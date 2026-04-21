@@ -3,7 +3,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, CalendarDays, CreditCard, DollarSign, FileImage, Image, NotepadText, ReceiptText, Settings, Upload, User, X } from "lucide-react";
+import {
+    ArrowLeft,
+    CalendarDays,
+    CreditCard,
+    DollarSign,
+    FileImage,
+    Image,
+    NotepadText,
+    ReceiptText,
+    Settings,
+    Upload,
+    User,
+    X,
+} from "lucide-react";
 import {
     TextField,
     Select,
@@ -85,14 +98,39 @@ export const EditBookingSetupClubPage = () => {
 
     const coverImageRef = useRef(null);
     const bookingImageRef = useRef(null);
-    const [selectedFile, setSelectedFile] = useState<File[]>([]);
-    const [selectedBookingFiles, setSelectedBookingFiles] = useState<File[]>([]);
-    const [existingCoverImageUrl, setExistingCoverImageUrl] = useState<string>("");
-    const [existingBookingImageUrls, setExistingBookingImageUrls] = useState<string[]>([]);
+    const [selectedFile, setSelectedFile] = useState<
+        {
+            id: string;
+            file: File | null;
+            _destroy: boolean;
+        }[]
+    >([]);
+    const [selectedBookingFiles, setSelectedBookingFiles] = useState<{
+        id: string;
+        file: File | null;
+        _destroy: boolean;
+    }[]>([
+        {
+            id: "",
+            file: null,
+            _destroy: false,
+        }
+    ]);
+    console.log(selectedFile.length)
+    const [existingCoverImage, setExistingCoverImage] =
+        useState<{ id: number; url: string } | null>(null);
+    const [existingBookingAttachments, setExistingBookingAttachments] = useState<
+        { id: number; url: string }[]
+    >([]);
+    const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
+    const [deletedCoverImageId, setDeletedCoverImageId] = useState<number | null>(null);
+    const [deletedBlockDayIds, setDeletedBlockDayIds] = useState<number[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>({});
+    const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>(
+        {}
+    );
 
-    console.log(existingBookingImageUrls)
+    console.log(existingBookingAttachments);
 
     const [formData, setFormData] = useState({
         facilityName: "",
@@ -183,6 +221,7 @@ export const EditBookingSetupClubPage = () => {
             dayType: string;
             blockReason: string;
             selectedSlots: number[];
+            disabledSlots: Array<{ id: number; ampm: string }>;
         }>,
     });
 
@@ -209,12 +248,26 @@ export const EditBookingSetupClubPage = () => {
 
     const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        setSelectedFile(files);
+        setSelectedFile((prev) => [
+            ...prev,
+            ...files.map((file) => ({
+                id: "",            // or generate if needed
+                file: file,
+                _destroy: false,
+            })),
+        ]);
     };
 
     const handleBookingImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        setSelectedBookingFiles(files);
+        setSelectedBookingFiles((prev) => [
+            ...prev,
+            ...files.map((file) => ({
+                id: "",            // or generate if needed
+                file: file,
+                _destroy: false,
+            })),
+        ]);
     };
 
     const removeCoverImage = (indexToRemove) => {
@@ -243,7 +296,7 @@ export const EditBookingSetupClubPage = () => {
         // else if (formData.facilityBookings.length === 0 || !formData.facilityBookings.some(fb => fb.isChecked && fb.times)) {
         //     toast.error("Please add at least one facility booking rule");
         //     return false;
-        // } 
+        // }
         else if (!formData.termsConditions) {
             toast.error("Please enter Terms and Conditions");
             return false;
@@ -293,10 +346,7 @@ export const EditBookingSetupClubPage = () => {
         }
 
         if (slot.breakTimeStart.hour !== "00") {
-            if (
-                slot.breakTimeEnd.hour === "00" ||
-                slot.endTime.hour === "00"
-            ) {
+            if (slot.breakTimeEnd.hour === "00" || slot.endTime.hour === "00") {
                 toast.error(
                     `Slot: Break Time End and End Time must be selected when Break Time Start is set`
                 );
@@ -348,22 +398,16 @@ export const EditBookingSetupClubPage = () => {
                 formData.isBookable ? "bookable" : "request"
             );
             formDataToSend.append("facility_setup[fac_name]", formData.facilityName);
-            formDataToSend.append(
-                "facility_setup[active]",
-                formData.active
-            );
-            formDataToSend.append(
-                "facility_setup[shareable]",
-                formData.shareable
-            )
+            formDataToSend.append("facility_setup[active]", formData.active);
+            formDataToSend.append("facility_setup[shareable]", formData.shareable);
             formDataToSend.append(
                 "facility_setup[link_to_billing]",
                 formData.linkToBilling
-            )
+            );
             formDataToSend.append(
                 "facility_setup[min_guarantee]",
                 formData.minGuarantee
-            )
+            );
             formDataToSend.append(
                 "facility_setup[min_guarantee_price]",
                 formData.price
@@ -371,7 +415,7 @@ export const EditBookingSetupClubPage = () => {
             formDataToSend.append(
                 "facility_setup[sub_facility_enabled]",
                 formData.addSubFacility ? "1" : "0"
-            )
+            );
 
             // Charge Setup - Member charges and boolean
             formDataToSend.append(
@@ -498,7 +542,7 @@ export const EditBookingSetupClubPage = () => {
                 formDataToSend.append(
                     "facility_setup[deposit]",
                     formData.chargeSetup.refundableDeposit
-                )
+                );
             }
 
             if (formData.addSubFacility) {
@@ -513,109 +557,106 @@ export const EditBookingSetupClubPage = () => {
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][name]`,
                         subFacility.name
-                    )
+                    );
 
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][active]`,
                         subFacility.status
-                    )
+                    );
 
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][member]`,
                         subFacility.chargeSetup.member.selected ? "true" : "false"
-                    )
+                    );
 
                     if (subFacility.chargeSetup.member.selected) {
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_member_charge]`,
                             subFacility.chargeSetup.member.adult
-                        )
+                        );
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_member_charge]`,
                             subFacility.chargeSetup.member.child
-                        )
+                        );
                     }
 
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][guest]`,
                         subFacility.chargeSetup.guest.selected ? "true" : "false"
-                    )
+                    );
 
                     if (subFacility.chargeSetup.guest.selected) {
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_guest_charge]`,
                             subFacility.chargeSetup.guest.adult
-                        )
+                        );
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_guest_charge]`,
                             subFacility.chargeSetup.guest.child
-                        )
+                        );
                     }
 
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][non_member]`,
                         subFacility.chargeSetup.nonMember.selected ? "true" : "false"
-                    )
+                    );
 
                     if (subFacility.chargeSetup.nonMember.selected) {
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_non_member_charge]`,
                             subFacility.chargeSetup.nonMember.adult
-                        )
+                        );
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_non_member_charge]`,
                             subFacility.chargeSetup.nonMember.child
-                        )
+                        );
                     }
 
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][tenant]`,
                         subFacility.chargeSetup.tenant.selected ? "true" : "false"
-                    )
+                    );
 
                     if (subFacility.chargeSetup.tenant.selected) {
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_tenant_charge]`,
                             subFacility.chargeSetup.tenant.adult
-                        )
+                        );
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_tenant_charge]`,
                             subFacility.chargeSetup.tenant.child
-                        )
+                        );
                     }
 
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][min_people]`,
                         subFacility.minimumPersonAllowed || "1"
-                    )
+                    );
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][max_people]`,
                         subFacility.maximumPersonAllowed || "1"
-                    )
+                    );
 
                     if (formData.isBookable) {
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][gst]`,
                             subFacility.gst || "0.0"
-                        )
+                        );
                     }
 
                     if (formData.isRequest) {
                         formDataToSend.append(
                             `facility_setup[sub_facilities_attributes][${idx}][deposit]`,
                             subFacility.refundableDeposit
-                        )
+                        );
                     }
-                })
+                });
             }
 
             // Facility Slots
             const slot = formData.slots;
             formDataToSend.append("facility_slots[][id]", slot.id);
-            formDataToSend.append(
-                `facility_slots[][slot_no]`,
-                "1"
-            );
+            formDataToSend.append(`facility_slots[][slot_no]`, "1");
             formDataToSend.append(`facility_slots[][dayofweek]`, "");
             formDataToSend.append(
                 `facility_slots[][start_hour]`,
@@ -641,14 +682,8 @@ export const EditBookingSetupClubPage = () => {
                 `facility_slots[][break_end_min]`,
                 slot.breakTimeEnd.minute
             );
-            formDataToSend.append(
-                `facility_slots[][end_hour]`,
-                slot.endTime.hour
-            );
-            formDataToSend.append(
-                `facility_slots[][end_min]`,
-                slot.endTime.minute
-            );
+            formDataToSend.append(`facility_slots[][end_hour]`, slot.endTime.hour);
+            formDataToSend.append(`facility_slots[][end_min]`, slot.endTime.minute);
             formDataToSend.append(
                 `facility_slots[][max_bookings]`,
                 slot.concurrentSlots || "1"
@@ -672,46 +707,43 @@ export const EditBookingSetupClubPage = () => {
                     formDataToSend.append(
                         `facility_request_slots[][slot_no]`,
                         String(idx + 1)
-                    )
+                    );
 
-                    formDataToSend.append(
-                        `facility_request_slots[][id]`,
-                        slot.id
-                    )
+                    formDataToSend.append(`facility_request_slots[][id]`, slot.id);
 
                     formDataToSend.append(
                         `facility_request_slots[][start_hour]`,
                         slot.startTime.hour
-                    )
+                    );
                     formDataToSend.append(
                         `facility_request_slots[][start_min]`,
                         slot.startTime.minute
-                    )
+                    );
                     formDataToSend.append(
                         `facility_request_slots[][end_hour]`,
                         slot.endTime.hour
-                    )
+                    );
                     formDataToSend.append(
                         `facility_request_slots[][end_min]`,
                         slot.endTime.minute
-                    )
+                    );
 
                     formDataToSend.append(
                         `facility_request_slots[][tentative_price]`,
                         slot.amount
-                    )
-                })
+                    );
+                });
             }
 
             // Block Days - Handle multiple block day records
-            console.log('=== Preparing Block Days Payload ===');
+            console.log("=== Preparing Block Days Payload ===");
             formData.blockDays.forEach((blockDay, index) => {
                 console.log(`Block day ${index}:`, {
                     id: blockDay.id,
                     startDate: blockDay.startDate,
                     dayType: blockDay.dayType,
                     selectedSlots: blockDay.selectedSlots,
-                    selectedSlotsCount: blockDay.selectedSlots?.length || 0
+                    selectedSlotsCount: blockDay.selectedSlots?.length || 0,
                 });
 
                 // Include ID only if it exists (existing block day from API)
@@ -739,15 +771,33 @@ export const EditBookingSetupClubPage = () => {
                 //     blockDay.blockReason
                 // );
 
-                if (blockDay.dayType === "selectedSlots" && blockDay.selectedSlots && blockDay.selectedSlots.length > 0) {
+                if (
+                    blockDay.dayType === "selectedSlots" &&
+                    blockDay.selectedSlots &&
+                    blockDay.selectedSlots.length > 0
+                ) {
                     blockDay.selectedSlots.forEach((slotId) => {
                         formDataToSend.append(
-                            `facility_setup[block_slot][]`,
+                            `facility_setup[facility_blockings_attributes][][block_slot][]`,
                             slotId.toString()
                         );
                     });
                 }
             });
+
+            // Handle deleted block days
+            if (deletedBlockDayIds.length > 0) {
+                deletedBlockDayIds.forEach((id) => {
+                    formDataToSend.append(
+                        `facility_setup[facility_blockings_attributes][][id]`,
+                        id.toString()
+                    );
+                    formDataToSend.append(
+                        `facility_setup[facility_blockings_attributes][][_destroy]`,
+                        "true"
+                    );
+                });
+            }
 
             // Booking Window Configs
             formDataToSend.append(
@@ -762,10 +812,7 @@ export const EditBookingSetupClubPage = () => {
                 "book_before_min",
                 formData.bookingAllowedBefore.minute
             );
-            formDataToSend.append(
-                "advance_booking_day",
-                formData.advanceBooking.day
-            );
+            formDataToSend.append("advance_booking_day", formData.advanceBooking.day);
             formDataToSend.append(
                 "advance_booking_hour",
                 formData.advanceBooking.hour
@@ -774,29 +821,20 @@ export const EditBookingSetupClubPage = () => {
                 "advance_booking_min",
                 formData.advanceBooking.minute
             );
-            formDataToSend.append(
-                "cancel_day",
-                formData.canCancelBefore.day
-            );
-            formDataToSend.append(
-                "cancel_hour",
-                formData.canCancelBefore.hour
-            );
-            formDataToSend.append(
-                "cancel_min",
-                formData.canCancelBefore.minute
-            );
+            formDataToSend.append("cancel_day", formData.canCancelBefore.day);
+            formDataToSend.append("cancel_hour", formData.canCancelBefore.hour);
+            formDataToSend.append("cancel_min", formData.canCancelBefore.minute);
 
             formData.facilityBookings.forEach((fb, idx) => {
                 formDataToSend.append(
                     `facility_setup[facility_booking_rules_attributes][${idx}][id]`,
                     fb.id
-                )
+                );
 
                 formDataToSend.append(
                     `facility_setup[facility_booking_rules_attributes][${idx}][user_society_id]`,
                     localStorage.getItem("selectedUserSociety")
-                )
+                );
 
                 formDataToSend.append(
                     `facility_setup[facility_booking_rules_attributes][${idx}][active]`,
@@ -816,8 +854,8 @@ export const EditBookingSetupClubPage = () => {
                 formDataToSend.append(
                     `facility_setup[facility_booking_rules_attributes][${idx}][level]`,
                     fb.unit
-                )
-            })
+                );
+            });
 
             formDataToSend.append(
                 "facility_setup[postpaid]",
@@ -835,31 +873,31 @@ export const EditBookingSetupClubPage = () => {
                 "facility_setup[complementary]",
                 formData.complimentary ? "1" : "0"
             );
-            formDataToSend.append(
-                "facility_setup[cgst]",
-                formData.gstPercentage
-            );
-            formDataToSend.append(
-                "facility_setup[sgst]",
-                formData.sgstPercentage
-            );
-            formDataToSend.append(
-                "facility_setup[igst]",
-                formData.igstPercentage
-            );
+            formDataToSend.append("facility_setup[cgst]", formData.gstPercentage);
+            formDataToSend.append("facility_setup[sgst]", formData.sgstPercentage);
+            formDataToSend.append("facility_setup[igst]", formData.igstPercentage);
 
             // Handle cover image - only append new files, keep existing URL if not replaced
             if (selectedFile.length > 0) {
-                selectedFile.forEach((file) => {
-                    formDataToSend.append(`cover_image`, file);
+                selectedFile.forEach((attachment) => {
+                    formDataToSend.append(`cover_image`, attachment.file);
                 });
+            }
+
+            if (deletedCoverImageId) {
+                formDataToSend.append("cover_image[id]", deletedCoverImageId.toString());
+                formDataToSend.append("cover_image[destroy]", "true");
             }
 
             // Handle booking attachments - only append new files, keep existing URLs if not replaced
             if (selectedBookingFiles.length > 0) {
-                selectedBookingFiles.forEach((file) => {
-                    formDataToSend.append(`attachments[]`, file);
+                selectedBookingFiles.forEach((attachment) => {
+                    formDataToSend.append(`attachments[]`, attachment.file);
                 });
+            }
+
+            if (deletedAttachmentIds.length > 0) {
+                formDataToSend.append("delete_attachments_ids", deletedAttachmentIds.join(","));
             }
 
             formDataToSend.append(
@@ -925,10 +963,7 @@ export const EditBookingSetupClubPage = () => {
                 formData.cancellationText || ""
             );
 
-            formDataToSend.append(
-                "facility_setup[book_by]",
-                "slot"
-            );
+            formDataToSend.append("facility_setup[book_by]", "slot");
             formDataToSend.append(
                 "facility_setup[create_by]",
                 JSON.parse(localStorage.getItem("user")).id
@@ -976,17 +1011,60 @@ export const EditBookingSetupClubPage = () => {
             // Map API response to form data
             const transformedSlot = {
                 id: data.facility_slots?.[0]?.facility_slot?.id,
-                startTime: { hour: String(data.facility_slots?.[0]?.facility_slot.start_hour).padStart(2, "0") || "00", minute: String(data.facility_slots?.[0]?.facility_slot.start_min).padStart(2, "0") || "00" },
-                breakTimeStart: { hour: String(data.facility_slots?.[0]?.facility_slot.break_start_hour).padStart(2, "0") || "00", minute: String(data.facility_slots?.[0]?.facility_slot.break_start_min).padStart(2, "0") || "00" },
-                breakTimeEnd: { hour: String(data.facility_slots?.[0]?.facility_slot.break_end_hour).padStart(2, "0") || "00", minute: String(data.facility_slots?.[0]?.facility_slot.break_end_min).padStart(2, "0") || "00" },
-                endTime: { hour: String(data.facility_slots?.[0]?.facility_slot.end_hour).padStart(2, "0") || "00", minute: String(data.facility_slots?.[0]?.facility_slot.end_min).padStart(2, "0") || "00" },
-                concurrentSlots: data.facility_slots?.[0]?.facility_slot.max_bookings || "",
+                startTime: {
+                    hour:
+                        String(data.facility_slots?.[0]?.facility_slot.start_hour).padStart(
+                            2,
+                            "0"
+                        ) || "00",
+                    minute:
+                        String(data.facility_slots?.[0]?.facility_slot.start_min).padStart(
+                            2,
+                            "0"
+                        ) || "00",
+                },
+                breakTimeStart: {
+                    hour:
+                        String(
+                            data.facility_slots?.[0]?.facility_slot.break_start_hour
+                        ).padStart(2, "0") || "00",
+                    minute:
+                        String(
+                            data.facility_slots?.[0]?.facility_slot.break_start_min
+                        ).padStart(2, "0") || "00",
+                },
+                breakTimeEnd: {
+                    hour:
+                        String(
+                            data.facility_slots?.[0]?.facility_slot.break_end_hour
+                        ).padStart(2, "0") || "00",
+                    minute:
+                        String(
+                            data.facility_slots?.[0]?.facility_slot.break_end_min
+                        ).padStart(2, "0") || "00",
+                },
+                endTime: {
+                    hour:
+                        String(data.facility_slots?.[0]?.facility_slot.end_hour).padStart(
+                            2,
+                            "0"
+                        ) || "00",
+                    minute:
+                        String(data.facility_slots?.[0]?.facility_slot.end_min).padStart(
+                            2,
+                            "0"
+                        ) || "00",
+                },
+                concurrentSlots:
+                    data.facility_slots?.[0]?.facility_slot.max_bookings || "",
                 slotBy: data.facility_slots?.[0]?.facility_slot.breakminutes || 15,
                 wrapTime: data.facility_slots?.[0]?.facility_slot.wrap_time || "",
                 consecutiveSlotsAllowed: data.consecutive_slot,
             };
 
-            const transformedFacilityBookings = (data.facility_booking_rules || []).map((rule: any) => ({
+            const transformedFacilityBookings = (
+                data.facility_booking_rules || []
+            ).map((rule: any) => ({
                 id: rule.facility_booking_rule.id?.toString() || Date.now().toString(),
                 isChecked: rule.facility_booking_rule.active,
                 times: rule.facility_booking_rule.enumerator || "",
@@ -996,22 +1074,30 @@ export const EditBookingSetupClubPage = () => {
 
             const transformedChargeSetup = {
                 member: {
-                    selected: data.facility_charge?.member === "true" || data.facility_charge?.member === true,
+                    selected:
+                        data.facility_charge?.member === "true" ||
+                        data.facility_charge?.member === true,
                     adult: data.facility_charge?.adult_member_charge || "",
                     child: data.facility_charge?.child_member_charge || "",
                 },
                 guest: {
-                    selected: data.facility_charge?.guest === "true" || data.facility_charge?.guest === true,
+                    selected:
+                        data.facility_charge?.guest === "true" ||
+                        data.facility_charge?.guest === true,
                     adult: data.facility_charge?.adult_guest_charge || "",
                     child: data.facility_charge?.child_guest_charge || "",
                 },
                 nonMember: {
-                    selected: data.facility_charge?.non_member === "true" || data.facility_charge?.non_member === true,
+                    selected:
+                        data.facility_charge?.non_member === "true" ||
+                        data.facility_charge?.non_member === true,
                     adult: data.facility_charge?.adult_non_member_charge || "",
                     child: data.facility_charge?.child_non_member_charge || "",
                 },
                 tenant: {
-                    selected: data.facility_charge?.tenant === "true" || data.facility_charge?.tenant === true,
+                    selected:
+                        data.facility_charge?.tenant === "true" ||
+                        data.facility_charge?.tenant === true,
                     adult: data.facility_charge?.adult_tenant_charge || "",
                     child: data.facility_charge?.child_tenant_charge || "",
                 },
@@ -1052,75 +1138,140 @@ export const EditBookingSetupClubPage = () => {
                     hour: data.cb_dhm.h || "",
                     minute: data.cb_dhm.m || "",
                 },
-                facilityBookings: transformedFacilityBookings.length > 0 ? transformedFacilityBookings : formData.facilityBookings,
+                facilityBookings:
+                    transformedFacilityBookings.length > 0
+                        ? transformedFacilityBookings
+                        : formData.facilityBookings,
                 description: data.description || "",
                 termsConditions: data.terms || "",
                 cancellationText: data.cancellation_policy || "",
                 slots: transformedSlot,
-                customSlots: data.facility_slots?.map((slot: any) => ({
-                    id: slot.facility_slot.id?.toString(),
-                    startTime: { hour: String(slot.facility_slot.start_hour).padStart(2, "0") || "00", minute: String(slot.facility_slot.start_min).padStart(2, "0") || "00" },
-                    endTime: { hour: String(slot.facility_slot.end_hour).padStart(2, "0") || "00", minute: String(slot.facility_slot.end_min).padStart(2, "0") || "00" },
-                    amount: slot.facility_slot.tentative_price || "",
-                })) || formData.customSlots,
+                customSlots:
+                    data.facility_slots?.map((slot: any) => ({
+                        id: slot.facility_slot.id?.toString(),
+                        startTime: {
+                            hour:
+                                String(slot.facility_slot.start_hour).padStart(2, "0") || "00",
+                            minute:
+                                String(slot.facility_slot.start_min).padStart(2, "0") || "00",
+                        },
+                        endTime: {
+                            hour:
+                                String(slot.facility_slot.end_hour).padStart(2, "0") || "00",
+                            minute:
+                                String(slot.facility_slot.end_min).padStart(2, "0") || "00",
+                        },
+                        amount: slot.facility_slot.tentative_price || "",
+                    })) || formData.customSlots,
                 chargeSetup: transformedChargeSetup,
-                subFacilities: (data.sub_facilities || []).map((subFac: any) => ({
-                    id: subFac.sub_facility?.id?.toString() || Date.now().toString(),
-                    name: subFac.sub_facility.name || "",
-                    status: subFac.sub_facility.active || "true",
-                    isNew: false,
-                    chargeSetup: {
-                        member: {
-                            selected: subFac.sub_facility.facility_charge?.member === true || subFac.facility_charge?.member === true,
-                            adult: subFac.sub_facility.facility_charge?.adult_member_charge || "",
-                            child: subFac.sub_facility.facility_charge?.child_member_charge || "",
+                subFacilities:
+                    (data.sub_facilities || []).map((subFac: any) => ({
+                        id: subFac.sub_facility?.id?.toString() || Date.now().toString(),
+                        name: subFac.sub_facility.name || "",
+                        status: subFac.sub_facility.active || "true",
+                        isNew: false,
+                        chargeSetup: {
+                            member: {
+                                selected:
+                                    subFac.sub_facility.facility_charge?.member === true ||
+                                    subFac.facility_charge?.member === true,
+                                adult:
+                                    subFac.sub_facility.facility_charge?.adult_member_charge ||
+                                    "",
+                                child:
+                                    subFac.sub_facility.facility_charge?.child_member_charge ||
+                                    "",
+                            },
+                            guest: {
+                                selected:
+                                    subFac.sub_facility.facility_charge?.guest === true ||
+                                    subFac.facility_charge?.guest === true,
+                                adult:
+                                    subFac.sub_facility.facility_charge?.adult_guest_charge || "",
+                                child:
+                                    subFac.sub_facility.facility_charge?.child_guest_charge || "",
+                            },
+                            nonMember: {
+                                selected:
+                                    subFac.sub_facility.facility_charge?.non_member === true ||
+                                    subFac.facility_charge?.non_member === true,
+                                adult:
+                                    subFac.sub_facility.facility_charge
+                                        ?.adult_non_member_charge || "",
+                                child:
+                                    subFac.sub_facility.facility_charge
+                                        ?.child_non_member_charge || "",
+                            },
+                            tenant: {
+                                selected:
+                                    subFac.sub_facility.facility_charge?.tenant === true ||
+                                    subFac.facility_charge?.tenant === true,
+                                adult:
+                                    subFac.sub_facility.facility_charge?.adult_tenant_charge ||
+                                    "",
+                                child:
+                                    subFac.sub_facility.facility_charge?.child_tenant_charge ||
+                                    "",
+                            },
                         },
-                        guest: {
-                            selected: subFac.sub_facility.facility_charge?.guest === true || subFac.facility_charge?.guest === true,
-                            adult: subFac.sub_facility.facility_charge?.adult_guest_charge || "",
-                            child: subFac.sub_facility.facility_charge?.child_guest_charge || "",
-                        },
-                        nonMember: {
-                            selected: subFac.sub_facility.facility_charge?.non_member === true || subFac.facility_charge?.non_member === true,
-                            adult: subFac.sub_facility.facility_charge?.adult_non_member_charge || "",
-                            child: subFac.sub_facility.facility_charge?.child_non_member_charge || "",
-                        },
-                        tenant: {
-                            selected: subFac.sub_facility.facility_charge?.tenant === true || subFac.facility_charge?.tenant === true,
-                            adult: subFac.sub_facility.facility_charge?.adult_tenant_charge || "",
-                            child: subFac.sub_facility.facility_charge?.child_tenant_charge || "",
-                        },
-                    },
-                    minimumPersonAllowed: subFac.sub_facility.min_people || "1",
-                    maximumPersonAllowed: subFac.sub_facility.max_people || "1",
-                    gst: subFac.sub_facility.gst || "",
-                    refundableDeposit: subFac.sub_facility.deposit || "0.0",
-                })) || [],
-                blockDays: (data.facility_blockings || []).map((blocking: any) => ({
-                    id: blocking.facility_blocking?.id,
-                    startDate: blocking.facility_blocking?.ondate || "",
-                    endDate: "",
-                    dayType: blocking.facility_blocking?.block_slot && blocking.facility_blocking?.block_slot.length > 0 ? "selectedSlots" : "entireDay",
-                    blockReason: blocking.facility_blocking?.reason || "",
-                    selectedSlots: blocking.facility_blocking?.block_slot?.map((slotId: string) => parseInt(slotId)) || [],
-                })) || [],
+                        minimumPersonAllowed: subFac.sub_facility.min_people || "1",
+                        maximumPersonAllowed: subFac.sub_facility.max_people || "1",
+                        gst: subFac.sub_facility.gst || "",
+                        refundableDeposit: subFac.sub_facility.deposit || "0.0",
+                    })) || [],
+                blockDays:
+                    (data.facility_blockings || []).map((blocking: any) => ({
+                        id: blocking.facility_blocking?.id,
+                        startDate: blocking.facility_blocking?.ondate || "",
+                        endDate: "",
+                        dayType:
+                            blocking.facility_blocking?.block_slot &&
+                                blocking.facility_blocking?.block_slot.length > 0
+                                ? "selectedSlots"
+                                : "entireDay",
+                        blockReason: blocking.facility_blocking?.reason || "",
+                        selectedSlots:
+                            blocking.facility_blocking?.block_slot?.map((slotId: string) =>
+                                parseInt(slotId)
+                            ) || [],
+                        disabledSlots:
+                            blocking.facility_blocking?.block_slot_details?.map((detail: any) => ({
+                                id: detail.id,
+                                ampm: detail.label
+                            })) || [],
+                    })) || [],
             });
 
             // Transform cancellation rules
             const transformedRules = [
                 {
-                    description: "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
-                    time: { type: String(data.cutoff_hr).padStart(2, "0") || "00", value: String(data.cutoff_min).padStart(2, "0") || "00", day: data.cutoff_day || "0" },
+                    description:
+                        "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
+                    time: {
+                        type: String(data.cutoff_hr).padStart(2, "0") || "00",
+                        value: String(data.cutoff_min).padStart(2, "0") || "00",
+                        day: data.cutoff_day || "0",
+                    },
                     deduction: data.return_percentage || "",
                 },
                 {
-                    description: "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
-                    time: { type: String(data.cutoff_second_hr).padStart(2, "0") || "00", value: String(data.cutoff_second_min).padStart(2, "0") || "00", day: data.cutoff_second_day || "0" },
+                    description:
+                        "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
+                    time: {
+                        type: String(data.cutoff_second_hr).padStart(2, "0") || "00",
+                        value: String(data.cutoff_second_min).padStart(2, "0") || "00",
+                        day: data.cutoff_second_day || "0",
+                    },
                     deduction: data.return_percentage_second || "",
                 },
                 {
-                    description: "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
-                    time: { type: String(data.cutoff_third_hr).padStart(2, "0") || "00", value: String(data.cutoff_third_min).padStart(2, "0") || "00", day: data.cutoff_third_day || "0" },
+                    description:
+                        "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
+                    time: {
+                        type: String(data.cutoff_third_hr).padStart(2, "0") || "00",
+                        value: String(data.cutoff_third_min).padStart(2, "0") || "00",
+                        day: data.cutoff_third_day || "0",
+                    },
                     deduction: data.return_percentage_third || "",
                 },
             ];
@@ -1130,7 +1281,8 @@ export const EditBookingSetupClubPage = () => {
             data.facility_blockings?.forEach((blocking: any, index: number) => {
                 const ondate = blocking.facility_blocking?.ondate;
                 const blockSlot = blocking.facility_blocking?.block_slot;
-                const dayType = blockSlot && blockSlot.length > 0 ? "selectedSlots" : "entireDay";
+                const dayType =
+                    blockSlot && blockSlot.length > 0 ? "selectedSlots" : "entireDay";
 
                 // Only fetch slots if it's a selectedSlots type
                 if (ondate && dayType === "selectedSlots") {
@@ -1140,20 +1292,26 @@ export const EditBookingSetupClubPage = () => {
 
             // Handle cover and booking images
             if (data.cover_image?.document) {
-                // Store URL separately for existing images
-                setExistingCoverImageUrl(data.cover_image.document);
+                setExistingCoverImage({
+                    id: data.cover_image.id,
+                    url: data.cover_image.document
+                });
             }
-            console.log(data)
+            console.log(data);
             if (data.documents && Array.isArray(data.documents)) {
-                const imageUrls = data.documents
-                    .map((doc: any) => doc.document.document);
-                setExistingBookingImageUrls(imageUrls);
+                const attachments = data.documents.map((doc: any) => ({
+                    id: doc.document.id,
+                    url: doc.document.document
+                }));
+                setExistingBookingAttachments(attachments);
             }
         } catch (error) {
             console.error("Error fetching facility details:", error);
             toast.error("Failed to fetch facility details");
         }
     };
+
+    console.log(existingCoverImage)
 
     useEffect(() => {
         if (id) {
@@ -1234,9 +1392,13 @@ export const EditBookingSetupClubPage = () => {
         });
     };
 
-    const fetchBlockDaySlots = async (facilityId: string, date: string, blockIndex: number) => {
+    const fetchBlockDaySlots = async (
+        facilityId: string,
+        date: string,
+        blockIndex: number
+    ) => {
         try {
-            const formattedDate = date.replace(/-/g, '/');
+            const formattedDate = date.replace(/-/g, "/");
             const response = await axios.get(
                 `https://${baseUrl}/crm/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
                 {
@@ -1246,22 +1408,25 @@ export const EditBookingSetupClubPage = () => {
                     },
                     params: {
                         on_date: formattedDate,
-                    }
+                    },
                 }
             );
 
             if (response.data && response.data.slots) {
-                console.log(`Slots fetched for block day ${blockIndex}:`, response.data.slots);
-                setBlockDaySlots(prev => ({
+                console.log(
+                    `Slots fetched for block day ${blockIndex}:`,
+                    response.data.slots
+                );
+                setBlockDaySlots((prev) => ({
                     ...prev,
-                    [blockIndex]: response.data.slots
+                    [blockIndex]: response.data.slots,
                 }));
             }
         } catch (error) {
-            console.error('Error fetching block day slots:', error);
-            setBlockDaySlots(prev => ({
+            console.error("Error fetching block day slots:", error);
+            setBlockDaySlots((prev) => ({
                 ...prev,
-                [blockIndex]: []
+                [blockIndex]: [],
             }));
         }
     };
@@ -1274,6 +1439,7 @@ export const EditBookingSetupClubPage = () => {
             dayType: "entireDay",
             blockReason: "",
             selectedSlots: [],
+            disabledSlots: [],
         };
         setFormData({
             ...formData,
@@ -1303,7 +1469,9 @@ export const EditBookingSetupClubPage = () => {
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                 <User className="w-4 h-4" />
                             </div>
-                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">BASIC INFo</h3>
+                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                BASIC INFo
+                            </h3>
                         </div>
 
                         <div className="space-y-6 py-2">
@@ -1355,72 +1523,80 @@ export const EditBookingSetupClubPage = () => {
                                         label="Shareable"
                                         displayEmpty
                                     >
-                                        <MenuItem value="">
-                                            Select
-                                        </MenuItem>
+                                        <MenuItem value="">Select</MenuItem>
                                         <MenuItem value="Yes">Yes</MenuItem>
                                         <MenuItem value="No">No</MenuItem>
                                     </Select>
                                 </FormControl>
 
                                 <FormControl>
-                                    <InputLabel className="bg-[#F6F7F7]">Link to billing</InputLabel>
+                                    <InputLabel className="bg-[#F6F7F7]">
+                                        Link to billing
+                                    </InputLabel>
                                     <Select
                                         value={formData.linkToBilling}
                                         onChange={(e) =>
-                                            setFormData({ ...formData, linkToBilling: e.target.value })
+                                            setFormData({
+                                                ...formData,
+                                                linkToBilling: e.target.value,
+                                            })
                                         }
                                         label="Link to billing"
                                         displayEmpty
                                     >
-                                        <MenuItem value="">
-                                            Select
-                                        </MenuItem>
+                                        <MenuItem value="">Select</MenuItem>
                                         <MenuItem value="Yes">Yes</MenuItem>
                                         <MenuItem value="No">No</MenuItem>
                                     </Select>
                                 </FormControl>
 
-                                {
-                                    formData.isRequest && (
-                                        <FormControl>
-                                            <InputLabel className="bg-[#F6F7F7]">Min.guarantee</InputLabel>
-                                            <Select
-                                                value={formData.minGuarantee}
-                                                onChange={(e) =>
-                                                    setFormData({ ...formData, minGuarantee: e.target.value })
-                                                }
-                                                label="Min.guarantee"
-                                                displayEmpty
-                                            >
-                                                <MenuItem value="">
-                                                    Select
-                                                </MenuItem>
-                                                <MenuItem value="Yes">Yes</MenuItem>
-                                                <MenuItem value="No">No</MenuItem>
-                                            </Select>
-                                        </FormControl>
-                                    )
-                                }
-
-                                {formData.shareable && formData.linkToBilling === "Yes" && formData.minGuarantee === "Yes" && (
-                                    <TextField
-                                        label={<span>Price <span className="text-[#C72030]">*</span></span>}
-                                        placeholder="Price"
-                                        value={formData.price}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            // Only allow letters and spaces, no numbers
-                                            // if (/^[a-zA-Z\s]*$/.test(value)) {
-                                            setFormData({ ...formData, price: value });
-                                            // }
-                                        }}
-                                        variant="outlined"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                    />
+                                {formData.isRequest && (
+                                    <FormControl>
+                                        <InputLabel className="bg-[#F6F7F7]">
+                                            Min.guarantee
+                                        </InputLabel>
+                                        <Select
+                                            value={formData.minGuarantee}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    minGuarantee: e.target.value,
+                                                })
+                                            }
+                                            label="Min.guarantee"
+                                            displayEmpty
+                                        >
+                                            <MenuItem value="">Select</MenuItem>
+                                            <MenuItem value="Yes">Yes</MenuItem>
+                                            <MenuItem value="No">No</MenuItem>
+                                        </Select>
+                                    </FormControl>
                                 )}
+
+                                {formData.shareable &&
+                                    formData.linkToBilling === "Yes" &&
+                                    formData.minGuarantee === "Yes" && (
+                                        <TextField
+                                            label={
+                                                <span>
+                                                    Price <span className="text-[#C72030]">*</span>
+                                                </span>
+                                            }
+                                            placeholder="Price"
+                                            value={formData.price}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                // Only allow letters and spaces, no numbers
+                                                // if (/^[a-zA-Z\s]*$/.test(value)) {
+                                                setFormData({ ...formData, price: value });
+                                                // }
+                                            }}
+                                            variant="outlined"
+                                            InputLabelProps={{
+                                                shrink: true,
+                                            }}
+                                        />
+                                    )}
                             </div>
 
                             <div className="flex gap-6 px-1">
@@ -1464,7 +1640,10 @@ export const EditBookingSetupClubPage = () => {
                                         <Switch
                                             checked={formData.addSubFacility}
                                             onChange={(e) => {
-                                                if (e.target.checked && formData.subFacilities.length === 0) {
+                                                if (
+                                                    e.target.checked &&
+                                                    formData.subFacilities.length === 0
+                                                ) {
                                                     // Create one default sub-facility when toggled on
                                                     const newSubFacility = {
                                                         id: Date.now().toString(),
@@ -1474,7 +1653,11 @@ export const EditBookingSetupClubPage = () => {
                                                         chargeSetup: {
                                                             member: { selected: false, adult: "", child: "" },
                                                             guest: { selected: false, adult: "", child: "" },
-                                                            nonMember: { selected: false, adult: "", child: "" },
+                                                            nonMember: {
+                                                                selected: false,
+                                                                adult: "",
+                                                                child: "",
+                                                            },
                                                             tenant: { selected: false, adult: "", child: "" },
                                                         },
                                                         minimumPersonAllowed: "1",
@@ -1488,566 +1671,663 @@ export const EditBookingSetupClubPage = () => {
                                                         subFacilities: [newSubFacility],
                                                     });
                                                 } else {
-                                                    setFormData({ ...formData, addSubFacility: e.target.checked });
+                                                    setFormData({
+                                                        ...formData,
+                                                        addSubFacility: e.target.checked,
+                                                    });
                                                 }
                                             }}
                                             // disabled={updatingStatus}
                                             sx={{
-                                                '& .MuiSwitch-switchBase': {
-                                                    color: '#ef4444',
-                                                    '&.Mui-checked': {
-                                                        color: '#22c55e',
+                                                "& .MuiSwitch-switchBase": {
+                                                    color: "#ef4444",
+                                                    "&.Mui-checked": {
+                                                        color: "#22c55e",
                                                     },
-                                                    '&.Mui-checked + .MuiSwitch-track': {
-                                                        backgroundColor: '#22c55e',
+                                                    "&.Mui-checked + .MuiSwitch-track": {
+                                                        backgroundColor: "#22c55e",
                                                     },
                                                 },
-                                                '& .MuiSwitch-track': {
-                                                    backgroundColor: '#ef4444',
+                                                "& .MuiSwitch-track": {
+                                                    backgroundColor: "#ef4444",
                                                 },
                                             }}
                                         />
-                                        <span className="text-sm font-medium text-gray-700">Add Sub-Facility</span>
+                                        <span className="text-sm font-medium text-gray-700">
+                                            Add Sub-Facility
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {
-                        formData.addSubFacility ? (
-                            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                                            <DollarSign className="w-4 h-4" />
-                                        </div>
-                                        <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Sub Facilities</h3>
+                    {formData.addSubFacility ? (
+                        <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                        <DollarSign className="w-4 h-4" />
                                     </div>
-
-                                    <Button onClick={addSubFacility} className="bg-[#C72030] hover:bg-[#A01828] text-white">
-                                        + Add
-                                    </Button>
+                                    <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                        Sub Facilities
+                                    </h3>
                                 </div>
 
-                                {/* Display all sub-facilities */}
-                                {formData.subFacilities.map((subFacility) => (
-                                    <div key={subFacility.id} className="border-b-2 pb-6 mb-6">
-                                        {/* Header with delete button */}
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h4 className="text-md font-semibold text-[#1A1A1A]">Sub-Facility Form</h4>
-                                            <button
-                                                onClick={() => deleteSubFacility(subFacility.id)}
-                                                className="bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded hover:bg-red-700"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
+                                <Button
+                                    onClick={addSubFacility}
+                                    className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                                >
+                                    + Add
+                                </Button>
+                            </div>
 
-                                        {/* Sub-Facility Name and Status */}
-                                        <div className="flex items-center gap-4 mb-6">
+                            {/* Display all sub-facilities */}
+                            {formData.subFacilities.map((subFacility) => (
+                                <div key={subFacility.id} className="border-b-2 pb-6 mb-6">
+                                    {/* Header with delete button */}
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h4 className="text-md font-semibold text-[#1A1A1A]">
+                                            Sub-Facility Form
+                                        </h4>
+                                        <button
+                                            onClick={() => deleteSubFacility(subFacility.id)}
+                                            className="bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded hover:bg-red-700"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+
+                                    {/* Sub-Facility Name and Status */}
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <TextField
+                                            label="Sub-Facility Name"
+                                            placeholder="Enter Sub-Facility Name"
+                                            value={subFacility.name}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                // Only allow letters and spaces, no numbers
+                                                if (/^[a-zA-Z\s]*$/.test(value)) {
+                                                    updateSubFacility(subFacility.id, { name: value });
+                                                }
+                                            }}
+                                            variant="outlined"
+                                            required
+                                            InputLabelProps={{
+                                                classes: {
+                                                    asterisk: "text-red-500",
+                                                },
+                                                shrink: true,
+                                            }}
+                                        />
+                                        <FormControl>
+                                            <InputLabel className="bg-[#F6F7F7]">Active</InputLabel>
+                                            <Select
+                                                value={subFacility.status}
+                                                onChange={(e) =>
+                                                    updateSubFacility(subFacility.id, {
+                                                        status: e.target.value,
+                                                    })
+                                                }
+                                                label="Active"
+                                                displayEmpty
+                                            >
+                                                <MenuItem value="">Select</MenuItem>
+                                                <MenuItem value="true">Active</MenuItem>
+                                                <MenuItem value="false">Inactive</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </div>
+
+                                    {/* Charge Setup Table */}
+                                    {formData.isBookable && (
+                                        <div className="overflow-x-auto mb-6">
+                                            <table className="w-full border">
+                                                <thead>
+                                                    <tr className="bg-gray-50">
+                                                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                                                            Member Type
+                                                        </th>
+                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                                                            Adult
+                                                        </th>
+                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                                                            Child
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        subFacility.chargeSetup.member.selected
+                                                                    }
+                                                                    onCheckedChange={(checked) =>
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                member: {
+                                                                                    ...subFacility.chargeSetup.member,
+                                                                                    selected: !!checked,
+                                                                                },
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Member</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.member.adult
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    member: {
+                                                                                        ...subFacility.chargeSetup.member,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={subFacility.chargeSetup.member.adult}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    member: {
+                                                                                        ...subFacility.chargeSetup.member,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.member.child
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                member: {
+                                                                                    ...subFacility.chargeSetup.member,
+                                                                                    child: checked
+                                                                                        ? subFacility.chargeSetup.member
+                                                                                            .child || ""
+                                                                                        : "",
+                                                                                },
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={subFacility.chargeSetup.member.child}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    member: {
+                                                                                        ...subFacility.chargeSetup.member,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        subFacility.chargeSetup.guest.selected
+                                                                    }
+                                                                    onCheckedChange={(checked) =>
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                guest: {
+                                                                                    ...subFacility.chargeSetup.guest,
+                                                                                    selected: !!checked,
+                                                                                },
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Guest</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.guest.adult
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    guest: {
+                                                                                        ...subFacility.chargeSetup.guest,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={subFacility.chargeSetup.guest.adult}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    guest: {
+                                                                                        ...subFacility.chargeSetup.guest,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.guest.child
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                guest: {
+                                                                                    ...subFacility.chargeSetup.guest,
+                                                                                    child: checked
+                                                                                        ? subFacility.chargeSetup.guest
+                                                                                            .child || ""
+                                                                                        : "",
+                                                                                },
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={subFacility.chargeSetup.guest.child}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    guest: {
+                                                                                        ...subFacility.chargeSetup.guest,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        subFacility.chargeSetup.nonMember.selected
+                                                                    }
+                                                                    onCheckedChange={(checked) =>
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                nonMember: {
+                                                                                    ...subFacility.chargeSetup.nonMember,
+                                                                                    selected: !!checked,
+                                                                                },
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Non-Member</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.nonMember.adult
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    nonMember: {
+                                                                                        ...subFacility.chargeSetup
+                                                                                            .nonMember,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={
+                                                                        subFacility.chargeSetup.nonMember.adult
+                                                                    }
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    nonMember: {
+                                                                                        ...subFacility.chargeSetup
+                                                                                            .nonMember,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.nonMember.child
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                nonMember: {
+                                                                                    ...subFacility.chargeSetup.nonMember,
+                                                                                    child: checked
+                                                                                        ? subFacility.chargeSetup.nonMember
+                                                                                            .child || ""
+                                                                                        : "",
+                                                                                },
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={
+                                                                        subFacility.chargeSetup.nonMember.child
+                                                                    }
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    nonMember: {
+                                                                                        ...subFacility.chargeSetup
+                                                                                            .nonMember,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        subFacility.chargeSetup.tenant.selected
+                                                                    }
+                                                                    onCheckedChange={(checked) =>
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                tenant: {
+                                                                                    ...subFacility.chargeSetup.tenant,
+                                                                                    selected: !!checked,
+                                                                                },
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Tenant</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.tenant.adult
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    tenant: {
+                                                                                        ...subFacility.chargeSetup.tenant,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={subFacility.chargeSetup.tenant.adult}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    tenant: {
+                                                                                        ...subFacility.chargeSetup.tenant,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        !!subFacility.chargeSetup.tenant.child
+                                                                    }
+                                                                    onCheckedChange={(checked) => {
+                                                                        updateSubFacility(subFacility.id, {
+                                                                            chargeSetup: {
+                                                                                ...subFacility.chargeSetup,
+                                                                                tenant: {
+                                                                                    ...subFacility.chargeSetup.tenant,
+                                                                                    child: checked
+                                                                                        ? subFacility.chargeSetup.tenant
+                                                                                            .child || ""
+                                                                                        : "",
+                                                                                },
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={subFacility.chargeSetup.tenant.child}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (
+                                                                            value === "" ||
+                                                                            /^\d*\.?\d{0,2}$/.test(value)
+                                                                        ) {
+                                                                            updateSubFacility(subFacility.id, {
+                                                                                chargeSetup: {
+                                                                                    ...subFacility.chargeSetup,
+                                                                                    tenant: {
+                                                                                        ...subFacility.chargeSetup.tenant,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+
+                                    {/* Min/Max Person Allowed */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="flex items-center gap-3">
+                                            <label className="text-sm font-semibold whitespace-nowrap">
+                                                Minimum Person Allowed
+                                            </label>
                                             <TextField
-                                                label="Sub-Facility Name"
-                                                placeholder="Enter Sub-Facility Name"
-                                                value={subFacility.name}
+                                                size="small"
+                                                variant="outlined"
+                                                value={subFacility.minimumPersonAllowed}
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    // Only allow letters and spaces, no numbers
-                                                    if (/^[a-zA-Z\s]*$/.test(value)) {
-                                                        updateSubFacility(subFacility.id, { name: value });
+                                                    if (value === "" || /^[1-9]\d*$/.test(value)) {
+                                                        updateSubFacility(subFacility.id, {
+                                                            minimumPersonAllowed: value,
+                                                        });
+                                                        if (
+                                                            subFacility.maximumPersonAllowed &&
+                                                            parseInt(subFacility.maximumPersonAllowed) <=
+                                                            parseInt(value)
+                                                        ) {
+                                                            toast.error(
+                                                                "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                                                            );
+                                                        }
                                                     }
                                                 }}
-                                                variant="outlined"
-                                                required
-                                                InputLabelProps={{
-                                                    classes: {
-                                                        asterisk: "text-red-500",
-                                                    },
-                                                    shrink: true,
-                                                }}
+                                                className="w-32"
+                                                placeholder="1"
                                             />
-                                            <FormControl>
-                                                <InputLabel className="bg-[#F6F7F7]">Active</InputLabel>
-                                                <Select
-                                                    value={subFacility.status}
-                                                    onChange={(e) =>
-                                                        updateSubFacility(subFacility.id, { status: e.target.value })
-                                                    }
-                                                    label="Active"
-                                                    displayEmpty
-                                                >
-                                                    <MenuItem value="">
-                                                        Select
-                                                    </MenuItem>
-                                                    <MenuItem value="true">Active</MenuItem>
-                                                    <MenuItem value="false">Inactive</MenuItem>
-                                                </Select>
-                                            </FormControl>
                                         </div>
-
-                                        {/* Charge Setup Table */}
-                                        {
-                                            formData.isBookable && (
-                                                <div className="overflow-x-auto mb-6">
-                                                    <table className="w-full border">
-                                                        <thead>
-                                                            <tr className="bg-gray-50">
-                                                                <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
-                                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
-                                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={subFacility.chargeSetup.member.selected}
-                                                                            onCheckedChange={(checked) =>
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        member: {
-                                                                                            ...subFacility.chargeSetup.member,
-                                                                                            selected: !!checked,
-                                                                                        },
-                                                                                    },
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                        <span>Member</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.member.adult}
-                                                                            onCheckedChange={(checked) => {
-                                                                                if (!checked) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            member: {
-                                                                                                ...subFacility.chargeSetup.member,
-                                                                                                adult: "",
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.member.adult}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            member: {
-                                                                                                ...subFacility.chargeSetup.member,
-                                                                                                adult: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.member.child}
-                                                                            onCheckedChange={(checked) => {
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        member: {
-                                                                                            ...subFacility.chargeSetup.member,
-                                                                                            child: checked ? subFacility.chargeSetup.member.child || "" : "",
-                                                                                        },
-                                                                                    },
-                                                                                });
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.member.child}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            member: {
-                                                                                                ...subFacility.chargeSetup.member,
-                                                                                                child: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={subFacility.chargeSetup.guest.selected}
-                                                                            onCheckedChange={(checked) =>
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        guest: {
-                                                                                            ...subFacility.chargeSetup.guest,
-                                                                                            selected: !!checked,
-                                                                                        },
-                                                                                    },
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                        <span>Guest</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.guest.adult}
-                                                                            onCheckedChange={(checked) => {
-                                                                                if (!checked) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            guest: {
-                                                                                                ...subFacility.chargeSetup.guest,
-                                                                                                adult: "",
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.guest.adult}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            guest: {
-                                                                                                ...subFacility.chargeSetup.guest,
-                                                                                                adult: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.guest.child}
-                                                                            onCheckedChange={(checked) => {
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        guest: {
-                                                                                            ...subFacility.chargeSetup.guest,
-                                                                                            child: checked ? subFacility.chargeSetup.guest.child || "" : "",
-                                                                                        },
-                                                                                    },
-                                                                                });
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.guest.child}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            guest: {
-                                                                                                ...subFacility.chargeSetup.guest,
-                                                                                                child: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={subFacility.chargeSetup.nonMember.selected}
-                                                                            onCheckedChange={(checked) =>
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        nonMember: {
-                                                                                            ...subFacility.chargeSetup.nonMember,
-                                                                                            selected: !!checked,
-                                                                                        },
-                                                                                    },
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                        <span>Non-Member</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.nonMember.adult}
-                                                                            onCheckedChange={(checked) => {
-                                                                                if (!checked) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            nonMember: {
-                                                                                                ...subFacility.chargeSetup.nonMember,
-                                                                                                adult: "",
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.nonMember.adult}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            nonMember: {
-                                                                                                ...subFacility.chargeSetup.nonMember,
-                                                                                                adult: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.nonMember.child}
-                                                                            onCheckedChange={(checked) => {
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        nonMember: {
-                                                                                            ...subFacility.chargeSetup.nonMember,
-                                                                                            child: checked ? subFacility.chargeSetup.nonMember.child || "" : "",
-                                                                                        },
-                                                                                    },
-                                                                                });
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.nonMember.child}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            nonMember: {
-                                                                                                ...subFacility.chargeSetup.nonMember,
-                                                                                                child: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={subFacility.chargeSetup.tenant.selected}
-                                                                            onCheckedChange={(checked) =>
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        tenant: {
-                                                                                            ...subFacility.chargeSetup.tenant,
-                                                                                            selected: !!checked,
-                                                                                        },
-                                                                                    },
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                        <span>Tenant</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.tenant.adult}
-                                                                            onCheckedChange={(checked) => {
-                                                                                if (!checked) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            tenant: {
-                                                                                                ...subFacility.chargeSetup.tenant,
-                                                                                                adult: "",
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.tenant.adult}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            tenant: {
-                                                                                                ...subFacility.chargeSetup.tenant,
-                                                                                                adult: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                                <td className="border border-gray-300 px-4 py-3">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <Checkbox
-                                                                            checked={!!subFacility.chargeSetup.tenant.child}
-                                                                            onCheckedChange={(checked) => {
-                                                                                updateSubFacility(subFacility.id, {
-                                                                                    chargeSetup: {
-                                                                                        ...subFacility.chargeSetup,
-                                                                                        tenant: {
-                                                                                            ...subFacility.chargeSetup.tenant,
-                                                                                            child: checked ? subFacility.chargeSetup.tenant.child || "" : "",
-                                                                                        },
-                                                                                    },
-                                                                                });
-                                                                            }}
-                                                                        />
-                                                                        <TextField
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            value={subFacility.chargeSetup.tenant.child}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                    updateSubFacility(subFacility.id, {
-                                                                                        chargeSetup: {
-                                                                                            ...subFacility.chargeSetup,
-                                                                                            tenant: {
-                                                                                                ...subFacility.chargeSetup.tenant,
-                                                                                                child: value,
-                                                                                            },
-                                                                                        },
-                                                                                    });
-                                                                                }
-                                                                            }}
-                                                                            className="w-full max-w-[200px]"
-                                                                        />
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            )
-                                        }
-
-                                        {/* Min/Max Person Allowed */}
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div className="flex items-center gap-3">
-                                                <label className="text-sm font-semibold whitespace-nowrap">Minimum Person Allowed</label>
-                                                <TextField
-                                                    size="small"
-                                                    variant="outlined"
-                                                    value={subFacility.minimumPersonAllowed}
-                                                    onChange={(e) => {
-                                                        const value = e.target.value;
-                                                        if (value === '' || /^[1-9]\d*$/.test(value)) {
-                                                            updateSubFacility(subFacility.id, {
-                                                                minimumPersonAllowed: value,
-                                                            });
-                                                            if (subFacility.maximumPersonAllowed && parseInt(subFacility.maximumPersonAllowed) <= parseInt(value)) {
-                                                                toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                                                            }
+                                        <div className="flex items-center gap-3">
+                                            <label className="text-sm font-semibold whitespace-nowrap">
+                                                Maximum Person Allowed
+                                            </label>
+                                            <TextField
+                                                size="small"
+                                                variant="outlined"
+                                                value={subFacility.maximumPersonAllowed}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (value === "" || /^[1-9]\d*$/.test(value)) {
+                                                        if (
+                                                            subFacility.minimumPersonAllowed &&
+                                                            parseInt(value) <=
+                                                            parseInt(subFacility.minimumPersonAllowed)
+                                                        ) {
+                                                            toast.error(
+                                                                "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                                                            );
                                                         }
-                                                    }}
-                                                    className="w-32"
-                                                    placeholder="1"
-                                                />
-                                            </div>
+                                                        updateSubFacility(subFacility.id, {
+                                                            maximumPersonAllowed: value,
+                                                        });
+                                                    }
+                                                }}
+                                                className="w-32"
+                                                placeholder="1"
+                                            />
+                                        </div>
+                                        {formData.isBookable ? (
                                             <div className="flex items-center gap-3">
-                                                <label className="text-sm font-semibold whitespace-nowrap">Maximum Person Allowed</label>
-                                                <TextField
-                                                    size="small"
-                                                    variant="outlined"
-                                                    value={subFacility.maximumPersonAllowed}
-                                                    onChange={(e) => {
-                                                        const value = e.target.value;
-                                                        if (value === '' || /^[1-9]\d*$/.test(value)) {
-                                                            if (subFacility.minimumPersonAllowed && parseInt(value) <= parseInt(subFacility.minimumPersonAllowed)) {
-                                                                toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                                                            }
-                                                            updateSubFacility(subFacility.id, {
-                                                                maximumPersonAllowed: value,
-                                                            });
-                                                        }
-                                                    }}
-                                                    className="w-32"
-                                                    placeholder="1"
-                                                />
-                                            </div>
-                                            {
-                                                formData.isBookable ? (
-                                                    <div className="flex items-center gap-3">
-                                                        {/* <label className="text-sm font-semibold whitespace-nowrap">GST</label>
+                                                {/* <label className="text-sm font-semibold whitespace-nowrap">GST</label>
                                                         <TextField
                                                             size="small"
                                                             variant="outlined"
@@ -2063,557 +2343,21 @@ export const EditBookingSetupClubPage = () => {
                                                             className="w-32"
                                                             placeholder="0.0"
                                                         /> */}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-3">
-                                                        <label className="text-sm font-semibold whitespace-nowrap">Refundable Deposit</label>
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={subFacility.refundableDeposit}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    updateSubFacility(subFacility.id, {
-                                                                        refundableDeposit: value,
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-32"
-                                                            placeholder="0.0"
-                                                        />
-                                                    </div>
-                                                )
-                                            }
-
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                                        <DollarSign className="w-4 h-4" />
-                                    </div>
-                                    <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CHARGE SETUP</h3>
-                                </div>
-
-                                {
-                                    formData.isBookable && (
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full border">
-                                                <thead>
-                                                    <tr className="bg-gray-50">
-                                                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
-                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
-                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={formData.chargeSetup.member.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                member: {
-                                                                                    ...formData.chargeSetup.member,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Member</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.member.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    member: {
-                                                                                        ...formData.chargeSetup.member,
-                                                                                        adult: "",
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.member.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    member: {
-                                                                                        ...formData.chargeSetup.member,
-                                                                                        adult: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.member.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                member: {
-                                                                                    ...formData.chargeSetup.member,
-                                                                                    child: checked ? formData.chargeSetup.member.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.member.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    member: {
-                                                                                        ...formData.chargeSetup.member,
-                                                                                        child: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={formData.chargeSetup.guest.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                guest: {
-                                                                                    ...formData.chargeSetup.guest,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Guest</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.guest.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    guest: {
-                                                                                        ...formData.chargeSetup.guest,
-                                                                                        adult: "",
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.guest.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    guest: {
-                                                                                        ...formData.chargeSetup.guest,
-                                                                                        adult: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.guest.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                guest: {
-                                                                                    ...formData.chargeSetup.guest,
-                                                                                    child: checked ? formData.chargeSetup.guest.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.guest.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    guest: {
-                                                                                        ...formData.chargeSetup.guest,
-                                                                                        child: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={formData.chargeSetup.nonMember.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                nonMember: {
-                                                                                    ...formData.chargeSetup.nonMember,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Non-Member</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.nonMember.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    nonMember: {
-                                                                                        ...formData.chargeSetup.nonMember,
-                                                                                        adult: "",
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.nonMember.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    nonMember: {
-                                                                                        ...formData.chargeSetup.nonMember,
-                                                                                        adult: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.nonMember.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                nonMember: {
-                                                                                    ...formData.chargeSetup.nonMember,
-                                                                                    child: checked ? formData.chargeSetup.nonMember.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.nonMember.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    nonMember: {
-                                                                                        ...formData.chargeSetup.nonMember,
-                                                                                        child: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={formData.chargeSetup.tenant.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                tenant: {
-                                                                                    ...formData.chargeSetup.tenant,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Tenant</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.tenant.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    tenant: {
-                                                                                        ...formData.chargeSetup.tenant,
-                                                                                        adult: "",
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.tenant.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    tenant: {
-                                                                                        ...formData.chargeSetup.tenant,
-                                                                                        adult: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!formData.chargeSetup.tenant.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            chargeSetup: {
-                                                                                ...formData.chargeSetup,
-                                                                                tenant: {
-                                                                                    ...formData.chargeSetup.tenant,
-                                                                                    child: checked ? formData.chargeSetup.tenant.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={formData.chargeSetup.tenant.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        // Allow only positive numbers with max 2 decimal places
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                chargeSetup: {
-                                                                                    ...formData.chargeSetup,
-                                                                                    tenant: {
-                                                                                        ...formData.chargeSetup.tenant,
-                                                                                        child: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )
-                                }
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                                    <div className="flex items-center gap-3">
-                                        <label className="text-sm font-semibold whitespace-nowrap">Minimum Person Allowed</label>
-                                        <TextField
-                                            size="small"
-                                            variant="outlined"
-                                            value={formData.chargeSetup.minimumPersonAllowed}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                // Allow only positive integers (no decimals, no negatives)
-                                                if (value === '' || /^[1-9]\d*$/.test(value)) {
-                                                    setFormData({
-                                                        ...formData,
-                                                        chargeSetup: {
-                                                            ...formData.chargeSetup,
-                                                            minimumPersonAllowed: value,
-                                                        },
-                                                    });
-                                                    // Check if maximum is valid after updating minimum
-                                                    if (formData.chargeSetup.maximumPersonAllowed && parseInt(formData.chargeSetup.maximumPersonAllowed) <= parseInt(value)) {
-                                                        toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                                                    }
-                                                }
-                                            }}
-                                            className="w-32"
-                                            placeholder="1"
-                                        />
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <label className="text-sm font-semibold whitespace-nowrap">Maximum Person Allowed</label>
-                                        <TextField
-                                            size="small"
-                                            variant="outlined"
-                                            value={formData.chargeSetup.maximumPersonAllowed}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                // Allow only positive integers (no decimals, no negatives)
-                                                if (value === '' || /^[1-9]\d*$/.test(value)) {
-                                                    // Check if value is greater than minimum
-                                                    if (formData.chargeSetup.minimumPersonAllowed && parseInt(value) <= parseInt(formData.chargeSetup.minimumPersonAllowed)) {
-                                                        toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                                                    }
-                                                    setFormData({
-                                                        ...formData,
-                                                        chargeSetup: {
-                                                            ...formData.chargeSetup,
-                                                            maximumPersonAllowed: value,
-                                                        },
-                                                    });
-                                                }
-                                            }}
-                                            className="w-32"
-                                            placeholder="1"
-                                        />
-                                    </div>
-
-                                    {
-                                        formData.isRequest && (
+                                            </div>
+                                        ) : (
                                             <div className="flex items-center gap-3">
-                                                <label className="text-sm font-semibold whitespace-nowrap">Refundable Deposit</label>
+                                                <label className="text-sm font-semibold whitespace-nowrap">
+                                                    Refundable Deposit
+                                                </label>
                                                 <TextField
                                                     size="small"
                                                     variant="outlined"
-                                                    value={formData.chargeSetup.refundableDeposit}
+                                                    value={subFacility.refundableDeposit}
                                                     onChange={(e) => {
                                                         const value = e.target.value;
-                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                            setFormData({
-                                                                ...formData,
-                                                                chargeSetup: {
-                                                                    ...formData.chargeSetup,
-                                                                    refundableDeposit: value,
-                                                                },
+                                                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                            updateSubFacility(subFacility.id, {
+                                                                refundableDeposit: value,
                                                             });
                                                         }
                                                     }}
@@ -2621,12 +2365,604 @@ export const EditBookingSetupClubPage = () => {
                                                     placeholder="0.0"
                                                 />
                                             </div>
-                                        )
-                                    }
+                                        )}
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                    <DollarSign className="w-4 h-4" />
+                                </div>
+                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                    CHARGE SETUP
+                                </h3>
                             </div>
-                        )
-                    }
+
+                            {formData.isBookable && (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border">
+                                        <thead>
+                                            <tr className="bg-gray-50">
+                                                <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                                                    Member Type
+                                                </th>
+                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                                                    Adult
+                                                </th>
+                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                                                    Child
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Checkbox
+                                                            checked={formData.chargeSetup.member.selected}
+                                                            onCheckedChange={(checked) =>
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        member: {
+                                                                            ...formData.chargeSetup.member,
+                                                                            selected: !!checked,
+                                                                        },
+                                                                    },
+                                                                })
+                                                            }
+                                                        />
+                                                        <span>Member</span>
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.member.adult}
+                                                            onCheckedChange={(checked) => {
+                                                                if (!checked) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            member: {
+                                                                                ...formData.chargeSetup.member,
+                                                                                adult: "",
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.member.adult}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            member: {
+                                                                                ...formData.chargeSetup.member,
+                                                                                adult: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.member.child}
+                                                            onCheckedChange={(checked) => {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        member: {
+                                                                            ...formData.chargeSetup.member,
+                                                                            child: checked
+                                                                                ? formData.chargeSetup.member.child ||
+                                                                                ""
+                                                                                : "",
+                                                                        },
+                                                                    },
+                                                                });
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.member.child}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            member: {
+                                                                                ...formData.chargeSetup.member,
+                                                                                child: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Checkbox
+                                                            checked={formData.chargeSetup.guest.selected}
+                                                            onCheckedChange={(checked) =>
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        guest: {
+                                                                            ...formData.chargeSetup.guest,
+                                                                            selected: !!checked,
+                                                                        },
+                                                                    },
+                                                                })
+                                                            }
+                                                        />
+                                                        <span>Guest</span>
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.guest.adult}
+                                                            onCheckedChange={(checked) => {
+                                                                if (!checked) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            guest: {
+                                                                                ...formData.chargeSetup.guest,
+                                                                                adult: "",
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.guest.adult}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            guest: {
+                                                                                ...formData.chargeSetup.guest,
+                                                                                adult: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.guest.child}
+                                                            onCheckedChange={(checked) => {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        guest: {
+                                                                            ...formData.chargeSetup.guest,
+                                                                            child: checked
+                                                                                ? formData.chargeSetup.guest.child || ""
+                                                                                : "",
+                                                                        },
+                                                                    },
+                                                                });
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.guest.child}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            guest: {
+                                                                                ...formData.chargeSetup.guest,
+                                                                                child: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Checkbox
+                                                            checked={formData.chargeSetup.nonMember.selected}
+                                                            onCheckedChange={(checked) =>
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        nonMember: {
+                                                                            ...formData.chargeSetup.nonMember,
+                                                                            selected: !!checked,
+                                                                        },
+                                                                    },
+                                                                })
+                                                            }
+                                                        />
+                                                        <span>Non-Member</span>
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.nonMember.adult}
+                                                            onCheckedChange={(checked) => {
+                                                                if (!checked) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            nonMember: {
+                                                                                ...formData.chargeSetup.nonMember,
+                                                                                adult: "",
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.nonMember.adult}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            nonMember: {
+                                                                                ...formData.chargeSetup.nonMember,
+                                                                                adult: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.nonMember.child}
+                                                            onCheckedChange={(checked) => {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        nonMember: {
+                                                                            ...formData.chargeSetup.nonMember,
+                                                                            child: checked
+                                                                                ? formData.chargeSetup.nonMember
+                                                                                    .child || ""
+                                                                                : "",
+                                                                        },
+                                                                    },
+                                                                });
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.nonMember.child}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            nonMember: {
+                                                                                ...formData.chargeSetup.nonMember,
+                                                                                child: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Checkbox
+                                                            checked={formData.chargeSetup.tenant.selected}
+                                                            onCheckedChange={(checked) =>
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        tenant: {
+                                                                            ...formData.chargeSetup.tenant,
+                                                                            selected: !!checked,
+                                                                        },
+                                                                    },
+                                                                })
+                                                            }
+                                                        />
+                                                        <span>Tenant</span>
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.tenant.adult}
+                                                            onCheckedChange={(checked) => {
+                                                                if (!checked) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            tenant: {
+                                                                                ...formData.chargeSetup.tenant,
+                                                                                adult: "",
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.tenant.adult}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            tenant: {
+                                                                                ...formData.chargeSetup.tenant,
+                                                                                adult: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Checkbox
+                                                            checked={!!formData.chargeSetup.tenant.child}
+                                                            onCheckedChange={(checked) => {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    chargeSetup: {
+                                                                        ...formData.chargeSetup,
+                                                                        tenant: {
+                                                                            ...formData.chargeSetup.tenant,
+                                                                            child: checked
+                                                                                ? formData.chargeSetup.tenant.child ||
+                                                                                ""
+                                                                                : "",
+                                                                        },
+                                                                    },
+                                                                });
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={formData.chargeSetup.tenant.child}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                // Allow only positive numbers with max 2 decimal places
+                                                                if (
+                                                                    value === "" ||
+                                                                    /^\d*\.?\d{0,2}$/.test(value)
+                                                                ) {
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        chargeSetup: {
+                                                                            ...formData.chargeSetup,
+                                                                            tenant: {
+                                                                                ...formData.chargeSetup.tenant,
+                                                                                child: value,
+                                                                            },
+                                                                        },
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full max-w-[200px]"
+                                                        />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                                <div className="flex items-center gap-3">
+                                    <label className="text-sm font-semibold whitespace-nowrap">
+                                        Minimum Person Allowed
+                                    </label>
+                                    <TextField
+                                        size="small"
+                                        variant="outlined"
+                                        value={formData.chargeSetup.minimumPersonAllowed}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            // Allow only positive integers (no decimals, no negatives)
+                                            if (value === "" || /^[1-9]\d*$/.test(value)) {
+                                                setFormData({
+                                                    ...formData,
+                                                    chargeSetup: {
+                                                        ...formData.chargeSetup,
+                                                        minimumPersonAllowed: value,
+                                                    },
+                                                });
+                                                // Check if maximum is valid after updating minimum
+                                                if (
+                                                    formData.chargeSetup.maximumPersonAllowed &&
+                                                    parseInt(formData.chargeSetup.maximumPersonAllowed) <=
+                                                    parseInt(value)
+                                                ) {
+                                                    toast.error(
+                                                        "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                                                    );
+                                                }
+                                            }
+                                        }}
+                                        className="w-32"
+                                        placeholder="1"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <label className="text-sm font-semibold whitespace-nowrap">
+                                        Maximum Person Allowed
+                                    </label>
+                                    <TextField
+                                        size="small"
+                                        variant="outlined"
+                                        value={formData.chargeSetup.maximumPersonAllowed}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            // Allow only positive integers (no decimals, no negatives)
+                                            if (value === "" || /^[1-9]\d*$/.test(value)) {
+                                                // Check if value is greater than minimum
+                                                if (
+                                                    formData.chargeSetup.minimumPersonAllowed &&
+                                                    parseInt(value) <=
+                                                    parseInt(formData.chargeSetup.minimumPersonAllowed)
+                                                ) {
+                                                    toast.error(
+                                                        "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                                                    );
+                                                }
+                                                setFormData({
+                                                    ...formData,
+                                                    chargeSetup: {
+                                                        ...formData.chargeSetup,
+                                                        maximumPersonAllowed: value,
+                                                    },
+                                                });
+                                            }
+                                        }}
+                                        className="w-32"
+                                        placeholder="1"
+                                    />
+                                </div>
+
+                                {formData.isRequest && (
+                                    <div className="flex items-center gap-3">
+                                        <label className="text-sm font-semibold whitespace-nowrap">
+                                            Refundable Deposit
+                                        </label>
+                                        <TextField
+                                            size="small"
+                                            variant="outlined"
+                                            value={formData.chargeSetup.refundableDeposit}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                    setFormData({
+                                                        ...formData,
+                                                        chargeSetup: {
+                                                            ...formData.chargeSetup,
+                                                            refundableDeposit: value,
+                                                        },
+                                                    });
+                                                }
+                                            }}
+                                            className="w-32"
+                                            placeholder="0.0"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center justify-between">
@@ -2634,487 +2970,489 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                     <CalendarDays className="w-4 h-4" />
                                 </div>
-                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE SLOT</h3>
+                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                    CONFIGURE SLOT
+                                </h3>
                             </div>
-                            {
-                                formData.isRequest && (
-                                    <Button
-                                        onClick={() => {
-                                            setFormData({
-                                                ...formData,
-                                                customSlots: [
-                                                    ...formData.customSlots,
-                                                    {
-                                                        id: null,
-                                                        startTime: { hour: "00", minute: "00" },
-                                                        endTime: { hour: "00", minute: "00" },
-                                                        amount: "",
-                                                    },
-                                                ],
-                                            });
-                                        }}
-                                        className="bg-purple-600 hover:bg-purple-700 mb-4"
-                                    >
-                                        Add
-                                    </Button>
-                                )
-                            }
+                            {formData.isRequest && (
+                                <Button
+                                    onClick={() => {
+                                        setFormData({
+                                            ...formData,
+                                            customSlots: [
+                                                ...formData.customSlots,
+                                                {
+                                                    id: null,
+                                                    startTime: { hour: "00", minute: "00" },
+                                                    endTime: { hour: "00", minute: "00" },
+                                                    amount: "",
+                                                },
+                                            ],
+                                        });
+                                    }}
+                                    className="bg-purple-600 hover:bg-purple-700 mb-4"
+                                >
+                                    Add
+                                </Button>
+                            )}
                         </div>
 
                         <div>
-                            {
-                                formData.isBookable ? (
-                                    <>
-                                        <div className="grid grid-cols-8 gap-2 mb-2 text-sm font-medium text-gray-600">
-                                            <div>Start Time</div>
-                                            <div>Break Time Start</div>
-                                            <div>Break Time End</div>
-                                            <div>End Time</div>
-                                            <div>Concurrent Slots</div>
-                                            <div>Slot by</div>
-                                            <div>Wrap Time</div>
-                                            <div>Consecutive Slots Allowed</div>
-                                        </div>
+                            {formData.isBookable ? (
+                                <>
+                                    <div className="grid grid-cols-8 gap-2 mb-2 text-sm font-medium text-gray-600">
+                                        <div>Start Time</div>
+                                        <div>Break Time Start</div>
+                                        <div>Break Time End</div>
+                                        <div>End Time</div>
+                                        <div>Concurrent Slots</div>
+                                        <div>Slot by</div>
+                                        <div>Wrap Time</div>
+                                        <div>Consecutive Slots Allowed</div>
+                                    </div>
 
-                                        {/* Slot Rows */}
-                                        <div className="grid grid-cols-8 gap-2 mb-2">
-                                            <div className="flex gap-1">
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.startTime.hour}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    startTime: {
-                                                                        ...formData.slots.startTime,
-                                                                        hour: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 24 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.startTime.minute}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    startTime: {
-                                                                        ...formData.slots.startTime,
-                                                                        minute: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 60 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                            </div>
-
-                                            <div className="flex gap-1">
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.breakTimeStart.hour}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    breakTimeStart: {
-                                                                        ...formData.slots.breakTimeStart,
-                                                                        hour: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 24 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.breakTimeStart.minute}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    breakTimeStart: {
-                                                                        ...formData.slots.breakTimeStart,
-                                                                        minute: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 60 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                            </div>
-
-                                            <div className="flex gap-1">
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.breakTimeEnd.hour}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    breakTimeEnd: {
-                                                                        ...formData.slots.breakTimeEnd,
-                                                                        hour: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 24 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.breakTimeEnd.minute}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    breakTimeEnd: {
-                                                                        ...formData.slots.breakTimeEnd,
-                                                                        minute: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 60 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                            </div>
-
-                                            <div className="flex gap-1">
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.endTime.hour}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    endTime: {
-                                                                        ...formData.slots.endTime,
-                                                                        hour: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 24 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                                <FormControl size="small">
-                                                    <Select
-                                                        value={formData.slots.endTime.minute}
-                                                        onChange={(e) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                slots: {
-                                                                    ...formData.slots,
-                                                                    endTime: {
-                                                                        ...formData.slots.endTime,
-                                                                        minute: e.target.value,
-                                                                    },
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        {Array.from({ length: 60 }, (_, i) => (
-                                                            <MenuItem
-                                                                key={i}
-                                                                value={i.toString().padStart(2, "0")}
-                                                            >
-                                                                {i.toString().padStart(2, "0")}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                            </div>
-
-                                            <TextField
-                                                size="small"
-                                                value={formData.slots.concurrentSlots}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    if (value === '' || /^[1-9]\d*$/.test(value)) {
-                                                        setFormData({
-                                                            ...formData,
-                                                            slots: {
-                                                                ...formData.slots,
-                                                                concurrentSlots: value,
-                                                            },
-                                                        });
-                                                    }
-                                                }}
-                                                variant="outlined"
-                                            />
-
+                                    {/* Slot Rows */}
+                                    <div className="grid grid-cols-8 gap-2 mb-2">
+                                        <div className="flex gap-1">
                                             <FormControl size="small">
                                                 <Select
-                                                    value={formData.slots.slotBy}
+                                                    value={formData.slots.startTime.hour}
                                                     onChange={(e) => {
                                                         setFormData({
                                                             ...formData,
                                                             slots: {
                                                                 ...formData.slots,
-                                                                slotBy: e.target.value,
+                                                                startTime: {
+                                                                    ...formData.slots.startTime,
+                                                                    hour: e.target.value,
+                                                                },
                                                             },
                                                         });
                                                     }}
                                                 >
-                                                    <MenuItem value={15}>15 Minutes</MenuItem>
-                                                    <MenuItem value={30}>30 Minutes</MenuItem>
-                                                    <MenuItem value={45}>45 Minutes</MenuItem>
-                                                    <MenuItem value={60}>1 hour</MenuItem>
-                                                    <MenuItem value={90}>1 hour 30 minutes</MenuItem>
-                                                    <MenuItem value={120}>2 hours</MenuItem>
-                                                    <MenuItem value={150}>2 hours 30 minutes</MenuItem>
-                                                    <MenuItem value={180}>3 hours</MenuItem>
-                                                    <MenuItem value={360}>6 hours</MenuItem>
-                                                    <MenuItem value={720}>12 hours</MenuItem>
-                                                    <MenuItem value={1440}>24 hours</MenuItem>
+                                                    {Array.from({ length: 24 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
                                                 </Select>
                                             </FormControl>
-
-                                            <TextField
-                                                size="small"
-                                                value={formData.slots.wrapTime}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    if (value === '' || /^\d+$/.test(value)) {
+                                            <FormControl size="small">
+                                                <Select
+                                                    value={formData.slots.startTime.minute}
+                                                    onChange={(e) => {
                                                         setFormData({
                                                             ...formData,
                                                             slots: {
                                                                 ...formData.slots,
-                                                                wrapTime: value,
+                                                                startTime: {
+                                                                    ...formData.slots.startTime,
+                                                                    minute: e.target.value,
+                                                                },
                                                             },
                                                         });
-                                                    }
-                                                }}
-                                                variant="outlined"
-                                            />
+                                                    }}
+                                                >
+                                                    {Array.from({ length: 60 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                        </div>
 
-                                            <Switch
-                                                checked={formData.slots.consecutiveSlotsAllowed}
+                                        <div className="flex gap-1">
+                                            <FormControl size="small">
+                                                <Select
+                                                    value={formData.slots.breakTimeStart.hour}
+                                                    onChange={(e) => {
+                                                        setFormData({
+                                                            ...formData,
+                                                            slots: {
+                                                                ...formData.slots,
+                                                                breakTimeStart: {
+                                                                    ...formData.slots.breakTimeStart,
+                                                                    hour: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {Array.from({ length: 24 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                            <FormControl size="small">
+                                                <Select
+                                                    value={formData.slots.breakTimeStart.minute}
+                                                    onChange={(e) => {
+                                                        setFormData({
+                                                            ...formData,
+                                                            slots: {
+                                                                ...formData.slots,
+                                                                breakTimeStart: {
+                                                                    ...formData.slots.breakTimeStart,
+                                                                    minute: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {Array.from({ length: 60 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                        </div>
+
+                                        <div className="flex gap-1">
+                                            <FormControl size="small">
+                                                <Select
+                                                    value={formData.slots.breakTimeEnd.hour}
+                                                    onChange={(e) => {
+                                                        setFormData({
+                                                            ...formData,
+                                                            slots: {
+                                                                ...formData.slots,
+                                                                breakTimeEnd: {
+                                                                    ...formData.slots.breakTimeEnd,
+                                                                    hour: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {Array.from({ length: 24 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                            <FormControl size="small">
+                                                <Select
+                                                    value={formData.slots.breakTimeEnd.minute}
+                                                    onChange={(e) => {
+                                                        setFormData({
+                                                            ...formData,
+                                                            slots: {
+                                                                ...formData.slots,
+                                                                breakTimeEnd: {
+                                                                    ...formData.slots.breakTimeEnd,
+                                                                    minute: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {Array.from({ length: 60 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                        </div>
+
+                                        <div className="flex gap-1">
+                                            <FormControl size="small">
+                                                <Select
+                                                    value={formData.slots.endTime.hour}
+                                                    onChange={(e) => {
+                                                        setFormData({
+                                                            ...formData,
+                                                            slots: {
+                                                                ...formData.slots,
+                                                                endTime: {
+                                                                    ...formData.slots.endTime,
+                                                                    hour: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {Array.from({ length: 24 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                            <FormControl size="small">
+                                                <Select
+                                                    value={formData.slots.endTime.minute}
+                                                    onChange={(e) => {
+                                                        setFormData({
+                                                            ...formData,
+                                                            slots: {
+                                                                ...formData.slots,
+                                                                endTime: {
+                                                                    ...formData.slots.endTime,
+                                                                    minute: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {Array.from({ length: 60 }, (_, i) => (
+                                                        <MenuItem
+                                                            key={i}
+                                                            value={i.toString().padStart(2, "0")}
+                                                        >
+                                                            {i.toString().padStart(2, "0")}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                        </div>
+
+                                        <TextField
+                                            size="small"
+                                            value={formData.slots.concurrentSlots}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === "" || /^[1-9]\d*$/.test(value)) {
+                                                    setFormData({
+                                                        ...formData,
+                                                        slots: {
+                                                            ...formData.slots,
+                                                            concurrentSlots: value,
+                                                        },
+                                                    });
+                                                }
+                                            }}
+                                            variant="outlined"
+                                        />
+
+                                        <FormControl size="small">
+                                            <Select
+                                                value={formData.slots.slotBy}
                                                 onChange={(e) => {
                                                     setFormData({
                                                         ...formData,
                                                         slots: {
                                                             ...formData.slots,
-                                                            consecutiveSlotsAllowed: e.target.checked,
+                                                            slotBy: e.target.value,
                                                         },
                                                     });
                                                 }}
-                                                sx={{
-                                                    '& .MuiSwitch-switchBase': {
-                                                        color: '#ef4444',
-                                                        '&.Mui-checked': {
-                                                            color: '#22c55e',
+                                            >
+                                                <MenuItem value={15}>15 Minutes</MenuItem>
+                                                <MenuItem value={30}>30 Minutes</MenuItem>
+                                                <MenuItem value={45}>45 Minutes</MenuItem>
+                                                <MenuItem value={60}>1 hour</MenuItem>
+                                                <MenuItem value={90}>1 hour 30 minutes</MenuItem>
+                                                <MenuItem value={120}>2 hours</MenuItem>
+                                                <MenuItem value={150}>2 hours 30 minutes</MenuItem>
+                                                <MenuItem value={180}>3 hours</MenuItem>
+                                                <MenuItem value={360}>6 hours</MenuItem>
+                                                <MenuItem value={720}>12 hours</MenuItem>
+                                                <MenuItem value={1440}>24 hours</MenuItem>
+                                            </Select>
+                                        </FormControl>
+
+                                        <TextField
+                                            size="small"
+                                            value={formData.slots.wrapTime}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === "" || /^\d+$/.test(value)) {
+                                                    setFormData({
+                                                        ...formData,
+                                                        slots: {
+                                                            ...formData.slots,
+                                                            wrapTime: value,
                                                         },
-                                                        '&.Mui-checked + .MuiSwitch-track': {
-                                                            backgroundColor: '#22c55e',
-                                                        },
+                                                    });
+                                                }
+                                            }}
+                                            variant="outlined"
+                                        />
+
+                                        <Switch
+                                            checked={formData.slots.consecutiveSlotsAllowed}
+                                            onChange={(e) => {
+                                                setFormData({
+                                                    ...formData,
+                                                    slots: {
+                                                        ...formData.slots,
+                                                        consecutiveSlotsAllowed: e.target.checked,
                                                     },
-                                                    '& .MuiSwitch-track': {
-                                                        backgroundColor: '#ef4444',
+                                                });
+                                            }}
+                                            sx={{
+                                                "& .MuiSwitch-switchBase": {
+                                                    color: "#ef4444",
+                                                    "&.Mui-checked": {
+                                                        color: "#22c55e",
                                                     },
-                                                }}
-                                            />
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="grid grid-cols-3 gap-2 mb-2 text-sm font-medium text-gray-600">
-                                            <div>Start Time</div>
-                                            <div>End Time</div>
-                                            <div>Payable Amount</div>
-                                        </div>
+                                                    "&.Mui-checked + .MuiSwitch-track": {
+                                                        backgroundColor: "#22c55e",
+                                                    },
+                                                },
+                                                "& .MuiSwitch-track": {
+                                                    backgroundColor: "#ef4444",
+                                                },
+                                            }}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-3 gap-2 mb-2 text-sm font-medium text-gray-600">
+                                        <div>Start Time</div>
+                                        <div>End Time</div>
+                                        <div>Payable Amount</div>
+                                    </div>
 
-                                        {formData.customSlots.map((slot, index) => (
-                                            <div key={index} className="grid grid-cols-3 gap-2 mb-2">
-                                                <div className="flex gap-1">
-                                                    <FormControl size="small">
-                                                        <Select
-                                                            value={slot.startTime.hour}
-                                                            onChange={(e) => {
-                                                                const newCustomSlots = [...formData.customSlots];
-                                                                newCustomSlots[index].startTime.hour = e.target.value;
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    customSlots: newCustomSlots,
-                                                                });
-                                                            }}
-                                                        >
-                                                            {Array.from({ length: 24 }, (_, i) => (
-                                                                <MenuItem
-                                                                    key={i}
-                                                                    value={i.toString().padStart(2, "0")}
-                                                                >
-                                                                    {i.toString().padStart(2, "0")}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Select>
-                                                    </FormControl>
-                                                    <FormControl size="small">
-                                                        <Select
-                                                            value={slot.startTime.minute}
-                                                            onChange={(e) => {
-                                                                const newCustomSlots = [...formData.customSlots];
-                                                                newCustomSlots[index].startTime.minute = e.target.value;
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    customSlots: newCustomSlots,
-                                                                });
-                                                            }}
-                                                        >
-                                                            {Array.from({ length: 60 }, (_, i) => (
-                                                                <MenuItem
-                                                                    key={i}
-                                                                    value={i.toString().padStart(2, "0")}
-                                                                >
-                                                                    {i.toString().padStart(2, "0")}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Select>
-                                                    </FormControl>
-                                                </div>
-
-                                                <div className="flex gap-1">
-                                                    <FormControl size="small">
-                                                        <Select
-                                                            value={slot.endTime.hour}
-                                                            onChange={(e) => {
-                                                                const newCustomSlots = [...formData.customSlots];
-                                                                newCustomSlots[index].endTime.hour = e.target.value;
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    customSlots: newCustomSlots,
-                                                                });
-                                                            }}
-                                                        >
-                                                            {Array.from({ length: 24 }, (_, i) => (
-                                                                <MenuItem
-                                                                    key={i}
-                                                                    value={i.toString().padStart(2, "0")}
-                                                                >
-                                                                    {i.toString().padStart(2, "0")}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Select>
-                                                    </FormControl>
-                                                    <FormControl size="small">
-                                                        <Select
-                                                            value={slot.endTime.minute}
-                                                            onChange={(e) => {
-                                                                const newCustomSlots = [...formData.customSlots];
-                                                                newCustomSlots[index].endTime.minute = e.target.value;
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    customSlots: newCustomSlots,
-                                                                });
-                                                            }}
-                                                        >
-                                                            {Array.from({ length: 60 }, (_, i) => (
-                                                                <MenuItem
-                                                                    key={i}
-                                                                    value={i.toString().padStart(2, "0")}
-                                                                >
-                                                                    {i.toString().padStart(2, "0")}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Select>
-                                                    </FormControl>
-                                                </div>
-
-                                                <div className="flex gap-1">
-                                                    <TextField
-                                                        size="small"
-                                                        variant="outlined"
-                                                        className="w-32"
-                                                        placeholder="1"
-                                                        value={slot.amount}
+                                    {formData.customSlots.map((slot, index) => (
+                                        <div key={index} className="grid grid-cols-3 gap-2 mb-2">
+                                            <div className="flex gap-1">
+                                                <FormControl size="small">
+                                                    <Select
+                                                        value={slot.startTime.hour}
                                                         onChange={(e) => {
                                                             const newCustomSlots = [...formData.customSlots];
-                                                            newCustomSlots[index].amount = e.target.value;
+                                                            newCustomSlots[index].startTime.hour =
+                                                                e.target.value;
                                                             setFormData({
                                                                 ...formData,
                                                                 customSlots: newCustomSlots,
                                                             });
                                                         }}
-                                                    />
-                                                </div>
+                                                    >
+                                                        {Array.from({ length: 24 }, (_, i) => (
+                                                            <MenuItem
+                                                                key={i}
+                                                                value={i.toString().padStart(2, "0")}
+                                                            >
+                                                                {i.toString().padStart(2, "0")}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                                <FormControl size="small">
+                                                    <Select
+                                                        value={slot.startTime.minute}
+                                                        onChange={(e) => {
+                                                            const newCustomSlots = [...formData.customSlots];
+                                                            newCustomSlots[index].startTime.minute =
+                                                                e.target.value;
+                                                            setFormData({
+                                                                ...formData,
+                                                                customSlots: newCustomSlots,
+                                                            });
+                                                        }}
+                                                    >
+                                                        {Array.from({ length: 60 }, (_, i) => (
+                                                            <MenuItem
+                                                                key={i}
+                                                                value={i.toString().padStart(2, "0")}
+                                                            >
+                                                                {i.toString().padStart(2, "0")}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
                                             </div>
-                                        ))}
-                                    </>
-                                )
-                            }
+
+                                            <div className="flex gap-1">
+                                                <FormControl size="small">
+                                                    <Select
+                                                        value={slot.endTime.hour}
+                                                        onChange={(e) => {
+                                                            const newCustomSlots = [...formData.customSlots];
+                                                            newCustomSlots[index].endTime.hour =
+                                                                e.target.value;
+                                                            setFormData({
+                                                                ...formData,
+                                                                customSlots: newCustomSlots,
+                                                            });
+                                                        }}
+                                                    >
+                                                        {Array.from({ length: 24 }, (_, i) => (
+                                                            <MenuItem
+                                                                key={i}
+                                                                value={i.toString().padStart(2, "0")}
+                                                            >
+                                                                {i.toString().padStart(2, "0")}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                                <FormControl size="small">
+                                                    <Select
+                                                        value={slot.endTime.minute}
+                                                        onChange={(e) => {
+                                                            const newCustomSlots = [...formData.customSlots];
+                                                            newCustomSlots[index].endTime.minute =
+                                                                e.target.value;
+                                                            setFormData({
+                                                                ...formData,
+                                                                customSlots: newCustomSlots,
+                                                            });
+                                                        }}
+                                                    >
+                                                        {Array.from({ length: 60 }, (_, i) => (
+                                                            <MenuItem
+                                                                key={i}
+                                                                value={i.toString().padStart(2, "0")}
+                                                            >
+                                                                {i.toString().padStart(2, "0")}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                            </div>
+
+                                            <div className="flex gap-1">
+                                                <TextField
+                                                    size="small"
+                                                    variant="outlined"
+                                                    className="w-32"
+                                                    placeholder="1"
+                                                    value={slot.amount}
+                                                    onChange={(e) => {
+                                                        const newCustomSlots = [...formData.customSlots];
+                                                        newCustomSlots[index].amount = e.target.value;
+                                                        setFormData({
+                                                            ...formData,
+                                                            customSlots: newCustomSlots,
+                                                        });
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>
+                            )}
 
                             <div className="space-y-4 mt-4">
                                 <div>
@@ -3133,7 +3471,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.bookingAllowedBefore.day}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         bookingAllowedBefore: {
@@ -3153,7 +3491,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.bookingAllowedBefore.hour}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         bookingAllowedBefore: {
@@ -3173,7 +3511,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.bookingAllowedBefore.minute}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         bookingAllowedBefore: {
@@ -3200,7 +3538,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.advanceBooking.day}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         advanceBooking: {
@@ -3220,7 +3558,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.advanceBooking.hour}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         advanceBooking: {
@@ -3240,7 +3578,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.advanceBooking.minute}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         advanceBooking: {
@@ -3267,7 +3605,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.canCancelBefore.day}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         canCancelBefore: {
@@ -3287,7 +3625,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.canCancelBefore.hour}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         canCancelBefore: {
@@ -3307,7 +3645,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={formData.canCancelBefore.minute}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^\d+$/.test(value)) {
+                                                if (value === "" || /^\d+$/.test(value)) {
                                                     setFormData({
                                                         ...formData,
                                                         canCancelBefore: {
@@ -3325,11 +3663,16 @@ export const EditBookingSetupClubPage = () => {
 
                             <div className="space-y-4 flex flex-col gap-4 mt-4">
                                 {formData.facilityBookings.map((booking) => (
-                                    <div key={booking.id} className="flex items-center gap-2 text-sm text-gray-600">
+                                    <div
+                                        key={booking.id}
+                                        className="flex items-center gap-2 text-sm text-gray-600"
+                                    >
                                         <Checkbox
                                             checked={booking.isChecked}
                                             onCheckedChange={(checked) =>
-                                                updateFacilityBooking(booking.id, { isChecked: !!checked })
+                                                updateFacilityBooking(booking.id, {
+                                                    isChecked: !!checked,
+                                                })
                                             }
                                         />
                                         <span>Facility can be booked</span>
@@ -3338,7 +3681,7 @@ export const EditBookingSetupClubPage = () => {
                                             value={booking.times}
                                             onChange={(e) => {
                                                 const value = e.target.value;
-                                                if (value === '' || /^[1-9]\d*$/.test(value)) {
+                                                if (value === "" || /^[1-9]\d*$/.test(value)) {
                                                     updateFacilityBooking(booking.id, { times: value });
                                                 }
                                             }}
@@ -3359,16 +3702,19 @@ export const EditBookingSetupClubPage = () => {
                                             style={{ width: "140px" }}
                                         >
                                             <MenuItem value="Select">Select</MenuItem>
-                                            <MenuItem value="day">Day</MenuItem>
+                                            <MenuItem value="daily">Daily</MenuItem>
                                             <MenuItem value="weekly">Weekly</MenuItem>
                                             <MenuItem value="quarterly">Quarterly</MenuItem>
+                                            <MenuItem value="half_yearly">Half-Yearly</MenuItem>
                                             <MenuItem value="annually">Annually</MenuItem>
                                         </Select>
                                         <span>by</span>
                                         <Select
                                             value={booking.unit}
                                             onChange={(e) =>
-                                                updateFacilityBooking(booking.id, { unit: e.target.value })
+                                                updateFacilityBooking(booking.id, {
+                                                    unit: e.target.value,
+                                                })
                                             }
                                             displayEmpty
                                             size="small"
@@ -3408,7 +3754,9 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                     <CalendarDays className="w-4 h-4" />
                                 </div>
-                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Block Days </h3>
+                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                    Block Days{" "}
+                                </h3>
                             </div>
                             <Button
                                 onClick={addBlockDay}
@@ -3420,159 +3768,219 @@ export const EditBookingSetupClubPage = () => {
                         </div>
 
                         <div className="space-y-6">
-                            {[...formData.blockDays].reverse().map((blockDay, reverseIndex) => {
-                                const blockIndex = formData.blockDays.length - 1 - reverseIndex;
-                                return (
-                                    <div key={blockIndex} className="space-y-4 p-4 border rounded-lg">
-                                        {formData.blockDays.length > 1 && (
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-sm font-semibold">Block Day {blockIndex + 1}</span>
-                                                <button
-                                                    onClick={() => {
-                                                        setFormData({
-                                                            ...formData,
-                                                            blockDays: formData.blockDays.filter((_, idx) => idx !== blockIndex),
-                                                        });
-                                                    }}
-                                                    className="text-red-500 hover:text-red-700"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        )}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <TextField
-                                                label="Date"
-                                                type="date"
-                                                value={blockDay.startDate}
-                                                onChange={(e) => {
-                                                    const newBlockDays = [...formData.blockDays];
-                                                    newBlockDays[blockIndex].startDate = e.target.value;
-                                                    setFormData({
-                                                        ...formData,
-                                                        blockDays: newBlockDays,
-                                                    });
-                                                    // Fetch slots automatically if selectedSlots is active
-                                                    if (blockDay.dayType === "selectedSlots" && e.target.value) {
-                                                        fetchBlockDaySlots(id!, e.target.value, blockIndex);
-                                                    }
-                                                }}
-                                                variant="outlined"
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                            />
-                                        </div>
-
-                                        <div className="flex gap-6 px-1">
-                                            <div className="flex items-center space-x-2">
-                                                <input
-                                                    type="radio"
-                                                    id={`entireDay-${blockIndex}`}
-                                                    name={`dayType-${blockIndex}`}
-                                                    checked={blockDay.dayType === "entireDay"}
-                                                    onChange={() => {
-                                                        const newBlockDays = [...formData.blockDays];
-                                                        newBlockDays[blockIndex].dayType = "entireDay";
-                                                        setFormData({
-                                                            ...formData,
-                                                            blockDays: newBlockDays,
-                                                        });
-                                                    }}
-                                                    className="text-blue-600"
-                                                />
-                                                <label htmlFor={`entireDay-${blockIndex}`}>Entire Day</label>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <input
-                                                    type="radio"
-                                                    id={`selectedSlots-${blockIndex}`}
-                                                    name={`dayType-${blockIndex}`}
-                                                    checked={blockDay.dayType === "selectedSlots"}
-                                                    onChange={() => {
-                                                        const newBlockDays = [...formData.blockDays];
-                                                        newBlockDays[blockIndex].dayType = "selectedSlots";
-                                                        setFormData({
-                                                            ...formData,
-                                                            blockDays: newBlockDays,
-                                                        });
-                                                    }}
-                                                    className="text-blue-600"
-                                                />
-                                                <label htmlFor={`selectedSlots-${blockIndex}`}>Selected Slots</label>
-                                            </div>
-                                        </div>
-
-                                        {blockDay.dayType === "selectedSlots" && (
-                                            <div>
-                                                <h4 className="text-sm font-medium text-gray-700 mb-3">Select Slots</h4>
-                                                {blockDaySlots[blockIndex]?.length > 0 ? (
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                        {blockDaySlots[blockIndex].map((slot) => {
-                                                            const isChecked = blockDay.selectedSlots?.includes(slot.id) || false;
-                                                            console.log(`Block ${blockIndex} - Slot ${slot.id} (${slot.ampm}):`, {
-                                                                slotId: slot.id,
-                                                                slotIdType: typeof slot.id,
-                                                                selectedSlots: blockDay.selectedSlots,
-                                                                isChecked: isChecked
+                            {[...formData.blockDays]
+                                .reverse()
+                                .map((blockDay, reverseIndex) => {
+                                    const blockIndex =
+                                        formData.blockDays.length - 1 - reverseIndex;
+                                    return (
+                                        <div
+                                            key={blockIndex}
+                                            className="space-y-4 p-4 border rounded-lg"
+                                        >
+                                            {formData.blockDays.length > 1 && (
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-sm font-semibold">
+                                                        Block Day {blockIndex + 1}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const removedBlockDay = formData.blockDays[blockIndex];
+                                                            if (removedBlockDay.id) {
+                                                                setDeletedBlockDayIds(prev => [...prev, removedBlockDay.id]);
+                                                            }
+                                                            setFormData({
+                                                                ...formData,
+                                                                blockDays: formData.blockDays.filter(
+                                                                    (_, idx) => idx !== blockIndex
+                                                                ),
                                                             });
-                                                            return (
-                                                                <div key={slot.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        id={`slot-${blockIndex}-${slot.id}`}
-                                                                        checked={isChecked}
-                                                                        onChange={(e) => {
-                                                                            const newBlockDays = [...formData.blockDays];
-                                                                            if ((e.target as HTMLInputElement).checked) {
-                                                                                newBlockDays[blockIndex].selectedSlots = [...(blockDay.selectedSlots || []), slot.id];
-                                                                            } else {
-                                                                                newBlockDays[blockIndex].selectedSlots = (blockDay.selectedSlots || []).filter((id: number) => id !== slot.id);
-                                                                            }
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                blockDays: newBlockDays,
-                                                                            });
-                                                                        }}
-                                                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                                                    />
-                                                                    <label
-                                                                        htmlFor={`slot-${blockIndex}-${slot.id}`}
-                                                                        className="cursor-pointer text-sm font-medium"
-                                                                    >
-                                                                        {slot.ampm}
-                                                                    </label>
-                                                                </div>
+                                                        }}
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <TextField
+                                                    label="Date"
+                                                    type="date"
+                                                    value={blockDay.startDate}
+                                                    onChange={(e) => {
+                                                        const newBlockDays = [...formData.blockDays];
+                                                        newBlockDays[blockIndex].startDate = e.target.value;
+                                                        setFormData({
+                                                            ...formData,
+                                                            blockDays: newBlockDays,
+                                                        });
+                                                        // Fetch slots automatically if selectedSlots is active
+                                                        if (
+                                                            blockDay.dayType === "selectedSlots" &&
+                                                            e.target.value
+                                                        ) {
+                                                            fetchBlockDaySlots(
+                                                                id!,
+                                                                e.target.value,
+                                                                blockIndex
                                                             );
-                                                        })}
-                                                    </div>
-                                                ) : blockDay.startDate ? (
-                                                    <p className="text-sm text-gray-500">No slots available for the selected date</p>
-                                                ) : (
-                                                    <p className="text-sm text-gray-500">Please select a date to fetch available slots</p>
-                                                )}
+                                                        }
+                                                    }}
+                                                    variant="outlined"
+                                                    InputLabelProps={{
+                                                        shrink: true,
+                                                    }}
+                                                />
                                             </div>
-                                        )}
 
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-700 mb-2 block">Block Reason</label>
-                                            <Textarea
-                                                placeholder="Please mention block reason"
-                                                value={blockDay.blockReason}
-                                                onChange={(e) => {
-                                                    const newBlockDays = [...formData.blockDays];
-                                                    newBlockDays[blockIndex].blockReason = e.target.value;
-                                                    setFormData({
-                                                        ...formData,
-                                                        blockDays: newBlockDays,
-                                                    });
-                                                }}
-                                                className="min-h-[100px]"
-                                            />
+                                            <div className="flex gap-6 px-1">
+                                                <div className="flex items-center space-x-2">
+                                                    <input
+                                                        type="radio"
+                                                        id={`entireDay-${blockIndex}`}
+                                                        name={`dayType-${blockIndex}`}
+                                                        checked={blockDay.dayType === "entireDay"}
+                                                        onChange={() => {
+                                                            const newBlockDays = [...formData.blockDays];
+                                                            newBlockDays[blockIndex].dayType = "entireDay";
+                                                            setFormData({
+                                                                ...formData,
+                                                                blockDays: newBlockDays,
+                                                            });
+                                                        }}
+                                                        className="text-blue-600"
+                                                    />
+                                                    <label htmlFor={`entireDay-${blockIndex}`}>
+                                                        Entire Day
+                                                    </label>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <input
+                                                        type="radio"
+                                                        id={`selectedSlots-${blockIndex}`}
+                                                        name={`dayType-${blockIndex}`}
+                                                        checked={blockDay.dayType === "selectedSlots"}
+                                                        onChange={() => {
+                                                            const newBlockDays = [...formData.blockDays];
+                                                            newBlockDays[blockIndex].dayType =
+                                                                "selectedSlots";
+                                                            setFormData({
+                                                                ...formData,
+                                                                blockDays: newBlockDays,
+                                                            });
+                                                        }}
+                                                        className="text-blue-600"
+                                                    />
+                                                    <label htmlFor={`selectedSlots-${blockIndex}`}>
+                                                        Selected Slots
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {blockDay.dayType === "selectedSlots" && (
+                                                <div>
+                                                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                                                        Select Slots
+                                                    </h4>
+                                                    {(() => {
+                                                        const availableSlots = blockDaySlots[blockIndex] || [];
+                                                        const disabledSlots = blockDay.disabledSlots || [];
+
+                                                        // Merge slots, ensuring uniqueness by ID
+                                                        const mergedSlots = [...availableSlots];
+                                                        disabledSlots.forEach(ds => {
+                                                            if (!mergedSlots.some(s => s.id === ds.id)) {
+                                                                mergedSlots.push(ds);
+                                                            }
+                                                        });
+
+                                                        if (mergedSlots.length === 0) {
+                                                            return blockDay.startDate ? (
+                                                                <p className="text-sm text-gray-500">
+                                                                    No slots available for the selected date
+                                                                </p>
+                                                            ) : (
+                                                                <p className="text-sm text-gray-500">
+                                                                    Please select a date to fetch available slots
+                                                                </p>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                                {mergedSlots.map((slot) => {
+                                                                    const isChecked =
+                                                                        blockDay.selectedSlots?.includes(slot.id) ||
+                                                                        blockDay.disabledSlots?.some(ds => ds.id === slot.id) ||
+                                                                        false;
+                                                                    const isDisabled = blockDay.disabledSlots?.some(ds => ds.id === slot.id);
+
+                                                                    return (
+                                                                        <div
+                                                                            key={slot.id}
+                                                                            className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50"
+                                                                        >
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                id={`slot-${blockIndex}-${slot.id}`}
+                                                                                checked={isChecked}
+                                                                                disabled={isDisabled}
+                                                                                onChange={(e) => {
+                                                                                    const newBlockDays = [...formData.blockDays];
+                                                                                    if ((e.target as HTMLInputElement).checked) {
+                                                                                        newBlockDays[blockIndex].selectedSlots = [
+                                                                                            ...(blockDay.selectedSlots || []),
+                                                                                            slot.id,
+                                                                                        ];
+                                                                                    } else {
+                                                                                        newBlockDays[blockIndex].selectedSlots = (
+                                                                                            blockDay.selectedSlots || []
+                                                                                        ).filter((id: number) => id !== slot.id);
+                                                                                    }
+                                                                                    setFormData({
+                                                                                        ...formData,
+                                                                                        blockDays: newBlockDays,
+                                                                                    });
+                                                                                }}
+                                                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                                                            />
+                                                                            <label
+                                                                                htmlFor={`slot-${blockIndex}-${slot.id}`}
+                                                                                className="cursor-pointer text-sm font-medium"
+                                                                            >
+                                                                                {slot.ampm}
+                                                                            </label>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                                    Block Reason
+                                                </label>
+                                                <Textarea
+                                                    placeholder="Please mention block reason"
+                                                    value={blockDay.blockReason}
+                                                    onChange={(e) => {
+                                                        const newBlockDays = [...formData.blockDays];
+                                                        newBlockDays[blockIndex].blockReason =
+                                                            e.target.value;
+                                                        setFormData({
+                                                            ...formData,
+                                                            blockDays: newBlockDays,
+                                                        });
+                                                    }}
+                                                    className="min-h-[100px]"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
                         </div>
                     </div>
 
@@ -3581,7 +3989,9 @@ export const EditBookingSetupClubPage = () => {
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                 <CreditCard className="w-4 h-4" />
                             </div>
-                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE PAYMENT</h3>
+                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                CONFIGURE PAYMENT
+                            </h3>
                         </div>
 
                         <div className="space-y-6">
@@ -3634,7 +4044,7 @@ export const EditBookingSetupClubPage = () => {
                                     onChange={(e) => {
                                         const value = e.target.value;
                                         // Allow only non-negative numbers with max 2 decimal places
-                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
                                             setFormData({ ...formData, sgstPercentage: value });
                                         }
                                     }}
@@ -3645,7 +4055,7 @@ export const EditBookingSetupClubPage = () => {
                                     value={formData.gstPercentage}
                                     onChange={(e) => {
                                         const value = e.target.value;
-                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
                                             setFormData({ ...formData, gstPercentage: value });
                                         }
                                     }}
@@ -3656,7 +4066,7 @@ export const EditBookingSetupClubPage = () => {
                                     value={formData.igstPercentage}
                                     onChange={(e) => {
                                         const value = e.target.value;
-                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
                                             setFormData({ ...formData, igstPercentage: value });
                                         }
                                     }}
@@ -3672,7 +4082,9 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                     <FileImage className="w-4 h-4" />
                                 </div>
-                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">COVER IMAGE</h3>
+                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                    COVER IMAGE
+                                </h3>
                             </div>
 
                             <div className="p-6" style={{ border: "1px dashed #C72030" }}>
@@ -3703,43 +4115,48 @@ export const EditBookingSetupClubPage = () => {
                                     hidden
                                 />
                             </div>
-                            {(selectedFile.length > 0 || existingCoverImageUrl) && (
+                            {(selectedFile.length > 0 || existingCoverImage) && (
                                 <div className="mt-4 flex gap-2 flex-wrap">
                                     {/* Display existing cover image */}
-                                    {existingCoverImageUrl && selectedFile.length === 0 && (
+                                    {existingCoverImage && selectedFile.length === 0 && (
                                         <div className="relative">
                                             <img
-                                                src={existingCoverImageUrl}
+                                                src={existingCoverImage.url}
                                                 alt="cover-existing"
                                                 className="h-[80px] w-20 rounded border border-gray-200"
                                             />
                                             <button
                                                 onClick={() => {
-                                                    setExistingCoverImageUrl("");
+                                                    if (existingCoverImage.id) {
+                                                        setDeletedCoverImageId(existingCoverImage.id);
+                                                    }
+                                                    setExistingCoverImage(null);
                                                 }}
                                                 className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-700"
                                                 type="button"
                                             >
-                                                {'×'}
+                                                {"×"}
                                             </button>
                                         </div>
                                     )}
                                     {/* Display newly selected cover images */}
-                                    {selectedFile.map((file, index) => (
-                                        <div key={index} className="relative">
-                                            <img
-                                                src={URL.createObjectURL(file)}
-                                                alt={`cover-preview-${index}`}
-                                                className="h-[80px] w-20 rounded border border-gray-200"
-                                            />
-                                            <button
-                                                onClick={() => removeCoverImage(index)}
-                                                className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-700"
-                                            >
-                                                {'×'}
-                                            </button>
-                                        </div>
-                                    ))}
+                                    {selectedFile.map((attachment, index) =>
+                                        attachment.file && !attachment._destroy ? (
+                                            <div key={index} className="relative">
+                                                <img
+                                                    src={URL.createObjectURL(attachment.file)}
+                                                    alt={`cover-preview-${index}`}
+                                                    className="h-[80px] w-20 rounded border border-gray-200"
+                                                />
+                                                <button
+                                                    onClick={() => removeCoverImage(index)}
+                                                    className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-700"
+                                                >
+                                                    {"×"}
+                                                </button>
+                                            </div>
+                                        ) : null
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -3749,7 +4166,9 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                     <Image className="w-4 h-4" />
                                 </div>
-                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Booking Summary Image</h3>
+                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                    Booking Summary Image
+                                </h3>
                             </div>
 
                             <div className="p-6" style={{ border: "1px dashed #C72030" }}>
@@ -3780,47 +4199,56 @@ export const EditBookingSetupClubPage = () => {
                                     hidden
                                 />
                             </div>
-                            {(selectedBookingFiles.length > 0 || existingBookingImageUrls.length > 0) && (
-                                <div className="mt-4 flex gap-2 flex-wrap">
-                                    {/* Display existing booking images */}
-                                    {existingBookingImageUrls.map((url, index) => (
-                                        <div key={`existing-${index}`} className="relative">
-                                            <img
-                                                src={url}
-                                                alt={`booking-existing-${index}`}
-                                                className="h-[80px] w-20 rounded border border-gray-200 bg-cover"
-                                            />
-                                            <button
-                                                onClick={() => {
-                                                    setExistingBookingImageUrls(
-                                                        existingBookingImageUrls.filter((_, i) => i !== index)
-                                                    );
-                                                }}
-                                                className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-700"
-                                                type="button"
-                                            >
-                                                {'×'}
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {/* Display newly selected booking images */}
-                                    {selectedBookingFiles.map((file, index) => (
-                                        <div key={index} className="relative">
-                                            <img
-                                                src={URL.createObjectURL(file)}
-                                                alt={`booking-preview-${index}`}
-                                                className="h-[80px] w-20 rounded border border-gray-200 bg-cover"
-                                            />
-                                            <button
-                                                onClick={() => removeBookingImage(index)}
-                                                className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-700"
-                                            >
-                                                {'×'}
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            {(selectedBookingFiles.length > 0 ||
+                                existingBookingAttachments.length > 0) && (
+                                    <div className="mt-4 flex gap-2 flex-wrap">
+                                        {/* Display existing booking images */}
+                                        {existingBookingAttachments.map((attachment, index) => (
+                                            <div key={`existing-${index}`} className="relative">
+                                                <img
+                                                    src={attachment.url}
+                                                    alt={`booking-existing-${index}`}
+                                                    className="h-[80px] w-20 rounded border border-gray-200 bg-cover"
+                                                />
+                                                <button
+                                                    onClick={() => {
+                                                        const removedAttachment = existingBookingAttachments[index];
+                                                        setExistingBookingAttachments(
+                                                            existingBookingAttachments.filter(
+                                                                (_, i) => i !== index
+                                                            )
+                                                        );
+                                                        if (removedAttachment.id) {
+                                                            setDeletedAttachmentIds(prev => [...prev, removedAttachment.id]);
+                                                        }
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-700"
+                                                    type="button"
+                                                >
+                                                    {"×"}
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {/* Display newly selected booking images */}
+                                        {selectedBookingFiles.map((attachment, index) =>
+                                            attachment.file && !attachment._destroy ? (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={URL.createObjectURL(attachment.file)}
+                                                        alt={`booking-preview-${index}`}
+                                                        className="h-[80px] w-20 rounded border border-gray-200 bg-cover"
+                                                    />
+                                                    <button
+                                                        onClick={() => removeBookingImage(index)}
+                                                        className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-700"
+                                                    >
+                                                        {"×"}
+                                                    </button>
+                                                </div>
+                                            ) : null
+                                        )}
+                                    </div>
+                                )}
                         </div>
                     </div>
 
@@ -3920,7 +4348,9 @@ export const EditBookingSetupClubPage = () => {
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                 <NotepadText className="w-4 h-4" />
                             </div>
-                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">DESCRIPTION</h3>
+                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                DESCRIPTION
+                            </h3>
                         </div>
 
                         <div>
@@ -3942,7 +4372,9 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                     <ReceiptText className="w-4 h-4" />
                                 </div>
-                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">TERMS & CONDITIONS*</h3>
+                                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                    TERMS & CONDITIONS*
+                                </h3>
                             </div>
 
                             <div>
@@ -3966,7 +4398,9 @@ export const EditBookingSetupClubPage = () => {
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                                 <Settings className="w-4 h-4" />
                             </div>
-                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">RULE SETUP</h3>
+                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                                RULE SETUP
+                            </h3>
                         </div>
 
                         <div>
@@ -4059,7 +4493,7 @@ export const EditBookingSetupClubPage = () => {
                                             const value = e.target.value;
                                             // Allow only non-negative numbers with max 2 decimal places and not more than 100
                                             if (
-                                                value === '' ||
+                                                value === "" ||
                                                 (/^\d*\.?\d{0,2}$/.test(value) && Number(value) <= 100)
                                             ) {
                                                 const newRules = [...cancellationRules];
@@ -4098,7 +4532,7 @@ export const EditBookingSetupClubPage = () => {
                             onClick={handleSave}
                             className="bg-purple-600 hover:bg-purple-700 text-white w-full"
                             disabled={isSubmitting}
-                            style={{ maxWidth: '90px' }}
+                            style={{ maxWidth: "90px" }}
                         >
                             Update
                         </Button>
@@ -4125,6 +4559,6 @@ export const EditBookingSetupClubPage = () => {
           onImagesChange={setSelectedGalleryImages}
         />
       )} */}
-        </ThemeProvider >
+        </ThemeProvider>
     );
 };

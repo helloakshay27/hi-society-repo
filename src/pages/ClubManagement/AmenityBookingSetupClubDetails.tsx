@@ -119,7 +119,6 @@ export const BookingSetupDetailClubPage = () => {
   const [isPremiumSlots, setIsPremiumSlots] = useState<{ [key: string]: boolean }>({});
   const [inventories, setInventories] = useState<any[]>([]);
   const [loadingInventories, setLoadingInventories] = useState(false);
-  const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>({});
   const [formData, setFormData] = useState({
     facilityName: "",
     shareable: "",
@@ -201,6 +200,7 @@ export const BookingSetupDetailClubPage = () => {
       dayType: string;
       blockReason: string;
       selectedSlots: string[];
+      slots: Array<{ id: number; ampm: string }>;
     }>,
   });
   const [departments, setDepartments] = useState([]);
@@ -304,38 +304,6 @@ export const BookingSetupDetailClubPage = () => {
 
   const handleAdditionalOpen = () => {
     setAdditionalOpen(!additionalOpen);
-  };
-
-  const fetchBlockDaySlots = async (facilityId: string, date: string, blockIndex: number) => {
-    try {
-      const formattedDate = date.replace(/-/g, '/');
-      const response = await axios.get(
-        `https://${baseUrl}/crm/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          params: {
-            on_date: formattedDate,
-          }
-        }
-      );
-
-      if (response.data && response.data.slots) {
-        console.log(`Slots fetched for block day ${blockIndex}:`, response.data.slots);
-        setBlockDaySlots(prev => ({
-          ...prev,
-          [blockIndex]: response.data.slots
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching block day slots:', error);
-      setBlockDaySlots(prev => ({
-        ...prev,
-        [blockIndex]: []
-      }));
-    }
   };
 
   const fetchDepartments = async () => {
@@ -536,6 +504,10 @@ export const BookingSetupDetailClubPage = () => {
           dayType: blocking.facility_blocking?.block_slot && blocking.facility_blocking?.block_slot.length > 0 ? "selectedSlots" : "entireDay",
           blockReason: blocking.facility_blocking?.reason || "",
           selectedSlots: blocking.facility_blocking?.block_slot || [],
+          slots: blocking.facility_blocking?.block_slot_details?.map((detail: any) => ({
+            id: detail.id,
+            ampm: detail.label
+          })) || [],
         })) || [],
       });
 
@@ -550,19 +522,6 @@ export const BookingSetupDetailClubPage = () => {
         selectedSlots: blocking.facility_blocking?.block_slot,
       })));
       console.log('======================');
-
-      // Fetch slots for ALL block days (so we can display them in the UI)
-      response?.facility_blockings?.forEach((blocking: any, index: number) => {
-        const ondate = blocking.facility_blocking?.ondate;
-
-        if (ondate) {
-          console.log(`Fetching slots for block day ${index}:`, {
-            date: ondate,
-            blockSlotIds: blocking.facility_blocking?.block_slot
-          });
-          fetchBlockDaySlots(id!, ondate, index);
-        }
-      });
 
       const transformedRules = response.cancellation_rules?.map((rule: any) => ({
         description: rule.description,
@@ -1369,9 +1328,9 @@ export const BookingSetupDetailClubPage = () => {
                     {blockDay.dayType === "selectedSlots" && (
                       <div>
                         <label className="text-sm font-medium text-gray-700 mb-2 block">Select Slots to Block</label>
-                        {blockDaySlots[index]?.length > 0 ? (
+                        {blockDay.slots && blockDay.slots.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {blockDaySlots[index].map((slot: any) => {
+                            {blockDay.slots.map((slot: any) => {
                               const isBlocked = blockDay.selectedSlots.includes(slot.id.toString());
                               return (
                                 <div key={slot.id} className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
@@ -1393,7 +1352,7 @@ export const BookingSetupDetailClubPage = () => {
                             })}
                           </div>
                         ) : (
-                          <div className="text-gray-500 text-sm">Loading slots...</div>
+                          <div className="text-gray-500 text-sm">No slots selected</div>
                         )}
                       </div>
                     )}
