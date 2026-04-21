@@ -363,7 +363,7 @@ export const ViewUserPage = () => {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Calendar className="w-4 h-4" />
                   <Typography variant="body2">
-                    {user?.phase || "Post Possession"}
+                    {user?.phase || "-"}
                   </Typography>
                 </Box>
               </Box>
@@ -450,7 +450,7 @@ export const ViewUserPage = () => {
                     <InfoField label="Mobile Number" value={user?.mobile_number || "-"} />
                     <InfoField label="Alternate Email 1" value={user?.alternate_email_1 || "-"} />
                     <InfoField label="Alternate Email 2" value={user?.alternate_email_2 || "-"} />
-                    <InfoField label="Landline Number" value={user?.landline || "-"} />
+                    <InfoField label="Landline Number" value={user?.user_flat?.landline || "-"} />
                     <InfoField label="Intercom Number" value={user?.intercom || "-"} />
                   </Box>
                 </Paper>
@@ -487,7 +487,7 @@ export const ViewUserPage = () => {
                 </Box>
                 <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
                   <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                    <InfoField label="Phase" value={user?.phase || "Post Possession"} />
+                    <InfoField label="Phase" value={user?.phase || "-"} />
                     <InfoField label="Alternate Address" value={user?.alternate_address || "-"} />
                     <InfoField label="Adults Residing" value={user?.adults || "-"} />
                     <InfoField label="Children Residing" value={user?.children || "-"} />

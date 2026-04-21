@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { ExecutiveEscalationTab } from "./ExecutiveEscalationTab";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ import {
   ticketManagementAPI,
   UserAccountResponse,
 } from "@/services/ticketManagementAPI";
+import { apiClient } from "@/utils/apiClient";
 import { API_CONFIG } from "@/config/apiConfig";
 
 const resolutionEscalationSchema = z.object({
@@ -273,7 +275,7 @@ export const ResolutionEscalationTab: React.FC = () => {
     "assign-rule" | "escalation-rule"
   >("assign-rule");
   const [activeFmProjectTab, setActiveFmProjectTab] = useState<
-    "fm" | "project"
+    "fm" | "project" | "executive"
   >("fm");
 
   // Assign Rule states
@@ -313,6 +315,11 @@ export const ResolutionEscalationTab: React.FC = () => {
   const [serviceEngineerOptions, setServiceEngineerOptions] = useState<
     { id: number; full_name: string }[]
   >([]);
+  // Per-modal filtered category options
+  const [addModalCategories, setAddModalCategories] = useState<{ id: number; name: string }[]>([]);
+  const [addModalCategoriesLoading, setAddModalCategoriesLoading] = useState(false);
+  const [editModalCategories, setEditModalCategories] = useState<{ id: number; name: string }[]>([]);
+  const [editModalCategoriesLoading, setEditModalCategoriesLoading] = useState(false);
 
   // Edit Assign Rule state
   const [editingAssignRule, setEditingAssignRule] = useState<AssignRule | null>(
@@ -540,6 +547,30 @@ export const ResolutionEscalationTab: React.FC = () => {
     }
   };
 
+  // Fetch categories filtered by issue type for a modal
+  const fetchCategoriesByIssueType = async (
+    issueTypeId: string,
+    target: "add" | "edit"
+  ) => {
+    const setLoading = target === "add" ? setAddModalCategoriesLoading : setEditModalCategoriesLoading;
+    const setOptions = target === "add" ? setAddModalCategories : setEditModalCategories;
+    if (!issueTypeId) {
+      setOptions([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await apiClient.get("/dropdown/categories", {
+        params: { "q[issue_type_id_eq]": issueTypeId },
+      });
+      setOptions(res.data.categories || []);
+    } catch {
+      setOptions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load escalation rules from /crm/admin/assign_escalation.json
   // Load escalation rules from /crm/admin/escalation_rule.json
   const loadEscalationRules = async (
@@ -615,11 +646,14 @@ export const ResolutionEscalationTab: React.FC = () => {
       const data = await ticketManagementAPI.getAssignRuleById(rule.id);
       const fullRule = data.assign_rule;
       setEditingAssignRule(fullRule);
+      const issueTypeId = fullRule.issue_type_id?.toString() || "";
       setEditAssignRuleForm({
-        issueType: fullRule.issue_type_id?.toString() || "",
+        issueType: issueTypeId,
         categoryType: fullRule.category_id?.toString() || "",
         engineer: fullRule.assign_to?.[0] || "",
       });
+      // Pre-fetch filtered categories for the edit modal
+      if (issueTypeId) fetchCategoriesByIssueType(issueTypeId, "edit");
       setIsEditAssignRuleOpen(true);
     } catch (error) {
       console.error("Error fetching assign rule details:", error);
@@ -1030,6 +1064,15 @@ export const ResolutionEscalationTab: React.FC = () => {
 
   const escalationLevels = ["e1", "e2", "e3", "e4", "e5"] as const;
   const priorities = ["p1", "p2", "p3", "p4", "p5"] as const;
+
+  // Clear escalation rule create-form state when switching FM/Project/Executive tabs
+  const clearEscalationFormState = () => {
+    reset();
+    setEscalationFormIssueTypeId("");
+    setEscalationFormCategoryTypeId("");
+    setEscalationFilterIssueTypeId("");
+    setEscalationFilterCategoryId("");
+  };
 
   return (
     <div className="space-y-0">
@@ -1572,7 +1615,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           {/* FM / Project sub-tabs */}
           <div className="flex border-b border-gray-200 bg-white px-6">
             <button
-              onClick={() => setActiveFmProjectTab("fm")}
+              onClick={() => { if (activeFmProjectTab !== "fm") { clearEscalationFormState(); setActiveFmProjectTab("fm"); } }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "fm"
                   ? "border-[#C72030] text-[#C72030]"
@@ -1582,7 +1625,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               FM
             </button>
             <button
-              onClick={() => setActiveFmProjectTab("project")}
+              onClick={() => { if (activeFmProjectTab !== "project") { clearEscalationFormState(); setActiveFmProjectTab("project"); } }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "project"
                   ? "border-[#C72030] text-[#C72030]"
@@ -1590,6 +1633,16 @@ export const ResolutionEscalationTab: React.FC = () => {
               }`}
             >
               Project
+            </button>
+            <button
+              onClick={() => { if (activeFmProjectTab !== "executive") { clearEscalationFormState(); setActiveFmProjectTab("executive"); } }}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeFmProjectTab === "executive"
+                  ? "border-[#C72030] text-[#C72030]"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Executive Escalation
             </button>
           </div>
 
@@ -1618,6 +1671,11 @@ export const ResolutionEscalationTab: React.FC = () => {
             </Select>
           </div> */}
 
+          {activeFmProjectTab === "executive" ? (
+            <div className="p-6">
+              <ExecutiveEscalationTab />
+            </div>
+          ) : (
           <div className="p-6 space-y-6">
             {/* Create Form */}
             <Card>
@@ -2463,6 +2521,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 )}
             </Card>
           </div>
+          )}
         </div>
       )}
 
@@ -2554,7 +2613,10 @@ export const ResolutionEscalationTab: React.FC = () => {
       </Dialog>
 
       {/* ──────────────── ADD ASSIGN RULE MODAL ──────────────── */}
-      <Dialog open={isAddAssignRuleOpen} onOpenChange={setIsAddAssignRuleOpen}>
+      <Dialog open={isAddAssignRuleOpen} onOpenChange={(open) => {
+        if (!open) { setAddModalCategories([]); setAssignRuleForm({ issueType: "", categoryType: "", engineer: "" }); }
+        setIsAddAssignRuleOpen(open);
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add Assign Rule</DialogTitle>
@@ -2564,9 +2626,10 @@ export const ResolutionEscalationTab: React.FC = () => {
               <Label className="text-sm font-medium">Issue Type</Label>
               <Select
                 value={assignRuleForm.issueType}
-                onValueChange={(v) =>
-                  setAssignRuleForm((f) => ({ ...f, issueType: v }))
-                }
+                onValueChange={(v) => {
+                  setAssignRuleForm((f) => ({ ...f, issueType: v, categoryType: "" }));
+                  fetchCategoriesByIssueType(v, "add");
+                }}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="select" />
@@ -2587,12 +2650,19 @@ export const ResolutionEscalationTab: React.FC = () => {
                 onValueChange={(v) =>
                   setAssignRuleForm((f) => ({ ...f, categoryType: v }))
                 }
+                disabled={!assignRuleForm.issueType || addModalCategoriesLoading}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select" />
+                  <SelectValue placeholder={
+                    !assignRuleForm.issueType
+                      ? "Select issue type first"
+                      : addModalCategoriesLoading
+                      ? "Loading..."
+                      : "select"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {categoryDropdownOptions.map((cat) => (
+                  {addModalCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>
@@ -2636,7 +2706,10 @@ export const ResolutionEscalationTab: React.FC = () => {
       {/* ──────────────── EDIT ASSIGN RULE MODAL ──────────────── */}
       <Dialog
         open={isEditAssignRuleOpen}
-        onOpenChange={setIsEditAssignRuleOpen}
+        onOpenChange={(open) => {
+          if (!open) setEditModalCategories([]);
+          setIsEditAssignRuleOpen(open);
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -2647,9 +2720,10 @@ export const ResolutionEscalationTab: React.FC = () => {
               <Label className="text-sm font-medium">Issue Type</Label>
               <Select
                 value={editAssignRuleForm.issueType}
-                onValueChange={(v) =>
-                  setEditAssignRuleForm((f) => ({ ...f, issueType: v }))
-                }
+                onValueChange={(v) => {
+                  setEditAssignRuleForm((f) => ({ ...f, issueType: v, categoryType: "" }));
+                  fetchCategoriesByIssueType(v, "edit");
+                }}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="select" />
@@ -2670,12 +2744,19 @@ export const ResolutionEscalationTab: React.FC = () => {
                 onValueChange={(v) =>
                   setEditAssignRuleForm((f) => ({ ...f, categoryType: v }))
                 }
+                disabled={!editAssignRuleForm.issueType || editModalCategoriesLoading}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select" />
+                  <SelectValue placeholder={
+                    !editAssignRuleForm.issueType
+                      ? "Select issue type first"
+                      : editModalCategoriesLoading
+                      ? "Loading..."
+                      : "select"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {categoryDropdownOptions.map((cat) => (
+                  {editModalCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>

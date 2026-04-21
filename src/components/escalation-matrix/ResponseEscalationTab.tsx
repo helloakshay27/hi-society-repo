@@ -538,12 +538,23 @@ export const ResponseEscalationTab: React.FC = () => {
     }
   }
 
+  // Clear all create-form state when switching tabs
+  const clearFormState = () => {
+    form.reset({
+      escalationLevels: { e1: [], e2: [], e3: [], e4: [], e5: [] },
+    });
+    setSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] });
+    setSelectedIssueTypeId('');
+    setSelectedCategoryTypeId('');
+    setSelectedAssignTo([]);
+  };
+
   return (
     <div className="space-y-0">
       {/* FM / Project sub-tabs */}
       <div className="flex border-b border-gray-200 bg-white">
         <button
-          onClick={() => setActiveFmProjectTab('fm')}
+          onClick={() => { if (activeFmProjectTab !== 'fm') { clearFormState(); setActiveFmProjectTab('fm'); } }}
           className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
             activeFmProjectTab === 'fm'
               ? 'border-[#C72030] text-[#C72030]'
@@ -553,7 +564,7 @@ export const ResponseEscalationTab: React.FC = () => {
           FM
         </button>
         <button
-          onClick={() => setActiveFmProjectTab('project')}
+          onClick={() => { if (activeFmProjectTab !== 'project') { clearFormState(); setActiveFmProjectTab('project'); } }}
           className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
             activeFmProjectTab === 'project'
               ? 'border-[#C72030] text-[#C72030]'
