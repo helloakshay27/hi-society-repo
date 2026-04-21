@@ -1109,7 +1109,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingSuppliers(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}${API_CONFIG.ENDPOINTS.SUPPLIERS}`;
+        const url = `https://${baseUrl}/crm/admin/vendor_setup.json`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1124,12 +1124,17 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        console.log('Suppliers response:', data);
-        // API returns pms_suppliers array
-        setSuppliers(Array.isArray(data.pms_suppliers) ? data.pms_suppliers : []);
+        console.log('Vendors response:', data);
+        // API returns a direct array of vendor objects
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.pms_suppliers)
+            ? data.pms_suppliers
+            : [];
+        setSuppliers(list);
       } catch (err) {
-        console.error('Error fetching suppliers:', err);
-        toast.error('Failed to load suppliers');
+        console.error('Error fetching vendors:', err);
+        toast.error('Failed to load vendors');
       } finally {
         setLoadingSuppliers(false);
       }
