@@ -420,7 +420,7 @@ export const StaffsDashboard = () => {
     return apiStaffsData.map(staff => {
       // Format associated flats
       const flats = Array.isArray(staff.associated_flats) && staff.associated_flats.length > 0
-        ? staff.associated_flats.map((flat: any) => flat.label || flat.name || flat).join(', ')
+        ? staff.associated_flats.map((flat: any) => flat.display || flat.label || flat.name || flat).join(', ')
         : '--';
 
       return {

@@ -586,9 +586,12 @@ export const TicketDetailsPage = () => {
     identifier: string;
     identifier_action: string;
     body: string;
-    resource_id: number;
-    resource_type: string;
-    active: boolean;
+    created_by_id: number;
+    created_by: { id: number; email: string };
+    resource: { id: number };
+    created_at: string;
+    updated_at: string;
+    active?: boolean;
   }>>([]);
   const [selectedInternalTemplate, setSelectedInternalTemplate] = useState<number | string>("");
   const [selectedCustomerTemplate, setSelectedCustomerTemplate] = useState<number | string>("");
@@ -1096,10 +1099,6 @@ export const TicketDetailsPage = () => {
 
     fetchResponsiblePersons();
   }, [ticketDetailsLoaded]);
-
-  console.log("corrective:-------------------", communicationTemplates
-    .filter(template => template.identifier === "Corrective Action" && template?.active === true)
-    .map(t => ({ value: t.id, label: t.identifier_action })));
 
 
   // PRIORITY 3: Fetch suppliers after ticket details are loaded
@@ -5314,15 +5313,7 @@ export const TicketDetailsPage = () => {
                                     {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
                                   </span>
                                 </MenuItem>
-                                {complaintStatus
-                                  .filter((status) => {
-                                    // If reopen_status is false, don't show statuses with fixed_state === 'reopen'
-                                    if (ticketData?.reopen_status === false && status.fixed_state === 'reopen') {
-                                      return false;
-                                    }
-                                    return true;
-                                  })
-                                  .map((status) => (
+                                {complaintStatus.map((status) => (
                                     <MenuItem key={status.id} value={status.id.toString()}>
                                       {status.name}
                                     </MenuItem>
@@ -7233,7 +7224,7 @@ export const TicketDetailsPage = () => {
                                   </span>
                                 </MenuItem>
                                 {communicationTemplates
-                                  .filter(template => template.identifier === "Internal" && template.active === true)
+                                  .filter(template => template.identifier === "helpdesk")
                                   .map((template) => (
                                     <MenuItem key={template.id} value={template.id}>
                                       {template.identifier_action}
@@ -7358,7 +7349,7 @@ export const TicketDetailsPage = () => {
                                   </span>
                                 </MenuItem>
                                 {communicationTemplates
-                                  .filter(template => template.identifier === "Customer" && template.active === true)
+                                  .filter(template => template.identifier === "helpdesk")
                                   .map((template) => (
                                     <MenuItem key={template.id} value={template.id}>
                                       {template.identifier_action}
@@ -8159,15 +8150,7 @@ export const TicketDetailsPage = () => {
                                 {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
                               </span>
                             </MenuItem>
-                            {complaintStatus
-                              .filter((status) => {
-                                // If reopen_status is false, don't show statuses with fixed_state === 'reopen'
-                                if (ticketData?.reopen_status === false && status.fixed_state === 'reopen') {
-                                  return false;
-                                }
-                                return true;
-                              })
-                              .map((status) => (
+                            {complaintStatus.map((status) => (
                                 <MenuItem key={status.id} value={status.id.toString()}>
                                   {status.name}
                                 </MenuItem>
@@ -9911,7 +9894,7 @@ export const TicketDetailsPage = () => {
                               </span>
                             </MenuItem>
                             {communicationTemplates
-                              .filter(template => template.identifier === "Internal" && template.active === true)
+                              .filter(template => template.identifier === "helpdesk")
                               .map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
                                   {template.identifier_action}
@@ -10036,7 +10019,7 @@ export const TicketDetailsPage = () => {
                               </span>
                             </MenuItem>
                             {communicationTemplates
-                              .filter(template => template.identifier === "Customer" && template.active === true)
+                              .filter(template => template.identifier === "helpdesk")
                               .map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
                                   {template.identifier_action}

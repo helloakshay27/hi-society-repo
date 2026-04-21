@@ -460,6 +460,8 @@ import { PlantDetailSetupPage } from "./pages/PlantDetailSetupPage";
 // Import RVehiclesInDashboard and RVehiclesOutDashboard
 import { RVehiclesInDashboard } from "./pages/RVehiclesInDashboard";
 import { RVehiclesOutDashboard } from "./pages/RVehiclesOutDashboard";
+import SmartSecureVehiclesHistory from "./pages/SmartSecureVehiclesHistory";
+import AddVehicleHistoryPage from "./pages/AddVehicleHistoryPage";
 
 // Import Finance pages
 import { MaterialPRDashboard } from "./pages/MaterialPRDashboard";
@@ -5041,6 +5043,14 @@ function App() {
                       <Route
                         path="/smartsecure/staff/add"
                         element={<AddStaffPage />}
+                      />
+                      <Route
+                        path="/smartsecure/vehicles/history"
+                        element={<SmartSecureVehiclesHistory />}
+                      />
+                      <Route
+                        path="/smartsecure/vehicles/add"
+                        element={<AddVehicleHistoryPage />}
                       />
                       <Route
                         path="/security/patrolling/create"
