@@ -6,7 +6,7 @@ import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Radi
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
-// ─── Field style (matches AddStaffPage) ──────────────────────────────────────
+// ─── Field style ─────────────────────────────────────────────────────────────
 
 const fieldStyles = {
   backgroundColor: "#fff",
@@ -19,6 +19,16 @@ const fieldStyles = {
   "& .MuiInputLabel-root": {
     "&.Mui-focused": { color: "#C72030" },
   },
+};
+
+const labelStyles = {
+  backgroundColor: "white",
+  px: 1,
+  "&.Mui-focused": { color: "#C72030" },
+};
+
+const menuProps = {
+  PaperProps: { style: { maxHeight: 300 } },
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -230,16 +240,21 @@ const AddVehicleHistoryPage: React.FC = () => {
                     Host Name <span className="text-red-500">*</span>
                   </label>
                   <div className="col-span-3">
-                    <FormControl fullWidth sx={fieldStyles} size="small">
-                      <InputLabel>Select Host Name</InputLabel>
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel shrink sx={labelStyles}>
+                        Select Host Name <span style={{ color: "#ef4444" }}>*</span>
+                      </InputLabel>
                       <MuiSelect
+                        label="Select Host Name *"
+                        displayEmpty
                         value={form.host_name}
-                        label="Select Host Name"
                         onChange={(e) => set("host_name", e.target.value)}
-                        MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                        sx={fieldStyles}
+                        MenuProps={menuProps}
                       >
+                        <MenuItem value="" disabled><em>Select Host Name</em></MenuItem>
                         {hosts.length === 0 ? (
-                          <MenuItem disabled value="">
+                          <MenuItem disabled value="__none">
                             No hosts available
                           </MenuItem>
                         ) : (
@@ -262,16 +277,21 @@ const AddVehicleHistoryPage: React.FC = () => {
                     Guest Name <span className="text-red-500">*</span>
                   </label>
                   <div className="col-span-3">
-                    <FormControl fullWidth sx={fieldStyles} size="small">
-                      <InputLabel>Select Guest Name</InputLabel>
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel shrink sx={labelStyles}>
+                        Select Guest Name <span style={{ color: "#ef4444" }}>*</span>
+                      </InputLabel>
                       <MuiSelect
+                        label="Select Guest Name *"
+                        displayEmpty
                         value={form.guest_name}
-                        label="Select Guest Name"
                         onChange={(e) => set("guest_name", e.target.value)}
-                        MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                        sx={fieldStyles}
+                        MenuProps={menuProps}
                       >
+                        <MenuItem value="" disabled><em>Select Guest Name</em></MenuItem>
                         {guests.length === 0 ? (
-                          <MenuItem disabled value="">
+                          <MenuItem disabled value="__none">
                             No guests available
                           </MenuItem>
                         ) : (
@@ -295,7 +315,7 @@ const AddVehicleHistoryPage: React.FC = () => {
                 <div className="col-span-3">
                   <TextField
                     fullWidth
-                    size="small"
+                    variant="outlined"
                     label="Vehicle Number"
                     placeholder="Vehicle Number"
                     value={form.vehicle_number}
@@ -303,7 +323,8 @@ const AddVehicleHistoryPage: React.FC = () => {
                       set("vehicle_number", e.target.value.toUpperCase())
                     }
                     inputProps={{ maxLength: 20 }}
-                    sx={fieldStyles}
+                    InputLabelProps={{ shrink: true, sx: labelStyles }}
+                    InputProps={{ sx: fieldStyles }}
                   />
                 </div>
               </div>
@@ -314,17 +335,19 @@ const AddVehicleHistoryPage: React.FC = () => {
                   Parking Slot
                 </label>
                 <div className="col-span-3">
-                  <FormControl fullWidth sx={fieldStyles} size="small">
-                    <InputLabel>Select Parking Slot</InputLabel>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={labelStyles}>
+                      Select Parking Slot
+                    </InputLabel>
                     <MuiSelect
-                      value={form.parking_slot}
                       label="Select Parking Slot"
+                      displayEmpty
+                      value={form.parking_slot}
                       onChange={(e) => set("parking_slot", e.target.value)}
-                      MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
                     >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
+                      <MenuItem value=""><em>None</em></MenuItem>
                       {parkingSlots.map((s) => (
                         <MenuItem key={s.id} value={String(s.id)}>
                           {s.name}
@@ -341,17 +364,19 @@ const AddVehicleHistoryPage: React.FC = () => {
                   Entry Gate
                 </label>
                 <div className="col-span-3">
-                  <FormControl fullWidth sx={fieldStyles} size="small">
-                    <InputLabel>Select Entry Gate</InputLabel>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={labelStyles}>
+                      Select Entry Gate
+                    </InputLabel>
                     <MuiSelect
-                      value={form.entry_gate}
                       label="Select Entry Gate"
+                      displayEmpty
+                      value={form.entry_gate}
                       onChange={(e) => set("entry_gate", e.target.value)}
-                      MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
                     >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
+                      <MenuItem value=""><em>None</em></MenuItem>
                       {entryGates.map((g) => (
                         <MenuItem key={g.id} value={String(g.id)}>
                           {g.name}

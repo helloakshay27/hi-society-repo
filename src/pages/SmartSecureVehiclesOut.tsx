@@ -118,13 +118,13 @@ const VehicleOutModal: React.FC<VehicleOutModalProps> = ({
 
     setSubmitting(true);
     try {
-      const fd = new FormData();
-      fd.append("visitor_vehicle_in_out[exit_gate_id]", selectedGate);
-      fd.append("visitor_vehicle_in_out[out_time]", new Date().toISOString());
-
       const res = await fetch(
-        getFullUrl(`/crm/admin/visitor_vehicle_out/${vehicle.id}.json`),
-        { method: "PUT", headers: { Authorization: getAuthHeader() }, body: fd }
+        getFullUrl("/crm/admin/checkout_visitor_vehicle.json"),
+        {
+          method: "POST",
+          headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+          body: JSON.stringify({ id: vehicle.id, society_gate_id: Number(selectedGate) }),
+        }
       );
       if (res.ok) {
         toast.success("Vehicle marked as out successfully!");
@@ -219,12 +219,15 @@ const SmartSecureVehiclesOut: React.FC = () => {
   const { data: exitGatesData } = useQuery<ExitGateOption[]>({
     queryKey: ["exit-gates"],
     queryFn: async () => {
-      const res = await fetch(getFullUrl("/crm/admin/exit_gates.json"), {
+      const res = await fetch(getFullUrl("/crm/admin/visitors_vehicle_history_filters.json"), {
         headers: { Authorization: getAuthHeader() },
       });
       if (!res.ok) return [];
       const data = await res.json();
-      return data.exit_gates || data || [];
+      return (data?.data?.entry_gates || []).map((g: { id: number; name: string }) => ({
+        id: g.id,
+        name: g.name,
+      }));
     },
     staleTime: 60000,
   });
@@ -255,7 +258,7 @@ const SmartSecureVehiclesOut: React.FC = () => {
 
         case "vehicle_number":
           return (
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-black-600">
               {row.in_out_vehicle_number || row.vehicle_number || "--"}
             </span>
           );
