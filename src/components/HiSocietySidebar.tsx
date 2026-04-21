@@ -714,17 +714,23 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Vehicles",
           icon: Car,
           subItems: [
-            {
-              id: "vehicle-in",
-              label: "Vehicle In",
-              icon: LogIn,
-              path: "/smartsecure/vehicles/in",
-            },
+            // {
+            //   id: "vehicle-in",
+            //   label: "Vehicle In",
+            //   icon: LogIn,
+            //   path: "/smartsecure/vehicles/in",
+            // },
             {
               id: "vehicle-out",
               label: "Vehicle Out",
               icon: LogOut,
               path: "/smartsecure/vehicles/out",
+            },
+             {
+              id: "vehicle-history",
+              label: "Vehicle History",
+              icon: History,
+              path: "/smartsecure/vehicles/history",
             },
           ],
         },

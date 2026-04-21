@@ -168,6 +168,7 @@ export interface SocietyStaffDetails {
   helpdesk_operations: HelpdeskOperation[];
   staff_workings: StaffWorking[];
   documents: StaffDocument[];
+  associated_flats: Array<{ id?: number | null; block_no: string | null; flat_no: string; display: string; flat_id?: number | null }>;
 }
 
 export interface SocietyStaffDetailsResponse {
@@ -468,11 +469,16 @@ export const staffService = {
       }
 
       const apiResponse: StaffDetailsApiResponse = await response.json();
-      const staff = apiResponse.data;
+      const staff = apiResponse?.data;
 
-      // Split name into first and last name
-      const nameParts = staff.name.split(' ');
-      const firstName = nameParts[0];
+      if (!staff) {
+        throw new Error('Staff data not found in response');
+      }
+
+      // Split name into first and last name (guard against null name)
+      const safeName = staff.name ?? '';
+      const nameParts = safeName.split(' ');
+      const firstName = nameParts[0] ?? '';
       const lastName = nameParts.slice(1).join(' ');
 
       // Convert new CRM API format to SocietyStaffDetails for compatibility
@@ -496,7 +502,7 @@ export const staffService = {
         vendor_name: staff.company_name,
         active: null,
         staff_type: staff.staff_type,
-        status: staff.status.value.toString(),
+        status: staff.status != null && staff.status.value != null ? String(staff.status.value) : '',
         associate_function_id: staff.associate_function_id ?? null,
         associate_function_name: staff.associate_function_name ?? null,
         resource_id: 0,
@@ -518,13 +524,14 @@ export const staffService = {
         unit_name: null,
         department_name: '',
         work_type_name: staff.work_type,
-        status_text: staff.status.label,
+        status_text: staff.status?.label ?? '',
         staff_image_url: staff.image_url,
         qr_code_present: !!staff.qr_code_url,
         qr_code_url: staff.qr_code_url,
         helpdesk_operations: staff.helpdesk_operations || [],
         staff_workings: [],
-        documents: []
+        documents: [],
+        associated_flats: (staff.associated_flats as Array<{ id?: number | null; block_no: string | null; flat_no: string; display: string; flat_id?: number | null }>) || [],
       };
 
       return convertedStaff;

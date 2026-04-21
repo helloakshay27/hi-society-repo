@@ -477,9 +477,13 @@ export const EditStaffPage = () => {
               <TextField
                 label="Mobile*"
                 value={formData.mobile}
-                onChange={(e) => handleInputChange('mobile', e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  handleInputChange('mobile', val);
+                }}
                 fullWidth
                 variant="outlined"
+                inputProps={{ maxLength: 10, pattern: '[0-9]*', inputMode: 'numeric' }}
                 slotProps={{
                   inputLabel: {
                     shrink: true,

@@ -5,11 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, Printer, ArrowLeft, Loader2, ChevronDown, ChevronUp, User, MapPin, Calendar, FileText, Image, QrCode } from 'lucide-react';
+import { Edit, Printer, ArrowLeft, Loader2, ChevronDown, ChevronUp, User, MapPin, Calendar, FileText, Image, QrCode, Plus, X } from 'lucide-react';
 import { staffService, SocietyStaffDetails } from '@/services/staffService';
+import { StaffFilterOption } from '@/services/staffService';
 import { toast } from 'sonner';
-import { apiClient } from '@/utils/apiClient';
-import { ENDPOINTS } from '@/config/apiConfig';
+import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 
 export const StaffDetailsPage = () => {
   const { id } = useParams();
@@ -25,12 +25,24 @@ export const StaffDetailsPage = () => {
   const [sendingOTP, setSendingOTP] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
+  // Associate Flat state
+  const [showFlatModal, setShowFlatModal] = useState(false);
+  const [towers, setTowers] = useState<StaffFilterOption[]>([]);
+  const [flats, setFlats] = useState<StaffFilterOption[]>([]);
+  const [loadingTowers, setLoadingTowers] = useState(false);
+  const [loadingFlats, setLoadingFlats] = useState(false);
+  const [selectedTower, setSelectedTower] = useState('');
+  const [selectedFlat, setSelectedFlat] = useState('');
+  const [savingFlat, setSavingFlat] = useState(false);
+  const [associatedFlats, setAssociatedFlats] = useState<Array<{ id?: number | null; block_no: string | null; flat_no: string; display: string; flat_id?: number | null }>>([]);
+
   // State for expandable sections
   const [expandedSections, setExpandedSections] = useState({
     basicInfo: true,
     workInfo: true,
     scheduleInfo: true,
-    qrInfo: true
+    qrInfo: true,
+    associateFlat: true
   });
 
   // Helper function to check if value has data
@@ -60,6 +72,7 @@ export const StaffDetailsPage = () => {
         setError(null);
         const staffData = await staffService.getStaffDetails(id);
         setStaff(staffData);
+        setAssociatedFlats(staffData.associated_flats || []);
       } catch (err) {
         console.error('Error fetching staff details:', err);
         setError(err instanceof Error ? err.message : 'Failed to load staff details');
@@ -118,12 +131,9 @@ export const StaffDetailsPage = () => {
     if (!staff) return;
     setIsPrinting(true);
     try {
-      await apiClient.post(ENDPOINTS.STAFF_PRINT_QR_CODES, {
-        society_staff_ids: [staff.id.toString()],
-      });
-      toast.success('QR Code print request sent successfully!');
+      await staffService.printQRCodes([staff.id]);
     } catch {
-      toast.error('Failed to send QR Code print request');
+      // error toast handled inside printQRCodes
     } finally {
       setIsPrinting(false);
     }
@@ -178,6 +188,138 @@ export const StaffDetailsPage = () => {
   const handleCloseVerifyModal = () => {
     setShowVerifyModal(false);
     setOtp('');
+  };
+
+  // Associate Flat handlers
+  const loadTowers = async () => {
+    setLoadingTowers(true);
+    try {
+      const response = await fetch(getFullUrl('/crm/admin/staff_filters.json'), {
+        headers: { Authorization: getAuthHeader() },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTowers(data.towers || []);
+      }
+    } catch {
+      toast.error('Failed to load tower options');
+    } finally {
+      setLoadingTowers(false);
+    }
+  };
+
+  const loadFlats = async (towerId: string) => {
+    setLoadingFlats(true);
+    setFlats([]);
+    setSelectedFlat('');
+    try {
+      const response = await fetch(
+        getFullUrl(`/crm/admin/staff_filters.json?q[society_staff_staff_workings_society_flat_society_block_id_eq]=${towerId}`),
+        { headers: { Authorization: getAuthHeader() } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setFlats(data.flats || []);
+      }
+    } catch {
+      toast.error('Failed to load flat options');
+    } finally {
+      setLoadingFlats(false);
+    }
+  };
+
+  const handleOpenFlatModal = async () => {
+    setShowFlatModal(true);
+    setSelectedTower('');
+    setSelectedFlat('');
+    setFlats([]);
+    await loadTowers();
+  };
+
+  const handleAddFlat = async () => {
+    if (!selectedFlat) {
+      toast.error('Please select a flat');
+      return;
+    }
+    if (!staff) return;
+    setSavingFlat(true);
+    try {
+      const flatOption = flats.find(f => String(f.value) === selectedFlat);
+      const towerOption = towers.find(t => String(t.value) === selectedTower);
+      const display = flatOption
+        ? towerOption
+          ? `${towerOption.label} - ${flatOption.label}`
+          : String(flatOption.label)
+        : selectedFlat;
+      const response = await fetch(getFullUrl('/staff_workings.json'), {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          staff_id: staff.id,
+          flat_id: Number(selectedFlat),
+          society_block_id_in: selectedTower ? [Number(selectedTower)] : [],
+        }),
+      });
+      if (response.ok) {
+        const result = await response.json();
+        const newFlat = {
+          id: result?.id ?? result?.staff_working?.id ?? null,
+          block_no: towerOption?.label ? String(towerOption.label) : null,
+          flat_no: String(flatOption?.label || selectedFlat),
+          display,
+          flat_id: Number(selectedFlat),
+        };
+        setAssociatedFlats(prev => [...prev, newFlat]);
+        setShowFlatModal(false);
+        toast.success('Flat associated successfully!');
+      } else {
+        throw new Error('Failed to associate flat');
+      }
+    } catch {
+      toast.error('Failed to associate flat. Please try again.');
+    } finally {
+      setSavingFlat(false);
+    }
+  };
+
+  const handleRemoveFlat = async (index: number) => {
+    if (!staff) return;
+    const flat = associatedFlats[index];
+    if (!flat?.id) {
+      toast.error('Cannot remove flat: missing working ID');
+      return;
+    }
+    try {
+      const response = await fetch(
+        getFullUrl(`/staff_workings_destroy?id=${flat.id}`),
+        {
+          method: 'GET',
+          headers: { Authorization: getAuthHeader() },
+        }
+      );
+      if (response.ok) {
+        setAssociatedFlats(prev => prev.filter((_, i) => i !== index));
+        toast.success('Flat removed successfully!');
+      } else {
+        throw new Error('Failed to remove flat');
+      }
+    } catch {
+      toast.error('Failed to remove flat. Please try again.');
+    }
+  };
+
+  // Filter flats by selected tower
+  const handleTowerChange = (towerId: string) => {
+    setSelectedTower(towerId);
+    if (towerId) {
+      loadFlats(towerId);
+    } else {
+      setFlats([]);
+      setSelectedFlat('');
+    }
   };
 
   const handleResendOTP = async () => {
@@ -274,7 +416,7 @@ export const StaffDetailsPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-[#1a1a1a]">Staff Summary</h1>
           <div className="flex gap-3">
-            <Button
+            {/* <Button
               onClick={handleVerifyNumber}
               className="bg-[#8B4B8C] hover:bg-[#7A4077] text-white px-4 py-2"
               disabled={staff.number_verified || sendingOTP}
@@ -289,7 +431,7 @@ export const StaffDetailsPage = () => {
               ) : (
                 'Verify Number'
               )}
-            </Button>
+            </Button> */}
             <Button
               onClick={handleEdit}
               style={{ backgroundColor: '#C72030' }} 
@@ -516,6 +658,67 @@ export const StaffDetailsPage = () => {
         )}
       </ExpandableSection>
 
+      {/* Section 5: Associate Flat */}
+      <div className="border-2 rounded-lg mb-6">
+        <div
+          onClick={() => toggleSection('associateFlat')}
+          className="flex items-center justify-between cursor-pointer p-6"
+          style={{ backgroundColor: 'rgb(246 244 238)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+              <MapPin className="w-4 h-4" style={{ color: '#C72030' }} />
+            </div>
+            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+              Associate Flat
+            </h3>
+            {associatedFlats.length > 0 && (
+              <span className="w-6 h-6 rounded-full bg-[#c72030] text-white text-xs font-bold flex items-center justify-center">
+                {associatedFlats.length}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleOpenFlatModal(); }}
+              className="w-8 h-8 rounded bg-[#c72030] hover:bg-[#2f8fc4] text-white flex items-center justify-center"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            {expandedSections.associateFlat
+              ? <ChevronUp className="w-5 h-5 text-gray-600" />
+              : <ChevronDown className="w-5 h-5 text-gray-600" />}
+          </div>
+        </div>
+        {expandedSections.associateFlat && (
+          <div className="p-6" style={{ backgroundColor: 'rgb(246 247 247)' }}>
+            {associatedFlats.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No flats associated. Click + to add.</p>
+            ) : (
+              <div className="flex flex-wrap gap-3">
+                {associatedFlats.map((flat, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 px-4 py-2 rounded text-sm font-medium"
+                    style={{ backgroundColor: '#f5e6c8', color: '#8B5C00' }}
+                  >
+                    <span>{flat.display}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFlat(index)}
+                      className="text-red-500 hover:text-red-700 ml-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Section 4: QR Code Information */}
       <ExpandableSection
         title="QR CODE"
@@ -559,6 +762,66 @@ export const StaffDetailsPage = () => {
           </div>
         </div>
       </ExpandableSection>
+
+      {/* Associate Flat Modal */}
+      <Dialog open={showFlatModal} onOpenChange={setShowFlatModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">Associate Flats</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {loadingTowers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <select
+                    value={selectedTower}
+                    onChange={(e) => handleTowerChange(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030] bg-white text-gray-700"
+                    title="Select Tower"
+                  >
+                    <option value="">Select Tower</option>
+                    {towers.map((tower) => (
+                      <option key={tower.value} value={String(tower.value)}>{tower.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <select
+                    value={selectedFlat}
+                    onChange={(e) => setSelectedFlat(e.target.value)}
+                    disabled={!selectedTower || loadingFlats}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030] bg-white text-gray-700 disabled:bg-gray-100 disabled:text-gray-400"
+                    title="Select Flat"
+                  >
+                    <option value="">
+                      {loadingFlats ? 'Loading flats...' : !selectedTower ? 'Select Tower first' : 'Select Flat'}
+                    </option>
+                    {flats.map((flat) => (
+                      <option key={flat.value} value={String(flat.value)}>{flat.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowFlatModal(false)} disabled={savingFlat}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddFlat}
+              disabled={savingFlat || !selectedFlat}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {savingFlat ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving...</> : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Verify Number Modal */}
       <Dialog open={showVerifyModal} onOpenChange={setShowVerifyModal}>
