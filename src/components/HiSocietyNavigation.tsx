@@ -6,6 +6,7 @@ import {
   Settings as SettingsIcon,
   Users,
   Gift,
+  Wrench,
 } from "lucide-react";
 import { useLayout } from "../contexts/LayoutContext";
 
@@ -22,6 +23,12 @@ const navigationItems: NavigationItem[] = [
     label: "Home",
     icon: <Home className="w-4 h-4" />,
     path: "/maintenance/project-details-list",
+  },
+  {
+    id: "maintenance",
+    label: "Maintenance",
+    icon: <Wrench className="w-4 h-4" />,
+    path: "/maintenance/survey/mapping",
   },
   {
     id: "bms",
@@ -173,6 +180,21 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("settings");
     } else if (path.startsWith("/cms")) {
       setActiveNav("cms");
+    } else if (
+      path.startsWith("/maintenance/survey") ||
+      path.startsWith("/maintenance/ticket") ||
+      path.startsWith("/maintenance/task") ||
+      path.startsWith("/maintenance/schedule") ||
+      path.startsWith("/maintenance/service") ||
+      path.startsWith("/maintenance/asset") ||
+      path.startsWith("/maintenance/inventory") ||
+      path.startsWith("/maintenance/amc") ||
+      path.startsWith("/maintenance/audit") ||
+      path.startsWith("/maintenance/waste") ||
+      path.startsWith("/maintenance/vendor") ||
+      path.startsWith("/maintenance/attendance")
+    ) {
+      setActiveNav("maintenance");
     } else if (path.startsWith("/campaigns")) {
       setActiveNav("campaigns");
     } else if (path.startsWith("/fb")) {

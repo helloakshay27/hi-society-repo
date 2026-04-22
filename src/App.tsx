@@ -4195,7 +4195,7 @@ function App() {
                         element={<SurveyListDashboard />}
                       />
                       <Route
-                        path="/master/survey/list"
+                        path="/settings/survey/list"
                         element={<SurveyListDashboard />}
                       />
 
