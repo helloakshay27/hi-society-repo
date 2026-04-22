@@ -544,16 +544,28 @@ export const ResolutionEscalationTab: React.FC = () => {
   // Load dropdowns for assign rule modals
   const loadAssignRuleDropdowns = async () => {
     try {
-      const [issueTypesData, categoriesData, engineersData] = await Promise.all(
-        [
-          ticketManagementAPI.getIssueTypesDropdown(),
-          ticketManagementAPI.getCategoriesDropdown(),
-          ticketManagementAPI.getServiceEngineers({ 'q[staff_type_eq]': 'Escalation' }),
-        ]
-      );
-      setIssueTypeOptions(issueTypesData.issue_types || []);
-      setCategoryDropdownOptions(categoriesData.categories || []);
-      setServiceEngineerOptions(engineersData.service_engineers || []);
+      const [issueTypesResult, categoriesResult, engineersResult] = await Promise.allSettled([
+        ticketManagementAPI.getIssueTypesDropdown(),
+        ticketManagementAPI.getCategoriesDropdown(),
+        ticketManagementAPI.getServiceEngineers({ 'q[staff_type_eq]': 'Escalation' }),
+      ]);
+      if (issueTypesResult.status === 'fulfilled') {
+        setIssueTypeOptions(issueTypesResult.value.issue_types || []);
+      } else {
+        console.error('Error loading issue types:', issueTypesResult.reason);
+        toast.error('Failed to load issue types!');
+      }
+      if (categoriesResult.status === 'fulfilled') {
+        setCategoryDropdownOptions(categoriesResult.value.categories || []);
+      } else {
+        console.error('Error loading categories:', categoriesResult.reason);
+      }
+      if (engineersResult.status === 'fulfilled') {
+        setServiceEngineerOptions(engineersResult.value.service_engineers || []);
+      } else {
+        console.error('Error loading service engineers:', engineersResult.reason);
+        toast.error('Failed to load service engineers!');
+      }
     } catch (error) {
       console.error("Error loading assign rule dropdowns:", error);
     }
