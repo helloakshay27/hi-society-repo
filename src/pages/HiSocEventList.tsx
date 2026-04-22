@@ -37,6 +37,7 @@ interface Event {
   to_time: string;
   active: boolean;
   show_on_home: boolean;
+  publish: number;
   created_at: string;
   updated_at: string;
 }
@@ -204,6 +205,37 @@ const HiSocEventList = () => {
     }
   };
 
+  const handleTogglePublish = async (id: number, currentPublish: number) => {
+    toast.dismiss();
+    const newPublish = currentPublish === 1 ? 0 : 1;
+    try {
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event.id === id ? { ...event, publish: newPublish } : event
+        )
+      );
+      await axios.put(
+        getFullUrl(`/crm/admin/events/${id}.json`),
+        { event: { publish: newPublish } },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
+          },
+        }
+      );
+      toast.success(newPublish === 1 ? "Event published successfully!" : "Event rejected successfully!");
+    } catch (error) {
+      console.error("Error toggling publish status:", error);
+      toast.error("Failed to update publish status.");
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event.id === id ? { ...event, publish: currentPublish } : event
+        )
+      );
+    }
+  };
+
   const handleToggleShowOnHome = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
     try {
@@ -283,7 +315,8 @@ const HiSocEventList = () => {
     { key: "from_time", label: "Event Date", sortable: false },
     { key: "to_time", label: "Event Time", sortable: false },
     { key: "show_on_home", label: "Show on Home", sortable: false },
-    { key: "active", label: "Status", sortable: false },
+    { key: "publish", label: "Publish", sortable: false },
+    // { key: "active", label: "Status", sortable: false },
   ];
 
   const renderCell = (item: Event, columnKey: string, rowIndex?: number) => {
@@ -332,14 +365,29 @@ const HiSocEventList = () => {
       case "show_on_home":
         return (
           <Switch
-            checked={item.show_on_home || false}
+            checked={!!item.show_on_home}
             onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
             sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
               },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
+            }}
+          />
+        );
+      case "publish":
+        return (
+          <Switch
+            checked={item.publish === 1}
+            onChange={() => handleTogglePublish(item.id, item.publish)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
               },
             }}
           />
@@ -347,14 +395,14 @@ const HiSocEventList = () => {
       case "active":
         return (
           <Switch
-            checked={item.active || false}
+            checked={!!item.active}
             onChange={() => handleToggle(item.id, item.active)}
             sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
               },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
               },
             }}
           />
