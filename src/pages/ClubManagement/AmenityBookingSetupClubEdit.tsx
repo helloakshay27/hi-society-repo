@@ -3868,6 +3868,14 @@ export const EditBookingSetupClubPage = () => {
                                                                 ...formData,
                                                                 blockDays: newBlockDays,
                                                             });
+
+                                                            if (blockDay.startDate) {
+                                                                fetchBlockDaySlots(
+                                                                    id!,
+                                                                    blockDay.startDate,
+                                                                    blockIndex
+                                                                );
+                                                            }
                                                         }}
                                                         className="text-blue-600"
                                                     />
