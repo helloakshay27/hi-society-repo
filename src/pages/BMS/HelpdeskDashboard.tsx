@@ -1322,16 +1322,25 @@ export const TicketDashboard = () => {
       return <TruncatedDescription text={item.heading} />;
     }
     if (columnKey === 'issue_status') {
-      return <span
-        className={`px-2 py-1 rounded text-xs animate-scale-in cursor-pointer hover:opacity-80 transition-opacity ${item.issue_status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : item.issue_status === 'Closed' ? 'bg-green-100 text-green-700' : item.issue_status === 'Open' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedTicketForEdit(item);
-          setIsEditStatusOpen(true);
-        }}
-      >
-        {item.issue_status}
-      </span>;
+      const statusName = item.status?.name || item.issue_status || '--';
+      const colorCode = item.status?.color_code;
+      return (
+        <span
+          className="px-2 py-1 rounded text-xs animate-scale-in cursor-pointer hover:opacity-80 transition-opacity font-medium"
+          style={colorCode ? {
+            backgroundColor: `${colorCode}22`,
+            color: colorCode,
+            border: `1px solid ${colorCode}44`,
+          } : {}}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedTicketForEdit(item);
+            setIsEditStatusOpen(true);
+          }}
+        >
+          {statusName}
+        </span>
+      );
     }
     if (columnKey === 'priority') {
       return <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 animate-scale-in">

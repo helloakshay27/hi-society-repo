@@ -705,6 +705,21 @@ export const TicketDetailsPage = () => {
   });
   const [submittingLocation, setSubmittingLocation] = useState(false);
 
+  // Society Location (new cascading dropdowns: Society → Wing → Area)
+  const [societyLocations, setSocietyLocations] = useState<Array<{ id: number; name: string }>>([]);
+  const [societyWings, setSocietyWings] = useState<Array<{ id: number; name: string }>>([]);
+  const [societyAreas, setSocietyAreas] = useState<Array<{ id: number; name: string }>>([]);
+  const [loadingSocietyLocations, setLoadingSocietyLocations] = useState(false);
+  const [loadingSocietyWings, setLoadingSocietyWings] = useState(false);
+  const [loadingSocietyAreas, setLoadingSocietyAreas] = useState(false);
+  const [isEditingSocietyLocation, setIsEditingSocietyLocation] = useState(false);
+  const [societyLocationFormData, setSocietyLocationFormData] = useState({
+    society_location_id: '',
+    wing_id: '',
+    area_id: '',
+  });
+  const [submittingSocietyLocation, setSubmittingSocietyLocation] = useState(false);
+
   // Location data states
   const [buildings, setBuildings] = useState<Array<{ id: number; name: string }>>([]);
   const [wings, setWings] = useState<Array<{ id: number; name: string; building_id: string }>>([]);
@@ -1289,6 +1304,23 @@ export const TicketDetailsPage = () => {
     loadLocationData();
   }, [ticketDetailsLoaded]);
 
+  // PRIORITY 3: Load society locations (for Location card Society/Wing/Area dropdowns)
+  useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    loadSocietyLocations();
+  }, [ticketDetailsLoaded]);
+
+  // Load society wings/areas for display when ticket data has the IDs
+  useEffect(() => {
+    if (!ticketData?.society_location_id) return;
+    loadSocietyWings(ticketData.society_location_id.toString());
+  }, [ticketData?.society_location_id]);
+
+  useEffect(() => {
+    if (!ticketData?.wing_id) return;
+    loadSocietyAreas(ticketData.wing_id.toString());
+  }, [ticketData?.wing_id]);
+
   // Initialize form data based on ticket data (runs once when ticket data and options are available)
   useEffect(() => {
     if (ticketData && ticketData.asset_or_service_id) {
@@ -1446,6 +1478,54 @@ export const TicketDetailsPage = () => {
       toast.error('Failed to load rooms');
     } finally {
       setLoadingRooms(false);
+    }
+  };
+
+  // Society Location load functions (separate from building/wing/area chain)
+  const loadSocietyLocations = async () => {
+    setLoadingSocietyLocations(true);
+    try {
+      const url = getFullUrl('/crm/admin/society_locations.json');
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyLocations(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading society locations:', error);
+    } finally {
+      setLoadingSocietyLocations(false);
+    }
+  };
+
+  const loadSocietyWings = async (societyLocationId: string) => {
+    setSocietyWings([]);
+    setLoadingSocietyWings(true);
+    try {
+      const url = getFullUrl(`/pms/wings.json?q[society_location_id_eq]=${societyLocationId}`);
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyWings(data.wings || []);
+    } catch (error) {
+      console.error('Error loading society wings:', error);
+    } finally {
+      setLoadingSocietyWings(false);
+    }
+  };
+
+  const loadSocietyAreas = async (wingId: string) => {
+    setSocietyAreas([]);
+    setLoadingSocietyAreas(true);
+    try {
+      const url = getFullUrl(`/pms/areas.json?q[wing_id_eq]=${wingId}`);
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyAreas(data.areas || []);
+    } catch (error) {
+      console.error('Error loading society areas:', error);
+    } finally {
+      setLoadingSocietyAreas(false);
     }
   };
 
@@ -3275,6 +3355,91 @@ export const TicketDetailsPage = () => {
     }
   };
 
+  // Society Location Edit Handlers
+  const handleSocietyLocationEdit = () => {
+    setSocietyLocationFormData({
+      society_location_id: ticketData?.society_location_id?.toString() || '',
+      wing_id: ticketData?.wing_id?.toString() || '',
+      area_id: ticketData?.area_id?.toString() || '',
+    });
+    if (ticketData?.society_location_id) {
+      loadSocietyWings(ticketData.society_location_id.toString());
+      if (ticketData?.wing_id) {
+        loadSocietyAreas(ticketData.wing_id.toString());
+      }
+    }
+    setIsEditingSocietyLocation(true);
+  };
+
+  const handleSocietyChange = async (societyLocationId: string) => {
+    setSocietyLocationFormData(prev => ({
+      ...prev,
+      society_location_id: societyLocationId,
+      wing_id: '',
+      area_id: '',
+    }));
+    setSocietyWings([]);
+    setSocietyAreas([]);
+    if (societyLocationId) {
+      await loadSocietyWings(societyLocationId);
+    }
+  };
+
+  const handleSocietyWingChange = async (wingId: string) => {
+    setSocietyLocationFormData(prev => ({
+      ...prev,
+      wing_id: wingId,
+      area_id: '',
+    }));
+    setSocietyAreas([]);
+    if (wingId) {
+      await loadSocietyAreas(wingId);
+    }
+  };
+
+  const handleSocietyLocationSubmit = async () => {
+    if (!id) return;
+    try {
+      setSubmittingSocietyLocation(true);
+      const formDataToSend = new FormData();
+      formDataToSend.append('id', id);
+      formDataToSend.append('complaint_log[complaint_id]', id);
+
+      if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
+        formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
+        formDataToSend.append('service_id', '');
+      } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
+        formDataToSend.append('asset_id', '');
+        formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+      } else {
+        formDataToSend.append('asset_id', '');
+        formDataToSend.append('service_id', '');
+      }
+
+      formDataToSend.append('complaint[society_location_id]', societyLocationFormData.society_location_id || '');
+      formDataToSend.append('complaint[wing_id]', societyLocationFormData.wing_id || '');
+      formDataToSend.append('complaint[area_id]', societyLocationFormData.area_id || '');
+
+      const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Authorization': getAuthHeader() },
+        body: formDataToSend,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+      const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
+      setTicketData(ticketDetails);
+      toast.success('Location updated successfully!');
+      setIsEditingSocietyLocation(false);
+    } catch (error) {
+      console.error('Error updating society location:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update location');
+    } finally {
+      setSubmittingSocietyLocation(false);
+    }
+  };
+
   // Check if ticket is closed (all timers stop) or on hold (only escalation timers stop)
   const isTicketClosed = ticketData?.issue_status ? ['complete', 'completed', 'close', 'closed'].includes(ticketData.issue_status.toLowerCase()) : false;
   const isTicketOnHold = ticketData?.issue_status ? ['on hold'].includes(ticketData.issue_status.toLowerCase()) : false;
@@ -4119,9 +4284,9 @@ export const TicketDetailsPage = () => {
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
               Location
-            </TabsTrigger>
+            </TabsTrigger> */}
 
-            <TabsTrigger
+            {/* <TabsTrigger
               value="survey-info"
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
@@ -6995,6 +7160,236 @@ export const TicketDetailsPage = () => {
                   </Card>
                 )}
 
+                {/* Society / Wing / Area Card (editable) */}
+                <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                        <MapPin className="w-6 h-6 text-[#C72030]" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-black">LOCATION INFORMATION</h3>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
+                      onClick={handleSocietyLocationEdit}
+                      disabled={isEditingSocietyLocation || loadingSocietyLocations}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      {loadingSocietyLocations ? 'Loading...' : 'Edit'}
+                    </Button>
+                  </div>
+
+                  <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                    {!isEditingSocietyLocation ? (
+                      /* View Mode */
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                        <div className="flex items-center">
+                          <span className="text-gray-500 min-w-[140px]">Society</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.society_location_id
+                              ? (societyLocations.find(s => s.id === ticketData.society_location_id)?.name || ticketData.society_location_id)
+                              : '-'}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-gray-500 min-w-[140px]">Wing</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.wing_id
+                              ? (societyWings.find(w => w.id === ticketData.wing_id)?.name || ticketData.wing_name || ticketData.wing_id)
+                              : (ticketData.wing_name || '-')}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-gray-500 min-w-[140px]">Area</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.area_id
+                              ? (societyAreas.find(a => a.id === ticketData.area_id)?.name || ticketData.area_name || ticketData.area_id)
+                              : (ticketData.area_name || '-')}
+                          </span>
+                        </div>
+                        {hasData(ticketData.region) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Region</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.region}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.building_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Building</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.floor_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Floor</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
+                          </div>
+                        )}
+                        {/* {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
+                          </div>
+                        )} */}
+                        {hasData(ticketData.zone) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Zone</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.zone}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.district) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">District</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.district}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.room_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Room</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.site_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Site</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.site_name}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.city) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">City</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.city}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.state) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">State</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.state}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.address) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Address</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.address}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Edit Mode */
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSocietyLocationSubmit();
+                        }}
+                        className="space-y-6"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Society Dropdown */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Society</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.society_location_id}
+                              onChange={(e) => handleSocietyChange(e.target.value)}
+                              label="Society"
+                              notched
+                              displayEmpty
+                              disabled={loadingSocietyLocations}
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyLocations ? 'Loading...' : 'Select Society'}
+                              </MenuItem>
+                              {societyLocations.map((loc) => (
+                                <MenuItem key={loc.id} value={loc.id.toString()}>
+                                  {loc.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+
+                          {/* Wing Dropdown */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Wing</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.wing_id}
+                              onChange={(e) => handleSocietyWingChange(e.target.value)}
+                              label="Wing"
+                              notched
+                              displayEmpty
+                              disabled={loadingSocietyWings || !societyLocationFormData.society_location_id}
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyWings ? 'Loading...' : !societyLocationFormData.society_location_id ? 'Select Society First' : 'Select Wing'}
+                              </MenuItem>
+                              {societyWings.map((wing) => (
+                                <MenuItem key={wing.id} value={wing.id.toString()}>
+                                  {wing.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+
+                          {/* Area Dropdown */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Area</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.area_id}
+                              onChange={(e) => setSocietyLocationFormData(prev => ({ ...prev, area_id: e.target.value }))}
+                              label="Area"
+                              notched
+                              displayEmpty
+                              disabled={loadingSocietyAreas || !societyLocationFormData.wing_id}
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyAreas ? 'Loading...' : !societyLocationFormData.wing_id ? 'Select Wing First' : 'Select Area'}
+                              </MenuItem>
+                              {societyAreas.map((area) => (
+                                <MenuItem key={area.id} value={area.id.toString()}>
+                                  {area.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+                        </div>
+
+                        <div className="flex items-center gap-3 justify-end mt-6">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsEditingSocietyLocation(false)}
+                            disabled={submittingSocietyLocation}
+                            className="border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={submittingSocietyLocation}
+                            className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
+                          >
+                            {submittingSocietyLocation ? 'Saving...' : 'Submit'}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+
                 {isModalOpen && selectedDoc && (
                   <div
                     className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
@@ -9843,6 +10238,236 @@ export const TicketDetailsPage = () => {
               </Card>
             )}
 
+            {/* Society / Wing / Area Card (editable) */}
+            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                    <MapPin className="w-6 h-6 text-[#C72030]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black">LOCATION INFORMATION</h3>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
+                  onClick={handleSocietyLocationEdit}
+                  disabled={isEditingSocietyLocation || loadingSocietyLocations}
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  {loadingSocietyLocations ? 'Loading...' : 'Edit'}
+                </Button>
+              </div>
+
+              <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                {!isEditingSocietyLocation ? (
+                  /* View Mode */
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div className="flex items-center">
+                      <span className="text-gray-500 min-w-[140px]">Society</span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        {ticketData.society_location_id
+                          ? (societyLocations.find(s => s.id === ticketData.society_location_id)?.name || ticketData.society_location_id)
+                          : '-'}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-gray-500 min-w-[140px]">Wing</span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        {ticketData.wing_id
+                          ? (societyWings.find(w => w.id === ticketData.wing_id)?.name || ticketData.wing_name || ticketData.wing_id)
+                          : (ticketData.wing_name || '-')}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-gray-500 min-w-[140px]">Area</span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        {ticketData.area_id
+                          ? (societyAreas.find(a => a.id === ticketData.area_id)?.name || ticketData.area_name || ticketData.area_id)
+                          : (ticketData.area_name || '-')}
+                      </span>
+                    </div>
+                    {hasData(ticketData.region) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Region</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.region}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.building_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Building</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.floor_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Floor</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
+                      </div>
+                    )}
+                    {/* {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
+                      </div>
+                    )} */}
+                    {hasData(ticketData.zone) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Zone</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.zone}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.district) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">District</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.district}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.room_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Room</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.site_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Site</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.site_name}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.city) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">City</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.city}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.state) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">State</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.state}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.address) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Address</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.address}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Edit Mode */
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSocietyLocationSubmit();
+                    }}
+                    className="space-y-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Society Dropdown */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Society</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.society_location_id}
+                          onChange={(e) => handleSocietyChange(e.target.value)}
+                          label="Society"
+                          notched
+                          displayEmpty
+                          disabled={loadingSocietyLocations}
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyLocations ? 'Loading...' : 'Select Society'}
+                          </MenuItem>
+                          {societyLocations.map((loc) => (
+                            <MenuItem key={loc.id} value={loc.id.toString()}>
+                              {loc.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+
+                      {/* Wing Dropdown */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Wing</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.wing_id}
+                          onChange={(e) => handleSocietyWingChange(e.target.value)}
+                          label="Wing"
+                          notched
+                          displayEmpty
+                          disabled={loadingSocietyWings || !societyLocationFormData.society_location_id}
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyWings ? 'Loading...' : !societyLocationFormData.society_location_id ? 'Select Society First' : 'Select Wing'}
+                          </MenuItem>
+                          {societyWings.map((wing) => (
+                            <MenuItem key={wing.id} value={wing.id.toString()}>
+                              {wing.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+
+                      {/* Area Dropdown */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Area</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.area_id}
+                          onChange={(e) => setSocietyLocationFormData(prev => ({ ...prev, area_id: e.target.value }))}
+                          label="Area"
+                          notched
+                          displayEmpty
+                          disabled={loadingSocietyAreas || !societyLocationFormData.wing_id}
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyAreas ? 'Loading...' : !societyLocationFormData.wing_id ? 'Select Wing First' : 'Select Area'}
+                          </MenuItem>
+                          {societyAreas.map((area) => (
+                            <MenuItem key={area.id} value={area.id.toString()}>
+                              {area.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                    </div>
+
+                    <div className="flex items-center gap-3 justify-end mt-6">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditingSocietyLocation(false)}
+                        disabled={submittingSocietyLocation}
+                        className="border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={submittingSocietyLocation}
+                        className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
+                      >
+                        {submittingSocietyLocation ? 'Saving...' : 'Submit'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+
             <Card className="w-full bg-white rounded-lg shadow-sm border">
               {/* Header */}
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
@@ -10419,138 +11044,6 @@ export const TicketDetailsPage = () => {
           </TabsContent>
 
           {/* Location Info Tab */}
-          <TabsContent value="location-info" className="p-4 sm:p-6">
-            <div className="space-y-6">
-              {/* Check if there's any location data to display */}
-              {hasData(ticketData.region) ||
-                hasData(ticketData.building_name) ||
-                hasData(ticketData.floor_name) ||
-                hasData(ticketData.flat_number) ||
-                hasData(ticketData.unit_name) ||
-                hasData(ticketData.zone) ||
-                hasData(ticketData.district) ||
-                hasData(ticketData.room_name) ||
-                hasData(ticketData.area_name) ||
-                hasData(ticketData.site_name) ||
-                hasData(ticketData.city) ||
-                hasData(ticketData.state) ||
-                hasData(ticketData.address) ||
-                hasData(ticketData.wing_name) ? (
-                /* Location Information Card */
-                <Card className="w-full">
-                  <CardHeader className="pb-4 lg:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-[#1A1A1A] text-lg lg:text-xl">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-white text-xs">
-                        <MapPin className="w-6 h-6 text-[#C72030]" />
-                      </div>
-                      <span>LOCATION INFORMATION</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                      {hasData(ticketData.region) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Region</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.region}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.building_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Building</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.floor_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Floor</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.flat_number || ticketData.unit_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.zone) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Zone</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.zone}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.district) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">District</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.district}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.room_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Room</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.area_name || ticketData.site_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Area/Site</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.area_name || ticketData.site_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.city) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">City</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.city}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.state) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">State</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.state}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.address) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Address</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.address}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.wing_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Wing</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.wing_name}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                /* No Data Available Message */
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <MapPin className="w-16 h-16 text-gray-300 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">
-                    No Location Information Available
-                  </h3>
-                  <p className="text-gray-400 max-w-sm">
-                    There is no location information available to display at
-                    this time.
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
           {/* Survey Info Tab */}
           <TabsContent value="survey-info" className="p-4 sm:p-6">
             <div className="space-y-6">
