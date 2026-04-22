@@ -12,8 +12,11 @@ const HiSocEventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [eventData, setEventData] = useState(null);
+  const [participantsData, setParticipantsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [participantsError, setParticipantsError] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // QR Code mock data
@@ -58,14 +61,44 @@ const HiSocEventDetails = () => {
     const fetchEventData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}.json`, {
-          headers: {
-                               Authorization: getAuthHeader(),
-                               "Content-Type": "multipart/form-data",
-                             },
-        });
-        console.log("Event Data:", response.data);
-        setEventData(response.data);
+        setParticipantsLoading(true);
+
+        const headers = {
+          Authorization: getAuthHeader(),
+          "Content-Type": "multipart/form-data",
+        };
+
+        const [eventResponse, participantsResponse] = await Promise.allSettled([
+          axios.get(`${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}.json`, {
+            headers,
+          }),
+          axios.get(`${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}/event_all_rsvps.json`, {
+            headers,
+          }),
+        ]);
+
+        if (eventResponse.status === "fulfilled") {
+          setEventData(eventResponse.value.data);
+        } else {
+          throw eventResponse.reason;
+        }
+
+        if (participantsResponse.status === "fulfilled") {
+          const participantsPayload = participantsResponse.value.data;
+          const participantsList = Array.isArray(participantsPayload)
+            ? participantsPayload
+            : Array.isArray(participantsPayload?.data)
+            ? participantsPayload.data
+            : [];
+
+          setParticipantsData(participantsList);
+          setParticipantsError(null);
+        } else {
+          console.error("Error fetching participants data:", participantsResponse.reason);
+          setParticipantsData([]);
+          setParticipantsError("Failed to load participants");
+        }
+
         setError(null);
       } catch (error) {
         console.error("Error fetching event data:", error);
@@ -73,6 +106,7 @@ const HiSocEventDetails = () => {
         toast.error("Failed to load event details");
       } finally {
         setLoading(false);
+        setParticipantsLoading(false);
       }
     };
 
@@ -120,22 +154,24 @@ const HiSocEventDetails = () => {
   // QR Code handlers
   const handleDownloadQRCode = (qrCodeId, cpName) => {
     toast.success(`Downloading QR Code for ${cpName}`);
-    console.log('Download QR Code:', qrCodeId);
   };
 
   const handleSendQRCodeEmail = (email, cpName) => {
     toast.success(`Sending QR Code to ${email}`);
-    console.log('Send QR Code to:', email);
   };
 
   const handleDownloadAllQRCodes = () => {
     toast.success('Downloading all QR Codes');
-    console.log('Download All QR Codes');
   };
 
   const handleSendAllQRCodesEmail = () => {
     toast.success('Sending QR Codes to all channel partners');
-    console.log('Send All QR Codes via Email');
+  };
+
+  const formatRSVPStatus = (rsvpValue) => {
+    if (rsvpValue === 1 || rsvpValue === "1" || rsvpValue === true) return "Yes";
+    if (rsvpValue === 0 || rsvpValue === "0" || rsvpValue === false) return "No";
+    return "N/A";
   };
 
   if (loading) {
@@ -182,6 +218,7 @@ const HiSocEventDetails = () => {
               { label: 'Event Details', value: 'event-details' },
               { label: 'Events Related Images', value: 'images' },
               { label: 'Invited CPs', value: 'invited-cps' },
+              { label: 'Participants', value: 'participants' },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -363,6 +400,67 @@ const HiSocEventDetails = () => {
               </div>
               <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
                 <p className="text-gray-600">Invited CPs content will be displayed here.</p>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Participants Tab */}
+          <TabsContent value="participants" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                    <Users className="w-6 h-6 text-[#C72030]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black">
+                    Participants
+                  </h3>
+                </div>
+              </div>
+
+              <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                {participantsLoading ? (
+                  <p className="text-gray-600">Loading participants...</p>
+                ) : participantsError ? (
+                  <p className="text-red-600">{participantsError}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">Sr. No.</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Name</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Email</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">RSVP</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">No. of People</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center">Attended</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {participantsData.length > 0 ? (
+                          participantsData.map((participant, index) => (
+                            <TableRow key={participant.id || `${participant.user_id}-${index}`} className="hover:bg-gray-50">
+                              <TableCell className="py-3 px-4 text-center">{index + 1}</TableCell>
+                              <TableCell className="py-3 px-4">{participant.user_name || "N/A"}</TableCell>
+                              <TableCell className="py-3 px-4">{participant.user_email || "N/A"}</TableCell>
+                              <TableCell className="py-3 px-4 text-center">{formatRSVPStatus(participant.rsvp)}</TableCell>
+                              <TableCell className="py-3 px-4 text-center">{participant.no_of_people ?? "N/A"}</TableCell>
+                              <TableCell className="py-3 px-4 text-center">
+                                {participant.event_attended === 1 || participant.event_attended === "1" ? "Yes" : participant.event_attended === 0 || participant.event_attended === "0" ? "No" : "N/A"}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-600">
+                              No participants found
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>
