@@ -214,7 +214,7 @@ const SmartSecureStaffsOut: React.FC = () => {
         case "checkin_time":
           return (
             <span className="text-sm text-gray-600">
-              {formatTime(record.checkin_time)}
+              {formatTime(record.checkin_time || record.entry_time)}
             </span>
           );
 

@@ -1065,7 +1065,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingResponsiblePersons(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}/usergroups/get_members_list.json`;
+        const url = `https://${baseUrl}/dropdown/service_engineers`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1080,13 +1080,12 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        console.log('Responsible persons response:', data);
-        const members = Array.isArray(data) ? data : [];
+        const engineers = Array.isArray(data.service_engineers) ? data.service_engineers : [];
         setResponsiblePersons(
-          members.map((member: { user: { id: number; firstname: string; lastname: string } }) => ({
-            id: member.user.id,
+          engineers.map((engineer: { id: number; full_name: string }) => ({
+            id: engineer.id,
             employee_type: '',
-            full_name: `${member.user.firstname} ${member.user.lastname}`.trim(),
+            full_name: engineer.full_name,
           }))
         );
       } catch (err) {
