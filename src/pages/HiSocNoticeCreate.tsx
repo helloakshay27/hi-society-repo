@@ -32,7 +32,7 @@ const HiSocNoticeCreate = () => {
     is_important: "",
     email_trigger_enabled: "",
     active: true,
-    publish: "",
+    // publish: "",
     notice_type: "General",
     project_id: "",
     flag_expire: false,
@@ -289,7 +289,7 @@ const HiSocNoticeCreate = () => {
     data.append("noticeboard[active]", "1");
     data.append("noticeboard[IsDelete]", formData.IsDelete ? "1" : "0");
     data.append("noticeboard[notice_type]", formData.notice_type || "General");
-    data.append("noticeboard[publish]", formData.publish);
+    // data.append("noticeboard[publish]", formData.publish);
     data.append("noticeboard[flag_expire]", formData.flag_expire ? "1" : "0");
     data.append("noticeboard[is_important]", formData.is_important ? "1" : "0");
     data.append("noticeboard[email_trigger_enabled]", formData.email_trigger_enabled ? "1" : "0");

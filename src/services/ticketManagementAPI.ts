@@ -1775,8 +1775,8 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
-  async getServiceEngineers() {
-    const response = await apiClient.get('/dropdown/service_engineers');
+  async getServiceEngineers(params?: Record<string, string>) {
+    const response = await apiClient.get('/dropdown/service_engineers', { params });
     return response.data;
   },
 

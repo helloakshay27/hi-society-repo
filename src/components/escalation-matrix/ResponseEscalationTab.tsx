@@ -191,7 +191,7 @@ export const ResponseEscalationTab: React.FC = () => {
     try {
       const [issueTypesData, engineersData] = await Promise.all([
         ticketManagementAPI.getIssueTypesDropdown(),
-        ticketManagementAPI.getServiceEngineers(),
+        ticketManagementAPI.getServiceEngineers({ 'q[staff_type_eq]': 'Escalation' }),
       ])
       setIssueTypeOptions(issueTypesData.issue_types || [])
       setServiceEngineerOptions(engineersData.service_engineers || [])
