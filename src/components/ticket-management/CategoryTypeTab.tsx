@@ -712,8 +712,9 @@ export const CategoryTypeTab: React.FC = () => {
     { key: 'name', label: 'Category Type', sortable: true },
     { key: 'issue_type_id', label: 'Issue Type', sortable: false },
     { key: 'priority', label: 'Priority', sortable: false },
-    { key: 'project_tat', label: 'Project Response Time', sortable: false },
     { key: 'tat', label: 'Response Time (FM)', sortable: false },
+    { key: 'project_tat', label: 'Project Response Time', sortable: false },
+    
     { key: 'icon_url', label: 'Icon', sortable: false },
   ];
 
