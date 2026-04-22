@@ -18,6 +18,7 @@ import { fetchHelpdeskCategories } from '@/store/slices/helpdeskCategoriesSlice'
 import { createResponseEscalation, clearState, fetchResponseEscalations, updateResponseEscalation, deleteResponseEscalation } from '@/store/slices/responseEscalationSlice'
 import { ResponseEscalationApiFormData, FMUserDropdown, EscalationMatrixPayload, ResponseEscalationGetResponse, UpdateResponseEscalationPayload } from '@/types/escalationMatrix'
 import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManagementAPI'
+import { apiClient } from '@/utils/apiClient'
 import { API_CONFIG } from '@/config/apiConfig'
 import { toast } from 'sonner'
 import ReactSelect from 'react-select'
@@ -68,13 +69,21 @@ export const ResponseEscalationTab: React.FC = () => {
   const [selectedIssueTypeId, setSelectedIssueTypeId] = useState<string>('')
   const [selectedCategoryTypeId, setSelectedCategoryTypeId] = useState<string>('')
   const [selectedAssignTo, setSelectedAssignTo] = useState<number[]>([])
+  const [formCategoryOptions, setFormCategoryOptions] = useState<{ id: number; name: string }[]>([])
+  const [formCategoriesLoading, setFormCategoriesLoading] = useState(false)
 
   // Edit dialog dropdown selections
   const [editIssueTypeId, setEditIssueTypeId] = useState<string>('')
   const [editCategoryTypeId, setEditCategoryTypeId] = useState<string>('')
   const [editAssignTo, setEditAssignTo] = useState<number[]>([])
+  const [editCategoryOptions, setEditCategoryOptions] = useState<{ id: number; name: string }[]>([])
+  const [editCategoriesLoading, setEditCategoriesLoading] = useState(false)
   // Map of user id -> display name for pre-existing edit selections not in userOptions
   const [editUserLabels, setEditUserLabels] = useState<Record<number, string>>({})
+
+  // Filter dialog category selections
+  const [filterCategoryOptions, setFilterCategoryOptions] = useState<{ id: number; name: string }[]>([])
+  const [filterCategoriesLoading, setFilterCategoriesLoading] = useState(false)
 
   // FM/Project tab state
   const [activeFmProjectTab, setActiveFmProjectTab] = useState<'fm' | 'project'>('fm')
@@ -131,6 +140,33 @@ export const ResponseEscalationTab: React.FC = () => {
     loadEscalationRules(1, '', '')
   }, [dispatch])
 
+  // Fetch filtered categories when selectedIssueTypeId changes (form)
+  useEffect(() => {
+    if (selectedIssueTypeId) {
+      fetchCategoriesByIssueType(selectedIssueTypeId, 'form')
+    } else {
+      setFormCategoryOptions([])
+    }
+  }, [selectedIssueTypeId])
+
+  // Fetch filtered categories when editIssueTypeId changes (edit dialog)
+  useEffect(() => {
+    if (editIssueTypeId) {
+      fetchCategoriesByIssueType(editIssueTypeId, 'edit')
+    } else {
+      setEditCategoryOptions([])
+    }
+  }, [editIssueTypeId])
+
+  // Fetch filtered categories when filterIssueTypeId changes (filter)
+  useEffect(() => {
+    if (filterIssueTypeId) {
+      fetchCategoriesByIssueType(filterIssueTypeId, 'filter')
+    } else {
+      setFilterCategoryOptions([])
+    }
+  }, [filterIssueTypeId])
+
   // Reload escalation rules when FM/Project tab changes
   useEffect(() => {
     loadEscalationRules(1, filterIssueTypeId, filterCategoryId)
@@ -153,20 +189,45 @@ export const ResponseEscalationTab: React.FC = () => {
   const loadDropdowns = async () => {
     setLoadingUsers(true)
     try {
-      const [issueTypesData, categoriesData, engineersData] = await Promise.all([
+      const [issueTypesData, engineersData] = await Promise.all([
         ticketManagementAPI.getIssueTypesDropdown(),
-        ticketManagementAPI.getCategoriesDropdown(),
         ticketManagementAPI.getServiceEngineers(),
       ])
       setIssueTypeOptions(issueTypesData.issue_types || [])
-      setCategoryDropdownOptions(categoriesData.categories || [])
       setServiceEngineerOptions(engineersData.service_engineers || [])
-      console.log('Dropdowns loaded:', { issueTypesData, categoriesData, engineersData })
+      console.log('Dropdowns loaded:', { issueTypesData, engineersData })
     } catch (error) {
       console.error('Error loading dropdowns:', error)
       toast.error('Failed to load dropdown options!')
     } finally {
       setLoadingUsers(false)
+    }
+  }
+
+  // Fetch categories filtered by issue type
+  const fetchCategoriesByIssueType = async (
+    issueTypeId: string,
+    target: 'form' | 'edit' | 'filter'
+  ) => {
+    const setLoading = target === 'form' ? setFormCategoriesLoading : target === 'edit' ? setEditCategoriesLoading : setFilterCategoriesLoading
+    const setOptions = target === 'form' ? setFormCategoryOptions : target === 'edit' ? setEditCategoryOptions : setFilterCategoryOptions
+    
+    if (!issueTypeId) {
+      setOptions([])
+      return
+    }
+    
+    setLoading(true)
+    try {
+      const res = await apiClient.get('/dropdown/categories', {
+        params: { 'q[issue_type_id_eq]': issueTypeId },
+      })
+      setOptions(res.data.categories || [])
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      setOptions([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -602,12 +663,12 @@ export const ResponseEscalationTab: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Category Type <span className="text-red-500">*</span></Label>
-                  <Select value={selectedCategoryTypeId} onValueChange={setSelectedCategoryTypeId}>
+                  <Select value={selectedCategoryTypeId} onValueChange={setSelectedCategoryTypeId} disabled={!selectedIssueTypeId || formCategoriesLoading}>
                     <SelectTrigger className="w-full border-gray-300">
-                      <SelectValue placeholder="Select Category Type" />
+                      <SelectValue placeholder={selectedIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'} />
                     </SelectTrigger>
                     <SelectContent>
-                      {categoryDropdownOptions.map((category) => (
+                      {formCategoryOptions.map((category) => (
                         <SelectItem key={category.id} value={String(category.id)}>
                           {category.name}
                         </SelectItem>
@@ -789,13 +850,13 @@ export const ResponseEscalationTab: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium text-gray-700">Category Type</Label>
-                  <Select value={filterCategoryId || 'all'} onValueChange={(val) => setFilterCategoryId(val === 'all' ? '' : val)}>
+                  <Select value={filterCategoryId || 'all'} onValueChange={(val) => setFilterCategoryId(val === 'all' ? '' : val)} disabled={!filterIssueTypeId || filterCategoriesLoading}>
                     <SelectTrigger className="w-40 border-gray-200">
-                      <SelectValue placeholder="All" />
+                      <SelectValue placeholder={filterIssueTypeId ? 'Loading...' : 'All'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
-                      {categoryDropdownOptions.map((category) => (
+                      {filterCategoryOptions.map((category) => (
                         <SelectItem key={category.id} value={String(category.id)}>
                           {category.name}
                         </SelectItem>
@@ -997,12 +1058,12 @@ export const ResponseEscalationTab: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Category Type <span className="text-red-500">*</span></Label>
-                  <Select value={editCategoryTypeId} onValueChange={setEditCategoryTypeId}>
+                  <Select value={editCategoryTypeId} onValueChange={setEditCategoryTypeId} disabled={!editIssueTypeId || editCategoriesLoading}>
                     <SelectTrigger className="w-full border-gray-300">
-                      <SelectValue placeholder="Select Category Type" />
+                      <SelectValue placeholder={editIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'} />
                     </SelectTrigger>
                     <SelectContent>
-                      {categoryDropdownOptions.map((category) => (
+                      {editCategoryOptions.map((category) => (
                         <SelectItem key={category.id} value={String(category.id)}>
                           {category.name}
                         </SelectItem>

@@ -344,12 +344,20 @@ export const ResolutionEscalationTab: React.FC = () => {
     useState("");
   const [escalationFormCategoryTypeId, setEscalationFormCategoryTypeId] =
     useState("");
+  const [escalationFormCategoryOptions, setEscalationFormCategoryOptions] =
+    useState<{ id: number; name: string }[]>([]);
+  const [escalationFormCategoriesLoading, setEscalationFormCategoriesLoading] =
+    useState(false);
 
   // Edit Escalation Rule dialog - Issue Type & Category Type selection
   const [editEscalationIssueTypeId, setEditEscalationIssueTypeId] =
     useState("");
   const [editEscalationCategoryTypeId, setEditEscalationCategoryTypeId] =
     useState("");
+  const [editEscalationCategoryOptions, setEditEscalationCategoryOptions] =
+    useState<{ id: number; name: string }[]>([]);
+  const [editEscalationCategoriesLoading, setEditEscalationCategoriesLoading] =
+    useState(false);
 
   // Escalation Rule list data (from /crm/admin/assign_escalation.json)
   const [escalationRulesList, setEscalationRulesList] = useState<any[]>([]);
@@ -367,6 +375,10 @@ export const ResolutionEscalationTab: React.FC = () => {
     useState("");
   const [escalationFilterCategoryId, setEscalationFilterCategoryId] =
     useState("");
+  const [escalationFilterCategoryOptions, setEscalationFilterCategoryOptions] =
+    useState<{ id: number; name: string }[]>([]);
+  const [escalationFilterCategoriesLoading, setEscalationFilterCategoriesLoading] =
+    useState(false);
   const [isEscalationFilterDialogOpen, setIsEscalationFilterDialogOpen] =
     useState(false);
   const [
@@ -571,6 +583,32 @@ export const ResolutionEscalationTab: React.FC = () => {
     }
   };
 
+  // Fetch categories filtered by issue type for escalation rules (form, edit, filter)
+  const fetchEscalationCategoriesByIssueType = async (
+    issueTypeId: string,
+    target: "form" | "edit" | "filter"
+  ) => {
+    const setLoading = target === "form" ? setEscalationFormCategoriesLoading : target === "edit" ? setEditEscalationCategoriesLoading : setEscalationFilterCategoriesLoading;
+    const setOptions = target === "form" ? setEscalationFormCategoryOptions : target === "edit" ? setEditEscalationCategoryOptions : setEscalationFilterCategoryOptions;
+    
+    if (!issueTypeId) {
+      setOptions([]);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await apiClient.get("/dropdown/categories", {
+        params: { "q[issue_type_id_eq]": issueTypeId },
+      });
+      setOptions(res.data.categories || []);
+    } catch {
+      setOptions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load escalation rules from /crm/admin/assign_escalation.json
   // Load escalation rules from /crm/admin/escalation_rule.json
   const loadEscalationRules = async (
@@ -737,6 +775,33 @@ export const ResolutionEscalationTab: React.FC = () => {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFmProjectTab]);
+
+  // Fetch escalation filter categories when filter issue type changes
+  useEffect(() => {
+    if (pendingEscalationFilterIssueTypeId && pendingEscalationFilterIssueTypeId !== "all") {
+      fetchEscalationCategoriesByIssueType(pendingEscalationFilterIssueTypeId, "filter");
+    } else {
+      setEscalationFilterCategoryOptions([]);
+    }
+  }, [pendingEscalationFilterIssueTypeId]);
+
+  // Fetch escalation form categories when form issue type changes
+  useEffect(() => {
+    if (escalationFormIssueTypeId) {
+      fetchEscalationCategoriesByIssueType(escalationFormIssueTypeId, "form");
+    } else {
+      setEscalationFormCategoryOptions([]);
+    }
+  }, [escalationFormIssueTypeId]);
+
+  // Fetch escalation edit categories when edit issue type changes
+  useEffect(() => {
+    if (editEscalationIssueTypeId) {
+      fetchEscalationCategoriesByIssueType(editEscalationIssueTypeId, "edit");
+    } else {
+      setEditEscalationCategoryOptions([]);
+    }
+  }, [editEscalationIssueTypeId]);
 
   // Handle success/error states
   useEffect(() => {
@@ -1714,12 +1779,13 @@ export const ResolutionEscalationTab: React.FC = () => {
                       <Select
                         value={escalationFormCategoryTypeId}
                         onValueChange={setEscalationFormCategoryTypeId}
+                        disabled={!escalationFormIssueTypeId || escalationFormCategoriesLoading}
                       >
                         <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select Category Type" />
+                          <SelectValue placeholder={escalationFormIssueTypeId ? "Loading categories..." : "Select Issue Type first"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {categoryDropdownOptions.map((cat) => (
+                          {escalationFormCategoryOptions.map((cat) => (
                             <SelectItem key={cat.id} value={cat.id.toString()}>
                               {cat.name}
                             </SelectItem>
@@ -2559,13 +2625,14 @@ export const ResolutionEscalationTab: React.FC = () => {
               <Select
                 value={pendingEscalationFilterCategoryId}
                 onValueChange={setPendingEscalationFilterCategoryId}
+                disabled={!pendingEscalationFilterIssueTypeId || pendingEscalationFilterIssueTypeId === "all" || escalationFilterCategoriesLoading}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select Category Type" />
+                  <SelectValue placeholder={pendingEscalationFilterIssueTypeId && pendingEscalationFilterIssueTypeId !== "all" ? "Loading categories..." : "Select Issue Type first"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {categoryDropdownOptions.map((cat) => (
+                  {escalationFilterCategoryOptions.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>
@@ -2835,12 +2902,13 @@ export const ResolutionEscalationTab: React.FC = () => {
                 <Select
                   value={editEscalationCategoryTypeId}
                   onValueChange={(v) => setEditEscalationCategoryTypeId(v)}
+                  disabled={!editEscalationIssueTypeId || editEscalationCategoriesLoading}
                 >
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select Category Type" />
+                    <SelectValue placeholder={editEscalationIssueTypeId ? "Loading categories..." : "Select Issue Type first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {categoryDropdownOptions.map((cat) => (
+                    {editEscalationCategoryOptions.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                         {cat.name}
                       </SelectItem>
