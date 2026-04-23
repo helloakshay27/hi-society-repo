@@ -1128,6 +1128,7 @@ import { DeliveryChallansDashboard } from "./pages/ClubManagement/DeliveryChalla
 import { DeliveryChallansAdd } from "./pages/ClubManagement/DeliveryChallansAdd";
 import FitoutRequestCategoryApprovalRequestMobile from "./pages/FitoutRequestCategoryApprovalRequestMobile";
 import AddVisitorPage from "./pages/AddVisitorPage";
+import SettingsGenericPage from "./pages/SettingsGenericPage";
 
 const queryClient = new QueryClient();
 
@@ -4197,6 +4198,11 @@ function App() {
                       <Route
                         path="/settings/survey/list"
                         element={<SurveyListDashboard />}
+                      />
+
+                       <Route
+                        path="/settings/general-settings"
+                        element={<SettingsGenericPage />}
                       />
 
                       <Route
