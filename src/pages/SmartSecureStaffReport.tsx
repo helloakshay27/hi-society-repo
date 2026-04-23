@@ -23,10 +23,9 @@ interface FilterOption {
 interface StaffFilters {
   work_types: FilterOption[];
   staff_types: FilterOption[];
-  statuses: FilterOption[];
   towers: FilterOption[];
-  staffs: FilterOption[];
-  companies: FilterOption[];
+  staff_names: FilterOption[];
+  company_names: FilterOption[];
 }
 
 const SmartSecureStaffReport: React.FC = () => {
@@ -42,10 +41,9 @@ const SmartSecureStaffReport: React.FC = () => {
   const [filters, setFilters] = useState<StaffFilters>({
     work_types: [],
     staff_types: [],
-    statuses: [],
     towers: [],
-    staffs: [],
-    companies: [],
+    staff_names: [],
+    company_names: [],
   });
   const [loadingFilters, setLoadingFilters] = useState(false);
 
@@ -53,20 +51,20 @@ const SmartSecureStaffReport: React.FC = () => {
     const fetchFilters = async () => {
       setLoadingFilters(true);
       try {
-        const url = getFullUrl("/crm/admin/staff_filters.json");
-        const response = await fetch(url, {
-          method: "GET",
-          headers: { Authorization: getAuthHeader() },
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+        const headers = { Authorization: getAuthHeader() };
+        const [res1, res2] = await Promise.all([
+          fetch(getFullUrl("/crm/admin/staff_filters.json"), { method: "GET", headers }),
+          fetch(getFullUrl("/crm/admin/staff_and_company_filters.json"), { method: "GET", headers }),
+        ]);
+        if (!res1.ok) throw new Error(`HTTP ${res1.status}`);
+        if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+        const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
         setFilters({
-          work_types: data.work_types || [],
-          staff_types: data.staff_types || [],
-          statuses: data.statuses || [],
-          towers: data.towers || [],
-          staffs: data.staffs || [],
-          companies: data.companies || [],
+          work_types: data1.work_types || [],
+          staff_types: data1.staff_types || [],
+          towers: data1.towers || [],
+          staff_names: data2.staff_names || [],
+          company_names: data2.company_names || [],
         });
       } catch (error) {
         console.error("Error fetching staff filters:", error);
@@ -101,7 +99,7 @@ const SmartSecureStaffReport: React.FC = () => {
       if (staffName) body.staff_ids = [Number(staffName)];
       if (workType) body.type_ids = [Number(workType)];
       if (companyName) body.company_name = companyName;
-      if (status !== "") body.status = status;
+      if (status && status.trim() !== "") body.status = status.trim();
 
       const url = getFullUrl("/st_reports.csv");
       const response = await fetch(url, {
@@ -192,20 +190,14 @@ const SmartSecureStaffReport: React.FC = () => {
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Status
                 </label>
-                <Select value={status} onValueChange={setStatus} disabled={loadingFilters}>
+                <Select value={status} onValueChange={setStatus}>
                   <SelectTrigger className="h-[45px]">
-                    <SelectValue placeholder={loadingFilters ? "Loading..." : "Select Status"} />
+                    <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filters.statuses.map((item, idx) => {
-                      const val = String(item.value);
-                      if (val === "") return null;
-                      return (
-                        <SelectItem key={idx} value={val}>
-                          {item.label}
-                        </SelectItem>
-                      );
-                    })}
+                    <SelectItem value=" ">All</SelectItem>
+                    <SelectItem value="1">Active</SelectItem>
+                    <SelectItem value="0">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -220,7 +212,7 @@ const SmartSecureStaffReport: React.FC = () => {
                     <SelectValue placeholder={loadingFilters ? "Loading..." : "Select Staff Name"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {filters.staffs.map((item) => {
+                    {filters.staff_names.map((item) => {
                       const val = String(item.value);
                       if (val === "") return null;
                       return (
@@ -243,7 +235,7 @@ const SmartSecureStaffReport: React.FC = () => {
                     <SelectValue placeholder={loadingFilters ? "Loading..." : "Select Company"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {filters.companies.map((item) => {
+                    {filters.company_names.map((item) => {
                       const val = String(item.value);
                       if (val === "") return null;
                       return (
