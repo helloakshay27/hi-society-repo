@@ -1211,7 +1211,13 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Question Bank",
           icon: FileText,
           path: "/settings/survey/list",
+        },{
+          id: "sync-visitor",
+          label: "General Settings",
+          icon: FileText,
+          path: "/settings/general-settings",
         },
+
       ],
     },
   };
