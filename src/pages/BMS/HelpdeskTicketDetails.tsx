@@ -1095,7 +1095,7 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        const engineers = Array.isArray(data.service_engineers) ? data.service_engineers : [];
+        const engineers = Array.isArray(data.helpdesk_users) ? data.helpdesk_users : [];
         setResponsiblePersons(
           engineers.map((engineer: { id: number; full_name: string }) => ({
             id: engineer.id,
