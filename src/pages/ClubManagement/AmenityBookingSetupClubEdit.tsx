@@ -3956,7 +3956,7 @@ export const EditBookingSetupClubPage = () => {
                                                                                 htmlFor={`slot-${blockIndex}-${slot.id}`}
                                                                                 className="cursor-pointer text-sm font-medium"
                                                                             >
-                                                                                {slot.ampm}
+                                                                                {slot.ampm || slot.slot.ampm}
                                                                             </label>
                                                                         </div>
                                                                     );
