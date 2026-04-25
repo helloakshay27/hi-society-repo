@@ -4320,6 +4320,12 @@ export const TicketDetailsPage = () => {
             >
               Logs
             </TabsTrigger>
+            <TabsTrigger
+              value="feedbacks"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+            >
+              Feedbacks
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics" className="p-4 sm:p-6">
@@ -11657,6 +11663,69 @@ export const TicketDetailsPage = () => {
               <p className="text-gray-500 text-center py-8">
                 No action logs found
               </p>
+            )}
+          </TabsContent>
+
+          {/* Feedbacks Tab */}
+          <TabsContent value="feedbacks" className="p-4 sm:p-6">
+            {ticketData?.feedbacks && ticketData.feedbacks.length > 0 ? (
+              <div className="bg-white rounded-lg border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date/Time</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Staff</TableHead>
+                      <TableHead>By</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ticketData.feedbacks.map((feedback: any, index: number) => (
+                      <TableRow key={feedback.id || index}>
+                        <TableCell className="font-medium text-sm">
+                          {feedback.created_at ? formatLogTime(feedback.created_at) : '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <svg
+                                key={i}
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill={i < (feedback.rating || 0) ? '#C72030' : 'none'}
+                                stroke="#C72030"
+                                strokeWidth="2"
+                              >
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                              </svg>
+                            ))}
+                            <span className="ml-1 text-gray-600">({feedback.rating || 0}/5)</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {feedback.comment && feedback.comment.trim() ? feedback.comment : '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {feedback.status && feedback.status.trim() ? (
+                            <Badge className="bg-blue-100 text-blue-700 text-xs">{feedback.status}</Badge>
+                          ) : '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {feedback.staff && feedback.staff.trim() ? feedback.staff : '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {feedback.log_by || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No feedbacks found</p>
             )}
           </TabsContent>
         </Tabs>

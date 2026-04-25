@@ -256,7 +256,7 @@ class EmployeeTicketAPI {
       });
     }
 
-    const url = `/pms/admin/ticket_summary.json?${queryParams.toString()}`;
+    const url = `/crm/admin/ticket_summary.json?${queryParams.toString()}`;
     console.log('🔵 Employee API Final summary URL:', url);
     
     const response = await apiClient.get(url);

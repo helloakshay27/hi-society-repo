@@ -50,7 +50,8 @@ export const SubCategoryTab: React.FC = () => {
   // Create form state
   const [selectedIssueType, setSelectedIssueType] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [subCategoryName, setSubCategoryName] = useState('');
+  const [subCategoryTags, setSubCategoryTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [helpdeskText, setHelpdeskText] = useState('');
 
   // Edit modal state
@@ -150,6 +151,24 @@ export const SubCategoryTab: React.FC = () => {
     fetchSubCategories(1);
   }, [fetchAllData, fetchSubCategories]);
 
+  // Tag input helpers
+  const addTag = (raw: string) => {
+    const trimmed = raw.trim();
+    if (trimmed && !subCategoryTags.includes(trimmed)) {
+      setSubCategoryTags((prev) => [...prev, trimmed]);
+    }
+    setTagInput('');
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === 'Backspace' && tagInput === '' && subCategoryTags.length > 0) {
+      setSubCategoryTags((prev) => prev.slice(0, -1));
+    }
+  };
+
   // Handle create submit
   const handleCreateSubmit = async () => {
     if (!selectedIssueType) {
@@ -160,21 +179,25 @@ export const SubCategoryTab: React.FC = () => {
       toast.error('Please select category');
       return;
     }
-    if (!subCategoryName.trim()) {
-      toast.error('Please enter sub-category name');
+    // flush any unconfirmed tag still in the input
+    const finalTags = tagInput.trim()
+      ? [...subCategoryTags, tagInput.trim()]
+      : subCategoryTags;
+    if (finalTags.length === 0) {
+      toast.error('Please enter at least one sub-category name');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('helpdesk_sub_category[issue_type_id]', selectedIssueType);
-      formData.append('helpdesk_sub_category[name]', subCategoryName.trim());
-      formData.append('helpdesk_sub_category[helpdesk_category_id]', selectedCategory);
-
-      if (helpdeskText.trim()) {
-        formData.append('helpdesk_sub_category[helpdesk_text]', helpdeskText.trim());
-      }
+      const payload: Record<string, unknown> = {
+        helpdesk_sub_category: {
+          helpdesk_category_id: Number(selectedCategory),
+          issue_type_id: Number(selectedIssueType),
+          ...(helpdeskText.trim() ? { helpdesk_text: helpdeskText.trim() } : {}),
+        },
+        sub_category_tags: [finalTags.join(',')],
+      };
 
       const response = await fetch(
         getFullUrl('/crm/admin/create_helpdesk_sub_category.json'),
@@ -182,8 +205,9 @@ export const SubCategoryTab: React.FC = () => {
           method: 'POST',
           headers: {
             'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(payload),
         }
       );
 
@@ -191,7 +215,8 @@ export const SubCategoryTab: React.FC = () => {
         toast.success('Sub-category created successfully!');
         setSelectedIssueType('');
         setSelectedCategory('');
-        setSubCategoryName('');
+        setSubCategoryTags([]);
+        setTagInput('');
         setHelpdeskText('');
         setAddDialogOpen(false);
         fetchSubCategories(1);
@@ -361,7 +386,8 @@ export const SubCategoryTab: React.FC = () => {
         if (!open) {
           setSelectedIssueType('');
           setSelectedCategory('');
-          setSubCategoryName('');
+          setSubCategoryTags([]);
+          setTagInput('');
           setHelpdeskText('');
         }
       }}>
@@ -414,17 +440,43 @@ export const SubCategoryTab: React.FC = () => {
                 ))}
               </MuiSelect>
             </FormControl>
-            <TextField
-              label="Sub-category Name"
-              placeholder="Enter Sub-category"
-              value={subCategoryName}
-              onChange={(e) => setSubCategoryName(e.target.value)}
-              fullWidth
-              variant="outlined"
-              required
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
+            {/* Tag input for multiple sub-category names */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sub-category Names <span className="text-red-500">*</span>
+                <span className="text-xs text-gray-400 ml-2">Press Enter or comma to add</span>
+              </label>
+              <div
+                className="flex flex-wrap gap-1.5 min-h-[42px] border border-gray-300 rounded px-2 py-1.5 focus-within:ring-1 focus-within:ring-[#C72030] focus-within:border-[#C72030] cursor-text"
+                onClick={() => document.getElementById('tag-input-create')?.focus()}
+              >
+                {subCategoryTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 bg-red-50 text-[#C72030] border border-red-200 rounded px-2 py-0.5 text-sm"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setSubCategoryTags((prev) => prev.filter((t) => t !== tag)); }}
+                      className="hover:text-red-800 font-bold leading-none"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  id="tag-input-create"
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
+                  placeholder={subCategoryTags.length === 0 ? 'e.g. Leakage, Blockage, Pipe Burst' : ''}
+                  className="flex-1 min-w-[120px] outline-none text-sm bg-transparent py-0.5"
+                />
+              </div>
+            </div>
             <TextField
               label="Text"
               placeholder="Enter text"

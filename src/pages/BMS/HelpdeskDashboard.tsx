@@ -36,6 +36,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { toast as sonnerToast } from 'sonner';
 import { AIAssistantWidget } from '@/components/AIAssistantWidget';
 import { DashboardAIAssistant } from '@/components/DashboardAIAssistant';
+import { SpeechProvider } from '@/contexts/SpeechContext';
 
 // Sortable Chart Item Component
 const SortableChartItem = ({
@@ -1603,7 +1604,9 @@ export const TicketDashboard = () => {
                 <RecentTicketsSidebar onTicketUpdate={refreshTicketsAndSummary} />
               </div>
             </div>
-            <DashboardAIAssistant moduleId="2" />
+            <SpeechProvider>
+              <DashboardAIAssistant moduleId="2" />
+            </SpeechProvider>
 
           </TabsContent>
 

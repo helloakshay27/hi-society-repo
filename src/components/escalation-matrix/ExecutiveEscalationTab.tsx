@@ -30,47 +30,39 @@ interface EscalationRule {
 }
 
 interface ExecutiveEscalationPayload {
-  complaint_worker: {
-    of_phase: string;
-  };
   escalation_matrix: {
     [key: string]: {
-      esc_type: string;
       name: string;
-      escalate_to_users?: string[];
-      p1?: string;
+      esc_type: string;
+      escalate_to_users: number[];
+      p1: string;
+      p2: string;
+      p3: string;
+      p4: string;
+      p5: string;
     };
   };
 }
 
-interface ExecutiveEscalationResponse {
-  escalations: {
-    id: number;
-    society_id: number;
-    name: string;
-    after_days: number | null;
-    escalate_to_users: string[];
-    created_at: string;
-    updated_at: string;
-    complaint_status_id: number | null;
-    active: number | null;
-    p1: number | null;
-    p2: number | null;
-    p3: number | null;
-    p4: number | null;
-    p5: number | null;
-    cw_id: number | null;
-    esc_type: string;
-    resource_id: number | null;
-    resource_type: string | null;
-    copy_to: string | null;
-    escalate_to_users_details: {
-      id: number;
-      name: string;
-      email: string;
-      mobile: string;
-    }[];
-  }[];
+interface ExecutiveWorker {
+  id: number;
+  name: string;
+  esc_type: string | null;
+  p1: number | null;
+  p2: number | null;
+  p3: number | null;
+  p4: number | null;
+  p5: number | null;
+  escalate_to_users: { id: number; full_name: string }[];
+  created_at: string;
+  updated_at: string;
+}
+
+interface ExecutivePagination {
+  current_page: number;
+  per_page: number;
+  total_entries: number;
+  total_pages: number;
 }
 
 interface EscalationUser {
@@ -88,11 +80,17 @@ export const ExecutiveEscalationTab: React.FC = () => {
 
   const [savedRules, setSavedRules] = useState<EscalationRule[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [executiveRules, setExecutiveRules] = useState<ExecutiveEscalationResponse['escalations']>([]);
+  const [executiveRules, setExecutiveRules] = useState<ExecutiveWorker[]>([]);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
+  const [pagination, setPagination] = useState<ExecutivePagination>({
+    current_page: 1,
+    per_page: 20,
+    total_entries: 0,
+    total_pages: 1,
+  });
   // Editing state (modal)
   const [editingGroupIndex, setEditingGroupIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<EscalationLevel[]>([]);
@@ -109,7 +107,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
   const loadEscalationUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await ticketManagementAPI.getServiceEngineers();
+      const response = await ticketManagementAPI.getServiceEngineers({ 'q[staff_type_eq]': 'Escalation' });
       setEscalationUsers(response.service_engineers || []);
     } catch (error) {
       console.error('Error loading escalation users:', error);
@@ -125,11 +123,16 @@ export const ExecutiveEscalationTab: React.FC = () => {
     fetchExecutiveRules();
   }, []);
 
-  const fetchExecutiveRules = async () => {
+  const fetchExecutiveRules = async (page = 1) => {
     try {
       setFetchLoading(true);
-      const response = await apiClient.get('/executive_escalations.json');
-      setExecutiveRules(response.data?.escalations || []);
+      const response = await apiClient.get('/crm/admin/executive_workers_index.json', {
+        params: { page, per_page: 20 },
+      });
+      setExecutiveRules(response.data?.executive_workers || []);
+      if (response.data?.pagination) {
+        setPagination(response.data.pagination);
+      }
     } catch (error: unknown) {
       console.error('Error fetching executive rules:', error);
       const msg = (error as AxiosErrorLike)?.response?.data?.message || 'Failed to fetch executive escalation rules';
@@ -139,14 +142,9 @@ export const ExecutiveEscalationTab: React.FC = () => {
     }
   };
 
-  const parseEscalateToUsers = (escalateToUsers: string[]): number[] => {
-    if (!escalateToUsers || !Array.isArray(escalateToUsers)) return [];
-    return escalateToUsers.map(id => parseInt(id.toString()));
-  };
-
-  const getUserNamesFromDetails = (userDetails: { id: number; name: string; email: string; mobile: string }[]): string => {
-    if (!userDetails || userDetails.length === 0) return 'No users assigned';
-    return userDetails.map(user => user.name).join(', ');
+  const getUserNamesFromUsers = (users: { id: number; full_name: string }[]): string => {
+    if (!users || users.length === 0) return 'No users assigned';
+    return users.map(u => u.full_name).join(', ');
   };
 
   const formatTiming = (minutes: number | null): string => {
@@ -188,13 +186,12 @@ export const ExecutiveEscalationTab: React.FC = () => {
     return totalMinutes.toString();
   };
 
-  const startEdit = (groupIndex: number, group: ExecutiveEscalationResponse['escalations']) => {
-    // Prefill edit data for levels E1..E3
+  const startEdit = (groupIndex: number, group: ExecutiveWorker[]) => {
     const levels = ['E0','E1','E2','E3'].map((lvl) => {
       const esc = group.find(g => g.name === lvl);
       const time = splitMinutes(esc?.p1 ?? 0);
-      const userIds: number[] = Array.isArray(esc?.escalate_to_users_details)
-        ? esc!.escalate_to_users_details.map((u) => Number(u.id))
+      const userIds: number[] = Array.isArray(esc?.escalate_to_users)
+        ? esc!.escalate_to_users.map((u) => Number(u.id))
         : [];
       return {
         level: lvl,
@@ -229,11 +226,10 @@ export const ExecutiveEscalationTab: React.FC = () => {
     });
   };
 
-  const updateExecutiveEscalation = async (group: ExecutiveEscalationResponse['escalations']) => {
+  const updateExecutiveEscalation = async (group: ExecutiveWorker[]) => {
     try {
       setUpdateLoading(true);
-      // Build escalation_matrix using existing ids
-      const matrix: Record<string, any> = {};
+      const matrix: Record<string, { id: number | undefined; esc_type: string; name: string; escalate_to_users: number[]; p1: string; p2: string; p3: string; p4: string; p5: string }> = {};
       ['E0','E1','E2','E3'].forEach((lvl, i) => {
         const existing = group.find(g => g.name === lvl);
         const key = lvl.toLowerCase();
@@ -244,21 +240,22 @@ export const ExecutiveEscalationTab: React.FC = () => {
           esc_type: 'Executive Escalation',
           name: lvl,
           escalate_to_users: (item.escalationTo || []).map(id => Number(id)),
-        } as any;
-        if (lvl !== 'E0') {
-          base.p1 = convertMinutesToP1(item.days, item.hours, item.minutes);
-        }
+          p1: lvl !== 'E0' ? convertMinutesToP1(item.days, item.hours, item.minutes) : '0',
+          p2: '0',
+          p3: '0',
+          p4: '0',
+          p5: '0',
+        };
         matrix[key] = base;
       });
 
       const payload = {
-        complaint_worker: { of_phase: 'pms' },
         escalation_matrix: matrix,
       };
 
-      const res = await apiClient.put('/pms/admin/update_executive_worker.json', payload);
+      const res = await apiClient.put('/crm/admin/update_executive_worker.json', payload);
       toast.success('Executive escalation updated successfully!');
-      await fetchExecutiveRules();
+      await fetchExecutiveRules(pagination.current_page);
       cancelEdit();
       return res.data;
     } catch (error: unknown) {
@@ -281,35 +278,28 @@ export const ExecutiveEscalationTab: React.FC = () => {
       }
 
       // Prepare the payload according to the API structure
-      const escalationMatrix: { [key: string]: any } = {};
+      const escalationMatrix: ExecutiveEscalationPayload['escalation_matrix'] = {};
 
       escalationData.forEach((item) => {
         const levelKey = item.level.toLowerCase(); // e0, e1, e2, e3
-        
+
         escalationMatrix[levelKey] = {
-          esc_type: "Executive Escalation",
           name: item.level,
+          esc_type: 'Executive Escalation',
+          escalate_to_users: item.escalationTo && item.escalationTo.length > 0
+            ? item.escalationTo.map(id => Number(id))
+            : [],
+          p1: item.level !== 'E0' ? convertMinutesToP1(item.days, item.hours, item.minutes) : '0',
+          p2: '0',
+          p3: '0',
+          p4: '0',
+          p5: '0',
         };
-
-        // Add escalate_to_users if users are assigned
-        if (item.escalationTo && item.escalationTo.length > 0) {
-          escalationMatrix[levelKey].escalate_to_users = item.escalationTo.map(id => id.toString());
-        }
-
-        // Add p1 timing if any time value is provided
-        if (item.days || item.hours || item.minutes) {
-          escalationMatrix[levelKey].p1 = convertMinutesToP1(item.days, item.hours, item.minutes);
-        }
       });
 
       const payload: ExecutiveEscalationPayload = {
-        complaint_worker: {
-          of_phase: "pms"
-        },
-        escalation_matrix: escalationMatrix
+        escalation_matrix: escalationMatrix,
       };
-
-      console.log('Executive escalation payload:', payload);
 
       // Call the API
       await createExecutiveEscalation(payload);
@@ -334,7 +324,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
       ]);
       
       // Refresh the executive rules list
-      await fetchExecutiveRules();
+      await fetchExecutiveRules(1);
       
     } catch (error) {
       console.error('Error submitting executive escalation:', error);
@@ -352,7 +342,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
   const createExecutiveEscalation = async (payload: ExecutiveEscalationPayload) => {
     try {
       setIsSubmitting(true);
-      const response = await apiClient.post('/pms/admin/create_executive_worker.json', payload);
+      const response = await apiClient.post('/crm/admin/create_executive_worker.json', payload);
       toast.success('Executive escalation created successfully!');
       return response.data;
     } catch (error: unknown) {
@@ -373,17 +363,17 @@ export const ExecutiveEscalationTab: React.FC = () => {
     });
   };
 
-  // Group and filter rules for display
-  const groupedRules = executiveRules.reduce((acc: Record<string, ExecutiveEscalationResponse['escalations']>, escalation) => {
-    const key = `${escalation.society_id}-${escalation.created_at}`;
-    if (!acc[key]) acc[key] = [] as any;
-    acc[key].push(escalation);
+  // Group and filter rules for display — group by created_at (same batch = same timestamp)
+  const groupedRules = executiveRules.reduce((acc: Record<string, ExecutiveWorker[]>, worker) => {
+    const key = worker.created_at;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(worker);
     return acc;
   }, {});
   const ruleGroups = Object.values(groupedRules);
   const filteredRules = selectedCategoryFilter === 'all'
     ? ruleGroups
-    : ruleGroups.filter(group => group.some(escalation => escalation.esc_type === selectedCategoryFilter));
+    : ruleGroups.filter(group => group.some(w => w.esc_type === selectedCategoryFilter));
 
   const hasExecutive = executiveRules.some(e => e.esc_type === 'Executive Escalation');
 
@@ -396,7 +386,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
           </div>
         </div>
       )} */}
-      <div className={`bg-white rounded-lg border border-gray-200 p-8 ${hasExecutive ? 'opacity-60' : ''}`}>
+      <div className="bg-white rounded-lg border border-gray-200 p-8">
         <div className="space-y-6">
           {/* Header Row 1 */}
           <div className="grid grid-cols-6 gap-6 font-medium text-gray-700 text-sm border-b border-gray-200 pb-3">
@@ -432,7 +422,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                   value={userOptions.filter(option => item.escalationTo.includes(option.value))}
                   placeholder="Select up to 15 users..."
                   isLoading={loadingUsers}
-                  isDisabled={loadingUsers || hasExecutive}
+                  isDisabled={loadingUsers}
                   className="min-w-[250px]"
                   styles={{
                     control: (base) => ({
@@ -476,7 +466,6 @@ export const ExecutiveEscalationTab: React.FC = () => {
                     onChange={(e) => handleFieldChange(index, 'days', e.target.value)}
                     placeholder="Days"
                     className="text-center bg-white border-gray-300"
-                    disabled={hasExecutive}
                   />
 
                   <Input
@@ -485,7 +474,6 @@ export const ExecutiveEscalationTab: React.FC = () => {
                     onChange={(e) => handleFieldChange(index, 'hours', e.target.value)}
                     placeholder="Hrs"
                     className="text-center bg-white border-gray-300"
-                    disabled={hasExecutive}
                   />
 
                   <Input
@@ -494,7 +482,6 @@ export const ExecutiveEscalationTab: React.FC = () => {
                     onChange={(e) => handleFieldChange(index, 'minutes', e.target.value)}
                     placeholder="Min"
                     className="text-center bg-white border-gray-300"
-                    disabled={hasExecutive}
                   />
                 </>
               )}
@@ -505,7 +492,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
           <div className="flex justify-center pt-6">
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || loadingUsers || hasExecutive}
+              disabled={isSubmitting || loadingUsers}
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
@@ -556,14 +543,14 @@ export const ExecutiveEscalationTab: React.FC = () => {
                       <div className="flex gap-2">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button
+                            {/* <Button
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 text-gray-600 hover:text-red-600 hover:bg-red-50"
                               disabled={deleteLoading}
                             >
-                              {/* <Trash2 className="h-4 w-4" /> */}
-                            </Button>
+                              <Trash2 className="h-4 w-4" />
+                            </Button> */}
                           </AlertDialogTrigger>
 
                           <AlertDialogContent>
@@ -584,7 +571,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-gray-600 hover:text-[#C72030]"
@@ -592,7 +579,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                           title="Edit Rule"
                         >
                           <Edit className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   </div>
@@ -616,7 +603,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                                 {levelName}
                               </TableCell>
                               <TableCell className="py-4 px-4 align-top text-sm text-gray-700">
-                                {escalation ? getUserNamesFromDetails(escalation.escalate_to_users_details) : ''}
+                                {escalation ? getUserNamesFromUsers(escalation.escalate_to_users) : ''}
                               </TableCell>
                               <TableCell className="py-4 px-4 align-top text-sm text-gray-700">
                                 {escalation ? formatTiming(escalation.p1) : ''}
@@ -695,6 +682,32 @@ export const ExecutiveEscalationTab: React.FC = () => {
                   </Dialog>
                 </div>
               ))}
+            </div>
+          )}
+          {/* Pagination */}
+          {!fetchLoading && pagination.total_pages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+              <span className="text-sm text-gray-600">
+                Showing page {pagination.current_page} of {pagination.total_pages} ({pagination.total_entries} total)
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.current_page <= 1 || fetchLoading}
+                  onClick={() => fetchExecutiveRules(pagination.current_page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.current_page >= pagination.total_pages || fetchLoading}
+                  onClick={() => fetchExecutiveRules(pagination.current_page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

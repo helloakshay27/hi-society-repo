@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { X } from "lucide-react";
 import axios from "axios";
-import { getBaseUrl, getToken } from "@/utils/auth";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 
 interface OtherProjectData {
   id: string;
@@ -172,6 +172,9 @@ const CampaignsOtherProject: React.FC = () => {
   const [projectsData, setProjectsData] = useState<OtherProjectData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<BuilderProjectDetailApiResponse["data"] | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Fetch builder projects from API
   useEffect(() => {
@@ -180,32 +183,11 @@ const CampaignsOtherProject: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Get Hi-Society token from hiSocietyAccount
-        const hiSocietyAccount = localStorage.getItem("hiSocietyAccount");
-        const token = hiSocietyAccount
-          ? JSON.parse(hiSocietyAccount).spree_api_key
-          : null;
-
-        console.log("🔎 DEBUG Builder Projects - Hi-Society token:", token);
-
-        if (!token) {
-          console.error("❌ Hi-Society token is missing!");
-          throw new Error(
-            "Hi-Society authentication token not found. Please login again."
-          );
-        }
-
-        // Use the Hi-Society UAT API URL directly since this API is on Hi-Society server
-        const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
-        const apiUrl = `${hiSocietyBaseUrl}/crm/builder_projects.json`;
-        console.log("🔍 Fetching builder projects from URL:", apiUrl);
-        console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+        const apiUrl = `${API_CONFIG.BASE_URL}/crm/builder_projects.json`;
 
         const response = await axios.get<BuilderProjectApiResponse>(apiUrl, {
-          params: { token },
+          headers: { Authorization: getAuthHeader() },
         });
-
-        console.log("✅ Builder Projects API Response:", response.data);
 
         if (response.data.success && response.data.builder_projects) {
           // Map API response to component data structure
@@ -247,43 +229,22 @@ const CampaignsOtherProject: React.FC = () => {
   // Function to fetch a single builder project by ID
   const fetchBuilderProjectDetail = async (id: number) => {
     try {
-      const token = getToken();
-
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
-
-      // Use the Hi-Society UAT API URL directly
-      const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
-      const apiUrl = `${hiSocietyBaseUrl}/crm/builder_projects/${id}.json`;
-      console.log("🔍 Fetching builder project detail from URL:", apiUrl);
-      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+      const apiUrl = `${API_CONFIG.BASE_URL}/crm/builder_projects/${id}.json`;
 
       const response = await axios.get<BuilderProjectDetailApiResponse>(
         apiUrl,
-        {
-          params: { token },
-        }
+        { headers: { Authorization: getAuthHeader() } }
       );
-
-      console.log("✅ Builder Project Detail API Response:", response.data);
 
       return response.data;
     } catch (err) {
       const error = err as Error;
-      console.error("❌ Error fetching builder project detail:", error);
       if (axios.isAxiosError(err)) {
-        console.error("📍 Full Request URL:", err.config?.url);
-        console.error("📍 Request Params:", err.config?.params);
-        console.error("📍 Status:", err.response?.status);
-        console.error("📍 Response:", err.response?.data);
         throw new Error(
           `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
         );
       } else {
-        throw new Error(
-          error.message || "Failed to fetch builder project detail"
-        );
+        throw new Error(error.message || "Failed to fetch builder project detail");
       }
     }
   };
@@ -302,42 +263,24 @@ const CampaignsOtherProject: React.FC = () => {
   // });
   const createSocietyBlock = async (payload: CreateSocietyBlockPayload) => {
     try {
-      const token = getToken();
-
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
-
-      // Use the Hi-Society UAT API URL directly
-      const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
-      const apiUrl = `${hiSocietyBaseUrl}/crm/admin/society_blocks.json`;
-      console.log("🔍 Creating society block at URL:", apiUrl);
-      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
-      console.log("📦 Payload:", payload);
+      const apiUrl = `${API_CONFIG.BASE_URL}/crm/admin/society_blocks.json`;
 
       const response = await axios.post<SocietyBlockApiResponse>(
         apiUrl,
         payload,
         {
-          params: { token },
           headers: {
+            Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
         }
       );
-
-      console.log("✅ Society Block Created Successfully:", response.data);
 
       return response.data;
     } catch (err) {
       const error = err as Error;
       console.error("❌ Error creating society block:", error);
       if (axios.isAxiosError(err)) {
-        console.error("📍 Full Request URL:", err.config?.url);
-        console.error("📍 Request Payload:", err.config?.data);
-        console.error("📍 Request Params:", err.config?.params);
-        console.error("📍 Status:", err.response?.status);
-        console.error("📍 Response:", err.response?.data);
         throw new Error(
           `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
         );
@@ -350,33 +293,17 @@ const CampaignsOtherProject: React.FC = () => {
   // Function to fetch project dropdown list (GET API)
   const fetchDropdownProjects = async () => {
     try {
-      const token = getToken();
-
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
-
-      // Use the Hi-Society UAT API URL directly
-      const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
-      const apiUrl = `${hiSocietyBaseUrl}/crm/builder_projects/dropdown_projects.json`;
-      console.log("🔍 Fetching dropdown projects from URL:", apiUrl);
-      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+      const apiUrl = `${API_CONFIG.BASE_URL}/crm/builder_projects/dropdown_projects.json`;
 
       const response = await axios.get<ProjectDropdownApiResponse>(apiUrl, {
-        params: { token },
+        headers: { Authorization: getAuthHeader() },
       });
-
-      console.log("✅ Dropdown Projects API Response:", response.data);
 
       return response.data;
     } catch (err) {
       const error = err as Error;
       console.error("❌ Error fetching dropdown projects:", error);
       if (axios.isAxiosError(err)) {
-        console.error("📍 Full Request URL:", err.config?.url);
-        console.error("📍 Request Params:", err.config?.params);
-        console.error("📍 Status:", err.response?.status);
-        console.error("📍 Response:", err.response?.data);
         throw new Error(
           `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
         );
@@ -466,16 +393,19 @@ const CampaignsOtherProject: React.FC = () => {
           <div className="flex items-center justify-center">
             <button
               className="p-1 hover:bg-gray-100 rounded"
+              disabled={detailLoading}
               onClick={async () => {
                 try {
-                  const projectDetail = await fetchBuilderProjectDetail(
-                    parseInt(item.id)
-                  );
-                  console.log("📋 Project Detail:", projectDetail);
-                  // You can navigate to a detail page or show a modal here
-                  // For now, the data is logged to console and visible in Network tab
+                  setDetailLoading(true);
+                  const res = await fetchBuilderProjectDetail(parseInt(item.id));
+                  if (res.success && res.data) {
+                    setSelectedProject(res.data);
+                    setShowDetailDialog(true);
+                  }
                 } catch (error) {
                   console.error("Failed to fetch project detail:", error);
+                } finally {
+                  setDetailLoading(false);
                 }
               }}
             >
@@ -728,6 +658,190 @@ const CampaignsOtherProject: React.FC = () => {
           </DialogContent>
         </Dialog>
       </ThemeProvider>
+
+      {/* Project Detail Dialog */}
+      {showDetailDialog && selectedProject && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowDetailDialog(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{selectedProject.name}</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Project Reference: {selectedProject.project_reference_id}</p>
+              </div>
+              <button
+                className="p-2 hover:bg-gray-100 rounded-full"
+                onClick={() => setShowDetailDialog(false)}
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Project Info */}
+              <div>
+                <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Project Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Address</p>
+                    <p className="text-sm text-gray-800 whitespace-pre-line">{selectedProject.address || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${selectedProject.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                      {selectedProject.active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Reception Number</p>
+                    <p className="text-sm text-gray-800">{selectedProject.reception_number || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Reception (2nd)</p>
+                    <p className="text-sm text-gray-800">{selectedProject.reception_second_number || "-"}</p>
+                  </div>
+                  {selectedProject.geo_link && (
+                    <div>
+                      <p className="text-xs text-gray-500">Geo Location</p>
+                      <a href={selectedProject.geo_link} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline break-all">{selectedProject.geo_link}</a>
+                    </div>
+                  )}
+                  {selectedProject.project_area && (
+                    <div>
+                      <p className="text-xs text-gray-500">Project Area</p>
+                      <p className="text-sm text-gray-800">{selectedProject.project_area}</p>
+                    </div>
+                  )}
+                </div>
+                {selectedProject.about && (
+                  <div className="mt-4">
+                    <p className="text-xs text-gray-500 mb-1">About</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{selectedProject.about}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Builder & Society */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-2">Builder</h3>
+                  <p className="text-sm font-medium text-gray-800">{selectedProject.builder?.name || "-"}</p>
+                  <p className="text-xs text-gray-500">ID: {selectedProject.builder?.id}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-2">Society</h3>
+                  <p className="text-sm font-medium text-gray-800">{selectedProject.society?.name || "-"}</p>
+                  <p className="text-xs text-gray-500">{selectedProject.society?.building_name}</p>
+                  <p className="text-xs text-gray-500">{[selectedProject.society?.city, selectedProject.society?.state, selectedProject.society?.postcode].filter(Boolean).join(", ")}</p>
+                </div>
+              </div>
+
+              {/* Flat Types */}
+              {selectedProject.flat_types?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Flat Types</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.flat_types.map((ft) => (
+                      <span key={ft.id} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200">
+                        {ft.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Society Blocks */}
+              {selectedProject.society_blocks?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Society Blocks / Towers</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.society_blocks.map((block) => (
+                      <span key={block.id} className={`px-3 py-1 text-xs rounded-full border ${block.active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}>
+                        Block {block.name} {block.active ? "" : "(Inactive)"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Amenities */}
+              {selectedProject.amenities?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Amenities</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {selectedProject.amenities.map((amenity) => (
+                      <div key={amenity.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#C72030] flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{amenity.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Lead Sources */}
+              {selectedProject.project_lead_sources?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Lead Sources</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.project_lead_sources.map((src) => (
+                      <span key={src.id} className="px-3 py-1 bg-purple-50 text-purple-700 text-xs rounded-full border border-purple-200">
+                        {src.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Images */}
+              {selectedProject.images?.project_image?.filter((img) => img.active && img.url)?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Project Images</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {selectedProject.images.project_image
+                      .filter((img) => img.active && img.url)
+                      .map((img) => (
+                        <img
+                          key={img.id}
+                          src={img.url}
+                          alt="Project"
+                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Gallery */}
+              {selectedProject.images?.gallery?.filter((img) => img.active && img.url)?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Gallery</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {selectedProject.images.gallery
+                      .filter((img) => img.active && img.url)
+                      .map((img) => (
+                        <img
+                          key={img.id}
+                          src={img.url}
+                          alt="Gallery"
+                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
