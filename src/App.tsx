@@ -1129,6 +1129,7 @@ import { DeliveryChallansAdd } from "./pages/ClubManagement/DeliveryChallansAdd"
 import FitoutRequestCategoryApprovalRequestMobile from "./pages/FitoutRequestCategoryApprovalRequestMobile";
 import AddVisitorPage from "./pages/AddVisitorPage";
 import SettingsGenericPage from "./pages/SettingsGenericPage";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -1275,6 +1276,7 @@ function App() {
           <LayoutProvider>
             <PermissionsProvider>
               <ActionLayoutProvider>
+                <ErrorBoundary>
                 <Suspense fallback={
                   <div className="min-h-screen flex items-center justify-center bg-gray-50">
                     <div className="flex flex-col items-center gap-4">
@@ -7112,6 +7114,7 @@ function App() {
                     />
                   </Routes>
                 </Suspense>
+                </ErrorBoundary>
                 {/* Mail Inbound Routes */}
                 {/* <Toaster /> */}
                 <SonnerToaster

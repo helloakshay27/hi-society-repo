@@ -30,6 +30,7 @@ import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { UIHiSocietySidebar } from "./UIHiSocietySidebar";
 import { UIHiSocietyNavigation } from "./UIHiSocietyNavigation";
 import { ZxSidebar } from "./ZxSidebar";
+import { RouteErrorBoundary } from "./ErrorBoundary";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -398,7 +399,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               : "pt-28"
           } transition-all duration-300`}
       >
-        <Outlet />
+       <RouteErrorBoundary locationKey={location.key}>
+          <Outlet />
+        </RouteErrorBoundary>
       </main>
     </div >
   );
