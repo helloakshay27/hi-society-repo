@@ -56,7 +56,7 @@ export function SearchableSelect({
                     role="combobox"
                     disabled={disabled}
                     aria-expanded={open}
-                    className={cn("w-full justify-between !border-gray-300 !text-[#1a1a1a]", className)}
+                    className={cn("w-full justify-between !border-gray-300 !text-[#1a1a1a] rounded-[10px]", className)}
                 >
                     {selected ? selected.label : placeholder}
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />

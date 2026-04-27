@@ -31,6 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from "@/components/SearchSelect";
 
 interface Category {
   id: string;
@@ -400,7 +401,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
         <TabsContent value="subcategory" className="space-y-6">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              {/* <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
@@ -411,7 +412,17 @@ const BMSBusinessDirectorySetup: React.FC = () => {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select> */}
+
+              <SearchableSelect
+                value={selectedCategory}
+                onChange={setSelectedCategory}
+                options={categories.map((cat) => ({
+                  value: cat.id,
+                  label: cat.name,
+                }))}
+                placeholder="Select Category"
+              />
             </div>
             <div className="flex-1">
               <Input
