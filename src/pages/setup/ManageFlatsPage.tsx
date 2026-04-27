@@ -24,6 +24,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Switch } from "@mui/material";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -133,7 +134,7 @@ export const ManageFlatsPage = () => {
       )}`;
 
       if (filters.tower.length > 0) {
-        filters.tower.forEach((tId: string) => {
+        filters.tower.forEach((tId) => {
           url += `&society_block_id=${tId.value}`;
         });
       }
@@ -284,8 +285,29 @@ export const ManageFlatsPage = () => {
     setShowEditFlatDialog(true);
   };
 
-  const handleToggleStatus = (flatId: string) => {
-    toast.success("Status updated successfully!");
+  const handleToggleStatus = async (flatId: string, status: boolean) => {
+    try {
+      await axios.put(`https://${baseUrl}/crm/admin/society_flats/${flatId}.json`, {
+        society_flat: {
+          approve: !status,
+        }
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      toast.success("Status updated successfully!");
+      setFlats((prev) =>
+        prev.map((flat) =>
+          String(flat.id) === String(flatId)
+            ? { ...flat, approve: !status }
+            : flat
+        )
+      );
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to update status")
+    }
   };
 
   const handleExport = async () => {
@@ -411,24 +433,30 @@ export const ManageFlatsPage = () => {
           </div>
         );
       case "status":
-        const isActive = flat.approve || null;
+        const isActive = flat.approve || false;
+
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleToggleStatus(flat.id)}
-              style={{
-                backgroundColor: isActive ? "#22c55e" : "#ef4444",
+            <Switch
+              checked={isActive}
+              onChange={() => handleToggleStatus(flat.id, isActive)}
+              color="success"
+              size="small"
+              sx={{
+                '& .MuiSwitch-switchBase.Mui-checked': {
+                  color: '#04A231',
+                },
+                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                  backgroundColor: '#04A231',
+                },
+                '& .MuiSwitch-switchBase:not(.Mui-checked)': {
+                  color: '#C72030',
+                },
+                '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
+                  backgroundColor: 'rgba(199, 32, 48, 0.5)',
+                },
               }}
-              className={`relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isActive ? "focus:ring-green-300" : "focus:ring-red-300"
-                }`}
-              role="switch"
-              aria-checked={isActive}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${isActive ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-              />
-            </button>
+            />
           </div>
         );
       case "site_visits":
@@ -438,11 +466,18 @@ export const ManageFlatsPage = () => {
           </div>
         );
       case "sold":
+        return (
+          <div className="text-center">
+            <span className="text-sm text-gray-900">
+              {flat[columnKey]}
+            </span>
+          </div>
+        );
       case "possession":
         return (
           <div className="text-center">
             <span className="text-sm text-gray-900">
-              {flat[columnKey] ? "Yes" : "No"}
+              {flat[columnKey]}
             </span>
           </div>
         );
