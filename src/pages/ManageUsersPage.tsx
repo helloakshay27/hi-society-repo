@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit } from "lucide-react";
@@ -28,6 +28,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 import axios from "axios";
+import { debounce } from "lodash";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -605,6 +606,18 @@ const ManageUsersPage = () => {
     return items;
   };
 
+  const debouncedSearch = useCallback(
+    debounce(async (searchQuery: string) => {
+      fetchUsers(1, { "q[user_firstname_or_user_lastname_or_user_email_or_user_mobile_cont]": searchQuery });
+    }, 500),
+    [baseUrl, token, pagination.current_page]
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    debouncedSearch(value);
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedUsers(users.map((u) => u.id));
@@ -1083,7 +1096,6 @@ const ManageUsersPage = () => {
           <EnhancedTable
             columns={columns}
             data={users}
-            onRowClick={(user) => console.log("Row clicked:", user)}
             renderCell={renderCell}
             selectedItems={selectedUsers}
             onSelectAll={handleSelectAll}
@@ -1093,7 +1105,7 @@ const ManageUsersPage = () => {
             enableExport={true}
             handleExport={handleExport}
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={handleSearchChange}
             searchPlaceholder="Search users..."
             leftActions={
               <Button
