@@ -78,7 +78,7 @@ const BMSBusinessDirectoryList: React.FC = () => {
   }, [])
 
   const handleAdd = () => {
-    navigate("/business-directory/add");
+    navigate("/bms/business-directory/add");
   };
 
   const handleFilters = () => {
