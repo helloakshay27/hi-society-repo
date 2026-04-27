@@ -177,7 +177,6 @@ interface EnhancedTableProps<T> {
   newRowPlaceholder?: string;
   readonlyColumns?: string[];
   handleExport?: (columnVisibility?: Record<string, boolean>) => void;
-  isExporting?: boolean;
   enableGlobalSearch?: boolean;
   onGlobalSearch?: (searchTerm: string) => void;
   customSearchInput?: React.ReactNode;
@@ -239,7 +238,6 @@ export function EnhancedTable<T extends Record<string, any>>({
   renderEditableCell,
   newRowPlaceholder = "Click to add new record",
   readonlyColumns = [],
-  isExporting = false,
   enableGlobalSearch = false,
   onGlobalSearch,
   customSearchInput,
@@ -903,18 +901,10 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={handleExportClick}
-              disabled={isExporting}
               className="flex items-center gap-2"
               title="Export"
             >
-              {isExporting ? (
-                <>
-                  <div className="animate-spin rounded-full border-2 border-current border-t-transparent w-4 h-4" />
-                  <span className="text-xs">Exporting...</span>
-                </>
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
+              <Download className="w-4 h-4" />
             </Button>
           )}
         </div>
