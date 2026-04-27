@@ -321,9 +321,11 @@ const AddBusinessDirectoryPage: React.FC = () => {
                       id="mobile"
                       placeholder="9876543210"
                       value={form.mobile}
-                      onChange={(e) =>
-                        handleInputChange("mobile", e.target.value)
-                      }
+                      maxLength={10}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        handleInputChange("mobile", value);
+                      }}
                       className="rounded-l-none border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
                     />
                   </div>
