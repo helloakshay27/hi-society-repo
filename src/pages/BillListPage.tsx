@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { EnhancedTaskTable } from '@/components/enhanced-table/EnhancedTaskTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { TicketPagination } from '@/components/TicketPagination';
 import { toast } from 'sonner';
-import { useDebounce } from '@/hooks/useDebounce';
+import axios from 'axios';
 
 // Type definitions for Bill
 interface Bill {
@@ -55,7 +54,7 @@ const columns: ColumnConfig[] = [
         draggable: false
     },
     {
-        key: 'date',
+        key: 'bill_date',
         label: 'Date',
         sortable: true,
         hideable: true,
@@ -69,7 +68,7 @@ const columns: ColumnConfig[] = [
         draggable: true
     },
     {
-        key: 'reference_number',
+        key: 'order_number',
         label: 'Reference Number',
         sortable: true,
         hideable: true,
@@ -97,7 +96,7 @@ const columns: ColumnConfig[] = [
         draggable: true
     },
     {
-        key: 'amount',
+        key: 'total_amount',
         label: 'Amount',
         sortable: true,
         hideable: true,
@@ -116,109 +115,160 @@ export const BillListPage: React.FC = () => {
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
-    const [searchTerm, setSearchTerm] = useState('');
-    const debouncedSearchQuery = useDebounce(searchTerm, 1000);
+    const [searchQuery, setSearchQuery] = useState('');
     const [appliedFilters, setAppliedFilters] = useState<BillFilters>({});
     const [billData, setBillData] = useState<Bill[]>([]);
     const [loading, setLoading] = useState(false);
-    const [pagination, setPagination] = useState({
-        current_page: 1,
-        per_page: 10,
-        total_pages: 1,
-        total_count: 0,
-        has_next_page: false,
-        has_prev_page: false
-    });
+    const baseUrl = localStorage.getItem('baseUrl');
+    const token = localStorage.getItem('token');
+    const lock_account_id = localStorage.getItem("lock_account_id");
 
     // Fetch bill data from API
-    const fetchBillData = async (page = 1, per_page = 10, search = '', filters: BillFilters = {}) => {
+    // const fetchBillData = async (page = 1, per_page = 10, search = '', filters: BillFilters = {}) => {
+    //     setLoading(true);
+    //     try {
+    //         // Mock data - replace with actual API call
+    //         const mockData: Bill[] = [
+    //             {
+    //                 id: 1,
+    //                 bill_number: '123',
+    //                 vendor_name: 'Gophygital',
+    //                 date: '2026-02-10',
+    //                 due_date: '2026-02-10',
+    //                 amount: 250.00,
+    //                 balance_due: 0.00,
+    //                 status: 'paid',
+    //                 reference_number: 'PO-00002',
+    //                 active: true,
+    //                 created_at: '2026-02-10',
+    //                 updated_at: '2026-02-10'
+    //             },
+    //             {
+    //                 id: 2,
+    //                 bill_number: '555',
+    //                 vendor_name: 'Gophygital',
+    //                 date: '2025-11-04',
+    //                 due_date: '2025-11-28',
+    //                 amount: 250.00,
+    //                 balance_due: 0.00,
+    //                 status: 'paid',
+    //                 reference_number: 'es.PO-00001',
+    //                 active: true,
+    //                 created_at: '2025-11-04',
+    //                 updated_at: '2025-11-28'
+    //             }
+    //         ];
+
+    //         // Filter based on search
+    //         let filteredData = mockData;
+    //         if (search.trim()) {
+    //             filteredData = mockData.filter(bill =>
+    //                 bill.bill_number.toLowerCase().includes(search.toLowerCase()) ||
+    //                 bill.vendor_name.toLowerCase().includes(search.toLowerCase()) ||
+    //                 bill.reference_number.toLowerCase().includes(search.toLowerCase())
+    //             );
+    //         }
+
+    //         // Apply filters
+    //         if (filters.status) {
+    //             filteredData = filteredData.filter(order => order.status === filters.status);
+    //         }
+
+    //         const totalCount = filteredData.length;
+    //         const totalPages = Math.ceil(totalCount / per_page);
+    //         const startIndex = (page - 1) * per_page;
+    //         const paginatedData = filteredData.slice(startIndex, startIndex + per_page);
+
+    //         setBillData(paginatedData);
+    //         setPagination({
+    //             current_page: page,
+    //             per_page: per_page,
+    //             total_pages: totalPages,
+    //             total_count: totalCount,
+    //             has_next_page: page < totalPages,
+    //             has_prev_page: page > 1
+    //         });
+
+    //     } catch (error: unknown) {
+    //         console.error('Error fetching bill data:', error);
+    //         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    //         toast.error(`Failed to load bill data: ${errorMessage}`, {
+    //             duration: 5000,
+    //         });
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+
+    const fetchBillData = async (
+        _page = 1,
+        _per_page = 10,
+        _search = '',
+        _filters: BillFilters = {}
+    ) => {
         setLoading(true);
+
         try {
-            // Mock data - replace with actual API call
-            const mockData: Bill[] = [
+            const response = await axios.get(
+                `https://${baseUrl}/lock_account_bills.json?lock_account_id=${lock_account_id}`,
                 {
-                    id: 1,
-                    bill_number: '123',
-                    vendor_name: 'Gophygital',
-                    date: '2026-02-10',
-                    due_date: '2026-02-10',
-                    amount: 250.00,
-                    balance_due: 0.00,
-                    status: 'paid',
-                    reference_number: 'PO-00002',
-                    active: true,
-                    created_at: '2026-02-10',
-                    updated_at: '2026-02-10'
-                },
-                {
-                    id: 2,
-                    bill_number: '555',
-                    vendor_name: 'Gophygital',
-                    date: '2025-11-04',
-                    due_date: '2025-11-28',
-                    amount: 250.00,
-                    balance_due: 0.00,
-                    status: 'paid',
-                    reference_number: 'es.PO-00001',
-                    active: true,
-                    created_at: '2025-11-04',
-                    updated_at: '2025-11-28'
+                    params: {
+                        lock_account_id: lock_account_id,
+                        //   page,
+                        //   per_page,
+                        //   search,
+                        //   status: filters.status || undefined,
+                    },
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`, // if required
+                    },
                 }
-            ];
+            );
 
-            // Filter based on search
-            let filteredData = mockData;
-            if (search.trim()) {
-                filteredData = mockData.filter(bill =>
-                    bill.bill_number.toLowerCase().includes(search.toLowerCase()) ||
-                    bill.vendor_name.toLowerCase().includes(search.toLowerCase()) ||
-                    bill.reference_number.toLowerCase().includes(search.toLowerCase())
-                );
-            }
+            // 🔥 Adjust this based on actual API response structure
+            const apiData = response.data;
 
-            // Apply filters
-            if (filters.status) {
-                filteredData = filteredData.filter(order => order.status === filters.status);
-            }
+            const bills: Bill[] = apiData?.data || apiData || [];
 
-            const totalCount = filteredData.length;
-            const totalPages = Math.ceil(totalCount / per_page);
-            const startIndex = (page - 1) * per_page;
-            const paginatedData = filteredData.slice(startIndex, startIndex + per_page);
-
-            setBillData(paginatedData);
-            setPagination({
-                current_page: page,
-                per_page: per_page,
-                total_pages: totalPages,
-                total_count: totalCount,
-                has_next_page: page < totalPages,
-                has_prev_page: page > 1
-            });
+            setBillData(bills);
 
         } catch (error: unknown) {
-            console.error('Error fetching bill data:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error("Error fetching bill data:", error);
+
+            const errorMessage =
+                error instanceof Error ? error.message : "Unknown error";
+
             toast.error(`Failed to load bill data: ${errorMessage}`, {
                 duration: 5000,
             });
+
         } finally {
             setLoading(false);
         }
     };
 
-    // Load data on component mount and when page/perPage/filters change
+    // Load data on component mount
     useEffect(() => {
-        fetchBillData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
-    }, [currentPage, perPage, debouncedSearchQuery, appliedFilters]);
+        fetchBillData(currentPage, perPage, '', appliedFilters);
+    }, [appliedFilters]);
 
-    // Handle search
-    const handleSearch = (term: string) => {
-        setSearchTerm(term);
+    // Client-side search filter (same pattern as PaymentTermsMaster)
+    const filteredBills = billData.filter((bill) =>
+        bill.bill_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bill.vendor_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bill.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bill.status?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const paginatedBills = filteredBills.slice(
+        (currentPage - 1) * perPage,
+        currentPage * perPage
+    );
+
+    const handleTableSearch = (value: string) => {
+        setSearchQuery(value);
         setCurrentPage(1);
-        if (!term.trim()) {
-            fetchBillData(1, perPage, '', appliedFilters);
-        }
     };
 
     // Handle page change
@@ -249,9 +299,8 @@ export const BillListPage: React.FC = () => {
         );
     };
 
-    const totalRecords = pagination.total_count;
-    const totalPages = pagination.total_pages;
-    const displayedData = billData;
+    const totalRecords = filteredBills.length;
+    const totalPages = Math.ceil(totalRecords / perPage);
 
     // Render row function for enhanced table
     const renderRow = (bill: Bill) => ({
@@ -264,36 +313,48 @@ export const BillListPage: React.FC = () => {
                 >
                     <Eye className="w-4 h-4" />
                 </button>
-                <button
+                {/* <button
                     onClick={() => handleEdit(bill.id)}
                     className="p-1 text-black hover:bg-gray-100 rounded"
                     title="Edit"
                 >
                     <Edit className="w-4 h-4" />
-                </button>
-                <button
+                </button> */}
+                {/* <button
                     onClick={() => handleDelete(bill.id)}
                     className="p-1 text-black hover:bg-gray-100 rounded"
                     title="Delete"
                 >
                     <Trash2 className="w-4 h-4" />
-                </button>
+                </button> */}
             </div>
         ),
-        date: (
+        // bill_date: (
+        //     <span className="text-sm text-gray-600">
+        //         {new Date(bill.bill_date).toLocaleDateString('en-GB', {
+        //             day: '2-digit',
+        //             month: '2-digit',
+        //             year: 'numeric'
+        //         })}
+        //     </span>
+        // ),
+
+        bill_date: (
             <span className="text-sm text-gray-600">
-                {new Date(bill.date).toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                })}
+                {bill.bill_date
+                    ? new Date(bill.bill_date).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                    })
+                    : "-"}
             </span>
         ),
         bill_number: (
             <div className="font-medium text-blue-600">{bill.bill_number}</div>
         ),
-        reference_number: (
-            <span className="text-sm text-gray-900">{bill.reference_number}</span>
+        order_number: (
+            <span className="text-sm text-gray-900">{bill.order_number}</span>
         ),
         vendor_name: (
             <span className="text-sm text-gray-900">{bill.vendor_name}</span>
@@ -312,9 +373,9 @@ export const BillListPage: React.FC = () => {
                 })}
             </span>
         ),
-        amount: (
+        total_amount: (
             <span className="text-sm font-medium text-gray-900">
-                ₹{bill.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₹{bill?.total_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
         ),
         balance_due: (
@@ -336,7 +397,7 @@ export const BillListPage: React.FC = () => {
         if (confirm('Are you sure you want to delete this bill?')) {
             toast.success('Bill deleted successfully!', {
             });
-            fetchBillData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
+            fetchBillData(currentPage, perPage, '', appliedFilters);
         }
     };
 
@@ -347,15 +408,14 @@ export const BillListPage: React.FC = () => {
             </header>
 
             <EnhancedTaskTable
-                data={displayedData}
+                data={paginatedBills}
                 columns={columns}
                 renderRow={renderRow}
                 storageKey="bills-dashboard-v1"
                 hideTableExport={true}
                 hideTableSearch={false}
                 enableSearch={true}
-                searchTerm={searchTerm}
-                onSearchChange={handleSearch}
+                onSearch={handleTableSearch}
                 loading={loading}
                 leftActions={(
                     <Button

@@ -117,6 +117,13 @@ interface EnhancedTableProps<T> {
   rightActions?: React.ReactNode;
   onFilterClick?: () => void;
   handleExport?: (columnVisibility?: Record<string, boolean>) => void;
+  toolbarClassName?: string;
+  tableWrapperClassName?: string;
+  headerCellClassName?: string;
+  rowClassName?: string;
+  /** Merged after default row styles; use for per-row backgrounds (e.g. grouped report rows). */
+  getRowClassName?: (item: T) => string | undefined;
+  cellClassName?: string;
 }
 
 export function EnhancedTaskTable<T extends Record<string, any>>({
@@ -155,6 +162,12 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
   leftActions,
   rightActions,
   onFilterClick,
+  toolbarClassName,
+  tableWrapperClassName,
+  headerCellClassName,
+  rowClassName,
+  getRowClassName,
+  cellClassName,
 }: EnhancedTableProps<T>) {
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -434,7 +447,7 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className={cn("flex items-center justify-between gap-4", toolbarClassName)}>
         <div className="flex items-center gap-4 flex-1">
           {leftActions}
 
@@ -501,7 +514,7 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
         </div>
       </div>
 
-      <div className=" rounded-lg border border-[#D5DbDB] overflow-hidden">
+      <div className={cn("rounded-lg border border-[#D5DbDB] overflow-hidden", tableWrapperClassName)}>
         <div className="overflow-x-auto enhancedTable">
           <DndContext
             sensors={sensors}

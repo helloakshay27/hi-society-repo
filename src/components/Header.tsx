@@ -39,7 +39,7 @@ import {
   changeSite,
   clearSites,
 } from "@/store/slices/siteSlice";
-import { getUser, clearAuth } from "@/utils/auth";
+import { getUser, clearAuth, fetchLockAccount } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
@@ -48,6 +48,7 @@ import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import axios from "axios";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
+import { useNotification } from "@/contexts/NotificationContext";
 
 export interface Company {
   id: number;
@@ -95,6 +96,17 @@ export const Header = () => {
   console.log("layoutMode:-", layoutMode);
 
 
+  // Use Notification Context
+  const {
+    notifications,
+    notificationCount,
+    isNotificationOpen,
+    setIsNotificationOpen,
+    markAsRead,
+    markAllAsRead,
+    handleNotificationClick: handleNotificationClickContext,
+  } = useNotification();
+
   const currentPath = window.location.pathname;
 
   // Redux state
@@ -131,10 +143,8 @@ export const Header = () => {
     hostname.includes("localhost") ||
     hostname.includes("lockated.gophygital.work") ||
     hostname.includes("fm-matrix.lockated.com");
+
   const navigate = useNavigate();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
-  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     if (selectedSite) {
@@ -151,7 +161,10 @@ export const Header = () => {
   };
   const userId = user.id;
   const isRestrictedUser =
-    user?.email === "karan.balsara@zycus.com" || org_id === "90" || isPulseSite; // Example condition for restricted user
+    user?.email === "karan.balsara@zycus.com" ||
+    org_id === "90" ||
+    isPulseSite ||
+    isClubSite; // Example condition for restricted user
 
   const assetSuggestions = [
     "sdcdsc",
@@ -323,6 +336,9 @@ export const Header = () => {
   const handleCompanyChange = async (companyId: number) => {
     try {
       const response = await dispatch(changeCompany(companyId)).unwrap();
+      // Re-fetch lock_account_id for the new company
+      localStorage.removeItem("lock_account_id");
+      await fetchLockAccount();
       // Reload page smoothly after successful company change
       window.location.reload();
     } catch (error) {
@@ -330,56 +346,41 @@ export const Header = () => {
     }
   };
 
+  const handleNotificationClick = async (notification: any) => {
+    await handleNotificationClickContext(notification);
+
+    // Navigate based on notification type
+    if (notification.ntype === "conversation") {
+      navigate(
+        `/vas/channels/messages/${notification.payload.conversation_id}`
+      );
+    }
+    if (notification.ntype === "projectspace") {
+      navigate(
+        `/vas/channels/groups/${notification.payload.project_space_id}`
+      );
+    }
+    if (notification.payload.ntype === "newtaskmanagement") {
+      navigate(`/vas/tasks/${notification.payload.task_management_id}`);
+    }
+    if (notification.payload.ntype === "newissue") {
+      navigate(`/vas/issues/${notification.payload.issue_id}`);
+    }
+  };
+
   // Handle site change
   const handleSiteChange = async (siteId: number) => {
     try {
       await dispatch(changeSite(siteId)).unwrap();
+      // Re-fetch lock_account_id for the new site
+      localStorage.removeItem("lock_account_id");
+      await fetchLockAccount();
       // Reload page smoothly after successful site change
       window.location.reload();
     } catch (error) {
       console.error("Failed to change site:", error);
     }
   };
-
-  const fetchNotifications = async () => {
-    try {
-      // Mock notifications - replace with actual API call
-      const userNotifications = await axios.get(
-        `https://${localStorage.getItem("baseUrl")}/user_notifications.json`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      setNotifications(userNotifications.data.unread_notifications);
-      setNotificationCount(userNotifications.data.unread_notifications.length);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  };
-
-  const markAsRead = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-    setNotificationCount((prev) => Math.max(0, prev - 1));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
-    setNotificationCount(0);
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    // const interval = setInterval(fetchNotifications, 30000);
-    // return () => clearInterval(interval);
-  }, []);
 
   // Compute profile display name (prefer VI account when available)
   const profileDisplayName =
@@ -729,7 +730,7 @@ export const Header = () => {
                 </button>
               )}
 
-              {isViSite && selectedCompany?.id !== 294 && (
+              {isViSite && selectedCompany?.id !== 294 && !isWebSite && (
                 <button
                   onClick={() => navigate("/msafedashboard")}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
@@ -739,7 +740,7 @@ export const Header = () => {
                 </button>
               )}
 
-              {isWebSite && !isViSite && selectedCompany?.id !== 294 && (
+              {!isViSite && selectedCompany?.id !== 294 && !isWebSite && (
                 <button
                   onClick={() =>
                     window.open(

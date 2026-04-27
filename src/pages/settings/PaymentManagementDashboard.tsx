@@ -7,6 +7,8 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Badge } from "@/components/ui/badge";
 import { API_CONFIG } from '@/config/apiConfig';
+import { PaymentFilterDialog } from '@/components/PaymentFilterDialog';
+import axios from 'axios';
 
 interface LockPayment {
   id: number;
@@ -68,7 +70,7 @@ interface ApiResponse {
 
 export const PaymentManagementDashboard = () => {
   const navigate = useNavigate();
-  
+
   // State management
   const [payments, setPayments] = useState<LockPayment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,40 +82,50 @@ export const PaymentManagementDashboard = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const isSearchingRef = useRef(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+  const [filters, setFilters] = useState<any>({});
+
   const perPage = 20;
 
   // Fetch payments data
-  const fetchPayments = useCallback(async (page: number = 1) => {
+  const fetchPayments = useCallback(async (page: number = 1, currentFilters: any = filters, query: string = searchQuery) => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      
-      console.log('Fetching lock payments...', { baseUrl, hasToken: !!token, page });
-      
+
       const url = new URL(`${baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`}/lock_payments.json`);
       url.searchParams.append('access_token', token || '');
       url.searchParams.append('page', page.toString());
-      
+
+      // Add filter params (assuming Ransack q parameter if needed, or direct params)
+      if (currentFilters.orderNumber) url.searchParams.append('q[order_number_cont]', currentFilters.orderNumber);
+      if (currentFilters.paymentOf) url.searchParams.append('q[payment_of_eq]', currentFilters.paymentOf);
+      if (currentFilters.paymentStatus) url.searchParams.append('q[payment_status_eq]', currentFilters.paymentStatus);
+      if (currentFilters.paymentMethod) url.searchParams.append('q[payment_method_eq]', currentFilters.paymentMethod);
+
+      // Add search query
+      if (query) {
+        url.searchParams.append('q[order_number_or_receipt_number_cont]', query);
+      }
+
       console.log('API URL:', url.toString());
-      
+
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch lock payments: ${response.status} ${response.statusText}`);
       }
-      
+
       const data: ApiResponse = await response.json();
       console.log('Received data:', data);
-      
+
       if (data.lock_payments && Array.isArray(data.lock_payments)) {
         setPayments(data.lock_payments);
         setTotalCount(data.pagination.total_count);
@@ -125,7 +137,7 @@ export const PaymentManagementDashboard = () => {
         setTotalCount(0);
         setTotalPages(1);
       }
-      
+
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast.error('Failed to fetch payment data');
@@ -139,26 +151,43 @@ export const PaymentManagementDashboard = () => {
 
   // Handle search input change
   const handleSearch = useCallback((query: string) => {
-    isSearchingRef.current = true;
     setSearchQuery(query);
+    setCurrentPage(1); // Reset page on search
   }, []);
 
-  // Fetch on mount
+  // Handle filter apply
+  const handleFilterApply = (newFilters: any) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset page on filter
+  };
+
+  // Fetch data when page, search query, or filters change
   useEffect(() => {
-    console.log('Effect triggered - fetching payments', { currentPage });
-    fetchPayments(currentPage);
-  }, [currentPage, fetchPayments]);
+    fetchPayments(currentPage, filters, debouncedSearchQuery);
+  }, [currentPage, filters, debouncedSearchQuery, fetchPayments]);
 
   // Handle export
   const handleExport = async () => {
+    const baseUrl = localStorage.getItem('baseUrl')
+    const token = localStorage.getItem('token');
     try {
-      toast.loading('Preparing export file...');
-      
-      // TODO: Replace with actual API call
-      setTimeout(() => {
-        toast.success('Export completed successfully');
-      }, 1000);
-      
+      const response = await axios.get(`https://${baseUrl}/lock_payments/export.xlsx`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        responseType: 'blob',
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'lock_payments.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('File downloaded successfully');
+
     } catch (error) {
       console.error('Error exporting data:', error);
       toast.error('Failed to export data');
@@ -174,9 +203,9 @@ export const PaymentManagementDashboard = () => {
         </Badge>
       );
     }
-    
+
     const statusLower = status.toLowerCase();
-    
+
     if (statusLower === 'success' || statusLower === 'paid') {
       return (
         <Badge className="bg-green-100 text-green-800 border-0">
@@ -184,7 +213,7 @@ export const PaymentManagementDashboard = () => {
         </Badge>
       );
     }
-    
+
     if (statusLower === 'failed' || statusLower === 'rejected') {
       return (
         <Badge className="bg-red-100 text-red-800 border-0">
@@ -192,7 +221,7 @@ export const PaymentManagementDashboard = () => {
         </Badge>
       );
     }
-    
+
     if (statusLower === 'processing') {
       return (
         <Badge className="bg-yellow-100 text-yellow-800 border-0">
@@ -200,7 +229,7 @@ export const PaymentManagementDashboard = () => {
         </Badge>
       );
     }
-    
+
     return (
       <Badge className="bg-gray-100 text-gray-800 border-0">
         {status}
@@ -214,10 +243,12 @@ export const PaymentManagementDashboard = () => {
       'FacilityBooking': 'bg-grey-100 text-black-800',
       'LockAccountBill': 'bg-lightgrey-100 text-black-800',
       'Maintenance': 'bg-lightgrey-100 text-black-800',
+      'Pms::Supplier': 'bg-lightgrey-100 text-black-800',
+      'ClubMemberAllocation': 'bg-lightgrey-100 text-black-800',
     };
-    
+
     const color = colors[paymentOf] || colors['Other'];
-    
+
     return (
       <Badge className={`${color} border-0`}>
         {paymentOf}
@@ -245,7 +276,7 @@ export const PaymentManagementDashboard = () => {
   // Define columns for EnhancedTable
   const columns = [
     { key: 'actions', label: 'Actions', sortable: false },
-    { key: 'order_number', label: 'Order Number', sortable: true },
+    // { key: 'order_number', label: 'Order Number', sortable: true },
     { key: 'payment_of', label: 'Payment Type', sortable: true },
     { key: 'total_amount', label: 'Total Amount', sortable: true },
     { key: 'paid_amount', label: 'Paid Amount', sortable: true },
@@ -256,7 +287,7 @@ export const PaymentManagementDashboard = () => {
     { key: 'receipt_number', label: 'Receipt Number', sortable: true },
     // { key: 'resource_type', label: 'Resource Type', sortable: true },
     // { key: 'resource_id', label: 'Resource ID', sortable: true },
-        { key: 'recon_status', label: 'Reconciliation', sortable: true },
+    { key: 'recon_status', label: 'Reconciliation', sortable: true },
 
     { key: 'created_at', label: 'Created On', sortable: true },
   ];
@@ -266,8 +297,8 @@ export const PaymentManagementDashboard = () => {
     if (columnKey === 'actions') {
       return (
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => navigate(`/club-management/accounting/details/${item.id}`)}
             title="View Details"
@@ -310,11 +341,11 @@ export const PaymentManagementDashboard = () => {
         <span className="font-medium text-gray-900">{item.order_number}</span>
       );
     }
-    
+
     if (!item[columnKey] || item[columnKey] === null || item[columnKey] === '') {
       return <span className="text-gray-400">-</span>;
     }
-    
+
     return item[columnKey];
   };
 
@@ -348,7 +379,7 @@ export const PaymentManagementDashboard = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
       {/* Header Section */}
-     
+
 
       {/* Payments Table */}
       <div className="overflow-x-auto animate-fade-in">
@@ -366,15 +397,14 @@ export const PaymentManagementDashboard = () => {
           renderCell={renderCell}
           selectable={false}
           pagination={false}
-          enableExport={false}
           exportFileName="lock-payments"
           handleExport={handleExport}
           storageKey="lock-payments-table"
+          enableExport={true}
           enableSelection={false}
           onFilterClick={() => setIsFilterOpen(true)}
           searchPlaceholder="Search Payments"
           onSearchChange={handleSearch}
-          hideTableExport={false}
           hideColumnsButton={false}
           className="transition-all duration-500 ease-in-out"
           loading={loading}
@@ -498,6 +528,12 @@ export const PaymentManagementDashboard = () => {
           </div>
         </div>
       </div>
+
+      <PaymentFilterDialog
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        onApply={handleFilterApply}
+      />
     </div>
   );
 };

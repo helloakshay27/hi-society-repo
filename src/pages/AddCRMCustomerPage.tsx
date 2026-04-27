@@ -208,9 +208,12 @@ export const AddCRMCustomerPage = () => {
       ).unwrap();
       toast.success("Customer created successfully");
       navigate(`/crm/customers`);
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      toast.error("Failed to create customer");
+      const message = typeof error === 'string'
+        ? error
+        : error?.message || "Failed to create customer";
+      toast.error(message);
     }
   };
 
@@ -265,12 +268,7 @@ export const AddCRMCustomerPage = () => {
                   fullWidth
                   size="small"
                   value={formData.customerName}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^[A-Za-z\s]*$/.test(value)) {
-                      handleInputChange("customerName", value);
-                    }
-                  }}
+                  onChange={(e) => handleInputChange("customerName", e.target.value)}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: "8px",

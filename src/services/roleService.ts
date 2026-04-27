@@ -7,6 +7,16 @@ export interface ApiRole {
   permissions_hash: string;
 }
 
+export interface BCRole {
+  id: string;
+  name: string;
+}
+
+export interface BCRolesResponse {
+  success: boolean;
+  roles: BCRole[];
+}
+
 export interface CreateRolePayload {
   lock_role: {
     name: string;
@@ -174,6 +184,11 @@ interface CreateRoleWithPayload {
   lock_modules: number[]; // Array of module IDs instead of null
 }
 
+const isWebOrg34 = () => {
+  const orgId = String(localStorage.getItem("org_id") ?? "").trim();
+  return window.location.hostname === "web.gophygital.work" && orgId === "34";
+};
+
 export const roleService = {
   // Fetch all roles
   async fetchRoles(): Promise<ApiRole[]> {
@@ -182,6 +197,17 @@ export const roleService = {
       return response.data;
     } catch (error) {
       console.error("Error fetching roles:", error);
+      throw error;
+    }
+  },
+
+  // Fetch Business Compass roles
+  async fetchBusinessCompassRoles(): Promise<BCRole[]> {
+    try {
+      const response = await apiClient.get<BCRolesResponse>(ENDPOINTS.BUSINESS_COMPASS_ROLES);
+      return response.data.roles || [];
+    } catch (error) {
+      console.error("Error fetching BC roles:", error);
       throw error;
     }
   },
@@ -238,9 +264,18 @@ export const roleService = {
         modules: roleData.modules,
       };
 
+      const viPayload = {
+        role: {
+          name: roleData.role_name,
+        },
+        permissions_hash: {}, // You may need to build this from the modules data
+        lock_modules: roleData.modules?.length || 0,
+        modules: roleData.modules,
+      };
+
       const response = await apiClient.post<CreateRoleResponse>(
         ENDPOINTS.ROLES,
-        payload
+        isWebOrg34() ? viPayload : payload
       );
       return response.data;
     } catch (error) {
@@ -755,6 +790,20 @@ export const roleService = {
         lock_modules: enabledModuleIds,
       };
 
+      const viPayload = {
+        role: {
+          user_id: localStorage.getItem("userId"),
+          name: roleWithModules.role_name,
+          title: roleWithModules.role_name,
+          description: "",
+          resource_type: "Pms::CompanySetup",
+          resource_id: localStorage.getItem("selectedCompanyId"),
+          active: true,
+          modules: enabledModuleIds,
+          the_role: permissionsHash,
+        },
+      };
+
       console.log("Updating role with payload:", payload);
       console.log("Role ID being used:", roleWithModules.role_id);
       console.log(
@@ -764,7 +813,7 @@ export const roleService = {
 
       await apiClient.patch(
         `${ENDPOINTS.ROLES.replace(".json", "")}/${roleWithModules.role_id}.json`,
-        payload
+        isWebOrg34() ? viPayload : payload
       );
     } catch (error) {
       console.error("Error updating role with modules:", error);

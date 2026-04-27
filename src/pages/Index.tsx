@@ -4,6 +4,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { getUser } from "@/utils/auth";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -20,18 +21,23 @@ const Index = () => {
     const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
     const isHiSocietySite = hostname === "web.hisociety.lockated.com";
     const userType = localStorage.getItem("userType");
+    const currentUser = getUser();
+    const userEmail = currentUser?.email || "No email";
     const isLocalhost =
-      hostname.includes("localhost") ||
       hostname.includes("lockated.gophygital.work") ||
-      hostname.includes("fm-matrix.lockated.com");
+      hostname.includes("fm-matrix.lockated.com") ||
+      userEmail === "deveshjain928@gmail.com" ||
+      userEmail === "abdul.ghaffar@lockated.com" ||
+      userEmail === "mailroom2@zs.com" ||
+      userEmail === "abdul.g@gophygital.work";
 
     const isPulseSite =
       hostname.includes("pulse.lockated.com") ||
-      hostname.includes("localhost") ||
       hostname.includes("pulse.panchshil.com") ||
       hostname.includes("pulse.gophygital.work") ||
       hostname.includes("pulse-uat.panchshil.com");
     const isClubSite = hostname.includes("club.lockated.com");
+    const isWebSite = hostname.includes("web.lockated.com");
 
     // PRIORITY 0: Hi-Society site routing (highest priority for specific domains)
     if (isUIHiSocietySite) {
@@ -54,27 +60,19 @@ const Index = () => {
       }
     }
 
-    // PRIORITY 2: Localhost with userType-based routing
-    if (userType && isLocalhost) {
-      // Navigate based on userType
-      if (userType === "pms_organization_admin") {
-        navigate("/maintenance/asset", { replace: true });
-        return;
-      } else if (userType === "pms_occupant") {
-        navigate("/vas/projects", { replace: true });
-        return;
-      }
-    }
-
-    // PRIORITY 3: Company ID-based routing for specific companies
+    // PRIORITY 3: Company ID-based routing for specific companies and domains
     if (
       selectedCompany?.id === 300 ||
       selectedCompany?.id === 295 ||
       selectedCompany?.id === 298 ||
       selectedCompany?.id === 199 ||
-      isPulseSite
+      isPulseSite ||
+      (isWebSite && userEmail === "deveshjain928@gmail.com") ||
+      userEmail === "abdul.ghaffar@lockated.com" ||
+      userEmail === "mailroom2@zs.com" ||
+      userEmail === "abdul.g@gophygital.work"
     ) {
-      // For these companies, use dynamic routing from permissions
+      // For these companies and domains, use dynamic routing from permissions
       if (userRole) {
         const firstRoute = findFirstAccessibleRoute(userRole);
         if (firstRoute) {
@@ -92,12 +90,10 @@ const Index = () => {
       navigate("/safety/m-safe/internal", { replace: true });
     } else if (isClubSite) {
       navigate("/club-management/membership", { replace: true });
-    } else if (isPulseSite) {
-      navigate("/maintenance/ticket", { replace: true });
     } else {
       navigate("/maintenance/asset", { replace: true });
     }
-  }, [navigate, userRole, loading, selectedCompany]);
+  }, [navigate, userRole, loading, selectedCompany, org_id]);
 
   // Show loading while redirecting
   return (

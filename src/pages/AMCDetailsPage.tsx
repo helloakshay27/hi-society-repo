@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -24,10 +25,6 @@ import {
   Calendar,
   BarChart3,
   Settings,
-  Lock,
-  MessageSquareHeart,
-  AlertTriangle,
-  ChevronDown,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AddVisitModal } from "@/components/AddVisitModal";
@@ -43,15 +40,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye } from "lucide-react";
 import { AMCAnalyticsTab } from "@/components/amc-details/AMCAnalyticsTab";
 import { AMCDetailsPreviewTab } from "@/components/amc-details/AMCDetailsPreviewTab";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { ColumnConfig } from "@/hooks/useEnhancedTable";
 
 interface AMCDetailsData {
   id: number;
@@ -128,77 +116,7 @@ interface TicketRecord {
   updated_at?: string | null;
   created_at?: string | null;
   updated_by?: string | null;
-  documents?: any[];
 }
-
-interface TicketCounts {
-  open: number;
-  closed: number;
-  complaints: number;
-  suggestions: number;
-  requests: number;
-}
-
-const ticketStatusMapping: Record<string, string> = {
-  Open: "open",
-  Closed: "closed",
-  Complaints: "complaints",
-  Suggestion: "suggestions",
-  Requests: "requests",
-};
-
-const ticketStatusCards = [
-  { label: "Open", icon: Lock },
-  { label: "Closed", icon: Lock },
-  { label: "Complaints", icon: MessageSquareHeart },
-  { label: "Suggestion", icon: AlertTriangle },
-  { label: "Requests", icon: FileText },
-];
-
-const ticketColumns: ColumnConfig[] = [
-  {
-    key: "id",
-    label: "ID",
-    sortable: true,
-    draggable: true,
-    defaultVisible: true,
-  },
-  {
-    key: "heading",
-    label: "Title",
-    sortable: true,
-    draggable: true,
-    defaultVisible: true,
-  },
-  {
-    key: "category_type",
-    label: "Category",
-    sortable: true,
-    draggable: true,
-    defaultVisible: true,
-  },
-  {
-    key: "status",
-    label: "Status",
-    sortable: true,
-    draggable: true,
-    defaultVisible: true,
-  },
-  {
-    key: "updated_by",
-    label: "Updated By",
-    sortable: true,
-    draggable: true,
-    defaultVisible: true,
-  },
-  {
-    key: "created_at",
-    label: "Created At",
-    sortable: true,
-    draggable: true,
-    defaultVisible: true,
-  },
-];
 
 export const AMCDetailsPage = () => {
   const navigate = useNavigate();
@@ -221,23 +139,28 @@ export const AMCDetailsPage = () => {
   const amcVisitData = amcData?.amc_visit_logs?.map((visit) => visit) ?? [];
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState("amc-information"); // Changed default to 'amc-information'
+  const [activeTab, setActiveTab] = useState("amc-information");
+  const [activeSubTab, setActiveSubTab] = useState("analytics");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   // Tickets state
   const [tickets, setTickets] = useState<TicketRecord[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
-  const [ticketCounts, setTicketCounts] = useState<TicketCounts>({
-    open: 0,
-    closed: 0,
-    complaints: 0,
-    suggestions: 0,
-    requests: 0,
-  });
-  const [ticketStatusFilter, setTicketStatusFilter] = useState("open");
-  const [ticketSearchTerm, setTicketSearchTerm] = useState("");
-  const [allTickets, setAllTickets] = useState<TicketRecord[]>([]);
+  // History (PPM Occurrences) state
+  const [occurrences, setOccurrences] = useState<any[]>([]);
+  const [occurrencesLoading, setOccurrencesLoading] = useState(false);
+  const [occurrenceStatusFilter, setOccurrenceStatusFilter] = useState("Scheduled");
+  const [occurrenceSearch, setOccurrenceSearch] = useState("");
+  const [occurrencePage, setOccurrencePage] = useState(1);
+  const [occurrenceTotalCount, setOccurrenceTotalCount] = useState(0);
+  // AMC Visits History state
+  const [selectedVisitId, setSelectedVisitId] = useState<number | null>(null);
+  const [showVisitEditModal, setShowVisitEditModal] = useState(false);
+  const [visitEditRemarks, setVisitEditRemarks] = useState("");
+  const [visitEditStatus, setVisitEditStatus] = useState("");
+  const [visitEditDocument, setVisitEditDocument] = useState<File | null>(null);
+  const [visitUpdateLoading, setVisitUpdateLoading] = useState(false);
 
   const fetchTicketsForAssets = async (assetIds: number[]) => {
     if (!assetIds.length) return;
@@ -247,24 +170,33 @@ export const AMCDetailsPage = () => {
     setTicketsLoading(true);
     setTicketsError(null);
     try {
-      // Build query string: q[pms_asset_id_in][]=id1&q[pms_asset_id_in][]=id2...
-      const queryParams = assetIds
+      // Manually build query string to preserve brackets exactly as the API expects:
+      // q[pms_asset_id_in][]=123&q[pms_asset_id_in][]=456
+      const qs = assetIds
+        .filter((id) => !!id)
         .map((id) => `q[pms_asset_id_in][]=${id}`)
         .join("&");
-      const url = `https://${baseUrl}/pms/assets/assets_tickets?${queryParams}`;
+
+      const url = `https://${baseUrl}/pms/assets/assets_tickets?${qs}`;
+
       const resp = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
       });
-      if (!resp.ok) throw new Error("Failed to fetch tickets");
+
+      if (!resp.ok)
+        throw new Error(`Tickets fetch failed with status ${resp.status}`);
+
       const data = await resp.json();
-      setTicketCounts({
-        open: data.open || 0,
-        closed: data.closed || 0,
-        complaints: data.complaints || 0,
-        suggestions: data.suggestions || 0,
-        requests: data.requests || 0,
-      });
-      const arr: TicketRecord[] = (data.tickets || []).map((t: any) => ({
+
+      const arr = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.tickets)
+          ? data.tickets
+          : [];
+      const all: TicketRecord[] = arr.map((t: any) => ({
         id: t.id,
         heading: t.heading || null,
         category_type: t.category_type || null,
@@ -272,49 +204,72 @@ export const AMCDetailsPage = () => {
         updated_at: t.updated_at || null,
         created_at: t.created_at || null,
         updated_by: t.updated_by || null,
-        documents: t.documents || [],
       }));
-      setAllTickets(arr);
-      setTickets(arr);
+
+      setTickets(all);
     } catch (e: any) {
+      console.error("Tickets Error:", e);
       setTicketsError(e.message || "Failed to load tickets");
     } finally {
       setTicketsLoading(false);
     }
   };
 
-  // Filter tickets by status
-  useEffect(() => {
-    const statusToField: Record<string, string> = {
-      open: "Open",
-      closed: "Closed",
-    };
-    if (ticketStatusFilter === "open" || ticketStatusFilter === "closed") {
-      setTickets(
-        allTickets.filter((t) => t.status?.toLowerCase() === ticketStatusFilter)
-      );
-    } else if (ticketStatusFilter === "complaints") {
-      setTickets(
-        allTickets.filter((t) =>
-          t.category_type?.toLowerCase().includes("complaint")
-        )
-      );
-    } else if (ticketStatusFilter === "suggestions") {
-      setTickets(
-        allTickets.filter((t) =>
-          t.category_type?.toLowerCase().includes("suggestion")
-        )
-      );
-    } else if (ticketStatusFilter === "requests") {
-      setTickets(
-        allTickets.filter((t) =>
-          t.category_type?.toLowerCase().includes("request")
-        )
-      );
-    } else {
-      setTickets(allTickets);
+  const fetchOccurrences = async (page: number = 1) => {
+    const assetIds =
+      amcDetails?.amc_assets?.map((a: any) => a.asset_id).filter(Boolean) ?? [];
+    if (!assetIds.length) return;
+    const baseUrl = localStorage.getItem("baseUrl");
+    const token = localStorage.getItem("token");
+    if (!baseUrl || !token) return;
+    setOccurrencesLoading(true);
+    try {
+      const idsQs = assetIds.map((aid: number) => `ids[]=${aid}`).join("&");
+      const url = `https://${baseUrl}/pms/asset_amcs/occurrences.json?${idsQs}&access_token=${token}&page=${page}&per_page=20`;
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error(`Occurrences fetch failed: ${res.status}`);
+      const data = await res.json();
+      const items = Array.isArray(data)
+        ? data
+        : data.occurrences ?? data.data ?? [];
+      const total = data.total_count ?? data.total ?? items.length;
+      setOccurrences(items);
+      setOccurrenceTotalCount(total);
+    } catch (e: any) {
+      console.error("Occurrences Error:", e);
+    } finally {
+      setOccurrencesLoading(false);
     }
-  }, [ticketStatusFilter, allTickets]);
+  };
+
+  const handleVisitUpdate = async () => {
+    if (!selectedVisitId) return;
+    const baseUrl = localStorage.getItem("baseUrl");
+    const token = localStorage.getItem("token");
+    if (!baseUrl || !token) return;
+    setVisitUpdateLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("id", String(selectedVisitId));
+      formData.append("amc_history[remarks]", visitEditRemarks);
+      formData.append("amc_history[status]", visitEditStatus);
+      if (visitEditDocument) {
+        formData.append("amc_history[document]", visitEditDocument);
+      }
+      const res = await fetch(
+        `https://${baseUrl}/pms/asset_amcs/amc_history_update.json?access_token=${token}`,
+        { method: "POST", body: formData }
+      );
+      if (!res.ok) throw new Error(`Update failed: ${res.status}`);
+      setShowVisitEditModal(false);
+      setSelectedVisitId(null);
+      if (id) dispatch(fetchAMCDetails(id));
+    } catch (e: any) {
+      console.error("Visit update error:", e);
+    } finally {
+      setVisitUpdateLoading(false);
+    }
+  };
 
   // Fetch tickets when AMC details loaded
   useEffect(() => {
@@ -332,6 +287,13 @@ export const AMCDetailsPage = () => {
       dispatch(fetchAMCDetails(id));
     }
   }, [dispatch, id]);
+
+  useEffect(() => {
+    if (amcDetails?.amc_assets?.length) {
+      fetchOccurrences(occurrencePage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amcDetails?.amc_assets, occurrencePage]);
 
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return "—";
@@ -409,44 +371,39 @@ export const AMCDetailsPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-[#1a1a1a]">AMC Details</h1>
           <div className="flex gap-2">
-            <Button
-              onClick={() => navigate(`/maintenance/amc/edit/${id}`)}
-              variant="outline"
-              className="border-gray-300 text-gray-700 bg-white hover:bg-gray-50 px-4 py-2"
-            >
-              <svg
-                width="21"
-                height="21"
-                viewBox="0 0 21 21"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+            {activeTab === "amc-information" && activeSubTab === "amc-details" && (
+              <Button
+                onClick={() => navigate(`/maintenance/amc/edit/${id}`)}
+                variant="outline"
+                className="border-gray-300 text-gray-700 bg-white hover:bg-gray-50 px-4 py-2"
               >
-                <mask
-                  id="mask0_107_2076"
-                  style={{ maskType: "alpha" }}
-                  maskUnits="userSpaceOnUse"
-                  x="0"
-                  y="0"
+                <svg
                   width="21"
                   height="21"
+                  viewBox="0 0 21 21"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <rect width="21" height="21" fill="#C72030" />
-                </mask>
-                <g mask="url(#mask0_107_2076)">
-                  <path
-                    d="M4.375 16.625H5.47881L14.4358 7.66806L13.3319 6.56425L4.375 15.5212V16.625ZM3.0625 17.9375V14.9761L14.6042 3.43941C14.7365 3.31924 14.8825 3.22642 15.0423 3.16094C15.2023 3.09531 15.37 3.0625 15.5455 3.0625C15.7209 3.0625 15.8908 3.09364 16.0552 3.15591C16.2197 3.21818 16.3653 3.3172 16.492 3.45297L17.5606 4.53491C17.6964 4.66164 17.7931 4.80747 17.8509 4.97241C17.9086 5.13734 17.9375 5.30228 17.9375 5.46722C17.9375 5.64324 17.9075 5.81117 17.8474 5.971C17.7873 6.13098 17.6917 6.2771 17.5606 6.40937L6.02394 17.9375H3.0625ZM13.8742 7.12578L13.3319 6.56425L14.4358 7.66806L13.8742 7.12578Z"
-                    fill="#C72030"
-                  />
-                </g>
-              </svg>
-            </Button>
-            <Button
-              onClick={() => setShowAddVisitModal(true)}
-              style={{ backgroundColor: "#C72030" }}
-              className="text-white hover:bg-[#C72030]/90"
-            >
-              Add Visit
-            </Button>
+                  <mask
+                    id="mask0_107_2076"
+                    style={{ maskType: "alpha" }}
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width="21"
+                    height="21"
+                  >
+                    <rect width="21" height="21" fill="#C72030" />
+                  </mask>
+                  <g mask="url(#mask0_107_2076)">
+                    <path
+                      d="M4.375 16.625H5.47881L14.4358 7.66806L13.3319 6.56425L4.375 15.5212V16.625ZM3.0625 17.9375V14.9761L14.6042 3.43941C14.7365 3.31924 14.8825 3.22642 15.0423 3.16094C15.2023 3.09531 15.37 3.0625 15.5455 3.0625C15.7209 3.0625 15.8908 3.09364 16.0552 3.15591C16.2197 3.21818 16.3653 3.3172 16.492 3.45297L17.5606 4.53491C17.6964 4.66164 17.7931 4.80747 17.8509 4.97241C17.9086 5.13734 17.9375 5.30228 17.9375 5.46722C17.9375 5.64324 17.9075 5.81117 17.8474 5.971C17.7873 6.13098 17.6917 6.2771 17.5606 6.40937L6.02394 17.9375H3.0625ZM13.8742 7.12578L13.3319 6.56425L14.4358 7.66806L13.8742 7.12578Z"
+                      fill="#C72030"
+                    />
+                  </g>
+                </svg>
+              </Button>
+            )}
             {/* <Button
               onClick={() => navigate(`/maintenance/amc/edit/${id}`)}
               variant="outline"
@@ -473,7 +430,7 @@ export const AMCDetailsPage = () => {
             color: rgba(199, 32, 48, 1) !important;
           }
         `}</style>
-        <Tabs defaultValue="amc-information" className="w-full">
+        <Tabs defaultValue="amc-information" className="w-full" onValueChange={setActiveTab}>
           <TabsList
             className="top-level-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto mb-4"
             style={{
@@ -488,8 +445,9 @@ export const AMCDetailsPage = () => {
               { label: "AMC Information", value: "amc-information" },
               { label: "Supplier Information", value: "supplier-information" },
               { label: "Attachments", value: "attachments" },
-              { label: "Schedule", value: "schedule" },
+              { label: "Scheduled AMC", value: "scheduled-amc" },
               { label: "Tickets", value: "tickets" },
+              { label: "AMC Visits History", value: "amc-visits-history" },
               { label: "Association", value: "association" },
             ].map((tab) => (
               <TabsTrigger
@@ -527,7 +485,7 @@ export const AMCDetailsPage = () => {
               className="rounded-lg shadow-sm border border-gray-200"
               style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
             >
-              <Tabs defaultValue="analytics" className="w-full">
+              <Tabs defaultValue="analytics" className="w-full" onValueChange={setActiveSubTab}>
                 <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-[36px] p-0 text-sm justify-stretch border-b border-gray-200">
                   <TabsTrigger
                     value="analytics"
@@ -1121,9 +1079,9 @@ export const AMCDetailsPage = () => {
             </Card>
           </TabsContent>
 
-          {/* Schedule */}
+          {/* Scheduled AMC */}
           <TabsContent
-            value="schedule"
+            value="scheduled-amc"
             className="p-3 sm:p-6"
             style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
           >
@@ -1140,296 +1098,155 @@ export const AMCDetailsPage = () => {
                   <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] mr-3">
                     <Calendar className="w-5 h-5 text-[#C72030]" />
                   </div>
-                  SCHEDULE
+                  Scheduled AMC
                 </CardTitle>
               </CardHeader>
               <CardContent
                 className="p-6"
                 style={{ backgroundColor: "rgba(246, 247, 247, 1)" }}
               >
-                <div
-                  className="overflow-x-auto"
-                  style={{ maxHeight: "600px", overflowY: "auto" }}
-                >
-                  <Table>
-                    <TableHeader
-                      style={{
-                        position: "sticky",
-                        top: 0,
-                        backgroundColor: "#F6F4EE",
-                        zIndex: 10,
-                      }}
-                    >
-                      <TableRow className="bg-[#F6F4EE]">
-                        <TableHead className="font-semibold text-[#1a1a1a]">
-                          Asset Period
-                        </TableHead>
-                        <TableHead className="font-semibold text-[#1a1a1a]">
-                          Visit No.
-                        </TableHead>
-                        <TableHead className="font-semibold text-[#1a1a1a]">
-                          Technician
-                        </TableHead>
-                        <TableHead className="font-semibold text-[#1a1a1a]">
-                          Remarks
-                        </TableHead>
-                        <TableHead className="font-semibold text-[#1a1a1a]">
-                          Attachment
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {amcVisitData.length > 0 ? (
-                        amcVisitData.map((visit: any, index: number) => {
-                          const fileUrl =
-                            visit.attachment?.document ||
-                            visit.attachment?.document_url;
-                          const isImage =
-                            fileUrl &&
-                            /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(fileUrl);
-                          const isPdf = fileUrl && /\.pdf$/i.test(fileUrl);
-                          const isExcel =
-                            fileUrl && /\.(xls|xlsx|csv)$/i.test(fileUrl);
-                          const isWord =
-                            fileUrl && /\.(doc|docx)$/i.test(fileUrl);
-                          let icon: React.ReactNode = (
-                            <FileText className="w-6 h-6 text-gray-600" />
-                          );
-                          if (isPdf)
-                            icon = (
-                              <FileText className="w-6 h-6 text-red-600" />
-                            );
-                          else if (isExcel)
-                            icon = (
-                              <FileSpreadsheet className="w-6 h-6 text-green-600" />
-                            );
-                          else if (isWord)
-                            icon = (
-                              <FileText className="w-6 h-6 text-blue-600" />
-                            );
+                {(() => {
+                  const statusCards = [
+                    { label: "Scheduled", color: "#6366F1" },
+                    { label: "Open", color: "#EF4444" },
+                    { label: "In Progress", color: "#F59E0B" },
+                    { label: "Closed", color: "#10B981" },
+                    { label: "Overdue", color: "#C72030" },
+                  ];
+
+                  const filtered = occurrences.filter(
+                    (o) =>
+                      o.task_status === occurrenceStatusFilter &&
+                      (
+                        (o.checklist_name || "").toLowerCase().includes(occurrenceSearch.toLowerCase()) ||
+                        (o.schedule || "").toLowerCase().includes(occurrenceSearch.toLowerCase())
+                      )
+                  );
+
+                  const totalPages = Math.max(1, Math.ceil(occurrenceTotalCount / 20));
+
+                  return (
+                    <div className="space-y-6">
+                      {/* Status Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {statusCards.map((card) => {
+                          const count = occurrences.filter((o) => o.task_status === card.label).length;
                           return (
-                            <TableRow
-                              key={visit.id || index}
-                              className="border-b border-gray-200"
+                            <div
+                              key={card.label}
+                              className={`p-4 rounded-lg cursor-pointer ${occurrenceStatusFilter === card.label ? "ring-2 ring-[#C72030]" : ""
+                                }`}
+                              style={{ backgroundColor: "#F6F4EE" }}
+                              onClick={() => {
+                                setOccurrenceStatusFilter(card.label);
+                                setOccurrencePage(1);
+                              }}
                             >
-                              <TableCell className="text-gray-600">
-                                {visit.asset_period || "—"}
-                              </TableCell>
-                              <TableCell className="text-gray-600">
-                                {visit.visit_number || "—"}
-                              </TableCell>
-                              <TableCell className="text-gray-600">
-                                {visit.technician ? visit.technician.name : "—"}
-                              </TableCell>
-                              <TableCell className="text-gray-600">
-                                {visit.remarks || "—"}
-                              </TableCell>
-                              <TableCell>
-                                {fileUrl ? (
-                                  isImage ? (
-                                    <div className="flex relative flex-col items-center bg-[#F6F4EE] border rounded-lg p-2 w-[100px] shadow-sm">
-                                      <img
-                                        src={fileUrl}
-                                        alt={
-                                          visit.attachment?.document_name ||
-                                          "Attachment"
-                                        }
-                                        className="w-16 h-16 object-cover rounded border cursor-pointer"
-                                        onClick={() =>
-                                          setSelectedImage(fileUrl)
-                                        }
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div
-                                      className="flex relative flex-col items-center bg-[#F6F4EE] border rounded-lg p-2 w-[100px] shadow-sm cursor-pointer hover:ring-1 hover:ring-[#C72030]"
-                                      onClick={async () => {
-                                        try {
-                                          const attachmentId =
-                                            visit.attachment?.id;
-                                          const token =
-                                            localStorage.getItem("token");
-                                          const baseUrl =
-                                            localStorage.getItem("baseUrl");
-                                          if (
-                                            attachmentId &&
-                                            token &&
-                                            baseUrl
-                                          ) {
-                                            const apiUrl = `https://${baseUrl}/attachfiles/${attachmentId}?show_file=true`;
-                                            const response = await fetch(
-                                              apiUrl,
-                                              {
-                                                method: "GET",
-                                                headers: {
-                                                  Authorization: `Bearer ${token}`,
-                                                },
-                                              }
-                                            );
-                                            if (!response.ok)
-                                              throw new Error(
-                                                "Download failed"
-                                              );
-                                            const blob = await response.blob();
-                                            const url =
-                                              window.URL.createObjectURL(blob);
-                                            const link =
-                                              document.createElement("a");
-                                            link.href = url;
-                                            const originalName =
-                                              visit.attachment?.document_name ||
-                                              "file";
-                                            link.download = originalName;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                          } else {
-                                            // Fallback: open direct URL if available
-                                            window.open(fileUrl, "_blank");
-                                          }
-                                        } catch (e) {
-                                          console.error(
-                                            "Attachment download error",
-                                            e
-                                          );
-                                        }
-                                      }}
-                                      title="Download file"
-                                    >
-                                      <div className="w-16 h-16 flex items-center justify-center bg-white rounded border">
-                                        {icon}
-                                      </div>
-                                      <span className="mt-1 text-[10px] text-center break-all px-1">
-                                        {/* {(visit.attachment?.document_name || 'File').slice(0, 40)} */}
-                                      </span>
-                                      {/* <span className="absolute top-1 right-1 text-[9px] text-[#C72030] font-semibold">DL</span> */}
-                                    </div>
-                                  )
-                                ) : (
-                                  "—"
-                                )}
-                              </TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                                  <Calendar className="w-5 h-5" style={{ color: "#C72030" }} />
+                                </div>
+                                <div>
+                                  <div className="text-2xl font-bold text-black">
+                                    {count.toString().padStart(2, "0")}
+                                  </div>
+                                  <div className="text-sm font-medium text-black">{card.label}</div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Search */}
+                      <div className="flex justify-end">
+                        <Input
+                          placeholder="Search..."
+                          value={occurrenceSearch}
+                          onChange={(e) => setOccurrenceSearch(e.target.value)}
+                          className="pl-3 w-64"
+                        />
+                      </div>
+
+                      {/* Occurrences Table */}
+                      <div className="bg-white rounded-lg border overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-[#EDEAE3]">
+                              <TableHead className="font-semibold text-[#1a1a1a]">ID</TableHead>
+                              <TableHead className="font-semibold text-[#1a1a1a]">Checklist</TableHead>
+                              <TableHead className="font-semibold text-[#1a1a1a]">Type</TableHead>
+                              <TableHead className="font-semibold text-[#1a1a1a]">Schedule</TableHead>
+                              <TableHead className="font-semibold text-[#1a1a1a]">Assigned To</TableHead>
+                              <TableHead className="font-semibold text-[#1a1a1a]">Grace Time</TableHead>
+                              <TableHead className="font-semibold text-[#1a1a1a]">%</TableHead>
                             </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow className="border-b border-gray-200">
-                          <TableCell
-                            colSpan={5}
-                            className="text-center text-gray-600"
+                          </TableHeader>
+                          <TableBody className="bg-white">
+                            {occurrencesLoading ? (
+                              <TableRow>
+                                <TableCell colSpan={7} className="text-center py-6 text-gray-500">
+                                  Loading...
+                                </TableCell>
+                              </TableRow>
+                            ) : filtered.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={7} className="text-center py-6 text-gray-500">
+                                  No records found.
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              filtered.map((item: any) => (
+                                <TableRow key={item.id} className="border-b border-gray-200">
+                                  <TableCell className="font-medium text-gray-900">{item.id}</TableCell>
+                                  <TableCell className="text-gray-900">{item.checklist_name || "—"}</TableCell>
+                                  <TableCell className="text-gray-900">{item.type || "—"}</TableCell>
+                                  <TableCell className="text-gray-900">{item.schedule || "—"}</TableCell>
+                                  <TableCell className="text-gray-900">{item.assigned_to || "—"}</TableCell>
+                                  <TableCell className="text-gray-900">{item.grace_time || "—"}</TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#C72030]">
+                                        <span className="text-white text-[9px] font-bold">✓</span>
+                                      </div>
+                                      <span className="font-medium">{item.per ?? 0}%</span>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex justify-end items-center gap-3 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={occurrencePage <= 1 || occurrencesLoading}
+                            onClick={() => setOccurrencePage((p) => p - 1)}
                           >
-                            No AMC visit logs available.
-                          </TableCell>
-                        </TableRow>
+                            Previous
+                          </Button>
+                          <span className="text-sm text-gray-600">
+                            Page {occurrencePage} of {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={occurrencePage >= totalPages || occurrencesLoading}
+                            onClick={() => setOccurrencePage((p) => p + 1)}
+                          >
+                            Next
+                          </Button>
+                        </div>
                       )}
-                    </TableBody>
-                  </Table>
-                </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
-
-              {/* Modal */}
-              {selectedImage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-                  <div className="bg-white rounded-lg p-4 max-w-sm w-full relative pt-8">
-                    {/* Close Icon */}
-                    <button
-                      className="absolute top-2 right-2 text-gray-700 hover:text-black z-10"
-                      onClick={() => setSelectedImage(null)}
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-
-                    {/* Image */}
-                    <img
-                      src={selectedImage}
-                      alt="Preview"
-                      className="w-full h-auto object-contain rounded mb-4"
-                    />
-
-                    {/* Download Button with Loader */}
-                    <button
-                      className="block text-center bg-[#f6f4ee] text-[#c72030] py-2 rounded w-full flex items-center justify-center"
-                      disabled={isDownloading}
-                      onClick={async () => {
-                        const visit = amcVisitData.find(
-                          (v: any) => v.attachment?.document === selectedImage
-                        );
-                        if (!visit?.attachment?.id) {
-                          console.error(
-                            "Attachment ID is undefined for selected image"
-                          );
-                          return;
-                        }
-
-                        setIsDownloading(true);
-                        try {
-                          const token = localStorage.getItem("token");
-                          const baseUrl = localStorage.getItem("baseUrl");
-                          if (!token || !baseUrl) {
-                            console.error(
-                              "Token or baseUrl not found in local storage"
-                            );
-                            return;
-                          }
-
-                          const apiUrl = `https://${baseUrl}/attachfiles/${visit.attachment.id}?show_file=true`;
-
-                          const response = await fetch(apiUrl, {
-                            method: "GET",
-                            headers: {
-                              Authorization: `Bearer ${token}`,
-                              "Content-Type": "application/json",
-                            },
-                          });
-
-                          if (!response.ok) {
-                            throw new Error(
-                              `Failed to fetch the file: ${response.statusText}`
-                            );
-                          }
-
-                          const blob = await response.blob();
-                          const url = window.URL.createObjectURL(blob);
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.download = `attachment_${visit.attachment.id}.png`; // Fallback name
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          window.URL.revokeObjectURL(url);
-                          setSelectedImage(null); // Close modal after download
-                        } catch (error) {
-                          console.error("Error downloading file:", error);
-                        } finally {
-                          setIsDownloading(false);
-                        }
-                      }}
-                    >
-                      {isDownloading ? (
-                        <span className="loader mr-2"></span>
-                      ) : (
-                        <Download className="mr-2 w-4 h-4" />
-                      )}
-                      {isDownloading ? "Downloading..." : "Download"}
-                    </button>
-                    <style>{`
-                  .loader {
-                    border: 2px solid #c72030;
-                    border-top: 2px solid transparent;
-                    border-radius: 50%;
-                    width: 16px;
-                    height: 16px;
-                    animation: spin 1s linear infinite;
-                  }
-                  @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                  }
-                `}</style>
-                  </div>
-                </div>
-              )}
             </Card>
           </TabsContent>
 
@@ -1439,137 +1256,348 @@ export const AMCDetailsPage = () => {
             className="p-3 sm:p-6"
             style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
           >
-            <div className="space-y-6">
-              {/* Status Cards */}
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {ticketStatusCards.map((card, index) => {
-                  const Icon = card.icon;
-                  const key = ticketStatusMapping[card.label];
-                  const count = ticketCounts[key as keyof TicketCounts] || 0;
-                  return (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-lg flex items-center gap-3 cursor-pointer ${
-                        ticketStatusFilter === key
-                          ? "border-2 border-[#C72030]"
-                          : ""
-                      }`}
-                      style={{ backgroundColor: "#F6F4EE" }}
-                      onClick={() => setTicketStatusFilter(key)}
-                    >
-                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                        <Icon
-                          className="w-5 h-5"
-                          style={{ color: "#C72030" }}
-                        />
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-black">
-                          {count.toString().padStart(2, "0")}
-                        </div>
-                        <div className="text-sm font-medium text-black">
-                          {card.label}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Filter Dropdown */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <Select
-                  value={ticketStatusFilter}
-                  onValueChange={setTicketStatusFilter}
-                >
-                  <SelectTrigger className="w-36">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(ticketStatusMapping).map(
-                      ([label, value]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Enhanced Ticket Table */}
-              <EnhancedTable
-                data={tickets.filter((t) =>
-                  t.heading
-                    ?.toLowerCase()
-                    .includes(ticketSearchTerm.toLowerCase())
-                )}
-                columns={ticketColumns}
-                renderCell={(item: TicketRecord, columnKey: string) => {
-                  switch (columnKey) {
-                    case "id":
-                      return (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/maintenance/ticket/details/${item.id}`)
-                          }
-                          className="font-medium text-[#C72030] hover:underline"
-                        >
-                          #{item.id}
-                        </button>
-                      );
-                    case "heading":
-                      return item.heading || "—";
-                    case "category_type":
-                      return item.category_type || "—";
-                    case "status":
-                      return item.status ? (
-                        <div
-                          className={`px-3 py-1 rounded text-sm font-medium inline-flex items-center gap-1 ${
-                            item.status === "Open"
-                              ? "bg-[#FF6B5A] text-white"
-                              : item.status === "Pending"
-                                ? "bg-[#C72030] text-white"
-                                : "bg-[#2DD4BF] text-white"
-                          }`}
-                        >
-                          {item.status}
-                          <ChevronDown className="w-3 h-3" />
-                        </div>
-                      ) : (
-                        "—"
-                      );
-                    case "updated_by":
-                      return item.updated_by || "—";
-                    case "created_at":
-                      return item.created_at
-                        ? new Date(item.created_at).toLocaleDateString("en-GB")
-                        : "—";
-                    default:
-                      return (item as any)[columnKey];
-                  }
-                }}
-                storageKey="amc-ticket-table"
-                emptyMessage="No tickets found."
-                searchTerm={ticketSearchTerm}
-                onSearchChange={setTicketSearchTerm}
-                searchPlaceholder="Search tickets..."
-                enableExport={false}
-                pagination={true}
-                pageSize={10}
-                loading={ticketsLoading}
-                enableSearch={true}
-                className="w-full"
-              />
-
-              {/* Error message */}
-              {ticketsError && (
-                <div className="text-center text-red-600 py-4">
-                  {ticketsError}
+            <Card
+              className="border-[#D9D9D9] bg-white shadow-sm"
+              style={{
+                borderRadius: "4px",
+                background: "#FFF",
+                boxShadow: "0 4px 14.2px 0 rgba(0, 0, 0, 0.10)",
+              }}
+            >
+              <CardHeader className="bg-[#F6F4EE] border-b border-gray-300">
+                <CardTitle className="text-[#1a1a1a] font-semibold text-lg flex items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] mr-3">
+                    <Ticket className="w-5 h-5 text-[#C72030]" />
+                  </div>
+                  TICKETS
+                </CardTitle>
+              </CardHeader>
+              <CardContent
+                className="p-6"
+                style={{ backgroundColor: "rgba(246, 247, 247, 1)" }}
+              >
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-[#EDEAE3]">
+                        <TableHead className="font-semibold text-[#1a1a1a]">
+                          ID
+                        </TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">
+                          Title
+                        </TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">
+                          Category
+                        </TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">
+                          Status
+                        </TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">
+                          Updated By
+                        </TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">
+                          Created At
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="bg-white">
+                      {ticketsLoading && (
+                        <TableRow className="border-b border-gray-200">
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-gray-600"
+                          >
+                            Loading tickets...
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {!ticketsLoading && ticketsError && (
+                        <TableRow className="border-b border-gray-200">
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-red-600"
+                          >
+                            {ticketsError}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {!ticketsLoading &&
+                        !ticketsError &&
+                        tickets.length === 0 && (
+                          <TableRow className="border-b border-gray-200">
+                            <TableCell
+                              colSpan={6}
+                              className="text-center text-gray-600"
+                            >
+                              No tickets found.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      {!ticketsLoading &&
+                        !ticketsError &&
+                        tickets.length > 0 &&
+                        tickets.map((t) => (
+                          <TableRow
+                            key={t.id}
+                            className="border-b border-gray-200"
+                          >
+                            <TableCell className="text-gray-900">
+                              {t.id}
+                            </TableCell>
+                            <TableCell className="max-w-[360px] whitespace-normal break-words text-gray-900">
+                              {t.heading || "—"}
+                            </TableCell>
+                            <TableCell className="text-gray-900">
+                              {t.category_type || "—"}
+                            </TableCell>
+                            <TableCell>
+                              {t.status ? (
+                                <span
+                                  className={`px-2 py-1 text-xs rounded ${t.status.toLowerCase() === "open"
+                                      ? "bg-gray-200 text-gray-900"
+                                      : t.status.toLowerCase() === "pending"
+                                        ? "bg-[#C72030] text-white"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                >
+                                  {t.status}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
+                            </TableCell>
+                            <TableCell className="text-gray-900">
+                              {t.updated_by || "—"}
+                            </TableCell>
+                            <TableCell className="text-gray-900">
+                              {t.created_at
+                                ? new Date(t.created_at).toLocaleDateString(
+                                  "en-GB"
+                                )
+                                : "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* AMC Visits History */}
+          <TabsContent
+            value="amc-visits-history"
+            className="p-3 sm:p-6"
+            style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+          >
+            <Card
+              className="border-[#D9D9D9] bg-white shadow-sm"
+              style={{
+                borderRadius: "4px",
+                background: "#FFF",
+                boxShadow: "0 4px 14.2px 0 rgba(0, 0, 0, 0.10)",
+              }}
+            >
+              <CardHeader className="bg-[#F6F4EE] border-b border-gray-300">
+                <CardTitle className="text-[#1a1a1a] font-semibold text-lg flex items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] mr-3">
+                    <Calendar className="w-5 h-5 text-[#C72030]" />
+                  </div>
+                  AMC VISITS HISTORY
+                </CardTitle>
+              </CardHeader>
+              <CardContent
+                className="p-6"
+                style={{ backgroundColor: "rgba(246, 247, 247, 1)" }}
+              >
+                {/* Visits Table */}
+                <div className="bg-white rounded-lg border overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-[#EDEAE3]">
+                        <TableHead className="w-10" />
+                        <TableHead className="font-semibold text-[#1a1a1a]">Visit #</TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">Visit Date</TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">Asset Period</TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">Technician</TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">Remarks</TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">Status</TableHead>
+                        <TableHead className="font-semibold text-[#1a1a1a]">Attachment</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="bg-white">
+                      {amcVisitData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-6 text-gray-500">
+                            No visit history found.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        amcVisitData.map((visit) => {
+                          const isSelected = selectedVisitId === visit.id;
+                          return (
+                            <TableRow
+                              key={visit.id}
+                              className={`border-b border-gray-200 transition-colors ${isSelected ? "bg-[#FFF8F8]" : "hover:bg-gray-50"
+                                }`}
+                            >
+                              <TableCell className="w-10">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() =>
+                                    setSelectedVisitId(isSelected ? null : visit.id)
+                                  }
+                                  className="w-4 h-4 rounded border-gray-300 accent-[#C72030] cursor-pointer"
+                                />
+                              </TableCell>
+                              <TableCell className="font-medium text-gray-900">
+                                {visit.visit_number ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {visit.visit_date
+                                  ? new Date(visit.visit_date).toLocaleDateString("en-GB")
+                                  : "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {visit.asset_period || "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {visit.technician?.name || "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900 max-w-[200px] whitespace-normal break-words">
+                                {visit.remarks || "—"}
+                              </TableCell>
+                              <TableCell>
+                                {(visit as any).status ? (
+                                  <span
+                                    className={`px-2 py-1 text-xs font-medium rounded uppercase tracking-wide ${(visit as any).status.toLowerCase() === "completed"
+                                        ? "bg-green-100 text-green-800"
+                                        : (visit as any).status.toLowerCase() === "cancelled"
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-gray-100 text-gray-700"
+                                      }`}
+                                  >
+                                    {((visit as any).status as string).toUpperCase()}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400 text-sm">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {visit.attachment?.document || visit.attachment?.document_url ? (
+                                  <a
+                                    href={visit.attachment.document || visit.attachment.document_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-1 text-[#C72030] hover:underline text-sm"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    View
+                                  </a>
+                                ) : (
+                                  <span className="text-gray-400 text-sm">—</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Edit Visit Modal */}
+            <Dialog open={showVisitEditModal} onOpenChange={setShowVisitEditModal}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-[#1a1a1a] font-semibold">Edit Visit</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-5 py-2">
+                  {/* Remarks */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700">Remarks</label>
+                    <textarea
+                      value={visitEditRemarks}
+                      onChange={(e) => setVisitEditRemarks(e.target.value)}
+                      rows={3}
+                      placeholder="Enter remarks..."
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#C72030]"
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700">Status</label>
+                    <select
+                      value={visitEditStatus}
+                      onChange={(e) => setVisitEditStatus(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030]"
+                    >
+                      <option value="">Select status</option>
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  {/* Attachment */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700">Attachment</label>
+                    <div
+                      className="flex items-center gap-3 border border-dashed border-gray-300 rounded-md px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() =>
+                        document.getElementById("visit-doc-input")?.click()
+                      }
+                    >
+                      <Paperclip className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-500 truncate">
+                        {visitEditDocument
+                          ? visitEditDocument.name
+                          : "Click to attach a file"}
+                      </span>
+                      <input
+                        id="visit-doc-input"
+                        type="file"
+                        className="hidden"
+                        onChange={(e) =>
+                          setVisitEditDocument(e.target.files?.[0] || null)
+                        }
+                      />
+                    </div>
+                    {visitEditDocument && (
+                      <button
+                        className="text-xs text-red-500 hover:underline mt-1"
+                        onClick={() => setVisitEditDocument(null)}
+                      >
+                        Remove file
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowVisitEditModal(false)}
+                      disabled={visitUpdateLoading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      style={{ backgroundColor: "#C72030" }}
+                      className="text-white hover:bg-[#C72030]/90 min-w-[80px]"
+                      disabled={visitUpdateLoading}
+                      onClick={handleVisitUpdate}
+                    >
+                      {visitUpdateLoading ? "Saving..." : "Save"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* Asset Information */}
@@ -1623,11 +1651,10 @@ export const AMCDetailsPage = () => {
                               </TableCell>{" "}
                               <TableCell>
                                 <span
-                                  className={`px-2 py-1 text-xs rounded ${
-                                    asset.asset_status === "active"
+                                  className={`px-2 py-1 text-xs rounded ${asset.asset_status === "active"
                                       ? "bg-green-100 text-green-800"
                                       : "bg-gray-100 text-gray-800"
-                                  }`}
+                                    }`}
                                 >
                                   {asset.asset_status?.replace("_", " ") || "—"}
                                 </span>
@@ -1778,10 +1805,7 @@ export const AMCDetailsPage = () => {
                               Name
                             </TableHead>
                             <TableHead className="font-semibold text-[#1a1a1a]">
-                              Group
-                            </TableHead>
-                            <TableHead className="font-semibold text-[#1a1a1a]">
-                              Sub Group
+                              Group & Sub Group
                             </TableHead>
                             <TableHead className="font-semibold text-[#1a1a1a]">
                               Status
@@ -1793,16 +1817,25 @@ export const AMCDetailsPage = () => {
                               Action
                             </TableHead>
                             <TableHead className="font-semibold text-[#1a1a1a]">
-                              ID
+                              Equipment ID
                             </TableHead>
                             <TableHead className="font-semibold text-[#1a1a1a]">
-                              Name
+                              Asset Name
                             </TableHead>
                             <TableHead className="font-semibold text-[#1a1a1a]">
-                              Under Warranty
+                              Model No.
+                            </TableHead>
+                            <TableHead className="font-semibold text-[#1a1a1a]">
+                              Group & Sub Group
                             </TableHead>
                             <TableHead className="font-semibold text-[#1a1a1a]">
                               Status
+                            </TableHead>
+                            <TableHead className="font-semibold text-[#1a1a1a]">
+                              Criticality
+                            </TableHead>
+                            <TableHead className="font-semibold text-[#1a1a1a]">
+                              Location
                             </TableHead>
                           </>
                         )}
@@ -1832,20 +1865,18 @@ export const AMCDetailsPage = () => {
                                 {service.service_name || "—"}
                               </TableCell>
                               <TableCell className="text-gray-900">
-                                {service.group_name || "—"}
-                              </TableCell>
-                              <TableCell className="text-gray-900">
-                                {service.sub_group_name || "—"}
+                                {[service.group_name, service.sub_group_name]
+                                  .filter(Boolean)
+                                  .join(" / ") || "—"}
                               </TableCell>
                               <TableCell>
                                 <span
-                                  className={`px-2 py-1 text-xs rounded ${
-                                    service.status === "Active"
+                                  className={`px-2 py-1 text-xs rounded ${(service as any).status === "Active"
                                       ? "bg-green-100 text-green-800"
                                       : "bg-gray-100 text-gray-800"
-                                  }`}
+                                    }`}
                                 >
-                                  {service.status || "—"}
+                                  {(service as any).status || "—"}
                                 </span>
                               </TableCell>
                             </TableRow>
@@ -1853,7 +1884,7 @@ export const AMCDetailsPage = () => {
                         ) : (
                           <TableRow className="border-b border-gray-200">
                             <TableCell
-                              colSpan={6}
+                              colSpan={5}
                               className="text-center text-sm text-gray-500"
                             >
                               No services found
@@ -1861,50 +1892,74 @@ export const AMCDetailsPage = () => {
                           </TableRow>
                         )
                       ) : amcDetails.amc_assets?.length > 0 ? (
-                        amcDetails.amc_assets.map((asset) => (
-                          <TableRow
-                            key={asset.id}
-                            className="border-b border-gray-200"
-                          >
-                            <TableCell>
-                              <a
-                                href={`/maintenance/asset/details/${asset.asset_id}`}
-                                className="text-gray-600 hover:text-black"
-                                title="View Details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </a>
-                            </TableCell>
-                            <TableCell className="text-gray-900">
-                              {asset.asset_id || "—"}
-                            </TableCell>
-                            <TableCell className="text-gray-900">
-                              {asset.asset_name || "—"}
-                            </TableCell>
-                            <TableCell className="text-gray-900">
-                              {asset.warranty === true
-                                ? "Yes"
-                                : asset.warranty === false
-                                  ? "No"
-                                  : "—"}
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`px-2 py-1 text-xs rounded ${
-                                  asset.asset_status === "active"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {asset.asset_status?.replace("_", " ") || "—"}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        amcDetails.amc_assets.map((asset: any) => {
+                          const locationParts = [
+                            asset.building_name || asset.building,
+                            asset.wing_name || asset.wing,
+                            asset.area_name || asset.area,
+                            asset.floor_name || asset.floor,
+                            asset.room_name || asset.room,
+                          ].filter(Boolean);
+                          const location =
+                            locationParts.length > 0
+                              ? locationParts.join(", ")
+                              : "—";
+                          const groupSubGroup =
+                            [asset.group_name, asset.sub_group_name]
+                              .filter(Boolean)
+                              .join(" / ") || "—";
+                          return (
+                            <TableRow
+                              key={asset.id}
+                              className="border-b border-gray-200"
+                            >
+                              <TableCell>
+                                <a
+                                  href={`/maintenance/asset/details/${asset.asset_id}`}
+                                  className="text-gray-600 hover:text-black"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </a>
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {asset.equipment_id ||
+                                  asset.asset_code ||
+                                  asset.asset_id ||
+                                  "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {asset.asset_name || "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {asset.model_no || asset.model_number || "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {groupSubGroup}
+                              </TableCell>
+                              <TableCell>
+                                <span
+                                  className={`px-2 py-1 text-xs rounded ${asset.asset_status === "active"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-gray-100 text-gray-800"
+                                    }`}
+                                >
+                                  {asset.asset_status?.replace("_", " ") || "—"}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-gray-900">
+                                {asset.criticality || "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-900 text-sm">
+                                {location}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                       ) : (
                         <TableRow className="border-b border-gray-200">
                           <TableCell
-                            colSpan={5}
+                            colSpan={8}
                             className="text-center text-sm text-gray-500"
                           >
                             No assets found
@@ -1919,6 +1974,92 @@ export const AMCDetailsPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Fixed selection panel — mirrors AssetSelectionPanel style */}
+      {selectedVisitId !== null && (
+        <div
+          className="fixed bg-white border border-gray-200 rounded-sm shadow-lg z-50"
+          style={{ bottom: "24px", left: "50%", transform: "translateX(-50%)", width: "760px", height: "90px" }}
+        >
+          <div className="flex items-center justify-between w-full h-full pr-6">
+            {/* Left: count badge + visit label */}
+            <div className="flex items-center gap-2">
+              <div className="text-[#C72030] bg-[#C4B89D] rounded-l-sm w-[44px] h-[90px] flex items-center justify-center text-sm font-bold flex-shrink-0">
+                1
+              </div>
+              <div className="flex flex-col justify-center px-3 py-2">
+                <span className="text-[16px] font-semibold text-[#1A1A1A] whitespace-nowrap leading-none">
+                  Selection
+                </span>
+                <span className="text-[12px] font-medium text-[#6B7280] leading-tight">
+                  {(() => {
+                    const v = amcVisitData.find((x) => x.id === selectedVisitId);
+                    return v
+                      ? `Visit #${v.visit_number} — ${v.visit_date ? new Date(v.visit_date).toLocaleDateString("en-GB") : ""}`
+                      : `Visit ID: ${selectedVisitId}`;
+                  })()}
+                </span>
+              </div>
+            </div>
+
+            {/* Right: action buttons */}
+            <div className="flex items-center ml-6">
+              {/* Edit */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-600 hover:bg-gray-100 flex flex-col items-center gap-1 h-auto mr-6"
+                onClick={() => {
+                  const visit = amcVisitData.find((v) => v.id === selectedVisitId);
+                  setVisitEditRemarks((visit as any)?.remarks || "");
+                  setVisitEditStatus((visit as any)?.status || "");
+                  setVisitEditDocument(null);
+                  setShowVisitEditModal(true);
+                }}
+              >
+                <svg
+                  className="w-5 h-5 mt-3"
+                  viewBox="0 0 21 21"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <mask
+                    id="visit-sel-edit-mask"
+                    style={{ maskType: "alpha" }}
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width="21"
+                    height="21"
+                  >
+                    <rect width="21" height="21" fill="#1C1B1F" />
+                  </mask>
+                  <g mask="url(#visit-sel-edit-mask)">
+                    <path
+                      d="M4.375 16.625H5.47881L14.4358 7.66806L13.3319 6.56425L4.375 15.5212V16.625ZM3.0625 17.9375V14.9761L14.6042 3.43941C14.7365 3.31924 14.8825 3.22642 15.0423 3.16094C15.2023 3.09531 15.37 3.0625 15.5455 3.0625C15.7209 3.0625 15.8908 3.09364 16.0552 3.15591C16.2197 3.21818 16.3653 3.3172 16.492 3.45297L17.5606 4.53491C17.6964 4.66164 17.7931 4.80747 17.8509 4.97241C17.9086 5.13734 17.9375 5.30228 17.9375 5.46722C17.9375 5.64324 17.9075 5.81117 17.8474 5.971C17.7873 6.13098 17.6917 6.2771 17.5606 6.40937L6.02394 17.9375H3.0625ZM13.8742 7.12578L13.3319 6.56425L14.4358 7.66806L13.8742 7.12578Z"
+                      fill="#1C1B1F"
+                    />
+                  </g>
+                </svg>
+                <span className="text-xs font-medium">Edit</span>
+              </Button>
+
+              <div className="w-px h-8 bg-gray-300 mr-6" />
+
+              {/* Clear */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedVisitId(null)}
+                className="text-gray-600 hover:bg-gray-100"
+                style={{ width: "44px", height: "44px" }}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AddVisitModal
         isOpen={showAddVisitModal}

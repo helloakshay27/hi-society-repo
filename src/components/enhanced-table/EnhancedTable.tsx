@@ -120,12 +120,12 @@ interface BulkAction<T> {
   icon?: React.ComponentType<any>;
   onClick: (selectedItems: T[]) => void;
   variant?:
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary"
-    | "ghost"
-    | "link";
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
 }
 
 interface EnhancedTableProps<T> {
@@ -1074,10 +1074,10 @@ export function EnhancedTable<T extends Record<string, any>>({
 
                       const customCell = renderEditableCell
                         ? renderEditableCell(
-                            column.key,
-                            newRowData[column.key],
-                            (value) => handleNewRowDataChange(column.key, value)
-                          )
+                          column.key,
+                          newRowData[column.key],
+                          (value) => handleNewRowDataChange(column.key, value)
+                        )
                         : null;
 
                       return (
@@ -1088,11 +1088,11 @@ export function EnhancedTable<T extends Record<string, any>>({
                           {customCell !== null
                             ? customCell
                             : renderDefaultEditableCell(
-                                column.key,
-                                newRowData[column.key],
-                                (value) =>
-                                  handleNewRowDataChange(column.key, value)
-                              )}
+                              column.key,
+                              newRowData[column.key],
+                              (value) =>
+                                handleNewRowDataChange(column.key, value)
+                            )}
                         </TableCell>
                       );
                     })}

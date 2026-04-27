@@ -14,6 +14,8 @@ import {
   RefreshCw,
   Settings,
   PauseCircle,
+  Calendar as CalendarIcon,
+  ChevronDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,9 +27,31 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { toast } from "sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { PermitFilterModal } from "@/components/PermitFilterModal";
+import { AssetAnalyticsCard } from "@/components/AssetAnalyticsCard";
+import { AssetAnalyticsFilterDialog } from "@/components/AssetAnalyticsFilterDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RecentPermitsSidebar } from "@/components/RecentPermitsSidebar";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { debounce } from "lodash";
 
 // Type definitions for permit data
@@ -243,6 +267,184 @@ const getRiskColor = (risk: string) => {
   }
 };
 
+// Utility: get current site ID from localStorage or URL params
+const getCurrentSiteId = (): string => {
+  return localStorage.getItem('selectedSiteId') ||
+    new URLSearchParams(window.location.search).get('site_id') || '';
+};
+
+// Utility: format date for API calls (YYYY-MM-DD)
+const formatDateForAPI = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// API: fetch site-wise permits report (bar chart)
+const fetchSiteWisePermitsReport = async (fromDate: Date, toDate: Date) => {
+  const siteId = getCurrentSiteId();
+  const fromDateStr = formatDateForAPI(fromDate);
+  const toDateStr = formatDateForAPI(toDate);
+  const url = `${API_CONFIG.BASE_URL}/pms/permits/site_wise_permits_report.json?site_id=${siteId}&from_date=${fromDateStr}&to_date=${toDateStr}&access_token=${API_CONFIG.TOKEN}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${API_CONFIG.TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch site-wise permits report');
+  }
+
+  return await response.json();
+};
+
+// API: fetch permits status data (pie chart)
+const fetchPermitsStatusData = async (fromDate: Date, toDate: Date) => {
+  const siteId = getCurrentSiteId();
+  const fromDateStr = formatDateForAPI(fromDate);
+  const toDateStr = formatDateForAPI(toDate);
+  const url = `${API_CONFIG.BASE_URL}/pms/permits/permits_status_data.json?site_id=${siteId}&from_date=${fromDateStr}&to_date=${toDateStr}&access_token=${API_CONFIG.TOKEN}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${API_CONFIG.TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch permits status data');
+  }
+
+  return await response.json();
+};
+
+// Download: site-wise permits download
+const downloadSiteWisePermits = async (fromDate: Date, toDate: Date) => {
+  const siteId = getCurrentSiteId();
+  const fromDateStr = formatDateForAPI(fromDate);
+  const toDateStr = formatDateForAPI(toDate);
+  const url = `${API_CONFIG.BASE_URL}/pms/permits/site_wise_permits_download.json?site_id=${siteId}&from_date=${fromDateStr}&to_date=${toDateStr}&access_token=${API_CONFIG.TOKEN}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `site-wise-permits-${fromDateStr}-to-${toDateStr}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  } catch (error) {
+    console.error('Error downloading site-wise permits:', error);
+    throw error;
+  }
+};
+
+// Download: permits status download
+const downloadPermitsStatus = async (fromDate: Date, toDate: Date) => {
+  const siteId = getCurrentSiteId();
+  const fromDateStr = formatDateForAPI(fromDate);
+  const toDateStr = formatDateForAPI(toDate);
+  const url = `${API_CONFIG.BASE_URL}/pms/permits/permits_status_download.json?site_id=${siteId}&from_date=${fromDateStr}&to_date=${toDateStr}&access_token=${API_CONFIG.TOKEN}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `permits-status-${fromDateStr}-to-${toDateStr}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  } catch (error) {
+    console.error('Error downloading permits status:', error);
+    throw error;
+  }
+};
+
+// Sortable chart wrapper — same pattern as IncidentDashboard
+const SortableChartItem = ({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("button") ||
+      target.closest("[data-no-drag]") ||
+      target.tagName === "BUTTON"
+    ) {
+      e.stopPropagation();
+      return;
+    }
+    if (listeners?.onPointerDown) listeners.onPointerDown(e);
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      onPointerDown={handlePointerDown}
+      className="cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md"
+    >
+      {children}
+    </div>
+  );
+};
+
+// Analytics options for permits
+const PERMIT_ANALYTICS_OPTIONS = [
+  { value: "permitSiteWise", label: "Permit Site Wise Report" },
+  { value: "permitStatus", label: "Permit Status" },
+];
+
 export const PermitToWorkDashboard = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -274,6 +476,153 @@ export const PermitToWorkDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(20);
+
+  // Analytics tab state
+  const getDefaultAnalyticsDateRange = () => {
+    const today = new Date();
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
+    return { fromDate: oneYearAgo, toDate: today };
+  };
+  const formatDateForDisplay = (date: Date) => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+  const [analyticsDateRange, setAnalyticsDateRange] = useState(
+    getDefaultAnalyticsDateRange()
+  );
+  const [isAnalyticsFilterOpen, setIsAnalyticsFilterOpen] = useState(false);
+  const [selectedAnalyticsTypes, setSelectedAnalyticsTypes] = useState<string[]>(
+    PERMIT_ANALYTICS_OPTIONS.map((o) => o.value)
+  );
+  const [isAnalyticsDropdownOpen, setIsAnalyticsDropdownOpen] = useState(false);
+
+  // Drag-and-drop for chart cards
+  const [chartOrder, setChartOrder] = useState<string[]>(["permitSiteWise", "permitStatus"]);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+  const handleChartDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setChartOrder((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleAnalyticsFilterApply = (startDateStr: string, endDateStr: string) => {
+    setAnalyticsDateRange({
+      fromDate: new Date(startDateStr),
+      toDate: new Date(endDateStr),
+    });
+  };
+
+  const toggleAnalyticsType = (value: string) => {
+    setSelectedAnalyticsTypes((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+
+  // Analytics data state — site-wise permits (bar chart)
+  const [siteWiseRefreshKey, setSiteWiseRefreshKey] = useState(0);
+  const handleRefreshSiteWise = () => setSiteWiseRefreshKey((k) => k + 1);
+
+  const [siteWisePermitsData, setSiteWisePermitsData] = useState<{ name: string; value: number }[]>([]);
+  const [siteWisePermitsInfo, setSiteWisePermitsInfo] = useState<string>("");
+  const [siteWisePermitsLoading, setSiteWisePermitsLoading] = useState(false);
+
+  // Analytics data state — permits status (pie chart)
+  const [permitsStatusRefreshKey, setPermitsStatusRefreshKey] = useState(0);
+  const handleRefreshPermitsStatus = () => setPermitsStatusRefreshKey((k) => k + 1);
+
+  const [permitsStatusData, setPermitsStatusData] = useState<{ name: string; value: number }[]>([]);
+  const [permitsStatusInfo, setPermitsStatusInfo] = useState<string>("");
+  const [permitsStatusLoading, setPermitsStatusLoading] = useState(false);
+
+  // Fetch site-wise permits report independently
+  useEffect(() => {
+    const load = async () => {
+      setSiteWisePermitsLoading(true);
+      try {
+        const result = await fetchSiteWisePermitsReport(
+          analyticsDateRange.fromDate,
+          analyticsDateRange.toDate
+        );
+        if (result.success === 1 && result.response) {
+          const chartData: { name: string; value: number }[] = [];
+          for (const [, items] of Object.entries(result.response)) {
+            if (Array.isArray(items)) {
+              for (const item of items) {
+                if (Array.isArray(item) && item.length >= 2) {
+                  chartData.push({ name: `${item[1]}`, value: item[0] as number });
+                }
+              }
+            }
+          }
+          setSiteWisePermitsData(chartData);
+          setSiteWisePermitsInfo(result.info?.info || "Site wise permits distribution");
+        }
+      } catch (err) {
+        console.error("Error fetching site-wise permits report:", err);
+      } finally {
+        setSiteWisePermitsLoading(false);
+      }
+    };
+    load();
+  }, [analyticsDateRange, siteWiseRefreshKey]);
+
+  // Fetch permits status data independently
+  useEffect(() => {
+    const load = async () => {
+      setPermitsStatusLoading(true);
+      try {
+        const result = await fetchPermitsStatusData(
+          analyticsDateRange.fromDate,
+          analyticsDateRange.toDate
+        );
+        if (result.success === 1 && result.response) {
+          const chartData: { name: string; value: number }[] = [];
+          for (const [key, val] of Object.entries(result.response)) {
+            if (key !== "Total" && typeof val === "number") {
+              chartData.push({ name: key, value: val });
+            }
+          }
+          setPermitsStatusData(chartData);
+          setPermitsStatusInfo(result.info?.info || "Distribution of permits by status");
+        }
+      } catch (err) {
+        console.error("Error fetching permits status data:", err);
+      } finally {
+        setPermitsStatusLoading(false);
+      }
+    };
+    load();
+  }, [analyticsDateRange, permitsStatusRefreshKey]);
+
+  // Download handlers for analytics charts
+  const handleSiteWisePermitsDownload = async () => {
+    try {
+      await downloadSiteWisePermits(analyticsDateRange.fromDate, analyticsDateRange.toDate);
+      toast.success("Site wise permits report downloaded successfully");
+    } catch (err) {
+      toast.error("Failed to download site wise permits report");
+    }
+  };
+
+  const handlePermitsStatusDownload = async () => {
+    try {
+      await downloadPermitsStatus(analyticsDateRange.fromDate, analyticsDateRange.toDate);
+      toast.success("Permits status report downloaded successfully");
+    } catch (err) {
+      toast.error("Failed to download permits status report");
+    }
+  };
 
   // Fetch permits on component mount and when page/filters change
   useEffect(() => {
@@ -1002,69 +1351,175 @@ export const PermitToWorkDashboard = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Permit Status Distribution</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total: {permitCounts.total}</span>
-                  <span>100%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Approved: {permitCounts.approved}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.approved / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Open: {permitCounts.open}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.open / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Closed: {permitCounts.closed}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.closed / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Draft: {permitCounts.draft}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.draft / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Hold: {permitCounts.hold}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.hold / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Rejected: {permitCounts.rejected}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.rejected / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Extended: {permitCounts.extended}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.extended / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Expired: {permitCounts.expired}</span>
-                  <span>{permitCounts.total > 0 ? ((permitCounts.expired / permitCounts.total) * 100).toFixed(1) : 0}%</span>
-                </div>
-              </div>
-            </div>
+          {/* Toolbar: Date Filter + Analytics Selector Popover */}
+          <div className="flex justify-end items-center gap-3 mb-6">
+            {/* Date range filter button */}
+            <Button
+              onClick={() => setIsAnalyticsFilterOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border-gray-300"
+            >
+              <CalendarIcon className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                {formatDateForDisplay(analyticsDateRange.fromDate)} &ndash;{" "}
+                {formatDateForDisplay(analyticsDateRange.toDate)}
+              </span>
+              <Filter className="w-4 h-4 text-gray-600" />
+            </Button>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Permit Types</h3>
-              <div className="space-y-2">
-                {permits.reduce((acc: any[], permit) => {
-                  const existingType = acc.find(item => item.type === permit.permit_type);
-                  if (existingType) {
-                    existingType.count++;
-                  } else {
-                    acc.push({ type: permit.permit_type, count: 1 });
-                  }
-                  return acc;
-                }, []).map((typeData, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span>{typeData.type}: {typeData.count}</span>
-                    <span>{permits.length > 0 ? ((typeData.count / permits.length) * 100).toFixed(1) : 0}%</span>
+            {/* Analytics Selector Popover */}
+            <Popover
+              open={isAnalyticsDropdownOpen}
+              onOpenChange={setIsAnalyticsDropdownOpen}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 min-w-[200px] justify-between px-4 py-2 bg-white hover:bg-gray-50 border-gray-300"
+                >
+                  <span className="text-sm font-medium text-gray-700">
+                    {selectedAnalyticsTypes.length === 0
+                      ? "Select Analytics"
+                      : selectedAnalyticsTypes.length === PERMIT_ANALYTICS_OPTIONS.length
+                        ? "All Analytics Selected"
+                        : `${selectedAnalyticsTypes.length} / ${PERMIT_ANALYTICS_OPTIONS.length} Selected`}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72" align="end">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium">Select Analytics</h4>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() =>
+                          setSelectedAnalyticsTypes(
+                            PERMIT_ANALYTICS_OPTIONS.map((o) => o.value)
+                          )
+                        }
+                      >
+                        All
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setSelectedAnalyticsTypes([])}
+                      >
+                        None
+                      </Button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      Charts
+                    </p>
+                    <div className="space-y-2">
+                      {PERMIT_ANALYTICS_OPTIONS.map((opt) => (
+                        <div key={opt.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`permit-opt-${opt.value}`}
+                            checked={selectedAnalyticsTypes.includes(opt.value)}
+                            onCheckedChange={() => toggleAnalyticsType(opt.value)}
+                          />
+                          <label
+                            htmlFor={`permit-opt-${opt.value}`}
+                            className="text-sm cursor-pointer"
+                          >
+                            {opt.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
+
+          {/* Grid Layout: Charts (left) + Recent Permits Sidebar (right) */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <div className="xl:col-span-8 space-y-6">
+              {/* Chart Grid — draggable, only show selected charts */}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleChartDragEnd}
+              >
+                <SortableContext
+                  items={chartOrder.filter((k) => selectedAnalyticsTypes.includes(k))}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {chartOrder
+                      .filter((key) => selectedAnalyticsTypes.includes(key))
+                      .map((key) => {
+                        if (key === "permitSiteWise") {
+                          return (
+                            <SortableChartItem key="permitSiteWise" id="permitSiteWise">
+                              <AssetAnalyticsCard
+                                title="Permit Site Wise Report"
+                                type="groupWise"
+                                data={siteWisePermitsData}
+                                dateRange={{ startDate: analyticsDateRange.fromDate, endDate: analyticsDateRange.toDate }}
+                                onDownload={handleSiteWisePermitsDownload}
+                                onRefresh={handleRefreshSiteWise}
+                                isLoading={siteWisePermitsLoading}
+                                info={siteWisePermitsInfo}
+                              />
+                            </SortableChartItem>
+                          );
+                        }
+                        if (key === "permitStatus") {
+                          return (
+                            <SortableChartItem key="permitStatus" id="permitStatus">
+                              <AssetAnalyticsCard
+                                title="Permit Status"
+                                type="categoryWise"
+                                data={permitsStatusData}
+                                dateRange={{ startDate: analyticsDateRange.fromDate, endDate: analyticsDateRange.toDate }}
+                                onDownload={handlePermitsStatusDownload}
+                                onRefresh={handleRefreshPermitsStatus}
+                                isLoading={permitsStatusLoading}
+                                info={permitsStatusInfo}
+                              />
+                            </SortableChartItem>
+                          );
+                        }
+                        return null;
+                      })}
+
+                    {selectedAnalyticsTypes.length === 0 && (
+                      <div className="col-span-2 flex flex-col items-center justify-center py-16 text-gray-400">
+                        <Settings className="w-12 h-12 mb-4 opacity-30" />
+                        <p className="text-lg font-medium">No analytics selected</p>
+                        <p className="text-sm mt-1">Use the selector above to choose which charts to display.</p>
+                      </div>
+                    )}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </div>{/* end xl:col-span-8 */}
+
+            {/* Recent Permits Sidebar */}
+            <div className="xl:col-span-4">
+              <RecentPermitsSidebar permits={permits} loading={loading} />
+            </div>
+          </div>{/* end xl:grid-cols-12 */}
+
+          {/* Date filter dialog */}
+          <AssetAnalyticsFilterDialog
+            isOpen={isAnalyticsFilterOpen}
+            onClose={() => setIsAnalyticsFilterOpen(false)}
+            onApplyFilters={handleAnalyticsFilterApply}
+            currentStartDate={analyticsDateRange.fromDate}
+            currentEndDate={analyticsDateRange.toDate}
+          />
         </TabsContent>
       </Tabs>
 

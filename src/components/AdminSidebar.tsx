@@ -14,6 +14,14 @@ import {
   UserCheck,
   Database,
   Percent,
+  CreditCard,
+  LineChart,
+  FileText,
+  Brain,
+  TrendingUp,
+  DollarSign,
+  Activity,
+  BarChart3,
 } from "lucide-react";
 
 const adminNavigationStructure = {
@@ -55,16 +63,20 @@ const adminNavigationStructure = {
           // { name: "FM Users", href: "/ops-console/master/user/fm-users" },
           { name: "Admin Users", href: "/ops-console/admin/users" },
           // { name: "Create Admin User", href: "/ops-console/admin/create-admin-user" },
-          { name: "Roles", href: "/ops-console/settings/roles/role" },
+          { name: "Roles", href: `${window.location.hostname === "localhost" ? "/ops-console/settings/vi-roles/role" : "/ops-console/settings/roles/role"}` },
           {
             name: "Locked Users",
             href: "/ops-console/settings/account/locked-users",
           },
-           {
+          {
+            name: "Manage Users",
+            href: "/ops-console/admin/users/manage",
+          },
+          {
             name: "Occupant Users OTP",
             href: "/ops-console/settings/account/user-list-otp",
           },
-          
+
         ],
       },
       {
@@ -76,7 +88,32 @@ const adminNavigationStructure = {
         name: "Loyalty TDS",
         icon: Percent,
         href: "/ops-console/admin/loyalty-tds",
-      }
+      },
+      {
+        name: "Wallet Top-up",
+        icon: CreditCard,
+        href: "/settings/wallet-topup",
+      },
+      {
+        name: "Feedback Dashboard",
+        icon: LineChart,
+        href: "/ops-console/admin/feedback-dashboard",
+      },
+      {
+        name: "Systems & SOPs",
+        icon: FileText,
+        href: "/ops-console/admin/systems-sops",
+      },
+      {
+        name: "DISC Report",
+        icon: Brain,
+        href: "/ops-console/admin/disc-report",
+      },
+      {
+        name: "Lock Fees",
+        icon: DollarSign,
+        href: "/ops-console/admin/lock-fees",
+      },
     ],
   },
 };
@@ -112,8 +149,8 @@ export const AdminSidebar = () => {
       <div key={module.name} className="mb-2">
         <div
           className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${isActiveRoute(module.href)
-              ? "bg-[#f0e8dc] shadow-inner"
-              : "hover:bg-[#DBC2A9]"
+            ? "bg-[#f0e8dc] shadow-inner"
+            : "hover:bg-[#DBC2A9]"
             }`}
           onClick={() => {
             if (hasSubItems) {
@@ -154,8 +191,8 @@ export const AdminSidebar = () => {
               <div
                 key={subItem.name}
                 className={`flex items-center p-2 rounded-md cursor-pointer transition-all duration-200 ${isActiveRoute(subItem.href)
-                    ? "bg-[#f0e8dc] shadow-inner"
-                    : "hover:bg-[#DBC2A9]"
+                  ? "bg-[#f0e8dc] shadow-inner"
+                  : "hover:bg-[#DBC2A9]"
                   }`}
                 onClick={() => handleNavigation(subItem.href)}
               >
@@ -164,8 +201,8 @@ export const AdminSidebar = () => {
                 )}
                 <span
                   className={`text-sm ${isActiveRoute(subItem.href)
-                      ? "text-[#C72030] font-medium"
-                      : "text-[#1a1a1a] opacity-80"
+                    ? "text-[#C72030] font-medium"
+                    : "text-[#1a1a1a] opacity-80"
                     }`}
                 >
                   {subItem.name}
@@ -191,8 +228,8 @@ export const AdminSidebar = () => {
         }
       }}
       className={`flex items-center justify-center p-2 rounded-lg relative transition-all duration-200 ${isActiveRoute(module.href)
-          ? "bg-[#f0e8dc] shadow-inner"
-          : "hover:bg-[#DBC2A9]"
+        ? "bg-[#f0e8dc] shadow-inner"
+        : "hover:bg-[#DBC2A9]"
         }`}
       title={module.name}
     >

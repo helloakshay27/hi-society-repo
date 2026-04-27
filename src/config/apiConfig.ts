@@ -35,6 +35,11 @@ const getApiConfig = () => {
   };
 };
 
+const isWebOrg34 = () => {
+  const orgId = String(localStorage.getItem("org_id") ?? "").trim();
+  return window.location.hostname === "web.gophygital.work" && orgId === "34";
+};
+
 export const API_CONFIG = {
   get baseURL() {
     return getApiConfig().BASE_URL;
@@ -45,6 +50,7 @@ export const API_CONFIG = {
   get TOKEN() {
     return getApiConfig().TOKEN;
   },
+
   ENDPOINTS: {
     ASSETS: "/pms/assets.json",
     AMC: "/pms/asset_amcs.json",
@@ -62,8 +68,14 @@ export const API_CONFIG = {
     SEND_STAFF_OTP: "/pms/admin/society_staffs/send_otp.json",
     VERIFY_STAFF_NUMBER: "/pms/admin/society_staffs/verify_number.json",
     PRINT_QR_CODES: "/pms/admin/society_staffs/print_qr_codes.json",
-    ROLES: "/lock_roles.json",
-    ROLES_WITH_MODULES: "/lock_roles_with_modules.json",
+    get ROLES() {
+      return isWebOrg34() ? "/roles.json" : "/lock_roles.json";
+    },
+    get ROLES_WITH_MODULES() {
+      return isWebOrg34()
+        ? "/roles_with_modules.json"
+        : "/lock_roles_with_modules.json";
+    },
     FUNCTIONS: "/lock_functions.json",
     FUNCTION_DETAILS: "/lock_functions", // Base path, will append /:id.json
     SUB_FUNCTIONS: "/lock_sub_functions.json",
@@ -174,6 +186,7 @@ export const API_CONFIG = {
     CHECKLIST_SAMPLE_FORMAT: "/assets/checklist.xlsx",
     // Bulk upload for custom forms
     CUSTOM_FORMS_BULK_UPLOAD: "/pms/custom_forms/bulk_upload.json",
+    PATROLLING_IMPORT_CHECKPOINTS: "/patrolling/import_checkpoints.json",
     // Asset dashboard endpoints
     // ASSET_STATISTICS: '/pms/asset_statistics.json',
     // ASSET_STATUS: '/pms/asset_status.json',
@@ -320,6 +333,24 @@ export const API_CONFIG = {
     FLIP_CARD_HISTORY: "/api/flip_cards/history.json",
     // Purchase Order endpoints
     PURCHASE_ORDER_SUPPLIERS: "/pms/purchase_orders/get_suppliers.json",
+    RATINGS: "/ratings",
+    RATINGS_SHOW: "/ratings", // Base path, will append /:id.json
+    JOB_STATUS: "/jobs/status",
+    JOB_DESCRIPTIONS: "/job_descriptions",
+    JD_DETAIL: "/job_descriptions", // Will append /:id.json
+    KPIS: "/kpis.json",
+    USER_SETUP: "/jobs/setup", // Will append /:user_id
+    USER_JOURNALS: "/user_journals.json",
+    TEAM_MEMBERS: "/business_compass/team_members",
+    BUSINESS_COMPASS_DEPARTMENTS: "/business_compass/departments",
+    BUSINESS_COMPASS_ROLES: "/business_compass/roles",
+    INVITE_USER: "/business_compass/invite_user",
+    BULK_INVITE: "/business_compass/bulk_invite",
+    PENDING_INVITATIONS: "/business_compass/pending_invitations",
+    INVITATION_HISTORY: "/business_compass/invitation_history",
+    RESEND_INVITATION: "/business_compass/resend_invitation",
+    EMAIL_LOGS: "/business_compass/email_logs",
+    WITHDRAW_INVITATION: "/business_compass/withdraw_invitation",
   },
 } as const;
 

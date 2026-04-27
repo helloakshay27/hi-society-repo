@@ -264,6 +264,171 @@ const Attachments = ({ attachments, id, baseUrl, token, getIssue, fetchIssueDeta
     );
 };
 
+// Activity Log Component
+const ActivityLog = ({ issueId }: { issueId: string }) => {
+    const baseUrl = localStorage.getItem("baseUrl") || "";
+    const token = localStorage.getItem("token") || "";
+
+    const [issueSystemLogs, setIssueSystemLogs] = useState([]);
+
+    useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                const response = await axios.get(
+                    `https://${baseUrl}/issues/${issueId}/issue_system_logs.json`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                setIssueSystemLogs(response.data || []);
+            } catch (error) {
+                console.error("Error fetching activity logs:", error);
+            }
+        };
+
+        if (issueId) {
+            fetchLogs();
+        }
+    }, [issueId, baseUrl, token]);
+
+    const formatTimestamp = (dateString: string) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = date.toLocaleString("default", { month: "short" });
+        const year = date.getFullYear();
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        const hoursStr = String(hours).padStart(2, "0");
+        return `${day} ${month} ${year} ${hoursStr}:${minutes} ${ampm}`;
+    };
+
+    const getActionFromLog = (log: any) => {
+        if (!log.changed_attr || Object.keys(log.changed_attr).length === 0) {
+            return log.log_type?.replace("Issue", "").trim() || "updated issue";
+        }
+
+        const changedFields = Object.keys(log.changed_attr);
+        const changes: string[] = [];
+
+        // Check for status change
+        if (log.changed_attr.status) {
+            const [oldStatus, newStatus] = log.changed_attr.status;
+            changes.push(`changed status from ${oldStatus} to ${newStatus}`);
+        }
+
+        // Check for description change
+        if (log.changed_attr.description) {
+            changes.push("updated the issue description");
+        }
+
+        // Check for priority change
+        if (log.changed_attr.priority) {
+            const [oldPriority, newPriority] = log.changed_attr.priority;
+            changes.push(`changed priority from ${oldPriority} to ${newPriority}`);
+        }
+
+        // Check for other field changes
+        const otherFields = changedFields.filter(
+            (field) =>
+                ![
+                    "status",
+                    "description",
+                    "priority",
+                    "updated_at",
+                ].includes(field)
+        );
+        if (otherFields.length > 0) {
+            otherFields.forEach((field) => {
+                const label = field
+                    .replace(/_/g, " ")
+                    .replace(/([A-Z])/g, " $1")
+                    .trim();
+                changes.push(`updated ${label}`);
+            });
+        }
+
+        return changes.join(" and ");
+    };
+
+    const calculateDuration = (start: string, end: string) => {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const diffMs = Math.abs(endDate.getTime() - startDate.getTime());
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+        return `${hours} hr ${minutes} mins ${seconds} sec`;
+    };
+
+    if (!issueSystemLogs || issueSystemLogs.length === 0) {
+        return (
+            <div className="text-center py-8 w-full text-gray-500">
+                No activity logs available
+            </div>
+        );
+    }
+
+    const activities = issueSystemLogs.map((log: any) => ({
+        id: log.id,
+        person: log.changed_by,
+        action: getActionFromLog(log),
+        item: "issue",
+        timestamp: formatTimestamp(log.created_at),
+        rawTimestamp: log.created_at,
+    }));
+
+    const sortedActivities = [...activities].sort(
+        (a, b) =>
+            new Date(a.rawTimestamp).getTime() -
+            new Date(b.rawTimestamp).getTime()
+    );
+
+    return (
+        <div className="overflow-x-auto w-full bg-[rgba(247, 247, 247, 0.51)] shadow rounded-lg mt-3 px-4">
+            <div className="flex items-center p-2 gap-5 text-[12px] my-3 overflow-x-auto">
+                {sortedActivities.map((activity: any, index: number) => (
+                    <div key={activity.id}>
+                        <div className="flex flex-col gap-2 min-w-[150px]">
+                            <span>
+                                <i>
+                                    {activity.person}{" "}
+                                    <span className="text-[#C72030]">
+                                        {activity.action}
+                                    </span>{" "}
+                                </i>
+                            </span>
+                            <span>
+                                <i>{activity.timestamp}</i>
+                            </span>
+                        </div>
+                        {index < sortedActivities.length - 1 && (
+                            <div className="flex flex-col items-center min-w-[100px] mt-2">
+                                <h1 className="text-[12px] text-center">
+                                    {calculateDuration(
+                                        activity.rawTimestamp,
+                                        sortedActivities[index + 1]
+                                            .rawTimestamp
+                                    )}
+                                </h1>
+                                <img
+                                    src="/arrow.png"
+                                    alt="arrow"
+                                    className="mt-1"
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const Comments = ({ comments, getIssue, baseUrl, token, id }: any) => {
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const { id: issueId } = useParams();
@@ -467,13 +632,18 @@ const Comments = ({ comments, getIssue, baseUrl, token, id }: any) => {
             outline: "none",
             padding: 0,
             margin: 0,
+            width: "100%",
         },
-        highlighter: { overflow: "hidden" },
+        highlighter: {
+            overflow: "hidden",
+            padding: "8px",
+            border: "none",
+        },
         input: {
             font: "inherit",
             backgroundColor: "transparent",
             border: "none",
-            padding: 0,
+            padding: "8px",
             margin: 0,
             outline: "none",
         },
@@ -513,21 +683,27 @@ const Comments = ({ comments, getIssue, baseUrl, token, id }: any) => {
                         inputRef={textareaRef}
                         value={comment}
                         onChange={(e, newValue) => setComment(newValue)}
-                        className="mentions w-full h-[70px] bg-[#F2F4F4] p-2 border-2 border-[#DFDFDF] focus:outline-none pr-10"
+                        className="mentions w-full min-h-[70px] bg-[#F2F4F4] p-0 border-2 border-[#DFDFDF] focus-within:border-[#01569E] outline-none pr-10"
                         placeholder="Add comment here. Type @ to mention users. Type # to mention tags"
                         style={{
                             control: {
                                 backgroundColor: "#F2F4F4",
                                 fontSize: 14,
                                 fontWeight: "normal",
+                                minHeight: 70,
+                                width: "100%",
                             },
                             highlighter: {
                                 overflow: "hidden",
+                                border: "none",
+                                padding: "8px",
                             },
                             input: {
                                 margin: 0,
                                 padding: "8px",
                                 outline: "none",
+                                border: "none",
+                                minHeight: 70,
                             },
                             suggestions: {
                                 list: {
@@ -965,20 +1141,20 @@ const IssueDetailsPage = () => {
                             </div>
                         </span>
 
-                        {
+                        {/* {
                             localStorage.getItem("selectedView") !== "employee" && (
-                                <>
-                                    <span className="h-6 w-[1px] border border-gray-300"></span>
-                                    <span
-                                        className="flex items-center gap-1 cursor-pointer"
-                                        onClick={() => setOpenEditModal(true)}
-                                    >
-                                        <PencilIcon size={15} />
-                                        Edit Issue
-                                    </span>
-                                </>
+                                <> */}
+                        <span className="h-6 w-[1px] border border-gray-300"></span>
+                        <span
+                            className="flex items-center gap-1 cursor-pointer"
+                            onClick={() => setOpenEditModal(true)}
+                        >
+                            <PencilIcon size={15} />
+                            Edit Issue
+                        </span>
+                        {/* </>
                             )
-                        }
+                        } */}
                     </div>
                 </div>
                 <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)] my-3"></div>
@@ -1123,7 +1299,7 @@ const IssueDetailsPage = () => {
                 <div>
                     <div className="flex items-center justify-between my-3">
                         <div className="flex items-center gap-10">
-                            {["Comments", "Documents"].map((item) => (
+                            {["Comments", "Documents", "Activity Log"].map((item) => (
                                 <div
                                     key={item}
                                     className={`text-[14px] font-[400] ${activeTab === item
@@ -1157,6 +1333,9 @@ const IssueDetailsPage = () => {
                                 token={token}
                                 id={issueId}
                             />
+                        )}
+                        {activeTab === "Activity Log" && (
+                            <ActivityLog issueId={issueId || ""} />
                         )}
                     </div>
                 </div>

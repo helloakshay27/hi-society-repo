@@ -20,6 +20,7 @@ import {
   Calendar1,
   Car,
   Wallet,
+  Compass,
 } from "lucide-react";
 import recessLogo from "../assets/recess-logo";
 
@@ -43,6 +44,7 @@ import { RootState } from "@/store/store";
 import { getUser, clearAuth } from "@/utils/auth";
 import { useLayout } from "@/contexts/LayoutContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
+import { useNotification } from "@/contexts/NotificationContext";
 import { permissionService } from "@/services/permissionService";
 import { Calendar } from "./ui/calendar";
 import axios from "axios";
@@ -58,6 +60,7 @@ import employeeFaqIcon from "@/assets/employee_faq.png";
 // Icon mapping for employee header modules based on action_name
 const headerIconMap: Record<string, any> = {
   employee_company_hub: Globe,
+  employee_company_hub_new: Globe,
   employee_dashboard: Home,
   employee_projects_overview: FolderKanban,
   employee_ticket: Ticket,
@@ -70,11 +73,14 @@ const headerIconMap: Record<string, any> = {
   employee_parking: Car,
   employee_booking: Package,
   employee_fb: ChartArea,
+  employee_business_compass: Compass,
 };
 
 // Fallback static employeeModules for backward compatibility
 const staticEmployeeModules = [
   { name: "Company Hub", icon: Globe, action_name: "employee_company_hub" },
+  { name: "Company Hub New", icon: Globe, action_name: "employee_company_hub_new" },
+  { name: "Business Compass", icon: Compass, action_name: "employee_business_compass" },
   { name: "Dashboard", icon: Home, action_name: "employee_dashboard" },
   {
     name: "Project Task",
@@ -134,9 +140,17 @@ export const EmployeeHeader: React.FC = () => {
   };
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isModuleMenuOpen, setIsModuleMenuOpen] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
-  const [notifications, setNotifications] = useState<any[]>([]);
+
+  // Use Notification Context
+  const {
+    notifications,
+    notificationCount,
+    isNotificationOpen,
+    setIsNotificationOpen,
+    markAsRead,
+    markAllAsRead,
+    handleNotificationClick: handleNotificationClickContext,
+  } = useNotification();
   const { currentSection, setCurrentSection, isSidebarCollapsed } = useLayout();
   const [userRoleName, setUserRoleName] = useState<string | null>(null);
   const [availableBalance, setAvailableBalance] = useState(0);
@@ -190,6 +204,16 @@ export const EmployeeHeader: React.FC = () => {
           react_link: func.react_link,
         };
       });
+
+    // Manually add "Company Hub New" if it doesn't exist
+    if (!dynamicModules.some((m) => m.name === "Company Hub New")) {
+      dynamicModules.push({
+        name: "Company Hub New",
+        icon: Globe,
+        action_name: "employee_company_hub_new",
+        react_link: "/employee/company-hub-new",
+      });
+    }
 
     return dynamicModules.length > 0 ? dynamicModules : staticEmployeeModules;
   }, [userRole]);
@@ -309,45 +333,28 @@ export const EmployeeHeader: React.FC = () => {
     navigate("/profile/settings");
   };
 
-  const fetchNotifications = async () => {
-    try {
-      // Mock notifications - replace with actual API call
-      const userNotifications = await axios.get(
-        `https://${localStorage.getItem("baseUrl")}/user_notifications.json`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+  // Wrap handleNotificationClickContext to add navigation
+  const handleNotificationClick = async (notification: any) => {
+    await handleNotificationClickContext(notification);
 
-      setNotifications(userNotifications.data.unread_notifications);
-      setNotificationCount(userNotifications.data.unread_notifications.length);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
+    // Navigate based on notification type
+    if (notification.ntype === "conversation") {
+      navigate(
+        `/vas/channels/messages/${notification.payload.conversation_id}`
+      );
+    }
+    if (notification.ntype === "projectspace") {
+      navigate(
+        `/vas/channels/groups/${notification.payload.project_space_id}`
+      );
+    }
+    if (notification.payload.ntype === "newtaskmanagement") {
+      navigate(`/vas/tasks/${notification.payload.task_management_id}`);
+    }
+    if (notification.payload.ntype === "newissue") {
+      navigate(`/vas/issues/${notification.payload.issue_id}`);
     }
   };
-
-  const markAsRead = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-    setNotificationCount((prev) => Math.max(0, prev - 1));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
-    setNotificationCount(0);
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    // const interval = setInterval(fetchNotifications, 30000);
-    // return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const loadUserInfo = () => {
@@ -414,8 +421,11 @@ export const EmployeeHeader: React.FC = () => {
       case "TO DO":
         navigate("/vas/todo");
         break;
-      case "Ask AI":
-        navigate("/ask-ai");
+      case "Company Hub New":
+        navigate("/employee/company-hub-new");
+        break;
+      case "Business Compass":
+        navigate("/business-compass");
         break;
       default:
         break;
@@ -704,11 +714,10 @@ export const EmployeeHeader: React.FC = () => {
                         onDrop={(e) => handleModuleDrop(e, module.name)}
                         onDragOver={handleModuleDragOver}
                         onClick={() => handleModuleClick(module)}
-                        className={`flex flex-col items-center gap-1 px-3 sm:px-4 py-2 rounded-lg transition-all cursor-move min-w-[70px] sm:min-w-[80px] ${
-                          isActive
-                            ? "bg-[#DBC2A9] text-[#1a1a1a]"
-                            : "text-gray-600 hover:bg-[#f6f4ee]"
-                        }`}
+                        className={`flex flex-col items-center gap-1 px-3 sm:px-4 py-2 rounded-lg transition-all cursor-move min-w-[70px] sm:min-w-[80px] ${isActive
+                          ? "bg-[#DBC2A9] text-[#1a1a1a]"
+                          : "text-gray-600 hover:bg-[#f6f4ee]"
+                          }`}
                       >
                         <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                         <span className="text-[10px] sm:text-xs font-medium whitespace-nowrap">
@@ -733,9 +742,8 @@ export const EmployeeHeader: React.FC = () => {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => navigate(link.path)}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all hover:bg-gray-100 group ${
-                          location.pathname === link.path ? "bg-gray-100" : ""
-                        }`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all hover:bg-gray-100 group ${location.pathname === link.path ? "bg-gray-100" : ""
+                          }`}
                       >
                         <img
                           src={link.icon}
@@ -795,11 +803,10 @@ export const EmployeeHeader: React.FC = () => {
                                 handleModuleDragStart(e, module.name)
                               }
                               onClick={() => handleModuleClick(module)}
-                              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-move ${
-                                isActive
-                                  ? "bg-[#DBC2A9] text-[#1a1a1a]"
-                                  : "hover:bg-[#f6f4ee] text-gray-700"
-                              }`}
+                              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-move ${isActive
+                                ? "bg-[#DBC2A9] text-[#1a1a1a]"
+                                : "hover:bg-[#f6f4ee] text-gray-700"
+                                }`}
                             >
                               <Icon className="w-5 h-5 flex-shrink-0" />
                               <span className="text-sm font-medium">
@@ -923,17 +930,15 @@ export const EmployeeHeader: React.FC = () => {
                             markAsRead(notification.id);
                           }
                         }}
-                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                          !notification.read ? "bg-blue-50/30" : ""
-                        }`}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${!notification.read ? "bg-blue-50/30" : ""
+                          }`}
                       >
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                              !notification.read
-                                ? "bg-[#C72030]"
-                                : "bg-gray-300"
-                            }`}
+                            className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!notification.read
+                              ? "bg-[#C72030]"
+                              : "bg-gray-300"
+                              }`}
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
@@ -950,46 +955,52 @@ export const EmployeeHeader: React.FC = () => {
                               {notification.message}
                             </p>
                             <div className="mt-2">
-                              <Badge
-                                variant="outline"
-                                className={`text-xs ${
-                                  notification.type === "task"
-                                    ? "bg-blue-50 text-blue-700 border-blue-200"
-                                    : notification.type === "meeting"
-                                      ? "bg-green-50 text-green-700 border-green-200"
-                                      : "bg-gray-50 text-gray-700 border-gray-200"
-                                }`}
-                              >
-                                {notification.type}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
+                              {notification.ntype === "conversation" && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  Conversation
+                                </Badge>
+                              )}
+                              {notification.ntype === "projectspace" && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  Project Space
+                                </Badge>
+                              )}
+                            </div >
+                          </div >
+                        </div >
+                      </button >
                     ))}
-                  </div>
+                  </div >
                 )}
-              </div>
+              </div >
 
               {/* Footer */}
-              {notifications.length > 0 && (
-                <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                  <button
-                    onClick={() => {
-                      setIsNotificationOpen(false);
-                      navigate("/notifications");
-                    }}
-                    className="w-full text-center text-sm font-medium text-[#C72030] hover:text-[#A01020] transition-colors"
-                  >
-                    View all notifications
-                  </button>
-                </div>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {
+                notifications.length > 0 && (
+                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        setIsNotificationOpen(false);
+                        navigate("/notifications");
+                      }}
+                      className="w-full text-center text-sm font-medium text-[#C72030] hover:text-[#A01020] transition-colors"
+                    >
+                      View all notifications
+                    </button>
+                  </div>
+                )
+              }
+            </DropdownMenuContent >
+          </DropdownMenu >
 
           {/* User Profile Dropdown */}
-          <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+          < DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen} >
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 hover:bg-[#f6f4ee] rounded-lg transition-colors">
                 <span className="hidden sm:block text-sm font-medium text-gray-700">
@@ -1094,9 +1105,9 @@ export const EmployeeHeader: React.FC = () => {
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </header>
+          </DropdownMenu >
+        </div >
+      </div >
+    </header >
   );
 };

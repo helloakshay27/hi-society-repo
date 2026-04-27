@@ -95,6 +95,7 @@ const BMSParking: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ ...emptyForm });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slotNameError, setSlotNameError] = useState(false);
 
   // Dropdown data
   const [blocks, setBlocks] = useState<SocietyBlock[]>([]);
@@ -196,6 +197,7 @@ const BMSParking: React.FC = () => {
   const handleAddParking = () => {
     setFormData({ ...emptyForm });
     setFlats([]);
+    setSlotNameError(false);
     fetchBlocks();
     fetchChargeOptions();
     setIsAddModalOpen(true);
@@ -282,6 +284,7 @@ const BMSParking: React.FC = () => {
     setEditingId(null);
     setFormData({ ...emptyForm });
     setFlats([]);
+    setSlotNameError(false);
   };
 
   // ── Handle tower change → load flats ───────────────────────────────────────
@@ -294,6 +297,11 @@ const BMSParking: React.FC = () => {
   // ── Submit Add ──────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.slotName.trim()) {
+      setSlotNameError(true);
+      return;
+    }
+    setSlotNameError(false);
     setIsSubmitting(true);
     try {
       const body = {
@@ -472,15 +480,22 @@ const BMSParking: React.FC = () => {
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Parking Slot Details</p>
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-base font-semibold">Slot Name</Label>
+            <Label className="text-base font-semibold">
+              Slot Name <span className="text-red-500">*</span>
+            </Label>
             <Input
               placeholder="Enter slot name"
               value={formData.slotName}
-              onChange={(e) => setFormData((p) => ({ ...p, slotName: e.target.value }))}
-              className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
+              onChange={(e) => {
+                setFormData((p) => ({ ...p, slotName: e.target.value }));
+                if (e.target.value.trim()) setSlotNameError(false);
+              }}
+              className={`h-10 focus:ring-0 ${slotNameError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-gray-500'}`}
               style={{ borderRadius: '4px' }}
-              required
             />
+            {slotNameError && (
+              <p className="text-xs text-red-500 mt-1">Slot name is required</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-base font-semibold">Vehicle Type</Label>
@@ -565,7 +580,7 @@ const BMSParking: React.FC = () => {
               onChange={(e) => setFormData((p) => ({ ...p, vehicleNumber: e.target.value }))}
               className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
               style={{ borderRadius: '4px' }}
-              required
+              // required
             />
           </div>
           <div className="space-y-2">

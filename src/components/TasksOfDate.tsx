@@ -91,15 +91,14 @@ const TaskCard = ({ task, selectedDate, isDragging, setDraggedTask }) => {
         e.dataTransfer.effectAllowed = "move";
       }}
       onDragEnd={() => setDraggedTask(null)}
-      className={`p-3 mb-2 border-l-4 cursor-move ${task.priority === "High" ? "border-[#C72030]" : task.priority === "Medium" ? "border-[#ED9017]" : "border-[#1FCFB3]"} bg-[#D5DBDB] ${
-        isDragging ? "opacity-50" : "hover:opacity-80"
-      } transition-opacity`}
+      className={`p-3 mb-2 border-l-4 cursor-move ${task.priority === "High" ? "border-[#C72030]" : task.priority === "Medium" ? "border-[#ED9017]" : "border-[#1FCFB3]"} bg-[#D5DBDB] ${isDragging ? "opacity-50" : "hover:opacity-80"
+        } transition-opacity`}
     >
       <div className="mb-2">
         <a
           className="text-xs font-medium text-gray-800 text-ellipsis whitespace-nowrap overflow-hidden cursor-pointer"
           href={
-            task.type === "issue" ? `/issues/${task.id}` : `/tasks/${task.id}`
+            task.type === "issue" ? `/vas/issues/${task.id}` : `/vas/tasks/${task.id}`
           }
           target="_blank"
         >
@@ -222,15 +221,14 @@ const DroppableDay = ({
       className={`relative grid grid-cols-3 border-t border-b border-r border-dashed border-gray-400 items-center px-3 py-[19px] ${bgClass} cursor-pointer transition-colors`}
     >
       <span
-        className={`absolute left-0 top-0 h-full w-[4px] ${
-          isWeekOff
-            ? "bg-red-500"
-            : durationPercentage <= 33
-              ? "bg-[#1FCFB3]"
-              : durationPercentage <= 66
-                ? "bg-[#ED9017]"
-                : "bg-[#C72030]"
-        }`}
+        className={`absolute left-0 top-0 h-full w-[4px] ${isWeekOff
+          ? "bg-red-500"
+          : durationPercentage <= 33
+            ? "bg-[#1FCFB3]"
+            : durationPercentage <= 66
+              ? "bg-[#ED9017]"
+              : "bg-[#C72030]"
+          }`}
       />
       <div className="font-medium text-xs text-left">{dateInfo.day}</div>
       <div className="text-xs text-gray-600 text-left">{dateInfo.date}</div>
@@ -430,7 +428,7 @@ const TasksOfDate = ({
 
       const dateField = task.type === "issue" ? "end_date" : "target_date";
 
-      const payload = {
+      const basePayload = {
         ...(task[dateField] == formatedSelectedDate && {
           [dateField]: fullDate,
           allocation_date: fullDate,
@@ -442,6 +440,11 @@ const TasksOfDate = ({
           task_management_id: task.task_management_id,
         }),
       };
+
+      const payload =
+        task.type === "issue"
+          ? { issue: basePayload }
+          : { task_management: basePayload };
 
       // Use different API based on task type
       if (task.type === "issue") {

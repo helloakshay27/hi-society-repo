@@ -44,18 +44,21 @@ interface Complaint {
   rca_template_ids?: number[];
   corrective_action_template_ids?: number[];
   preventive_action_template_ids?: number[];
+  root_cause?: string;
+  corrective_action?: string;
+  preventive_action?: string;
   asset_service?: string;
   asset_or_service_id?: number;
   reopen_status?: boolean;
 }
 
-export const EditStatusDialog = ({ 
-  open, 
-  onOpenChange, 
+export const EditStatusDialog = ({
+  open,
+  onOpenChange,
   complaintId,
   currentStatusId,
   currentStatus,
-  onSuccess 
+  onSuccess
 }: EditStatusDialogProps) => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [statuses, setStatuses] = useState<Status[]>([]);
@@ -65,6 +68,10 @@ export const EditStatusDialog = ({
   const [preventiveActionTemplateIds, setPreventiveActionTemplateIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [ticketData, setTicketData] = useState<Complaint | null>(null);
+  // Text input states for org_id 63
+  const [rcaText, setRcaText] = useState('');
+  const [correctiveActionText, setCorrectiveActionText] = useState('');
+  const [preventiveActionText, setPreventiveActionText] = useState('');
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -89,12 +96,12 @@ export const EditStatusDialog = ({
 
     const fetchTicketData = async () => {
       if (!complaintId) return;
-      
+
       try {
         const response = await apiClient.get(`/crm/admin/complaints/${complaintId}.json`);
         const data = response.data;
         setTicketData(data);
-        
+
         // Pre-populate template IDs if they exist, otherwise set empty arrays
         if (data.rca_template_ids && Array.isArray(data.rca_template_ids)) {
           setRcaTemplateIds(data.rca_template_ids);
@@ -123,7 +130,7 @@ export const EditStatusDialog = ({
       setCorrectiveActionTemplateIds([]);
       setPreventiveActionTemplateIds([]);
       setSelectedStatus('');
-      
+
       fetchStatuses();
       fetchCommunicationTemplates();
       fetchTicketData();
@@ -145,19 +152,19 @@ export const EditStatusDialog = ({
       // Create FormData to match TicketDetailsPage format exactly
       const formDataToSend = new FormData();
       formDataToSend.append('complaint_log[complaint_id]', complaintId.toString());
-      
+
       // Add issue_status
       formDataToSend.append('issue_status', selectedStatus);
-      
+
       // Add template IDs using the exact format from TicketDetailsPage
       rcaTemplateIds.forEach(templateId => {
         formDataToSend.append('root_cause[template_ids][]', String(templateId));
       });
-      
+
       preventiveActionTemplateIds.forEach(templateId => {
         formDataToSend.append('preventive_action[template_ids][]', String(templateId));
       });
-      
+
       correctiveActionTemplateIds.forEach(templateId => {
         formDataToSend.append('corrective_action[template_ids][]', String(templateId));
       });
@@ -176,7 +183,7 @@ export const EditStatusDialog = ({
 
       // Use apiClient.post with FormData (apiClient handles authorization header)
       const loadingToastId = toast.loading("Updating status...");
-      
+
       await apiClient.post('/complaint_logs.json', formDataToSend);
 
       toast.dismiss(loadingToastId);
@@ -200,6 +207,12 @@ export const EditStatusDialog = ({
     setCorrectiveActionTemplateIds([]);
     setPreventiveActionTemplateIds([]);
   };
+
+  // Determine if selected status is "closed" for conditional field display
+  const selectedStatusObj = statuses.find(s => s.id.toString() === selectedStatus);
+  const isClosedStatus = selectedStatusObj?.fixed_state === 'closed';
+  // const isOrg63 = orgId === 63;
+  // const showRcaFields = isOrg63 && isClosedStatus;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -250,8 +263,8 @@ export const EditStatusDialog = ({
               <ReactSelect
                 isMulti
                 value={communicationTemplates
-                  .filter(template => 
-                    rcaTemplateIds.includes(template.id) && 
+                  .filter(template =>
+                    rcaTemplateIds.includes(template.id) &&
                     template.identifier === "Root Cause Analysis" &&
                     template.active === true
                   )
@@ -260,8 +273,8 @@ export const EditStatusDialog = ({
                   setRcaTemplateIds(selected ? selected.map((s) => s.value as number) : []);
                 }}
                 options={communicationTemplates
-                  .filter(template => 
-                    template.identifier === "Root Cause Analysis" && 
+                  .filter(template =>
+                    template.identifier === "Root Cause Analysis" &&
                     template.active === true
                   )
                   .map(t => ({ value: t.id, label: t.identifier_action }))}
@@ -290,8 +303,8 @@ export const EditStatusDialog = ({
               <ReactSelect
                 isMulti
                 value={communicationTemplates
-                  .filter(template => 
-                    correctiveActionTemplateIds.includes(template.id) && 
+                  .filter(template =>
+                    correctiveActionTemplateIds.includes(template.id) &&
                     template.identifier === "Corrective Action" &&
                     template.active === true
                   )
@@ -300,8 +313,8 @@ export const EditStatusDialog = ({
                   setCorrectiveActionTemplateIds(selected ? selected.map((s) => s.value as number) : []);
                 }}
                 options={communicationTemplates
-                  .filter(template => 
-                    template.identifier === "Corrective Action" && 
+                  .filter(template =>
+                    template.identifier === "Corrective Action" &&
                     template.active === true
                   )
                   .map(t => ({ value: t.id, label: t.identifier_action }))}
@@ -332,8 +345,8 @@ export const EditStatusDialog = ({
             <ReactSelect
               isMulti
               value={communicationTemplates
-                .filter(template => 
-                  preventiveActionTemplateIds.includes(template.id) && 
+                .filter(template =>
+                  preventiveActionTemplateIds.includes(template.id) &&
                   template.identifier === "Preventive Action" &&
                   template.active === true
                 )
@@ -342,8 +355,8 @@ export const EditStatusDialog = ({
                 setPreventiveActionTemplateIds(selected ? selected.map((s) => s.value as number) : []);
               }}
               options={communicationTemplates
-                .filter(template => 
-                  template.identifier === "Preventive Action" && 
+                .filter(template =>
+                  template.identifier === "Preventive Action" &&
                   template.active === true
                 )
                 .map(t => ({ value: t.id, label: t.identifier_action }))}
@@ -367,13 +380,13 @@ export const EditStatusDialog = ({
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button 
+            <Button
               onClick={handleApply}
               className="bg-[#8B4B8C] hover:bg-[#7A427B] text-white flex-1"
             >
               Apply
             </Button>
-            <Button 
+            <Button
               onClick={handleReset}
               variant="outline"
               className="flex-1"

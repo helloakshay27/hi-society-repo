@@ -189,7 +189,8 @@ export const CountryTab: React.FC<CountryTabProps> = ({
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com", 
+      "sumitra.patil@lockated.com",
+"komalshinde0101@lockated.com", 
 "demo@lockated.com",
     ];
     setCanEditCountry(allowedEmails.includes(userEmail));
@@ -355,10 +356,10 @@ export const CountryTab: React.FC<CountryTabProps> = ({
         const normalizedBase = storedBaseUrl.startsWith("http")
           ? storedBaseUrl.replace(/\/+$/, "")
           : `https://${storedBaseUrl.replace(/\/+$/, "")}`;
-        url = `${normalizedBase}/pms/countries.json`;
+        url = `${normalizedBase}/pms/countries.json?per_page=1000`;
       } else {
         // Fallback to configured helper
-        url = getFullUrl("/pms/countries.json");
+        url = getFullUrl("/pms/countries.json?per_page=1000");
       }
 
       if (storedToken) {

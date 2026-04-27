@@ -1046,11 +1046,13 @@ export const TicketDashboard = () => {
     key: 'priority',
     label: 'Priority',
     sortable: true
-  }, {
-    key: 'site_name',
-    label: 'Site',
-    sortable: true
-  }, {
+  }, 
+  // {
+  //   key: 'site_name',
+  //   label: 'Site',
+  //   sortable: true
+  // }, 
+  {
     key: 'created_at',
     label: 'Created On',
     sortable: true

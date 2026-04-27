@@ -275,12 +275,7 @@ export const EditCrmCustomer = () => {
                                     fullWidth
                                     size="small"
                                     value={formData.customerName}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (/^[A-Za-z\s]*$/.test(value)) {
-                                            handleInputChange("customerName", value);
-                                        }
-                                    }}
+                                    onChange={(e) => handleInputChange("customerName", e.target.value)}
                                     sx={{
                                         "& .MuiOutlinedInput-root": {
                                             borderRadius: "8px",

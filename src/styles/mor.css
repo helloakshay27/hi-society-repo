@@ -2254,20 +2254,7 @@ section ul {
   border: none;
 }
 
-/* .flat-type-container div {
-  margin: 10px;
-  width: 31%;
-  height: 400px;
-  position: relative;
-  background-color: #f3f3f3;
-  /* overflow-y: auto;
-  overflow-x: hidden; */
-
-/* overflow: hidden; */
-
-/* } */
-
-*/ .flat-type-container {
+.flat-type-container {
   overflow-x: auto;
   white-space: nowrap;
 }

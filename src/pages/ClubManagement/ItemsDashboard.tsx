@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import axios from 'axios';
-import { Eye, Plus, Download, Filter, QrCode, Edit, Trash2, Users, CreditCard } from 'lucide-react';
+import { Eye, Plus, Download, Filter, QrCode, Edit, Trash2, Users, CreditCard, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
@@ -42,6 +42,10 @@ interface ItemData {
   description: string;
   rate: number;
   usage_unit: string;
+  icon?: {
+    document_file_name: string | null;
+    attachment_url: string;
+  };
 }
 
 
@@ -50,6 +54,7 @@ export const ItemsDashboard = () => {
   const loginState = useSelector((state: RootState) => state.login);
 const baseUrl = localStorage.getItem("baseUrl");
 const token = localStorage.getItem("token");
+const lock_account_id = localStorage.getItem("lock_account_id");
   // State management
   // const [memberships, setMemberships] = useState<GroupMembershipData[]>([]);
   // const [journals, setJournals] = useState([]);
@@ -83,7 +88,7 @@ const token = localStorage.getItem("token");
       try {
         // const baseUrl = API_CONFIG.BASE_URL || "https://club-uat-api.lockated.com";
         // const token = API_CONFIG.TOKEN;
-        const url = `https://${baseUrl}/lock_account_items.json?lock_account_id=1`;
+        const url = `https://${baseUrl}/lock_account_items.json?lock_account_id=${lock_account_id}`;
         const response = await axios.get(url, {
           headers: {
             'Content-Type': 'application/json',
@@ -509,6 +514,24 @@ const columns = [
     );
   }
 
+  if (columnKey === "name") {
+    const hasIcon = item.icon?.document_file_name;
+    return (
+      <div className="flex items-center gap-2">
+        {hasIcon ? (
+          <img
+            src={item.icon!.attachment_url}
+            alt={item.name}
+            className="w-7 h-7 rounded object-cover border border-gray-200 flex-shrink-0"
+          />
+        ) : (
+          <div className="w-7 h-7 rounded border border-gray-200 bg-gray-100 flex-shrink-0" />
+        )}
+        <span>{item.name}</span>
+      </div>
+    );
+  }
+
   return item[columnKey as keyof ItemData] ?? "--";
 };
 
@@ -573,7 +596,7 @@ const columns = [
           searchPlaceholder="Search "
           onSearchChange={handleSearch}
           hideTableExport={true}
-          hideColumnsButton={true}
+          hideColumnsButton={false}
           className="transition-all duration-500 ease-in-out"
           loading={loading}
           loadingMessage="Loading group memberships..."
