@@ -6,23 +6,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAppDispatch, useAppSelector } from "@/hooks/useAppDispatch";
+import { useAppSelector } from "@/hooks/useAppDispatch";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import {
-  changeProjectStatus,
-  createProject,
-  filterProjects,
-} from "@/store/slices/projectManagementSlice";
 import { FormControl, MenuItem, Select, TextField } from "@mui/material";
 import {
   ChartNoAxesColumn,
   ChevronDown,
   Eye,
+  Filter,
   List,
   LogOut,
   Plus,
 } from "lucide-react";
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { baseClient } from "@/utils/withoutTokenBase";
 import { fetchProjectTeams } from "@/store/slices/projectTeamsSlice";
@@ -39,7 +35,14 @@ import axios from "axios";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { CommonImportModal } from "@/components/CommonImportModal";
-import { getBaseUrl } from "@/utils/auth";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import {
+  useProjects,
+  useChangeProjectStatus,
+  useCreateProject,
+  useDeleteProject,
+  useImportProjects,
+} from "@/hooks/useProjects";
 
 const columns: ColumnConfig[] = [
   {
@@ -199,12 +202,10 @@ const transformedProjects = (projects: any) => {
       milestoneCompletionPercent: project.avg_milestone_completion_percent || 0,
       tasks: project.total_task_management_count,
       tasksCompleted: project.completed_task_management_count,
-      taskCompletionPercent:
-        project.avg_task_management_completion_percent || 0,
+      taskCompletionPercent: project.avg_task_management_completion_percent || 0,
       subtasks: project.total_sub_task_management_count || 0,
       subtasksCompleted: project.completed_sub_task_management_count || 0,
-      subtaskCompletionPercent:
-        project.avg_sub_task_management_completion_percent || 0,
+      subtaskCompletionPercent: project.avg_sub_task_management_completion_percent || 0,
       issues: project.total_issues_count,
       resolvedIssues: project.completed_issues_count,
       start_date: project.start_date,
@@ -283,17 +284,15 @@ export const ProjectsDashboard = () => {
 
   // Determine token source: prefer sessionStorage (mobile) over localStorage (web)
   const token =
-    sessionStorage.getItem("mobile_token") || localStorage.getItem("token");
+    sessionStorage.getItem("mobile_token") ||
+    localStorage.getItem("token");
 
   // For baseUrl: use localStorage for web, or will be resolved by baseClient for mobile
-  let baseUrl =
-    localStorage.getItem("baseUrl") ?? "lockated-api.gophygital.work";
+  let baseUrl = localStorage.getItem("baseUrl") ?? "lockated-api.gophygital.work";
 
   // If mobile flow and no baseUrl, will be resolved by baseClient interceptor
   if (!baseUrl && urlToken) {
-    console.log(
-      "📱 Mobile flow detected - baseUrl will be resolved by baseClient interceptor"
-    );
+    console.log("📱 Mobile flow detected - baseUrl will be resolved by baseClient interceptor");
     // After baseClient resolves it, it will be stored in localStorage automatically
   }
 
@@ -301,13 +300,19 @@ export const ProjectsDashboard = () => {
     setCurrentSection(
       view === "admin" ? "Value Added Services" : "Project Task"
     );
-  }, [setCurrentSection]);
+  }, [setCurrentSection, view]);
 
   const { teams } = useAppSelector((state) => state.projectTeams);
   const { projectTags: tags } = useAppSelector((state) => state.projectTags);
 
+  // Pagination and Search - declare FIRST before useDebounce
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [allProjects, setAllProjects] = useState([]); // Accumulated projects for infinite scroll
+
+  // UI State
   const [selectedFilterOption, setSelectedFilterOption] = useState("all");
-  const [projects, setProjects] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [openFormDialog, setOpenFormDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState({});
@@ -317,25 +322,91 @@ export const ProjectsDashboard = () => {
   const [selectedView, setSelectedView] = useState("List");
   const [projectTypes, setProjectTypes] = useState([]);
   const [owners, setOwners] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [scrollLoading, setScrollLoading] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState("");
-  const [hasMore, setHasMore] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
-    null
-  );
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState(""); // For ProjectFilterModal
 
-  // Refs for click outside detection
-  const viewDropdownRef = useRef<HTMLDivElement>(null);
-  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  // Build filter string for TanStack Query (combines status filter + applied filters)
+  let filterString = "";
+  if (appliedFilters !== "") {
+    filterString = appliedFilters;
+  } else if (selectedFilterOption !== "all") {
+    filterString = `q[status_eq]=${selectedFilterOption}&`;
+  }
+
+  // TanStack Query hooks for server state management
+  const {
+    data: projectsData,
+    isLoading,
+    isFetching,
+    error
+  } = useProjects({
+    page: currentPage,
+    filters: filterString,
+    search: debouncedSearchTerm,
+    sortBy: sortColumn ? COLUMN_TO_BACKEND_MAP[sortColumn] || sortColumn : undefined,
+    sortDirection,
+  });
+
+  // Extract projects and pagination
+  const currentPageProjects = projectsData?.data?.project_managements ||
+    projectsData?.project_managements ||
+    [];
+  const paginationData = projectsData?.data?.pagination ||
+    projectsData?.pagination;
+  const hasMore = currentPage < (paginationData?.total_pages || 1);
+
+  // Accumulate projects for infinite scroll
+  useEffect(() => {
+    if (currentPage === 1) {
+      // Reset on first page (when filters/search changes)
+      setAllProjects(currentPageProjects);
+    } else if (currentPageProjects.length > 0) {
+      // Append new projects on subsequent pages
+      setAllProjects((prev) => [...prev, ...currentPageProjects]);
+    }
+  }, [currentPageProjects, currentPage]);
+
+  // Ref for infinite scroll loader
+  const loaderRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll observer - only trigger when user scrolls near bottom
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Only load next page if user is near the loader AND data isn't already loading
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isFetching) {
+          setCurrentPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [hasMore, isLoading, isFetching]);
+
+  // Mutations for updates
+  const statusMutation = useChangeProjectStatus();
+  const createMutation = useCreateProject();
+  const deleteMutation = useDeleteProject();
+  const importMutation = useImportProjects();
+
+  // Helper function for Kanban when it needs to refresh data
+  const refetchProjects = useCallback(() => {
+    setCurrentPage(1);
+    // TanStack Query will automatically refetch with the reset page
+  }, []);
 
   // Helper function to safely get user ID from sessionStorage or localStorage
   const getUserId = useCallback(() => {
@@ -359,168 +430,9 @@ export const ProjectsDashboard = () => {
     return null;
   }, []);
 
-  const fetchData = useCallback(
-    async (
-      page = 1,
-      filterString = "",
-      isLoadMore = false,
-      searchQuery = "",
-      orderBy = sortColumn,
-      orderDirection = sortDirection
-    ) => {
-      // Guard: don't proceed if token is not available
-      if (!token) {
-        console.warn("⚠️ fetchData called without token");
-        return;
-      }
-
-      try {
-        if (!hasMore && isLoadMore) return;
-
-        // Use scrollLoading for infinite scroll, regular loading for initial load
-        if (isLoadMore) {
-          setScrollLoading(true);
-        } else {
-          setLoading(true);
-        }
-
-        let filters = filterString !== "" ? filterString : appliedFilters;
-
-        if (!filters) {
-          if (selectedFilterOption !== "all") {
-            filters = `q[status_eq]=${selectedFilterOption}&`;
-          }
-        }
-
-        // Add search query using Ransack's cont (contains) matcher
-        if (searchQuery && searchQuery.trim() !== "") {
-          const searchFilter = `q[title_or_project_type_name_or_project_owner_name_cont]=${encodeURIComponent(searchQuery.trim())}`;
-          filters += (filters ? "&" : "") + searchFilter + "&";
-        }
-
-        // Add sorting parameters
-        if (orderBy && orderDirection) {
-          const backendFieldName = COLUMN_TO_BACKEND_MAP[orderBy] || orderBy;
-          filters +=
-            (filters ? "&" : "") +
-            `order_by=${backendFieldName}&order_direction=${orderDirection}`;
-        }
-
-        filters += (filters ? "&" : "") + `page=${page}`;
-
-        // Fetch data
-        if (!isLoadMore && page === 1) {
-          const response = await dispatch(
-            filterProjects({ token, baseUrl, filters })
-          ).unwrap();
-
-          const projectsData =
-            response?.data?.project_managements ||
-            response?.project_managements ||
-            [];
-          const transformedData = transformedProjects(projectsData);
-          setProjects(transformedData);
-
-          const paginationData =
-            response?.data?.pagination || response?.pagination;
-          setHasMore(page < (paginationData?.total_pages || 1));
-          setCurrentPage(page);
-        } else {
-          // For pagination, fetch fresh data
-          const response = await dispatch(
-            filterProjects({ token, baseUrl, filters })
-          ).unwrap();
-
-          const projectsData =
-            response?.data?.project_managements ||
-            response?.project_managements ||
-            [];
-          const transformedData = transformedProjects(projectsData);
-
-          if (isLoadMore) {
-            setProjects((prev) => [...prev, ...transformedData]);
-          } else {
-            setProjects(transformedData);
-          }
-
-          const paginationData =
-            response?.data?.pagination || response?.pagination;
-          setHasMore(page < (paginationData?.total_pages || 1));
-          setCurrentPage(page);
-        }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-        setScrollLoading(false);
-      }
-    },
-    [
-      hasMore,
-      appliedFilters,
-      selectedFilterOption,
-      dispatch,
-      token,
-      baseUrl,
-      sortColumn,
-      sortDirection,
-    ]
-  );
-
-  useEffect(() => {
-    if (token) {
-      setCurrentPage(1);
-      setHasMore(true);
-      fetchData(1, "", false, debouncedSearchTerm);
-      setAppliedFilters("");
-    }
-  }, [token, selectedFilterOption, debouncedSearchTerm]);
-
-  // Infinite scroll handler with debouncing
-  useEffect(() => {
-    let scrollTimeout: ReturnType<typeof setTimeout>;
-    let lastLoadedPage = currentPage;
-
-    const handleScroll = () => {
-      // Clear any existing timeout
-      clearTimeout(scrollTimeout);
-
-      // Debounce the scroll check to avoid excessive calls
-      scrollTimeout = setTimeout(async () => {
-        const scrollElement = document.documentElement;
-        const scrollTop = window.pageYOffset || scrollElement.scrollTop;
-        const scrollHeight = scrollElement.scrollHeight;
-        const clientHeight = window.innerHeight;
-
-        // Load more when user is 500px from bottom
-        const threshold = 500;
-        if (
-          scrollTop + clientHeight >= scrollHeight - threshold &&
-          !scrollLoading &&
-          !loading &&
-          hasMore &&
-          lastLoadedPage === currentPage // Prevent duplicate requests
-        ) {
-          const nextPage = currentPage + 1;
-          lastLoadedPage = nextPage;
-          await fetchData(nextPage, "", true, debouncedSearchTerm);
-        }
-      }, 150); // Debounce for 150ms
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearTimeout(scrollTimeout);
-    };
-  }, [
-    currentPage,
-    scrollLoading,
-    loading,
-    hasMore,
-    debouncedSearchTerm,
-    fetchData,
-  ]);
+  // Refs for click outside detection
+  const viewDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   // Click outside handler for dropdowns
   useEffect(() => {
@@ -549,21 +461,21 @@ export const ProjectsDashboard = () => {
       // Use direct axios call for web flow
       const response = baseUrl
         ? await axios.get(
-            `https://${baseUrl}/pms/users/get_escalate_to_users.json?type=Task`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
+          `https://${baseUrl}/pms/users/get_escalate_to_users.json?type=Task`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
         : await baseClient.get(
-            `/pms/users/get_escalate_to_users.json?type=Task`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          `/pms/users/get_escalate_to_users.json?type=Task`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
       setOwners(response.data.users);
     } catch (error) {
       console.log(error);
@@ -616,23 +528,24 @@ export const ProjectsDashboard = () => {
     setOpenDialog(false);
   };
 
-  const handleSubmit = async (data) => {
+  const handleSubmit = async (data: any) => {
     try {
       const payload = {
         project_management: {
           title: data.title,
           start_date: data.start_date,
           end_date: data.end_date,
-          status: "active",
+          status: "active" as const,
           owner_id: data.manager,
-          priority: data.priority,
+          priority: (data.priority || "medium") as "low" | "medium" | "high",
           active: true,
           project_type_id: data.type,
         },
       };
-      await dispatch(createProject({ token, baseUrl, data: payload })).unwrap();
+      await createMutation.mutateAsync(payload);
       toast.success("Project created successfully");
-      fetchData(1, "", false, debouncedSearchTerm);
+      setCurrentPage(1);
+      // Cache automatically invalidated by the mutation hook
     } catch (error) {
       console.log(error);
       toast.error(error);
@@ -643,75 +556,57 @@ export const ProjectsDashboard = () => {
     try {
       // Use baseClient for mobile flow (when baseUrl not available)
       const response = baseUrl
-        ? await axios.get(`https://${baseUrl}/assets/project_import.xlsx`, {
-            responseType: "blob",
+        ? await axios.get(
+          `https://${baseUrl}/assets/project_import.xlsx`,
+          {
+            responseType: 'blob',
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          })
-        : await baseClient.get(`/assets/project_import.xlsx`, {
-            responseType: "blob",
+          }
+        )
+        : await baseClient.get(
+          `/assets/project_import.xlsx`,
+          {
+            responseType: 'blob',
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
+          }
+        );
 
       // Create a download link and trigger it
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
-      link.setAttribute("download", "sample_project_management.xlsx"); // specify filename
+      link.setAttribute('download', 'sample_project_management.xlsx'); // specify filename
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url); // cleanup
-      toast.success("Sample format downloaded successfully");
+      toast.success('Sample format downloaded successfully');
     } catch (error) {
-      console.error("Error downloading sample file:", error);
-      toast.error("Failed to download sample file. Please try again.");
+      console.error('Error downloading sample file:', error);
+      toast.error('Failed to download sample file. Please try again.');
     }
   };
 
   const handleImport = async () => {
-    setIsUploading(true);
+    if (!selectedFile) {
+      toast.error("Please select a file");
+      return;
+    }
+
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      // Use baseClient for mobile flow (when baseUrl not available)
-      const response = baseUrl
-        ? await axios.post(
-            `https://${baseUrl}/project_managements/import.json`,
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
-        : await baseClient.post(`/project_managements/import.json`, formData, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-      if (response.data.failed && response.data.failed.length > 0) {
-        response.data.failed.forEach(
-          (item: { row: number; errors: string[] }) => {
-            const errorMessages = item.errors.join(", ");
-            toast.error(`Row ${item.row}: ${errorMessages}`);
-          }
-        );
-      } else {
-        toast.success("Projects imported successfully");
-        setIsImportModalOpen(false);
-        setSelectedFile(null);
-        fetchData(1, "", false, debouncedSearchTerm);
-      }
+      await importMutation.mutateAsync(selectedFile);
+      toast.success("Projects imported successfully");
+      setIsImportModalOpen(false);
+      setSelectedFile(null);
+      setCurrentPage(1);
+      // Cache automatically invalidated by the mutation hook
     } catch (error) {
       console.log(error);
-    } finally {
-      setIsUploading(false);
+      toast.error("Failed to import projects");
     }
   };
 
@@ -722,11 +617,7 @@ export const ProjectsDashboard = () => {
           size="sm"
           variant="ghost"
           className="p-1"
-          onClick={() =>
-            window.location.pathname.startsWith("/vas/projects")
-              ? navigate(`/vas/projects/details/${item.id}`)
-              : navigate(`/mobile-projects/${item.id}`)
-          }
+          onClick={() => window.location.pathname.startsWith("/vas/projects") ? navigate(`/vas/projects/details/${item.id}`) : navigate(`/mobile-projects/${item.id}`)}
         >
           <Eye className="w-4 h-4" />
         </Button>
@@ -736,13 +627,7 @@ export const ProjectsDashboard = () => {
           size="sm"
           variant="ghost"
           className="p-1"
-          onClick={() =>
-            window.location.pathname.startsWith("/vas/projects")
-              ? navigate(`/vas/projects/${item.id}/milestones`)
-              : navigate(
-                  `/mobile-projects/${item.id}/milestones?token=${token}&org_id=${urlOrgId}&user_id=${urlUserId}`
-                )
-          }
+          onClick={() => window.location.pathname.startsWith("/vas/projects") ? navigate(`/vas/projects/${item.id}/milestones`) : navigate(`/mobile-projects/${item.id}/milestones?token=${token}&org_id=${urlOrgId}&user_id=${urlUserId}`)}
         >
           <LogOut className="w-4 h-4" />
         </Button>
@@ -752,20 +637,15 @@ export const ProjectsDashboard = () => {
 
   const handleStatusChange = async (id: number, status: string) => {
     try {
-      await dispatch(
-        changeProjectStatus({
-          token,
-          baseUrl,
-          id: String(id),
-          payload: { project_management: { status } },
-        })
-      ).unwrap();
-      fetchData(1, "", false, debouncedSearchTerm, sortColumn, sortDirection);
-      setCurrentPage(1);
-      setHasMore(true);
+      await statusMutation.mutateAsync({
+        id,
+        status,
+      });
       toast.success("Project status changed successfully");
+      // Cache automatically invalidated by the mutation hook
     } catch (error) {
       console.log(error);
+      toast.error("Failed to update project status");
     }
   };
 
@@ -775,30 +655,15 @@ export const ProjectsDashboard = () => {
 
     // Cycle through: asc -> desc -> null -> asc
     if (sortColumn === columnKey) {
-      newDirection =
-        sortDirection === "asc"
-          ? "desc"
-          : sortDirection === "desc"
-            ? null
-            : "asc";
+      newDirection = sortDirection === "asc" ? "desc" : sortDirection === "desc" ? null : "asc";
     } else {
       newDirection = "asc";
     }
 
     setSortColumn(newDirection ? columnKey : null);
     setSortDirection(newDirection);
-
-    // Reset to page 1 and fetch with new sort
+    // Reset to page 1 when sorting changes
     setCurrentPage(1);
-    setHasMore(true);
-    fetchData(
-      1,
-      "",
-      false,
-      debouncedSearchTerm,
-      newDirection ? columnKey : null,
-      newDirection
-    );
   };
 
   const renderCell = (item: any, columnKey: string) => {
@@ -956,14 +821,14 @@ export const ProjectsDashboard = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span
-                  className="truncate cursor-pointer"
+                <div
+                  className="max-w-[250px] truncate cursor-pointer"
                   onClick={() =>
                     navigate(`/vas/projects/${item.id}/milestones`)
                   }
                 >
                   {item.title}
-                </span>
+                </div>
               </TooltipTrigger>
               <TooltipContent className="rounded-[5px]">
                 <p>{item.title}</p>
@@ -972,103 +837,107 @@ export const ProjectsDashboard = () => {
           </TooltipProvider>
         );
       case "completion_percent":
-        return (
-          <div className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              {item.status === "completed" ? 1 : 0}
-            </span>
-            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-              <div
-                className={`absolute top-0 left-0 h-6 bg-[#7fffdd] rounded-full transition-all duration-300`}
-                style={{ width: `${item.completion_percent}%` }}
-              ></div>
-              <span className="relative z-10 text-xs font-semibold text-gray-800">
-                {Math.round(item.completion_percent)}%
-              </span>
-            </div>
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              1
+        return <div className="flex items-center gap-2 cursor-pointer">
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            {item.status === "completed" ? 1 : 0}
+          </span>
+          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+            <div
+              className={`absolute top-0 left-0 h-6 bg-[#7fffdd] rounded-full transition-all duration-300`}
+              style={{ width: `${item.completion_percent}%` }}
+            ></div>
+            <span className="relative z-10 text-xs font-semibold text-gray-800">
+              {Math.round(item.completion_percent)}%
             </span>
           </div>
-        );
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            1
+          </span>
+        </div>
       case "milestoneCompletionPercent":
-        return (
-          <div className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              {item.milestonesCompleted}
-            </span>
-            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-              <div
-                className={`absolute top-0 left-0 h-6 bg-[#84edba] rounded-full transition-all duration-300`}
-                style={{ width: `${item.milestoneCompletionPercent}%` }}
-              ></div>
-              <span className="relative z-10 text-xs font-semibold text-gray-800">
-                {Math.round(item.milestoneCompletionPercent)}%
-              </span>
-            </div>
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              {item.milestones}
+        return <div className="flex items-center gap-2 cursor-pointer">
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            {item.milestonesCompleted}
+          </span>
+          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+            <div
+              className={`absolute top-0 left-0 h-6 bg-[#84edba] rounded-full transition-all duration-300`}
+              style={{ width: `${item.milestoneCompletionPercent}%` }}
+            ></div>
+            <span className="relative z-10 text-xs font-semibold text-gray-800">
+              {Math.round(item.milestoneCompletionPercent)}%
             </span>
           </div>
-        );
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            {item.milestones}
+          </span>
+        </div>
       case "taskCompletionPercent":
-        return (
-          <div className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              {item.tasksCompleted}
-            </span>
-            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-              <div
-                className={`absolute top-0 left-0 h-6 bg-[#e9e575] rounded-full transition-all duration-300`}
-                style={{ width: `${item.taskCompletionPercent}%` }}
-              ></div>
-              <span className="relative z-10 text-xs font-semibold text-gray-800">
-                {Math.round(item.taskCompletionPercent)}%
-              </span>
-            </div>
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              {item.tasks}
+        return <div className="flex items-center gap-2 cursor-pointer">
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            {item.tasksCompleted}
+          </span>
+          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+            <div
+              className={`absolute top-0 left-0 h-6 bg-[#e9e575] rounded-full transition-all duration-300`}
+              style={{ width: `${item.taskCompletionPercent}%` }}
+            ></div>
+            <span className="relative z-10 text-xs font-semibold text-gray-800">
+              {Math.round(item.taskCompletionPercent)}%
             </span>
           </div>
-        );
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            {item.tasks}
+          </span>
+        </div>
       case "subtaskCompletionPercent":
-        return (
-          <div className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              {item.subtasksCompleted}
-            </span>
-            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-              <div
-                className={`absolute top-0 left-0 h-6 bg-[#b4e7ff] rounded-full transition-all duration-300`}
-                style={{ width: `${item.subtaskCompletionPercent}%` }}
-              ></div>
-              <span className="relative z-10 text-xs font-semibold text-gray-800">
-                {Math.round(item.subtaskCompletionPercent)}%
-              </span>
-            </div>
-            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-              {item.subtasks}
+        return <div className="flex items-center gap-2 cursor-pointer">
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            {item.subtasksCompleted}
+          </span>
+          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+            <div
+              className={`absolute top-0 left-0 h-6 bg-[#b4e7ff] rounded-full transition-all duration-300`}
+              style={{ width: `${item.subtaskCompletionPercent}%` }}
+            ></div>
+            <span className="relative z-10 text-xs font-semibold text-gray-800">
+              {Math.round(item.subtaskCompletionPercent)}%
             </span>
           </div>
-        );
+          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+            {item.subtasks}
+          </span>
+        </div>
       default:
         return item[columnKey] || "-";
     }
   };
 
   const leftActions = (
-    <>
-      {shouldShow("employee_projects", "create") && (
-        <Button
-          className="bg-[#C72030] hover:bg-[#A01020] text-white"
-          onClick={() => setShowActionPanel(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Action
-        </Button>
-      )}
-    </>
+    <div className="flex items-center gap-4">
+      {/* Action Button */}
+      {
+        localStorage.getItem("selectedView") === "admin" && (
+          <Button
+            className="bg-[#C72030] hover:bg-[#A01020] text-white"
+            onClick={() => setShowActionPanel(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Action
+          </Button>
+        )
+      }
+
+      {/* Total Projects Count */}
+      <div className="flex items-center gap-2 px-4 py-1 bg-gray-50 rounded-lg border border-gray-200">
+        <span className="text-gray-700 font-medium text-sm">Total Projects:</span>
+        <span className="text-lg font-bold text-[#C72030]">
+          {paginationData?.total_count || 0}
+        </span>
+      </div>
+    </div>
   );
+
 
   const renderEditableCell = (columnKey, value, onChange) => {
     if (columnKey === "status") {
@@ -1265,7 +1134,7 @@ export const ProjectsDashboard = () => {
             <Plus className="w-4 h-4 mr-2" />
             Add
           </Button>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <div className="relative">
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -1314,6 +1183,15 @@ export const ProjectsDashboard = () => {
                 </div>
               )}
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2"
+              title='Filter'
+              onClick={() => setIsFilterModalOpen(true)}
+            >
+              <Filter className="w-4 h-4" />
+            </Button>
             {/* <div className="relative">
               <button
                 onClick={() => setOpenStatusOptions(!openStatusOptions)}
@@ -1348,7 +1226,11 @@ export const ProjectsDashboard = () => {
           </div>
         </div>
 
-        <ProjectManagementKanban fetchData={fetchData} />
+        <ProjectManagementKanban
+          fetchData={refetchProjects}
+          appliedFilters={appliedFilters}
+          selectedFilterOption={selectedFilterOption}
+        />
 
         <AddProjectModal
           openDialog={openDialog}
@@ -1368,7 +1250,7 @@ export const ProjectsDashboard = () => {
           projectTypes={projectTypes}
           tags={tags}
           teams={teams}
-          fetchProjects={fetchData}
+          fetchProjects={refetchProjects}
           templateDetails={selectedTemplate}
         />
 
@@ -1378,18 +1260,20 @@ export const ProjectsDashboard = () => {
           onApplyFilters={(filterString) => {
             setAppliedFilters(filterString);
             setCurrentPage(1);
-            setHasMore(true);
-            fetchData(1, filterString, false, debouncedSearchTerm);
+            // TanStack Query hook will automatically refetch with new filters
           }}
         />
       </div>
     );
   }
 
+  // Transform projects for display
+  const displayProjects = transformedProjects(allProjects);
+
   return (
     <div className="p-6">
       <EnhancedTable
-        data={projects}
+        data={displayProjects}
         columns={columns}
         renderActions={renderActions}
         renderCell={renderCell}
@@ -1405,12 +1289,11 @@ export const ProjectsDashboard = () => {
         }}
         renderEditableCell={renderEditableCell}
         newRowPlaceholder="Click to add new project"
-        loading={loading}
+        loading={isLoading}
         enableGlobalSearch={true}
-        onGlobalSearch={(searchQuery) => {
+        onSearchChange={(searchQuery) => {
           setSearchTerm(searchQuery);
           setCurrentPage(1);
-          setHasMore(true);
         }}
         searchValue={searchTerm}
         searchPlaceholder="Search by title, type, or manager..."
@@ -1419,13 +1302,20 @@ export const ProjectsDashboard = () => {
         hideTableExport={true}
       />
 
-      {scrollLoading && hasMore && (
-        <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+      {/* Infinite Scroll Loader - Only visible when loading more data */}
+      {isFetching && hasMore && !isLoading && (
+        <div className="flex justify-center py-8">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+            <span className="text-sm text-gray-500">Loading more projects...</span>
+          </div>
         </div>
       )}
 
-      {!hasMore && projects.length > 0 && (
+      {/* Invisible trigger element for infinite scroll - always present so observer can watch it */}
+      {hasMore && <div ref={loaderRef} className="h-1" />}
+
+      {!hasMore && allProjects.length > 0 && (
         <div className="flex justify-center py-4 text-gray-500 text-sm">
           No more projects to load
         </div>
@@ -1448,7 +1338,7 @@ export const ProjectsDashboard = () => {
         entityType="projects"
         onSampleDownload={handleSampleDownload}
         onImport={handleImport}
-        isUploading={isUploading}
+        isUploading={importMutation.isPending}
       />
 
       <AddProjectModal
@@ -1469,7 +1359,7 @@ export const ProjectsDashboard = () => {
         projectTypes={projectTypes}
         tags={tags}
         teams={teams}
-        fetchProjects={fetchData}
+        fetchProjects={refetchProjects}
         templateDetails={selectedTemplate}
       />
 
@@ -1479,8 +1369,6 @@ export const ProjectsDashboard = () => {
         onApplyFilters={(filterString) => {
           setAppliedFilters(filterString);
           setCurrentPage(1);
-          setHasMore(true);
-          fetchData(1, filterString, false, debouncedSearchTerm);
         }}
       />
     </div>

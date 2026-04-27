@@ -4200,7 +4200,7 @@ function App() {
                         element={<SurveyListDashboard />}
                       />
 
-                       <Route
+                      <Route
                         path="/settings/general-settings"
                         element={<SettingsGenericPage />}
                       />
@@ -7138,4 +7138,3 @@ function App() {
 }
 
 export default App;
-

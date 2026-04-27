@@ -440,6 +440,7 @@ export const PatrollingEditPage: React.FC = () => {
   const [patrolName, setPatrolName] = useState("");
   const [description, setDescription] = useState("");
   const [estimatedDuration, setEstimatedDuration] = useState("");
+  const [graceType, setGraceType] = useState<'minutes' | 'hours'>('minutes');
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [grace, setGrace] = useState("");
@@ -530,7 +531,16 @@ export const PatrollingEditPage: React.FC = () => {
         setDescription(data.description || "");
         setStartDate(data.validity_start_date || "");
         setEndDate(data.validity_end_date || "");
-        setGrace((data.grace_period_minutes || "").toString());
+
+        // Auto-detect grace type: if value is divisible by 60, show as hours
+        const graceMinutes = parseInt(data.grace_period_minutes);
+        if (!isNaN(graceMinutes) && graceMinutes > 0 && graceMinutes % 60 === 0) {
+          setGraceType('hours');
+          setGrace((graceMinutes / 60).toString());
+        } else {
+          setGraceType('minutes');
+          setGrace((data.grace_period_minutes || "").toString());
+        }
 
         // Populate schedules
         setShifts(
@@ -1354,28 +1364,28 @@ export const PatrollingEditPage: React.FC = () => {
     const validShifts = shifts;
 
     // Validate shift assignees
-    const shiftsWithoutAssignee = validShifts.filter(
-      (s) => !s.assignee || s.assignee.trim() === ""
-    );
-    if (shiftsWithoutAssignee.length > 0) {
-      toast.error("All schedules must have an assignee", {
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    // const shiftsWithoutAssignee = validShifts.filter(
+    //   (s) => !s.assignee || s.assignee.trim() === ""
+    // );
+    // if (shiftsWithoutAssignee.length > 0) {
+    //   toast.error("All schedules must have an assignee", {
+    //     duration: 5000,
+    //   });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     // Validate shift supervisors
-    const shiftsWithoutSupervisor = validShifts.filter(
-      (s) => !s.supervisor || s.supervisor.trim() === ""
-    );
-    if (shiftsWithoutSupervisor.length > 0) {
-      toast.error("All schedules must have a supervisor", {
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    // const shiftsWithoutSupervisor = validShifts.filter(
+    //   (s) => !s.supervisor || s.supervisor.trim() === ""
+    // );
+    // if (shiftsWithoutSupervisor.length > 0) {
+    //   toast.error("All schedules must have a supervisor", {
+    //     duration: 5000,
+    //   });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     // Validate shift time setups
     for (let i = 0; i < validShifts.length; i++) {
@@ -1412,7 +1422,7 @@ export const PatrollingEditPage: React.FC = () => {
         description: description,
         validity_start_date: startDate,
         validity_end_date: endDate,
-        grace_period_minutes: parseInt(grace) || 0,
+        grace_period_minutes: graceType === 'hours' ? (parseInt(grace) || 0) * 60 : (parseInt(grace) || 0),
         // Include checklist_id if a checklist is selected
         ...(selectedChecklist && { checklist_id: parseInt(selectedChecklist.id) }),
         questions: questions
@@ -1618,7 +1628,7 @@ export const PatrollingEditPage: React.FC = () => {
         title="Validity"
         icon={<CalendarRange className="w-3.5 h-3.5" />}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <TextField
               type="date"
@@ -1658,14 +1668,29 @@ export const PatrollingEditPage: React.FC = () => {
             />
           </div>
           <div>
+            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+              <InputLabel shrink>Grace Type<span className="text-red-500">*</span></InputLabel>
+              <MuiSelect
+                value={graceType}
+                onChange={(e) => setGraceType(e.target.value as 'minutes' | 'hours')}
+                label="Grace Type"
+                notched
+                disabled={isSubmitting}
+              >
+                <MenuItem value="minutes">Minutes</MenuItem>
+                <MenuItem value="hours">Hourly</MenuItem>
+              </MuiSelect>
+            </FormControl>
+          </div>
+          <div>
             <TextField
               type="number"
               label={
                 <>
-                  Grace Period (minutes)<span className="text-red-500">*</span>
+                  Grace Period ({graceType === 'hours' ? 'hours' : 'minutes'})<span className="text-red-500">*</span>
                 </>
               }
-              placeholder="Enter grace period in minutes"
+              placeholder={`Enter grace period in ${graceType === 'hours' ? 'hours' : 'minutes'}`}
               value={grace}
               onChange={(e) => handlegraceminutes(e.target.value)}
               fullWidth
@@ -1964,7 +1989,7 @@ export const PatrollingEditPage: React.FC = () => {
                 </button>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
+                {/* <div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -1997,8 +2022,8 @@ export const PatrollingEditPage: React.FC = () => {
                       <MenuItem value="bhai">bhai</MenuItem>
                     </MuiSelect>
                   </FormControl>
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -2031,7 +2056,7 @@ export const PatrollingEditPage: React.FC = () => {
                       <MenuItem value="bhai">bhai</MenuItem>
                     </MuiSelect>
                   </FormControl>
-                </div>
+                </div> */}
                 
               </div>
               <div>

@@ -12,7 +12,7 @@ interface BulkUploadDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   uploadType?: "upload" | "update";
-  context?: "assets" | "custom_forms" | "measurements" | "staff"; // New prop to determine context
+  context?: "assets" | "custom_forms" | "measurements" | "patrolling" | "staff"; // New prop to determine context
   onImport?: (file: File) => void;
 }
 
@@ -21,29 +21,29 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
   onOpenChange,
   title,
   uploadType = "upload",
-  context = "assets", // Default to assets for backward compatibility
+  context = "assets" as "assets" | "custom_forms" | "measurements" | "patrolling" | "staff", // Default to assets for backward compatibility
   onImport
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
- const waitForAssetImportDone = async (importKey: string) => {
-  while (true) {
-    const res = await apiClient.get("/pms/assets/import_status", {
-      params: { import_key: importKey },
-    });
+  const waitForAssetImportDone = async (importKey: string) => {
+    while (true) {
+      const res = await apiClient.get("/pms/assets/import_status", {
+        params: { import_key: importKey },
+      });
 
-    const data = res.data;
+      const data = res.data;
 
-    if (data.status === "completed") return data;
-    if (data.status === "failed") {
-      throw new Error(data.error_message || "Import failed");
+      if (data.status === "completed") return data;
+      if (data.status === "failed") {
+        throw new Error(data.error_message || "Import failed");
+      }
+
+      // processing / unknown → wait
+      await new Promise((r) => setTimeout(r, 2000));
     }
-
-    // processing / unknown → wait
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-};
+  };
 
 
 
@@ -126,6 +126,9 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
       } else if (context === "staff") {
         endpoint = ENDPOINTS.STAFF_SAMPLE_FORMAT;
         filename = 'staff_sample_format.xlsx';
+      } else if (context === "patrolling") {
+        endpoint = '/patrolling_checkpoints_bulk_upload_sample.xlsx';
+        filename = 'patrolling_checkpoints_bulk_upload_sample.xlsx';
       } else {
         endpoint = '/assets/asset.xlsx';
         filename = 'asset_sample_format.xlsx';
@@ -170,97 +173,100 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
     }
   };
 
-const handleImport = async () => {
-  if (!selectedFile) {
-    toast.error("Please select a file to import");
-    return;
-  }
-
-  setIsUploading(true);
-
-  try {
-    // ===============================
-    // 🔹 ASSETS → BACKGROUND IMPORT
-    // ===============================
-    if (context === "assets") {
-      const formData = new FormData();
-      formData.append("pms_asset_file", selectedFile);
-
-      // STEP 1: Start background import
-      const response = await apiClient.post(
-        "/pms/assets/asset_import",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      const { import_key } = response.data;
-
-      if (!import_key) {
-        throw new Error("Import key not returned from server");
-      }
-
-      toast.info("Import started", {
-        description: "Assets are being imported in background…",
-      });
-
-      // STEP 2: Poll until finished
-      const result = await waitForAssetImportDone(import_key);
-
-      toast.success("Import completed", {
-        description: `${result.success_count || 0} assets imported, ${result.error_count || 0} errors`,
-      });
-
-      setSelectedFile(null);
-      onOpenChange(false);
-      return; // ⛔ IMPORTANT: stop here
-    }
-
-    // ==================================
-    // 🔹 STAFF BULK UPLOAD
-    // ==================================
-    if (context === "staff") {
-      const formData = new FormData();
-      formData.append("society_staff_file", selectedFile);
-
-      await apiClient.post(ENDPOINTS.STAFF_BULK_UPLOAD, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      toast.success("Staff imported successfully");
-      setSelectedFile(null);
-      onOpenChange(false);
+  const handleImport = async () => {
+    if (!selectedFile) {
+      toast.error("Please select a file to import");
       return;
     }
 
-    // ==================================
-    // 🔹 CUSTOM FORMS / MEASUREMENTS
-    // (UNCHANGED – DIRECT UPLOAD)
-    // ==================================
-    let endpoint = "";
-    const formData = new FormData();
+    setIsUploading(true);
 
-    if (context === "custom_forms") {
-      endpoint = ENDPOINTS.CUSTOM_FORMS_BULK_UPLOAD;
-      formData.append("custom_form_file", selectedFile);
-    } else if (context === "measurements") {
-      endpoint = ENDPOINTS.ASSET_MEASUREMENT_IMPORT;
-      formData.append("measurement_file", selectedFile);
+    try {
+      // ===============================
+      // 🔹 ASSETS → BACKGROUND IMPORT
+      // ===============================
+      if (context === "assets") {
+        const formData = new FormData();
+        formData.append("pms_asset_file", selectedFile);
+
+        // STEP 1: Start background import
+        const response = await apiClient.post(
+          "/pms/assets/asset_import",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+        const { import_key } = response.data;
+
+        if (!import_key) {
+          throw new Error("Import key not returned from server");
+        }
+
+        toast.info("Import started", {
+          description: "Assets are being imported in background…",
+        });
+
+        // STEP 2: Poll until finished
+        const result = await waitForAssetImportDone(import_key);
+
+        toast.success("Import completed", {
+          description: `${result.success_count || 0} assets imported, ${result.error_count || 0} errors`,
+        });
+
+        setSelectedFile(null);
+        onOpenChange(false);
+        return; // ⛔ IMPORTANT: stop here
+      }
+
+      // ==================================
+      // 🔹 STAFF BULK UPLOAD
+      // ==================================
+      if (context === "staff") {
+        const formData = new FormData();
+        formData.append("society_staff_file", selectedFile);
+
+        await apiClient.post(ENDPOINTS.STAFF_BULK_UPLOAD, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        toast.success("Staff imported successfully");
+        setSelectedFile(null);
+        onOpenChange(false);
+        return;
+      }
+
+      // ==================================
+      // 🔹 CUSTOM FORMS / MEASUREMENTS
+      // (UNCHANGED – DIRECT UPLOAD)
+      // ==================================
+      let endpoint = "";
+      const formData = new FormData();
+
+      if (context === "custom_forms") {
+        endpoint = ENDPOINTS.CUSTOM_FORMS_BULK_UPLOAD;
+        formData.append("custom_form_file", selectedFile);
+      } else if (context === "measurements") {
+        endpoint = ENDPOINTS.ASSET_MEASUREMENT_IMPORT;
+        formData.append("measurement_file", selectedFile);
+      } else if (context === "patrolling") {
+        endpoint = ENDPOINTS.PATROLLING_IMPORT_CHECKPOINTS;
+        formData.append("file", selectedFile);
+      }
+
+      await apiClient.post(endpoint, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Import completed successfully");
+      setSelectedFile(null);
+      onOpenChange(false);
+
+    } catch (error: any) {
+      toast.error(error?.message || "Import failed");
+    } finally {
+      setIsUploading(false);
     }
-
-    await apiClient.post(endpoint, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    toast.success("Import completed successfully");
-    setSelectedFile(null);
-    onOpenChange(false);
-
-  } catch (error: any) {
-    toast.error(error?.message || "Import failed");
-  } finally {
-    setIsUploading(false);
-  }
-};
+  };
 
 
   const handleClose = () => {

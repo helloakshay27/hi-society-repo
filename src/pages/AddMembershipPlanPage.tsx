@@ -108,6 +108,8 @@ export const AddMembershipPlanPage = () => {
     renewalTerms: "",
     payment_plan_id: "",
     hsnCode: "",
+    cgst: "",
+    sgst: "",
     usageLimits: "Unlimited",
     discountEligibility: "No",
     amenities: [] as string[],
@@ -149,11 +151,27 @@ export const AddMembershipPlanPage = () => {
     }
   }
 
-  console.log(amenities)
+  const fetchHSN = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/pms/hsns/get_hsns.json`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      setFormData({
+        ...formData,
+        hsnCode: response.data[0].code || "",
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   useEffect(() => {
     getAmenities()
     getPaymentPlans()
+    fetchHSN()
   }, [])
 
   const validateForm = () => {
@@ -359,6 +377,7 @@ export const AddMembershipPlanPage = () => {
               {/* <TextField
                 label="HSN Code*"
                 value={formData.hsnCode}
+                disabled
                 onChange={(e) => {
                   const value = e.target.value;
                   // Allow only numbers and letters (alphanumeric)

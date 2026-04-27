@@ -1,6 +1,7 @@
 import { useEffect, useState, forwardRef, useRef, Fragment } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   ChevronDown,
@@ -12,6 +13,7 @@ import {
   CircleCheckBig,
   Mic,
   MicOff,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -38,6 +40,14 @@ import {
   Slide,
   Select as MuiSelect,
 } from "@mui/material";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { TransitionProps } from "@mui/material/transitions";
 import { useAppDispatch } from "@/store/hooks";
 import {
@@ -220,7 +230,14 @@ const Comments = ({
   const [editedCommentText, setEditedCommentText] = useState("");
   const textareaRef = useRef<any>(null);
 
-  const { isListening, activeId, transcript, supported, startListening, stopListening } = useSpeechToText();
+  const {
+    isListening,
+    activeId,
+    transcript,
+    supported,
+    startListening,
+    stopListening,
+  } = useSpeechToText();
   const fieldId = "task-comment-input";
   const isActive = isListening && activeId === fieldId;
 
@@ -454,13 +471,18 @@ const Comments = ({
       outline: "none",
       padding: 0,
       margin: 0,
+      width: "100%",
     },
-    highlighter: { overflow: "hidden" },
+    highlighter: {
+      overflow: "hidden",
+      padding: "8px",
+      border: "none",
+    },
     input: {
       font: "inherit",
       backgroundColor: "transparent",
       border: "none",
-      padding: 0,
+      padding: "8px",
       margin: 0,
       outline: "none",
     },
@@ -500,21 +522,27 @@ const Comments = ({
             inputRef={textareaRef}
             value={comment}
             onChange={(e, newValue) => setComment(newValue)}
-            className="mentions w-full h-[70px] bg-[#F2F4F4] p-2 border-2 border-[#DFDFDF] focus:outline-none pr-10"
+            className="mentions w-full min-h-[70px] bg-[#F2F4F4] p-0 border-2 border-[#DFDFDF] focus-within:border-[#01569E] outline-none pr-10"
             placeholder="Add comment here. Type @ to mention users. Type # to mention tags"
             style={{
               control: {
                 backgroundColor: "#F2F4F4",
                 fontSize: 14,
                 fontWeight: "normal",
+                minHeight: 70,
+                width: "100%",
               },
               highlighter: {
                 overflow: "hidden",
+                border: "none",
+                padding: "8px",
               },
               input: {
                 margin: 0,
                 padding: "8px",
                 outline: "none",
+                border: "none",
+                minHeight: 70,
               },
               suggestions: {
                 list: {
@@ -560,7 +588,9 @@ const Comments = ({
           {supported && (
             <button
               onClick={toggleListening}
-              className={`absolute right-2 top-2 p-1 rounded-full transition-all ${isActive ? "bg-red-100 text-red-600 animate-pulse" : "text-gray-400 hover:bg-gray-200"
+              className={`absolute right-2 top-2 p-1 rounded-full transition-all ${isActive
+                ? "bg-red-100 text-red-600 animate-pulse"
+                : "text-gray-400 hover:bg-gray-200"
                 }`}
               title={isActive ? "Stop recording" : "Start voice input"}
             >
@@ -657,7 +687,11 @@ const Comments = ({
                         : "text-gray-400 hover:bg-gray-200"
                         }`}
                     >
-                      {isListening && activeId === `edit-comment-${cmt.id}` ? <Mic size={16} /> : <MicOff size={16} />}
+                      {isListening && activeId === `edit-comment-${cmt.id}` ? (
+                        <Mic size={16} />
+                      ) : (
+                        <MicOff size={16} />
+                      )}
                     </button>
                   )}
                 </div>
@@ -894,7 +928,29 @@ const Attachments = ({
 };
 
 // Activity Log Component
-const ActivityLog = ({ taskStatusLogs }: { taskStatusLogs?: any[] }) => {
+const ActivityLog = ({ taskId }: { taskId: string }) => {
+  const baseUrl = localStorage.getItem("baseUrl") || "";
+  const token = localStorage.getItem("token") || "";
+
+  const [taskStatusLogs, setTaskStatusLogs] = useState([]);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      const response = await axios.get(
+        `https://${baseUrl}/task_managements/${taskId}/task_system_logs.json`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setTaskStatusLogs(response.data || []);
+    };
+
+    fetchLogs();
+  }, [taskId]);
+
   const formatTimestamp = (dateString: string) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, "0");
@@ -923,6 +979,55 @@ const ActivityLog = ({ taskStatusLogs }: { taskStatusLogs?: any[] }) => {
     }
   };
 
+  const getActionFromLog = (log: any) => {
+    if (!log.changed_attr || Object.keys(log.changed_attr).length === 0) {
+      return (
+        log.log_type?.replace("TaskManagement", "").trim() || "updated task"
+      );
+    }
+
+    const changedFields = Object.keys(log.changed_attr);
+    const changes: string[] = [];
+
+    // Check for status change
+    if (log.changed_attr.status) {
+      const [oldStatus, newStatus] = log.changed_attr.status;
+      changes.push(`changed status from ${oldStatus} to ${newStatus}`);
+    }
+
+    // Check for description change
+    if (log.changed_attr.description) {
+      changes.push("updated the task description");
+    }
+
+    // Check for started_at change
+    if (log.changed_attr.started_at) {
+      const [oldStart, newStart] = log.changed_attr.started_at;
+      if (oldStart === "nil" || oldStart === null) {
+        changes.push("started the task");
+      } else {
+        changes.push("changed start time");
+      }
+    }
+
+    // Check for other field changes
+    const otherFields = changedFields.filter(
+      (field) =>
+        !["status", "description", "started_at", "updated_at"].includes(field)
+    );
+    if (otherFields.length > 0) {
+      otherFields.forEach((field) => {
+        const label = field
+          .replace(/_/g, " ")
+          .replace(/([A-Z])/g, " $1")
+          .trim();
+        changes.push(`updated ${label}`);
+      });
+    }
+
+    return changes.join(" and ");
+  };
+
   const calculateDuration = (start: string, end: string) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -943,8 +1048,8 @@ const ActivityLog = ({ taskStatusLogs }: { taskStatusLogs?: any[] }) => {
 
   const activities = taskStatusLogs.map((log: any) => ({
     id: log.id,
-    person: log.created_by_name,
-    action: getActionFromStatus(log.status),
+    person: log.changed_by,
+    action: getActionFromLog(log),
     item: "task",
     timestamp: formatTimestamp(log.created_at),
     rawTimestamp: log.created_at,
@@ -965,7 +1070,6 @@ const ActivityLog = ({ taskStatusLogs }: { taskStatusLogs?: any[] }) => {
                 <i>
                   {activity.person}{" "}
                   <span className="text-[#C72030]">{activity.action}</span>{" "}
-                  {activity.item}
                 </i>
               </span>
               <span>
@@ -1085,7 +1189,11 @@ interface TaskDetails {
   created_at?: string;
   status?: string;
   parent_task_title?: string;
+  total_allocated_hours?: number;
   responsible_person?: {
+    name?: string;
+  };
+  project_management: {
     name?: string;
   };
   priority?: string;
@@ -1200,6 +1308,10 @@ export const ProjectTaskDetails = () => {
   const [dependentTasks, setDependentTasks] = useState<any[]>([]);
   const [addingTodo, setAddingTodo] = useState(false);
   const [statuses, setStatuses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [projectName, setProjectName] = useState<string>("");
+  const [milestoneName, setMilestoneName] = useState<string>("");
+  const [isSubSubtask, setIsSubSubtask] = useState(false);
 
   const firstContentRef = useRef<HTMLDivElement>(null);
   const secondContentRef = useRef<HTMLDivElement>(null);
@@ -1268,6 +1380,7 @@ export const ProjectTaskDetails = () => {
 
   const fetchData = async () => {
     try {
+      setIsLoading(true);
       const response = await dispatch(
         fetchProjectTasksById({ baseUrl, token, id: taskId })
       ).unwrap();
@@ -1281,6 +1394,8 @@ export const ProjectTaskDetails = () => {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to load task details";
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1328,6 +1443,7 @@ export const ProjectTaskDetails = () => {
           task_management_id: taskDetails.id,
           status: "open",
           target_date: taskDetails.target_date,
+          user_id: JSON.parse(localStorage.getItem("user"))?.id,
         },
       };
 
@@ -1424,6 +1540,64 @@ export const ProjectTaskDetails = () => {
     }
   };
 
+  function formatHours(hours: number): string {
+    console.log(hours);
+    if (hours < 1) {
+      const minutes = Math.round(hours * 60);
+      return `${minutes} min${minutes !== 1 ? "s" : ""}`;
+    }
+
+    const wholeHours = Math.floor(hours);
+    const remainingMinutes = Math.round((hours - wholeHours) * 60);
+
+    if (remainingMinutes === 0) {
+      return `${wholeHours} hr${wholeHours !== 1 ? "s" : ""}`;
+    }
+
+    return `${wholeHours} hr${wholeHours !== 1 ? "s" : ""} ${remainingMinutes} min${remainingMinutes !== 1 ? "s" : ""}`;
+  }
+
+  const fetchProjectAndMilestoneNames = async () => {
+    try {
+      // Fetch project name
+      if (id) {
+        const projectResponse = baseUrl
+          ? await axios.get(
+            `https://${baseUrl}/project_managements/${id}.json`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          )
+          : await axios.get(`/project_managements/${id}.json`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        setProjectName(
+          projectResponse.data.title || projectResponse.data.project_code || ""
+        );
+      }
+
+      // Fetch milestone name
+      if (mid) {
+        const milestoneResponse = baseUrl
+          ? await axios.get(`https://${baseUrl}/milestones/${mid}.json`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          : await axios.get(`/milestones/${mid}.json`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        setMilestoneName(milestoneResponse.data.title || "");
+      }
+    } catch (error) {
+      console.error("Failed to fetch project/milestone names:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (token && (id || mid)) {
+      fetchProjectAndMilestoneNames();
+    }
+  }, [token, id, mid]);
+
   useEffect(() => {
     if (activeTab === "subtasks" && taskDetails?.parent_id) {
       setActiveTab("dependency");
@@ -1432,386 +1606,549 @@ export const ProjectTaskDetails = () => {
 
   return (
     <div className="my-4 m-8">
-      <Button variant="ghost" onClick={() => navigate(-1)} className="p-0">
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back
-      </Button>
+      {location.pathname.includes("projects") && (
+        <Breadcrumb className="mb-2">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                onClick={() =>
+                  navigate(`/vas/projects/${id}/milestones/${mid}`)
+                }
+                className="cursor-pointer"
+              >
+                {projectName || "Project"}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                onClick={() => navigate(`/vas/projects/${id}/milestones`)}
+                className="cursor-pointer"
+              >
+                {milestoneName || "Milestone"}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                onClick={() =>
+                  navigate(`/vas/projects/${id}/milestones/${mid}/tasks`)
+                }
+                className="cursor-pointer"
+              >
+                Tasks
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                {taskDetails?.title?.split(" ").slice(0, 5).join(" ")}...
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      )}
+
+      {window.location.pathname === "/vas/tasks" && (
+        <Button variant="ghost" onClick={() => navigate(-1)} className="p-0">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+      )}
+
       <div className="pt-1">
-        <h2 className="text-[15px] p-3 px-0">
-          <span className="mr-3 text-[#C72030]">Task-{taskDetails.id}</span>
-          <span>{taskDetails.title}</span>
-        </h2>
-        <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)]"></div>
-        <div className="flex items-center justify-between my-3 text-[12px]">
-          <div className="flex items-center gap-3 text-[#323232]">
-            <span>
-              Created By:{" "}
-              {typeof taskDetails?.created_by === "string"
-                ? taskDetails.created_by
-                : (taskDetails?.created_by as any)?.name}
-            </span>
-            <span className="h-6 w-[1px] border border-gray-300"></span>
-            <span className="flex items-center gap-3">
-              Created On: {formatToDDMMYYYY_AMPM(taskDetails.created_at || "")}
-            </span>
-            <span className="h-6 w-[1px] border border-gray-300"></span>
-            <span
-              className={`flex items-center gap-2 cursor-pointer px-2 py-1 rounded-md text-sm ${STATUS_COLORS[mapDisplayToApiStatus(selectedOption).toLowerCase()] || "bg-gray-400 text-white"}`}
-            >
-              <div className="relative" ref={dropdownRef}>
-                <div
-                  className="flex items-center gap-1 cursor-pointer px-2 py-1"
-                  onClick={() => setOpenDropdown(!openDropdown)}
-                  role="button"
-                  aria-haspopup="true"
-                  aria-expanded={openDropdown}
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && setOpenDropdown(!openDropdown)
-                  }
-                >
-                  <span className="text-[13px]">{selectedOption}</span>
-                  <ChevronDown
-                    size={15}
-                    className={`${openDropdown ? "rotate-180" : ""
-                      } transition-transform`}
-                  />
-                </div>
-                <ul
-                  className={`dropdown-menu absolute right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden ${openDropdown ? "block" : "hidden"
-                    }`}
-                  role="menu"
-                  style={{
-                    minWidth: "150px",
-                    maxHeight: "400px",
-                    overflowY: "auto",
-                    zIndex: 1000,
+        {isLoading ? (
+          <>
+            {/* Loading Skeleton for Title */}
+            <div className="p-3 px-0">
+              <Skeleton className="h-[30px] w-1/3 mb-4" />
+            </div>
+            <Skeleton className="h-[3px] w-full mb-4" />
+
+            {/* Loading Skeleton for Header Info */}
+            <div className="space-y-3 my-3">
+              <Skeleton className="h-[20px] w-full" />
+              <Skeleton className="h-[20px] w-4/5" />
+            </div>
+            <Skeleton className="h-[3px] w-full mb-4" />
+
+            {/* Loading Skeleton for Description Section */}
+            <div className="bg-white rounded-[10px] shadow-md border border-gray-200 mb-6 p-6 mt-4">
+              <Skeleton className="h-[30px] w-1/4 mb-4" />
+              <div className="space-y-3">
+                <Skeleton className="h-[20px] w-full" />
+                <Skeleton className="h-[20px] w-full" />
+                <Skeleton className="h-[20px] w-3/4" />
+              </div>
+            </div>
+
+            {/* Loading Skeleton for Details Section */}
+            <div className="bg-white rounded-[10px] shadow-md border border-gray-200 mb-6 p-6">
+              <Skeleton className="h-[30px] w-1/4 mb-6" />
+              <div className="grid grid-cols-2 gap-6">
+                {Array(8)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div key={i} className="flex items-start">
+                      <Skeleton className="h-[20px] w-[200px] mr-4" />
+                      <Skeleton className="h-[20px] flex-1" />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="cursor-pointer text-[15px] p-3 px-0">
+              <span className="mr-3 text-[#C72030]">Task-{taskDetails.id}</span>
+              <span>
+                {taskDetails.title}
+                <Button
+                  variant="ghost"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link copied to clipboard!");
+                    } catch (err) {
+                      console.error("Failed to copy:", err);
+                    }
                   }}
                 >
-                  {dropdownOptions.map((option, idx) => (
-                    <li key={idx} role="menuitem">
-                      <button
-                        className={`dropdown-item w-full text-left px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-100 ${selectedOption === option
-                          ? "bg-gray-100 font-semibold"
-                          : ""
-                          }`}
-                        onClick={() => handleOptionSelect(option)}
-                      >
-                        {option}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </span>
-            <span className="h-6 w-[1px] border border-gray-300"></span>
-            <span className="cursor-pointer flex items-center gap-1">
-              <ActiveTimer
-                activeTimeTillNow={(taskDetails as any)?.active_time_till_now}
-                isStarted={(taskDetails as any)?.is_started}
-              />
-            </span>
-            <span className="h-6 w-[1px] border border-gray-300"></span>
-            {taskDetails.todo_converted ? (
-              <span
-                className="flex items-center gap-1 cursor-pointer"
-                onClick={() => navigate(`/vas/todo`)}
-              >
-                <CircleCheckBig size={15} />
-                <span>Added To Do</span>
+                  <Copy size={15} />
+                </Button>
               </span>
-            ) : (
-              <span
-                className="flex items-center gap-1 cursor-pointer"
-                onClick={handleAddToDo}
-              >
-                <CircleCheckBig size={15} />
-                <span>Add To Do</span>
-              </span>
-            )}
-            <span className="h-6 w-[1px] border border-gray-300"></span>
-            <span
-              className="flex items-center gap-1 cursor-pointer"
-              onClick={() => setOpenEditModal(true)}
-            >
-              <PencilIcon size={15} />
-              {taskDetails.parent_id ? "Edit Subtask" : "Edit Task"}
-            </span>
-            {!taskDetails.parent_id && (
-              <>
+            </h2>
+            <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)]"></div>
+            <div className="flex items-center justify-between my-3 text-[12px]">
+              <div className="flex items-center gap-3 text-[#323232]">
+                <span>
+                  Created By:{" "}
+                  {typeof taskDetails?.created_by === "string"
+                    ? taskDetails.created_by
+                    : (taskDetails?.created_by as any)?.name}
+                </span>
+                <span className="h-6 w-[1px] border border-gray-300"></span>
+                <span className="flex items-center gap-3">
+                  Created On:{" "}
+                  {formatToDDMMYYYY_AMPM(taskDetails.created_at || "")}
+                </span>
+                <span className="h-6 w-[1px] border border-gray-300"></span>
+                <span
+                  className={`flex items-center gap-2 cursor-pointer px-2 py-1 rounded-md text-sm ${STATUS_COLORS[mapDisplayToApiStatus(selectedOption).toLowerCase()] || "bg-gray-400 text-white"}`}
+                >
+                  <div className="relative" ref={dropdownRef}>
+                    <div
+                      className="flex items-center gap-1 cursor-pointer px-2 py-1"
+                      onClick={() => setOpenDropdown(!openDropdown)}
+                      role="button"
+                      aria-haspopup="true"
+                      aria-expanded={openDropdown}
+                      tabIndex={0}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && setOpenDropdown(!openDropdown)
+                      }
+                    >
+                      <span className="text-[13px]">{selectedOption}</span>
+                      <ChevronDown
+                        size={15}
+                        className={`${openDropdown ? "rotate-180" : ""
+                          } transition-transform`}
+                      />
+                    </div>
+                    <ul
+                      className={`dropdown-menu absolute right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden ${openDropdown ? "block" : "hidden"
+                        }`}
+                      role="menu"
+                      style={{
+                        minWidth: "150px",
+                        maxHeight: "400px",
+                        overflowY: "auto",
+                        zIndex: 1000,
+                      }}
+                    >
+                      {dropdownOptions.map((option, idx) => (
+                        <li key={idx} role="menuitem">
+                          <button
+                            className={`dropdown-item w-full text-left px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-100 ${selectedOption === option
+                              ? "bg-gray-100 font-semibold"
+                              : ""
+                              }`}
+                            onClick={() => handleOptionSelect(option)}
+                          >
+                            {option}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </span>
+                <span className="h-6 w-[1px] border border-gray-300"></span>
+                <span className="cursor-pointer flex items-center gap-1">
+                  <ActiveTimer
+                    activeTimeTillNow={
+                      (taskDetails as any)?.active_time_till_now
+                    }
+                    isStarted={(taskDetails as any)?.is_started}
+                  />
+                </span>
+                <span className="h-6 w-[1px] border border-gray-300"></span>
+                {taskDetails.todo_converted ? (
+                  <span
+                    className="flex items-center gap-1 cursor-pointer"
+                    onClick={() => navigate(`/vas/todo`)}
+                  >
+                    <CircleCheckBig size={15} />
+                    <span>Added To Do</span>
+                  </span>
+                ) : (
+                  <span
+                    className="flex items-center gap-1 cursor-pointer"
+                    onClick={handleAddToDo}
+                  >
+                    <CircleCheckBig size={15} />
+                    <span>Add To Do</span>
+                  </span>
+                )}
                 <span className="h-6 w-[1px] border border-gray-300"></span>
                 <span
                   className="flex items-center gap-1 cursor-pointer"
-                  onClick={() => setOpenSubTaskModal(true)}
+                  onClick={() => setOpenEditModal(true)}
                 >
-                  <Plus size={15} />
-                  <span>Add Subtask</span>
+                  <PencilIcon size={15} />
+                  {taskDetails.parent_id ? "Edit Subtask" : "Edit Task"}
                 </span>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)]"></div>
-      </div>
-
-      {/* Description Section */}
-      <div className="bg-white rounded-[10px] shadow-md border border-gray-200 mb-6 p-6 mt-4">
-        <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-          <ChevronDownCircle
-            color="#E95420"
-            size={30}
-            className={`${isFirstCollapsed ? "rotate-180" : "rotate-0"} transition-transform cursor-pointer`}
-            onClick={toggleFirstCollapse}
-          />
-          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-            Description
-          </h3>
-        </div>
-
-        <div className="mt-4 overflow-hidden" ref={firstContentRef}>
-          <p className="text-sm text-gray-900">{taskDetails.description}</p>
-        </div>
-      </div>
-
-      {/* Details Section */}
-      <div className="bg-white rounded-[10px] shadow-md border border-gray-200 mb-6 p-6">
-        <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-          <ChevronDownCircle
-            color="#E95420"
-            size={30}
-            className={`${isSecondCollapsed ? "rotate-180" : "rotate-0"} transition-transform cursor-pointer`}
-            onClick={toggleSecondCollapse}
-          />
-          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-            Details
-          </h3>
-        </div>
-
-        {/* Collapsed View Summary */}
-        {isSecondCollapsed && (
-          <div className="flex items-center gap-6 mt-4 flex-wrap text-[12px]">
-            <div className="flex items-center justify-start gap-3">
-              <div className="text-right font-[500]">Responsible Person:</div>
-              <div className="text-left">
-                {taskDetails.responsible_person.name || "-"}
+                {!taskDetails.parent_id && (
+                  <>
+                    <span className="h-6 w-[1px] border border-gray-300"></span>
+                    <span
+                      className="flex items-center gap-1 cursor-pointer"
+                      onClick={() => setOpenSubTaskModal(true)}
+                    >
+                      <Plus size={15} />
+                      <span>Add Subtask</span>
+                    </span>
+                  </>
+                )}
+                {!taskDetails.parent_id && (
+                  <>
+                    <span className="h-6 w-[1px] border border-gray-300"></span>
+                    <span
+                      className="flex items-center gap-1 cursor-pointer"
+                      onClick={() => {
+                        setIsSubSubtask(true);
+                        setOpenSubTaskModal(true);
+                      }}
+                    >
+                      <Plus size={15} />
+                      <span>Add SubSubTask</span>
+                    </span>
+                  </>
+                )}
               </div>
             </div>
-            <div className="flex items-center justify-start gap-3">
-              <div className="text-right font-[500]">Priority:</div>
-              <div className="text-left">{taskDetails.priority || "-"}</div>
-            </div>
-            <div className="flex items-center justify-start gap-3">
-              <div className="text-right font-[500]">End Date:</div>
-              <div className="text-left">
-                {formatToDDMMYYYY(taskDetails.target_date || "")}
+            <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)]"></div>
+
+            {/* Description Section */}
+            <div className="bg-white rounded-[10px] shadow-md border border-gray-200 mb-6 p-6 mt-4">
+              <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+                <ChevronDownCircle
+                  color="#E95420"
+                  size={30}
+                  className={`${isFirstCollapsed ? "rotate-180" : "rotate-0"} transition-transform cursor-pointer`}
+                  onClick={toggleFirstCollapse}
+                />
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  Description
+                </h3>
+              </div>
+
+              <div className="mt-4 overflow-hidden" ref={firstContentRef}>
+                <div
+                  className="prose prose-sm max-w-none quill-content"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      taskDetails?.description ||
+                      "<p>No description provided</p>",
+                  }}
+                />
               </div>
             </div>
-            <div className="flex items-center justify-start gap-3">
-              <div className="text-right font-[500]">Efforts Duration:</div>
-              <div className="text-left">
-                {taskDetails.estimated_hour || 0} hours
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Expanded View */}
-        <div
-          className={`mt-3 ${isSecondCollapsed ? "overflow-hidden" : ""}`}
-          ref={secondContentRef}
-        >
-          <div className="flex flex-col space-y-4">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">
-                    Responsible Person:
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    {taskDetails?.responsible_person?.name || "-"}
-                  </p>
-                </div>
+            {/* Details Section */}
+            <div className="bg-white rounded-[10px] shadow-md border border-gray-200 mb-6 p-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+                <ChevronDownCircle
+                  color="#E95420"
+                  size={30}
+                  className={`${isSecondCollapsed ? "rotate-180" : "rotate-0"} transition-transform cursor-pointer`}
+                  onClick={toggleSecondCollapse}
+                />
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  Details
+                </h3>
               </div>
 
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">Priority:</p>
+              {/* Collapsed View Summary */}
+              {isSecondCollapsed && (
+                <div className="flex items-center gap-6 mt-4 flex-wrap text-[12px]">
+                  <div className="flex items-center justify-start gap-3">
+                    <div className="text-right font-[500]">
+                      Responsible Person:
+                    </div>
+                    <div className="text-left">
+                      {taskDetails.responsible_person.name || "-"}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-start gap-3">
+                    <div className="text-right font-[500]">Priority:</div>
+                    <div className="text-left">
+                      {taskDetails.priority || "-"}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-start gap-3">
+                    <div className="text-right font-[500]">End Date:</div>
+                    <div className="text-left">
+                      {formatToDDMMYYYY(taskDetails.target_date || "")}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-start gap-3">
+                    <div className="text-right font-[500]">
+                      Efforts Duration:
+                    </div>
+                    <div className="text-left">
+                      {formatHours(taskDetails.total_allocated_hours)}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    {taskDetails.priority || "-"}
-                  </p>
-                </div>
-              </div>
+              )}
 
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">
-                    Start Date:
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    {formatToDDMMYYYY(taskDetails.expected_start_date || "")}
-                  </p>
-                </div>
-              </div>
+              {/* Expanded View */}
+              <div
+                className={`mt-3 ${isSecondCollapsed ? "overflow-hidden" : ""}`}
+                ref={secondContentRef}
+              >
+                <div className="flex flex-col space-y-4">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Responsible Person:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {taskDetails?.responsible_person?.name || "-"}
+                        </p>
+                      </div>
+                    </div>
 
-              <div className="flex items-start">
-                {/* <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">Milestone:</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">{taskDetails?.milestone?.title || "-"}</p>
-                </div> */}
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Project:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {taskDetails?.project_management?.name || "-"}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">
-                    {taskDetails.parent_id ? "Task" : "Milestones"}:
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    {taskDetails.parent_id
-                      ? taskDetails.parent_task_title
-                      : taskDetails.milestone?.title}
-                  </p>
-                </div>
-              </div>
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Start Date:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {formatToDDMMYYYY(
+                            taskDetails.expected_start_date || ""
+                          )}
+                        </p>
+                      </div>
+                    </div>
 
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">End Date:</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    {formatToDDMMYYYY(taskDetails.target_date || "")}
-                  </p>
-                </div>
-              </div>
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          {taskDetails.parent_id ? "Task" : "Milestones"}:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {taskDetails.parent_id
+                            ? taskDetails.parent_task_title
+                            : taskDetails.milestone?.title}
+                        </p>
+                      </div>
+                    </div>
 
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">Tags:</p>
-                </div>
-                <div className="flex-1">
-                  <div className="flex gap-1 flex-wrap">
-                    {taskDetails.task_tags &&
-                      taskDetails.task_tags.length > 0 ? (
-                      taskDetails.task_tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-[#c72030] text-white rounded-full text-xs font-medium"
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          End Date:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {formatToDDMMYYYY(taskDetails.target_date || "")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Tags:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex gap-1 flex-wrap">
+                          {taskDetails.task_tags &&
+                            taskDetails.task_tags.length > 0 ? (
+                            taskDetails.task_tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="px-3 py-1 bg-[#c72030] text-white rounded-full text-xs font-medium"
+                              >
+                                {tag?.company_tag?.name ||
+                                  tag.name ||
+                                  "Unknown"}
+                              </span>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-900">-</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Efforts Duration:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {formatHours(taskDetails.total_allocated_hours || 0)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Observer:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        {taskDetails.observers &&
+                          taskDetails.observers.length > 0 ? (
+                          <TooltipProvider>
+                            <div className="flex gap-1">
+                              {taskDetails.observers.map((observer, idx) => (
+                                <Tooltip key={idx}>
+                                  <TooltipTrigger asChild>
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#C72030] text-white text-xs font-medium cursor-default">
+                                      {getInitials(observer.user_name)}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="text-sm"
+                                  >
+                                    {observer.user_name}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                            </div>
+                          </TooltipProvider>
+                        ) : (
+                          <p className="text-sm text-gray-900">-</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          {calculateDuration(
+                            taskDetails.expected_start_date,
+                            taskDetails.target_date
+                          ).isOverdue
+                            ? "Overdued Time:"
+                            : "Time Left:"}
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <CountdownTimer
+                          startDate={taskDetails.expected_start_date}
+                          targetDate={taskDetails.target_date}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Workflow Status:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <Select
+                          value={
+                            taskDetails.project_status_id
+                              ? String(taskDetails.project_status_id)
+                              : "1"
+                          }
+                          onValueChange={(value) => handleWorkflowChange(value)}
                         >
-                          {tag?.company_tag?.name || tag.name || "Unknown"}
-                        </span>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-900">-</p>
-                    )}
+                          <SelectTrigger className="w-[180px] h-9 bg-[#C72030] text-white border-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statuses.map((status: any) => (
+                              <SelectItem
+                                key={status.id}
+                                value={String(status.id)}
+                              >
+                                {status.status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-gray-600">
+                          Priority:
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {taskDetails.priority || "-"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">
-                    Efforts Duration:
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    {taskDetails.estimated_hour || 0} hours
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">Observer:</p>
-                </div>
-                <div className="flex-1">
-                  {taskDetails.observers && taskDetails.observers.length > 0 ? (
-                    <TooltipProvider>
-                      <div className="flex gap-1">
-                        {taskDetails.observers.map((observer, idx) => (
-                          <Tooltip key={idx}>
-                            <TooltipTrigger asChild>
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#C72030] text-white text-xs font-medium cursor-default">
-                                {getInitials(observer.user_name)}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="text-sm">
-                              {observer.user_name}
-                            </TooltipContent>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </TooltipProvider>
-                  ) : (
-                    <p className="text-sm text-gray-900">-</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">
-                    {calculateDuration(
-                      taskDetails.expected_start_date,
-                      taskDetails.target_date
-                    ).isOverdue
-                      ? "Overdued Time:"
-                      : "Time Left:"}
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <CountdownTimer
-                    startDate={taskDetails.expected_start_date}
-                    targetDate={taskDetails.target_date}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="min-w-[200px]">
-                  <p className="text-sm font-medium text-gray-600">
-                    Workflow Status:
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <Select
-                    value={
-                      taskDetails.project_status_id
-                        ? String(taskDetails.project_status_id)
-                        : "1"
-                    }
-                    onValueChange={(value) => handleWorkflowChange(value)}
-                  >
-                    <SelectTrigger className="w-[180px] h-9 bg-[#C72030] text-white border-none">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map((status: any) => (
-                        <SelectItem key={status.id} value={String(status.id)}>
-                          {status.status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       <AddSubtaskModal
         openTaskModal={openSubTaskModal}
         setOpenTaskModal={setOpenSubTaskModal}
         fetchData={fetchData}
+        isSubSubtask={isSubSubtask}
+        setIsSubSubtask={setIsSubSubtask}
+        subTasks={subtasks}
       />
 
       {/* Tabs Section */}
@@ -1879,11 +2216,7 @@ export const ProjectTaskDetails = () => {
           )}
 
           {/* Activity Log Tab */}
-          {activeTab === "activity_log" && (
-            <ActivityLog
-              taskStatusLogs={(taskDetails as any)?.task_status_logs}
-            />
-          )}
+          {activeTab === "activity_log" && <ActivityLog taskId={taskId} />}
 
           {/* Workflow Status Log Tab */}
           {activeTab === "workflow_status_log" && (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { EnhancedTaskTable } from '@/components/enhanced-table/EnhancedTaskTable';
@@ -8,6 +8,7 @@ import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { TicketPagination } from '@/components/TicketPagination';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/useDebounce';
+import axios from 'axios';
 
 // Type definitions for Sales Order
 interface SalesOrder {
@@ -19,6 +20,7 @@ interface SalesOrder {
     total_amount: number;
     status: string;
     payment_term: string | null;
+    delivery_method: string | null;
     reference_number: string;
     sales_person_name: string;
     active: boolean;
@@ -56,9 +58,17 @@ const columns: ColumnConfig[] = [
         hideable: false,
         draggable: false
     },
+
     {
         key: 'sale_order_number',
-        label: 'Order Number',
+        label: 'Sale Order Number',
+        sortable: true,
+        hideable: true,
+        draggable: true
+    },
+    {
+        key: 'reference_number',
+        label: 'Reference #',
         sortable: true,
         hideable: true,
         draggable: true
@@ -99,6 +109,13 @@ const columns: ColumnConfig[] = [
         draggable: true
     },
     {
+        key: 'delivery_method',
+        label: 'Delivery Method',
+        sortable: true,
+        hideable: true,
+        draggable: true
+    },
+    {
         key: 'sales_person_name',
         label: 'Salesperson',
         sortable: true,
@@ -123,6 +140,8 @@ export const SalesOrderListPage: React.FC = () => {
     const [appliedFilters, setAppliedFilters] = useState<SalesOrderFilters>({});
     const [salesOrderData, setSalesOrderData] = useState<SalesOrder[]>([]);
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
+    const [hasSaleOrderApproval, setHasSaleOrderApproval] = useState(false);
+    const [errorModal, setErrorModal] = useState<{ show: boolean; errors: { id: string; message: string }[] }>({ show: false, errors: [] });
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         current_page: 1,
@@ -133,8 +152,10 @@ export const SalesOrderListPage: React.FC = () => {
         has_prev_page: false
     });
 
+    const lock_account_id = localStorage.getItem("lock_account_id");
 
-    
+
+
 
     // Fetch sales order data from API
     const fetchSalesOrderData = async (page = 1, per_page = 10, search = '', filters: SalesOrderFilters = {}) => {
@@ -143,15 +164,15 @@ export const SalesOrderListPage: React.FC = () => {
             const baseUrl = localStorage.getItem('baseUrl');
             const token = localStorage.getItem('token');
             const params = new URLSearchParams({
-                lock_account_id: '1',
+                lock_account_id: lock_account_id,
                 // page: String(page),
                 // per_page: String(per_page),
             });
-            if (search) params.append('search', search);
-            if (filters.status) params.append('status', filters.status);
-            if (filters.customerId) params.append('customer_id', String(filters.customerId));
-            if (filters.dateFrom) params.append('date_from', filters.dateFrom);
-            if (filters.dateTo) params.append('date_to', filters.dateTo);
+            if (search) params.append('q[sale_order_number_or_customer_name_cont]', search);
+            if (filters.status) params.append('q[status_eq]', filters.status);
+            if (filters.customerId) params.append('q[lock_account_customer_id_eq]', String(filters.customerId));
+            if (filters.dateFrom) params.append('q[date_gteq]', filters.dateFrom);
+            if (filters.dateTo) params.append('q[date_lteq]', filters.dateTo);
 
             const response = await fetch(`https://${baseUrl}/sale_orders.json?${params.toString()}`, {
                 headers: {
@@ -162,7 +183,7 @@ export const SalesOrderListPage: React.FC = () => {
             const data = await response.json();
             console.log('API Response:', data);
             // Assume API returns { data: SalesOrder[], pagination: {...} }
-            setSalesOrderData(Array.isArray(data) ? data: []);
+            setSalesOrderData(Array.isArray(data) ? data : []);
             setPagination(data.pagination || {
                 current_page: page,
                 per_page: per_page,
@@ -186,6 +207,30 @@ export const SalesOrderListPage: React.FC = () => {
     useEffect(() => {
         fetchSalesOrderData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
     }, [currentPage, perPage, debouncedSearchQuery, appliedFilters]);
+
+    // Fetch lock account to check if sale_order approval is enabled
+    useEffect(() => {
+        const fetchLockAccount = async () => {
+            const baseUrl = localStorage.getItem('baseUrl');
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`https://${baseUrl}/get_lock_account.json`, {
+                    headers: {
+                        Authorization: token ? `Bearer ${token}` : undefined,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await response.json();
+                console.log('get_lock_account response:', data);
+                const saleOrderApproval = Array.isArray(data?.approvals) &&
+                    data.approvals.some((a: any) => a.approval_type === 'sale_order' && a.active);
+                setHasSaleOrderApproval(saleOrderApproval);
+            } catch (error) {
+                console.error('Error fetching lock account:', error);
+            }
+        };
+        fetchLockAccount();
+    }, []);
 
     // Handle search
     const handleSearch = (term: string) => {
@@ -228,11 +273,12 @@ export const SalesOrderListPage: React.FC = () => {
     const totalRecords = pagination.total_count;
     const totalPages = pagination.total_pages;
     const displayedData = salesOrderData;
-console.log('Sales Order Data:', salesOrderData);
+    console.log('Sales Order Data:', salesOrderData);
     // Render row function for enhanced table
     const renderRow = (order: SalesOrder) => ({
         actions: (
             <div className="flex items-center gap-2">
+                {/* {order.status !== 'confirmed' && ( */}
                 <input
                     type="checkbox"
                     checked={selectedRows.includes(order.id)}
@@ -245,13 +291,14 @@ console.log('Sales Order Data:', salesOrderData);
                     }}
                     title="Select for status update"
                 />
-                {/* <button
+                {/* )} */}
+                <button
                     onClick={() => handleView(order.id)}
                     className="p-1 text-black hover:bg-gray-100 rounded"
                     title="View"
                 >
                     <Eye className="w-4 h-4" />
-                </button> */}
+                </button>
                 {/* <button
                     onClick={() => handleEdit(order.id)}
                     className="p-1 text-black hover:bg-gray-100 rounded"
@@ -268,8 +315,14 @@ console.log('Sales Order Data:', salesOrderData);
                 </button> */}
             </div>
         ),
+
         sale_order_number: (
             <div className="font-medium text-blue-600">{order.sale_order_number}</div>
+        ),
+        reference_number: (
+            <span className="text-sm text-gray-600">
+                {order.reference_number || '-'}
+            </span>
         ),
         customer_name: (
             <span className="text-sm text-gray-900">{order.customer_name}</span>
@@ -300,39 +353,20 @@ console.log('Sales Order Data:', salesOrderData);
         payment_term: (
             <span className="text-sm text-gray-600">{order.payment_term || '-'}</span>
         ),
+        delivery_method: (
+            <span className="text-sm text-gray-600">{order.delivery_method || '-'}</span>
+        ),
         sales_person_name: (
             <span className="text-sm text-gray-600">{order.sales_person_name}</span>
         ),
         status: (
             <div className="flex items-center justify-center gap-2">
                 {getStatusBadge(order.status)}
-                <input
-                    type="checkbox"
-                    checked={order.fulfilled}
-                    onChange={async () => {
-                        try {
-                            const baseUrl = localStorage.getItem('baseUrl');
-                            const token = localStorage.getItem('token');
-                            const payload = {
-                                sale_order_ids: [order.id],
-                                fulfilled: !order.fulfilled
-                            };
-                            await fetch(`https://${baseUrl}/sale_orders/update_status.json`, {
-                                method: 'POST',
-                                headers: {
-                                    Authorization: token ? `Bearer ${token}` : undefined,
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(payload)
-                            });
-                            fetchSalesOrderData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
-                        } catch (err) {
-                            toast.error('Failed to update fulfilled status');
-                        }
-                    }}
-                    style={{ accentColor: order.fulfilled ? '#22c55e' : '#d1d5db', width: 18, height: 18 }}
-                    title={order.fulfilled ? 'Fulfilled' : 'Not Fulfilled'}
-                />
+                {order.fulfilled && (
+                    <span title="Fulfilled">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </span>
+                )}
             </div>
         )
     });
@@ -354,32 +388,66 @@ console.log('Sales Order Data:', salesOrderData);
         }
     };
 
-    const handleMarkAsConfirmed = async () => {
+    const handleUpdateStatus = async (status: string, successMsg: string, failMsg: string) => {
         if (selectedRows.length === 0) {
             toast.error('Select at least one sales order');
             return;
         }
+
         try {
             const baseUrl = localStorage.getItem('baseUrl');
             const token = localStorage.getItem('token');
-            const payload = {
-                sale_order_ids: selectedRows,
-                status: 'confirmed',
-                fulfilled: true
-            };
-            await fetch(`https://${baseUrl}/sale_orders/update_status.json`, {
-                method: 'POST',
-                headers: {
-                    Authorization: token ? `Bearer ${token}` : undefined,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            });
-            toast.success('Status updated successfully');
+
+            const response = await axios.post(
+                `https://${baseUrl}/sale_orders/update_status.json`,
+                { sale_order_ids: selectedRows, status },
+                { headers: { Authorization: token ? `Bearer ${token}` : undefined }, validateStatus: () => true }
+            );
+
+            if (response.status === 422) {
+                const { message, errors } = response.data;
+                if (Array.isArray(errors) && errors.length > 0) {
+                    setErrorModal({ show: true, errors });
+                } else {
+                    setErrorModal({ show: true, errors: [{ id: '-', message: message || failMsg }] });
+                }
+                return;
+            }
+
+            toast.success(successMsg);
             setSelectedRows([]);
             fetchSalesOrderData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
-        } catch (err) {
-            toast.error('Failed to update status');
+        } catch (error) {
+            console.error(error);
+            toast.error(failMsg);
+        }
+    };
+
+    const handleMarkAsConfirmed = () => handleUpdateStatus('confirmed', 'Sales orders marked as confirmed', 'Failed to mark sales orders as confirmed');
+
+    const handleSubmitForApproval = () => handleUpdateStatus('pending_approval', 'Sales orders submitted for approval', 'Failed to submit sales orders for approval');
+
+    const handleMarkAsFulfilled = async () => {
+        if (selectedRows.length === 0) { toast.error('Select at least one sales order'); return; }
+        try {
+            const baseUrl = localStorage.getItem('baseUrl');
+            const token = localStorage.getItem('token');
+            const response = await axios.post(
+                `https://${baseUrl}/sale_orders/update_status.json`,
+                { sale_order_ids: selectedRows, fulfilled: true },
+                { headers: { Authorization: token ? `Bearer ${token}` : undefined }, validateStatus: () => true }
+            );
+            if (response.status >= 400) {
+                const { message, errors } = response.data;
+                if (Array.isArray(errors) && errors.length > 0) { setErrorModal({ show: true, errors }); }
+                else { setErrorModal({ show: true, errors: [{ id: '-', message: message || 'Failed to mark as fulfilled' }] }); }
+                return;
+            }
+            toast.success('Sales orders marked as fulfilled');
+            setSelectedRows([]);
+            fetchSalesOrderData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
+        } catch (error) {
+            toast.error('Failed to mark as fulfilled');
         }
     };
 
@@ -397,7 +465,6 @@ console.log('Sales Order Data:', salesOrderData);
                 hideTableExport={true}
                 hideTableSearch={false}
                 enableSearch={true}
-                isLoading={loading}
                 searchTerm={searchTerm}
                 onSearchChange={handleSearch}
                 loading={loading}
@@ -410,12 +477,30 @@ console.log('Sales Order Data:', salesOrderData);
                             <Plus className="w-4 h-4 mr-2" /> Add
                         </Button>
                         {selectedRows.length > 0 && (
-                            <Button
-                                className='bg-green-600 text-white hover:bg-green-700'
-                                onClick={handleMarkAsConfirmed}
-                            >
-                                Mark as Confirmed
-                            </Button>
+                            <>
+                                {hasSaleOrderApproval ? (
+                                    <Button
+                                        className="bg-[#C72030] text-white hover:bg-[#a81a28]"
+                                        onClick={handleSubmitForApproval}
+                                    >
+                                        Submit for Approval
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        className="bg-green-600 text-white hover:bg-green-700"
+                                        onClick={handleMarkAsConfirmed}
+                                    >
+                                        Mark as Confirmed
+                                    </Button>
+                                )}
+                                <Button
+                                    className="bg-blue-600 text-white hover:bg-blue-700"
+                                    onClick={handleMarkAsFulfilled}
+                                >
+                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                    Mark as Fulfilled
+                                </Button>
+                            </>
                         )}
                     </div>
                 )}
@@ -431,6 +516,49 @@ console.log('Sales Order Data:', salesOrderData);
                     onPageChange={handlePageChange}
                     onPerPageChange={handlePerPageChange}
                 />
+            )}
+
+            {/* Bulk Update Error Modal */}
+            {errorModal.show && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
+                        <div className="flex items-center justify-between px-5 py-4 border-b">
+                            <h2 className="text-base font-semibold text-gray-800">Bulk Update Error Summary</h2>
+                            <button
+                                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                                onClick={() => setErrorModal({ show: false, errors: [] })}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="px-5 py-4 max-h-80 overflow-y-auto">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="text-left px-3 py-2 border border-gray-200 font-semibold text-gray-700">SALE ORDER</th>
+                                        <th className="text-left px-3 py-2 border border-gray-200 font-semibold text-gray-700">ERROR DETAILS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {errorModal.errors.map((err, i) => (
+                                        <tr key={i} className="hover:bg-gray-50">
+                                            <td className="px-3 py-2 border border-gray-200 text-gray-800 font-medium">{err.id}</td>
+                                            <td className="px-3 py-2 border border-gray-200 text-black-600">{err.message}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="px-5 py-3 border-t flex justify-end">
+                            <Button
+                                className="bg-[#C72030] text-white hover:bg-[#a81a28] px-6"
+                                onClick={() => setErrorModal({ show: false, errors: [] })}
+                            >
+                                OK
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

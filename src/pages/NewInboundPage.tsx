@@ -105,8 +105,8 @@ export const NewInboundPage = () => {
     };
 
     const sanitizeText = (value: string) => value?.trim() || '';
-const MOBILE_NUMBER_REGEX = /^\d{10}$/;
-const isValidMobileNumber = (value: string) => MOBILE_NUMBER_REGEX.test(value);
+    const MOBILE_NUMBER_REGEX = /^\d{10}$/;
+    const isValidMobileNumber = (value: string) => MOBILE_NUMBER_REGEX.test(value);
 
     const getSelectedSiteId = () => {
         if (typeof window === 'undefined') return '';

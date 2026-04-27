@@ -1,7 +1,20 @@
-import { Dialog, DialogContent, FormControl, InputLabel, MenuItem, Select, Slide, TextField } from "@mui/material"
+import {
+    Dialog,
+    DialogContent,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    Slide,
+    TextField,
+    MenuList,
+    IconButton,
+} from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
-import { CalendarIcon, X } from "lucide-react"
+import { CalendarIcon, X, Mic, MicOff } from "lucide-react";
+import Quill from "quill";
 import { forwardRef, useEffect, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { DurationPicker } from "./DurationPicker";
 import { CustomCalender } from "./CustomCalender";
 import { TaskDatePicker } from "./TaskDatePicker";
@@ -9,12 +22,26 @@ import TasksOfDate from "./TasksOfDate";
 import MuiMultiSelect from "./MuiMultiSelect";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import axios from "axios";
-import { removeTagFromProject } from "@/store/slices/projectManagementSlice";
-import { createProjectTask, fetchProjectTasksById, fetchTargetDateTasks, fetchUserAvailability } from "@/store/slices/projectTasksSlice";
+import {
+    removeTagFromProject,
+    fetchProjectById,
+    fetchKanbanProjects,
+} from "@/store/slices/projectManagementSlice";
+import {
+    createProjectTask,
+    fetchProjectTasksById,
+    fetchTargetDateTasks,
+    fetchUserAvailability,
+} from "@/store/slices/projectTasksSlice";
 import { fetchFMUsers } from "@/store/slices/fmUserSlice";
 import { fetchProjectsTags } from "@/store/slices/projectTagSlice";
+import {
+    fetchMilestoneById,
+    fetchMilestones,
+} from "@/store/slices/projectMilestoneSlice";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 
 interface SubTask {
     estimated_hour?: number;
@@ -23,7 +50,77 @@ interface SubTask {
 interface ParentTask {
     estimated_hour?: number;
     sub_tasks_managements?: SubTask[];
+    project_management_id?: number | string;
+    project_milestone_id?: number | string;
+    project_milestone?: {
+        id: number | string;
+        name: string;
+    };
+    project_management?: {
+        id: number | string;
+        title: string;
+    };
 }
+
+// Virtualized wrapper for task rendering
+const VirtualizedTaskMenuContent = ({
+    tasks,
+    renderItem,
+}: {
+    tasks: any[];
+    renderItem: (task: any) => React.ReactNode;
+}) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    const virtualizer = useVirtualizer({
+        count: tasks.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => 35,
+        measureElement: (el) => el?.getBoundingClientRect().height,
+        overscan: 5,
+    });
+
+    const virtualItems = virtualizer.getVirtualItems();
+
+    if (!tasks.length || tasks.length < 10) {
+        return <>{tasks.map((task) => renderItem(task))}</>;
+    }
+
+    return (
+        <div
+            ref={containerRef}
+            style={{
+                height: "300px",
+                overflow: "auto",
+                scrollbarWidth: "thin",
+            }}
+        >
+            <div
+                style={{
+                    height: `${virtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                }}
+            >
+                {virtualItems.map((virtualItem) => (
+                    <div
+                        key={virtualItem.key}
+                        data-index={virtualItem.index}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            transform: `translateY(${virtualItem.start}px)`,
+                        }}
+                    >
+                        {renderItem(tasks[virtualItem.index])}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const Transition = forwardRef(function Transition(
     props: TransitionProps & { children: React.ReactElement },
@@ -74,14 +171,35 @@ const SubtaskForm = ({
     setStartDate,
     endDate,
     setEndDate,
+    isInlineMode = false,
+    isSubSubtask = false,
+    subTasks = [],
+    selectedParentTaskId,
+    setSelectedParentTaskId,
 }) => {
-    const { data: userAvailabilityData } = useAppSelector((state) => state.fetchUserAvailability);
-    const userAvailability = Array.isArray(userAvailabilityData) ? userAvailabilityData : [];
+    const { data: userAvailabilityData } = useAppSelector(
+        (state) => state.fetchUserAvailability
+    );
+    const userAvailability = Array.isArray(userAvailabilityData)
+        ? userAvailabilityData
+        : [];
+
+    const {
+        isListening,
+        activeId,
+        transcript,
+        supported,
+        startListening,
+        stopListening,
+    } = useSpeechToText();
+    const [baseValue, setBaseValue] = useState("");
+    const quillRef = useRef<HTMLDivElement>(null);
+    const quillEditorRef = useRef<Quill | null>(null);
 
     const startDateRef = useRef(null);
     const endDateRef = useRef(null);
 
-    const [shift, setShift] = useState([])
+    const [shift, setShift] = useState([]);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [startDateTasks, setStartDateTasks] = useState([]);
@@ -93,18 +211,77 @@ const SubtaskForm = ({
     const collapsibleRef = useRef(null);
     const startCollapsibleRef = useRef(null);
 
+    // Handle STT for Description
+    useEffect(() => {
+        if (isListening && transcript && activeId === "subtask-description") {
+            const newValue = baseValue ? `${baseValue} ${transcript}` : transcript;
+            if (quillEditorRef.current) {
+                const formattedValue = newValue.startsWith("<")
+                    ? newValue
+                    : `<p>${newValue}</p>`;
+                quillEditorRef.current.root.innerHTML = formattedValue;
+                setFormData((prev) => ({
+                    ...prev,
+                    description: formattedValue,
+                }));
+            }
+        }
+    }, [isListening, transcript, activeId, baseValue, setFormData]);
+
+    // Initialize Quill Editor
+    useEffect(() => {
+        if (quillRef.current && !quillEditorRef.current) {
+            quillEditorRef.current = new Quill(quillRef.current, {
+                theme: "snow",
+                placeholder: "Enter Description...",
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ["bold", "italic", "underline", "strike"],
+                        ["blockquote"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["link"],
+                        ["clean"],
+                    ],
+                },
+            });
+
+            // Handle text changes
+            quillEditorRef.current.on("text-change", () => {
+                const htmlContent = quillEditorRef.current?.root.innerHTML;
+                setFormData((prev) => ({
+                    ...prev,
+                    description: htmlContent || "",
+                }));
+            });
+        }
+    }, [setFormData]);
+
+    // Update Quill editor when description changes
+    useEffect(() => {
+        if (quillEditorRef.current && formData.description) {
+            const currentContent = quillEditorRef.current.root.innerHTML;
+            if (currentContent !== formData.description) {
+                quillEditorRef.current.root.innerHTML = formData.description;
+            }
+        }
+    }, [formData.description]);
+
     const fetchShifts = async (id) => {
         try {
-            const response = await axios.get(`https://${baseUrl}/pms/admin/user_shifts.json?user_id=${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            const response = await axios.get(
+                `https://${baseUrl}/pms/admin/user_shifts.json?user_id=${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
-            });
+            );
             setShift(response.data.user_shifts);
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
     useEffect(() => {
         if (Array.isArray(userAvailability) && userAvailability.length > 0) {
@@ -119,11 +296,11 @@ const SubtaskForm = ({
     useEffect(() => {
         if (startCollapsibleRef.current) {
             if (showStartDatePicker) {
-                startCollapsibleRef.current.style.height = 'auto';
-                startCollapsibleRef.current.style.opacity = '1';
+                startCollapsibleRef.current.style.height = "auto";
+                startCollapsibleRef.current.style.opacity = "1";
             } else {
-                startCollapsibleRef.current.style.height = '0';
-                startCollapsibleRef.current.style.opacity = '0';
+                startCollapsibleRef.current.style.height = "0";
+                startCollapsibleRef.current.style.opacity = "0";
             }
         }
     }, [showStartDatePicker]);
@@ -131,11 +308,11 @@ const SubtaskForm = ({
     useEffect(() => {
         if (collapsibleRef.current) {
             if (showDatePicker) {
-                collapsibleRef.current.style.height = 'auto';
-                collapsibleRef.current.style.opacity = '1';
+                collapsibleRef.current.style.height = "auto";
+                collapsibleRef.current.style.opacity = "1";
             } else {
-                collapsibleRef.current.style.height = '0';
-                collapsibleRef.current.style.opacity = '0';
+                collapsibleRef.current.style.height = "0";
+                collapsibleRef.current.style.opacity = "0";
             }
         }
     }, [showDatePicker]);
@@ -219,11 +396,40 @@ const SubtaskForm = ({
     };
 
     return (
-        <div className="p-4 bg-white relative">
+        <div className={`${isInlineMode ? "p-0" : "p-4"} bg-white relative`}>
+            {
+                isSubSubtask && (
+                    <div className="mb-4">
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Subtask *</InputLabel>
+                            <Select
+                                label="Subtask *"
+                                name="subtask"
+                                value={selectedParentTaskId}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setSelectedParentTaskId(value);
+                                }}
+                                displayEmpty
+                                sx={fieldStyles}
+                            >
+                                <MenuItem value="">
+                                    <em>Select Subtask</em>
+                                </MenuItem>
+                                {subTasks?.map((subtask: any) => (
+                                    <MenuItem key={subtask?.id} value={subtask?.id}>
+                                        {subtask?.title}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                )
+            }
             <div className="mb-1">
                 <TextField
                     fullWidth
-                    label="Subtask Title *"
+                    label={isSubSubtask ? "Sub-Subtask Title *" : "Subtask Title *"}
                     name="title"
                     placeholder="Enter Subtask Title"
                     value={formData.title}
@@ -235,40 +441,55 @@ const SubtaskForm = ({
             </div>
 
             <div className="mb-1">
-                <TextField
-                    fullWidth
-                    label="Description"
-                    name="description"
-                    placeholder="Enter Description"
-                    multiline
-                    rows={3}
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                        mt: 1,
-                        "& .MuiOutlinedInput-root": {
-                            height: "auto !important",
-                            padding: "2px !important",
-                            display: "flex",
-                        },
-                        "& .MuiInputBase-input[aria-hidden='true']": {
-                            flex: 0,
-                            width: 0,
-                            height: 0,
-                            padding: "0 !important",
-                            margin: 0,
-                            display: "none",
-                        },
-                        "& .MuiInputBase-input": {
-                            resize: "none !important",
-                        },
+                <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">Description</label>
+                    {supported && (
+                        <IconButton
+                            size="small"
+                            onClick={() => {
+                                if (isListening && activeId === "subtask-description") {
+                                    stopListening();
+                                } else {
+                                    const currentText = quillEditorRef.current
+                                        ? quillEditorRef.current.root.innerHTML
+                                        : formData.description;
+                                    setBaseValue(
+                                        currentText === "<p><br></p>" ? "" : currentText
+                                    );
+                                    startListening("subtask-description");
+                                }
+                            }}
+                            color={
+                                isListening && activeId === "subtask-description"
+                                    ? "secondary"
+                                    : "default"
+                            }
+                            sx={{
+                                color:
+                                    isListening && activeId === "subtask-description"
+                                        ? "#C72030"
+                                        : "inherit",
+                            }}
+                        >
+                            {isListening && activeId === "subtask-description" ? (
+                                <Mic size={18} />
+                            ) : (
+                                <MicOff size={18} />
+                            )}
+                        </IconButton>
+                    )}
+                </div>
+                <div
+                    ref={quillRef}
+                    style={{
+                        border: "1px solid rgba(0, 0, 0, 0.23)",
+                        borderRadius: "4px",
+                        minHeight: "150px",
                     }}
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-3 mb-3">
+            <div className="grid grid-cols-1 gap-3 mb-3 mt-6">
                 <div>
                     <FormControl fullWidth variant="outlined">
                         <InputLabel shrink>Responsible Person *</InputLabel>
@@ -285,10 +506,14 @@ const SubtaskForm = ({
                                     ...formData,
                                     responsiblePerson: value,
                                     responsiblePersonName:
-                                        selectedUser?.user?.full_name || selectedUser?.full_name || "",
+                                        selectedUser?.user?.full_name ||
+                                        selectedUser?.full_name ||
+                                        "",
                                 });
                                 if (value) {
-                                    dispatch(fetchUserAvailability({ baseUrl, token, id: value }));
+                                    dispatch(
+                                        fetchUserAvailability({ baseUrl, token, id: value })
+                                    );
                                     fetchShifts(value);
                                 }
                             }}
@@ -324,7 +549,9 @@ const SubtaskForm = ({
 
             <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label className="block text-xs text-gray-700 mb-1">Target Date *</label>
+                    <label className="block text-xs text-gray-700 mb-1">
+                        Target Date *
+                    </label>
                     <button
                         type="button"
                         className="w-full border outline-none border-gray-300 px-3 py-2 text-[13px] flex items-center gap-2 text-gray-400 rounded"
@@ -340,11 +567,16 @@ const SubtaskForm = ({
                             <div className="text-black flex items-center justify-between w-full">
                                 <CalendarIcon className="w-4 h-4" />
                                 <div>
-                                    Target Date :{" "}
-                                    {endDate.date.toString().padStart(2, "0")}{" "}
+                                    Target Date : {endDate.date.toString().padStart(2, "0")}{" "}
                                     {monthNames[endDate.month]}
                                 </div>
-                                <X className="w-4 h-4" onClick={(e) => { e.preventDefault(); setEndDate(null); }} />
+                                <X
+                                    className="w-4 h-4"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setEndDate(null);
+                                    }}
+                                />
                             </div>
                         ) : (
                             <>
@@ -370,11 +602,16 @@ const SubtaskForm = ({
                             <div className="text-black flex items-center justify-between w-full">
                                 <CalendarIcon className="w-4 h-4" />
                                 <div>
-                                    Start Date : {" "}
-                                    {startDate?.date?.toString().padStart(2, "0")}{" "}
+                                    Start Date : {startDate?.date?.toString().padStart(2, "0")}{" "}
                                     {monthNames[startDate.month]}
                                 </div>
-                                <X className="w-4 h-4" onClick={(e) => { e.preventDefault(); setStartDate(null); }} />
+                                <X
+                                    className="w-4 h-4"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setStartDate(null);
+                                    }}
+                                />
                             </div>
                         ) : (
                             <>
@@ -502,51 +739,137 @@ const SubtaskForm = ({
             <div className="mb-6">
                 <MuiMultiSelect
                     label="Tags"
-                    options={tags.map((tag) => ({ value: tag.id, label: tag.name, id: tag.id }))}
+                    options={tags.map((tag) => ({
+                        value: tag.id,
+                        label: tag.name,
+                        id: tag.id,
+                    }))}
                     value={formData.tags}
                     onChange={(values) => handleMultiSelectChange("tags", values)}
                     placeholder="Select Tags"
                 />
             </div>
+
+            <style>{`
+                .ql-toolbar {
+                    background-color: #fafafa;
+                    border: 1px solid rgba(0, 0, 0, 0.23);
+                    border-bottom: none;
+                    border-radius: 4px 4px 0 0;
+                }
+                .ql-toolbar button {
+                    color: #01569E;
+                }
+                .ql-toolbar button:hover {
+                    color: #C72030;
+                    background-color: rgba(199, 32, 48, 0.1);
+                }
+                .ql-toolbar button.ql-active {
+                    color: #C72030;
+                    background-color: rgba(199, 32, 48, 0.1);
+                }
+                .ql-container {
+                    font-family: inherit;
+                    border: 1px solid rgba(0, 0, 0, 0.23);
+                    border-top: none;
+                    border-radius: 0 0 4px 4px;
+                }
+                .ql-editor {
+                    min-height: 150px;
+                    padding: 10px;
+                    font-size: 14px;
+                }
+                .ql-editor.ql-blank::before {
+                    color: rgba(0, 0, 0, 0.4);
+                }
+            `}</style>
         </div>
     );
 };
 
 // Main AddSubtaskModal Component
-const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openTaskModal: boolean, setOpenTaskModal: (value: boolean) => void, fetchData: () => void }) => {
-    const { id: pid, mid, taskId } = useParams();
+const AddSubtaskModal = ({
+    openTaskModal,
+    setOpenTaskModal,
+    fetchData,
+    parentTaskId: propParentTaskId,
+    prefillData: propPrefillData,
+    availableTasks: propAvailableTasks,
+    isInlineMode = false,
+    isSubSubtask = false,
+    setIsSubSubtask,
+    subTasks = [],
+}: {
+    openTaskModal: boolean | string;
+    setOpenTaskModal: (value: boolean | string) => void;
+    fetchData: () => void;
+    parentTaskId?: number;
+    prefillData?: any;
+    availableTasks?: any[];
+    isInlineMode?: boolean;
+    isSubSubtask?: boolean;
+    setIsSubSubtask?: (value: boolean) => void;
+    subTasks?: any[];
+}) => {
+    const { id: pid, mid, taskId: urlTaskId } = useParams();
+    const initialParentTaskId = propParentTaskId || urlTaskId;
+    const [selectedParentTaskId, setSelectedParentTaskId] = useState<
+        number | null
+    >(initialParentTaskId ? Number(initialParentTaskId) : null);
     const token = localStorage.getItem("token");
     const baseUrl = localStorage.getItem("baseUrl");
     const dispatch = useAppDispatch();
 
-    const { data: parentTask } = useAppSelector((state) => state.fetchProjectTasksById) as { data: ParentTask | undefined };
+    const { data: parentTask } = useAppSelector(
+        (state) => state.fetchProjectTasksById
+    ) as { data: ParentTask | undefined };
+    const { data: project } = useAppSelector((state) => state.fetchProjectById);
+    const { data: milestone } = useAppSelector(
+        (state) => state.fetchMilestoneById
+    );
 
-    const [tags, setTags] = useState([])
-    const [users, setUsers] = useState([])
-    const [taskDuration, setTaskDuration] = useState(null)
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [tags, setTags] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [availableTasks, setAvailableTasks] = useState<any[]>([]);
+    const [projects, setProjects] = useState<any[]>([]);
+    const [milestones, setMilestones] = useState<any[]>([]);
+    const [selectedProject, setSelectedProject] = useState("");
+    const [selectedMilestone, setSelectedMilestone] = useState("");
+    const [taskDuration, setTaskDuration] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [totalWorkingHours, setTotalWorkingHours] = useState(0);
     const [dateWiseHours, setDateWiseHours] = useState([]);
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [prevTags, setPrevTags] = useState([]);
     const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        responsiblePerson: "",
+        title: propPrefillData?.title || "",
+        description: propPrefillData?.description || "",
+        responsiblePerson: propPrefillData?.responsiblePerson || "",
         responsiblePersonName: "",
         priority: "",
-        tags: [],
-    })
+        tags: propPrefillData?.tags || [],
+    });
 
     const getTags = async () => {
         try {
             const response = await dispatch(fetchProjectsTags()).unwrap();
             setTags(response);
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
-    }
+    };
+
+    const getProjects = async () => {
+        try {
+            const response = await dispatch(
+                fetchKanbanProjects({ baseUrl, token })
+            ).unwrap();
+            setProjects(response.project_managements);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     const getUsers = async () => {
         try {
@@ -556,34 +879,131 @@ const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openT
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-            const validUsers = (response.data.users || []).filter((user: any) => user && user.id);
+            const validUsers = (response.data.users || []).filter(
+                (user: any) => user && user.id
+            );
             setUsers(validUsers);
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
-    }
+    };
 
     useEffect(() => {
         getUsers();
         getTags();
-    }, [])
+        getProjects();
+    }, []);
 
     useEffect(() => {
         const fetchParentTask = async () => {
             try {
-                if (taskId) {
-                    await dispatch(fetchProjectTasksById({ baseUrl, token, id: taskId })).unwrap();
+                if (selectedParentTaskId) {
+                    const taskData = await dispatch(
+                        fetchProjectTasksById({
+                            baseUrl,
+                            token,
+                            id: String(selectedParentTaskId),
+                        })
+                    ).unwrap();
+
+                    // Fetch project and milestone data
+                    if (taskData?.project_management_id) {
+                        dispatch(
+                            fetchProjectById({
+                                baseUrl,
+                                token,
+                                id: String(taskData.project_management_id),
+                            })
+                        );
+                        setSelectedProject(String(taskData.project_management_id));
+                    }
+                    if (taskData?.project_milestone_id) {
+                        dispatch(
+                            fetchMilestoneById({
+                                baseUrl,
+                                token,
+                                id: String(taskData.project_milestone_id),
+                            })
+                        );
+                        setSelectedMilestone(String(taskData.project_milestone_id));
+                    }
                 }
             } catch (error) {
-                console.log(error)
+                console.log(error);
             }
-        }
+        };
 
         fetchParentTask();
-    }, []);
+    }, [selectedParentTaskId]);
+
+    useEffect(() => {
+        const getMilestones = async () => {
+            if (!selectedProject) return;
+
+            try {
+                const response = await dispatch(
+                    fetchMilestones({ baseUrl, token, id: selectedProject })
+                ).unwrap();
+                setMilestones(response);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        getMilestones();
+    }, [selectedProject]);
+
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const queryParams = new URLSearchParams();
+                if (!selectedMilestone) {
+                    queryParams.append(
+                        "q[responsible_person_id_eq]",
+                        JSON.parse(localStorage.getItem("user"))?.id
+                    );
+                }
+                if (selectedMilestone) {
+                    queryParams.append("q[milestone_id_eq]", selectedMilestone);
+                }
+                const response = await axios.get(
+                    `https://${baseUrl}/task_managements/kanban.json?${queryParams.toString()}`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                const tasks = response.data || [];
+                setAvailableTasks(tasks);
+            } catch (error) {
+                console.log(error);
+                toast.error("Failed to fetch tasks");
+            }
+        };
+
+        fetchTasks();
+    }, [selectedMilestone]);
 
     const handleCloseModal = () => {
         setOpenTaskModal(false);
+        if (isSubSubtask && setIsSubSubtask) {
+            setIsSubSubtask(false);
+        }
+        // Clear form
+        setFormData({
+            title: "",
+            description: "",
+            responsiblePerson: "",
+            responsiblePersonName: "",
+            priority: "",
+            tags: [],
+        });
+        setTotalWorkingHours(0);
+        setDateWiseHours([]);
+        setStartDate(null);
+        setEndDate(null);
+        setSelectedProject("");
+        setSelectedMilestone("");
+        setTaskDuration(null);
     };
 
     const validateForm = () => {
@@ -597,7 +1017,7 @@ const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openT
             return false;
         }
         return true;
-    }
+    };
 
     const validateSubtaskDuration = () => {
         if (!parentTask) {
@@ -607,10 +1027,9 @@ const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openT
         const parentEstimatedHours = parentTask.estimated_hour || 0;
 
         // Calculate total estimated hours of existing subtasks
-        const existingSubtasksHours = (parentTask.sub_tasks_managements || []).reduce(
-            (sum, subtask) => sum + (subtask.estimated_hour || 0),
-            0
-        );
+        const existingSubtasksHours = (
+            parentTask.sub_tasks_managements || []
+        ).reduce((sum, subtask) => sum + (subtask.estimated_hour || 0), 0);
 
         // New subtask hours
         const newSubtaskHours = Number(totalWorkingHours) || 0;
@@ -633,18 +1052,18 @@ const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openT
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateForm()) return
+        if (!validateForm()) return;
 
         if (!validateSubtaskDuration()) return;
 
-        setIsSubmitting(true)
+        setIsSubmitting(true);
         const formatedStartDate = `${startDate?.year}-${startDate?.month + 1}-${startDate?.date
             }`;
         const formatedEndDate = `${endDate?.year}-${endDate?.month + 1}-${endDate?.date
             }`;
         const payload = {
             task_management: {
-                parent_id: taskId,
+                parent_id: selectedParentTaskId,
                 title: formData.title,
                 description: formData.description,
                 responsible_person_id: formData.responsiblePerson,
@@ -654,41 +1073,177 @@ const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openT
                 priority: formData.priority,
                 task_tag_ids: formData.tags.map((tag) => tag.value),
                 task_allocation_times_attributes: dateWiseHours,
-                project_management_id: pid
-            }
+                ...(pid && { project_management_id: pid }),
+            },
         };
         try {
-            await dispatch(createProjectTask({ baseUrl, token, data: payload })).unwrap();
+            await dispatch(
+                createProjectTask({ baseUrl, token, data: payload })
+            ).unwrap();
             toast.success("Subtask created successfully");
             handleCloseModal();
             fetchData();
         } catch (error) {
-            console.log(error)
+            console.log(error);
         } finally {
-            setIsSubmitting(false)
+            setIsSubmitting(false);
         }
+    };
+
+    if (isInlineMode) {
+        return (
+            <form
+                className="pb-6 overflow-y-auto text-[12px] px-4"
+                onSubmit={handleSubmit}
+            >
+                <div className="flex items-center justify-between gap-3 mb-4 mt-4">
+                    <div className="flex-1">
+                        <FormControl fullWidth variant="outlined" size="small">
+                            <InputLabel>Project</InputLabel>
+                            <Select
+                                label="Project"
+                                value={selectedProject || ""}
+                                onChange={(e) => setSelectedProject(e.target.value)}
+                                displayEmpty
+                            >
+                                <MenuItem value="">
+                                    <em>Select Project</em>
+                                </MenuItem>
+                                {projects.map((proj) => (
+                                    <MenuItem key={proj.id} value={proj.id}>
+                                        {proj.title}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                    <div className="flex-1">
+                        <FormControl
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            disabled={!selectedProject}
+                        >
+                            <InputLabel>Milestone</InputLabel>
+                            <Select
+                                label="Milestone"
+                                value={selectedMilestone || ""}
+                                onChange={(e) => setSelectedMilestone(e.target.value)}
+                                displayEmpty
+                            >
+                                <MenuItem value="">
+                                    <em>Select Milestone</em>
+                                </MenuItem>
+                                {milestones.map((mile) => (
+                                    <MenuItem key={mile.id} value={mile.id}>
+                                        {mile.title}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                </div>
+
+                <div className="mb-4">
+                    <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel shrink>Task</InputLabel>
+                        <Select
+                            label="Task"
+                            value={selectedParentTaskId || ""}
+                            onChange={(e) => setSelectedParentTaskId(Number(e.target.value))}
+                            displayEmpty
+                            MenuProps={{
+                                PaperProps: {
+                                    style: {
+                                        maxHeight: "auto",
+                                        overflow: "visible",
+                                    },
+                                },
+                            }}
+                        >
+                            <VirtualizedTaskMenuContent
+                                tasks={availableTasks}
+                                renderItem={(task) => (
+                                    <MenuItem key={task.id} value={task.id}>
+                                        {task.title}
+                                    </MenuItem>
+                                )}
+                            />
+                        </Select>
+                    </FormControl>
+                </div>
+
+                <SubtaskForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    users={users}
+                    tags={tags}
+                    prevTags={prevTags}
+                    setPrevTags={setPrevTags}
+                    dispatch={dispatch}
+                    token={token}
+                    baseUrl={baseUrl}
+                    taskDuration={taskDuration}
+                    setTaskDuration={setTaskDuration}
+                    setDateWiseHours={setDateWiseHours}
+                    totalWorkingHours={totalWorkingHours}
+                    setTotalWorkingHours={setTotalWorkingHours}
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                    isInlineMode={true}
+                    selectedParentTaskId={selectedParentTaskId}
+                    setSelectedParentTaskId={setSelectedParentTaskId}
+                />
+
+                <div className="flex justify-end gap-3 mt-6">
+                    <button
+                        type="button"
+                        onClick={() => setOpenTaskModal(false)}
+                        className="flex items-center justify-center border-2 text-gray-600 border-gray-400 px-4 py-2"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="flex items-center justify-center border-2 text-white bg-[#C72030] border-[#C72030] px-4 py-2"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? "Creating..." : "Create Subtask"}
+                    </button>
+                </div>
+            </form>
+        );
     }
 
     return (
         <Dialog
-            open={openTaskModal}
+            open={typeof openTaskModal === "boolean" ? openTaskModal : true}
             onClose={handleCloseModal}
             TransitionComponent={Transition}
             maxWidth={false}
         >
             <DialogContent
                 className="w-1/2 h-full fixed right-0 top-0 rounded-none bg-[#fff] text-sm overflow-y-auto"
-                style={{ margin: 0, maxHeight: "100vh", display: "flex", flexDirection: "column" }}
+                style={{
+                    margin: 0,
+                    maxHeight: "100vh",
+                    display: "flex",
+                    flexDirection: "column",
+                }}
                 sx={{
                     padding: "0 !important",
                     "& .MuiDialogContent-root": {
                         padding: "0 !important",
                         overflow: "auto",
-                    }
+                    },
                 }}
             >
                 <div className="sticky top-0 bg-white z-10">
-                    <h3 className="text-[14px] font-medium text-center mt-8">Create Subtask</h3>
+                    <h3 className="text-[14px] font-medium text-center mt-8">
+                        {isSubSubtask ? "Create Sub-Subtask" : "Create Subtask"}
+                    </h3>
                     <X
                         className="absolute top-[26px] right-8 cursor-pointer w-4 h-4"
                         onClick={handleCloseModal}
@@ -724,6 +1279,10 @@ const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openT
                                 setStartDate={setStartDate}
                                 endDate={endDate}
                                 setEndDate={setEndDate}
+                                isSubSubtask={isSubSubtask}
+                                subTasks={subTasks}
+                                selectedParentTaskId={selectedParentTaskId}
+                                setSelectedParentTaskId={setSelectedParentTaskId}
                             />
                             <div className="flex justify-center">
                                 <button
@@ -739,7 +1298,7 @@ const AddSubtaskModal = ({ openTaskModal, setOpenTaskModal, fetchData }: { openT
                 </div>
             </DialogContent>
         </Dialog>
-    )
-}
+    );
+};
 
-export default AddSubtaskModal
+export default AddSubtaskModal;

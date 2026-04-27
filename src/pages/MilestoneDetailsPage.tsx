@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ScrollText, ClipboardList, Pencil, Trash2, ChevronDown, ChevronDownCircle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -13,6 +14,14 @@ import { format } from "date-fns";
 import { MenuItem, Select, TextField, FormControl } from "@mui/material";
 import { useLayout } from "@/contexts/LayoutContext";
 import axios from "axios";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface Dependency {
   title?: string;
@@ -26,6 +35,7 @@ interface Dependency {
 interface MilestoneData {
   id?: string | number;
   title?: string;
+  description?: string;
   status?: string;
   created_by_name?: string;
   created_at?: string;
@@ -185,26 +195,38 @@ export const MilestoneDetailsPage = () => {
   const [selectedOption, setSelectedOption] = useState("Open");
   const [isDetailsCollapsed, setIsDetailsCollapsed] = useState(false);
   const [isDependencyCollapsed, setIsDependencyCollapsed] = useState(false);
+  const [isFirstCollapsed, setIsFirstCollapsed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDependenciesLoading, setIsDependenciesLoading] = useState(true);
+  const [projectName, setProjectName] = useState<string>('');
+  const [milestoneName, setMilestoneName] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const firstContentRef = useRef<HTMLDivElement>(null);
 
   const fetchData = async () => {
     try {
+      setIsLoading(true);
       const response = await dispatch(fetchMilestoneById({ baseUrl, token, id: mid })).unwrap();
       setMilestoneDetails(response);
       setSelectedOption(mapStatusToDisplay(response.status));
     } catch (error) {
       console.error("Error fetching milestone details:", error);
       toast.error(String(error) || "Failed to fetch milestone details");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const getDependencies = async () => {
     try {
+      setIsDependenciesLoading(true);
       const response = await dispatch(fetchDependentMilestones({ baseUrl, token, id: mid })).unwrap();
-      setDependencies(response);
+      setDependencies(response.milestones || []);
     } catch (error) {
       console.error("Error fetching dependencies:", error);
       toast.error(String(error) || "Failed to fetch dependencies");
+    } finally {
+      setIsDependenciesLoading(false);
     }
   };
 
@@ -223,10 +245,46 @@ export const MilestoneDetailsPage = () => {
     }
   };
 
+  const fetchProjectAndMilestoneNames = async () => {
+    try {
+      // Fetch project name
+      if (id) {
+        const projectResponse = baseUrl
+          ? await axios.get(`https://${baseUrl}/project_managements/${id}.json`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          : await axios.get(`/project_managements/${id}.json`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        setProjectName(projectResponse.data.title || projectResponse.data.project_code || '');
+      }
+
+      // Fetch milestone name
+      if (mid) {
+        const milestoneResponse = baseUrl
+          ? await axios.get(`https://${baseUrl}/milestones/${mid}.json`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          : await axios.get(`/milestones/${mid}.json`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        setMilestoneName(milestoneResponse?.data?.title || '');
+      }
+    } catch (error) {
+      console.error('Failed to fetch project/milestone names:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     getDependencies();
   }, [mid]);
+
+  useEffect(() => {
+    if (token && (id || mid)) {
+      fetchProjectAndMilestoneNames();
+    }
+  }, [token, id, mid]);
 
   useEffect(() => {
     getOwners();
@@ -243,6 +301,10 @@ export const MilestoneDetailsPage = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const toggleFirstCollapse = () => {
+    setIsFirstCollapsed(!isFirstCollapsed);
+  };
 
   const handleStatusChange = async (option: string) => {
     if (milestoneDetails.task_managements && milestoneDetails.task_managements.length > 0) {
@@ -460,143 +522,221 @@ export const MilestoneDetailsPage = () => {
 
   return (
     <>
-      <div className="m-4">
-        <Button
+      <div className="p-6">
+        <Breadcrumb className="mb-2">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                onClick={() => navigate(`/vas/projects`)}
+                className="cursor-pointer"
+              >
+                {projectName || "Project"}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                onClick={() => navigate(`/vas/projects/${id}/milestones`)}
+                className="cursor-pointer"
+              >
+                Milestones
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{milestoneName || "Milestone"}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        {/* <Button
           variant="ghost"
           onClick={() => navigate(-1)}
           className="py-0"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
-        </Button>
-        <div className="px-4 pt-1">
-          {/* Title */}
-          <h2 className="text-[15px] p-3 px-0">
-            <span className="mr-3">M-0{milestoneDetails.id}</span>
-            <span>{milestoneDetails.title}</span>
-          </h2>
-          <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)]"></div>
+        </Button> */}
+        <div>
+          {isLoading ? (
+            <>
+              {/* Loading Skeleton for Title */}
+              <div className="p-3 px-0">
+                <Skeleton className="h-[30px] w-1/3 mb-4" />
+              </div>
+              <Skeleton className="h-[3px] w-full mb-4" />
 
-          {/* Header Info and Status */}
-          <div className="flex items-center justify-between my-3 text-[12px]">
-            <div className="flex items-center gap-3 text-[#323232] flex-wrap">
-              <span>Created By: {milestoneDetails.created_by_name}</span>
-              <span className="h-6 w-[1px] border border-gray-300"></span>
-              <span className="flex items-center gap-3">
-                Created On: {formatToDDMMYYYY_AMPM(milestoneDetails.created_at)}
-              </span>
-              <span className="h-6 w-[1px] border border-gray-300"></span>
+              {/* Loading Skeleton for Header Info */}
+              <div className="space-y-3 my-3">
+                <Skeleton className="h-[20px] w-full" />
+                <Skeleton className="h-[20px] w-4/5" />
+              </div>
+              <Skeleton className="h-[3px] w-full mb-4" />
 
-              {/* Status Dropdown */}
-              <div className="relative w-[150px]" ref={dropdownRef}>
-                <div
-                  className="flex items-center justify-between gap-1 cursor-pointer px-2 py-1"
-                  onClick={() => setOpenDropdown(!openDropdown)}
-                  role="button"
-                  aria-haspopup="true"
-                  aria-expanded={openDropdown}
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && setOpenDropdown(!openDropdown)}
-                >
-                  <span className="text-[13px] font-medium text-[#c72030]">{selectedOption}</span>
-                  <ChevronDown
-                    size={15}
-                    className={`${!milestoneDetails.task_managements || milestoneDetails.task_managements.length === 0
-                      ? openDropdown
-                        ? "rotate-180"
-                        : ""
-                      : ""
-                      } transition-transform`}
-                  />
+              {/* Loading Skeleton for Details Section */}
+              <div className="border rounded-[10px] shadow-md p-5 mb-4">
+                <Skeleton className="h-[30px] w-1/4 mb-4" />
+                <div className="space-y-4">
+                  <Skeleton className="h-[20px] w-1/2" />
+                  <Skeleton className="h-[20px] w-1/2" />
+                  <Skeleton className="h-[20px] w-1/2" />
+                  <Skeleton className="h-[20px] w-1/2" />
                 </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Title */}
+              <h2 className="text-[15px] p-3 px-0">
+                <span className="mr-3">M-0{milestoneDetails.id}</span>
+                <span>{milestoneDetails.title}</span>
+              </h2>
+              <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)]"></div>
 
-                {/* Only show dropdown if no task_managements exist */}
-                {(!milestoneDetails.task_managements || milestoneDetails.task_managements.length === 0) && (
-                  <ul
-                    className={`dropdown-menu absolute right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden ${openDropdown ? "block" : "hidden"
-                      }`}
-                    role="menu"
-                    style={{
-                      minWidth: "150px",
-                      maxHeight: "400px",
-                      overflowY: "auto",
-                      zIndex: 1000,
-                    }}
-                  >
-                    {dropdownOptions.map((option, idx) => (
-                      <li key={idx} role="menuitem">
-                        <button
-                          className={`dropdown-item w-full text-left px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-100 ${selectedOption === option ? "bg-gray-100 font-semibold" : ""
-                            }`}
-                          onClick={() => handleStatusChange(option)}
-                        >
-                          {option}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              {/* Header Info and Status */}
+              <div className="flex items-center justify-between my-3 text-[12px]">
+                <div className="flex items-center gap-3 text-[#323232] flex-wrap">
+                  <span>Created By: {milestoneDetails.created_by_name}</span>
+                  <span className="h-6 w-[1px] border border-gray-300"></span>
+                  <span className="flex items-center gap-3">
+                    Created On: {formatToDDMMYYYY_AMPM(milestoneDetails.created_at)}
+                  </span>
+                  <span className="h-6 w-[1px] border border-gray-300"></span>
+
+                  {/* Status Dropdown */}
+                  <div className="relative w-[150px]" ref={dropdownRef}>
+                    <div
+                      className="flex items-center justify-between gap-1 cursor-pointer px-2 py-1"
+                      onClick={() => setOpenDropdown(!openDropdown)}
+                      role="button"
+                      aria-haspopup="true"
+                      aria-expanded={openDropdown}
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === "Enter" && setOpenDropdown(!openDropdown)}
+                    >
+                      <span className="text-[13px] font-medium text-[#c72030]">{selectedOption}</span>
+                      <ChevronDown
+                        size={15}
+                        className={`${!milestoneDetails.task_managements || milestoneDetails.task_managements.length === 0
+                          ? openDropdown
+                            ? "rotate-180"
+                            : ""
+                          : ""
+                          } transition-transform`}
+                      />
+                    </div>
+
+                    {/* Only show dropdown if no task_managements exist */}
+                    {(!milestoneDetails.task_managements || milestoneDetails.task_managements.length === 0) && (
+                      <ul
+                        className={`dropdown-menu absolute right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden ${openDropdown ? "block" : "hidden"
+                          }`}
+                        role="menu"
+                        style={{
+                          minWidth: "150px",
+                          maxHeight: "400px",
+                          overflowY: "auto",
+                          zIndex: 1000,
+                        }}
+                      >
+                        {dropdownOptions.map((option, idx) => (
+                          <li key={idx} role="menuitem">
+                            <button
+                              className={`dropdown-item w-full text-left px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-100 ${selectedOption === option ? "bg-gray-100 font-semibold" : ""
+                                }`}
+                              onClick={() => handleStatusChange(option)}
+                            >
+                              {option}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <span className="h-6 w-[1px] border border-gray-300"></span>
+                  <span className="cursor-pointer flex items-center gap-1" onClick={() => setEditModalOpen(true)}>
+                    <Pencil className="mx-1" size={15} /> Edit Milestone
+                  </span>
+                </div>
               </div>
 
-              <span className="h-6 w-[1px] border border-gray-300"></span>
-              <span className="cursor-pointer flex items-center gap-1" onClick={() => setEditModalOpen(true)}>
-                <Pencil className="mx-1" size={15} /> Edit Milestone
-              </span>
-            </div>
-          </div>
+              <div className="border-b-[3px] border-grey my-3"></div>
 
-          <div className="border-b-[3px] border-grey my-3"></div>
-
-          {/* Details Section */}
-          <div className="border rounded-[10px] shadow-md p-5 mb-4">
-            <div className="font-[600] text-[16px] flex items-center gap-4">
-              <ChevronDownCircle
-                color="#E95420"
-                size={30}
-                className={`${isDetailsCollapsed ? "rotate-180" : "rotate-0"
-                  } transition-transform cursor-pointer`}
-                onClick={() => setIsDetailsCollapsed(!isDetailsCollapsed)}
-              />
-              Details
-            </div>
-            <div
-              className={`mt-3 transition-all duration-300 ease-in-out overflow-hidden ${isDetailsCollapsed ? "max-h-0" : "max-h-[500px]"
-                }`}
-            >
-              <div className="flex flex-col">
-                <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
-                  <div className="text-right text-[12px] font-[500]">Responsible Person:</div>
-                  <div className="text-left text-[12px]">{milestoneDetails.owner_name}</div>
+              <div className="rounded-[10px] shadow-md border mb-6 p-6 mt-4">
+                <div className="flex items-center gap-3 pb-4 border-b">
+                  <ChevronDownCircle
+                    color="#E95420"
+                    size={30}
+                    className={`${isFirstCollapsed ? "rotate-180" : "rotate-0"} transition-transform cursor-pointer`}
+                    onClick={toggleFirstCollapse}
+                  />
+                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                    Description
+                  </h3>
                 </div>
 
-                <span className="border h-[1px] inline-block w-full my-4"></span>
-
-                <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
-                  <div className="text-right text-[12px] font-[500]">Duration:</div>
-                  <CountdownTimer
-                    startDate={milestoneDetails.start_date}
-                    targetDate={milestoneDetails.end_date}
+                <div className="mt-4 overflow-hidden" ref={firstContentRef}>
+                  <div
+                    className="prose prose-sm max-w-none quill-content"
+                    dangerouslySetInnerHTML={{
+                      __html: milestoneDetails?.description || '<p>No description provided</p>'
+                    }}
                   />
                 </div>
+              </div>
 
-                <span className="border h-[1px] inline-block w-full my-4"></span>
+              {/* Details Section */}
+              <div className="border rounded-[10px] shadow-md p-5 mb-4">
+                <div className="font-[600] text-[16px] flex items-center gap-4">
+                  <ChevronDownCircle
+                    color="#E95420"
+                    size={30}
+                    className={`${isDetailsCollapsed ? "rotate-180" : "rotate-0"
+                      } transition-transform cursor-pointer`}
+                    onClick={() => setIsDetailsCollapsed(!isDetailsCollapsed)}
+                  />
+                  Details
+                </div>
+                <div
+                  className={`mt-3 transition-all duration-300 ease-in-out overflow-hidden ${isDetailsCollapsed ? "max-h-0" : "max-h-[500px]"
+                    }`}
+                >
+                  <div className="flex flex-col">
+                    <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
+                      <div className="text-right text-[12px] font-[500]">Responsible Person:</div>
+                      <div className="text-left text-[12px]">{milestoneDetails.owner_name}</div>
+                    </div>
 
-                <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
-                  <div className="text-right text-[12px] font-[500]">Start Date:</div>
-                  <div className="text-left text-[12px]">
-                    {milestoneDetails?.start_date?.split("T")[0]}
+                    <span className="border h-[1px] inline-block w-full my-4"></span>
+
+                    <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
+                      <div className="text-right text-[12px] font-[500]">Duration:</div>
+                      <CountdownTimer
+                        startDate={milestoneDetails.start_date}
+                        targetDate={milestoneDetails.end_date}
+                      />
+                    </div>
+
+                    <span className="border h-[1px] inline-block w-full my-4"></span>
+
+                    <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
+                      <div className="text-right text-[12px] font-[500]">Start Date:</div>
+                      <div className="text-left text-[12px]">
+                        {milestoneDetails?.start_date?.split("T")[0]}
+                      </div>
+                    </div>
+
+                    <span className="border h-[1px] inline-block w-full my-4"></span>
+
+                    <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
+                      <div className="text-right text-[12px] font-[500]">End Date:</div>
+                      <div className="text-left text-[12px]">{milestoneDetails?.end_date?.split("T")[0]}</div>
+                    </div>
                   </div>
                 </div>
-
-                <span className="border h-[1px] inline-block w-full my-4"></span>
-
-                <div className="w-1/2 flex items-center justify-start gap-3 ml-36">
-                  <div className="text-right text-[12px] font-[500]">End Date:</div>
-                  <div className="text-left text-[12px]">{milestoneDetails?.end_date?.split("T")[0]}</div>
-                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
 
           {/* Dependencies Section */}
           <div>
@@ -607,95 +747,105 @@ export const MilestoneDetailsPage = () => {
             </div>
             <div className="border-b-[3px] border-[rgba(190, 190, 190, 1)]"></div>
             <div className="mt-4 overflow-x-auto">
-              <EnhancedTable
-                data={dependencies}
-                columns={dependencyColumns}
-                storageKey="milestone-dependencies-table"
-                hideColumnsButton={true}
-                hideTableExport={true}
-                hideTableSearch={true}
-                exportFileName="milestone-dependencies"
-                pagination={true}
-                pageSize={10}
-                emptyMessage="No dependencies available"
-                className="min-w-[1200px]"
-                renderCell={renderDependencyCell}
-                renderActions={(item) => (
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="p-1"
-                      onClick={() => navigate(`/vas/projects/${id}/milestones/${item.id}`)}
-                      title="View Task Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-                canAddRow={true}
-                newRowPlaceholder="Add Milestone title"
-                onAddRow={handleAddDependency}
-                readonlyColumns={["duration"]}
-                renderEditableCell={(columnKey: string, value: any, onChange: (value: any) => void) => {
-                  if (columnKey === "milestone_title") {
+              {isDependenciesLoading ? (
+                <div className="space-y-3 p-4">
+                  <Skeleton className="h-[40px] w-full" />
+                  <Skeleton className="h-[40px] w-full" />
+                  <Skeleton className="h-[40px] w-full" />
+                  <Skeleton className="h-[40px] w-full" />
+                  <Skeleton className="h-[40px] w-full" />
+                </div>
+              ) : (
+                <EnhancedTable
+                  data={dependencies}
+                  columns={dependencyColumns}
+                  storageKey="milestone-dependencies-table"
+                  hideColumnsButton={true}
+                  hideTableExport={true}
+                  hideTableSearch={true}
+                  exportFileName="milestone-dependencies"
+                  pagination={true}
+                  pageSize={10}
+                  emptyMessage="No dependencies available"
+                  className="min-w-[1200px]"
+                  renderCell={renderDependencyCell}
+                  renderActions={(item) => (
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="p-1"
+                        onClick={() => navigate(`/vas/projects/${id}/milestones/${item.id}`)}
+                        title="View Task Details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  canAddRow={true}
+                  newRowPlaceholder="Add Milestone title"
+                  onAddRow={handleAddDependency}
+                  readonlyColumns={["duration"]}
+                  renderEditableCell={(columnKey: string, value: any, onChange: (value: any) => void) => {
+                    if (columnKey === "milestone_title") {
+                      return (
+                        <TextField
+                          type="text"
+                          value={value || ""}
+                          onChange={(e) => onChange(e.target.value)}
+                          placeholder="Enter milestone title"
+                          size="small"
+                          sx={{ minWidth: 200 }}
+                        />
+                      );
+                    }
+                    if (columnKey === "status") {
+                      return <span className="text-gray-500">Open</span>;
+                    }
+                    if (columnKey === "owner_name") {
+                      return (
+                        <Select
+                          value={value || ""}
+                          onChange={(e) => onChange(e.target.value)}
+                          displayEmpty
+                          size="small"
+                          sx={{ minWidth: 200 }}
+                        >
+                          <MenuItem value="">
+                            <em>Select owner</em>
+                          </MenuItem>
+                          {owners?.map((owner: any) => (
+                            <MenuItem key={owner.id} value={owner.id}>
+                              {owner.full_name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      );
+                    }
+                    if (columnKey === "start_date" || columnKey === "end_date") {
+                      return (
+                        <TextField
+                          type="date"
+                          value={value || ""}
+                          onChange={(e) => onChange(e.target.value)}
+                          size="small"
+                          sx={{ minWidth: 150 }}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      );
+                    }
                     return (
                       <TextField
                         type="text"
                         value={value || ""}
                         onChange={(e) => onChange(e.target.value)}
-                        placeholder="Enter milestone title"
-                        size="small"
-                        sx={{ minWidth: 200 }}
-                      />
-                    );
-                  }
-                  if (columnKey === "status") {
-                    return <span className="text-gray-500">Open</span>;
-                  }
-                  if (columnKey === "owner_name") {
-                    return (
-                      <Select
-                        value={value || ""}
-                        onChange={(e) => onChange(e.target.value)}
-                        displayEmpty
-                        size="small"
-                        sx={{ minWidth: 200 }}
-                      >
-                        <MenuItem value="">
-                          <em>Select owner</em>
-                        </MenuItem>
-                        {owners?.map((owner: any) => (
-                          <MenuItem key={owner.id} value={owner.id}>
-                            {owner.full_name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    );
-                  }
-                  if (columnKey === "start_date" || columnKey === "end_date") {
-                    return (
-                      <TextField
-                        type="date"
-                        value={value || ""}
-                        onChange={(e) => onChange(e.target.value)}
                         size="small"
                         sx={{ minWidth: 150 }}
-                        InputLabelProps={{ shrink: true }}
                       />
                     );
-                  }
-                  return (
-                    <TextField
-                      type="text"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      size="small"
-                      sx={{ minWidth: 150 }}
-                    />
-                  );
-                }}
-              />
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>

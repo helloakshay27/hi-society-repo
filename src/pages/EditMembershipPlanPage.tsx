@@ -112,6 +112,8 @@ export const EditMembershipPlanPage = () => {
     renewalTerms: "",
     payment_plan_id: "",
     hsnCode: "",
+    cgst: "",
+    sgst: "",
     amenities: [] as any[],
     amenityDetails: {} as Record<string, {
       frequency: string;
@@ -193,6 +195,8 @@ export const EditMembershipPlanPage = () => {
         amenities: data.plan_amenities,
         amenityDetails: amenityDetailsMap,
         hsnCode: data.hsn_code || "",
+        cgst: data.cgst?.toString() || "",
+        sgst: data.sgst?.toString() || "",
       })
     } catch (error) {
       console.error("Error fetching membership plan details:", error);
@@ -246,6 +250,8 @@ export const EditMembershipPlanPage = () => {
           renewal_terms: formData.renewalTerms,
           payment_plan_id: formData.payment_plan_id ? parseInt(formData.payment_plan_id) : null,
           hsn_code: formData.hsnCode,
+          cgst: formData.cgst ? parseFloat(formData.cgst) : 0,
+          sgst: formData.sgst ? parseFloat(formData.sgst) : 0,
           active: true,
           plan_amenities_attributes: [
             ...formData.amenities.map(amenity => {

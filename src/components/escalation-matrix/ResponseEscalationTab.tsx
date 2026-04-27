@@ -26,26 +26,26 @@ import ReactSelect from 'react-select'
 // Schema for form validation
 const responseEscalationSchema = z.object({
   escalationLevels: z.object({
-    e1: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e2: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e3: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e4: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e5: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
+    e1: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e2: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e3: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e4: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e5: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
   }),
-})
+});
 
-type ResponseEscalationFormData = z.infer<typeof responseEscalationSchema>
+type ResponseEscalationFormData = z.infer<typeof responseEscalationSchema>;
 
 export const ResponseEscalationTab: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
 
   // Local state
   const [selectedUsers, setSelectedUsers] = useState<{
-    e1: number[]
-    e2: number[]
-    e3: number[]
-    e4: number[]
-    e5: number[]
+    e1: number[];
+    e2: number[];
+    e3: number[];
+    e4: number[];
+    e5: number[];
   }>({
     e1: [],
     e2: [],
@@ -170,20 +170,20 @@ export const ResponseEscalationTab: React.FC = () => {
   // Reload escalation rules when FM/Project tab changes
   useEffect(() => {
     loadEscalationRules(1, filterIssueTypeId, filterCategoryId)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFmProjectTab])
 
   // Load user account to get site_id
   const loadUserAccount = async () => {
     try {
-      const account = await ticketManagementAPI.getUserAccount()
-      setUserAccount(account)
-      console.log('User account loaded:', account)
+      const account = await ticketManagementAPI.getUserAccount();
+      setUserAccount(account);
+      console.log("User account loaded:", account);
     } catch (error) {
-      console.error('Error loading user account:', error)
-      toast.error('Failed to load user account!')
+      console.error("Error loading user account:", error);
+      toast.error("Failed to load user account!");
     }
-  }
+  };
 
   // Load dropdown options
   const loadDropdowns = async () => {
@@ -206,9 +206,9 @@ export const ResponseEscalationTab: React.FC = () => {
         toast.error('Failed to load service engineers!')
       }
     } finally {
-      setLoadingUsers(false)
+      setLoadingUsers(false);
     }
-  }
+  };
 
   // Fetch categories filtered by issue type
   const fetchCategoriesByIssueType = async (
@@ -217,12 +217,12 @@ export const ResponseEscalationTab: React.FC = () => {
   ) => {
     const setLoading = target === 'form' ? setFormCategoriesLoading : target === 'edit' ? setEditCategoriesLoading : setFilterCategoriesLoading
     const setOptions = target === 'form' ? setFormCategoryOptions : target === 'edit' ? setEditCategoryOptions : setFilterCategoryOptions
-    
+
     if (!issueTypeId) {
       setOptions([])
       return
     }
-    
+
     setLoading(true)
     try {
       const res = await apiClient.get('/dropdown/categories', {
@@ -252,7 +252,7 @@ export const ResponseEscalationTab: React.FC = () => {
       }
       if (issueTypeId) params['q[issue_type_id_eq]'] = issueTypeId
       if (categoryId) params['q[category_id_eq]'] = categoryId
-      
+
       const data = await ticketManagementAPI.getResponseEscalationRules(params)
       setEscalationRulesList(data.response_rules || [])
       if (data.pagination) {
@@ -276,7 +276,7 @@ export const ResponseEscalationTab: React.FC = () => {
     if (success) {
       // Only show toast for create operations, not update (update has its own toast in handleUpdateRule)
       if (!editingRule) {
-        toast.success('Response escalation rule created successfully!')
+        toast.success("Response escalation rule created successfully!");
       }
       // Reset form
       form.reset()
@@ -289,11 +289,14 @@ export const ResponseEscalationTab: React.FC = () => {
     }
     if (error) {
       // Ensure error is a string for toast display
-      const errorMessage = typeof error === 'string' ? error : 'An error occurred while processing your request';
-      toast.error(errorMessage + '!');
+      const errorMessage =
+        typeof error === "string"
+          ? error
+          : "An error occurred while processing your request";
+      toast.error(errorMessage + "!");
       dispatch(clearState());
     }
-  }, [success, error, form, dispatch, editingRule])
+  }, [success, error, form, dispatch, editingRule]);
 
   // Helper functions
   const getIssueTypeName = (id: number) => {
@@ -301,9 +304,9 @@ export const ResponseEscalationTab: React.FC = () => {
   }
 
   const getCategoryName = (id: number) => {
-    return categoryDropdownOptions.find(cat => cat.id === id)?.name || 
-           categoriesData?.helpdesk_categories?.find(cat => cat.id === id)?.name || 
-           'Unknown Category'
+    return categoryDropdownOptions.find(cat => cat.id === id)?.name ||
+      categoriesData?.helpdesk_categories?.find(cat => cat.id === id)?.name ||
+      'Unknown Category'
   }
 
   const getUserName = (id: number) => {
@@ -313,16 +316,16 @@ export const ResponseEscalationTab: React.FC = () => {
   const getUserNames = (userIds: string | number[] | null): string => {
     if (!userIds) return '-'
 
-    let ids: number[] = []
-    if (typeof userIds === 'string') {
+    let ids: number[] = [];
+    if (typeof userIds === "string") {
       try {
-        ids = JSON.parse(userIds)
+        ids = JSON.parse(userIds);
       } catch {
         // It might be a comma-separated name string, return as-is
         return userIds || '-'
       }
     } else {
-      ids = userIds
+      ids = userIds;
     }
 
     if (!Array.isArray(ids) || ids.length === 0) return '-'
@@ -417,28 +420,28 @@ export const ResponseEscalationTab: React.FC = () => {
 
       // Build id->name map from API escalate_to_display so edit dropdowns show names
       const userLabels: Record<number, string> = {}
-      ;[...escalations, ...escalationMatrix].forEach((levelItem: any) => {
-        const ids: number[] = levelItem.escalate_to_ids || []
-        const display: string = levelItem.escalate_to_display || ''
-        const names = display.split(',').map((n: string) => n.trim()).filter(Boolean)
-        ids.forEach((id, i) => {
-          if (names[i]) userLabels[id] = names[i]
+        ;[...escalations, ...escalationMatrix].forEach((levelItem: any) => {
+          const ids: number[] = levelItem.escalate_to_ids || []
+          const display: string = levelItem.escalate_to_display || ''
+          const names = display.split(',').map((n: string) => n.trim()).filter(Boolean)
+          ids.forEach((id, i) => {
+            if (names[i]) userLabels[id] = names[i]
+          })
         })
-      })
       setEditUserLabels(userLabels)
 
       form.reset({ escalationLevels: formUsers })
       setSelectedUsers(formUsers)
       setEditIssueTypeId(String(rule.issue_type_id || ''))
       setEditCategoryTypeId(String(rule.category_id || ''))
-      
+
       // Parse assign_to
       let assignToIds: number[] = []
       if (rule.assign_to) {
         assignToIds = safeParseUsers(rule.assign_to)
       }
       setEditAssignTo(assignToIds)
-      
+
       setIsEditDialogOpen(true)
     } catch (error) {
       console.error('Error fetching response escalation rule details:', error)
@@ -502,7 +505,7 @@ export const ResponseEscalationTab: React.FC = () => {
       console.error('Error updating response escalation:', err)
       toast.error(err?.response?.data?.message || 'Failed to update response escalation. Please try again!')
     }
-  }
+  };
 
   // Handle delete rule
   const handleDeleteRule = async (ruleId: number) => {
@@ -514,7 +517,7 @@ export const ResponseEscalationTab: React.FC = () => {
       console.error('Error deleting response escalation:', err)
       toast.error('Failed to delete response escalation. Please try again!')
     }
-  }
+  };
 
   // Form submission
   const onSubmit = async (data: ResponseEscalationFormData) => {
@@ -553,7 +556,7 @@ export const ResponseEscalationTab: React.FC = () => {
 
       await ticketManagementAPI.createResolutionEscalationRule(payload as any)
       toast.success('Response escalation rule created successfully!')
-      
+
       // Reset form
       form.reset()
       setSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] })
@@ -603,7 +606,7 @@ export const ResponseEscalationTab: React.FC = () => {
         toast.error(finalErrorMessage + '!')
       }
     }
-  }
+  };
 
   // Clear all create-form state when switching tabs
   const clearFormState = () => {
@@ -622,21 +625,19 @@ export const ResponseEscalationTab: React.FC = () => {
       <div className="flex border-b border-gray-200 bg-white">
         <button
           onClick={() => { if (activeFmProjectTab !== 'fm') { clearFormState(); setActiveFmProjectTab('fm'); } }}
-          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-            activeFmProjectTab === 'fm'
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeFmProjectTab === 'fm'
               ? 'border-[#C72030] text-[#C72030]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
+            }`}
         >
           FM
         </button>
         <button
           onClick={() => { if (activeFmProjectTab !== 'project') { clearFormState(); setActiveFmProjectTab('project'); } }}
-          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-            activeFmProjectTab === 'project'
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeFmProjectTab === 'project'
               ? 'border-[#C72030] text-[#C72030]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
+            }`}
         >
           Project
         </button>
@@ -980,7 +981,7 @@ export const ResponseEscalationTab: React.FC = () => {
                                 {['E1', 'E2', 'E3', 'E4', 'E5'].map((level) => {
                                   const escalations = rule.escalations || rule.escalation_matrix || []
                                   const levelData = escalations.find((e: any) => (e.name || '').toUpperCase() === level || (e.level || '').toUpperCase() === level)
-                                  
+
                                   let usersDisplay = '-'
                                   if (levelData) {
                                     if (levelData.escalate_to_display !== undefined) {
@@ -1182,5 +1183,5 @@ export const ResponseEscalationTab: React.FC = () => {
         </Dialog>
       </div>
     </div>
-  )
-}
+  );
+};

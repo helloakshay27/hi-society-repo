@@ -120,12 +120,12 @@ interface BulkAction<T> {
   icon?: React.ComponentType<any>;
   onClick: (selectedItems: T[]) => void;
   variant?:
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary"
-    | "ghost"
-    | "link";
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
 }
 
 interface EnhancedTableProps<T> {
@@ -177,6 +177,7 @@ interface EnhancedTableProps<T> {
   newRowPlaceholder?: string;
   readonlyColumns?: string[];
   handleExport?: (columnVisibility?: Record<string, boolean>) => void;
+  isExporting?: boolean;
   enableGlobalSearch?: boolean;
   onGlobalSearch?: (searchTerm: string) => void;
   customSearchInput?: React.ReactNode;
@@ -238,6 +239,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   renderEditableCell,
   newRowPlaceholder = "Click to add new record",
   readonlyColumns = [],
+  isExporting = false,
   enableGlobalSearch = false,
   onGlobalSearch,
   customSearchInput,
@@ -901,10 +903,18 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={handleExportClick}
+              disabled={isExporting}
               className="flex items-center gap-2"
               title="Export"
             >
-              <Download className="w-4 h-4" />
+              {isExporting ? (
+                <>
+                  <div className="animate-spin rounded-full border-2 border-current border-t-transparent w-4 h-4" />
+                  <span className="text-xs">Exporting...</span>
+                </>
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
             </Button>
           )}
         </div>
@@ -1074,10 +1084,10 @@ export function EnhancedTable<T extends Record<string, any>>({
 
                       const customCell = renderEditableCell
                         ? renderEditableCell(
-                            column.key,
-                            newRowData[column.key],
-                            (value) => handleNewRowDataChange(column.key, value)
-                          )
+                          column.key,
+                          newRowData[column.key],
+                          (value) => handleNewRowDataChange(column.key, value)
+                        )
                         : null;
 
                       return (
@@ -1088,11 +1098,11 @@ export function EnhancedTable<T extends Record<string, any>>({
                           {customCell !== null
                             ? customCell
                             : renderDefaultEditableCell(
-                                column.key,
-                                newRowData[column.key],
-                                (value) =>
-                                  handleNewRowDataChange(column.key, value)
-                              )}
+                              column.key,
+                              newRowData[column.key],
+                              (value) =>
+                                handleNewRowDataChange(column.key, value)
+                            )}
                         </TableCell>
                       );
                     })}

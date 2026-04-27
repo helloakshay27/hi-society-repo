@@ -8,7 +8,7 @@ import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { TicketPagination } from '@/components/TicketPagination';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/useDebounce';
-
+import axios from "axios";
 // Type definitions for Sales Order
 interface SalesOrder {
     id: number;
@@ -57,7 +57,7 @@ const columns: ColumnConfig[] = [
         draggable: false
     },
 
-     {
+    {
         key: 'date',
         label: 'Date',
         sortable: true,
@@ -85,7 +85,7 @@ const columns: ColumnConfig[] = [
         hideable: true,
         draggable: true
     },
-   
+
     {
         key: 'due_date',
         label: 'Due Date',
@@ -132,6 +132,8 @@ export const InvoiceDashboardAccounting: React.FC = () => {
     const [appliedFilters, setAppliedFilters] = useState<SalesOrderFilters>({});
     const [salesOrderData, setSalesOrderData] = useState<SalesOrder[]>([]);
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
+    const [hasInvoiceApproval, setHasInvoiceApproval] = useState(false);
+    const [errorModal, setErrorModal] = useState<{ show: boolean; errors: { id: string; message: string }[] }>({ show: false, errors: [] });
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         current_page: 1,
@@ -143,7 +145,7 @@ export const InvoiceDashboardAccounting: React.FC = () => {
     });
 
 
-    
+
 
     // Fetch sales order data from API
     const fetchSalesOrderData = async (page = 1, per_page = 10, search = '', filters: SalesOrderFilters = {}) => {
@@ -151,16 +153,17 @@ export const InvoiceDashboardAccounting: React.FC = () => {
         try {
             const baseUrl = localStorage.getItem('baseUrl');
             const token = localStorage.getItem('token');
+            const lock_account_id = localStorage.getItem("lock_account_id");
             const params = new URLSearchParams({
-                lock_account_id: '1',
+                lock_account_id: lock_account_id,
                 // page: String(page),
                 // per_page: String(per_page),
             });
-            if (search) params.append('search', search);
-            if (filters.status) params.append('status', filters.status);
-            if (filters.customerId) params.append('customer_id', String(filters.customerId));
-            if (filters.dateFrom) params.append('date_from', filters.dateFrom);
-            if (filters.dateTo) params.append('date_to', filters.dateTo);
+            if (search) params.append('q[invoice_number_or_customer_name_cont]', search);
+            if (filters.status) params.append('q[status_eq]', filters.status);
+            if (filters.customerId) params.append('q[lock_account_customer_id_eq]', String(filters.customerId));
+            if (filters.dateFrom) params.append('q[date_gteq]', filters.dateFrom);
+            if (filters.dateTo) params.append('q[date_lteq]', filters.dateTo);
 
             const response = await fetch(`https://${baseUrl}/lock_account_invoices.json?${params.toString()}`, {
                 headers: {
@@ -171,7 +174,7 @@ export const InvoiceDashboardAccounting: React.FC = () => {
             const data = await response.json();
             console.log('API Response:', data);
             // Assume API returns { data: SalesOrder[], pagination: {...} }
-            setSalesOrderData(Array.isArray(data) ? data: []);
+            setSalesOrderData(Array.isArray(data) ? data : []);
             setPagination(data.pagination || {
                 current_page: page,
                 per_page: per_page,
@@ -195,6 +198,29 @@ export const InvoiceDashboardAccounting: React.FC = () => {
     useEffect(() => {
         fetchSalesOrderData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
     }, [currentPage, perPage, debouncedSearchQuery, appliedFilters]);
+
+    // Fetch lock account to check if invoice approval is enabled
+    useEffect(() => {
+        const fetchLockAccount = async () => {
+            const baseUrl = localStorage.getItem('baseUrl');
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`https://${baseUrl}/get_lock_account.json`, {
+                    headers: {
+                        Authorization: token ? `Bearer ${token}` : undefined,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await response.json();
+                const invoiceApproval = Array.isArray(data?.approvals) &&
+                    data.approvals.some((a: any) => a.approval_type === 'invoice' && a.active);
+                setHasInvoiceApproval(invoiceApproval);
+            } catch (error) {
+                console.error('Error fetching lock account:', error);
+            }
+        };
+        fetchLockAccount();
+    }, []);
 
     // Handle search
     const handleSearch = (term: string) => {
@@ -237,30 +263,32 @@ export const InvoiceDashboardAccounting: React.FC = () => {
     const totalRecords = pagination.total_count;
     const totalPages = pagination.total_pages;
     const displayedData = salesOrderData;
-console.log('Sales Order Data:', salesOrderData);
+    console.log('Sales Order Data:', salesOrderData);
     // Render row function for enhanced table
     const renderRow = (order: SalesOrder) => ({
         actions: (
             <div className="flex items-center gap-2">
-                {/* <input
+                {/* {order.status !== "sent" && ( */}
+                <input
                     type="checkbox"
                     checked={selectedRows.includes(order.id)}
-                    onChange={e => {
-                        setSelectedRows(prev =>
+                    onChange={(e) => {
+                        setSelectedRows((prev) =>
                             e.target.checked
                                 ? [...prev, order.id]
-                                : prev.filter(id => id !== order.id)
+                                : prev.filter((id) => id !== order.id)
                         );
                     }}
-                    title="Select for status update"
-                /> */}
-                {/* <button
+                    className="cursor-pointer"
+                />
+                {/* )} */}
+                <button
                     onClick={() => handleView(order.id)}
                     className="p-1 text-black hover:bg-gray-100 rounded"
                     title="View"
                 >
                     <Eye className="w-4 h-4" />
-                </button> */}
+                </button>
                 {/* <button
                     onClick={() => handleEdit(order.id)}
                     className="p-1 text-black hover:bg-gray-100 rounded"
@@ -280,7 +308,7 @@ console.log('Sales Order Data:', salesOrderData);
         invoice_number: (
             <div className="font-medium text-blue-600">{order.invoice_number}</div>
         ),
-                order_number: (
+        order_number: (
             <div className="font-medium text-blue-600">{order.order_number}</div>
         ),
         customer_name: (
@@ -296,37 +324,37 @@ console.log('Sales Order Data:', salesOrderData);
             </span>
         ),
 
-         due_date: (
-    <span className="text-sm text-gray-600">
-      {order.due_date
-        ? new Date(order.due_date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })
-        : "-"}
-    </span>
-  ),
+        due_date: (
+            <span className="text-sm text-gray-600">
+                {order.due_date
+                    ? new Date(order.due_date).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                    })
+                    : "-"}
+            </span>
+        ),
 
-  total_amount: (
-    <span className="text-sm font-medium text-gray-900">
-      ₹
-      {order.total_amount?.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}
-    </span>
-  ),
+        total_amount: (
+            <span className="text-sm font-medium text-gray-900">
+                ₹
+                {order.total_amount?.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })}
+            </span>
+        ),
 
-  balance_due: (
-    <span className="text-sm font-medium text-red-600">
-      ₹
-      {order.balance_due?.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}
-    </span>
-  ),
+        balance_due: (
+            <span className="text-sm font-medium text-red-600">
+                ₹
+                {order.balance_due?.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })}
+            </span>
+        ),
         // shipment_date: (
         //     <span className="text-sm text-gray-600">
         //         {order.shipment_date ? new Date(order.shipment_date).toLocaleDateString('en-GB', {
@@ -382,7 +410,7 @@ console.log('Sales Order Data:', salesOrderData);
     });
 
     const handleView = (id: number) => {
-        navigate(`/accounting/sales-order/${id}`);
+        navigate(`/accounting/dashboard/invoices/${id}`);
     };
 
     const handleEdit = (id: number) => {
@@ -398,35 +426,44 @@ console.log('Sales Order Data:', salesOrderData);
         }
     };
 
-    const handleMarkAsConfirmed = async () => {
+    const handleUpdateStatus = async (status: string, successMsg: string, failMsg: string) => {
         if (selectedRows.length === 0) {
-            toast.error('Select at least one sales order');
+            toast.error('Select at least one invoice');
             return;
         }
+
         try {
             const baseUrl = localStorage.getItem('baseUrl');
             const token = localStorage.getItem('token');
-            const payload = {
-                sale_order_ids: selectedRows,
-                status: 'confirmed',
-                fulfilled: true
-            };
-            await fetch(`https://${baseUrl}/sale_orders/update_status.json`, {
-                method: 'POST',
-                headers: {
-                    Authorization: token ? `Bearer ${token}` : undefined,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            });
-            toast.success('Status updated successfully');
+
+            const response = await axios.post(
+                `https://${baseUrl}/lock_account_invoices/update_status.json`,
+                { invoice_ids: selectedRows, status },
+                { headers: { Authorization: token ? `Bearer ${token}` : undefined }, validateStatus: () => true }
+            );
+
+            if (response.status === 422) {
+                const { message, errors } = response.data;
+                if (Array.isArray(errors) && errors.length > 0) {
+                    setErrorModal({ show: true, errors });
+                } else {
+                    setErrorModal({ show: true, errors: [{ id: '-', message: message || failMsg }] });
+                }
+                return;
+            }
+
+            toast.success(successMsg);
             setSelectedRows([]);
             fetchSalesOrderData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
-        } catch (err) {
-            toast.error('Failed to update status');
+        } catch (error) {
+            console.error(error);
+            toast.error(failMsg);
         }
     };
 
+    const handleMarkAsSent = () => handleUpdateStatus('sent', 'Invoices marked as sent', 'Failed to mark invoices as sent');
+
+    const handleSubmitForApproval = () => handleUpdateStatus('pending_approval', 'Invoices submitted for approval', 'Failed to submit invoices for approval');
     return (
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
@@ -453,13 +490,31 @@ console.log('Sales Order Data:', salesOrderData);
                         >
                             <Plus className="w-4 h-4 mr-2" /> Add
                         </Button>
-                        {selectedRows.length > 0 && (
+                        {/* {selectedRows.length > 0 && (
                             <Button
                                 className='bg-green-600 text-white hover:bg-green-700'
                                 onClick={handleMarkAsConfirmed}
                             >
                                 Mark as Confirmed
                             </Button>
+                        )} */}
+
+                        {selectedRows.length > 0 && (
+                            hasInvoiceApproval ? (
+                                <Button
+                                    className="bg-[#C72030] text-white hover:bg-[#a81a28]"
+                                    onClick={handleSubmitForApproval}
+                                >
+                                    Submit for Approval
+                                </Button>
+                            ) : (
+                                <Button
+                                    className="bg-blue-600 text-white hover:bg-blue-700"
+                                    onClick={handleMarkAsSent}
+                                >
+                                    Mark as Sent
+                                </Button>
+                            )
                         )}
                     </div>
                 )}
@@ -475,6 +530,49 @@ console.log('Sales Order Data:', salesOrderData);
                     onPageChange={handlePageChange}
                     onPerPageChange={handlePerPageChange}
                 />
+            )}
+
+            {/* Bulk Update Error Modal */}
+            {errorModal.show && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
+                        <div className="flex items-center justify-between px-5 py-4 border-b">
+                            <h2 className="text-base font-semibold text-gray-800">Bulk Update Error Summary</h2>
+                            <button
+                                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                                onClick={() => setErrorModal({ show: false, errors: [] })}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="px-5 py-4 max-h-80 overflow-y-auto">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="text-left px-3 py-2 border border-gray-200 font-semibold text-gray-700">INVOICE</th>
+                                        <th className="text-left px-3 py-2 border border-gray-200 font-semibold text-gray-700">ERROR DETAILS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {errorModal.errors.map((err, i) => (
+                                        <tr key={i} className="hover:bg-gray-50">
+                                            <td className="px-3 py-2 border border-gray-200 text-gray-800 font-medium">{err.id}</td>
+                                            <td className="px-3 py-2 border border-gray-200 text-black-600">{err.message}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="px-5 py-3 border-t flex justify-end">
+                            <Button
+                                className="bg-[#C72030] text-white hover:bg-[#a81a28] px-6"
+                                onClick={() => setErrorModal({ show: false, errors: [] })}
+                            >
+                                OK
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
