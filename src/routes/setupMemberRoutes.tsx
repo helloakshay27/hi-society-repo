@@ -1718,7 +1718,7 @@ export const setupMemberRoutes = (
     <Route path="/loyalty/offer/add/:id" Component={withSuspense(LoyaltyAddOfferPage)} />
     <Route path="/loyalty/offer/view/:id" Component={withSuspense(LoyaltyOfferViewPage)} />
     <Route
-      path="/business-directory/add"
+      path="/bms/business-directory/add"
       Component={withSuspense(AddBusinessDirectoryPage)}
     />
     <Route path="/mis/add" Component={withSuspense(AddMISPage)} />

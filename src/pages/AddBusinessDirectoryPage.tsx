@@ -114,8 +114,23 @@ const AddBusinessDirectoryPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.companyName || !form.mobile || !form.primaryEmail || !form.category) {
-      toast.error("Please fill in all required fields");
+    if (!form.companyName) {
+      toast.error("Company name is required");
+      return;
+    }
+
+    if (!form.mobile) {
+      toast.error("Mobile number is required");
+      return;
+    }
+
+    if (!form.primaryEmail) {
+      toast.error("Email is required");
+      return;
+    }
+
+    if (!form.category) {
+      toast.error("Category is required");
       return;
     }
 
