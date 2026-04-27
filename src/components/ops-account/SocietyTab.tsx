@@ -153,6 +153,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       "helloakshay27@gmail.com",
       "dev@lockated.com",
       "sumitra.patil@lockated.com",
+"komalshinde0101@lockated.com",
       "demo@lockated.com",
       "ajay.ghenand@lockated.com"
     ];

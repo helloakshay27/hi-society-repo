@@ -284,7 +284,7 @@ export const getOrganizationsByEmail = async (
 
   if (isHiSocietyUiSite) {
     const response = await fetch(
-      `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+      `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch organizations");
@@ -296,7 +296,7 @@ export const getOrganizationsByEmail = async (
   // For Hi-Society sites (localhost or production), use Hi-Society API
   if (isHiSocietySite) {
     const apiUrl = isLocalhost
-      ? `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+      ? `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
       : `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
 
     const response = await fetch(`${apiUrl}`);

@@ -4,6 +4,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { getUser } from "@/utils/auth";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ const Index = () => {
       hostname.includes("pulse.gophygital.work") ||
       hostname.includes("pulse-uat.panchshil.com");
     const isClubSite = hostname.includes("club.lockated.com");
+    const isWebSite = hostname.includes("web.lockated.com");
 
     // PRIORITY 0: Hi-Society site routing (highest priority for specific domains)
     if (isUIHiSocietySite) {
@@ -91,7 +93,7 @@ const Index = () => {
     } else {
       navigate("/maintenance/asset", { replace: true });
     }
-  }, [navigate, userRole, loading, selectedCompany]);
+  }, [navigate, userRole, loading, selectedCompany, org_id]);
 
   // Show loading while redirecting
   return (
