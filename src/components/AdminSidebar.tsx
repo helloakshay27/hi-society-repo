@@ -109,6 +109,11 @@ const adminNavigationStructure = {
         icon: Brain,
         href: "/ops-console/admin/disc-report",
       },
+      {
+        name: "Lock Fees",
+        icon: DollarSign,
+        href: "/ops-console/admin/lock-fees",
+      },
     ],
   },
 };

@@ -1131,6 +1131,10 @@ import AddVisitorPage from "./pages/AddVisitorPage";
 import SettingsGenericPage from "./pages/SettingsGenericPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import LockFees from "./pages/LockFees";
+import LockFeesAdd from "./pages/LockFeesAdd";
+import LockFeesDetail from "./pages/LockFeesDetail";
+import EditLockFeesPage from "./pages/EditLockFeesPage";
 
 const queryClient = new QueryClient();
 
@@ -1447,6 +1451,23 @@ function App() {
                           <Route
                             path="settings/account/locked-users"
                             element={<LockedUsersDashboard />}
+                          />
+
+                          <Route
+                            path="admin/lock-fees"
+                            element={<LockFees />}
+                          />
+                          <Route
+                            path="admin/lock-fees/add"
+                            element={<LockFeesAdd />}
+                          />
+                          <Route
+                            path="admin/lock-fees/edit/:id"
+                            element={<EditLockFeesPage />}
+                          />
+                          <Route
+                            path="admin/lock-fees/:id"
+                            element={<LockFeesDetail />}
                           />
 
                           <Route path="settings/account/user-list-otp" element={<OccupantUserListWrapper />} />
