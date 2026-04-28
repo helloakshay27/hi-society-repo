@@ -116,7 +116,7 @@ export const StaffsDashboard = () => {
         // Third try: fetch from account API
         const token = localStorage.getItem('token');
         if (token) {
-          const baseUrl = localStorage.getItem('baseUrl') || 'https://hi-society.lockated.com';
+          const baseUrl = localStorage.getItem('baseUrl'); 
           const normalizedBaseUrl = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
           const response = await fetch(`${normalizedBaseUrl}/api/users/account.json`, {
             headers: {

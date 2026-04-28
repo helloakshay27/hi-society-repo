@@ -6,7 +6,7 @@ export const HI_SOCIETY_CONFIG = {
     const savedBaseUrl = getBaseUrl();
 
     // Default to UAT for other environments
-    return savedBaseUrl || "https://uat-hi-society.lockated.com";
+    return savedBaseUrl;
   },
   get TOKEN() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
