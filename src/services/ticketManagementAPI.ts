@@ -294,6 +294,7 @@ export interface TicketFilters {
   complaint_status_name_eq?: string;
   complaint_status_fixed_state_not_eq?: string;
   complaint_status_fixed_state_null?: string;
+  complaint_type_eq?: string;
   m?: string;
   g?: Array<{
     m?: string;

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, RefreshCw, Loader2, Car, MapPin } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, RefreshCw, Loader2, Car, MapPin, ChevronDown, Upload, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { StaffActionsPanel } from "@/components/StaffActionsPanel";
+import { ParkingFilterDialog, ParkingFilters } from "@/components/ParkingFilterDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
@@ -107,12 +110,41 @@ const BMSParking: React.FC = () => {
 
   const societyId = localStorage.getItem("selectedSocietyId") || "";
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [parkingFilters, setParkingFilters] = useState<ParkingFilters>({});
+  const [showActionPanel, setShowActionPanel] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Debounce search query → reset page and update debouncedSearch
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // ── Fetch parking list ──────────────────────────────────────────────────────
-  const fetchParkingList = useCallback(async (page = 1) => {
+  const fetchParkingList = useCallback(async (page = 1, filters: ParkingFilters = parkingFilters) => {
     setIsLoading(true);
     try {
+      const params = new URLSearchParams({ page: page.toString() });
+      if (debouncedSearch.trim()) {
+        params.append("q[parking_slot_slot_name_or_vehicle_number_cont]", debouncedSearch.trim());
+      }
+      if (filters.society_flat_society_block_id_eq) params.append("q[society_flat_society_block_id_eq]", filters.society_flat_society_block_id_eq);
+      if (filters.society_flat_id_eq) params.append("q[society_flat_id_eq]", filters.society_flat_id_eq);
+      if (filters.parking_slot_slot_name_cont) params.append("q[parking_slot_slot_name_cont]", filters.parking_slot_slot_name_cont);
+      if (filters.parking_slot_sticker_number_cont) params.append("q[parking_slot_sticker_number_cont]", filters.parking_slot_sticker_number_cont);
+      if (filters.vehicle_number_in?.length) {
+        filters.vehicle_number_in.forEach((v) => params.append("q[vehicle_number_in][]", v));
+      }
       const response = await fetch(
-        getFullUrl(`/crm/admin/configure-parking.json?page=${page}`),
+        getFullUrl(`/crm/admin/configure-parking.json?${params.toString()}`),
         { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
       );
       if (response.ok) {
@@ -128,7 +160,7 @@ const BMSParking: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [parkingFilters, debouncedSearch]);
 
   useEffect(() => {
     fetchParkingList(currentPage);
@@ -285,6 +317,72 @@ const BMSParking: React.FC = () => {
     setFormData({ ...emptyForm });
     setFlats([]);
     setSlotNameError(false);
+  };
+
+  // ── Export ──────────────────────────────────────────────────────────────────
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (parkingFilters.society_flat_society_block_id_eq) params.append("q[society_flat_society_block_id_eq]", parkingFilters.society_flat_society_block_id_eq);
+      if (parkingFilters.society_flat_id_eq) params.append("q[society_flat_id_eq]", parkingFilters.society_flat_id_eq);
+      if (parkingFilters.parking_slot_slot_name_cont) params.append("q[parking_slot_slot_name_cont]", parkingFilters.parking_slot_slot_name_cont);
+      if (parkingFilters.parking_slot_sticker_number_cont) params.append("q[parking_slot_sticker_number_cont]", parkingFilters.parking_slot_sticker_number_cont);
+      if (parkingFilters.vehicle_number_in?.length) {
+        parkingFilters.vehicle_number_in.forEach((v) => params.append("q[vehicle_number_in][]", v));
+      }
+      const qs = params.toString();
+      const response = await fetch(
+        getFullUrl(`/parkings/vehicle_category_details_report.xlsx${qs ? `?${qs}` : ""}`),
+        { headers: { Authorization: getAuthHeader() } }
+      );
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `parking_report_${new Date().toISOString().split("T")[0]}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        toast.success("Parking report exported successfully!");
+      } else {
+        toast.error("Failed to export report");
+      }
+    } catch {
+      toast.error("Failed to export report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // ── Import ──────────────────────────────────────────────────────────────────
+  const handleImport = async () => {
+    if (!importFile) { toast.error("Please select a file to import"); return; }
+    setIsImporting(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", importFile);
+      if (societyId) fd.append("society_id", societyId);
+      const response = await fetch(
+        getFullUrl("/crm/admin/upload_parking_slots"),
+        { method: "POST", headers: { Authorization: getAuthHeader() }, body: fd }
+      );
+      if (response.ok) {
+        toast.success("Parking slots imported successfully!");
+        setIsImportOpen(false);
+        setImportFile(null);
+        setCurrentPage(1);
+        fetchParkingList(1);
+      } else {
+        const err = await response.json().catch(() => null);
+        toast.error(err?.message || "Failed to import parking slots");
+      }
+    } catch {
+      toast.error("Something went wrong during import");
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   // ── Handle tower change → load flats ───────────────────────────────────────
@@ -621,20 +719,50 @@ const BMSParking: React.FC = () => {
         columns={columns}
         renderCell={renderCell}
         enableExport={true}
+        handleExport={handleExport}
         onSearchChange={(q) => setSearchQuery(q)}
         searchPlaceholder="Search by slot, vehicle number..."
         enableSearch={true}
+        onFilterClick={() => setIsFilterOpen(true)}
         leftActions={
-          <Button onClick={handleAddParking} className="bg-[#C72030] hover:bg-[#a01828] text-white h-9 px-4 text-sm font-medium">
+          <Button
+            onClick={() => setShowActionPanel(true)}
+            className="bg-[#C72030] hover:bg-[#a01828] text-white h-9 px-4 text-sm font-medium"
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Add
+            Action
           </Button>
+        }
+        rightActions={
+          Object.values(parkingFilters).some(
+            (v) => v !== undefined && v !== null && (Array.isArray(v) ? v.length > 0 : v !== "")
+          ) ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setParkingFilters({}); setCurrentPage(1); }}
+              className="h-8 px-2 text-xs text-gray-500 hover:text-red-600"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Clear Filters
+            </Button>
+          ) : undefined
         }
         emptyMessage="No parking slots found"
         loading={isLoading}
         pagination={false}
         storageKey="bms-parking-table"
       />
+
+      {/* Action Panel */}
+      {showActionPanel && (
+        <StaffActionsPanel
+          onAdd={() => { setShowActionPanel(false); handleAddParking(); }}
+          onImport={() => { setShowActionPanel(false); setIsImportOpen(true); }}
+          onClearSelection={() => setShowActionPanel(false)}
+          addLabel="Add Parking"
+        />
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -678,6 +806,88 @@ const BMSParking: React.FC = () => {
           {renderModalForm(true)}
         </DialogContent>
       </Dialog>
+
+      {/* Import Modal */}
+      <Dialog
+        open={isImportOpen}
+        onOpenChange={(open) => { if (!open) { setIsImportOpen(false); setImportFile(null); } }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">Import Parking Slots</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-500">
+              Upload an Excel or CSV file to bulk import parking slots.
+            </p>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                Upload File <span className="text-red-500">*</span>
+              </Label>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-[#C72030] transition-colors"
+                onClick={() => document.getElementById("parking-import-input")?.click()}
+              >
+                {importFile ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Upload className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-gray-700">{importFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setImportFile(null); }}
+                      className="ml-2 text-gray-400 hover:text-red-500"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">Click to select file</p>
+                    <p className="text-xs text-gray-400 mt-1">.xlsx, .xls, .csv</p>
+                  </div>
+                )}
+              </div>
+              <input
+                id="parking-import-input"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                aria-label="Upload parking slots file"
+                className="hidden"
+                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => { setIsImportOpen(false); setImportFile(null); }}
+              disabled={isImporting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImport}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+              disabled={isImporting || !importFile}
+            >
+              {isImporting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Importing...</>
+              ) : (
+                <><Upload className="mr-2 h-4 w-4" />Import</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Filter Dialog */}
+      <ParkingFilterDialog
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApplyFilters={(filters) => { setParkingFilters(filters); setCurrentPage(1); }}
+        initialFilters={parkingFilters}
+      />
     </div>
   );
 };

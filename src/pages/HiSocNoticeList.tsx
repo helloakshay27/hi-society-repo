@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, Pencil } from "lucide-react";
+import { Plus, Eye, Pencil, X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { NoticeFilterDialog, NoticeFilters } from "@/components/NoticeFilterDialog";
 
 const HiSocNoticeList = () => {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ const HiSocNoticeList = () => {
   }>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<NoticeFilters | null>(null);
 
   const getNoticeboardPermission = () => {
     try {
@@ -62,11 +65,40 @@ const HiSocNoticeList = () => {
   }, []);
 
   const fetchNoticeboards = useCallback(
-    async (search: string) => {
+    async (search: string, filters?: NoticeFilters | null) => {
       setLoading(true);
       setIsSearching(!!search);
       try {
-        const response = await fetch(getFullUrl('/crm/admin/noticeboards.json'), {
+        // Build query string from active filters
+        const params = new URLSearchParams();
+        if (filters) {
+          filters.tower_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_society_block_id_in][]",
+              id
+            )
+          );
+          filters.flat_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_id_in][]",
+              id
+            )
+          );
+          filters.shared_in.forEach((v) =>
+            params.append("q[shared_in][]", v)
+          );
+          if (filters.date_range) {
+            params.append("q[date_range]", filters.date_range);
+          }
+          filters.publish_in.forEach((v) =>
+            params.append("q[publish_in][]", v)
+          );
+        }
+        const qs = params.toString();
+        const url = getFullUrl(
+          `/crm/admin/noticeboards.json${qs ? `?${qs}` : ""}`
+        );
+        const response = await fetch(url, {
           headers: {
             Authorization: getAuthHeader(),
           },
@@ -123,8 +155,22 @@ const HiSocNoticeList = () => {
   );
 
   useEffect(() => {
-    fetchNoticeboards(searchTerm);
-  }, [searchTerm, fetchNoticeboards]);
+    fetchNoticeboards(searchTerm, activeFilters);
+  }, [searchTerm, activeFilters, fetchNoticeboards]);
+
+  const handleApplyFilters = (filters: NoticeFilters) => {
+    const hasFilters =
+      filters.tower_ids.length > 0 ||
+      filters.flat_ids.length > 0 ||
+      filters.shared_in.length > 0 ||
+      filters.date_range !== "" ||
+      filters.publish_in.length > 0;
+    setActiveFilters(hasFilters ? filters : null);
+  };
+
+  const handleClearFilters = () => {
+    setActiveFilters(null);
+  };
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
@@ -406,7 +452,7 @@ const HiSocNoticeList = () => {
   };
 
   const renderCustomActions = () => (
-    <div className="flex flex-wrap">
+    <div className="flex flex-wrap gap-2">
       <Button
         onClick={handleAddNoticeboard}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -431,6 +477,20 @@ const HiSocNoticeList = () => {
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search broadcasts..."
         leftActions={renderCustomActions()}
+        rightActions={
+          activeFilters ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="h-8 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              title="Clear filters"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          ) : undefined
+        }
+        onFilterClick={() => setIsFilterOpen(true)}
         loading={isSearching || loading}
         loadingMessage={
           isSearching ? "Searching broadcasts..." : "Loading broadcasts..."
@@ -443,6 +503,11 @@ const HiSocNoticeList = () => {
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
       <div className="w-full">{renderListTab()}</div>
+      <NoticeFilterDialog
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApplyFilters={handleApplyFilters}
+      />
     </div>
   );
 };
