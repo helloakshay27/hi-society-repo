@@ -3728,7 +3728,6 @@ export const EditBookingSetupClubPage = () => {
                                         </Select>
                                         <Button
                                             onClick={() => deleteFacilityBooking(booking.id)}
-                                            className="bg-red-600 hover:bg-red-700 text-white"
                                             size="sm"
                                         >
                                             Remove
