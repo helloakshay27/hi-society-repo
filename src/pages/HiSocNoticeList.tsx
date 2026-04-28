@@ -7,6 +7,14 @@ import { Plus, Eye, Pencil, X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { NoticeFilterDialog, NoticeFilters } from "@/components/NoticeFilterDialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationLink,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 const HiSocNoticeList = () => {
   const navigate = useNavigate();
@@ -22,6 +30,9 @@ const HiSocNoticeList = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<NoticeFilters | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PER_PAGE = 20;
 
   const getNoticeboardPermission = () => {
     try {
@@ -65,12 +76,17 @@ const HiSocNoticeList = () => {
   }, []);
 
   const fetchNoticeboards = useCallback(
-    async (search: string, filters?: NoticeFilters | null) => {
+    async (search: string, filters?: NoticeFilters | null, page = 1) => {
       setLoading(true);
       setIsSearching(!!search);
       try {
         // Build query string from active filters
         const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("per_page", String(PER_PAGE));
+        if (search) {
+          params.set("q[notice_heading_or_notice_text_cont]", search);
+        }
         if (filters) {
           filters.tower_ids.forEach((id) =>
             params.append(
@@ -120,28 +136,16 @@ const HiSocNoticeList = () => {
           noticeboardsData = data.data;
         }
 
-        let filteredNoticeboards = noticeboardsData;
-        if (search) {
-          const searchLower = search.toLowerCase();
-          filteredNoticeboards = noticeboardsData.filter(
-            (noticeboard) =>
-              (noticeboard.notice_heading || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.notice_text || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.notice_type || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.society_name || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.user_name || "").toLowerCase().includes(searchLower)
-          );
+        // Update pagination from response metadata if available
+        if (data.pagination) {
+          setTotalPages(data.pagination.total_pages || 1);
+        } else if (data.meta) {
+          setTotalPages(data.meta.total_pages || 1);
+        } else {
+          setTotalPages(1);
         }
 
-        setNoticeboards(filteredNoticeboards);
+        setNoticeboards(noticeboardsData);
       } catch (error) {
         console.error("Error fetching noticeboards:", error);
         toast.error("Failed to fetch noticeboards");
@@ -155,8 +159,12 @@ const HiSocNoticeList = () => {
   );
 
   useEffect(() => {
-    fetchNoticeboards(searchTerm, activeFilters);
-  }, [searchTerm, activeFilters, fetchNoticeboards]);
+    fetchNoticeboards(searchTerm, activeFilters, currentPage);
+  }, [searchTerm, activeFilters, currentPage, fetchNoticeboards]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handleApplyFilters = (filters: NoticeFilters) => {
     const hasFilters =
@@ -165,14 +173,17 @@ const HiSocNoticeList = () => {
       filters.shared_in.length > 0 ||
       filters.date_range !== "" ||
       filters.publish_in.length > 0;
+    setCurrentPage(1);
     setActiveFilters(hasFilters ? filters : null);
   };
 
   const handleClearFilters = () => {
+    setCurrentPage(1);
     setActiveFilters(null);
   };
 
   const handleGlobalSearch = (term: string) => {
+    setCurrentPage(1);
     setSearchTerm(term);
   };
 
@@ -496,6 +507,46 @@ const HiSocNoticeList = () => {
           isSearching ? "Searching broadcasts..." : "Loading broadcasts..."
         }
       />
+      <div className="mt-6 flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) handlePageChange(currentPage - 1);
+                }}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(page);
+                  }}
+                  isActive={currentPage === page}
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage < totalPages) handlePageChange(currentPage + 1);
+                }}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 

@@ -483,18 +483,18 @@ const HiSocNoticeEdit = () => {
       errors.push("Send Email is required.");
       return errors;
     }
-    if (!data.shared) {
-      errors.push("Share With is required.");
-      return errors;
-    }
-    if (data.shared === "1" && data.user_ids.length === 0) {
-      errors.push("Please select at least one user.");
-      return errors;
-    }
-    if (data.shared === "2" && data.group_id.length === 0) {
-      errors.push("Please select at least one group.");
-      return errors;
-    }
+    // if (!data.shared) {
+    //   errors.push("Share With is required.");
+    //   return errors;
+    // }
+    // if (data.shared === "1" && data.user_ids.length === 0) {
+    //   errors.push("Please select at least one user.");
+    //   return errors;
+    // }
+    // if (data.shared === "2" && data.group_id.length === 0) {
+    //   errors.push("Please select at least one group.");
+    //   return errors;
+    // }
     return errors;
   };
 
@@ -867,7 +867,7 @@ const HiSocNoticeEdit = () => {
             </div>
 
             {/* Share With */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Share With <span className="text-red-500">*</span>
@@ -916,7 +916,7 @@ const HiSocNoticeEdit = () => {
                   </label>
                 </div>
 
-                {/* Individual Users Select */}
+            
                 {formData.shared === "1" && (
                   <FormControl
                     fullWidth
@@ -983,7 +983,7 @@ const HiSocNoticeEdit = () => {
                   </FormControl>
                 )}
 
-                {/* Groups Select */}
+               
                 {formData.shared === "2" && (
                   <FormControl
                     fullWidth
@@ -1034,7 +1034,7 @@ const HiSocNoticeEdit = () => {
                   </FormControl>
                 )}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 

@@ -53,6 +53,19 @@ export const ResponseEscalationTab: React.FC = () => {
     e4: [],
     e5: [],
   })
+  const [editSelectedUsers, setEditSelectedUsers] = useState<{
+    e1: number[];
+    e2: number[];
+    e3: number[];
+    e4: number[];
+    e5: number[];
+  }>({
+    e1: [],
+    e2: [],
+    e3: [],
+    e4: [],
+    e5: [],
+  })
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all')
   const [selectedIssueTypeFilter, setSelectedIssueTypeFilter] = useState<string>('all')
   const [editingRule, setEditingRule] = useState<any | null>(null)
@@ -430,8 +443,7 @@ export const ResponseEscalationTab: React.FC = () => {
         })
       setEditUserLabels(userLabels)
 
-      form.reset({ escalationLevels: formUsers })
-      setSelectedUsers(formUsers)
+      setEditSelectedUsers(formUsers)
       setEditIssueTypeId(String(rule.issue_type_id || ''))
       setEditCategoryTypeId(String(rule.category_id || ''))
 
@@ -478,7 +490,7 @@ export const ResponseEscalationTab: React.FC = () => {
           p3: existingLevel.p3 || '',
           p4: existingLevel.p4 || '',
           p5: existingLevel.p5 || '',
-          escalate_to_users: selectedUsers[level],
+          escalate_to_users: editSelectedUsers[level],
           copy_to: existingLevel.copy_to || [],
         }
       })
@@ -1040,7 +1052,7 @@ export const ResponseEscalationTab: React.FC = () => {
         )}
 
         {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) setEditSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] }); }}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Response Escalation Rule</DialogTitle>
@@ -1146,13 +1158,12 @@ export const ResponseEscalationTab: React.FC = () => {
                           <TableCell>
                             <ReactSelect
                               isMulti
-                              options={getEditLevelOptions(selectedUsers[level])}
-                              value={getEditLevelOptions(selectedUsers[level]).filter(option => selectedUsers[level].includes(option.value))}
+                              options={getEditLevelOptions(editSelectedUsers[level])}
+                              value={getEditLevelOptions(editSelectedUsers[level]).filter(option => editSelectedUsers[level].includes(option.value))}
                               onChange={(selected) => {
                                 const newUsers = selected ? selected.map(s => s.value) : []
-                                const updatedUsers = { ...selectedUsers, [level]: newUsers }
-                                setSelectedUsers(updatedUsers)
-                                form.setValue('escalationLevels', updatedUsers)
+                                const updatedUsers = { ...editSelectedUsers, [level]: newUsers }
+                                setEditSelectedUsers(updatedUsers)
                               }}
                               placeholder="Select users..."
                               isLoading={loadingUsers}
@@ -1168,7 +1179,7 @@ export const ResponseEscalationTab: React.FC = () => {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => { setIsEditDialogOpen(false); setEditSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] }); }}>
                   Cancel
                 </Button>
                 <Button
