@@ -37,7 +37,7 @@ const getApiConfig = () => {
 
 const isWebOrg34 = () => {
   const orgId = String(localStorage.getItem("org_id") ?? "").trim();
-  return window.location.hostname === "web.gophygital.work" && orgId === "34";
+  return window.location.hostname === "web.hisociety.lockated.com" ;
 };
 
 export const API_CONFIG = {

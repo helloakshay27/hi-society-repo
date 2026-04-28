@@ -344,7 +344,7 @@ export const fetchViRoles = createAsyncThunk(
 
     try {
       const rolesEndpoint =
-        hostname === "web.gophygital.work" && orgId === "34"
+        hostname === "web.gophygital.work"
           ? "/roles.json"
           : "/lock_roles.json";
 
