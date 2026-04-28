@@ -1131,7 +1131,7 @@ const AddCMSClubMembers = () => {
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? "Submitting..." : "Submit"}
+                            {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Submit"}
                         </Button>
                     </div>
                 </div>

@@ -5,7 +5,7 @@ import {
   Select as MuiSelect,
   TextField,
 } from "@mui/material";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, Loader, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -42,6 +42,7 @@ const AddFacilityBookingPage = () => {
   const token = localStorage.getItem("token");
   const societyId = localStorage.getItem("selectedUserSociety");
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedTowerId, setSelectedTowerId] = useState("");
   const [towers, setTowers] = useState([]);
   const [selectedFlatId, setSelectedFlatId] = useState("");
@@ -600,6 +601,7 @@ const AddFacilityBookingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+    setIsSubmitting(true);
     try {
       const booked_members_attributes: any[] = [];
 
@@ -692,6 +694,8 @@ const AddFacilityBookingPage = () => {
     } catch (error) {
       console.log(error);
       toast.error("Failed to create facility booking");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1347,7 +1351,9 @@ const AddFacilityBookingPage = () => {
           </div>
         </div>
         <div className="flex justify-center pt-4">
-          <Button type="submit">Submit</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Submit"}
+          </Button>
         </div>
       </form>
     </div>
