@@ -774,7 +774,7 @@ export const Header = () => {
                 navigate('/maintenance/asset');
               } else {
                 // Switching to Hi-Society - set Hi-Society base URL
-                localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
+                // localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
                 toggleLayoutMode();
                 // Use React Router navigate for client-side navigation (preserves auth)
                 navigate('/maintenance/project-details-list');
