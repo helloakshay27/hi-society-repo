@@ -1206,7 +1206,9 @@ export const EditSurveyMapping = () => {
         </div>
       </Section>
 
-      {/* LOCATION CONFIGURATION SECTION TEMPORARILY HIDDEN
+      {/* Location Configuration section is temporarily hidden.
+          To re-enable, change `false` to `true` below. */}
+      {(false as boolean) && (
       <Section
         title="Location Configuration"
         icon={<MapPin className="w-3.5 h-3.5" />}
@@ -1511,9 +1513,9 @@ export const EditSurveyMapping = () => {
           </div>
         </div>
       </Section>
-      LOCATION CONFIGURATION SECTION TEMPORARILY HIDDEN */}
+      )}
 
-      {/* Survey Questions Section */}}
+      {/* Survey Questions Section */}
       {selectedSurveyQuestions.length > 0 && (
         <Section
           title="Survey Questions"
