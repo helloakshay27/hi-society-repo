@@ -1119,6 +1119,8 @@ import { OccupantUserDetailWrapper } from "./components/OccupantUserDetailWrappe
 import { LoginPageWrapper } from "./components/LoginPageWrapper";
 import ModulesManagement from "./pages/settings/ModulesManagement";
 import { LoyaltyTDS } from "./pages/ops-console/admin/LoyaltyTDS";
+import { HiSocietyUsersDashboard } from "./pages/master/HiSocietyUsersDashboard";
+import { ViewHiSocietyUserPage } from "./pages/master/ViewHiSocietyUserPage";
 import { InvoiceAdd } from "./pages/ClubManagement/InvoiceAdd";
 import { InvoiceDashboardAccounting } from "./pages/ClubManagement/InvoiceDashboard";
 import { QuotesDashboard } from "./pages/ClubManagement/QuotesDashboard";
@@ -1411,7 +1413,6 @@ function App() {
                             path="admin/loyalty-tds"
                             element={<LoyaltyTDS />}
                           />
-
                           {/* <Route
                       path="settings/account/lock-module/view/:id"
                       element={<LockModuleView />}
@@ -5576,6 +5577,14 @@ function App() {
                             path="/master/user/occupant-users"
                             element={<OccupantUserMasterDashboard />}
                           />
+                          <Route
+                            path="/master/user/hi-society-users"
+                            element={<HiSocietyUsersDashboard />}
+                          />
+                          <Route
+                            path="/master/user/hi-society-users/view/:id"
+                            element={<ViewHiSocietyUserPage />}
+                          />
                           {/* Material Master Route */}
                           <Route
                             path="/master/material-ebom"
@@ -6491,6 +6500,14 @@ function App() {
                           <Route
                             path="/master/user/occupant-users"
                             element={<OccupantUserMasterDashboard />}
+                          />
+                          <Route
+                            path="/master/user/hi-society-users"
+                            element={<HiSocietyUsersDashboard />}
+                          />
+                          <Route
+                            path="/ops-console/master/user/hi-society-users/view/:id"
+                            element={<ViewHiSocietyUserPage />}
                           />
 
                           {/* Material Master Route */}

@@ -76,7 +76,10 @@ const adminNavigationStructure = {
             name: "Occupant Users OTP",
             href: "/ops-console/settings/account/user-list-otp",
           },
-
+          {
+            name: "Hi Society Users",
+            href: "/master/user/hi-society-users",
+          },
         ],
       },
       {

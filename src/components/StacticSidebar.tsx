@@ -393,6 +393,11 @@ const modulesByPackage = {
           href: "/master/user/vi-users",
           color: "text-[#1a1a1a]",
         },
+        {
+          name: "Hi Society Users",
+          href: "/master/user/hi-society-users",
+          color: "text-[#1a1a1a]",
+        },
       ],
     },
     {

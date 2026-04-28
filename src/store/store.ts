@@ -15,6 +15,7 @@ import userCountsReducer from './slices/userCountsSlice'
 import occupantUsersReducer, { exportOccupantUsersReducer } from './slices/occupantUsersSlice'
 import occupantUserCountsReducer from './slices/occupantUserCountsSlice'
 import viUsersReducer from './slices/viUsersSlice'
+import hiSocietyUsersReducer from './slices/hiSocietyUsersSlice'
 import projectReducer from './slices/projectSlice'
 import siteReducer from './slices/siteSlice'
 import helpdeskCategoriesReducer from './slices/helpdeskCategoriesSlice'
@@ -99,6 +100,7 @@ export const store = configureStore({
     occupantUsers: occupantUsersReducer,
     occupantUserCounts: occupantUserCountsReducer,
     viUsers: viUsersReducer,
+    hiSocietyUsers: hiSocietyUsersReducer,
     project: projectReducer,
     site: siteReducer,
     helpdeskCategories: helpdeskCategoriesReducer,
