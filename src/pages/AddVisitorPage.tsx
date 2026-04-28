@@ -424,7 +424,7 @@ export const AddVisitorPage = () => {
             });
 
             toast.success("Visitor added successfully!");
-            navigate("/smartsecure/visitor-history");
+            navigate("/smartsecure/visitor-in");
         } catch (error) {
             console.error("Error creating visitor:", error);
             toast.error("Failed to add visitor. Please try again.");

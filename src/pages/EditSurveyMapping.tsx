@@ -175,12 +175,7 @@ interface SurveyMappingResponse {
 interface SurveyMappingPayload {
   id?: number;
   survey_id: number;
-  site_id: number;
-  building_id?: number;
-  wing_id?: number;
-  area_id?: number;
-  floor_id?: number;
-  room_id?: number;
+  society_id?: number;
 }
 
 interface SurveyMappingForm {
@@ -972,134 +967,37 @@ export const EditSurveyMapping = () => {
       setIsSubmitting(false);
       return;
     }
-    surveyMappings.forEach((mapping, index) => {
-      // Check if mapping is marked for deletion
-      if (mapping.markedForDeletion) {
-        mappingsToDelete.push(mapping);
-        return;
-      }
-
-      const hasLocation =
-        mapping.selectedLocation.site ||
-        mapping.selectedLocation.building ||
-        mapping.selectedLocation.wing ||
-        mapping.selectedLocation.area ||
-        mapping.selectedLocation.floor ||
-        mapping.selectedLocation.room;
-
-      if (!hasLocation) {
-        invalidMappings.push(
-          `Location Configuration ${index + 1}: Please select at least one location`
-        );
-      } else {
-        validMappings.push(mapping);
-      }
-    });
-
-    if (invalidMappings.length > 0) {
-      toast.error(invalidMappings.join("\n"), {
-        duration: 7000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (validMappings.length === 0) {
-      toast.error(
-        "Please add at least one valid survey mapping with selected locations",
-        {
-          duration: 5000,
-        }
-      );
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // Convert form mappings to API format for bulk update
-      const surveyMappingsPayload = validMappings.map((mapping) => {
-        // Extract the actual mapping ID from the form mapping id (remove 'sm-' prefix)
-        const mappingId = mapping.id.replace("sm-", "");
+      // Get society_id from localStorage (same pattern as other pages)
+      const societyId = parseInt(
+        localStorage.getItem("selectedSocietyId") ||
+        localStorage.getItem("society_id") ||
+        localStorage.getItem("org_id") ||
+        "0"
+      );
 
-        // Check if this is an existing mapping:
-        // - Existing mappings have numeric IDs from the database (e.g., "sm-86" -> "86")
-        // - New mappings have "new-" prefix with timestamp (e.g., "sm-new-1234567890123" -> "new-1234567890123")
-        const isExistingMapping =
-          !mappingId.startsWith("new-") && !isNaN(parseInt(mappingId));
-
-        console.log(
-          `Processing mapping: ${mapping.id}, extracted ID: ${mappingId}, isExisting: ${isExistingMapping}`
-        );
-
-        const mappingData: SurveyMappingPayload = {
-          survey_id: selectedSurveyId,
-          site_id: parseInt(localStorage.getItem("selectedSiteId") || "2189"),
-          ...(mapping.selectedLocation.building && {
-            building_id: parseInt(mapping.selectedLocation.building),
-          }),
-          ...(mapping.selectedLocation.wing && {
-            wing_id: parseInt(mapping.selectedLocation.wing),
-          }),
-          ...(mapping.selectedLocation.area && {
-            area_id: parseInt(mapping.selectedLocation.area),
-          }),
-          ...(mapping.selectedLocation.floor && {
-            floor_id: parseInt(mapping.selectedLocation.floor),
-          }),
-          ...(mapping.selectedLocation.room && {
-            room_id: parseInt(mapping.selectedLocation.room),
-          }),
-        };
-
-        // Add ID only for existing mappings (for update), omit for new ones (for create)
-        if (isExistingMapping) {
-          mappingData.id = parseInt(mappingId);
-          console.log(
-            `Adding ID ${mappingData.id} for existing mapping update`
-          );
-        } else {
-          console.log(`No ID added - this will create a new mapping`);
-        }
-
-        return mappingData;
-      });
-
-      // Add mappings marked for deletion to the payload with location IDs only
-      const deletionPayload = mappingsToDelete
+      // Build payload: existing mappings include their DB id, new ones don't
+      const surveyMappingsPayload: SurveyMappingPayload[] = surveyMappings
+        .filter((m) => !m.markedForDeletion)
         .map((mapping) => {
           const mappingId = mapping.id.replace("sm-", "");
           const isExistingMapping =
             !mappingId.startsWith("new-") && !isNaN(parseInt(mappingId));
 
+          const mappingData: SurveyMappingPayload = {
+            survey_id: selectedSurveyId,
+            society_id: societyId,
+          };
+
           if (isExistingMapping) {
-            console.log(`Marking mapping ${mappingId} for deletion`);
-            return {
-              id: parseInt(mappingId),
-              site_id: parseInt(localStorage.getItem("site_id") || "2189"),
-              ...(mapping.selectedLocation.building && {
-                building_id: parseInt(mapping.selectedLocation.building),
-              }),
-              ...(mapping.selectedLocation.wing && {
-                wing_id: parseInt(mapping.selectedLocation.wing),
-              }),
-              ...(mapping.selectedLocation.area && {
-                area_id: parseInt(mapping.selectedLocation.area),
-              }),
-              ...(mapping.selectedLocation.floor && {
-                floor_id: parseInt(mapping.selectedLocation.floor),
-              }),
-              ...(mapping.selectedLocation.room && {
-                room_id: parseInt(mapping.selectedLocation.room),
-              }),
-            };
+            mappingData.id = parseInt(mappingId);
           }
-          // If it's a new mapping that hasn't been saved yet, don't include it in deletion
-          return null;
-        })
-        .filter(Boolean); // Remove null entries
+
+          return mappingData;
+        });
 
       const payload = {
-        survey_mappings: [...surveyMappingsPayload, ...deletionPayload],
+        survey_mappings: surveyMappingsPayload,
       };
 
       console.log("Updating survey mappings with payload:", payload);
@@ -1308,6 +1206,7 @@ export const EditSurveyMapping = () => {
         </div>
       </Section>
 
+      {/* LOCATION CONFIGURATION SECTION TEMPORARILY HIDDEN
       <Section
         title="Location Configuration"
         icon={<MapPin className="w-3.5 h-3.5" />}
@@ -1612,8 +1511,9 @@ export const EditSurveyMapping = () => {
           </div>
         </div>
       </Section>
+      LOCATION CONFIGURATION SECTION TEMPORARILY HIDDEN */}
 
-      {/* Survey Questions Section */}
+      {/* Survey Questions Section */}}
       {selectedSurveyQuestions.length > 0 && (
         <Section
           title="Survey Questions"

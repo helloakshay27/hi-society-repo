@@ -759,7 +759,7 @@ export const AddStaffPage = () => {
                     type="button"
                     onClick={handleCameraClick}
                     variant="outline"
-                    className="w-full flex items-center justify-center gap-2 border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+                    className="w-full flex items-center justify-center gap-2 border-[#C72030] text-[#C72030]"
                   >
                     <Camera className="w-4 h-4" />
                     Capture Photo
