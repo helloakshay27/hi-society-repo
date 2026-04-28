@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./styles/product-pages.css";
+import { initColorPatch } from "./utils/colorPatch.ts";
 import { Provider } from "react-redux";
 import { store } from "./store/store.ts";
 import { BrowserRouter as Router } from "react-router-dom";
