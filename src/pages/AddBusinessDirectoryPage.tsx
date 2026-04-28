@@ -134,6 +134,11 @@ const AddBusinessDirectoryPage: React.FC = () => {
       return;
     }
 
+    if (!form.subCategory) {
+      toast.error("Sub category is required");
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("business_directory[company_name]", form.companyName);
@@ -437,7 +442,9 @@ const AddBusinessDirectoryPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subCategory">Sub Category</Label>
+                  <Label htmlFor="subCategory">
+                    Sub Category <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={form.subCategory}
                     onValueChange={(value) =>
