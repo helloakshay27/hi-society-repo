@@ -461,6 +461,26 @@ export const ResolutionEscalationTab: React.FC = () => {
     },
   });
 
+  const {
+    handleSubmit: editHandleSubmit,
+    reset: editReset,
+    setValue: editSetValue,
+    watch: editWatch,
+    register: editRegister,
+  } = useForm<ResolutionEscalationFormData>({
+    resolver: zodResolver(resolutionEscalationSchema),
+    defaultValues: {
+      categoryIds: [],
+      escalationLevels: {
+        e1: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
+        e2: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
+        e3: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
+        e4: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
+        e5: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
+      },
+    },
+  });
+
   // Helper function to convert day/hour/minute to total minutes
   const convertToMinutes = (
     days: number,
@@ -1050,7 +1070,7 @@ export const ResolutionEscalationTab: React.FC = () => {
         },
       };
 
-      reset(formData);
+      editReset(formData);
       setEditEscalationIssueTypeId(String(rule.issue_type_id || ""));
       setEditEscalationCategoryTypeId(String(rule.category_id || ""));
       setIsEditDialogOpen(true);
@@ -1094,6 +1114,7 @@ export const ResolutionEscalationTab: React.FC = () => {
 
       await ticketManagementAPI.updateResolutionEscalationRule(payload);
       toast.success("Resolution escalation updated successfully!");
+      editReset();
       setIsEditDialogOpen(false);
       setEditingRule(null);
       dispatch(fetchResolutionEscalations());
@@ -2883,12 +2904,12 @@ export const ResolutionEscalationTab: React.FC = () => {
       </Dialog>
 
       {/* ──────────────── EDIT ESCALATION RULE DIALOG ──────────────── */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) editReset(); }}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto overflow-x-visible">
           <DialogHeader>
             <DialogTitle>Edit</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit(handleUpdate)} className="space-y-6">
+          <form onSubmit={editHandleSubmit(handleUpdate)} className="space-y-6">
             {/* Issue Type & Category Type Selection */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -3006,14 +3027,14 @@ export const ResolutionEscalationTab: React.FC = () => {
                           options={userOptions}
                           value={userOptions.filter((option) => {
                             const currentUsers =
-                              watch(`escalationLevels.${level}.users`) || [];
+                              editWatch(`escalationLevels.${level}.users`) || [];
                             return currentUsers.includes(option.value);
                           })}
                           onChange={(selected) => {
                             const selectedIds = selected
                               ? selected.map((s) => s.value)
                               : [];
-                            setValue(
+                            editSetValue(
                               `escalationLevels.${level}.users`,
                               selectedIds,
                               { shouldValidate: true }
@@ -3067,14 +3088,14 @@ export const ResolutionEscalationTab: React.FC = () => {
                           options={userOptions}
                           value={userOptions.filter((option) => {
                             const currentCopyTo =
-                              watch(`escalationLevels.${level}.copyTo`) || [];
+                              editWatch(`escalationLevels.${level}.copyTo`) || [];
                             return currentCopyTo.includes(option.value);
                           })}
                           onChange={(selected) => {
                             const selectedIds = selected
                               ? selected.map((s) => s.value)
                               : [];
-                            setValue(
+                            editSetValue(
                               `escalationLevels.${level}.copyTo`,
                               selectedIds,
                               { shouldValidate: true }
@@ -3128,7 +3149,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                             <Input
                               type="number"
                               min="0"
-                              {...register(
+                              {...editRegister(
                                 `escalationLevels.${level}.priorities.${priority}.days`,
                                 { valueAsNumber: true }
                               )}
@@ -3141,7 +3162,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                               type="number"
                               min="0"
                               max="23"
-                              {...register(
+                              {...editRegister(
                                 `escalationLevels.${level}.priorities.${priority}.hours`,
                                 { valueAsNumber: true }
                               )}
@@ -3154,7 +3175,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                               type="number"
                               min="0"
                               max="59"
-                              {...register(
+                              {...editRegister(
                                 `escalationLevels.${level}.priorities.${priority}.minutes`,
                                 { valueAsNumber: true }
                               )}
@@ -3174,7 +3195,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
+                onClick={() => { setIsEditDialogOpen(false); editReset(); }}
               >
                 Cancel
               </Button>

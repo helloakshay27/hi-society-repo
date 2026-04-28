@@ -18,6 +18,7 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
+import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
 
 const HiSocNoticeCreate = () => {
   const navigate = useNavigate();
@@ -59,6 +60,8 @@ const HiSocNoticeCreate = () => {
   const [showCoverUploader, setShowCoverUploader] = useState(false);
   const [showBroadcastUploader, setShowBroadcastUploader] = useState(false);
   const previewUrlsRef = useRef(new Map());
+  const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
+  const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -367,20 +370,28 @@ const HiSocNoticeCreate = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(getFullUrl('/usergroups/get_members_list.json'), {
+  const fetchUsers = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        getFullUrl(`/usergroups/get_members_list.json${qs ? `?${qs}` : ""}`),
+        {
           headers: {
             Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
-        });
-        setUsers(response?.data || []);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
+        }
+      );
+      setUsers(response?.data || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, []);
   
@@ -406,26 +417,34 @@ const HiSocNoticeCreate = () => {
     navigate(-1);
   };
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get(getFullUrl('/crm/usergroups.json'), {
-         headers: {
-                                  Authorization: getAuthHeader(),
-                                  "Content-Type": "application/json",
-                                },
-        });
-        const groupsData = Array.isArray(response.data) ? response.data : response.data.usergroups || [];
-        setGroups(groupsData);
-      } catch (error) {
-        console.error("Error fetching Groups:", error);
-      }
-    };
-
-    if (formData.shared === "2" && groups.length === 0) {
-      fetchGroups();
+  const fetchGroups = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        getFullUrl(`/crm/usergroups.json${qs ? `?${qs}` : ""}`),
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const groupsData = Array.isArray(response.data) ? response.data : response.data.usergroups || [];
+      setGroups(groupsData);
+    } catch (error) {
+      console.error("Error fetching Groups:", error);
     }
-  }, [formData.shared, groups.length]);
+  };
+
+  useEffect(() => {
+    if (formData.shared === "2") {
+      fetchGroups(groupFilter);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.shared]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">
@@ -448,7 +467,7 @@ const HiSocNoticeCreate = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section: Communication Information */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
@@ -781,6 +800,17 @@ const HiSocNoticeCreate = () => {
 
                 {/* Individual Select */}
                 {formData.shared === "1" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter members by role or tower</span>
+                      <MemberFilterPanel
+                        value={memberFilter}
+                        onChange={(newFilters) => {
+                          setMemberFilter(newFilters);
+                          fetchUsers(newFilters);
+                        }}
+                      />
+                    </div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -834,10 +864,22 @@ const HiSocNoticeCreate = () => {
                       })}
                     </MuiSelect>
                   </FormControl>
+                  </div>
                 )}
 
                 {/* Group Select */}
                 {formData.shared === "2" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter groups by role or tower</span>
+                      <MemberFilterPanel
+                        value={groupFilter}
+                        onChange={(newFilters) => {
+                          setGroupFilter(newFilters);
+                          fetchGroups(newFilters);
+                        }}
+                      />
+                    </div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -878,6 +920,7 @@ const HiSocNoticeCreate = () => {
                       ))}
                     </MuiSelect>
                   </FormControl>
+                  </div>
                 )}
               </div>
             </div>

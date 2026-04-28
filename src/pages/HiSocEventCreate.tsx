@@ -20,6 +20,7 @@ import {
   Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
 
 const HiSocEventCreate = () => {
   const navigate = useNavigate();
@@ -68,6 +69,8 @@ const HiSocEventCreate = () => {
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
   const [groups, setGroups] = useState([]);
+  const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
+  const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
 
   // Enhanced reminder state
   const [reminderValue, setReminderValue] = useState("");
@@ -1030,39 +1033,44 @@ const HiSocEventCreate = () => {
     fetchEvent();
   }, []);
 
+  const fetchUsers = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        getFullUrl(`/usergroups/get_members_list.json${qs ? `?${qs}` : ""}`),
+        {
+           headers: {
+                    Authorization: getAuthHeader(),
+                    "Content-Type": "application/json",
+                  },
+        }
+      );
+
+      // Transform the response to match the expected format
+      const transformedUsers = (response?.data || []).map(item => ({
+        id: item.id,
+        id_user: item.id_user,
+        firstname: item.user?.firstname || '',
+        lastname: item.user?.lastname || '',
+        user_name: `${item.user?.firstname || ''} ${item.user?.lastname || ''}`.trim(),
+        email: item.user?.email || '',
+        mobile: item.user?.mobile || '',
+        flat: item.user_flat?.flat || '',
+        block: item.user_flat?.block || '',
+        society_name: item.society?.building_name || ''
+      }));
+
+      setEventUserID(transformedUsers);
+      console.log("eventUserID", transformedUsers);
+    } catch (error) {
+      console.error("Error fetching Users:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(
-          getFullUrl('/usergroups/get_members_list.json'),
-          {
-             headers: {
-                      Authorization: getAuthHeader(),
-                      "Content-Type": "application/json",
-                    },
-          }
-        );
-
-        // Transform the response to match the expected format
-        const transformedUsers = (response?.data || []).map(item => ({
-          id: item.id,
-          id_user: item.id_user,
-          firstname: item.user?.firstname || '',
-          lastname: item.user?.lastname || '',
-          user_name: `${item.user?.firstname || ''} ${item.user?.lastname || ''}`.trim(),
-          email: item.user?.email || '',
-          mobile: item.user?.mobile || '',
-          flat: item.user_flat?.flat || '',
-          block: item.user_flat?.block || '',
-          society_name: item.society?.building_name || ''
-        }));
-
-        setEventUserID(transformedUsers);
-        console.log("eventUserID", transformedUsers);
-      } catch (error) {
-        console.error("Error fetching Users:", error);
-      }
-    };
     fetchUsers();
   }, []);
 
@@ -1098,27 +1106,34 @@ const HiSocEventCreate = () => {
     navigate(-1);
   };
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get(getFullUrl('/crm/usergroups.json'), {
+  const fetchGroups = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        getFullUrl(`/crm/usergroups.json${qs ? `?${qs}` : ""}`),
+        {
           headers: {
                    Authorization: getAuthHeader(),
                    "Content-Type": "application/json",
                  },
-        });
-
-        const groupsData = response.data.usergroups || [];
-        setGroups(groupsData);
-        console.log("Fetched Groups:", groupsData);
-      } catch (error) {
-        console.error("Error fetching Groups:", error);
-      }
-    };
-
-    if (formData.shared === "group" && groups.length === 0) {
-      fetchGroups();
+        }
+      );
+      const groupsData = response.data.usergroups || [];
+      setGroups(groupsData);
+      console.log("Fetched Groups:", groupsData);
+    } catch (error) {
+      console.error("Error fetching Groups:", error);
     }
+  };
+
+  useEffect(() => {
+    if (formData.shared === "group") {
+      fetchGroups(groupFilter);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.shared]);
 
   // Fetch Channel Partners
@@ -2240,6 +2255,17 @@ const HiSocEventCreate = () => {
                 </div>
 
                 {formData.shared === "individual" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter members by role or tower</span>
+                      <MemberFilterPanel
+                        value={memberFilter}
+                        onChange={(newFilters) => {
+                          setMemberFilter(newFilters);
+                          fetchUsers(newFilters);
+                        }}
+                      />
+                    </div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -2280,8 +2306,20 @@ const HiSocEventCreate = () => {
                       ))}
                     </MuiSelect>
                   </FormControl>
+                  </div>
                 )}
                 {formData.shared === "group" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter groups by role or tower</span>
+                      <MemberFilterPanel
+                        value={groupFilter}
+                        onChange={(newFilters) => {
+                          setGroupFilter(newFilters);
+                          fetchGroups(newFilters);
+                        }}
+                      />
+                    </div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -2322,6 +2360,7 @@ const HiSocEventCreate = () => {
                       ))}
                     </MuiSelect>
                   </FormControl>
+                  </div>
                 )}
               </div>
 

@@ -262,7 +262,7 @@ const HiSocNoticeDetails = () => {
               </div>
 
               {/* Share With */}
-              <div className="flex items-start col-span-1 md:col-span-2 gap-6">
+              {/* <div className="flex items-start col-span-1 md:col-span-2 gap-6">
                 <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
                   Share With
                 </div>
@@ -344,7 +344,7 @@ const HiSocNoticeDetails = () => {
                     return "-";
                   })()}
                 </div>
-              </div>
+              </div> */}
 
               {/* Notice Text - Full Width */}
               <div className="flex items-start col-span-1 md:col-span-2 gap-6">
