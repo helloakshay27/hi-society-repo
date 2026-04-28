@@ -10,7 +10,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 
 // Register service worker for PWA
 // registerServiceWorker();
-if (window.location.hostname === "fm-matrix.lockated.com" || window.location.hostname === "localhost") {
+if (window.location.hostname === "fm-matrix.lockated.com") {
   import("./styles/theme.css"); // Lockated Brand Theme - Edit this file for global color changes
   // Initialise runtime color patcher — overrides MUI inline styles and any
   // legacy #C72030 / #C62828 colors injected via sx props or inline styles.
