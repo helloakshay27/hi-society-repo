@@ -6,18 +6,9 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Plus,
-  Edit,
-  Eye,
-  Settings,
-  Users,
-  UserCheck,
-  UserX,
-  Clock,
-  Pencil,
-} from "lucide-react";
+import { Plus, Edit, Eye, Settings, Users, UserCheck, UserX, Clock, Pencil, X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { EventFilterDialog, EventFilters } from "@/components/EventFilterDialog";
 import {
   Pagination,
   PaginationContent,
@@ -64,6 +55,8 @@ const HiSocEventList = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<EventFilters | null>(null);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [activeTab, setActiveTab] = useState("events");
 
@@ -103,15 +96,37 @@ const HiSocEventList = () => {
   }, []);
 
   const fetchEvents = useCallback(
-    async (page: number, search: string) => {
+    async (page: number, search: string, filters?: EventFilters | null) => {
       setLoading(true);
       setIsSearching(!!search);
       try {
-        const response = await axios.get(getFullUrl('/crm/admin/events.json'), {
-          headers: {
-            Authorization: getAuthHeader(),
-          },
-        });
+        // Build query params from active filters
+        const params = new URLSearchParams();
+        if (filters) {
+          filters.tower_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_society_block_id_in][]",
+              id
+            )
+          );
+          filters.flat_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_id_in][]",
+              id
+            )
+          );
+          if (filters.date_range) {
+            params.append("q[date_range]", filters.date_range);
+          }
+          filters.publish_in.forEach((v) =>
+            params.append("q[publish_in][]", v)
+          );
+        }
+        const qs = params.toString();
+        const response = await axios.get(
+          getFullUrl(`/crm/admin/events.json${qs ? `?${qs}` : ""}`),
+          { headers: { Authorization: getAuthHeader() } }
+        );
 
         const eventsData = response.data.classifieds || [];
 
@@ -161,11 +176,26 @@ const HiSocEventList = () => {
   );
 
   useEffect(() => {
-    fetchEvents(currentPage, searchTerm);
-  }, [currentPage, searchTerm, fetchEvents]);
+    fetchEvents(currentPage, searchTerm, activeFilters);
+  }, [currentPage, searchTerm, activeFilters, fetchEvents]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = (filters: EventFilters) => {
+    const hasFilters =
+      filters.tower_ids.length > 0 ||
+      filters.flat_ids.length > 0 ||
+      filters.date_range !== "" ||
+      filters.publish_in.length > 0;
+    setActiveFilters(hasFilters ? filters : null);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setActiveFilters(null);
     setCurrentPage(1);
   };
 
@@ -502,7 +532,21 @@ const HiSocEventList = () => {
           enableGlobalSearch={true}
           onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search events..."
-          leftActions={renderCustomActions()}
+        leftActions={renderCustomActions()}
+          rightActions={
+            activeFilters ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-8 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                title="Clear filters"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            ) : undefined
+          }
+          onFilterClick={() => setIsFilterOpen(true)}
           loading={isSearching || loading}
           loadingMessage={
             isSearching ? "Searching events..." : "Loading events..."
@@ -652,6 +696,11 @@ const HiSocEventList = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <EventFilterDialog
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApplyFilters={handleApplyFilters}
+      />
     </div>
   );
 };

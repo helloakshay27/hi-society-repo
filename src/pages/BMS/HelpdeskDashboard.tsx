@@ -223,7 +223,18 @@ export const TicketDashboard = () => {
     complaints: 0,
     suggestions: 0,
     requests: 0,
-    pending_tickets: 0
+    pending_tickets: 0,
+    new_tickets: 0,
+    overdue_tickets: 0,
+    total_complaints: 0,
+    total_suggestions: 0,
+    total_requests: 0,
+    golden_tickets: 0,
+    flagged_tickets: 0,
+    open_complaints: 0,
+    open_requests: 0,
+    open_suggestions: 0,
+    completed_tickets: 0,
   });
   const [filters, setFilters] = useState<TicketFilters>({});
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -349,7 +360,7 @@ export const TicketDashboard = () => {
       const summaryFilters: TicketFilters = filters || {};
 
       const summary = await ticketManagementAPI.getTicketSummary(summaryFilters);
-      setTicketSummary(summary);
+      setTicketSummary(prev => ({ ...prev, ...summary }));
 
       // Store initial total count only on first load without filters
       if (!filters && initialTotalTickets === 0) {
@@ -469,7 +480,7 @@ export const TicketDashboard = () => {
     const loadInitialData = async () => {
       try {
         const summary = await ticketManagementAPI.getTicketSummary();
-        setTicketSummary(summary);
+        setTicketSummary(prev => ({ ...prev, ...summary }));
         setInitialTotalTickets(summary.total_tickets);
       } catch (error) {
         console.error('Error fetching initial ticket summary:', error);
@@ -485,7 +496,14 @@ export const TicketDashboard = () => {
   const inProgressTickets = ticketSummary.in_progress_tickets || 0;
   const closedTickets = ticketSummary.closed_tickets || 0;
   const totalSummaryTickets = ticketSummary.total_tickets || 0;
-  const pendingTickets = ticketSummary.pending_tickets || 0; // Use ticket summary for pending as it's not in analytics
+  const pendingTickets = ticketSummary.pending_tickets || 0;
+  const completedTickets = ticketSummary.completed_tickets || ticketSummary.closed_tickets || 0;
+  const totalComplaints = ticketSummary.total_complaints || ticketSummary.complaints || 0;
+  const totalSuggestions = ticketSummary.total_suggestions || ticketSummary.suggestions || 0;
+  const totalRequests = ticketSummary.total_requests || ticketSummary.requests || 0;
+  const openComplaints = ticketSummary.open_complaints || 0;
+  const openRequests = ticketSummary.open_requests || 0;
+  const openSuggestions = ticketSummary.open_suggestions || 0;
   // Always use the current totalSummaryTickets from API to ensure the count is up-to-date
   const displayTotalTickets = totalSummaryTickets.toLocaleString();
 
@@ -908,69 +926,72 @@ export const TicketDashboard = () => {
 
   // Handle status card click for filtering
   const handleStatusCardClick = (cardType: string) => {
-    console.log('Status card clicked:', cardType);
-
     if (cardType === 'total') {
-      // Clear only status filters, keep other filters like date_range
       setFilters(prevFilters => {
         const {
           complaint_status_fixed_state_eq,
           complaint_status_fixed_state_not_eq,
           complaint_status_fixed_state_null,
+          complaint_type_eq,
           m,
-          g, // Remove nested group structure
+          g,
           ...otherFilters
         } = prevFilters;
-        console.log('Total card - Clearing status filters, keeping:', otherFilters);
         return otherFilters;
       });
       setCurrentPage(1);
       return;
     }
 
-    // Preserve existing filters (like date_range) and only update status filters
     setFilters(prevFilters => {
-      // Remove any existing status filters first (including nested group structure)
       const {
         complaint_status_fixed_state_eq,
         complaint_status_fixed_state_not_eq,
         complaint_status_fixed_state_null,
+        complaint_type_eq,
         m,
-        g, // Remove nested group structure
+        g,
         ...otherFilters
       } = prevFilters;
 
       const newFilters: TicketFilters = { ...otherFilters };
 
-      // Add the new status filter
       if (cardType === 'open') {
-        // Use nested group structure for open tickets as per API requirement
-        // q[m]=and&q[g][0][m]=or&q[g][0][complaint_status_fixed_state_not_eq]=closed&q[g][0][complaint_status_fixed_state_null]=1
         newFilters.m = 'and';
         newFilters.g = [{
           m: 'or',
           complaint_status_fixed_state_not_eq: 'closed',
           complaint_status_fixed_state_null: '1'
         }];
-        console.log('✅ Open card - Combined filters with date_range:', newFilters);
       } else if (cardType === 'pending') {
         newFilters.complaint_status_fixed_state_eq = 'Pending';
-        console.log('✅ Pending card - Combined filters with date_range:', newFilters);
       } else if (cardType === 'in_progress') {
         newFilters.complaint_status_fixed_state_eq = 'In Progress';
-        console.log('✅ In Progress card - Combined filters with date_range:', newFilters);
       } else if (cardType === 'closed') {
         newFilters.complaint_status_fixed_state_eq = 'Closed';
-        console.log('✅ Closed card - Combined filters with date_range:', newFilters);
+      } else if (cardType === 'completed') {
+        newFilters.complaint_status_fixed_state_eq = 'complete';
+      } else if (cardType === 'complaints') {
+        newFilters.complaint_type_eq = 'Complaint';
+      } else if (cardType === 'suggestions') {
+        newFilters.complaint_type_eq = 'Suggestion';
+      } else if (cardType === 'requests') {
+        newFilters.complaint_type_eq = 'Request';
+      } else if (cardType === 'open_complaints') {
+        newFilters.complaint_status_fixed_state_eq = 'Open';
+        newFilters.complaint_type_eq = 'Complaint';
+      } else if (cardType === 'open_suggestions') {
+        newFilters.complaint_status_fixed_state_eq = 'Open';
+        newFilters.complaint_type_eq = 'Suggestion';
+      } else if (cardType === 'open_requests') {
+        newFilters.complaint_status_fixed_state_eq = 'Open';
+        newFilters.complaint_type_eq = 'Request';
       }
 
       return newFilters;
     });
 
     setCurrentPage(1);
-
-    // DO NOT call fetchTicketSummary here - status card clicks should only filter the ticket list,
-    // not affect the summary counts which should remain unfiltered
   };
 
   // Helper function to check if a status card is currently active
@@ -978,7 +999,6 @@ export const TicketDashboard = () => {
     if (cardType === 'total') return false;
 
     if (cardType === 'open') {
-      // Check for nested group structure
       return filters.m === 'and' &&
         filters.g?.[0]?.m === 'or' &&
         filters.g?.[0]?.complaint_status_fixed_state_not_eq === 'closed' &&
@@ -989,6 +1009,20 @@ export const TicketDashboard = () => {
       return filters.complaint_status_fixed_state_eq === 'In Progress';
     } else if (cardType === 'closed') {
       return filters.complaint_status_fixed_state_eq === 'Closed';
+    } else if (cardType === 'completed') {
+      return filters.complaint_status_fixed_state_eq === 'complete';
+    } else if (cardType === 'complaints') {
+      return filters.complaint_type_eq === 'Complaint' && !filters.complaint_status_fixed_state_eq;
+    } else if (cardType === 'suggestions') {
+      return filters.complaint_type_eq === 'Suggestion' && !filters.complaint_status_fixed_state_eq;
+    } else if (cardType === 'requests') {
+      return filters.complaint_type_eq === 'Request' && !filters.complaint_status_fixed_state_eq;
+    } else if (cardType === 'open_complaints') {
+      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Complaint';
+    } else if (cardType === 'open_suggestions') {
+      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Suggestion';
+    } else if (cardType === 'open_requests') {
+      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Request';
     }
 
     return false;
@@ -1614,44 +1648,34 @@ export const TicketDashboard = () => {
 
           <TabsContent value="tickets" className="space-y-4 sm:space-y-4 mt-4 sm:mt-6">
             {/* Ticket Statistics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 mb-6">
-              {[{
-                label: 'Total Tickets',
-                value: displayTotalTickets,
-                icon: Settings,
-                type: 'total',
-                clickable: true
-              }, {
-                label: 'Open',
-                value: openTickets,
-                icon: Settings,
-                type: 'open',
-                clickable: true
-              }, {
-                label: 'Closed',
-                value: closedTickets,
-                icon: Settings,
-                type: 'closed',
-                clickable: true
-              }].map((item, i) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-6">
+              {([
+                { label: 'Total Tickets',       value: displayTotalTickets,       type: 'total',       icon: Ticket },
+                { label: 'Open Tickets',        value: openTickets,               type: 'open',        icon: AlertCircle },
+                { label: 'Closed Tickets',      value: closedTickets,             type: 'closed',      icon: CheckCircle },
+                { label: 'Completed Tickets',   value: completedTickets,          type: 'completed',   icon: CheckCircle },
+                { label: 'Work In Progress',    value: inProgressTickets,         type: 'in_progress', icon: Clock },
+                { label: 'Complaints',          value: totalComplaints,           type: 'complaints',       icon: AlertCircle },
+                { label: 'Suggestions',         value: totalSuggestions,          type: 'suggestions',      icon: TrendingUp },
+                { label: 'Requests',            value: totalRequests,             type: 'requests',         icon: Ticket },
+                { label: 'Open (Complaints)',   value: openComplaints,            type: 'open_complaints',  icon: AlertCircle },
+                { label: 'Open (Requests)',     value: openRequests,              type: 'open_requests',    icon: Ticket },
+                { label: 'Open (Suggestions)', value: openSuggestions,           type: 'open_suggestions', icon: TrendingUp },
+              ] as { label: string; value: string | number; type: string | null; icon: React.ElementType }[]).map((item, i) => {
                 const IconComponent = item.icon;
-                const isActive = isStatusCardActive(item.type);
+                const isActive = item.type ? isStatusCardActive(item.type) : false;
                 return (
                   <div
                     key={i}
-                    className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${item.clickable ? "cursor-pointer hover:shadow-lg transition-shadow" : ""}`}
-                    onClick={() => item.clickable && handleStatusCardClick(item.type)}
+                    className={`bg-[#F6F4EE] p-4 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-3 cursor-pointer hover:shadow-lg transition-shadow ${isActive ? 'ring-2 ring-[#C72030]' : ''}`}
+                    onClick={() => item.type && handleStatusCardClick(item.type)}
                   >
-                    <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
-                      <IconComponent className="w-6 h-6 text-[#C72030]" />
+                    <div className={`w-10 h-10 flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-[#C72030]/10' : 'bg-[#C4B89D54]'}`}>
+                      <IconComponent className="w-5 h-5 text-[#C72030]" />
                     </div>
-                    <div>
-                      <div className="text-2xl font-semibold text-[#1A1A1A]">
-                        {item.value}
-                      </div>
-                      <div className="text-sm font-medium text-[#1A1A1A]">
-                        {item.label}
-                      </div>
+                    <div className="min-w-0">
+                      <div className="text-xl font-semibold text-[#1A1A1A]">{item.value}</div>
+                      <div className="text-xs font-medium text-[#1A1A1A] leading-tight">{item.label}</div>
                     </div>
                   </div>
                 );

@@ -11,13 +11,15 @@ interface StaffActionsPanelProps {
   onImport?: () => void;
   onClearSelection?: () => void;
   loading?: boolean;
+  addLabel?: string;
 }
 
 export const StaffActionsPanel: React.FC<StaffActionsPanelProps> = ({
   onAdd,
   onImport,
   onClearSelection,
-  loading
+  loading,
+  addLabel = 'Add Staff',
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +65,7 @@ export const StaffActionsPanel: React.FC<StaffActionsPanelProps> = ({
               style={{ width: "60px", height: "70px" }}
             >
               <Plus className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium text-center leading-tight">Add Staff</span>
+              <span className="text-xs font-medium text-center leading-tight">{addLabel}</span>
             </Button>
           )}
 

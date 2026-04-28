@@ -916,66 +916,65 @@ export const AddVisitorPage = () => {
                             </div>
                             <div className="p-6 space-y-5">
                                 {/* Single Item Row */}
-                                <div className="space-y-3">
-                                    <div className="flex gap-4 items-stretch">
-                                        <div className="flex-1">
-                                            <TextField
-                                                placeholder="Item description"
-                                                value={item?.description || ""}
-                                                onChange={(e) =>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                                    <div className="md:col-span-3">
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                            Item Description
+                                        </label>
+                                        <TextField
+                                            placeholder="Item description"
+                                            value={item?.description || ""}
+                                            onChange={(e) =>
+                                                setItem({
+                                                    ...item,
+                                                    description: e.target.value
+                                                })
+                                            }
+                                            fullWidth
+                                            // multiline
+                                            rows={3}
+                                            variant="outlined"
+                                            InputLabelProps={{ shrink: true }}
+                                            sx={{
+                                                ...fieldStyles,
+                                                height: "auto",
+                                                "& .MuiOutlinedInput-root": {
+                                                    ...fieldStyles["& .MuiOutlinedInput-root"],
+                                                    height: "auto",
+                                                    minHeight: "80px",
+                                                },
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-1">
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                            No. of Items
+                                        </label>
+                                        <TextField
+                                            type="number"
+                                            placeholder="Qty"
+                                            value={item?.quantity || 1}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value) || 0;
+                                                if (val > 0) {
                                                     setItem({
                                                         ...item,
-                                                        description: e.target.value
-                                                    })
+                                                        quantity: val
+                                                    });
                                                 }
-                                                fullWidth
-                                                multiline
-                                                rows={3}
-                                                variant="outlined"
-                                                InputLabelProps={{ shrink: true }}
-                                                sx={{
-                                                    ...fieldStyles,
-                                                    height: "auto",
-                                                    "& .MuiOutlinedInput-root": {
-                                                        ...fieldStyles["& .MuiOutlinedInput-root"],
-                                                        height: "auto",
-                                                        minHeight: "120px",
-                                                    },
-                                                    "& .MuiOutlinedInput-input": {
-                                                        resize: "vertical",
-                                                    },
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-2 items-center">
-                                            <div className="w-24">
-                                                <TextField
-                                                    type="number"
-                                                    placeholder="Qty"
-                                                    value={item?.quantity || 1}
-                                                    onChange={(e) => {
-                                                        const val = parseInt(e.target.value) || 0;
-                                                        if (val > 0) {
-                                                            setItem({
-                                                                ...item,
-                                                                quantity: val
-                                                            });
-                                                        }
-                                                    }}
-                                                    fullWidth
-                                                    variant="outlined"
-                                                    InputLabelProps={{ shrink: true }}
-                                                    inputProps={{
-                                                        min: 1,
-                                                        style: { textAlign: "center", fontSize: "16px", fontWeight: "500" }
-                                                    }}
-                                                    sx={{
-                                                        ...fieldStyles,
-                                                        "& input": { textAlign: "center" },
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
+                                            }}
+                                            fullWidth
+                                            variant="outlined"
+                                            InputLabelProps={{ shrink: true }}
+                                            inputProps={{
+                                                min: 1,
+                                                style: { textAlign: "center", fontSize: "16px", fontWeight: "500" }
+                                            }}
+                                            sx={{
+                                                ...fieldStyles,
+                                                "& input": { textAlign: "center" },
+                                            }}
+                                        />
                                     </div>
                                 </div>
 
@@ -1091,22 +1090,29 @@ export const AddVisitorPage = () => {
                     )}
 
                     {/* Submit Button */}
-                    <div className="flex gap-4 pt-6">
-                        <Button
+                    <div className="flex gap-4 justify-center pt-6">
+                        <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-6 rounded-lg font-medium text-lg"
+                            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] flex items-center justify-center gap-2"
                         >
-                            {isSubmitting ? "Submitting..." : "Submit"}
-                        </Button>
-                        <Button
+                            {isSubmitting ? (
+                                <>
+                                    <svg className="animate-spin h-4 w-4 text-[#C72030]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Submitting...
+                                </>
+                            ) : "Submit"}
+                        </button>
+                        <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            variant="outline"
-                            className="flex-1 py-6 rounded-lg font-medium text-lg"
+                            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
                         >
                             Cancel
-                        </Button>
+                        </button>
                     </div>
                 </form>
             </div>
