@@ -361,8 +361,8 @@ export const TOKEN = API_CONFIG.TOKEN;
 
 // Helper to get full URL
 export const getFullUrl = (endpoint: string): string => {
-  let resolvedBaseUrl = API_CONFIG.BASE_URL;
-  if (!resolvedBaseUrl) {
+  const baseUrl = API_CONFIG.BASE_URL;
+  if (!baseUrl) {
     console.warn(
       "Base URL is not configured, this should not happen with fallback"
     );
@@ -370,16 +370,7 @@ export const getFullUrl = (endpoint: string): string => {
       "Base URL is not configured. Please check your authentication settings."
     );
   }
-  const hostname = window.location.hostname;
-  // Force UAT baseUrl for localhost
-  if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-    resolvedBaseUrl = "https://hi-society.lockated.com";
-  }
-  // Ensure endpoint starts with '/'
-  const normalizedEndpoint = endpoint.startsWith("/")
-    ? endpoint
-    : `/${endpoint}`;
-  return `${resolvedBaseUrl}${normalizedEndpoint}`;
+  return `${baseUrl}${endpoint}`;
 };
 
 // Helper to get authorization header
