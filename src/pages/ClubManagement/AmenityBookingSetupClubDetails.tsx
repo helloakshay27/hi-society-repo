@@ -648,7 +648,6 @@ export const BookingSetupDetailClubPage = () => {
               <Button
                 variant="outline"
                 onClick={() => handleEditClick(id)}
-                className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
               >
                 Edit
               </Button>
