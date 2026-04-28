@@ -768,7 +768,7 @@ export const Header = () => {
               // Set base URL BEFORE toggling mode to ensure proper API routing
               if (layoutMode === 'hi-society') {
                 // Switching to FM Matrix - set FM Matrix base URL
-                localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
+                // localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
                 toggleLayoutMode();
                 // Use React Router navigate for client-side navigation (preserves auth)
                 navigate('/maintenance/asset');
