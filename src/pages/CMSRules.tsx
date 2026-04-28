@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, Plus, Trash2, Pencil, Check } from "lucide-react";
+import { X, Plus, Trash2, Pencil, Check, Loader } from "lucide-react";
 import {
   FormControl,
   MenuItem,
@@ -24,6 +24,7 @@ const CMSRules: React.FC = () => {
   const token = localStorage.getItem("token");
 
   const [rules, setRules] = useState<Rule[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     triggerTo: "",
     periodType: "",
@@ -37,10 +38,10 @@ const CMSRules: React.FC = () => {
     periodValue: "",
   });
 
-  const fetchRules = async() => {
+  const fetchRules = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/facility_setups.json?type=rules_setup`,{
-        headers:{
+      const response = await axios.get(`https://${baseUrl}/crm/admin/facility_setups.json?type=rules_setup`, {
+        headers: {
           Authorization: `Bearer ${token}`,
         }
       })
@@ -63,11 +64,13 @@ const CMSRules: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     if (!formData.triggerTo || !formData.periodType || !formData.periodValue) {
       toast.error("Please fill all fields");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const formDataToSend = new FormData();
@@ -75,8 +78,8 @@ const CMSRules: React.FC = () => {
       formDataToSend.append("q[][prior_to]", formData.periodType);
       formDataToSend.append("q[][prior_val]", formData.periodValue);
 
-      await axios.post(`https://${baseUrl}/crm/admin/facility_rules.json`,formDataToSend,{
-        headers:{
+      await axios.post(`https://${baseUrl}/crm/admin/facility_rules.json`, formDataToSend, {
+        headers: {
           Authorization: `Bearer ${token}`,
         }
       })
@@ -90,6 +93,8 @@ const CMSRules: React.FC = () => {
       fetchRules();
     } catch (error) {
       console.log(error)
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -117,6 +122,8 @@ const CMSRules: React.FC = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("facility_rule[trigger_to]", editFormData.triggerTo);
@@ -135,6 +142,8 @@ const CMSRules: React.FC = () => {
     } catch (error) {
       console.error("Error updating rule:", error);
       toast.error("Failed to update rule");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -143,6 +152,7 @@ const CMSRules: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    setIsSubmitting(true);
     try {
       await axios.delete(`https://${baseUrl}/crm/admin/facility_rules/${id}.json`, {
         headers: {
@@ -154,6 +164,8 @@ const CMSRules: React.FC = () => {
     } catch (error) {
       console.error("Error deleting rule:", error);
       toast.error("Failed to delete rule");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -257,9 +269,10 @@ const CMSRules: React.FC = () => {
           <div className="mt-4 flex justify-center">
             <Button
               onClick={handleSubmit}
-              className="bg-[#00a65a] hover:bg-[#008d4c] text-white px-8 py-2 h-auto text-sm font-semibold"
+              disabled={isSubmitting}
+              className="px-8 py-2 h-auto text-sm font-semibold"
             >
-              Submit
+              {isSubmitting ? <Loader size={14} className="animate-spin" /> : "Submit"}
             </Button>
           </div>
         </div>
@@ -269,83 +282,60 @@ const CMSRules: React.FC = () => {
 
       {/* Configured Rules Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {rules.map((rule,idx) => {
+        {rules.map((rule, idx) => {
           const isEditing = editingId === rule.id;
           return (
-          <div key={rule.id} className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden relative">
-            <div className="absolute right-2 top-2 z-10 flex gap-2">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={() => handleUpdate(rule.id)}
-                    className="bg-green-600 text-white p-1 rounded hover:bg-green-700 transition-colors"
-                  >
-                    <Check size={14} />
-                  </button>
-                  <button
-                    onClick={handleEditCancel}
-                    className="bg-gray-500 text-white p-1 rounded hover:bg-gray-600 transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleEditStart(rule)}
-                    className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 transition-colors"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(rule.id)}
-                    className="bg-[#d9534f] text-white p-1 rounded hover:bg-[#c9302c] transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </>
-              )}
-            </div>
-            <div className="bg-[#efefef] p-3 border-l-4 border-[#f7941d] flex items-center pr-20">
-              <Typography variant="subtitle2" fontWeight="600" color="#333">
-                Rule {idx + 1}
-              </Typography>
-            </div>
-            <div className="p-4">
-              <div className="border border-dashed border-[#ccc] p-4 rounded space-y-4 bg-[#fcfcfc]">
-                <div className="space-y-1">
-                  <Typography variant="caption" color="textSecondary" fontWeight="500">
-                    Trigger an email to
-                  </Typography>
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={isEditing ? editFormData.triggerTo : rule.triggerTo}
-                      onChange={(e) => handleEditInputChange("triggerTo", e.target.value)}
-                      disabled={!isEditing}
-                      sx={{
-                        ...selectStyles,
-                        backgroundColor: isEditing ? "#fff" : "#f9f9f9",
-                        "& .MuiSelect-select.Mui-disabled": {
-                          WebkitTextFillColor: "#333",
-                        },
-                      }}
-                      MenuProps={menuProps}
+            <div key={rule.id} className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden relative">
+              <div className="absolute right-2 top-2 z-10 flex gap-2">
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={() => handleUpdate(rule.id)}
+                      disabled={isSubmitting}
+                      className="bg-green-600 text-white p-1 rounded hover:bg-green-700 transition-colors"
                     >
-                      <MenuItem value="Admin">Admin</MenuItem>
-                      <MenuItem value="Resident">Resident</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-
-                <div className="space-y-1">
-                  <Typography variant="caption" color="textSecondary" fontWeight="500">
-                    Prior to membership expire date
-                  </Typography>
-                  <div className="flex gap-2">
-                    <FormControl sx={{ flex: 1, minWidth: "100px" }} size="small">
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={handleEditCancel}
+                      disabled={isSubmitting}
+                      className="bg-gray-500 text-white p-1 rounded hover:bg-gray-600 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleEditStart(rule)}
+                      className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(rule.id)}
+                      className="bg-[#d9534f] text-white p-1 rounded hover:bg-[#c9302c] transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+              </div>
+              <div className="bg-[#efefef] p-3 border-l-4 border-[#f7941d] flex items-center pr-20">
+                <Typography variant="subtitle2" fontWeight="600" color="#333">
+                  Rule {idx + 1}
+                </Typography>
+              </div>
+              <div className="p-4">
+                <div className="border border-dashed border-[#ccc] p-4 rounded space-y-4 bg-[#fcfcfc]">
+                  <div className="space-y-1">
+                    <Typography variant="caption" color="textSecondary" fontWeight="500">
+                      Trigger an email to
+                    </Typography>
+                    <FormControl fullWidth size="small">
                       <Select
-                        value={isEditing ? editFormData.periodType : rule.periodType}
-                        onChange={(e) => handleEditInputChange("periodType", e.target.value)}
+                        value={isEditing ? editFormData.triggerTo : rule.triggerTo}
+                        onChange={(e) => handleEditInputChange("triggerTo", e.target.value)}
                         disabled={!isEditing}
                         sx={{
                           ...selectStyles,
@@ -356,30 +346,56 @@ const CMSRules: React.FC = () => {
                         }}
                         MenuProps={menuProps}
                       >
-                        <MenuItem value="days">Days</MenuItem>
-                        <MenuItem value="months">Months</MenuItem>
+                        <MenuItem value="Admin">Admin</MenuItem>
+                        <MenuItem value="Resident">Resident</MenuItem>
                       </Select>
                     </FormControl>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={isEditing ? editFormData.periodValue : rule.periodValue}
-                      onChange={(e) => handleEditInputChange("periodValue", e.target.value)}
-                      disabled={!isEditing}
-                      sx={{
-                        ...textFieldStyles,
-                        backgroundColor: isEditing ? "#fff" : "#f9f9f9",
-                        "& .MuiOutlinedInput-input.Mui-disabled": {
-                          WebkitTextFillColor: "#333",
-                        },
-                      }}
-                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Typography variant="caption" color="textSecondary" fontWeight="500">
+                      Prior to membership expire date
+                    </Typography>
+                    <div className="flex gap-2">
+                      <FormControl sx={{ flex: 1, minWidth: "100px" }} size="small">
+                        <Select
+                          value={isEditing ? editFormData.periodType : rule.periodType}
+                          onChange={(e) => handleEditInputChange("periodType", e.target.value)}
+                          disabled={!isEditing}
+                          sx={{
+                            ...selectStyles,
+                            backgroundColor: isEditing ? "#fff" : "#f9f9f9",
+                            "& .MuiSelect-select.Mui-disabled": {
+                              WebkitTextFillColor: "#333",
+                            },
+                          }}
+                          MenuProps={menuProps}
+                        >
+                          <MenuItem value="days">Days</MenuItem>
+                          <MenuItem value="months">Months</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={isEditing ? editFormData.periodValue : rule.periodValue}
+                        onChange={(e) => handleEditInputChange("periodValue", e.target.value)}
+                        disabled={!isEditing}
+                        sx={{
+                          ...textFieldStyles,
+                          backgroundColor: isEditing ? "#fff" : "#f9f9f9",
+                          "& .MuiOutlinedInput-input.Mui-disabled": {
+                            WebkitTextFillColor: "#333",
+                          },
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )})}
+          )
+        })}
       </div>
     </div>
   );

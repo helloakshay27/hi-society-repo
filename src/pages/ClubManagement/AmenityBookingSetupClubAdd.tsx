@@ -11,6 +11,7 @@ import {
   FileImage,
   Image,
   LampFloor,
+  Loader,
   MessageSquareX,
   NotepadText,
   ReceiptText,
@@ -253,6 +254,84 @@ export const AddBookingSetupClubPage = () => {
     } else if (!formData.cancellationText) {
       toast.error("Please enter Cancellation Policies");
       return false;
+    }
+
+    if (formData.addSubFacility) {
+      if (formData.subFacilities.length === 0) {
+        toast.error("Please add at least one sub-facility");
+        return false;
+      }
+
+      for (const [index, subFacility] of formData.subFacilities.entries()) {
+        if (!subFacility.name) {
+          toast.error(`Please enter name for Sub-Facility ${index + 1}`);
+          return false;
+        }
+
+        if (formData.isBookable) {
+          const { member, guest, nonMember, tenant } = subFacility.chargeSetup;
+          if (
+            !member.selected &&
+            !guest.selected &&
+            !nonMember.selected &&
+            !tenant.selected
+          ) {
+            toast.error(
+              `Please select at least one member type for Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+
+          if (member.selected && !member.adult && !member.child) {
+            toast.error(
+              `Please enter at least one charge for Member in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+          if (guest.selected && !guest.adult && !guest.child) {
+            toast.error(
+              `Please enter at least one charge for Guest in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+          if (nonMember.selected && !nonMember.adult && !nonMember.child) {
+            toast.error(
+              `Please enter at least one charge for Non-Member in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+          if (tenant.selected && !tenant.adult && !tenant.child) {
+            toast.error(
+              `Please enter at least one charge for Tenant in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+        }
+
+        if (!subFacility.minimumPersonAllowed) {
+          toast.error(
+            `Please enter Minimum Person Allowed for Sub-Facility: ${subFacility.name}`
+          );
+          return false;
+        }
+
+        if (!subFacility.maximumPersonAllowed) {
+          toast.error(
+            `Please enter Maximum Person Allowed for Sub-Facility: ${subFacility.name}`
+          );
+          return false;
+        }
+
+        if (
+          parseInt(subFacility.maximumPersonAllowed) <
+          parseInt(subFacility.minimumPersonAllowed)
+        ) {
+          toast.error(
+            `Maximum Person Allowed must be greater than or equal to Minimum Person Allowed for Sub-Facility: ${subFacility.name}`
+          );
+          return false;
+        }
+      }
     }
 
     // Validate slots
@@ -3780,7 +3859,7 @@ export const AddBookingSetupClubPage = () => {
               disabled={isSubmitting}
               style={{ maxWidth: "90px" }}
             >
-              Save
+              {isSubmitting ? <Loader className="animate-spin" size={20} /> : "Save"}
             </Button>
           </div>
         </div>
