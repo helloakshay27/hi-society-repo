@@ -351,6 +351,9 @@ export const API_CONFIG = {
     RESEND_INVITATION: "/business_compass/resend_invitation",
     EMAIL_LOGS: "/business_compass/email_logs",
     WITHDRAW_INVITATION: "/business_compass/withdraw_invitation",
+    // Endpoint used by BMS documents UI to fetch common folder contents
+    COMMON_FOLDER_SHOW: "/crm/admin/common_folder_show",
+    ATTACHMENT_COMMON: "/crm/admin/attachment_common.json",
   },
 } as const;
 

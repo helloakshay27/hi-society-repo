@@ -1,40 +1,23 @@
-import React, { useState } from "react";
+﻿import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronDown, Folder, FolderOpen, File, FileText, Upload, RefreshCw, Loader2, Download, Search, FileVideo, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
+import { ChevronRight, Folder, File, FileText, Upload, RefreshCw, Loader2, Download, Search, FileVideo, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader, ENDPOINTS } from "@/config/apiConfig";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
-interface ApiFolder {
+interface TreeNode {
   id: string | number;
-  name: string;
-}
-
-interface ApiDocument {
-  id: string | number;
-  name: string;
-  content: { url: string };
-}
-
-interface CommonFolderResponse {
-  folder?: ApiFolder;
-  subfolders: ApiFolder[];
-  documents: ApiDocument[];
-}
-
-// ─── Internal Tree Types ──────────────────────────────────────────────────────
-
-interface DocumentNode {
-  id: string;
-  name: string;
-  type: "folder" | "file";
-  fileType?: string;
-  url?: string;
+  parent: string | number;
+  text: string;
+  icon?: string;
+  a_attr?: {
+    href: string;
+  };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -49,7 +32,6 @@ const inferFileType = (name: string): string => {
   if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext)) return "image";
   if (["xls", "xlsx", "csv"].includes(ext)) return "spreadsheet";
   if (["doc", "docx"].includes(ext)) return "doc";
-  if (name.toLowerCase().includes("warranty_card")) return "pdf"; 
   return "file";
 };
 
@@ -70,63 +52,68 @@ const getFileIcon = (fileType?: string) => {
 
 const BMSDocumentsCommonFiles: React.FC = () => {
   const navigate = useNavigate();
-  const [currentFolderId, setCurrentFolderId] = useState<string | number | undefined>(undefined);
-  const [breadcrumbs, setBreadcrumbs] = useState<{ id: string | number | undefined; name: string }[]>([
-    { id: undefined, name: "Common Files" }
+  const [currentFolderId, setCurrentFolderId] = useState<string | number>("All");
+  const [breadcrumbs, setBreadcrumbs] = useState<{ id: string | number; name: string }[]>([
+    { id: "All", name: "Common Files" }
   ]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
-    data: folderData,
+    data: treeData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useQuery<CommonFolderResponse>({
-    queryKey: ["common-folder", currentFolderId],
+  } = useQuery<TreeNode[]>({
+    queryKey: ["attachment-common"],
     queryFn: async () => {
-      const url = getFullUrl("/crm/admin/common_folder_show.json");
-      const { data } = await axios.get(url, {
-        params: { folder_id: currentFolderId },
-        headers: { Authorization: getAuthHeader() },
-      });
-      return data;
+      const endpoint = ENDPOINTS.ATTACHMENT_COMMON;
+      const url = getFullUrl(endpoint);
+      const authHeader = getAuthHeader();
+
+      console.debug("[BMSDocuments] Fetching common files tree:", { url });
+
+      try {
+        const { data } = await axios.get(url, {
+          headers: { Authorization: authHeader },
+        });
+        return Array.isArray(data) ? data : [];
+      } catch (err) {
+        console.error("[BMSDocuments] Error fetching common files:", err);
+        if (axios.isAxiosError(err) && err.response) {
+          console.error("[BMSDocuments] Response status:", err.response.status);
+          console.error("[BMSDocuments] Response data:", err.response.data);
+        }
+        throw err;
+      }
     },
     retry: 1,
     staleTime: 30000,
   });
 
-  // Transform folderData into UI nodes
-  const nodes: DocumentNode[] = [];
-  if (folderData) {
-    folderData.subfolders.forEach((sf) => {
-      nodes.push({
-        id: String(sf.id),
-        name: sf.name,
-        type: "folder"
-      });
-    });
-    folderData.documents.forEach((doc) => {
-      nodes.push({
-        id: String(doc.id),
-        name: doc.name,
-        type: "file",
-        fileType: inferFileType(doc.name),
-        url: doc.content.url
-      });
-    });
-  }
+  // Transform tree data to get children of current folder
+  const visibleItems = useMemo(() => {
+    if (!treeData) return [];
 
-  const visibleDocuments = nodes.filter(n => 
-    n.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    // Get all items that are direct children of currentFolderId
+    let items = treeData.filter(node => node.parent === currentFolderId);
 
-  const handleFolderClick = (id: string, name: string) => {
+    // Apply search filter
+    if (searchQuery) {
+      items = items.filter(item =>
+        item.text.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return items;
+  }, [treeData, currentFolderId, searchQuery]);
+
+  const handleFolderClick = (id: string | number, name: string) => {
     setCurrentFolderId(id);
     setBreadcrumbs(prev => [...prev, { id, name }]);
   };
 
-  const handleBreadcrumbClick = (id: string | number | undefined, index: number) => {
+  const handleBreadcrumbClick = (id: string | number, index: number) => {
     setCurrentFolderId(id);
     setBreadcrumbs(prev => prev.slice(0, index + 1));
   };
@@ -135,12 +122,21 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     navigate("/bms/documents/upload");
   };
 
-  const handleDownload = (fileName: string, url?: string) => {
-    if (url) {
-      window.open(url, '_blank');
+  const handleDownload = (fileName: string, nodeId: string | number) => {
+    try {
+      // Get the token from auth header
+      const authHeader = getAuthHeader();
+      const token = authHeader.replace("Bearer ", "").replace("Token ", "");
+
+      // Construct download URL with token
+      const baseUrl = getFullUrl("/crm/admin/attachments_common");
+      const downloadUrl = `${baseUrl}?id=${nodeId}&token=${token}`;
+      
+      window.open(downloadUrl, '_blank');
       toast.success(`Opening ${fileName}…`);
-    } else {
-      toast.error("File URL not found.");
+    } catch (error) {
+      console.error("Error opening file:", error);
+      toast.error("Unable to open file. Please try again.");
     }
   };
 
@@ -149,30 +145,34 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     toast.success("Folder refreshed");
   };
 
-  const renderNode = (node: DocumentNode): React.ReactNode => {
-    if (node.type === "folder") {
+  const renderNode = (node: TreeNode): React.ReactNode => {
+    const isFolder = treeData?.some(item => item.parent === node.id) ?? false;
+
+    if (isFolder) {
       return (
         <div 
           key={node.id}
           className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 cursor-pointer rounded border-b border-gray-50 last:border-0"
-          onClick={() => handleFolderClick(node.id, node.name)}
+          onClick={() => handleFolderClick(node.id, node.text)}
         >
           <Folder className="w-5 h-5 text-blue-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-gray-700 truncate">{node.name}</span>
+          <span className="text-sm font-medium text-gray-700 truncate">{node.text}</span>
           <ChevronRight className="ml-auto w-4 h-4 text-gray-400" />
         </div>
       );
     }
 
+    // It's a file
+    const fileType = inferFileType(node.text);
     return (
       <div
         key={node.id}
         className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 rounded group cursor-pointer border-b border-gray-50 last:border-0"
-        onClick={() => node.url && window.open(node.url, '_blank')}
+        onClick={() => handleDownload(node.text, node.id)}
       >
-        <div className="flex-shrink-0">{getFileIcon(node.fileType)}</div>
-        <span className="text-sm text-gray-600 flex-1 truncate" title={node.name}>
-          {node.name}
+        <div className="flex-shrink-0">{getFileIcon(fileType)}</div>
+        <span className="text-sm text-gray-600 flex-1 truncate" title={node.text}>
+          {node.text}
         </span>
         <Button
           size="sm"
@@ -180,7 +180,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           className="opacity-0 group-hover:opacity-100 h-7 px-2 flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation();
-            handleDownload(node.name, node.url);
+            handleDownload(node.text, node.id);
           }}
         >
           <Download className="w-4 h-4" />
@@ -266,7 +266,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
                 Retry
               </Button>
             </div>
-          ) : visibleDocuments.length === 0 ? (
+          ) : visibleItems.length === 0 ? (
             <div className="text-center py-24">
               <Folder className="w-12 h-12 text-gray-200 mx-auto mb-3" />
               <p className="text-gray-400 text-sm">
@@ -275,7 +275,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
             </div>
           ) : (
             <div className="flex flex-col">
-              {visibleDocuments.map((node) => renderNode(node))}
+              {visibleItems.map((node) => renderNode(node))}
             </div>
           )}
         </div>

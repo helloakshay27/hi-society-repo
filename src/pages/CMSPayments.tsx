@@ -1,5 +1,5 @@
 import { Edit, Printer, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +23,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { CMSPaymentsFilterModal } from "@/components/CMSPaymentsFilterModal";
 import { format, parse } from "date-fns";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { debounce } from "lodash";
 
 const columns: ColumnConfig[] = [
   {
@@ -122,6 +123,7 @@ const CMSPayments = () => {
   const token = localStorage.getItem('token')
   const societyId = localStorage.getItem("selectedUserSociety");
   const [payments, setPayments] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Edit Modal State
@@ -151,11 +153,14 @@ const CMSPayments = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const fetchPayments = async (filterParams = appliedFilters, pageNum: number = 1) => {
+  const fetchPayments = async (filterParams = appliedFilters, pageNum: number = 1, search = searchQuery) => {
     setLoading(true);
     try {
       const params: any = { page: pageNum };
 
+      if (search) {
+        params.search = search;
+      }
       if (filterParams.status) {
         params["q[payment_status_in]"] = filterParams.status;
       }
@@ -186,6 +191,19 @@ const CMSPayments = () => {
       setLoading(false);
     }
   }
+
+  const debouncedSearch = useCallback(
+    debounce((query: string) => {
+      setPagination((prev) => ({ ...prev, current_page: 1 }));
+      fetchPayments(appliedFilters, 1, query);
+    }, 500),
+    [baseUrl, token, appliedFilters]
+  );
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
 
   const handleFilterApply = (filters: any) => {
     setAppliedFilters(filters);
@@ -546,6 +564,8 @@ const CMSPayments = () => {
         columns={columns}
         renderActions={renderActions}
         renderCell={renderCell}
+        searchTerm={searchQuery}
+        onSearchChange={handleSearchChange}
         enableExport
         handleExport={handleExport}
         onFilterClick={() => setIsFilterModalOpen(true)}

@@ -65,6 +65,9 @@ const AppointmentzRMConfig = () => {
     userType: "",
   });
 
+  // Validation Errors State
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   // Fetch RM users on component mount
   const fetchRMUsers = useCallback(async (page: number = 1) => {
     setLoading(true);
@@ -88,10 +91,24 @@ const AppointmentzRMConfig = () => {
       setData(transformedData);
       setTotalPages(response.pagination.total_pages);
       setTotalCount(response.pagination.total_count);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching RM users:", error);
+
+      let errorMessage = "Failed to fetch RM users";
+
+      if (error && typeof error === 'object' && 'response' in error && error.response) {
+        const errorData = (error.response as any).data;
+        if (errorData?.message) {
+          errorMessage = errorData.message;
+        } else if (errorData?.error) {
+          errorMessage = typeof errorData.error === 'string'
+            ? errorData.error
+            : JSON.stringify(errorData.error);
+        }
+      }
+
       setTimeout(() => {
-        toast.error("Failed to fetch RM users");
+        toast.error(errorMessage);
       }, 0);
     } finally {
       setLoading(false);
@@ -150,7 +167,40 @@ const AppointmentzRMConfig = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "mobile") {
+      // Only allow numbers and max 10 digits
+      const cleanedValue = value.replace(/\D/g, "");
+      if (cleanedValue.length <= 10) {
+        setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
+      }
+      return;
+    }
+    if (name === "email") {
+      setFormData((prev) => ({ ...prev, [name]: value.trim() }));
+      return;
+    }
+    setFormData((prev) => ({ ...prev, [name]: value.trim() }));
+  };
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters";
+    }
+    if (!/[A-Z]/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/[a-z]/.test(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!/[0-9]/.test(password)) {
+      return "Password must contain at least one number";
+    }
+    return null;
   };
 
   const handleSelectChange = (value: string) => {
@@ -168,6 +218,7 @@ const AppointmentzRMConfig = () => {
       password: "",
       userType: "",
     });
+    setFormErrors({}); // Clear errors when opening dialog
     setIsAddModalOpen(true);
   };
 
@@ -176,6 +227,7 @@ const AppointmentzRMConfig = () => {
       setIsEditMode(true);
       setSelectedId(item.id);
       setEditingUserName(`${item.firstName} ${item.lastName}`);
+      setFormErrors({}); // Clear errors when opening dialog
 
       // Fetch the latest user details from API
       const response = await getRMUserById(item.id);
@@ -190,26 +242,69 @@ const AppointmentzRMConfig = () => {
         userType: user.user_type === "cs_user" ? "cs_user" : "rm_user",
       });
       setIsAddModalOpen(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user details:", error);
+
+      let errorMessage = "Failed to fetch user details";
+
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string'
+            ? errorData.error
+            : JSON.stringify(errorData.error);
+        } else if (errorData.errors) {
+          errorMessage = Object.keys(errorData.errors).map((key) => {
+            return `${key}: ${errorData.errors[key].join(', ')}`;
+          }).join(', ');
+        }
+      }
+
       setTimeout(() => {
-        toast.error("Failed to load user details");
+        toast.error(errorMessage);
       }, 0);
     }
   };
 
   const handleSubmit = async () => {
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.mobile ||
-      (!isEditMode && !formData.password) ||
-      !formData.userType
-    ) {
-      setTimeout(() => {
-        toast.error("Please fill all required fields");
-      }, 0);
+    // Reset errors
+    setFormErrors({});
+    const newErrors: Record<string, string> = {};
+
+    // Validation checks
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    if (!formData.mobile.trim()) {
+      newErrors.mobile = "Mobile number is required";
+    } else if (formData.mobile.length !== 10) {
+      newErrors.mobile = "Mobile number must be exactly 10 digits";
+    }
+    if (!isEditMode && !formData.password) {
+      newErrors.password = "Password is required";
+    } else if (!isEditMode && formData.password) {
+      const passwordError = validatePassword(formData.password);
+      if (passwordError) {
+        newErrors.password = passwordError;
+      }
+    }
+    if (!formData.userType) {
+      newErrors.userType = "User type is required";
+    }
+
+    // If there are validation errors, show them and don't submit
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
       return;
     }
 
@@ -246,11 +341,60 @@ const AppointmentzRMConfig = () => {
       // Refresh the list
       await fetchRMUsers();
       setIsAddModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving user:", error);
-      setTimeout(() => {
-        toast.error("Failed to save user");
-      }, 0);
+
+      let errorMessage = "Failed to save user";
+      const apiErrors: Record<string, string> = {};
+
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle field-level errors
+        if (errorData.errors) {
+          Object.keys(errorData.errors).forEach((key) => {
+            const errorArray = errorData.errors[key];
+            const errorText = Array.isArray(errorArray) ? errorArray.join(", ") : String(errorArray);
+            
+            // Map API field names to form field names
+            if (key === "first_name") {
+              apiErrors.firstName = errorText;
+            } else if (key === "last_name") {
+              apiErrors.lastName = errorText;
+            } else if (key === "mobile") {
+              apiErrors.mobile = errorText;
+            } else if (key === "email") {
+              apiErrors.email = errorText;
+            } else if (key === "password") {
+              apiErrors.password = errorText;
+            } else if (key === "user_type") {
+              apiErrors.userType = errorText;
+            } else {
+              // Generic field mapping
+              apiErrors[key] = errorText;
+            }
+          });
+          setFormErrors(apiErrors);
+          errorMessage = "Please fix the errors below";
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = typeof errorData.error === "string"
+            ? errorData.error
+            : JSON.stringify(errorData.error);
+        }
+      }
+
+      // Show toast only if we don't have field-level errors
+      if (Object.keys(apiErrors).length === 0) {
+        setTimeout(() => {
+          toast.error(errorMessage);
+        }, 0);
+      } else {
+        setTimeout(() => {
+          toast.error(errorMessage);
+        }, 0);
+      }
     }
   };
 
@@ -283,8 +427,7 @@ const AppointmentzRMConfig = () => {
           />
         );
       default:
-        // @ts-expect-error: accessing property by string key
-        return item[columnKey];
+        return item[columnKey as keyof RMUser];
     }
   };
 
@@ -335,8 +478,13 @@ const AppointmentzRMConfig = () => {
                 placeholder="Enter First Name"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                  formErrors.firstName ? "border-red-500" : ""
+                }`}
               />
+              {formErrors.firstName && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.firstName}</p>
+              )}
             </div>
 
             <div className="relative">
@@ -352,8 +500,13 @@ const AppointmentzRMConfig = () => {
                 placeholder="Last Name"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                  formErrors.lastName ? "border-red-500" : ""
+                }`}
               />
+              {formErrors.lastName && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.lastName}</p>
+              )}
             </div>
 
             <div className="relative">
@@ -373,8 +526,11 @@ const AppointmentzRMConfig = () => {
                 disabled={isEditMode}
                 className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
                   isEditMode ? "opacity-60 cursor-not-allowed" : ""
-                }`}
+                } ${formErrors.email ? "border-red-500" : ""}`}
               />
+              {formErrors.email && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+              )}
             </div>
 
             <div className="relative">
@@ -390,8 +546,13 @@ const AppointmentzRMConfig = () => {
                 placeholder="Mobile Number"
                 value={formData.mobile}
                 onChange={handleInputChange}
-                className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                  formErrors.mobile ? "border-red-500" : ""
+                }`}
               />
+              {formErrors.mobile && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.mobile}</p>
+              )}
             </div>
 
             {!isEditMode && (
@@ -409,8 +570,13 @@ const AppointmentzRMConfig = () => {
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                  className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                    formErrors.password ? "border-red-500" : ""
+                  }`}
                 />
+                {formErrors.password && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>
+                )}
               </div>
             )}
 
@@ -422,7 +588,9 @@ const AppointmentzRMConfig = () => {
                 onValueChange={handleSelectChange}
                 value={formData.userType}
               >
-                <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                <SelectTrigger className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                  formErrors.userType ? "border-red-500" : ""
+                }`}>
                   <SelectValue placeholder="Select User Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -430,6 +598,9 @@ const AppointmentzRMConfig = () => {
                   <SelectItem value="rm_user">RM User</SelectItem>
                 </SelectContent>
               </Select>
+              {formErrors.userType && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.userType}</p>
+              )}
             </div>
           </div>
 

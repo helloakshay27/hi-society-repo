@@ -369,10 +369,10 @@ const AppointmentzSlotsConfig = () => {
                   onValueChange={(val) => handleSelectChange("rmUser", val)}
                   value={formData.rmUserId ? formData.rmUserId.toString() : ""}
                 >
-                  <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
                     <SelectValue placeholder="Select Rm User" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
                     {rmUsers.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.name}
@@ -392,7 +392,7 @@ const AppointmentzSlotsConfig = () => {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="bg-white border-gray-300 pl-4 focus:border-[#C72030] focus:ring-0 h-10 text-gray-500"
+                    className="bg-white border-gray-300 px-2 focus:border-[#C72030] focus:ring-0 h-8 text-gray-500 text-sm"
                   />
                 </div>
               </div>
@@ -409,7 +409,7 @@ const AppointmentzSlotsConfig = () => {
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleInputChange}
-                  className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 text-gray-500"
+                  className="bg-white border-gray-300 px-2 focus:border-[#C72030] focus:ring-0 h-8 text-gray-500 text-sm"
                 />
               </div>
 
@@ -417,7 +417,7 @@ const AppointmentzSlotsConfig = () => {
                 <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
                   Start Time
                 </label>
-                <div className="flex gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Select
                     onValueChange={(val) =>
                       handleSelectChange("startHour", val)
@@ -425,11 +425,11 @@ const AppointmentzSlotsConfig = () => {
                     defaultValue={formData.startHour}
                     value={formData.startHour}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                                      <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
+                      {Array.from({ length: 24 }, (_, i) => i).map(
                         (num) => (
                           <SelectItem
                             key={num}
@@ -448,10 +448,10 @@ const AppointmentzSlotsConfig = () => {
                     defaultValue={formData.startMinute}
                     value={formData.startMinute}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                                      <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
                       <SelectItem value="00">00</SelectItem>
                       <SelectItem value="15">15</SelectItem>
                       <SelectItem value="30">30</SelectItem>
@@ -468,17 +468,17 @@ const AppointmentzSlotsConfig = () => {
                 <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
                   End Time
                 </label>
-                <div className="flex gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Select
                     onValueChange={(val) => handleSelectChange("endHour", val)}
                     defaultValue={formData.endHour}
                     value={formData.endHour}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                    <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
+                      {Array.from({ length: 24 }, (_, i) => i).map(
                         (num) => (
                           <SelectItem
                             key={num}
@@ -497,10 +497,10 @@ const AppointmentzSlotsConfig = () => {
                     defaultValue={formData.endMinute}
                     value={formData.endMinute}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                                        <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
                       <SelectItem value="00">00</SelectItem>
                       <SelectItem value="15">15</SelectItem>
                       <SelectItem value="30">30</SelectItem>
@@ -525,7 +525,7 @@ const AppointmentzSlotsConfig = () => {
                         {day}
                       </span>
                       <Input
-                        className="h-9 px-2 text-center border-gray-300"
+                        className="h-8 px-2 text-center border-gray-300 text-sm"
                         value={formData.days[dayKey]}
                         onChange={(e) =>
                           handleDayChange(dayKey, e.target.value)
@@ -539,7 +539,7 @@ const AppointmentzSlotsConfig = () => {
               <div className="flex flex-col gap-1 w-[60px] mt-4">
                 <span className="text-sm text-[#C72030] font-medium">S</span>
                 <Input
-                  className="h-9 px-2 text-center border-gray-300"
+                  className="h-8 px-2 text-center border-gray-300 text-sm"
                   value={formData.days.sun}
                   onChange={(e) => handleDayChange("sun", e.target.value)}
                 />

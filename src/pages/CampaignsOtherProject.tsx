@@ -31,19 +31,59 @@ interface OtherProjectData {
   receptionMobile1: string;
   receptionMobile2: string;
   active: boolean;
+  videoLink: string;
+  projectStatus: string;
+  description: string;
+  projectArea: string;
+  externalProjectId: string;
 }
 
 interface BuilderProjectApiResponse {
   success: boolean;
   builder_projects: {
     id: number;
+    builder_id: number;
     name: string;
-    project_reference_id?: string;
     address?: string;
-    geo_location?: string;
-    reception_mobile_1?: string;
-    reception_mobile_2?: string;
-    active?: boolean;
+    about?: string;
+    video_link?: string | null;
+    active?: number;
+    society_id?: number;
+    geo_link?: string;
+    reception_number?: string;
+    reception_second_number?: string;
+    project_reference_id?: string;
+    project_status?: string | null;
+    description?: string | null;
+    project_area?: string | null;
+    external_project_id?: string | null;
+    created_at?: string;
+    updated_at?: string;
+    builder?: {
+      id: number;
+      name: string;
+    };
+    society?: {
+      id: number;
+      building_name: string;
+      address1: string;
+      city: string;
+      state: string;
+      postcode: number;
+      name: string;
+    };
+    flat_types?: any[];
+    society_blocks?: any[];
+    project_lead_sources?: any[];
+    images?: {
+      project_image?: Array<{ id: number; active: number; url: string }>;
+      project_logo?: Array<{ id: number; active: number; url: string }>;
+      gallery?: Array<{ id: number; active: number; url: string }>;
+    };
+    configurations?: any[];
+    highlights?: any[];
+    plans?: any[];
+    amenities?: any[];
     [key: string]: any;
   }[];
   count: number;
@@ -172,7 +212,9 @@ const CampaignsOtherProject: React.FC = () => {
   const [projectsData, setProjectsData] = useState<OtherProjectData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProject, setSelectedProject] = useState<BuilderProjectDetailApiResponse["data"] | null>(null);
+  const [selectedProject, setSelectedProject] = useState<
+    BuilderProjectDetailApiResponse["data"] | null
+  >(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -183,13 +225,19 @@ const CampaignsOtherProject: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const apiUrl = `${API_CONFIG.BASE_URL}/crm/builder_projects.json`;
+        const baseUrl =
+          API_CONFIG.BASE_URL || "https://hi-society.lockated.com";
+        const token = JSON.parse(
+          localStorage.getItem("user") || "{}"
+        )?.spree_api_key;
+        const apiUrl = `${baseUrl}/crm/builder_projects.json?token=${token}`;
 
-        const response = await axios.get<BuilderProjectApiResponse>(apiUrl, {
-          headers: { Authorization: getAuthHeader() },
-        });
+        const response = await axios.get<BuilderProjectApiResponse>(apiUrl);
 
         if (response.data.success && response.data.builder_projects) {
+          // Debug: Log raw API response
+          console.log("📍 Raw API response:", response.data.builder_projects);
+          
           // Map API response to component data structure
           const mappedData: OtherProjectData[] =
             response.data.builder_projects.map((project) => ({
@@ -197,11 +245,19 @@ const CampaignsOtherProject: React.FC = () => {
               project: project.name || "-",
               projectReferenceId: project.project_reference_id || "-",
               address: project.address || "-",
-              geoLocation: project.geo_location || "-",
-              receptionMobile1: project.reception_mobile_1 || "-",
-              receptionMobile2: project.reception_mobile_2 || "-",
-              active: project.active ?? false,
+              geoLocation: project.geo_link || "-",
+              receptionMobile1: project.reception_number || "-",
+              receptionMobile2: project.reception_second_number || "-",
+              active: project.active === 1 ? true : false,
+              videoLink: project.video_link || "-",
+              projectStatus: project.project_status || "-",
+              description: project.description || "-",
+              projectArea: project.project_area || "-",
+              externalProjectId: project.external_project_id || "-",
             }));
+          
+          // Debug: Log mapped data
+          console.log("📍 Mapped table data:", mappedData);
           setProjectsData(mappedData);
         }
       } catch (err) {
@@ -229,12 +285,14 @@ const CampaignsOtherProject: React.FC = () => {
   // Function to fetch a single builder project by ID
   const fetchBuilderProjectDetail = async (id: number) => {
     try {
-      const apiUrl = `${API_CONFIG.BASE_URL}/crm/builder_projects/${id}.json`;
+      const baseUrl =
+        API_CONFIG.BASE_URL || "https://hi-society.lockated.com";
+      const token = JSON.parse(
+        localStorage.getItem("user") || "{}"
+      )?.spree_api_key;
+      const apiUrl = `${baseUrl}/crm/builder_projects/${id}.json?token=${token}`;
 
-      const response = await axios.get<BuilderProjectDetailApiResponse>(
-        apiUrl,
-        { headers: { Authorization: getAuthHeader() } }
-      );
+      const response = await axios.get<BuilderProjectDetailApiResponse>(apiUrl);
 
       return response.data;
     } catch (err) {
@@ -244,7 +302,9 @@ const CampaignsOtherProject: React.FC = () => {
           `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
         );
       } else {
-        throw new Error(error.message || "Failed to fetch builder project detail");
+        throw new Error(
+          error.message || "Failed to fetch builder project detail"
+        );
       }
     }
   };
@@ -263,14 +323,18 @@ const CampaignsOtherProject: React.FC = () => {
   // });
   const createSocietyBlock = async (payload: CreateSocietyBlockPayload) => {
     try {
-      const apiUrl = `${API_CONFIG.BASE_URL}/crm/admin/society_blocks.json`;
+      const baseUrl =
+        API_CONFIG.BASE_URL || "https://hi-society.lockated.com";
+      const token = JSON.parse(
+        localStorage.getItem("user") || "{}"
+      )?.spree_api_key;
+      const apiUrl = `${baseUrl}/crm/admin/society_blocks.json?token=${token}`;
 
       const response = await axios.post<SocietyBlockApiResponse>(
         apiUrl,
         payload,
         {
           headers: {
-            Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
         }
@@ -293,11 +357,14 @@ const CampaignsOtherProject: React.FC = () => {
   // Function to fetch project dropdown list (GET API)
   const fetchDropdownProjects = async () => {
     try {
-      const apiUrl = `${API_CONFIG.BASE_URL}/crm/builder_projects/dropdown_projects.json`;
+      const baseUrl =
+        API_CONFIG.BASE_URL || "https://hi-society.lockated.com";
+      const token = JSON.parse(
+        localStorage.getItem("user") || "{}"
+      )?.spree_api_key;
+      const apiUrl = `${baseUrl}/crm/builder_projects/dropdown_projects.json?token=${token}`;
 
-      const response = await axios.get<ProjectDropdownApiResponse>(apiUrl, {
-        headers: { Authorization: getAuthHeader() },
-      });
+      const response = await axios.get<ProjectDropdownApiResponse>(apiUrl);
 
       return response.data;
     } catch (err) {
@@ -384,6 +451,41 @@ const CampaignsOtherProject: React.FC = () => {
       draggable: true,
       defaultVisible: true,
     },
+    {
+      key: "videoLink",
+      label: "Video Link",
+      sortable: true,
+      draggable: true,
+      defaultVisible: false,
+    },
+    {
+      key: "projectStatus",
+      label: "Project Status",
+      sortable: true,
+      draggable: true,
+      defaultVisible: true,
+    },
+    {
+      key: "description",
+      label: "Description",
+      sortable: true,
+      draggable: true,
+      defaultVisible: false,
+    },
+    {
+      key: "projectArea",
+      label: "Project Area",
+      sortable: true,
+      draggable: true,
+      defaultVisible: true,
+    },
+    {
+      key: "externalProjectId",
+      label: "External Project ID",
+      sortable: true,
+      draggable: true,
+      defaultVisible: false,
+    },
   ];
 
   const renderCell = (item: OtherProjectData, columnKey: string) => {
@@ -397,7 +499,9 @@ const CampaignsOtherProject: React.FC = () => {
               onClick={async () => {
                 try {
                   setDetailLoading(true);
-                  const res = await fetchBuilderProjectDetail(parseInt(item.id));
+                  const res = await fetchBuilderProjectDetail(
+                    parseInt(item.id)
+                  );
                   if (res.success && res.data) {
                     setSelectedProject(res.data);
                     setShowDetailDialog(true);
@@ -427,6 +531,20 @@ const CampaignsOtherProject: React.FC = () => {
         return <span className="text-sm">{item.receptionMobile2}</span>;
       case "active":
         return <span className="text-sm">{item.active ? "Yes" : "No"}</span>;
+      case "videoLink":
+        return item.videoLink && item.videoLink !== "-" ? (
+          <a href={item.videoLink} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline truncate block max-w-[200px]">{item.videoLink}</a>
+        ) : (
+          <span className="text-sm">-</span>
+        );
+      case "projectStatus":
+        return <span className="text-sm capitalize">{item.projectStatus}</span>;
+      case "description":
+        return <span className="text-sm truncate block max-w-[200px]" title={item.description}>{item.description}</span>;
+      case "projectArea":
+        return <span className="text-sm">{item.projectArea}</span>;
+      case "externalProjectId":
+        return <span className="text-sm">{item.externalProjectId}</span>;
       default:
         return null;
     }
@@ -491,7 +609,7 @@ const CampaignsOtherProject: React.FC = () => {
               emptyMessage="No Matching Records Found"
               searchPlaceholder="Search"
               enableExport={true}
-              storageKey="campaigns-other-project-v1"
+              storageKey="campaigns-other-project-v3"
               onFilterClick={() => setShowFilters(!showFilters)}
               leftActions={
                 <div className="flex items-center gap-2">
@@ -672,8 +790,12 @@ const CampaignsOtherProject: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{selectedProject.name}</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Project Reference: {selectedProject.project_reference_id}</p>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {selectedProject.name}
+                </h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Project Reference: {selectedProject.project_reference_id}
+                </p>
               </div>
               <button
                 className="p-2 hover:bg-gray-100 rounded-full"
@@ -686,43 +808,64 @@ const CampaignsOtherProject: React.FC = () => {
             <div className="p-6 space-y-6">
               {/* Project Info */}
               <div>
-                <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Project Information</h3>
+                <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">
+                  Project Information
+                </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500">Address</p>
-                    <p className="text-sm text-gray-800 whitespace-pre-line">{selectedProject.address || "-"}</p>
+                    <p className="text-sm text-gray-800 whitespace-pre-line">
+                      {selectedProject.address || "-"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Status</p>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${selectedProject.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${selectedProject.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                    >
                       {selectedProject.active ? "Active" : "Inactive"}
                     </span>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Reception Number</p>
-                    <p className="text-sm text-gray-800">{selectedProject.reception_number || "-"}</p>
+                    <p className="text-sm text-gray-800">
+                      {selectedProject.reception_number || "-"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Reception (2nd)</p>
-                    <p className="text-sm text-gray-800">{selectedProject.reception_second_number || "-"}</p>
+                    <p className="text-sm text-gray-800">
+                      {selectedProject.reception_second_number || "-"}
+                    </p>
                   </div>
                   {selectedProject.geo_link && (
                     <div>
                       <p className="text-xs text-gray-500">Geo Location</p>
-                      <a href={selectedProject.geo_link} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline break-all">{selectedProject.geo_link}</a>
+                      <a
+                        href={selectedProject.geo_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-blue-600 underline break-all"
+                      >
+                        {selectedProject.geo_link}
+                      </a>
                     </div>
                   )}
                   {selectedProject.project_area && (
                     <div>
                       <p className="text-xs text-gray-500">Project Area</p>
-                      <p className="text-sm text-gray-800">{selectedProject.project_area}</p>
+                      <p className="text-sm text-gray-800">
+                        {selectedProject.project_area}
+                      </p>
                     </div>
                   )}
                 </div>
                 {selectedProject.about && (
                   <div className="mt-4">
                     <p className="text-xs text-gray-500 mb-1">About</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{selectedProject.about}</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {selectedProject.about}
+                    </p>
                   </div>
                 )}
               </div>
@@ -730,25 +873,50 @@ const CampaignsOtherProject: React.FC = () => {
               {/* Builder & Society */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-2">Builder</h3>
-                  <p className="text-sm font-medium text-gray-800">{selectedProject.builder?.name || "-"}</p>
-                  <p className="text-xs text-gray-500">ID: {selectedProject.builder?.id}</p>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-2">
+                    Builder
+                  </h3>
+                  <p className="text-sm font-medium text-gray-800">
+                    {selectedProject.builder?.name || "-"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    ID: {selectedProject.builder?.id}
+                  </p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-2">Society</h3>
-                  <p className="text-sm font-medium text-gray-800">{selectedProject.society?.name || "-"}</p>
-                  <p className="text-xs text-gray-500">{selectedProject.society?.building_name}</p>
-                  <p className="text-xs text-gray-500">{[selectedProject.society?.city, selectedProject.society?.state, selectedProject.society?.postcode].filter(Boolean).join(", ")}</p>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-2">
+                    Society
+                  </h3>
+                  <p className="text-sm font-medium text-gray-800">
+                    {selectedProject.society?.name || "-"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {selectedProject.society?.building_name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {[
+                      selectedProject.society?.city,
+                      selectedProject.society?.state,
+                      selectedProject.society?.postcode,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
                 </div>
               </div>
 
               {/* Flat Types */}
               {selectedProject.flat_types?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Flat Types</h3>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">
+                    Flat Types
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedProject.flat_types.map((ft) => (
-                      <span key={ft.id} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200">
+                      <span
+                        key={ft.id}
+                        className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200"
+                      >
                         {ft.name}
                       </span>
                     ))}
@@ -759,10 +927,15 @@ const CampaignsOtherProject: React.FC = () => {
               {/* Society Blocks */}
               {selectedProject.society_blocks?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Society Blocks / Towers</h3>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">
+                    Society Blocks / Towers
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedProject.society_blocks.map((block) => (
-                      <span key={block.id} className={`px-3 py-1 text-xs rounded-full border ${block.active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}>
+                      <span
+                        key={block.id}
+                        className={`px-3 py-1 text-xs rounded-full border ${block.active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}
+                      >
                         Block {block.name} {block.active ? "" : "(Inactive)"}
                       </span>
                     ))}
@@ -773,12 +946,19 @@ const CampaignsOtherProject: React.FC = () => {
               {/* Amenities */}
               {selectedProject.amenities?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Amenities</h3>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">
+                    Amenities
+                  </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {selectedProject.amenities.map((amenity) => (
-                      <div key={amenity.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                      <div
+                        key={amenity.id}
+                        className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                      >
                         <div className="w-1.5 h-1.5 rounded-full bg-[#C72030] flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{amenity.name}</span>
+                        <span className="text-sm text-gray-700">
+                          {amenity.name}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -788,10 +968,15 @@ const CampaignsOtherProject: React.FC = () => {
               {/* Lead Sources */}
               {selectedProject.project_lead_sources?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Lead Sources</h3>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">
+                    Lead Sources
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedProject.project_lead_sources.map((src) => (
-                      <span key={src.id} className="px-3 py-1 bg-purple-50 text-purple-700 text-xs rounded-full border border-purple-200">
+                      <span
+                        key={src.id}
+                        className="px-3 py-1 bg-purple-50 text-purple-700 text-xs rounded-full border border-purple-200"
+                      >
                         {src.name}
                       </span>
                     ))}
@@ -800,9 +985,13 @@ const CampaignsOtherProject: React.FC = () => {
               )}
 
               {/* Images */}
-              {selectedProject.images?.project_image?.filter((img) => img.active && img.url)?.length > 0 && (
+              {selectedProject.images?.project_image?.filter(
+                (img) => img.active && img.url
+              )?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Project Images</h3>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">
+                    Project Images
+                  </h3>
                   <div className="grid grid-cols-3 gap-3">
                     {selectedProject.images.project_image
                       .filter((img) => img.active && img.url)
@@ -812,7 +1001,10 @@ const CampaignsOtherProject: React.FC = () => {
                           src={img.url}
                           alt="Project"
                           className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
                         />
                       ))}
                   </div>
@@ -820,9 +1012,13 @@ const CampaignsOtherProject: React.FC = () => {
               )}
 
               {/* Gallery */}
-              {selectedProject.images?.gallery?.filter((img) => img.active && img.url)?.length > 0 && (
+              {selectedProject.images?.gallery?.filter(
+                (img) => img.active && img.url
+              )?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">Gallery</h3>
+                  <h3 className="text-sm font-semibold text-[#C72030] uppercase tracking-wide mb-3">
+                    Gallery
+                  </h3>
                   <div className="grid grid-cols-3 gap-3">
                     {selectedProject.images.gallery
                       .filter((img) => img.active && img.url)
@@ -832,7 +1028,10 @@ const CampaignsOtherProject: React.FC = () => {
                           src={img.url}
                           alt="Gallery"
                           className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
                         />
                       ))}
                   </div>
