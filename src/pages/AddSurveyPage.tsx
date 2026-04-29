@@ -814,7 +814,7 @@ export const AddSurveyPage = () => {
         duration: 4000,
       });
 
-      navigate("/master/survey/list");
+      navigate("/settings/survey/list");
     } catch (error) {
       console.error("Error creating survey:", error);
 

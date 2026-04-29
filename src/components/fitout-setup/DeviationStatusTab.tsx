@@ -82,6 +82,7 @@ export const DeviationStatusTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Delete confirmation states
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -324,7 +325,7 @@ export const DeviationStatusTab: React.FC = () => {
     (item: DeviationStatus, columnKey: string, index: number) => {
       switch (columnKey) {
         case 'sr_no':
-          return <span>{index + 1}</span>;
+          return <span>{(currentPage - 1) * 10 + index + 1}</span>;
         case 'actions':
           return (
             <div className="flex gap-2">
@@ -401,6 +402,8 @@ export const DeviationStatusTab: React.FC = () => {
         searchPlaceholder="Search deviation statuses..."
         pagination={true}
         pageSize={10}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
         leftActions={
           <Button
             onClick={handleOpenAddDialog}

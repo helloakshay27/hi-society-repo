@@ -795,13 +795,13 @@ export const HiSocietySidebar: React.FC = () => {
             },
             {
               id: "vehicle-report",
-              label: "Vehicle Report",
+              label: "Member Vehicles",
               icon: FileText,
               path: "/smartsecure/vehicle-report",
             },
             {
               id: "material-report",
-              label: "Material Report",
+              label: "Guest Vehicles",
               icon: FileText,
               path: "/smartsecure/material-report",
             },

@@ -36,6 +36,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary] Caught error:", error, errorInfo);
+    // Auto-reload immediately on stale-chunk errors (new deploy invalidated old hashes)
+    if (this.state.isChunkError) {
+      this.handleReload();
+    }
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -64,32 +68,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      if (this.state.isChunkError) {
+        // On chunk errors, reload immediately and render nothing (or null)
+        // The reload is triggered in componentDidCatch, so just return null here
+        return null;
+      }
       if (this.props.fallback) {
         return this.props.fallback;
       }
-
-      // ChunkLoadError: stale chunks after new deployment — auto-reload
-      if (this.state.isChunkError) {
-        return (
-          <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 p-8 bg-white">
-            <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold text-gray-800">
-                New update available
-              </h2>
-              <p className="text-sm text-gray-500">
-                The app was updated. Please reload to continue.
-              </p>
-            </div>
-            <button
-              onClick={this.handleReload}
-              className="px-4 py-2 bg-[#C72030] text-white rounded-lg text-sm font-medium hover:bg-[#a01828] transition-colors"
-            >
-              Reload page
-            </button>
-          </div>
-        );
-      }
-
       // Generic render error
       return (
         <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 p-8 bg-white">
@@ -118,7 +104,6 @@ export class ErrorBoundary extends Component<Props, State> {
         </div>
       );
     }
-
     return this.props.children;
   }
 }
@@ -183,6 +168,10 @@ export class RouteErrorBoundary extends Component<
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[RouteErrorBoundary] Caught error:", error, errorInfo);
+    // Auto-reload immediately on stale-chunk errors (new deploy invalidated old hashes)
+    if (this.state.isChunkError) {
+      this.handleReload();
+    }
   }
 
   handleReload = () => {
@@ -199,26 +188,10 @@ export class RouteErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       if (this.state.isChunkError) {
-        return (
-          <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 p-8 bg-white">
-            <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold text-gray-800">
-                New update available
-              </h2>
-              <p className="text-sm text-gray-500">
-                The app was updated. Please reload to continue.
-              </p>
-            </div>
-            <button
-              onClick={this.handleReload}
-              className="px-4 py-2 bg-[#C72030] text-white rounded-lg text-sm font-medium hover:bg-[#a01828] transition-colors"
-            >
-              Reload page
-            </button>
-          </div>
-        );
+        // On chunk errors, reload immediately and render nothing (or null)
+        // The reload is triggered in componentDidCatch, so just return null here
+        return null;
       }
-
       return (
         <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 p-8 bg-white">
           <div className="text-center space-y-2">
@@ -248,7 +221,6 @@ export class RouteErrorBoundary extends Component<
         </div>
       );
     }
-
     return this.props.children;
   }
 }

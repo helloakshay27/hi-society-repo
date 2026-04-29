@@ -4236,7 +4236,7 @@ function App() {
                             element={<AddSurveyPage />}
                           />
                           <Route
-                            path="/master/survey/add"
+                            path="/settings/survey/add"
                             element={<AddSurveyPage />}
                           />
                           <Route
@@ -4964,7 +4964,7 @@ function App() {
                             element={<VisitorsHistoryDashboard />}
                           />
                           <Route
-                            path="/security/visitor/details/:id"
+                            path="/smartsecure/visitor/details/:id"
                             element={<VisitorDetailsPage />}
                           />
                           <Route

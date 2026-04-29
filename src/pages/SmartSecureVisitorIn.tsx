@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, KeyRound, Loader2 } from "lucide-react";
+import { Plus, KeyRound, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -137,6 +137,7 @@ const checkVisitorAction = async (
 // ─── Column Config ─────────────────────────────────────────────────────────────
 
 const visitorInColumns: ColumnConfig[] = [
+  { key: "action",         label: "Action",         sortable: false, hideable: false, draggable: false },
   { key: "sr_no",           label: "Sr. No.",       sortable: false, hideable: true,  draggable: true  },
   { key: "visitor_image",   label: "Photo",          sortable: false, hideable: true,  draggable: true  },
   { key: "guest_name",      label: "Visitor Name",   sortable: true,  hideable: true,  draggable: true  },
@@ -213,6 +214,17 @@ const SmartSecureVisitorIn: React.FC = () => {
 
   const renderCell = useCallback((visitor: ApiGatekeeper, columnKey: string) => {
     switch (columnKey) {
+      case "action":
+        return (
+          <button
+            onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
+            className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#C72030] transition-colors"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        );
+
       case "sr_no": {
         const idx = rows.indexOf(visitor);
         return (
