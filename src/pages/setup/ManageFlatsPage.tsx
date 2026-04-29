@@ -9,6 +9,7 @@ import { CommonImportModal } from "@/components/CommonImportModal";
 import { AddFlatDialog } from "./manage-flats-dialogs/AddFlatDialog";
 import { EditFlatDialog } from "./manage-flats-dialogs/EditFlatDialog";
 import { ConfigureTowerDialog } from "./manage-flats-dialogs/ConfigureTowerDialog";
+import { ConfigureWingDialog } from "./manage-flats-dialogs/ConfigureWingDialog";
 import { ConfigureFloorDialog } from "./manage-flats-dialogs/ConfigureFloorDialog";
 import { ConfigureFlatTypeDialog } from "./manage-flats-dialogs/ConfigureFlatTypeDialog";
 import { FiltersDialog } from "./manage-flats-dialogs/FiltersDialog";
@@ -75,8 +76,9 @@ export const ManageFlatsPage = () => {
   const [showEditFlatDialog, setShowEditFlatDialog] = useState(false);
   const [editingFlatId, setEditingFlatId] = useState<string | null>(null);
 
-  // Configure Tower Dialog states
+  // Configure Tower/Wing/Floor Dialog states
   const [showConfigureTowerDialog, setShowConfigureTowerDialog] = useState(false);
+  const [showConfigureWingDialog, setShowConfigureWingDialog] = useState(false);
   const [showConfigureFloorDialog, setShowConfigureFloorDialog] = useState(false);
   const [editingTower, setEditingTower] = useState<number | null>(null);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
@@ -240,6 +242,11 @@ export const ManageFlatsPage = () => {
 
   const handleAddTower = () => {
     setShowConfigureTowerDialog(true);
+    setShowActionPanel(false);
+  };
+
+  const handleAddWing = () => {
+    setShowConfigureWingDialog(true);
     setShowActionPanel(false);
   };
 
@@ -667,6 +674,14 @@ export const ManageFlatsPage = () => {
                 </Button>
                 <Button
                   size="sm"
+                  onClick={handleAddWing}
+                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Wing
+                </Button>
+                <Button
+                  size="sm"
                   onClick={handleAddFloor}
                   className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
                 >
@@ -738,6 +753,12 @@ export const ManageFlatsPage = () => {
           onOpenChange={setShowConfigureTowerDialog}
           editingTower={editingTower}
           setEditingTower={setEditingTower}
+        />
+
+        {/* Configure Wing Dialog */}
+        <ConfigureWingDialog
+          open={showConfigureWingDialog}
+          onOpenChange={setShowConfigureWingDialog}
         />
 
         {/* Configure Floor Dialog */}

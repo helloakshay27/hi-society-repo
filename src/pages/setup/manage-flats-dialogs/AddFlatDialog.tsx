@@ -34,10 +34,12 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
   const [loading, setLoading] = useState(false)
   const [rmUsers, setRmUsers] = useState([])
   const [formData, setFormData] = useState({
+    project: "",
     status: true,
     possession: true,
     sold: false,
     tower: "",
+    wing: "",
     flat: "",
     floor: "",
     carpetArea: "",
@@ -48,6 +50,25 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
     dateOfPossession: "",
     rmUser: "",
   });
+
+  const [projectOptions, setProjectOptions] = useState([]);
+  const [wingOptions, setWingOptions] = useState([]);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/builder_projects/dropdown_projects.json`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const raw = response.data;
+      if (Array.isArray(raw?.builder_projects)) setProjectOptions(raw.builder_projects);
+      else if (Array.isArray(raw)) setProjectOptions(raw);
+      else if (Array.isArray(raw?.projects)) setProjectOptions(raw.projects);
+    } catch (error) {
+      console.log("Failed to fetch projects", error);
+    }
+  };
 
   const fetchTowers = async () => {
     try {
@@ -62,6 +83,23 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
       toast.error("Failed to fetch towers")
     }
   }
+
+  const fetchWings = async () => {
+    if (!formData.tower) {
+      setWingOptions([]);
+      return;
+    }
+    try {
+      const response = await axios.get(`https://${baseUrl}/wings.json?tower_id=${formData.tower}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setWingOptions(response.data || []);
+    } catch (error) {
+      console.log("Failed to fetch wings", error);
+    }
+  };
 
   const fetchFloors = async () => {
     try {
@@ -105,16 +143,20 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
   }
 
   useEffect(() => {
-    fetchTowers()
-    fetchFlatTypes()
-    fetchRmUsers()
-  }, [])
+    fetchProjects();
+    fetchTowers();
+    fetchFlatTypes();
+    fetchRmUsers();
+  }, []);
 
   useEffect(() => {
     if (formData.tower) {
-      fetchFloors()
+      fetchWings();
+      fetchFloors();
     }
-  }, [formData.tower])
+  }, [formData.tower]);
+
+  const filteredTowers = towerOptions.filter((t: any) => !formData.project || t.project_id?.toString() === formData.project);
 
   const onChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -144,7 +186,9 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
     const payload = {
       society_flat: {
+        project_id: formData.project || null,
         society_block_id: formData.tower,
+        wing_id: formData.wing || null,
         society_floor_id: formData.floor,
         flat_no: formData.flat,
         build_up_area: formData.carpetArea,
@@ -172,10 +216,12 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
       fetchFlats()
       onOpenChange(false)
       setFormData({
+        project: "",
         status: true,
         possession: true,
         sold: false,
         tower: "",
+        wing: "",
         floor: "",
         flat: "",
         carpetArea: "",
@@ -238,20 +284,59 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             </div>
           </div>
 
-          {/* Tower and Flat */}
+          {/* Project, Tower, Wing, Flat */}
           <div className="grid grid-cols-2 gap-4">
+            <div className="relative">
+              <Label htmlFor="project" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+                Project
+              </Label>
+              <SearchableSelect
+                value={formData.project}
+                onChange={(value) => {
+                  onChange('project', value);
+                  onChange('tower', "");
+                  onChange('wing', "");
+                }}
+                options={projectOptions.map((project: any) => ({
+                  value: project.id.toString(),
+                  label: project.name || project.project_name,
+                }))}
+                placeholder="Select Project"
+                className="pt-2"
+              />
+            </div>
+
             <div className="relative">
               <Label htmlFor="tower" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 Tower <span className="text-red-500">*</span>
               </Label>
               <SearchableSelect
                 value={formData.tower}
-                onChange={(value) => onChange('tower', value)}
-                options={towerOptions.map((tower) => ({
+                onChange={(value) => {
+                  onChange('tower', value);
+                  onChange('wing', "");
+                }}
+                options={filteredTowers.map((tower: any) => ({
                   value: tower.id.toString(),
                   label: tower.name,
                 }))}
                 placeholder="Select Tower"
+                className="pt-2"
+              />
+            </div>
+
+            <div className="relative">
+              <Label htmlFor="wing" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+                Wing
+              </Label>
+              <SearchableSelect
+                value={formData.wing}
+                onChange={(value) => onChange('wing', value)}
+                options={wingOptions.map((wing: any) => ({
+                  value: wing.id.toString(),
+                  label: wing.wing,
+                }))}
+                placeholder="Select Wing"
                 className="pt-2"
               />
             </div>
