@@ -709,10 +709,11 @@ export const StaffsDashboard = () => {
             leftActions={
               <Button
                 onClick={() => setShowActionMenu(!showActionMenu)}
-                style={{ backgroundColor: '#C72030' }}
-                className="hover:bg-[#C72030]/90 text-white px-6 py-2 h-10 rounded-lg text-sm font-medium border-0 flex items-center gap-2"
+                // style={{ backgroundColor: '#C72030' }}
+                className="hover:bg-[#C72030]/90 text-white px-6 py-2 h-10 text-sm font-medium border-0 flex items-center gap-2"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-5 h-5 text-white" />
+
                 Action
               </Button>
             }

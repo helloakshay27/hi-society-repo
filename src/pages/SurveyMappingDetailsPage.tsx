@@ -64,6 +64,11 @@ interface SurveyMapping {
   area_name: string | null;
   room_name: string | null;
   qr_code_url: string;
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
+  location: string;
 }
 
 interface QuestionOption {
@@ -114,6 +119,11 @@ interface LocationTableItem {
   created_at: string;
   active: boolean;
   survey_id: number;
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
+  location: string;
 }
 
 export const SurveyMappingDetailsPage = () => {
@@ -312,6 +322,34 @@ export const SurveyMappingDetailsPage = () => {
       draggable: false,
       defaultVisible: true,
     },
+    {
+      key: "society_name",
+      label: "Society",
+      sortable: false,
+      draggable: false,
+      defaultVisible: true,
+    },
+    {
+      key: "tower_name",
+      label: "Tower",
+      sortable: false,
+      draggable: false,
+      defaultVisible: true,
+    },
+    {
+      key: "flat_no",
+      label: "Flat",
+      sortable: false,
+      draggable: false,
+      defaultVisible: true,
+    },
+    {
+      key: "user_name",
+      label: "User",
+      sortable: false,
+      draggable: false,
+      defaultVisible: true,
+    },
     // {
     //   key: "site",
     //   label: "Site",
@@ -401,6 +439,11 @@ export const SurveyMappingDetailsPage = () => {
       created_at: mappingItem.created_at,
       active: mappingItem.active,
       survey_id: mappingItem.survey_id,
+      society_name: mappingItem.society_name,
+      tower_name: mappingItem.tower_name,
+      flat_no: mappingItem.flat_no,
+      user_name: mappingItem.user_name,
+      location: mappingItem.location,
     }));
   }, [mapping]);
 
@@ -623,6 +666,30 @@ export const SurveyMappingDetailsPage = () => {
       case "room":
         return item.room ? (
           <span>{item.room}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      case "society_name":
+        return item.society_name ? (
+          <span>{item.society_name}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      case "tower_name":
+        return item.tower_name ? (
+          <span>{item.tower_name}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      case "flat_no":
+        return item.flat_no ? (
+          <span>{item.flat_no}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      case "user_name":
+        return item.user_name ? (
+          <span>{item.user_name}</span>
         ) : (
           <span className="text-gray-400">—</span>
         );

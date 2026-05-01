@@ -966,7 +966,7 @@ export const AddStaffPage = () => {
           <Button 
             type="submit"
             disabled={isSubmitting}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-2"
+            className="text-white px-8 py-2"
           >
             {isSubmitting ? 'Creating...' : 'Submit'}
           </Button>
