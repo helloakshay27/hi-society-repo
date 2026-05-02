@@ -100,7 +100,7 @@ export const MobileSurveyLanding: React.FC = () => {
   const [negativeComments3, setNegativeComments3] = useState<string>("");
 
   const [pendingNegativeType, setPendingNegativeType] = useState<
-    null | "emoji" | "smiley" | "multiple" | "rating"
+    null | "emoji" | "smiley" | "multiple" | "rating" | "numeric"
   >(null);
   const [pendingNegativeAnswer, setPendingNegativeAnswer] = useState<
     | null
@@ -236,6 +236,8 @@ export const MobileSurveyLanding: React.FC = () => {
       case "description":
         return currentQuestionValue.trim() !== "";
       case "rating":
+        return selectedRating !== null;
+      case "numeric":
         return selectedRating !== null;
       case "emoji":
       case "smiley":
@@ -487,27 +489,6 @@ export const MobileSurveyLanding: React.FC = () => {
         answerData.comments = comments || "";
         break;
       }
-      case "rating": {
-        answerData.rating = rating || selectedRating;
-        answerData.value = rating || selectedRating;
-        // attach dynamic label from API if available
-        const dynamicLabel = getRatingLabel(
-          currentQuestion,
-          (rating || selectedRating) as number
-        );
-        if (dynamicLabel) {
-          answerData.label = dynamicLabel;
-        }
-        // Use provided tags parameter or current selectedTags state
-        const ratingTags =
-          tags || (selectedTags.length > 0 ? selectedTags : undefined);
-        if (ratingTags && ratingTags.length > 0) {
-          answerData.selectedTags = ratingTags;
-        }
-        // Always set comments, defaulting to empty string
-        answerData.comments = comments || "";
-        break;
-      }
       case "emoji":
       case "smiley": {
         answerData.rating = rating || selectedRating;
@@ -526,6 +507,21 @@ export const MobileSurveyLanding: React.FC = () => {
             answerData.selectedTags.map((t) => t.category_name)
           );
         }
+        break;
+      }
+      case "numeric": {
+        answerData.rating = rating || selectedRating;
+        answerData.value = (rating || selectedRating)?.toString() || "";
+        // attach dynamic label from API if available
+        const selectedNumericOption = currentQuestion.snag_quest_options?.find(
+          (option) => option.option_type === "p"
+        );
+        if (selectedNumericOption) {
+          answerData.label = selectedNumericOption.qname;
+        }
+        // Use provided tags parameter or current selectedTags state
+        answerData.selectedTags = tags || selectedTags;
+        answerData.comments = comments || "";
         break;
       }
       case "input_box": {
@@ -864,6 +860,26 @@ export const MobileSurveyLanding: React.FC = () => {
           }
           break;
         }
+        case "numeric": {
+          if (answerData.rating !== undefined) {
+            surveyResponseItem.rating = answerData.rating;
+            surveyResponseItem.level_id = answerData.rating;
+          }
+          surveyResponseItem.answer_type = currentQuestion.qtype;
+          surveyResponseItem.answer_mode = "numeric_selection";
+          // Use label from answer data or fetch dynamically from API options
+          const numericLabelNeg = answerData.label || getRatingLabel(currentQuestion, answerData.rating);
+          if (numericLabelNeg) {
+            surveyResponseItem.label = numericLabelNeg;
+            surveyResponseItem.ans_descr = numericLabelNeg;
+          }
+
+          // Add option_id for numeric questions
+          if (answerData.optionId) {
+            surveyResponseItem.option_id = answerData.optionId;
+          }
+          break;
+        }
 
         case "input":
         case "text":
@@ -1086,6 +1102,49 @@ export const MobileSurveyLanding: React.FC = () => {
 
                   if (selectedOption) {
                     setPendingNegativeType("rating");
+                    setPendingNegativeAnswer({
+                      rating: savedAnswer.rating,
+                      option: selectedOption,
+                    });
+                  }
+                }
+              }
+              break;
+            case "numeric":
+              if (savedAnswer.rating !== undefined) {
+                setSelectedRating(savedAnswer.rating);
+              }
+              // If there are tags and comments, show generic tags view
+              if (
+                savedAnswer.selectedTags &&
+                savedAnswer.selectedTags.length > 0
+              ) {
+                setSelectedTags(savedAnswer.selectedTags);
+                setShowGenericTags(true);
+
+                // Set pending negative data for restoration
+                if (savedAnswer.rating !== undefined) {
+                  // Find the corresponding option for the numeric value
+                  const numericToOptionIndex = Array.from(
+                    {
+                      length: previousQuestion.snag_quest_options?.length || 11,
+                    },
+                    (_, index) => ({
+                      rating: index,
+                      optionIndex: index,
+                    })
+                  );
+                  const selectedOptionMapping = numericToOptionIndex.find(
+                    (opt) => opt.rating === savedAnswer.rating
+                  );
+                  const selectedOption =
+                    selectedOptionMapping &&
+                    previousQuestion.snag_quest_options?.[
+                    selectedOptionMapping.optionIndex
+                    ];
+
+                  if (selectedOption) {
+                    setPendingNegativeType("numeric");
                     setPendingNegativeAnswer({
                       rating: savedAnswer.rating,
                       option: selectedOption,
@@ -1695,6 +1754,40 @@ export const MobileSurveyLanding: React.FC = () => {
             }
             break;
 
+          case "numeric":
+            if (answer.rating !== undefined) {
+              surveyResponseItem.rating = answer.rating;
+              surveyResponseItem.level_id = answer.rating;
+            }
+            surveyResponseItem.answer_type = question.qtype;
+            surveyResponseItem.answer_mode = "numeric_selection";
+
+            // Add label and ans_descr for numeric
+            const formNumericLabel = answer.label || getRatingLabel(question, answer.rating);
+            if (formNumericLabel) {
+              surveyResponseItem.label = formNumericLabel;
+              surveyResponseItem.ans_descr = formNumericLabel;
+            }
+
+            // Map numeric value to option_id
+            if (question.snag_quest_options) {
+              const numericToOptionMapping = Array.from(
+                { length: question.snag_quest_options.length },
+                (_, index) => ({
+                  rating: index,
+                  optionIndex: index,
+                })
+              );
+              const mapping = numericToOptionMapping.find(
+                (opt) => opt.rating === answer.rating
+              );
+              if (mapping && question.snag_quest_options[mapping.optionIndex]) {
+                surveyResponseItem.option_id =
+                  question.snag_quest_options[mapping.optionIndex].id;
+              }
+            }
+            break;
+
           case "emoji":
           case "smiley":
             if (answer.rating !== undefined) {
@@ -2266,6 +2359,85 @@ export const MobileSurveyLanding: React.FC = () => {
                                     {selectedRating} star
                                     {selectedRating > 1 ? "s" : ""}
                                   </span>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+
+                      {/* Numeric Question */}
+                      {currentQuestion.qtype === "numeric" &&
+                        !showGenericTags && (
+                          <>
+                            <div className="bg-white rounded-xl border-2 border-gray-200 shadow-lg p-6">
+                              <div className="grid grid-cols-5 gap-3 sm:grid-cols-6">
+                                {Array.from({ length: 11 }, (_, index) => index).map(
+                                  (value) => {
+                                    const getButtonColor = (val: number, isSelected: boolean) => {
+                                      if (isSelected) {
+                                        // Selected state colors
+                                        if (val <= 6) {
+                                          return 'border-red-500 bg-red-500 text-white shadow-lg scale-105';
+                                        } else if (val <= 8) {
+                                          return 'border-yellow-500 bg-yellow-500 text-white shadow-lg scale-105';
+                                        } else {
+                                          return 'border-green-500 bg-green-500 text-white shadow-lg scale-105';
+                                        }
+                                      } else {
+                                        // Unselected state colors
+                                        if (val <= 6) {
+                                          return 'border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100';
+                                        } else if (val <= 8) {
+                                          return 'border-yellow-300 bg-yellow-50 text-yellow-700 hover:border-yellow-400 hover:bg-yellow-100';
+                                        } else {
+                                          return 'border-green-300 bg-green-50 text-green-700 hover:border-green-400 hover:bg-green-100';
+                                        }
+                                      }
+                                    };
+
+                                    return (
+                                      <button
+                                        type="button"
+                                        key={value}
+                                        onClick={() => handleRatingSelect(value)}
+                                        className={`
+                                          relative h-14 w-14 rounded-xl border-2 transition-all duration-200
+                                          flex items-center justify-center text-lg font-bold
+                                          ${getButtonColor(value, selectedRating === value)}
+                                        `}
+                                      >
+                                        {value}
+                                      </button>
+                                    );
+                                  }
+                                )}
+                              </div>
+                              {selectedRating !== null && (
+                                <div className="mt-6 p-4 rounded-lg border-2">
+                                  <p className="text-center font-semibold text-gray-800">
+                                    Selected value: <span className="text-2xl">{selectedRating}</span>
+                                  </p>
+                                  {selectedRating <= 6 && (
+                                    <div className="mt-2 text-center">
+                                      <span className="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                                        Poor (0-6)
+                                      </span>
+                                    </div>
+                                  )}
+                                  {selectedRating >= 7 && selectedRating <= 8 && (
+                                    <div className="mt-2 text-center">
+                                      <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                                        Average (7-8)
+                                      </span>
+                                    </div>
+                                  )}
+                                  {selectedRating >= 9 && (
+                                    <div className="mt-2 text-center">
+                                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                        Excellent (9-10)
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>

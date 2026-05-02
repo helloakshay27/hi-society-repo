@@ -3,6 +3,7 @@ import { SurveyQuestion, SurveyOption, SurveyAnswers } from "./types";
 import { MultipleChoiceQuestion } from "./MultipleChoiceQuestion";
 import { StarRatingQuestion } from "./StarRatingQuestion";
 import { EmojiRatingQuestion } from "./EmojiRatingQuestion";
+import { NumericQuestion } from "./NumericQuestion";
 import { getEmojiOptions, getRatingOptions } from "./surveyUtils";
 
 interface FormViewAllQuestionsProps {
@@ -66,6 +67,15 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
         });
     };
 
+    const handleNumericSelect = (questionId: number, rating: number, question: SurveyQuestion) => {
+        onAnswerChange(questionId, {
+            qtype: "numeric",
+            rating: rating,
+            value: rating,
+            comments: "",
+        });
+    };
+
     const isFormValid = () => {
         // Check if all mandatory questions are answered
         return questions.every((question) => {
@@ -84,6 +94,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                 case "rating":
                 case "emoji":
                 case "smiley":
+                case "numeric":
                     return answer.rating !== null && answer.rating !== undefined;
                 default:
                     return true;
@@ -141,6 +152,14 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                                     onEmojiSelect={(rating, emoji, label) =>
                                         handleEmojiSelect(question.id, rating, emoji, label)
                                     }
+                                />
+                            )}
+
+                            {/* Numeric */}
+                            {question.qtype === "numeric" && (
+                                <NumericQuestion
+                                    selectedRating={answer?.rating ?? null}
+                                    onRatingSelect={(rating) => handleNumericSelect(question.id, rating, question)}
                                 />
                             )}
 
