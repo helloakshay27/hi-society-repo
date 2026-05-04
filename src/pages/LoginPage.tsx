@@ -456,6 +456,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       sessionStorage.setItem("userId", response.id.toString());
 
       if (isHiSocietySite || isUIHiSocietySite) {
+        const from =
+          (location.state as { from?: Location })?.from?.pathname +
+          (location.state as { from?: Location })?.from?.search ||
+          "/maintenance/asset";
         // Hi Society specific logic - fetch additional data
         // Fetch Hi-Society specific data
         await fetchHiSocietyData(response.spree_api_key);
@@ -463,7 +467,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
         // Navigate based on site type
-        const redirectPath = isUIHiSocietySite ? "/loyalty/dashboard" : "/maintenance/project-details-list";
+        const redirectPath = from ? from : isUIHiSocietySite ? "/loyalty/dashboard" : "/maintenance/project-details-list";
         setTimeout(() => {
           navigate(redirectPath, { replace: true });
         }, 500);
@@ -583,10 +587,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           <div
             key={step}
             className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all transform ${step === currentStep
-                ? "bg-[#C72030] text-white shadow-lg scale-110"
-                : step < currentStep
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-100 text-gray-400"
+              ? "bg-[#C72030] text-white shadow-lg scale-110"
+              : step < currentStep
+                ? "bg-green-500 text-white"
+                : "bg-gray-100 text-gray-400"
               }`}
           >
             {step < currentStep ? (
@@ -999,8 +1003,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
               <p
                 className={`${isViSite
-                    ? "text-gray-800 text-base sm:text-lg font-semibold tracking-tight"
-                    : "text-gray-600 text-sm font-medium"
+                  ? "text-gray-800 text-base sm:text-lg font-semibold tracking-tight"
+                  : "text-gray-600 text-sm font-medium"
                   }`}
               >
                 Sign in to your account
