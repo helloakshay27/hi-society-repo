@@ -18,6 +18,7 @@ import {
   Loader2,
   Download,
   Upload,
+  QrCode,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -94,6 +95,10 @@ interface SurveyMappingItem {
     tag_created_at: string;
     tag_updated_at: string;
   };
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
 }
 
 // Survey group from the API
@@ -157,6 +162,10 @@ export const SurveyMappingDashboard = () => {
   const [columns, setColumns] = useState([
     { key: "actions", label: "Actions", visible: true },
     { key: "survey_title", label: "Survey Title", visible: true },
+    { key: "society_name", label: "Society", visible: true },
+    { key: "tower_name", label: "Tower", visible: true },
+    { key: "flat_no", label: "Flat", visible: true },
+    { key: "user_name", label: "User", visible: true },
     { key: "building_name", label: "Building", visible: true },
     { key: "wing_name", label: "Wing", visible: true },
     { key: "floor_name", label: "Floor", visible: true },
@@ -494,6 +503,10 @@ export const SurveyMappingDashboard = () => {
     navigate("/maintenance/survey/mapping/add");
   };
 
+  const handleUserQRSetup = () => {
+    navigate("/maintenance/survey/user-qr-setup");
+  };
+
   const handleExport = async (visibility?: Record<string, boolean>) => {
     try {
       // Collect selected columns based on visibility
@@ -670,50 +683,86 @@ export const SurveyMappingDashboard = () => {
         hideable: true,
       },
       {
-        key: "building_name",
-        label: "Building",
+        key: "society_name",
+        label: "Society",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("building_name"),
+        visible: isColumnVisible("society_name"),
         hideable: true,
       },
       {
-        key: "wing_name",
-        label: "Wing",
+        key: "tower_name",
+        label: "Tower",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("wing_name"),
+        visible: isColumnVisible("tower_name"),
         hideable: true,
       },
       {
-        key: "floor_name",
-        label: "Floor",
+        key: "flat_no",
+        label: "Flat",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("floor_name"),
+        visible: isColumnVisible("flat_no"),
         hideable: true,
       },
       {
-        key: "area_name",
-        label: "Area",
+        key: "user_name",
+        label: "User",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("area_name"),
+        visible: isColumnVisible("user_name"),
         hideable: true,
       },
-      {
-        key: "room_name",
-        label: "Room",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("room_name"),
-        hideable: true,
-      },
+      // {
+      //   key: "building_name",
+      //   label: "Building",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("building_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "wing_name",
+      //   label: "Wing",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("wing_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "floor_name",
+      //   label: "Floor",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("floor_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "area_name",
+      //   label: "Area",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("area_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "room_name",
+      //   label: "Room",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("room_name"),
+      //   hideable: true,
+      // },
       // { key: 'check_type', label: 'Check Type', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('check_type'), hideable: true },
       {
         key: "questions_count",
@@ -858,6 +907,34 @@ export const SurveyMappingDashboard = () => {
         );
       case "site_name":
         return <span className="text-sm text-black">{item.site_name}</span>;
+      case "society_name": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allSocieties = surveyData
+          ? surveyData.mappings.map((m) => m.society_name)
+          : [item.society_name];
+        return renderFirstWithHover(allSocieties, item.society_name);
+      }
+      case "tower_name": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allTowers = surveyData
+          ? surveyData.mappings.map((m) => m.tower_name)
+          : [item.tower_name];
+        return renderFirstWithHover(allTowers, item.tower_name);
+      }
+      case "flat_no": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allFlats = surveyData
+          ? surveyData.mappings.map((m) => m.flat_no)
+          : [item.flat_no];
+        return renderFirstWithHover(allFlats, item.flat_no);
+      }
+      case "user_name": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allUsers = surveyData
+          ? surveyData.mappings.map((m) => m.user_name)
+          : [item.user_name];
+        return renderFirstWithHover(allUsers, item.user_name);
+      }
       case "building_name": {
         const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
         const allBuildings = surveyData
@@ -1013,7 +1090,13 @@ export const SurveyMappingDashboard = () => {
 
       {showActionPanel && (
         <SelectionPanel
-          actions={[]}
+          actions={[
+            {
+              label: "User QR Setup",
+              icon: Plus,
+              onClick: handleUserQRSetup,
+            },
+          ]}
           onAdd={handleAddMapping}
           onImport={() => setShowImportModal(true)}
           onClearSelection={() => setShowActionPanel(false)}

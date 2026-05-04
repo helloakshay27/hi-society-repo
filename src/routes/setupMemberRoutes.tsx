@@ -479,6 +479,8 @@ const SmartSecureSetupVisitorParking = lazy(
 const SmartSecureSetupSupportStaff = lazy(
   () => import("@/pages/SmartSecureSetupSupportStaff")
 );
+const Petrolling = lazy(() => import("@/pages/Petrolling"));
+
 
 // Incidents Pages
 const IncidentsSetup = lazy(() => import("@/pages/IncidentsSetup"));
@@ -1648,6 +1650,11 @@ export const setupMemberRoutes = (
       path="/smartsecure/material-report"
       Component={withSuspense(SmartSecureMaterialReport)}
     />
+    <Route
+      path="/smartsecure/petrolling"
+      Component={withSuspense(Petrolling)}
+    />
+
     {/* <Route
       path="/smartsecure/patrolling"
       Component={withSuspense(SmartSecurePatrolling)}

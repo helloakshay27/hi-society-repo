@@ -137,6 +137,7 @@ import { SurveyMappingDashboard } from "./pages/SurveyMappingDashboard";
 import { AddSurveyMapping } from "./pages/AddSurveyMapping";
 import { EditSurveyMapping } from "./pages/EditSurveyMapping";
 import { SurveyMappingDetailsPage } from "./pages/SurveyMappingDetailsPage";
+import { UserQRSetup } from "./pages/UserQRSetup";
 import { SurveyResponseDashboard } from "./pages/SurveyResponseDashboard";
 import { SurveyResponsePage } from "./pages/SurveyResponsePage";
 import { SurveyResponseDetailPage } from "./pages/SurveyResponseDetailPage";
@@ -4236,7 +4237,7 @@ function App() {
                             element={<AddSurveyPage />}
                           />
                           <Route
-                            path="/master/survey/add"
+                            path="/settings/survey/add"
                             element={<AddSurveyPage />}
                           />
                           <Route
@@ -4275,6 +4276,10 @@ function App() {
                           <Route
                             path="/maintenance/survey/mapping/add"
                             element={<AddSurveyMapping />}
+                          />
+                          <Route
+                            path="/maintenance/survey/user-qr-setup"
+                            element={<UserQRSetup />}
                           />
                           <Route
                             path="/maintenance/survey/mapping/edit/:id"
@@ -4964,7 +4969,7 @@ function App() {
                             element={<VisitorsHistoryDashboard />}
                           />
                           <Route
-                            path="/security/visitor/details/:id"
+                            path="/smartsecure/visitor/details/:id"
                             element={<VisitorDetailsPage />}
                           />
                           <Route

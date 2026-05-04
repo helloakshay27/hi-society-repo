@@ -125,7 +125,7 @@ export const EditStaffPage = () => {
     vendorName: '',
     validFrom: '',
     validTill: '',
-    status: '',
+    active: '',
     notes: '',
     companyName: ''
   });
@@ -191,7 +191,7 @@ export const EditStaffPage = () => {
         vendorName: staff.vendor_name || '',
         validFrom: staff.valid_from || '',
         validTill: staff.expiry || '',
-        status: statusValue,
+        active: statusValue,
         notes: staff.notes || '',
         companyName: staff.vendor_name || ''
       });
@@ -337,7 +337,7 @@ export const EditStaffPage = () => {
         vendorName: formData.vendorName,
         validFrom: formData.validFrom,
         validTill: formData.validTill,
-        status: formData.status,
+        active: formData.active,
         notes: formData.notes,
         companyName: formData.companyName
       };
@@ -634,12 +634,12 @@ export const EditStaffPage = () => {
               {/* Status Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Status
+                  Active Status
                 </InputLabel>
                 <MuiSelect
-                  value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  label="Status"
+                  value={formData.active}
+                  onChange={(e) => handleInputChange('active', e.target.value)}
+                  label="Active Status"
                   displayEmpty
                   sx={fieldStyles}
                 >

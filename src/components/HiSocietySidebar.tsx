@@ -795,37 +795,43 @@ export const HiSocietySidebar: React.FC = () => {
             },
             {
               id: "vehicle-report",
-              label: "Vehicle Report",
+              label: "Member Vehicles",
               icon: FileText,
               path: "/smartsecure/vehicle-report",
             },
             {
               id: "material-report",
-              label: "Material Report",
+              label: "Guest Vehicles",
               icon: FileText,
               path: "/smartsecure/material-report",
             },
           ],
         },
         {
-          id: "patrolling",
-          label: "Patrolling",
-          icon: BarChart3,
-          subItems: [
-            {
-              id: "patrolling-info",
-              label: "Patrolling Info",
-              icon: FileText,
-              path: "/smartsecure/patrolling-info",
-            },
-            {
-              id: "response",
-              label: "Response",
-              icon: FileText,
-              path: "/smartsecure/response",
-            },
-          ],
+          id: "petrolling",
+          label: "Petrolling",
+          icon: History,
+          path: "/smartsecure/petrolling",
         },
+        // {
+        //   id: "patrolling",
+        //   label: "Patrolling",
+        //   icon: BarChart3,
+        //   subItems: [
+        //     {
+        //       id: "patrolling-info",
+        //       label: "Patrolling Info",
+        //       icon: FileText,
+        //       path: "/smartsecure/patrolling-info",
+        //     },
+        //     {
+        //       id: "response",
+        //       label: "Response",
+        //       icon: FileText,
+        //       path: "/smartsecure/response",
+        //     },
+        //   ],
+        // },
         {
           id: "setup",
           label: "Setup",
@@ -1211,13 +1217,13 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Question Bank",
           icon: FileText,
           path: "/settings/survey/list",
-        },{
+        },
+        {
           id: "sync-visitor",
           label: "General Settings",
           icon: FileText,
           path: "/settings/general-settings",
         },
-
       ],
     },
   };
@@ -1410,8 +1416,9 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${isSidebarCollapsed ? "w-16" : "w-64"
-        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${
+        isSidebarCollapsed ? "w-16" : "w-64"
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>

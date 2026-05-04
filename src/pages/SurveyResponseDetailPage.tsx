@@ -106,12 +106,11 @@ interface FinalComment {
 }
 
 interface ResponseLocation {
-  site_name: string;
-  building_name: string;
-  wing_name: string;
-  floor_name: string;
-  area_name: string;
-  room_name: string;
+  society_name: string;
+  tower_name: string;
+  flat_no: string;
+  user_name: string;
+  location_path: string;
   status: boolean;
 }
 
@@ -319,11 +318,10 @@ interface TabularResponseData {
   id: string;
   response_id: string;
   date_time: string;
-  building: string;
-  wing: string;
-  area: string;
-  floor: string;
-  room: string;
+  society: string;
+  tower: string;
+  flat: string;
+  user: string;
   question_type: string;
   question_name: string;
   answer: string;
@@ -2829,11 +2827,10 @@ export const SurveyResponseDetailPage = () => {
             hour12: false,
           })
           : "",
-        building: response.location?.building_name || "",
-        wing: response.location?.wing_name || "",
-        area: response.location?.area_name || "",
-        floor: response.location?.floor_name || "",
-        room: response.location?.room_name || "",
+        society: response.location?.society_name || "",
+        tower: response.location?.tower_name || "",
+        flat: response.location?.flat_no || "",
+        user: response.location?.user_name || "",
         question_type: "",
         question_name: "",
         answer: "",
@@ -3078,15 +3075,14 @@ export const SurveyResponseDetailPage = () => {
         sortable: true,
       },
       {
-        key: "building",
-        label: "Building",
+        key: "society",
+        label: "Society",
         defaultVisible: true,
         sortable: true,
       },
-      { key: "wing", label: "Wing", defaultVisible: true, sortable: true },
-      { key: "area", label: "Area", defaultVisible: true, sortable: true },
-      { key: "floor", label: "Floor", defaultVisible: true, sortable: true },
-      { key: "room", label: "Room", defaultVisible: true, sortable: true },
+      { key: "tower", label: "Tower", defaultVisible: true, sortable: true },
+      { key: "flat", label: "Flat", defaultVisible: true, sortable: true },
+      { key: "user", label: "User", defaultVisible: true, sortable: true },
     ];
 
     // Add dynamic question columns with grouped structure

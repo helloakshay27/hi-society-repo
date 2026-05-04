@@ -137,11 +137,11 @@ export const EditSurveyPage = () => {
   const [ticketSubCategory, setTicketSubCategory] = useState("");
   const [assignTo, setAssignTo] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [ticketCategories, setTicketCategories] = useState<CategoryResponse[]>(
-    []
-  );
+  const [ticketCategories, setTicketCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
   const [ticketSubCategories, setTicketSubCategories] = useState<
-    SubCategoryResponse[]
+    { id: number; name: string; category_id: number }[]
   >([]);
   const [fmUsers, setFmUsers] = useState<
     { id: number; firstname: string; lastname: string; email?: string }[]
@@ -167,6 +167,7 @@ export const EditSurveyPage = () => {
   // Emoji and rating constants
   const EMOJIS = ["😁", "😊", "😐", "😟", "😞"];
   const RATING_STARS = ["1-star", "2-star", "3-star", "4-star", "5-star"];
+  const NUMERIC_VALUES = ["0","1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
   useEffect(() => {
     fetchCategories();
@@ -181,9 +182,8 @@ export const EditSurveyPage = () => {
 
     setLoadingTicketCategories(true);
     try {
-      const response = await ticketManagementAPI.getCategories();
-      setTicketCategories(response.helpdesk_categories || []);
-      console.log("Ticket categories loaded:", response.helpdesk_categories);
+      const response = await apiClient.get("/dropdown/categories.json");
+      setTicketCategories(response.data?.categories || []);
     } catch (error) {
       console.error("Error loading ticket categories:", error);
     } finally {
@@ -195,14 +195,26 @@ export const EditSurveyPage = () => {
   const loadTicketSubCategories = useCallback(async (categoryId: number) => {
     setLoadingTicketSubCategories(true);
     try {
-      const subcats =
-        await ticketManagementAPI.getSubCategoriesByCategory(categoryId);
-      setTicketSubCategories(subcats);
-      console.log("Ticket subcategories loaded:", subcats);
-      return subcats; // Return the loaded subcategories
+      const response = await apiClient.get(
+        "/crm/admin/helpdesk_sub_categories.json"
+      );
+      const allSubcats = response.data?.helpdesk_sub_categories || [];
+      const filtered = allSubcats
+        .filter((s: { category_id: number }) => s.category_id === categoryId)
+        .map(
+          (s: { id: number; sub_category: string | null; category_id: number }) =>
+            ({
+              id: s.id,
+              name: s.sub_category || "",
+              category_id: s.category_id,
+            })
+        )
+        .filter((s: { name: string }) => !!s.name);
+      setTicketSubCategories(filtered);
+      return filtered;
     } catch (error) {
       console.error("Error loading ticket subcategories:", error);
-      return []; // Return empty array on error
+      return [];
     } finally {
       setLoadingTicketSubCategories(false);
     }
@@ -294,10 +306,11 @@ export const EditSurveyPage = () => {
         console.log("Processing ticket config:", ticketConfig);
         // First, load all ticket categories for the dropdowns
         try {
-          const categoriesResponse = await ticketManagementAPI.getCategories();
-          const allCategories = categoriesResponse.helpdesk_categories || [];
+          const categoriesResponse = await apiClient.get(
+            "/dropdown/categories.json"
+          );
+          const allCategories = categoriesResponse.data?.categories || [];
           setTicketCategories(allCategories);
-          console.log("All ticket categories loaded:", allCategories);
         } catch (error) {
           console.error("Error loading ticket categories:", error);
         }
@@ -347,49 +360,24 @@ export const EditSurveyPage = () => {
             subcategoryId
           );
           try {
-            const allSubCategoriesResponse =
-              await ticketManagementAPI.getSubCategories();
+            const allSubCategoriesResponse = await apiClient.get(
+              "/crm/admin/helpdesk_sub_categories.json"
+            );
             const allSubCategories =
-              allSubCategoriesResponse.sub_categories ||
-              allSubCategoriesResponse ||
-              [];
-            console.log("All subcategories loaded:", allSubCategories);
+              allSubCategoriesResponse.data?.helpdesk_sub_categories || [];
 
             const matchingSubCategory = allSubCategories.find(
-              (subCat: SubCategoryResponse) => subCat.id === subcategoryId
+              (subCat: { id: number }) => subCat.id === subcategoryId
             );
 
-            if (
-              matchingSubCategory &&
-              matchingSubCategory.helpdesk_category_id
-            ) {
-              console.log(
-                "Found parent category:",
-                matchingSubCategory.helpdesk_category_id
-              );
-              setTicketCategoryId(
-                matchingSubCategory.helpdesk_category_id.toString()
-              );
+            if (matchingSubCategory && matchingSubCategory.category_id) {
+              setTicketCategoryId(matchingSubCategory.category_id.toString());
 
               // Load subcategories for the parent category
-              const loadedSubcats = await loadTicketSubCategories(
-                matchingSubCategory.helpdesk_category_id
-              );
+              await loadTicketSubCategories(matchingSubCategory.category_id);
 
               // Set subcategory immediately after loading
               setTicketSubCategory(subcategoryId.toString());
-              console.log(
-                "Set subcategory ID from reverse lookup:",
-                subcategoryId
-              );
-
-              const foundSubcat = loadedSubcats?.find(
-                (s) => s.id === subcategoryId
-              );
-              console.log(
-                "Verified subcategory from reverse lookup:",
-                foundSubcat
-              );
             }
           } catch (error) {
             console.error(
@@ -450,11 +438,13 @@ export const EditSurveyPage = () => {
                       ? "rating"
                       : q.qtype === "emoji"
                         ? "emojis"
-                        : q.qtype === "text"
-                          ? "input-box"
-                          : q.qtype === "description"
-                            ? "description"
-                            : "description",
+                        : q.qtype === "numeric"
+                          ? "numeric"
+                          : q.qtype === "text"
+                            ? "input-box"
+                            : q.qtype === "description"
+                              ? "description"
+                              : "description",
             mandatory: q.quest_mandatory,
             answerOptions:
               q.snag_quest_options?.map((option: any) => ({
@@ -626,7 +616,7 @@ export const EditSurveyPage = () => {
           const updatedQuestion = { ...q, [field]: value };
           if (
             field === "answerType" &&
-            ["multiple-choice", "rating", "emojis"].includes(value as string) &&
+            ["multiple-choice", "rating", "emojis", "numeric"].includes(value as string) &&
             !updatedQuestion.answerOptions
           ) {
             updatedQuestion.answerOptions = [
@@ -635,7 +625,7 @@ export const EditSurveyPage = () => {
             ];
           } else if (
             field === "answerType" &&
-            !["multiple-choice", "rating", "emojis"].includes(value as string)
+            !["multiple-choice", "rating", "emojis", "numeric"].includes(value as string)
           ) {
             updatedQuestion.answerOptions = undefined;
           }
@@ -973,9 +963,9 @@ export const EditSurveyPage = () => {
         return;
       }
 
-      // Check if multiple choice, rating, or emojis have at least one option with text
+      // Check if multiple choice, rating, emojis, or numeric have at least one option with text
       if (
-        ["multiple-choice", "rating", "emojis"].includes(question.answerType)
+        ["multiple-choice", "rating", "emojis", "numeric"].includes(question.answerType)
       ) {
         if (!question.answerOptions || question.answerOptions.length === 0) {
           toast.error("Validation Error", {
@@ -1109,7 +1099,9 @@ export const EditSurveyPage = () => {
                 ? "rating"
                 : question.answerType === "emojis"
                   ? "emoji"
-                  : "description";
+                  : question.answerType === "numeric"
+                    ? "numeric"
+                    : "description";
 
         formData.append(`question[][qtype]`, qtype);
         formData.append(
@@ -1163,9 +1155,9 @@ export const EditSurveyPage = () => {
           });
         }
 
-        // Add multiple choice, rating, and emoji options with proper structure
+        // Add multiple choice, rating, emoji, and numeric options with proper structure
         if (
-          ["multiple-choice", "rating", "emojis"].includes(
+          ["multiple-choice", "rating", "emojis", "numeric"].includes(
             question.answerType
           ) &&
           question.answerOptions
@@ -1247,7 +1239,7 @@ export const EditSurveyPage = () => {
         duration: 4000,
       });
 
-      navigate("/master/survey/list");
+      navigate("/setting/survey/list");
     } catch (error) {
       console.error("Error updating Question:", error);
 
@@ -1719,12 +1711,13 @@ export const EditSurveyPage = () => {
                             <SelectItem value="rating">Rating</SelectItem>
                             <SelectItem value="emojis">Emojis</SelectItem>
                             <SelectItem value="input-box">Input Box</SelectItem>
+                            <SelectItem value="numeric">Numeric</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      {/* Multiple Choice, Rating, and Emoji Options */}
-                      {["multiple-choice", "rating", "emojis"].includes(
+                      {/* Multiple Choice, Rating, Emoji, and Numeric Options */}
+                      {["multiple-choice", "rating", "emojis", "numeric"].includes(
                         question.answerType
                       ) && (
                         <div className="space-y-3 pt-2">
@@ -1733,7 +1726,9 @@ export const EditSurveyPage = () => {
                               ? "Rating Options"
                               : question.answerType === "emojis"
                                 ? "Emoji Options"
-                                : "Answer Options"}
+                                : question.answerType === "numeric"
+                                  ? "Numeric Values"
+                                  : "Answer Options"}
                           </Label>
                           {(question.answerOptions || []).map(
                             (option, optionIndex) => (
@@ -1751,6 +1746,12 @@ export const EditSurveyPage = () => {
                                   <div className="flex items-center justify-center w-28 h-12">
                                     <span className="text-base">
                                       {RATING_STARS[optionIndex]}
+                                    </span>
+                                  </div>
+                                ) : question.answerType === "numeric" ? (
+                                  <div className="flex items-center justify-center w-12 h-12">
+                                    <span className="text-base font-semibold text-gray-700">
+                                      {NUMERIC_VALUES[optionIndex]}
                                     </span>
                                   </div>
                                 ) : (

@@ -62,6 +62,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchRates();
@@ -288,7 +289,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
   const renderCell = useCallback((item: FitoutFlatRate, columnKey: string, index: number) => {
     switch (columnKey) {
       case 'sr_no':
-        return <span>{index + 1}</span>;
+        return <span>{(currentPage - 1) * 10 + index + 1}</span>;
       case 'actions':
         return (
           <div className="flex gap-2">
@@ -360,6 +361,8 @@ export const FitoutCategoryRateTab: React.FC = () => {
         searchPlaceholder="Search rates..."
         pagination={true}
         pageSize={10}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
         leftActions={
           <Button
             onClick={handleOpenAddDialog}

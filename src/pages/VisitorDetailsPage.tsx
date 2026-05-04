@@ -80,6 +80,62 @@ interface AdditionalVisitor {
   assets?: AssetItem[];
 }
 
+interface VehicleInfo {
+  vehicle_number?: string;
+  vehicle_type?: string | null;
+  parking_slot_number?: string | null;
+}
+
+interface BuildingInfo {
+  id: number;
+  name: string;
+}
+
+interface TowerInfo {
+  id: number;
+  name: string | null;
+}
+
+interface FlatInfo {
+  id: number;
+  number: string;
+}
+
+interface PersonToMeet {
+  id: string;
+  name: string;
+  flat_member_str?: string;
+  mobile?: string;
+}
+
+interface ApprovalStatus {
+  approve: number;
+  approve_label: string;
+}
+
+interface OtpInfo {
+  otp?: string;
+  otp_verified?: string | null;
+  pass_number?: string | null;
+  is_pass_holder?: boolean;
+  pass_valid?: boolean;
+}
+
+interface HealthCheck {
+  temperature?: string | null;
+  mask_checked?: string | null;
+}
+
+interface MimoDetail {
+  id: number;
+  type?: string;
+  item_number?: number;
+  details?: string;
+  need_approval?: number;
+  reason?: string | null;
+  approve_status?: string | null;
+}
+
 interface VisitorData {
   id: number;
   guest_name: string;
@@ -113,6 +169,8 @@ interface VisitorData {
   entry_gate?: string;
   exit_gate?: string;
   created_by?: string;
+  marked_in_by?: string;
+  marked_out_by?: string;
   time_since_in?: string;
   location?: string;
   qr_code_url?: string;
@@ -132,6 +190,21 @@ interface VisitorData {
   building_name?: string;
   encrypted_gatekeeper_id?: string;
   item_movements?: ItemMovement[];
+  // Nested API fields
+  vehicle_info?: VehicleInfo;
+  building?: BuildingInfo;
+  tower?: TowerInfo;
+  flat?: FlatInfo;
+  person_to_meet?: PersonToMeet;
+  approval_status?: ApprovalStatus;
+  otp_info?: OtpInfo;
+  health_check?: HealthCheck;
+  mimo_details?: MimoDetail[];
+  // Extra display fields
+  remarks?: string;
+  guest_entry_time_show?: string;
+  master_exit_time_show?: string;
+  plus_person?: string | number;
 }
 
 export const VisitorDetailsPage = () => {
@@ -171,7 +244,7 @@ export const VisitorDetailsPage = () => {
 
       try {
         setLoading(true);
-        const url = getFullUrl(`/pms/visitors/${id}.json`);
+        const url = getFullUrl(`/crm/admin/visitors/${id}.json`);
         const options = getAuthenticatedFetchOptions();
 
         const response = await fetch(url, options);
@@ -184,8 +257,49 @@ export const VisitorDetailsPage = () => {
 
         const data = await response.json();
 
-        // Handle the nested gatekeeper structure from the API
-        const visitor = data.gatekeeper || data.visitor || data;
+        // Handle both old (gatekeeper/visitor) and new (data) API response shapes
+        const rawVisitor = data.data || data.gatekeeper || data.visitor || data;
+
+        // Normalize nested fields so existing JSX works with both API shapes
+        const visitor: VisitorData = {
+          ...rawVisitor,
+          // Flatten vehicle_info
+          guest_vehicle_number:
+            rawVisitor.guest_vehicle_number ||
+            rawVisitor.vehicle_info?.vehicle_number,
+          vehicle_type:
+            rawVisitor.vehicle_type || rawVisitor.vehicle_info?.vehicle_type,
+          // Flatten person_to_meet
+          visitor_host_name:
+            rawVisitor.visitor_host_name || rawVisitor.person_to_meet?.name,
+          visitor_host_mobile:
+            rawVisitor.visitor_host_mobile || rawVisitor.person_to_meet?.mobile,
+          // Flatten building
+          building_name:
+            rawVisitor.building_name || rawVisitor.building?.name,
+          // Flatten approval_status
+          approve:
+            rawVisitor.approve ?? rawVisitor.approval_status?.approve,
+          // Flatten otp_info
+          otp_string: rawVisitor.otp_string || rawVisitor.otp_info?.otp,
+          pass_number:
+            rawVisitor.pass_number || rawVisitor.otp_info?.pass_number,
+          pass_valid:
+            rawVisitor.pass_valid ?? rawVisitor.otp_info?.pass_valid,
+          // Flatten health_check
+          temperature:
+            rawVisitor.temperature || rawVisitor.health_check?.temperature,
+          // Derive vstatus when not present
+          vstatus:
+            rawVisitor.vstatus ||
+            (rawVisitor.check_out
+              ? "checked_out"
+              : rawVisitor.check_in
+              ? "checked_in"
+              : rawVisitor.approval_status?.approve === 0
+              ? "pending"
+              : "expected"),
+        };
         setVisitorData(visitor);
       } catch (err) {
         setError("Failed to fetch visitor details");
@@ -258,7 +372,7 @@ export const VisitorDetailsPage = () => {
       toast.info("Processing approval...");
 
       // Construct the API URL
-      const url = getFullUrl(`/pms/visitors/${id}.json`);
+      const url = getFullUrl(`/crm/admin/visitors/${id}.json`);
       const options = getAuthenticatedFetchOptions();
 
       // Set the request method to PUT and add the request body
@@ -564,12 +678,12 @@ export const VisitorDetailsPage = () => {
             >
               Additional Details
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="assets"
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
               Asset Details
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger
               value="identity"
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
@@ -715,7 +829,7 @@ export const VisitorDetailsPage = () => {
                         <span className="text-gray-500 min-w-[140px]">Expected Time</span>
                         <span className="text-gray-500 mx-2">:</span>
                         <span className="text-gray-900 font-medium">
-                          {visitorData.expected_at && !isNaN(new Date(visitorData.expected_at))
+                          {visitorData.expected_at && !isNaN(new Date(visitorData.expected_at).getTime())
                             ? new Date(visitorData.expected_at).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -747,6 +861,22 @@ export const VisitorDetailsPage = () => {
                         <span className="text-gray-500 min-w-[140px]">Created Date & Time</span>
                         <span className="text-gray-500 mx-2">:</span>
                         <span className="text-gray-900 font-medium">{visitorData.created_at}</span>
+                      </div>
+                    )}
+
+                    {hasData(visitorData.marked_in_by) && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">Marked In By</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{visitorData.marked_in_by}</span>
+                      </div>
+                    )}
+
+                    {hasData(visitorData.marked_out_by) && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">Marked Out By</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{visitorData.marked_out_by}</span>
                       </div>
                     )}
 
@@ -830,7 +960,7 @@ export const VisitorDetailsPage = () => {
                         <span className="text-gray-900 font-medium">{visitorData.notes}</span>
                       </div>
                     )}
-                    {hasData(visitorData.plus_person) && (
+                    {hasData(visitorData.plus_person != null ? String(visitorData.plus_person) : undefined) && (
                       <div className="flex items-start md:col-span-2">
                         <span className="text-gray-500 min-w-[140px]">Additional Visitor Count</span>
                         <span className="text-gray-500 mx-2">:</span>
@@ -1057,7 +1187,55 @@ export const VisitorDetailsPage = () => {
 
           {/* Tab 3: Asset Details */}
           <TabsContent value="assets" className="p-6 space-y-6">
-            {/* Item Movements Section */}
+            {/* MIMO Details Section (new API) */}
+            {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                  Item Movements
+                </h2>
+                {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
+                  <div key={mimo.id || index} className="border rounded-lg p-6 bg-gray-50">
+                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                      Movement {index + 1}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                      {hasData(mimo?.type) && (
+                        <div className="flex items-start">
+                          <span className="text-gray-500 min-w-[140px]">Movement Type</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium capitalize">
+                            {mimo.type?.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                      )}
+                      {mimo?.item_number != null && (
+                        <div className="flex items-start">
+                          <span className="text-gray-500 min-w-[140px]">Item Count</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">{mimo.item_number}</span>
+                        </div>
+                      )}
+                      {hasData(mimo?.details) && (
+                        <div className="flex items-start md:col-span-2">
+                          <span className="text-gray-500 min-w-[140px]">Details</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">{mimo.details}</span>
+                        </div>
+                      )}
+                      {hasData(mimo?.approve_status) && (
+                        <div className="flex items-start">
+                          <span className="text-gray-500 min-w-[140px]">Approval Status</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">{mimo.approve_status}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Item Movements Section (legacy API) */}
             {visitorData.item_movements && visitorData.item_movements.length > 0 && (
               <div className="space-y-6">
                 <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
@@ -1271,7 +1449,7 @@ export const VisitorDetailsPage = () => {
               ))
             )}
 
-            {!visitorData.item_movements?.length && !visitorData.assets?.length && !visitorData.additional_visitors?.some(v => v.assets?.length) && (
+            {!visitorData.mimo_details?.length && !visitorData.item_movements?.length && !visitorData.assets?.length && !visitorData.additional_visitors?.some(v => v.assets?.length) && (
               <div className="text-center py-12 text-gray-500">
                 No asset details found
               </div>

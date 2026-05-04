@@ -49,6 +49,7 @@ export const CategoryTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchCategories();
@@ -244,7 +245,7 @@ export const CategoryTab: React.FC = () => {
   const renderCell = useCallback((item: Category, columnKey: string, index: number) => {
     switch (columnKey) {
       case 'sr_no':
-        return <span>{index + 1}</span>;
+        return <span>{(currentPage - 1) * 10 + index + 1}</span>;
       case 'actions':
         return (
           <div className="flex gap-2">
@@ -304,7 +305,7 @@ export const CategoryTab: React.FC = () => {
       default:
         return <span>{String(item[columnKey as keyof Category] || '-')}</span>;
     }
-  }, []);
+  }, [currentPage]);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -322,6 +323,8 @@ export const CategoryTab: React.FC = () => {
         searchPlaceholder="Search categories..."
         pagination={true}
         pageSize={10}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
         leftActions={
           <Button
             onClick={handleOpenAddDialog}

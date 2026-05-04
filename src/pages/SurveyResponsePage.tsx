@@ -174,6 +174,10 @@ interface TransformedSurveyResponse {
   floor_name: string;
   area_name: string;
   room_name: string;
+  society_name: string;
+  tower_name: string;
+  flat_no: string;
+  user_names: string;
   total_responses: number;
   total_complaints: number;
   latest_response_date: string;
@@ -237,6 +241,10 @@ export const SurveyResponsePage = () => {
     { key: "floor_name", label: "Floor Name", visible: true },
     { key: "area_name", label: "Area Name", visible: true },
     { key: "room_name", label: "Room Name", visible: true },
+    { key: "society_name", label: "Society", visible: true },
+    { key: "tower_name", label: "Tower", visible: true },
+    { key: "flat_no", label: "Flat", visible: true },
+    { key: "user_names", label: "User", visible: true },
     { key: "total_responses", label: "Total Responses", visible: true },
     { key: "total_complaints", label: "Total Complaints", visible: true },
     // { key: "latest_response_date", label: "Latest Response", visible: true },
@@ -581,6 +589,26 @@ export const SurveyResponsePage = () => {
           (location.room_name || response.room_name) &&
             (location.room_name || response.room_name).trim() !== ""
             ? location.room_name || response.room_name
+            : "-",
+        society_name:
+          (location.society_name || response.society_name) &&
+            (location.society_name || response.society_name).trim() !== ""
+            ? location.society_name || response.society_name
+            : "-",
+        tower_name:
+          (location.tower_name || response.tower_name) &&
+            (location.tower_name || response.tower_name).trim() !== ""
+            ? location.tower_name || response.tower_name
+            : "-",
+        flat_no:
+          (location.flat_no || response.flat_no) &&
+            (location.flat_no || response.flat_no).trim() !== ""
+            ? location.flat_no || response.flat_no
+            : "-",
+        user_names:
+          (location.user_names || response.user_names) &&
+            (location.user_names || response.user_names).trim() !== ""
+            ? location.user_names || response.user_names
             : "-",
         total_responses: response?.answers_count || 0,
         total_complaints: response?.complaints_count || 0,
@@ -941,49 +969,85 @@ export const SurveyResponsePage = () => {
         hideable: true,
       },
       // { key: 'site_name', label: 'Site Name', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('site_name'), hideable: true },
+      // {
+      //   key: "building_name",
+      //   label: "Building Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("building_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "wing_name",
+      //   label: "Wing Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("wing_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "floor_name",
+      //   label: "Floor Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("floor_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "area_name",
+      //   label: "Area Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("area_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "room_name",
+      //   label: "Room Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("room_name"),
+      //   hideable: true,
+      // },
       {
-        key: "building_name",
-        label: "Building Name",
+        key: "society_name",
+        label: "Society",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("building_name"),
+        visible: isColumnVisible("society_name"),
         hideable: true,
       },
       {
-        key: "wing_name",
-        label: "Wing Name",
+        key: "tower_name",
+        label: "Tower",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("wing_name"),
+        visible: isColumnVisible("tower_name"),
         hideable: true,
       },
       {
-        key: "floor_name",
-        label: "Floor Name",
+        key: "flat_no",
+        label: "Flat",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("floor_name"),
+        visible: isColumnVisible("flat_no"),
         hideable: true,
       },
       {
-        key: "area_name",
-        label: "Area Name",
+        key: "user_names",
+        label: "User",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("area_name"),
-        hideable: true,
-      },
-      {
-        key: "room_name",
-        label: "Room Name",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("room_name"),
+        visible: isColumnVisible("user_names"),
         hideable: true,
       },
       {
@@ -1084,6 +1148,14 @@ export const SurveyResponsePage = () => {
         return renderLocation(item.area_name);
       case "room_name":
         return renderLocation(item.room_name);
+      case "society_name":
+        return renderLocation(item.society_name);
+      case "tower_name":
+        return renderLocation(item.tower_name);
+      case "flat_no":
+        return renderLocation(item.flat_no);
+      case "user_names":
+        return renderLocation(item.user_names);
       case "total_responses":
         return (
           <span

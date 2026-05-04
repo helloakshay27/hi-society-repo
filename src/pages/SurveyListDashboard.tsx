@@ -135,7 +135,7 @@ export const SurveyListDashboard = () => {
 
   const handleAddSurvey = () => {
     const siteId = getCurrentSiteId();
-    navigate(`/master/survey/add?site_id=${siteId}`);
+    navigate(`/settings/survey/add?site_id=${siteId}`);
   };
 
   const handleOpenFilterModal = () => {

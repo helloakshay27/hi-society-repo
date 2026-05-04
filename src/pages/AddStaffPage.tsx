@@ -61,7 +61,7 @@ export const AddStaffPage = () => {
     vendorName: '',
     validFrom: '',
     validTill: '',
-    status: '',
+    active: '',
     notes: '',
     companyName: ''
   });
@@ -317,7 +317,7 @@ export const AddStaffPage = () => {
         vendorName: formData.vendorName,
         validFrom: formData.validFrom,
         validTill: validTill,
-        status: formData.status,
+        active: formData.active,
         notes: formData.notes,
         companyName: formData.companyName,
         userId: currentUser.id,
@@ -718,12 +718,12 @@ export const AddStaffPage = () => {
               {/* Status Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Status
+                  Active Status
                 </InputLabel>
                 <MuiSelect
-                  value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  label="Status"
+                  value={formData.active}
+                  onChange={(e) => handleInputChange('active', e.target.value)}
+                  label="Active Status"
                   displayEmpty
                   sx={fieldStyles}
                 >
@@ -966,7 +966,7 @@ export const AddStaffPage = () => {
           <Button 
             type="submit"
             disabled={isSubmitting}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-2"
+            className="text-white px-8 py-2"
           >
             {isSubmitting ? 'Creating...' : 'Submit'}
           </Button>

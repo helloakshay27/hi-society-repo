@@ -614,13 +614,20 @@ export const StaffDetailsPage = () => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
           <div className="space-y-4">
-            {hasData(staff.expiry_type) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Expiry Type</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.expiry_type} ({staff.expiry_value})</span>
-              </div>
-            )}
+            <div className="flex items-start">
+              <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Expiry Type</span>
+              <span className="text-gray-500 mx-3">:</span>
+              <span className="text-gray-900 font-semibold flex-1">
+                {hasData(staff.expiry_type) ? (
+                  <>
+                    {staff.expiry_type}
+                    {hasData(staff.expiry_value) ? ` (${staff.expiry_value})` : ''}
+                  </>
+                ) : (
+                  '-'
+                )}
+              </span>
+            </div>
           </div>
         </div>
       </ExpandableSection>

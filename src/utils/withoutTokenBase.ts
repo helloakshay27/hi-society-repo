@@ -267,7 +267,7 @@ baseClient.interceptors.request.use(
         config.baseURL = `${hiSocietyApiBase}/`;
         console.warn("⚠️ Using Hi-Society fallback URL due to error:", config.baseURL);
       } else {
-        config.baseURL = "https://fm-uat-api.lockated.com/";
+        config.baseURL = "https://hi-society.lockated.com/";
         console.warn("⚠️ Using fallback URL due to error:", config.baseURL);
       }
     }

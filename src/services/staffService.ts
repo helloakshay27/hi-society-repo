@@ -14,7 +14,7 @@ export interface StaffFormData {
   vendorName: string;
   validFrom: string;
   validTill: string;
-  status: string;
+  active: string;
   notes: string;
   companyName: string;
   resourceId?: string;
@@ -419,7 +419,7 @@ export const staffService = {
           associate_function_id: staffData.associateFunctionId || '1',
           valid_from: convertDateFormat(staffData.validFrom),
           expiry: convertDateFormat(staffData.validTill),
-          status: staffData.status || '1',
+          active: staffData.active || '1',
           notes: staffData.companyName || '',
           helpdesk_operations_attributes: helpdeskOperations,
           attachments: attachmentsBase64,
@@ -511,8 +511,8 @@ export const staffService = {
         type_id: staff.type_id ?? 0,
         pms_unit_id: null,
         created_by: 0,
-        expiry_type: 'days',
-        expiry_value: 90,
+        expiry_type: '',
+        expiry_value: 0,
         number_verified: false,
         otp: null,
         notes: staff.notes || '',
@@ -703,7 +703,7 @@ export const staffService = {
           vendorName: '',
           validFrom: '',
           validTill: '',
-          status: '',
+          active: '',
           notes: '',
           companyName: ''
         };
@@ -769,7 +769,7 @@ export const staffService = {
           associate_function_id: staffFormData.associateFunctionId || '1',
           valid_from: convertDateFormat(staffFormData.validFrom),
           expiry: convertDateFormat(staffFormData.validTill),
-          status: staffFormData.status || '1',
+          active: staffFormData.active || '1',
           notes: staffFormData.companyName || '',
           helpdesk_operations_attributes: helpdeskOperations,
           attachments: attachmentsBase64,

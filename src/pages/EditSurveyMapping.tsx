@@ -63,6 +63,12 @@ interface SurveyMapping {
     added_from: string | null;
     comments: string | null;
   };
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
+  user_society_id: number | null;
+  location: string;
 }
 
 interface SnagQuestion {
@@ -105,6 +111,12 @@ interface SurveyMappingItem {
   area_name: string | null;
   room_name: string | null;
   qr_code_url: string;
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
+  user_society_id: number | null;
+  location: string;
 }
 
 interface Question {
@@ -170,12 +182,20 @@ interface SurveyMappingResponse {
     added_from: string | null;
     comments: string | null;
   };
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
+  user_society_id: number | null;
+  location: string;
 }
 
 interface SurveyMappingPayload {
   id?: number;
   survey_id: number;
-  society_id?: number;
+  tower_id?: number;
+  flat_id?: number;
+  user_society_id?: number;
 }
 
 interface SurveyMappingForm {
@@ -257,6 +277,27 @@ export const EditSurveyMapping = () => {
     null
   );
 
+  // User configuration data
+  const [hasUserConfigData, setHasUserConfigData] = useState(false);
+  const [userConfigMappings, setUserConfigMappings] = useState<SurveyMappingItem[]>([]);
+
+  // User configuration dropdown data
+  const [towers, setTowers] = useState<LocationItem[]>([]);
+  const [loadingTowers, setLoadingTowers] = useState(false);
+  const [userConfigs, setUserConfigs] = useState<
+    Array<{
+      id: string;
+      building_id: string;
+      flat_id: string;
+      user_id: string;
+      locationData: {
+        towers: LocationItem[];
+        flats: LocationItem[];
+        users: Array<{ id: number; name: string }>;
+      };
+    }>
+  >([]);
+
   // Form state - updated to match AddSurveyMapping pattern
   const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
   const [userChangedSurvey, setUserChangedSurvey] = useState(false);
@@ -302,6 +343,7 @@ export const EditSurveyMapping = () => {
       // First fetch surveys, then mapping data to ensure surveys are available when setting selected survey
       await fetchSurveys();
       await fetchSurveyMappingData();
+      await fetchTowers();
     };
     initializeData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -425,7 +467,88 @@ export const EditSurveyMapping = () => {
             room_name: firstMapping.room_name,
             qr_code_url: firstMapping.qr_code_url,
             qr_code: firstMapping.qr_code,
+            society_name: firstMapping.society_name || null,
+            tower_name: firstMapping.tower_name || null,
+            flat_no: firstMapping.flat_no || null,
+            user_name: firstMapping.user_name || null,
+            user_society_id: firstMapping.user_society_id || null,
+            location: firstMapping.location || "",
           });
+
+          // Check if any mapping has user configuration data (tower, flat, or user)
+          const hasUserData = surveyData.mappings.some(
+            (m: SurveyMappingItem) =>
+              m.tower_name || m.flat_no || m.user_name || m.user_society_id
+          );
+          setHasUserConfigData(hasUserData);
+          setUserConfigMappings(surveyData.mappings);
+
+          // Initialize user configs with existing data
+          const initialUserConfigs = surveyData.mappings
+            .filter((m: SurveyMappingItem) => m.tower_name || m.flat_no || m.user_name)
+            .map((m: SurveyMappingItem) => ({
+              id: `uc-${m.id}`,
+              building_id: m.building_id?.toString() || "",
+              flat_id: m.wing_id?.toString() || "", // Map wing_id to flat_id
+              user_id: m.user_society_id?.toString() || "", // Map user_society_id to user_id
+              locationData: {
+                towers: [],
+                flats: [],
+                users: [],
+              },
+            }));
+          
+          console.log("Initial user configs:", initialUserConfigs);
+          setUserConfigs(initialUserConfigs);
+
+          // Fetch flats and users for existing configs
+          // Use a local copy to avoid async state issues
+          let workingConfigs = [...initialUserConfigs];
+          
+          for (let i = 0; i < workingConfigs.length; i++) {
+            const config = workingConfigs[i];
+            console.log(`Fetching data for config ${i}:`, config);
+            
+            if (config.building_id) {
+              // Fetch flats
+              const idSociety = localStorage.getItem("selectedSocietyId") || "";
+              const flatsResponse = await apiClient.get(`/get_society_flats.json?society_block_id=${config.building_id}&society_id=${idSociety}`);
+              const flatsArray = flatsResponse.data?.society_flats || [];
+              console.log("Fetched flats:", flatsArray);
+              
+              workingConfigs[i] = {
+                ...workingConfigs[i],
+                locationData: {
+                  ...workingConfigs[i].locationData,
+                  flats: flatsArray,
+                  users: [],
+                },
+              };
+            }
+            
+            if (config.flat_id) {
+              // Fetch users
+              const usersResponse = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${config.flat_id}&q[approve_eq]=true`);
+              const usersArray = Array.isArray(usersResponse.data) 
+                ? usersResponse.data.map(([name, id]: [string, number]) => ({
+                    id,
+                    name,
+                  }))
+                : [];
+              console.log("Fetched users:", usersArray);
+              
+              workingConfigs[i] = {
+                ...workingConfigs[i],
+                locationData: {
+                  ...workingConfigs[i].locationData,
+                  users: usersArray,
+                },
+              };
+            }
+          }
+          
+          // Update state with fetched data
+          setUserConfigs(workingConfigs);
         }
       } else {
         toast.error("Survey mapping not found");
@@ -885,6 +1008,157 @@ export const EditSurveyMapping = () => {
     [selectedSurveyId, surveys]
   );
 
+  // Fetch towers
+  const fetchTowers = async () => {
+    try {
+      setLoadingTowers(true);
+      const idSociety = localStorage.getItem("selectedSocietyId") || "";
+      
+      if (!idSociety) {
+        console.error("No selectedSocietyId found in localStorage");
+        toast.error("Society information not found. Please select a society.", { duration: 3000 });
+        return;
+      }
+      
+      const response = await apiClient.get(`/get_society_blocks.json?society_id=${idSociety}`);
+      const towersArray = response.data?.society_blocks || [];
+      setTowers(towersArray);
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to fetch towers", { duration: 5000 });
+    } finally {
+      setLoadingTowers(false);
+    }
+  };
+
+  // Fetch flats for a tower
+  const fetchFlatsForConfig = async (configIndex: number, towerId: string, preserveSelection = false) => {
+    try {
+      if (!towerId) return;
+      const idSociety = localStorage.getItem("selectedSocietyId") || "";
+
+      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
+      const flatsArray = response.data?.society_flats || [];
+      
+      console.log("Fetched flats for tower:", towerId, "flats:", flatsArray);
+      console.log("Current config flat_id to preserve:", userConfigs[configIndex]?.flat_id);
+
+      setUserConfigs((prev) =>
+        prev.map((config, i) => {
+          if (i !== configIndex) return config;
+          return {
+            ...config,
+            locationData: {
+              ...config.locationData,
+              flats: flatsArray,
+              users: [], // Clear users when flats change
+            },
+            flat_id: preserveSelection ? config.flat_id : "", // Preserve selection if flag is set
+            user_id: preserveSelection ? config.user_id : "", // Preserve selection if flag is set
+          };
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching flats:", error);
+      toast.error("Failed to fetch flats", { duration: 3000 });
+    }
+  };
+
+  // Fetch users for a flat
+  const fetchUsers = async (configIndex: number, flatId: string, preserveSelection = false) => {
+    try {
+      if (!flatId) return;
+
+      const response = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
+      // Response is an array of [name, id] tuples
+      const usersArray = Array.isArray(response.data) 
+        ? response.data.map(([name, id]: [string, number]) => ({
+            id,
+            name,
+          }))
+        : [];
+      
+      console.log("Fetched users for flat:", flatId, "users:", usersArray);
+      console.log("Current config user_id to preserve:", userConfigs[configIndex]?.user_id);
+
+      setUserConfigs((prev) =>
+        prev.map((config, i) => {
+          if (i !== configIndex) return config;
+          return {
+            ...config,
+            locationData: {
+              ...config.locationData,
+              users: usersArray,
+            },
+            user_id: preserveSelection ? config.user_id : "", // Preserve selection if flag is set
+          };
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users", { duration: 3000 });
+    }
+  };
+
+  // Handle tower change
+  const handleUserConfigTowerChange = async (configIndex: number, towerId: string) => {
+    setUserConfigs((prev) =>
+      prev.map((config, i) => {
+        if (i !== configIndex) return config;
+        return {
+          ...config,
+          building_id: towerId,
+          flat_id: "",
+          user_id: "",
+          locationData: {
+            ...config.locationData,
+            flats: [],
+            users: [],
+          },
+        };
+      })
+    );
+
+    if (towerId) {
+      await fetchFlatsForConfig(configIndex, towerId);
+    }
+  };
+
+  // Handle flat change
+  const handleUserConfigFlatChange = async (configIndex: number, flatId: string) => {
+    setUserConfigs((prev) =>
+      prev.map((config, i) => {
+        if (i !== configIndex) return config;
+        return {
+          ...config,
+          flat_id: flatId,
+          user_id: "",
+          locationData: {
+            ...config.locationData,
+            users: [],
+          },
+        };
+      })
+    );
+
+    if (flatId) {
+      await fetchUsers(configIndex, flatId);
+    }
+  };
+
+  // Handle user change
+  const handleUserConfigUserChange = (configIndex: number, userId: string) => {
+    setUserConfigs((prev) =>
+      prev.map((config, i) => {
+        if (i !== configIndex) return config;
+        return {
+          ...config,
+          user_id: userId,
+        };
+      })
+    );
+  };
+
   const handleSurveySelect = (mappingIndex: number, surveyId: number) => {
     setSurveyMappings((prev) =>
       prev.map((mapping, index) => {
@@ -976,25 +1250,36 @@ export const EditSurveyMapping = () => {
         "0"
       );
 
-      // Build payload: existing mappings include their DB id, new ones don't
-      const surveyMappingsPayload: SurveyMappingPayload[] = surveyMappings
-        .filter((m) => !m.markedForDeletion)
-        .map((mapping) => {
-          const mappingId = mapping.id.replace("sm-", "");
-          const isExistingMapping =
-            !mappingId.startsWith("new-") && !isNaN(parseInt(mappingId));
+      // Build payload from userConfigs with tower_id, flat_id, and user_society_id
+      const surveyMappingsPayload: SurveyMappingPayload[] = userConfigs.map((config, index) => {
+        const originalMapping = userConfigMappings[index];
+        
+        const mappingData: SurveyMappingPayload = {
+          survey_id: selectedSurveyId,
+        };
 
-          const mappingData: SurveyMappingPayload = {
-            survey_id: selectedSurveyId,
-            society_id: societyId,
-          };
+        // Include the original mapping ID
+        if (originalMapping) {
+          mappingData.id = originalMapping.id;
+        }
 
-          if (isExistingMapping) {
-            mappingData.id = parseInt(mappingId);
-          }
+        // Include tower_id if selected
+        if (config.building_id) {
+          mappingData.tower_id = parseInt(config.building_id);
+        }
 
-          return mappingData;
-        });
+        // Include flat_id if selected
+        if (config.flat_id) {
+          mappingData.flat_id = parseInt(config.flat_id);
+        }
+
+        // Include user_society_id if selected
+        if (config.user_id) {
+          mappingData.user_society_id = parseInt(config.user_id);
+        }
+
+        return mappingData;
+      });
 
       const payload = {
         survey_mappings: surveyMappingsPayload,
@@ -1205,6 +1490,124 @@ export const EditSurveyMapping = () => {
           </div>
         </div>
       </Section>
+
+      {/* User Configuration Section - Only show if data exists */}
+      {hasUserConfigData && (
+      <Section title="User Configuration" icon={<MapPin className="w-3.5 h-3.5" />}>
+        <div className="space-y-6">
+          <div className="mb-4 text-sm text-gray-600">
+            Edit the user configurations associated with this survey mapping.
+          </div>
+          {userConfigs.map((config, configIdx) => (
+            <div
+              key={config.id}
+              className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-gray-800">
+                  Configuration {configIdx + 1}
+                </h3>
+                <span className="text-xs text-gray-500">
+                  Mapping ID: {userConfigMappings[configIdx]?.id}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Tower Selection */}
+                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                  <InputLabel shrink>
+                    Tower <span className="text-red-500">*</span>
+                  </InputLabel>
+                  <Select
+                    value={config.building_id}
+                    onChange={(e: SelectChangeEvent<string>) =>
+                      handleUserConfigTowerChange(configIdx, e.target.value)
+                    }
+                    input={<OutlinedInput label="Tower" />}
+                    disabled={loadingTowers || towers.length === 0}
+                    displayEmpty
+                    notched
+                  >
+                    <MenuItem value="">
+                      <em>
+                        {loadingTowers ? "Loading..." : "Select tower"}
+                      </em>
+                    </MenuItem>
+                    {towers.map((tower) => (
+                      <MenuItem key={tower.id} value={tower.id.toString()}>
+                        {tower.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Flat Selection */}
+                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                  <InputLabel shrink>
+                    Flat <span className="text-red-500">*</span>
+                  </InputLabel>
+                  <Select
+                    value={config.flat_id}
+                    onChange={(e: SelectChangeEvent<string>) =>
+                      handleUserConfigFlatChange(configIdx, e.target.value)
+                    }
+                    input={<OutlinedInput label="Flat" />}
+                    disabled={
+                      !config.building_id || config.locationData.flats.length === 0
+                    }
+                    displayEmpty
+                    notched
+                  >
+                    <MenuItem value="">
+                      <em>
+                        {!config.building_id
+                          ? "Select tower first"
+                          : "Select flat"}
+                      </em>
+                    </MenuItem>
+                    {config.locationData.flats.map((flat) => (
+                      <MenuItem key={flat.id} value={flat.id.toString()}>
+                        {flat.flat_no || flat.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* User Selection */}
+                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                  <InputLabel shrink>
+                    User <span className="text-red-500">*</span>
+                  </InputLabel>
+                  <Select
+                    value={config.user_id}
+                    onChange={(e: SelectChangeEvent<string>) =>
+                      handleUserConfigUserChange(configIdx, e.target.value)
+                    }
+                    input={<OutlinedInput label="User" />}
+                    disabled={
+                      !config.flat_id || config.locationData.users.length === 0
+                    }
+                    displayEmpty
+                    notched
+                  >
+                    <MenuItem value="">
+                      <em>
+                        {!config.flat_id ? "Select flat first" : "Select user"}
+                      </em>
+                    </MenuItem>
+                    {config.locationData.users.map((user) => (
+                      <MenuItem key={user.id} value={user.id.toString()}>
+                        {user.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+      )}
 
       {/* Location Configuration section is temporarily hidden.
           To re-enable, change `false` to `true` below. */}
