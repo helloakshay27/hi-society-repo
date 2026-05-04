@@ -162,28 +162,45 @@ const CampaignsReferralSetup: React.FC = () => {
         );
       case "banner":
         return (
-          <div className="flex items-center justify-center">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 80,
+              height: 56,
+              minWidth: 80,
+              minHeight: 56,
+              background: "#f3f4f6",
+              borderRadius: 8,
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             {item.banner_url || item.banner ? (
               <img
                 src={item.banner_url || item.banner || ""}
-                alt={item.project_name}
-                className="w-20 h-14 object-cover rounded"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (item.banner && target.src !== item.banner && item.banner_url) {
-                    target.src = item.banner; // fallback
-                  }
+                alt=""
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+                draggable={false}
+                onError={e => {
+                  (e.target as HTMLImageElement).style.display = "none";
                 }}
               />
-            ) : (
-              <div className="w-20 h-14 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
-                No Image
-              </div>
-            )}
+            ) : null}
           </div>
         );
       case "project_name":
-        return <span className="text-sm">{item.project_name}</span>;
+        return (
+          <span className="text-sm" style={{ display: "block", minHeight: 24 }}>
+            {item.project_name}
+          </span>
+        );
       case "project_reference_id":
         return <span className="text-sm">{item.project_reference_id || "-"}</span>;
       case "active":

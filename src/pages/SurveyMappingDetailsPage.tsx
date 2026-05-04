@@ -810,6 +810,11 @@ export const SurveyMappingDetailsPage = () => {
       return <span className="text-sm text-gray-600">Text Input</span>;
     }
 
+    // Handle numeric type
+    if (question.qtype === "numeric") {
+      return <span className="text-sm text-gray-600">Numeric</span>;
+    }
+
     // Existing logic for other types
     // Check if it might be a numeric rating based on option names
     const isNumericRating = question.options.every((opt) =>

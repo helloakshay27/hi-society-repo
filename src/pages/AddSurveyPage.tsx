@@ -424,7 +424,7 @@ export const AddSurveyPage = () => {
       }
     }
     if (question.answerType === "numeric") {
-      if (currentOptionsCount >= 10) {
+      if (currentOptionsCount >= 11) {
         toast.error("Maximum Options Reached", {
           description: "You can only add up to 10 options for numeric questions.",
           duration: 3000,

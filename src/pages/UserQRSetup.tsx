@@ -732,40 +732,146 @@ export const UserQRSetup = () => {
             {selectedSurveyQuestions.map((q, idx) => (
               <div
                 key={q.id}
-                className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                className="relative rounded-md border border-dashed bg-muted/30 p-4"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-semibold text-gray-500 uppercase">
-                        Q{idx + 1}
-                      </span>
-                      {q.mandatory && (
-                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                          Mandatory
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm font-medium text-gray-800 mb-2">
-                      {q.task}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">
-                        {q.inputType.replace(/_/g, " ")}
-                      </span>
-                      {q.options.length > 0 && (
-                        <span className="text-xs text-gray-600">
-                          ({q.options.length} options)
-                        </span>
-                      )}
-                    </div>
-                    {q.optionsText && (
-                      <p className="text-xs text-gray-600 mt-2">
-                        <strong>Options:</strong> {q.optionsText}
-                      </p>
-                    )}
+                {/* First Row - Mandatory Checkbox */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`mandatory-${idx}`}
+                      checked={q.mandatory}
+                      className="w-4 h-4 text-[#C72030] bg-white border-gray-300 rounded focus:ring-[#C72030] focus:ring-2 accent-[#C72030]"
+                      disabled
+                    />
+                    <label
+                      htmlFor={`mandatory-${idx}`}
+                      className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+                    >
+                      Mandatory
+                    </label>
                   </div>
                 </div>
+
+                {/* Second Row - Task and Input Type */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                    >
+                      <InputLabel shrink>Question</InputLabel>
+                      <Select
+                        value={q.task}
+                        label="Question"
+                        notched
+                        disabled
+                        renderValue={() => q.task}
+                      >
+                        <MenuItem value={q.task}>{q.task}</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                  <div>
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                    >
+                      <InputLabel shrink>Input Type</InputLabel>
+                      <Select
+                        value={q.inputType}
+                        label="Input Type"
+                        notched
+                        disabled
+                      >
+                        <MenuItem value="yes_no">Yes/No</MenuItem>
+                        <MenuItem value="multiple_choice">
+                          Multiple Choice
+                        </MenuItem>
+                        <MenuItem value="rating">Rating</MenuItem>
+                        <MenuItem value="text_input">Text Input</MenuItem>
+                        <MenuItem value="input_box">Input Box</MenuItem>
+                        <MenuItem value="description">Description</MenuItem>
+                        <MenuItem value="emoji">Emoji</MenuItem>
+                        <MenuItem value="numeric">Numeric</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                </div>
+
+                {/* Options for multiple choice */}
+                {q.inputType === "multiple_choice" && (
+                  <div className="mt-4">
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                    >
+                      <InputLabel shrink>Options</InputLabel>
+                      <Select
+                        value={q.optionsText || ""}
+                        label="Options"
+                        notched
+                        disabled
+                        renderValue={() => q.optionsText || "No options"}
+                      >
+                        <MenuItem value={q.optionsText || ""}>
+                          {q.optionsText || "No options"}
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                )}
+
+                {/* Options for emoji */}
+                {q.inputType === "emoji" && (
+                  <div className="mt-4">
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                    >
+                      <InputLabel shrink>Emoji Options</InputLabel>
+                      <Select
+                        value={q.optionsText || ""}
+                        label="Emoji Options"
+                        notched
+                        disabled
+                        renderValue={() => q.optionsText || "No emoji options"}
+                      >
+                        <MenuItem value={q.optionsText || ""}>
+                          {q.optionsText || "No emoji options"}
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                )}
+
+                {/* Options for rating */}
+                {(q.inputType === "rating" || q.inputType === "numeric") && (
+                  <div className="mt-4">
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                    >
+                      <InputLabel shrink>Rating Scale</InputLabel>
+                      <Select
+                        value={q.optionsText || ""}
+                        label="Rating Scale"
+                        notched
+                        disabled
+                        renderValue={() => q.optionsText || "No rating scale"}
+                      >
+                        <MenuItem value={q.optionsText || ""}>
+                          {q.optionsText || "No rating scale"}
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                )}
               </div>
             ))}
           </div>

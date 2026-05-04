@@ -13,7 +13,7 @@ export const NumericQuestion: React.FC<NumericQuestionProps> = ({
 
     const getButtonColor = (value: number) => {
         if (value <= 1) return '#f87171';
-        if (value <= 5) return '#f97659';
+        if (value <= 6) return '#f97659';
         if (value <= 8) return '#fbbf24';
         return '#4ade80';
     };
@@ -29,7 +29,7 @@ export const NumericQuestion: React.FC<NumericQuestionProps> = ({
                         style={{ backgroundColor: getButtonColor(value) }}
                         className={`
                             flex-1 aspect-square max-w-[52px] min-w-0
-                            rounded-sm sm:rounded-md
+                            rounded-[7px] sm:rounded-[9px]
                             text-white font-bold
                             text-xs sm:text-sm md:text-lg
                             transition-all duration-150
