@@ -43,7 +43,7 @@ export interface BookingData {
   facilityType: string;
   scheduledDate: string;
   scheduledTime: string;
-  bookingStatus: 'Confirmed' | 'Pending' | 'Cancelled';
+  bookingStatus: 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected';
   createdOn: string;
   source: string;
   subFacilityName: string;
@@ -107,7 +107,7 @@ const transformBookingData = (apiData: FacilityBookingResponse): BookingData => 
     gst: safeValue(apiData.gst),
     amountPaid: safeValue(apiData.amount_paid),
     paymentStatus: safeValue(apiData.pg_state),
-    bookingStatus: (apiData.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+    bookingStatus: (apiData.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
     member: safeValue(apiData.member_count),
     nonMember: safeValue(apiData.non_member_count),
     guest: safeValue(apiData.guest_count),

@@ -172,10 +172,12 @@ const getStatusBadgeVariant = (status: string) => {
       return "success";
     case "Pending":
       return "warning";
-    case "Cancelled":
+    case "cancelled":
       return "destructive";
     case "Completed":
       return "default";
+    case "Rejected":
+      return "destructive";
     default:
       return "default";
   }
@@ -447,7 +449,7 @@ const BookingListDashboard = () => {
         gst: safeValue(item.gst),
         amountPaid: safeValue(item.amount_paid),
         paymentStatus: safeValue(item.pg_state),
-        bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+        bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
         member: safeValue(item.member_count),
         nonMember: safeValue(item.non_member_count),
         guest: safeValue(item.guest_count),
@@ -595,7 +597,7 @@ const BookingListDashboard = () => {
           gst: safeValue(item.gst),
           amountPaid: safeValue(item.amount_paid),
           paymentStatus: safeValue(item.pg_state),
-          bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+          bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
           member: safeValue(item.member_count),
           nonMember: safeValue(item.non_member_count),
           guest: safeValue(item.guest_count),
@@ -767,8 +769,10 @@ const BookingListDashboard = () => {
                     "bg-[#F4C790] hover:bg-[#F4C790] text-black",
                     item.bookingStatus === "Confirmed" &&
                     "bg-[#A3E4DB] hover:bg-[#8CDAD1] text-black",
-                    item.bookingStatus === "Cancelled" &&
-                    "bg-[#E4626F] hover:bg-[#E4626F] text-white"
+                    item.bookingStatus === "cancelled" &&
+                    "bg-[#E4626F] hover:bg-[#E4626F] text-white",
+                    item.bookingStatus === "Rejected" &&
+                    "bg-[#c72030] hover:bg-[#c72030] text-white",
                   )}
                 >
                   {item.bookingStatus.charAt(0).toUpperCase() + item.bookingStatus.slice(1)}
@@ -792,7 +796,7 @@ const BookingListDashboard = () => {
                   </div>
                 </SelectItem>
 
-                <SelectItem value="Cancelled">
+                <SelectItem value="cancelled">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-[#E4626F]" />
                     Cancelled
