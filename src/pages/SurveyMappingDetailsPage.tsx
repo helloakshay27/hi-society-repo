@@ -150,8 +150,8 @@ export const SurveyMappingDetailsPage = () => {
         setMapping(null);
       }
     } catch (error: unknown) {
-      console.error("Error fetching survey mapping details:", error);
-      toast.error("Failed to fetch survey mapping details");
+      console.error("Error fetching survey configuration details:", error);
+      toast.error("Failed to fetch survey configuration details");
       setMapping(null);
     } finally {
       setLoading(false);
@@ -537,7 +537,7 @@ export const SurveyMappingDetailsPage = () => {
           <div className="flex items-center justify-center">
             <button
               onClick={() => handleQuestionStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-500" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-400" : "bg-gray-300"
                 }`}
             >
               <div
@@ -750,7 +750,7 @@ export const SurveyMappingDetailsPage = () => {
           <div className="flex items-center justify-center">
             <button
               onClick={() => handleStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-500" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-400" : "bg-gray-300"
                 }`}
             >
               <div
@@ -1047,7 +1047,7 @@ export const SurveyMappingDetailsPage = () => {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
           <span className="ml-2 text-gray-600">
-            Loading survey mapping details...
+            Loading survey configuration details...
           </span>
         </div>
       </div>
@@ -1059,16 +1059,16 @@ export const SurveyMappingDetailsPage = () => {
       <div className="p-6">
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-gray-900">
-            Survey Mapping not found
+            Survey Configuration not found
           </h2>
           <p className="text-gray-600 mt-2">
-            The requested survey mapping could not be found.
+            The requested survey configuration could not be found.
           </p>
           <Button
             onClick={() => navigate("/maintenance/survey/mapping")}
             className="mt-4"
           >
-            Back to Survey Mapping List
+            Back to Survey configuration List
           </Button>
         </div>
       </div>
@@ -1076,35 +1076,36 @@ export const SurveyMappingDetailsPage = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="mb-6">
         <Button variant="ghost" onClick={handleBack} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Survey Mapping List
+          <span className="hidden sm:inline">Back to Survey configuration List</span>
+          <span className="sm:hidden">Back</span>
         </Button>
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[#1a1a1a]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] break-words">
             {/* Survey Details -  */}
             {mapping.name}
           </h1>
           <div className="flex gap-2">
             <Badge
-              variant={mapping.active ? "default" : "secondary"}
-              className="mr-2 rounded-none flex items-center"
-            >
-              {mapping.active ? (
-                <>
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Active
-                </>
-              ) : (
-                <>
-                  <XCircle className="w-3 h-3 mr-1" />
-                  Inactive
-                </>
-              )}
-              <ChevronDown className="w-3 h-3 ml-1" />
-            </Badge>
+  variant={mapping.active ? "default" : "secondary"}
+  className="mr-2 rounded-none inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-200 text-black"
+>
+  {mapping.active ? (
+    <>
+      <CheckCircle className="w-3 h-3 mr-1" />
+      Active
+    </>
+  ) : (
+    <>
+      <XCircle className="w-3 h-3 mr-1" />
+      Inactive
+    </>
+  )}
+  <ChevronDown className="w-3 h-3 ml-1" />
+</Badge>
 
             <Button
               onClick={handleEdit}
@@ -1184,7 +1185,7 @@ export const SurveyMappingDetailsPage = () => {
                 // ),
               },
               {
-                label: "Location Details",
+                label: "Survey QRs",
                 value: "location-details",
                 // icon: (
                 //   <svg
@@ -1219,7 +1220,7 @@ export const SurveyMappingDetailsPage = () => {
 
           {/* Survey Information */}
           <TabsContent value="survey-information" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
               <Card className="bg-[#F6F4EE]">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3">
@@ -1757,7 +1758,7 @@ export const SurveyMappingDetailsPage = () => {
                       No QR Codes Available
                     </h3>
                     <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                      No QR codes have been generated for this survey mapping
+                      No QR codes have been generated for this survey configuration
                       yet.
                     </p>
                   </div>

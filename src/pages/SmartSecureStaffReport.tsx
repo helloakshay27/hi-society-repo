@@ -90,6 +90,17 @@ const SmartSecureStaffReport: React.FC = () => {
 
     setDownloading(true);
     try {
+      // Get auth header with proper error handling
+      let authHeader;
+      try {
+        authHeader = getAuthHeader();
+      } catch (error) {
+        console.error('Error getting auth header:', error);
+        toast.error('Authentication error. Please log in again.');
+        setDownloading(false);
+        return;
+      }
+
       const body: Record<string, string | number | string[] | number[]> = {
         from_date: format(fromDate, "yyyy-MM-dd"),
         to_date: format(toDate, "yyyy-MM-dd"),
@@ -105,7 +116,7 @@ const SmartSecureStaffReport: React.FC = () => {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          Authorization: getAuthHeader(),
+          Authorization: authHeader,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
@@ -126,7 +137,29 @@ const SmartSecureStaffReport: React.FC = () => {
       toast.success("Staff Report downloaded successfully!");
     } catch (error) {
       console.error("Error downloading staff report:", error);
-      toast.error("Failed to download report. Please try again.");
+      
+      // Handle different types of errors
+      if (error.response) {
+        // API responded with error status
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.statusText || 'Unknown error';
+        
+        if (status === 401) {
+          toast.error("Authentication failed. Please log in again.");
+        } else if (status === 403) {
+          toast.error("Access denied. You don't have permission to download staff reports.");
+        } else if (status >= 500) {
+          toast.error("Server error. Please try again later.");
+        } else {
+          toast.error(`Failed to download report: ${message}`);
+        }
+      } else if (error.request) {
+        // Network error
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        // Other error
+        toast.error("Failed to download report. Please try again.");
+      }
     } finally {
       setDownloading(false);
     }

@@ -2370,74 +2370,70 @@ export const MobileSurveyLanding: React.FC = () => {
                         !showGenericTags && (
                           <>
                             <div className="bg-white rounded-xl border-2 border-gray-200 shadow-lg p-6">
-                              <div className="grid grid-cols-5 gap-3 sm:grid-cols-6">
-                                {Array.from({ length: 11 }, (_, index) => index).map(
-                                  (value) => {
-                                    const getButtonColor = (val: number, isSelected: boolean) => {
-                                      if (isSelected) {
-                                        // Selected state colors
-                                        if (val <= 6) {
-                                          return 'border-red-500 bg-red-500 text-white shadow-lg scale-105';
-                                        } else if (val <= 8) {
-                                          return 'border-yellow-500 bg-yellow-500 text-white shadow-lg scale-105';
-                                        } else {
-                                          return 'border-green-500 bg-green-500 text-white shadow-lg scale-105';
-                                        }
-                                      } else {
-                                        // Unselected state colors
-                                        if (val <= 6) {
-                                          return 'border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100';
-                                        } else if (val <= 8) {
-                                          return 'border-yellow-300 bg-yellow-50 text-yellow-700 hover:border-yellow-400 hover:bg-yellow-100';
-                                        } else {
-                                          return 'border-green-300 bg-green-50 text-green-700 hover:border-green-400 hover:bg-green-100';
-                                        }
-                                      }
-                                    };
+                              {/* Buttons row */}
+                              <div className="flex items-center justify-between gap-1 sm:gap-2">
+                                {Array.from({ length: 11 }, (_, index) => index).map((value) => {
+                                  const getButtonColor = (val: number) => {
+                                    if (val <= 1) return '#f87171';
+                                    if (val <= 6) return '#f97659';
+                                    if (val <= 8) return '#fbbf24';
+                                    return '#4ade80';
+                                  };
 
-                                    return (
-                                      <button
-                                        type="button"
-                                        key={value}
-                                        onClick={() => handleRatingSelect(value)}
-                                        className={`
-                                          relative h-14 w-14 rounded-xl border-2 transition-all duration-200
-                                          flex items-center justify-center text-lg font-bold
-                                          ${getButtonColor(value, selectedRating === value)}
-                                        `}
-                                      >
-                                        {value}
-                                      </button>
-                                    );
-                                  }
-                                )}
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={value}
+                                      onClick={() => handleRatingSelect(value)}
+                                      style={{ backgroundColor: getButtonColor(value) }}
+                                      className={`
+                                        flex-1 aspect-square max-w-[52px] min-w-0
+                                        rounded-[7px] sm:rounded-[9px]
+                                        text-white font-bold
+                                        text-xs sm:text-sm md:text-lg
+                                        transition-all duration-150
+                                        flex items-center justify-center
+                                        ${selectedRating === value
+                                          ? 'scale-110 shadow-lg'
+                                          : 'hover:scale-105 hover:shadow-md'
+                                        }
+                                      `}
+                                    >
+                                      {value}
+                                    </button>
+                                  );
+                                })}
                               </div>
+
+                              {/* Labels */}
+                              <div className="flex justify-between text-xs sm:text-sm font-semibold text-gray-500">
+                                <span>😠 0 - NOT LIKELY</span>
+                                <span>10 - VERY LIKELY 😌</span>
+                              </div>
+
+                              {/* Selected state feedback */}
                               {selectedRating !== null && (
-                                <div className="mt-6 p-4 rounded-lg border-2">
-                                  <p className="text-center font-semibold text-gray-800">
+                                <div className="mt-2 p-3 rounded-lg border-2 text-center">
+                                  <p className="font-semibold">
                                     Selected value: <span className="text-2xl">{selectedRating}</span>
                                   </p>
-                                  {selectedRating <= 6 && (
-                                    <div className="mt-2 text-center">
+                                  <div className="mt-1">
+                                    {selectedRating <= 6 && (
                                       <span className="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
                                         Poor (0-6)
                                       </span>
-                                    </div>
-                                  )}
-                                  {selectedRating >= 7 && selectedRating <= 8 && (
-                                    <div className="mt-2 text-center">
+                                    )}
+                                    {selectedRating >= 7 && selectedRating <= 8 && (
                                       <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
                                         Average (7-8)
                                       </span>
-                                    </div>
-                                  )}
-                                  {selectedRating >= 9 && (
-                                    <div className="mt-2 text-center">
+                                    )}
+                                    {selectedRating >= 9 && (
                                       <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                                         Excellent (9-10)
                                       </span>
-                                    </div>
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>

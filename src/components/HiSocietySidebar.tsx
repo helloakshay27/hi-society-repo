@@ -373,7 +373,7 @@ export const HiSocietySidebar: React.FC = () => {
           subItems: [
             {
               id: "survey-mapping",
-              label: "Survey Mapping",
+              label: "Survey Configuration",
               icon: FileText,
               path: "/maintenance/survey/mapping",
             },

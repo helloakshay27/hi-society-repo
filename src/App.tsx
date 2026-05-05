@@ -4265,11 +4265,11 @@ function App() {
                             element={<SurveyDetailsPage />}
                           />
                           <Route
-                            path="/master/survey/details/:id"
+                            path="/settings/survey/details/:id"
                             element={<SurveyDetailsPage />}
                           />
                           <Route
-                            path="/master/survey/edit/:id"
+                            path="/settings/survey/edit/:id"
                             element={<EditSurveyPage />}
                           />
 

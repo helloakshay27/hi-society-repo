@@ -162,7 +162,7 @@ export const SurveyDetailsPage = () => {
       <div className="flex items-center justify-between gap-4 mb-6">
         <Button
           variant="ghost"
-          onClick={() => navigate("/maintenance/survey/list")}
+          onClick={() => navigate("/settings/survey/list")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -170,7 +170,7 @@ export const SurveyDetailsPage = () => {
         </Button>
         {!loading && snagChecklist && (
           <Button
-            onClick={() => navigate(`/maintenance/survey/edit/${id}`)}
+            onClick={() => navigate(`/settings/survey/edit/${id}`)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Edit className="w-4 h-4" />
