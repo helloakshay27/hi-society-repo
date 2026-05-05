@@ -52,7 +52,7 @@ export const NumericQuestion: React.FC<NumericQuestionProps> = ({
             </div>
 
             {/* Selected state feedback */}
-            {/* {selectedRating !== null && (
+            {selectedRating !== null && (
                 <div className="mt-2 p-3 rounded-lg border-2 text-center">
                     <p className="font-semibold">
                         Selected value: <span className="text-2xl">{selectedRating}</span>
@@ -75,7 +75,7 @@ export const NumericQuestion: React.FC<NumericQuestionProps> = ({
                         )}
                     </div>
                 </div>
-            )} */}
+            )}
         </div>
     );
 };

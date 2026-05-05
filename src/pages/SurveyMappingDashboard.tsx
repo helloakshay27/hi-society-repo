@@ -1018,7 +1018,7 @@ export const SurveyMappingDashboard = () => {
             <button
               onClick={() => handleStatusToggle(item)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isActive ? "bg-green-500" : "bg-gray-300"
+                isActive ? "bg-green-400" : "bg-gray-300"
               }`}
             >
               <div
@@ -1080,10 +1080,10 @@ export const SurveyMappingDashboard = () => {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <Heading level="h1" variant="default">
-            Survey Mapping
+            Survey Configuration
           </Heading>
         </div>
       </div>
@@ -1132,14 +1132,16 @@ export const SurveyMappingDashboard = () => {
           hideTableExport={false}
           loading={loading}
           leftActions={
-            <div className="flex flex-wrap items-center gap-2 md:gap-4">
+            <div className="flex flex-wrap items-center gap-2">
               {shouldShow("survey_mapping", "add") && (
                 <Button
                   onClick={() => setShowActionPanel(!showActionPanel)}
-                  className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
+                  className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 text-sm px-3 py-2 h-auto"
+                  size="sm"
                 >
                   <Plus className="w-4 h-4" />
-                  Action
+                  <span className="hidden sm:inline">Action</span>
+                  <span className="sm:hidden">+</span>
                 </Button>
               )}
             </div>
@@ -1150,8 +1152,8 @@ export const SurveyMappingDashboard = () => {
 
         {/* Server-side Pagination */}
         {totalPages > 1 && (
-          <div className="mt-6">
-            <Pagination>
+          <div className="mt-6 overflow-x-auto">
+            <Pagination className="flex-wrap justify-center sm:justify-start">
               <PaginationContent>
                 {/* Previous Button */}
                 <PaginationItem>

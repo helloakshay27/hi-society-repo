@@ -281,10 +281,18 @@ export const AddSurveyPage = () => {
             ["multiple-choice", "rating", "emojis", "numeric"].includes(value as string) &&
             !updatedQuestion.answerOptions
           ) {
-            updatedQuestion.answerOptions = [
-              { text: "", type: "P" },
-              { text: "", type: "P" },
-            ];
+            // For numeric, auto-populate all 10 options (0-10)
+            if (value === "numeric") {
+              updatedQuestion.answerOptions = NUMERIC_VALUES.map((val) => ({
+                text: val,
+                type: "P",
+              }));
+            } else {
+              updatedQuestion.answerOptions = [
+                { text: "", type: "P" },
+                { text: "", type: "P" },
+              ];
+            }
           } else if (
             field === "answerType" &&
             !["multiple-choice", "rating", "emojis", "numeric"].includes(value as string)
@@ -426,7 +434,7 @@ export const AddSurveyPage = () => {
     if (question.answerType === "numeric") {
       if (currentOptionsCount >= 11) {
         toast.error("Maximum Options Reached", {
-          description: "You can only add up to 10 options for numeric questions.",
+          description: "Numeric questions must have exactly 11 options (0-10). You cannot add more options.",
           duration: 3000,
         });
         return;
@@ -565,6 +573,18 @@ export const AddSurveyPage = () => {
           });
           return;
         }
+
+        // Special validation for numeric - must have exactly 11 options (0-10)
+        if (question.answerType === "numeric") {
+          if (question.answerOptions.length !== 11) {
+            toast.error("Validation Error", {
+              description: `Numeric questions must have exactly 11 options (0-10) for Question ${i + 1}. Currently has ${question.answerOptions.length}.`,
+              duration: 3000,
+            });
+            return;
+          }
+        }
+
         // Check if all options have text
         for (let j = 0; j < question.answerOptions.length; j++) {
           if (!question.answerOptions[j].text.trim()) {

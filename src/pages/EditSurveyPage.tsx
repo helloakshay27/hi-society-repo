@@ -619,10 +619,18 @@ export const EditSurveyPage = () => {
             ["multiple-choice", "rating", "emojis", "numeric"].includes(value as string) &&
             !updatedQuestion.answerOptions
           ) {
-            updatedQuestion.answerOptions = [
-              { text: "", type: "P" },
-              { text: "", type: "P" },
-            ];
+            // For numeric, auto-populate all 10 options (0-10)
+            if (value === "numeric") {
+              updatedQuestion.answerOptions = NUMERIC_VALUES.map((val) => ({
+                text: val,
+                type: "P",
+              }));
+            } else {
+              updatedQuestion.answerOptions = [
+                { text: "", type: "P" },
+                { text: "", type: "P" },
+              ];
+            }
           } else if (
             field === "answerType" &&
             !["multiple-choice", "rating", "emojis", "numeric"].includes(value as string)
@@ -672,7 +680,20 @@ export const EditSurveyPage = () => {
     if (!question) return;
 
     const currentOptionsCount = question.answerOptions?.length || 0;
-    if (currentOptionsCount >= 5) return; // Limit to 5 options
+
+    // Different limits based on answer type
+    if (question.answerType === "numeric") {
+      // Numeric questions must have exactly 11 options (0-10), prevent adding more
+      if (currentOptionsCount >= 11) {
+        toast.error("Maximum Options Reached", {
+          description: "Numeric questions must have exactly 11 options (0-10). You cannot add more options.",
+          duration: 3000,
+        });
+        return;
+      }
+    } else if (currentOptionsCount >= 5) {
+      return; // Limit to 5 options for other types
+    }
 
     setQuestions(
       questions.map((q) =>
@@ -974,6 +995,18 @@ export const EditSurveyPage = () => {
           });
           return;
         }
+
+        // Special validation for numeric - must have exactly 11 options (0-10)
+        if (question.answerType === "numeric") {
+          if (question.answerOptions.length !== 11) {
+            toast.error("Validation Error", {
+              description: `Numeric questions must have exactly 11 options (0-10) for Question ${displayIndex}. Currently has ${question.answerOptions.length}.`,
+              duration: 3000,
+            });
+            return;
+          }
+        }
+
         // Check if all options have text
         for (let j = 0; j < question.answerOptions.length; j++) {
           if (!question.answerOptions[j].text.trim()) {
@@ -1239,7 +1272,7 @@ export const EditSurveyPage = () => {
         duration: 4000,
       });
 
-      navigate("/setting/survey/list");
+      navigate("/settings/survey/list");
     } catch (error) {
       console.error("Error updating Question:", error);
 
@@ -1291,7 +1324,7 @@ export const EditSurveyPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/master/survey/list")}
+            onClick={() => navigate("/settings/survey/list")}
             className="p-2"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -2214,7 +2247,7 @@ export const EditSurveyPage = () => {
                   {loading || isSubmitting ? "Updating..." : "Update Question"}
                 </Button>
                 <Button
-                  onClick={() => navigate("/master/survey/list")}
+                  onClick={() => navigate("/settings/survey/list")}
                   variant="outline"
                   className="border-red-600 text-red-600 hover:bg-red-50 px-8"
                 >

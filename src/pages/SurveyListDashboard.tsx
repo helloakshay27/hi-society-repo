@@ -214,9 +214,9 @@ export const SurveyListDashboard = () => {
     console.log(`${action} action for Question ${item.id}`);
     const siteId = getCurrentSiteId();
     if (action === "Edit") {
-      navigate(`/master/survey/edit/${item.id}?site_id=${siteId}`);
+      navigate(`/settings/survey/edit/${item.id}?site_id=${siteId}`);
     } else if (action === "View") {
-      navigate(`/master/survey/details/${item.id}?site_id=${siteId}`);
+      navigate(`/settings/survey/details/${item.id}?site_id=${siteId}`);
     } else {
       toast({
         title: `${action} Action`,
@@ -243,9 +243,9 @@ export const SurveyListDashboard = () => {
     console.log(`${action} action for Question ${surveyId}`);
     const siteId = getCurrentSiteId();
     if (action === "Edit") {
-      navigate(`/master/survey/edit/${surveyId}?site_id=${siteId}`);
+      navigate(`/settings/survey/edit/${surveyId}?site_id=${siteId}`);
     } else if (action === "View") {
-      navigate(`/master/survey/details/${surveyId}?site_id=${siteId}`);
+      navigate(`/settings/survey/details/${surveyId}?site_id=${siteId}`);
     } else {
       toast({
         title: `${action} Action`,

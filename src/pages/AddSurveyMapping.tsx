@@ -669,33 +669,24 @@ export const AddSurveyMapping = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-4 sm:p-6 space-y-6 relative min-h-screen overflow-y-auto">
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
         </div>
       )}
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(-1)}
-            className="h-8 w-8 p-0 hover:bg-gray-100"
-            aria-label="Go back"
+            onClick={() => navigate("/maintenance/survey/mapping")}
+            className="p-2"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-bold tracking-wide uppercase">
-            Survey Mapping
-          </h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Create Survey Mapping</h1>
         </div>
-        {/* <div className="text-sm text-gray-600">
-          {surveyMappings.length === 1 
-            ? '1 Location Configured' 
-            : `${surveyMappings.length} Location Configurations`
-          }
-        </div> */}
       </header>
 
       <Section title="Survey Selection" icon={<List className="w-3.5 h-3.5" />}>
@@ -805,7 +796,7 @@ export const AddSurveyMapping = () => {
                 )}
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Site */}
                 <FormControl
                   fullWidth
@@ -1095,7 +1086,7 @@ export const AddSurveyMapping = () => {
                 </div>
 
                 {/* Second Row - Task and Input Type */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <FormControl
                       fullWidth
@@ -1189,10 +1180,10 @@ export const AddSurveyMapping = () => {
         </Section>
       )}
 
-      <div className="flex items-center gap-3 justify-center pt-2">
+      <div className="flex flex-col sm:flex-row items-center gap-3 justify-center pt-2">
         <Button
           variant="destructive"
-          className="px-8"
+          className="px-6 sm:px-8 w-full sm:w-auto"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
@@ -1207,7 +1198,7 @@ export const AddSurveyMapping = () => {
         </Button>
         <Button
           variant="outline"
-          className="px-8"
+          className="px-6 sm:px-8 w-full sm:w-auto"
           onClick={() => navigate("/maintenance/survey/mapping")}
           disabled={isSubmitting}
         >
