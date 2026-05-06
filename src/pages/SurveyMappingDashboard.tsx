@@ -1081,8 +1081,8 @@ export const SurveyMappingDashboard = () => {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <Heading level="h1" variant="default">
+        <div className="w-full sm:w-auto">
+          <Heading level="h1" variant="default" className="text-lg sm:text-2xl">
             Survey Configuration
           </Heading>
         </div>
@@ -1114,46 +1114,47 @@ export const SurveyMappingDashboard = () => {
         )}
 
         {/* Survey Mapping Table using EnhancedTable */}
-        <EnhancedTable
-          data={mappings}
-          columns={enhancedTableColumns}
-          selectable={false}
-          renderCell={renderCell}
-          storageKey="survey-mapping-table"
-          enableExport={true}
-          handleExport={handleExport}
-          exportFileName="survey-mapping-data"
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          searchPlaceholder="Search survey mappings..."
-          pagination={false}
-          pageSize={perPage}
-          hideColumnsButton={false}
-          hideTableExport={false}
-          loading={loading}
-          leftActions={
-            <div className="flex flex-wrap items-center gap-2">
-              {shouldShow("survey_mapping", "add") && (
-                <Button
-                  onClick={() => setShowActionPanel(!showActionPanel)}
-                  className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 text-sm px-3 py-2 h-auto"
-                  size="sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Action</span>
-                  <span className="sm:hidden">+</span>
-                </Button>
-              )}
-            </div>
-          }
-          rightActions={null}
-          onFilterClick={() => setIsFilterOpen(true)}
-        />
+        <div className="min-w-full sm:min-w-0">
+          <EnhancedTable
+            data={mappings}
+            columns={enhancedTableColumns}
+            selectable={false}
+            renderCell={renderCell}
+            storageKey="survey-mapping-table"
+            enableExport={true}
+            handleExport={handleExport}
+            exportFileName="survey-mapping-data"
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search survey mappings..."
+            pagination={false}
+            pageSize={perPage}
+            hideColumnsButton={false}
+            hideTableExport={false}
+            loading={loading}
+            leftActions={
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                {shouldShow("survey_mapping", "add") && (
+                  <Button
+                    onClick={() => setShowActionPanel(!showActionPanel)}
+                    className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 text-sm px-2 sm:px-3 py-2 h-auto"
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Action</span>
+                  </Button>
+                )}
+              </div>
+            }
+            rightActions={null}
+            onFilterClick={() => setIsFilterOpen(true)}
+          />
+        </div>
 
         {/* Server-side Pagination */}
         {totalPages > 1 && (
           <div className="mt-6 overflow-x-auto">
-            <Pagination className="flex-wrap justify-center sm:justify-start">
+            <Pagination className="flex-wrap justify-center sm:justify-start gap-1 sm:gap-2">
               <PaginationContent>
                 {/* Previous Button */}
                 <PaginationItem>

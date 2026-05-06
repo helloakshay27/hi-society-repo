@@ -4887,7 +4887,7 @@ export const SurveyResponseDetailPage = () => {
               </TabsTrigger>
             ))}
           </TabsList> */}
-          <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200">
+          <TabsList className="flex w-full overflow-x-auto bg-white border border-gray-200">
             {[
               { label: "Survey Information", value: "summary" },
               { label: "Tabular", value: "tabular" },
@@ -4896,7 +4896,7 @@ export const SurveyResponseDetailPage = () => {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="group flex items-center justify-center gap-2 border-none font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=inactive]:bg-white data-[state=inactive]:text-black data-[state=active]:text-[#C72030]"
+                className="group flex items-center gap-1 sm:gap-2 border-none font-semibold text-xs sm:text-sm data-[state=active]:bg-[#EDEAE3] data-[state=inactive]:bg-white data-[state=inactive]:text-black data-[state=active]:text-[#C72030] px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap flex-shrink-0"
               >
                 {tab.label}
               </TabsTrigger>
