@@ -2374,7 +2374,7 @@ const HiSocEventEdit = () => {
                 </div>
 
                 {formData.shared === "individual" && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Filter members by role or tower</span>
                       <MemberFilterPanel
@@ -2385,58 +2385,86 @@ const HiSocEventEdit = () => {
                         }}
                       />
                     </div>
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    sx={{ '& .MuiInputBase-root': fieldStyles }}
-                  >
-                    <InputLabel shrink>Individuals</InputLabel>
-                    <MuiSelect
-                      multiple
-                      value={Array.isArray(formData.user_id) ? formData.user_id.map(id => id.toString()) : []}
-                      onChange={(e) => {
-                        const selectedIds = e.target.value;
-                        setFormData((prev) => ({
-                          ...prev,
-                          user_id: Array.isArray(selectedIds) ? selectedIds.map(id => parseInt(id)) : [],
-                        }));
-                      }}
-                      label="Individuals"
-                      notched
-                      displayEmpty
-                      renderValue={(selected) => {
-                        if (!selected || selected.length === 0) {
-                          return <span style={{ color: '#999' }}>Select Individuals</span>;
-                        }
-                        return selected
-                          .map((id) => {
-                            const member = eventUserID.find((u) => u.id.toString() === id);
-                            if (!member) return id;
+
+                    {/* Select All Checkbox */}
+                    {eventUserID?.length > 0 && (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
+                        <input
+                          type="checkbox"
+                          id="selectAllUsersEdit"
+                          checked={Array.isArray(formData.user_id) && formData.user_id.length === eventUserID.length && eventUserID.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                user_id: eventUserID.map((u) => u.id),
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                user_id: [],
+                              }));
+                            }
+                          }}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: '#C72030' }}
+                        />
+                        <label htmlFor="selectAllUsersEdit" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+                          Select All Members ({Array.isArray(formData.user_id) ? formData.user_id.length : 0}/{eventUserID.length})
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Members List with Checkboxes */}
+                    {eventUserID && eventUserID.length > 0 ? (
+                      <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                        <div className="divide-y">
+                          {eventUserID.map((member) => {
                             const firstName = member.user?.firstname || member.firstname || '';
                             const lastName = member.user?.lastname || member.lastname || '';
-                            return `${firstName} ${lastName}`.trim() || id;
-                          })
-                          .join(", ");
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        Select Individuals
-                      </MenuItem>
-                      {eventUserID?.map((member) => {
-                        const firstName = member.user?.firstname || member.firstname || '';
-                        const lastName = member.user?.lastname || member.lastname || '';
-                        const flat = member.user_flat?.flat || member.flat || '';
-                        const block = member.user_flat?.block || member.block || '';
-                        const displayName = `${firstName} ${lastName}`.trim();
-                        const flatBlock = flat && block ? ` - Flat ${flat} (${block})` : '';
-                        return (
-                          <MenuItem key={member.id} value={member.id.toString()}>
-                            {displayName}{flatBlock}
-                          </MenuItem>
-                        );
-                      })}
-                    </MuiSelect>
-                  </FormControl>
+                            const flat = member.user_flat?.flat || member.flat || '';
+                            const block = member.user_flat?.block || member.block || '';
+                            const name = `${firstName} ${lastName}`.trim();
+                            const flatText = flat ? ` - Flat ${flat}` : '';
+                            const blockText = block ? ` (${block})` : '';
+                            const displayName = name + flatText + blockText;
+                            const isChecked = Array.isArray(formData.user_id) && formData.user_id.includes(member.id);
+
+                            return (
+                              <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
+                                <input
+                                  type="checkbox"
+                                  id={`user-edit-${member.id}`}
+                                  checked={isChecked}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        user_id: [...(Array.isArray(prev.user_id) ? prev.user_id : []), member.id],
+                                      }));
+                                    } else {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        user_id: (prev.user_id || []).filter((id) => id !== member.id),
+                                      }));
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <label htmlFor={`user-edit-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+                                  {displayName}
+                                </label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                        No members available
+                      </div>
+                    )}
                   </div>
                 )}
                 {formData.shared === "group" && (
