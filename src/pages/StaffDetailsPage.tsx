@@ -589,7 +589,7 @@ export const StaffDetailsPage = () => {
               </div>
             )}
             
-            <div className="flex items-start">
+            {/* <div className="flex items-start">
               <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Number Verified</span>
               <span className="text-gray-500 mx-3">:</span>
               <div className="flex-1">
@@ -599,7 +599,7 @@ export const StaffDetailsPage = () => {
                   {staff.number_verified ? 'Verified' : 'Not Verified'}
                 </span>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </ExpandableSection>

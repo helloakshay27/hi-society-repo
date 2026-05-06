@@ -250,12 +250,53 @@ const SmartSecureStaffsHistory: React.FC = () => {
           );
         case "image":
           return (
-            <img
-              src={staff.image_url || "/images/male.jpg"}
-              alt={staff.name}
-              className="w-9 h-9 rounded-full object-cover"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/images/male.jpg"; }}
-            />
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 36,
+                height: 36,
+                minWidth: 36,
+                minHeight: 36,
+                background: "#f3f4f6",
+                borderRadius: "50%",
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {staff.image_url ? (
+                <img
+                  src={staff.image_url}
+                  alt={staff.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                  draggable={false}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <img
+                  src="/images/male.jpg"
+                  alt={staff.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                  draggable={false}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              )}
+            </div>
           );
         case "name":
           return <span className="font-medium">{staff.name}</span>;
