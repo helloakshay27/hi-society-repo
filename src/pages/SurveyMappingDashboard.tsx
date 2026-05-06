@@ -244,10 +244,30 @@ export const SurveyMappingDashboard = () => {
           }
         }
 
+        // If the dialog provided a prebuilt mappingListQuery, use it (but allow search to be appended)
+        let requestUrl = `/survey_mappings/mappings_list.json?${queryParams}`;
+        if ((filters as any).mappingListQuery) {
+          // Use mappingListQuery from the filter dialog as base
+          requestUrl = (filters as any).mappingListQuery;
+          // If search term present, append it
+          if (search && search.trim()) {
+            requestUrl += `&q[name_cont]=${encodeURIComponent(search.trim())}`;
+          }
+        } else {
+          // Support convenience fields from the dialog (buildingIdEq / wingIdEq / userSocietyIdEq)
+          if ((filters as any).buildingIdEq) {
+            requestUrl += `&q[building_id_eq]=${encodeURIComponent((filters as any).buildingIdEq)}`;
+          }
+          if ((filters as any).wingIdEq) {
+            requestUrl += `&q[wing_id_eq]=${encodeURIComponent((filters as any).wingIdEq)}`;
+          }
+          if ((filters as any).userSocietyIdEq) {
+            requestUrl += `&q[user_society_id_eq]=${encodeURIComponent((filters as any).userSocietyIdEq)}`;
+          }
+        }
+
         // Use the new mappings_list endpoint with pagination and search
-        const response = await apiClient.get(
-          `/survey_mappings/mappings_list.json?${queryParams}`
-        );
+        const response = await apiClient.get(requestUrl);
         console.log("Survey mapping API response:", response.data);
 
         const responseData: SurveyMappingApiResponse = response.data;
