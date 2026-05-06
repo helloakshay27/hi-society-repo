@@ -1145,7 +1145,7 @@ export const SurveyMappingDetailsPage = () => {
               </TabsTrigger>
             ))}
           </TabsList> */}
-          <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200">
+          <TabsList className="flex w-full overflow-x-auto bg-white border border-gray-200">
             {[
               {
                 label: "Survey Information",
@@ -1210,10 +1210,10 @@ export const SurveyMappingDetailsPage = () => {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="group flex items-center gap-2 border-none font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=inactive]:bg-white data-[state=inactive]:text-black"
+                className="group flex items-center gap-1 sm:gap-2 border-none font-semibold text-xs sm:text-sm data-[state=active]:bg-[#EDEAE3] data-[state=inactive]:bg-white data-[state=inactive]:text-black px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap flex-shrink-0"
               >
                 {tab.icon}
-                {tab.label}
+                <span>{tab.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
