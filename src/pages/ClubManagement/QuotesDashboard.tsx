@@ -303,7 +303,7 @@ export const QuotesDashboard: React.FC = () => {
                     title="View"
                 >
                     <Eye className="w-4 h-4" />
-                </button> */}
+                </button>
                 {/* <button
                     onClick={() => handleEdit(order.id)}
                     className="p-1 text-black hover:bg-gray-100 rounded"

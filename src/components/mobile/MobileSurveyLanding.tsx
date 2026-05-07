@@ -74,6 +74,22 @@ interface SurveyAttach {
   url: string;
 }
 
+interface SurveyResponsePayloadItem {
+  mapping_id: string;
+  question_id: number;
+  issues: string[];
+  option_id?: number;
+  rating?: number;
+  emoji?: string;
+  label?: string;
+  response_text?: string;
+  ans_descr?: string;
+  level_id?: number;
+  comments?: string;
+  answer_type?: string;
+  answer_mode?: string;
+}
+
 export const MobileSurveyLanding: React.FC = () => {
   const navigate = useNavigate();
   const { mappingId } = useParams<{ mappingId: string }>();
@@ -510,14 +526,11 @@ export const MobileSurveyLanding: React.FC = () => {
         break;
       }
       case "numeric": {
-        answerData.rating = rating || selectedRating;
-        answerData.value = (rating || selectedRating)?.toString() || "";
-        // attach dynamic label from API if available
-        const selectedNumericOption = currentQuestion.snag_quest_options?.find(
-          (option) => option.option_type === "p"
-        );
-        if (selectedNumericOption) {
-          answerData.label = selectedNumericOption.qname;
+        const numericValue = rating ?? selectedRating;
+        answerData.rating = numericValue;
+        answerData.value = numericValue?.toString() || "";
+        if (numericValue !== null && numericValue !== undefined) {
+          answerData.label = numericValue.toString();
         }
         // Use provided tags parameter or current selectedTags state
         answerData.selectedTags = tags || selectedTags;
@@ -579,21 +592,7 @@ export const MobileSurveyLanding: React.FC = () => {
         currentAnswer.selectedTags?.map((tag) => tag.category_name) || [];
 
       // Create comprehensive payload with all available fields
-      const surveyResponseItem: {
-        mapping_id: string;
-        question_id: number;
-        issues: string[];
-        option_id?: number;
-        rating?: number;
-        emoji?: string;
-        label?: string;
-        response_text?: string;
-        ans_descr?: string;
-        level_id?: number;
-        comments?: string;
-        answer_type?: string;
-        answer_mode?: string;
-      } = {
+      const surveyResponseItem: SurveyResponsePayloadItem = {
         mapping_id: mappingId || "",
         question_id: currentQuestion.id,
         issues: issues,
@@ -651,6 +650,22 @@ export const MobileSurveyLanding: React.FC = () => {
           break;
         }
 
+        case "numeric": {
+          if (currentAnswer.rating !== undefined) {
+            surveyResponseItem.rating = currentAnswer.rating;
+            surveyResponseItem.level_id = currentAnswer.rating;
+            surveyResponseItem.label = currentAnswer.rating.toString();
+            surveyResponseItem.ans_descr = currentAnswer.rating.toString();
+          }
+          surveyResponseItem.answer_type = currentQuestion.qtype;
+          surveyResponseItem.answer_mode = "numeric_selection";
+
+          if (currentAnswer.optionId) {
+            surveyResponseItem.option_id = currentAnswer.optionId;
+          }
+          break;
+        }
+
         case "emoji":
         case "smiley": {
           if (currentAnswer.rating !== undefined) {
@@ -700,6 +715,12 @@ export const MobileSurveyLanding: React.FC = () => {
           surveyResponseItem.answer_mode = "text_input";
           break;
       }
+
+      ensureAnswerDescription(
+        currentQuestion,
+        currentAnswer,
+        surveyResponseItem
+      );
 
       // Add individual question comment if available
       console.log("Current answer for payload building:", currentAnswer);
@@ -760,21 +781,7 @@ export const MobileSurveyLanding: React.FC = () => {
         answerData.selectedTags?.map((tag) => tag.category_name) || [];
 
       // Create comprehensive payload with all available fields
-      const surveyResponseItem: {
-        mapping_id: string;
-        question_id: number;
-        issues: string[];
-        option_id?: number;
-        rating?: number;
-        emoji?: string;
-        label?: string;
-        response_text?: string;
-        ans_descr?: string;
-        level_id?: number;
-        comments?: string;
-        answer_type?: string;
-        answer_mode?: string;
-      } = {
+      const surveyResponseItem: SurveyResponsePayloadItem = {
         mapping_id: mappingId || "",
         question_id: currentQuestion.id,
         issues: issues,
@@ -864,15 +871,11 @@ export const MobileSurveyLanding: React.FC = () => {
           if (answerData.rating !== undefined) {
             surveyResponseItem.rating = answerData.rating;
             surveyResponseItem.level_id = answerData.rating;
+            surveyResponseItem.label = answerData.rating.toString();
+            surveyResponseItem.ans_descr = answerData.rating.toString();
           }
           surveyResponseItem.answer_type = currentQuestion.qtype;
           surveyResponseItem.answer_mode = "numeric_selection";
-          // Use label from answer data or fetch dynamically from API options
-          const numericLabelNeg = answerData.label || getRatingLabel(currentQuestion, answerData.rating);
-          if (numericLabelNeg) {
-            surveyResponseItem.label = numericLabelNeg;
-            surveyResponseItem.ans_descr = numericLabelNeg;
-          }
 
           // Add option_id for numeric questions
           if (answerData.optionId) {
@@ -903,6 +906,12 @@ export const MobileSurveyLanding: React.FC = () => {
           surveyResponseItem.answer_mode = "text_input";
           break;
       }
+
+      ensureAnswerDescription(
+        currentQuestion,
+        answerData,
+        surveyResponseItem
+      );
 
       // Add individual question comment if available
       if (answerData.comments && answerData.comments.trim()) {
@@ -1248,21 +1257,7 @@ export const MobileSurveyLanding: React.FC = () => {
           answer.selectedTags?.map((tag) => tag.category_name) || [];
 
         // Create comprehensive payload with all available fields for each question type
-        const surveyResponseItem: {
-          mapping_id: string;
-          question_id: number;
-          issues: string[];
-          option_id?: number;
-          rating?: number;
-          emoji?: string;
-          label?: string;
-          response_text?: string;
-          ans_descr?: string;
-          level_id?: number;
-          comments?: string;
-          answer_type?: string;
-          answer_mode?: string;
-        } = {
+        const surveyResponseItem: SurveyResponsePayloadItem = {
           mapping_id: mappingId || "",
           question_id: question.id,
           issues: issues,
@@ -1376,6 +1371,40 @@ export const MobileSurveyLanding: React.FC = () => {
             break;
           }
 
+          case "numeric": {
+            if (answer.rating !== undefined) {
+              surveyResponseItem.rating = answer.rating;
+              surveyResponseItem.level_id = answer.rating;
+              surveyResponseItem.label = answer.rating.toString();
+              surveyResponseItem.ans_descr = answer.rating.toString();
+            }
+            surveyResponseItem.answer_type = question.qtype;
+            surveyResponseItem.answer_mode = "numeric_selection";
+
+            if (answer.optionId) {
+              surveyResponseItem.option_id = answer.optionId;
+            } else if (
+              answer.rating !== undefined &&
+              question.snag_quest_options
+            ) {
+              const numericToOptionMapping = Array.from(
+                { length: question.snag_quest_options.length },
+                (_, index) => ({
+                  rating: index,
+                  optionIndex: index,
+                })
+              );
+              const mapping = numericToOptionMapping.find(
+                (opt) => opt.rating === answer.rating
+              );
+              if (mapping && question.snag_quest_options[mapping.optionIndex]) {
+                surveyResponseItem.option_id =
+                  question.snag_quest_options[mapping.optionIndex].id;
+              }
+            }
+            break;
+          }
+
           case "input":
           case "text":
           case "description":
@@ -1396,6 +1425,8 @@ export const MobileSurveyLanding: React.FC = () => {
             surveyResponseItem.answer_mode = "text_input";
             break;
         }
+
+        ensureAnswerDescription(question, answer, surveyResponseItem);
 
         // Add individual question comment if available
         console.log(`[Multi-Submit] Question ${question.id} answer:`, answer);
@@ -1530,6 +1561,59 @@ export const MobileSurveyLanding: React.FC = () => {
       return question.snag_quest_options[selected.optionIndex].qname;
     }
     return undefined;
+  };
+
+  const getQuestionOptionName = (
+    question: SurveyQuestion,
+    optionId?: number
+  ): string | undefined => {
+    if (!optionId) return undefined;
+    return question.snag_quest_options?.find((option) => option.id === optionId)
+      ?.qname;
+  };
+
+  const getAnswerDescription = (
+    question: SurveyQuestion,
+    answer: SurveyAnswers[number],
+    item: SurveyResponsePayloadItem
+  ): string => {
+    const selectedOptionNames =
+      answer.selectedOptions
+        ?.map((option) => option.qname)
+        .filter(Boolean)
+        .join(", ") || "";
+
+    const optionName = getQuestionOptionName(question, item.option_id);
+    const ratingLabel =
+      item.label || answer.label || getRatingLabel(question, item.rating);
+    const textValue =
+      answer.value !== undefined && answer.value !== null
+        ? answer.value.toString().trim()
+        : "";
+    const responseText = item.response_text?.toString().trim() || "";
+    const numericOrRatingValue =
+      item.rating !== undefined && item.rating !== null
+        ? item.rating.toString()
+        : "";
+
+    return (
+      item.ans_descr?.toString().trim() ||
+      selectedOptionNames ||
+      ratingLabel ||
+      optionName ||
+      responseText ||
+      textValue ||
+      numericOrRatingValue ||
+      ""
+    );
+  };
+
+  const ensureAnswerDescription = (
+    question: SurveyQuestion,
+    answer: SurveyAnswers[number],
+    item: SurveyResponsePayloadItem
+  ) => {
+    item.ans_descr = getAnswerDescription(question, answer, item);
   };
 
   // Check if survey is active
@@ -1704,7 +1788,7 @@ export const MobileSurveyLanding: React.FC = () => {
         const answer = answers[question.id];
         if (!answer) continue;
 
-        const surveyResponseItem: any = {
+        const surveyResponseItem: SurveyResponsePayloadItem = {
           mapping_id: mappingId || "",
           question_id: question.id,
           issues: [], // No generic tags in form view
@@ -1758,16 +1842,11 @@ export const MobileSurveyLanding: React.FC = () => {
             if (answer.rating !== undefined) {
               surveyResponseItem.rating = answer.rating;
               surveyResponseItem.level_id = answer.rating;
+              surveyResponseItem.label = answer.rating.toString();
+              surveyResponseItem.ans_descr = answer.rating.toString();
             }
             surveyResponseItem.answer_type = question.qtype;
             surveyResponseItem.answer_mode = "numeric_selection";
-
-            // Add label and ans_descr for numeric
-            const formNumericLabel = answer.label || getRatingLabel(question, answer.rating);
-            if (formNumericLabel) {
-              surveyResponseItem.label = formNumericLabel;
-              surveyResponseItem.ans_descr = formNumericLabel;
-            }
 
             // Map numeric value to option_id
             if (question.snag_quest_options) {
@@ -1842,6 +1921,8 @@ export const MobileSurveyLanding: React.FC = () => {
             surveyResponseItem.answer_mode = "text_input";
             break;
         }
+
+        ensureAnswerDescription(question, answer, surveyResponseItem);
 
         surveyResponseItem.comments = answer.comments || "";
         surveyResponseArray.push(surveyResponseItem);
