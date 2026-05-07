@@ -5462,6 +5462,160 @@ export const SurveyResponseDetailPage = () => {
                       );
                     }
 
+                    // Handle numeric scale questions
+                    if (question.qtype === "numeric") {
+                      const numericScale = Array.from(
+                        { length: 11 },
+                        (_, index) => index
+                      );
+                      const getNumericColor = (value: number) => {
+                        if (value <= 6) return "#F26F64";
+                        if (value <= 8) return "#F3B33D";
+                        return "#43C982";
+                      };
+                      const numericData = numericScale.map((value, index) => {
+                        const matchingOption =
+                          question.options?.find(
+                            (option) => option.option === value.toString()
+                          ) || question.options?.[index];
+                        const count = matchingOption?.response_count || 0;
+                        const percentage =
+                          totalResponses > 0
+                            ? Math.round((count / totalResponses) * 100)
+                            : 0;
+
+                        return {
+                          value,
+                          count,
+                          percentage,
+                          color: getNumericColor(value),
+                        };
+                      });
+
+                      const positivePercent =
+                        typeof question.positive_percent === "number"
+                          ? question.positive_percent
+                          : (question.positive_responses ?? null);
+                      const negativePercent =
+                        typeof question.negative_percent === "number"
+                          ? question.negative_percent
+                          : (question.negative_responses ?? null);
+
+                      return (
+                        <Card
+                          key={question.question_id}
+                          className="mb-6 border border-[#D9D9D9] bg-[#F6F7F7] my-pdf-card"
+                        >
+                          <CardHeader className="bg-[#F6F4EE] mb-6">
+                            <CardTitle className="text-lg flex items-center">
+                              <div className="w-9 h-9 bg-[#C7203014] text-white rounded-full flex items-center justify-center mr-3">
+                                <HelpCircle className="h-4 w-4 text-[#C72030]" />
+                              </div>
+                              <span className="text-black font-semibold mr-2 header-text">
+                                Q{questionNumber}.
+                              </span>
+                              <span className="header-text">
+                                {question.question}
+                              </span>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="bg-white border border-gray-300 rounded-md overflow-hidden">
+                              <div className="relative text-center py-6">
+                                <div className="absolute top-6 right-8 flex flex-col gap-3">
+                                  <div
+                                    className="flex items-center gap-3"
+                                    style={{ minWidth: "150px" }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className="inline-block w-4 h-4 rounded-full bg-[#A9B7C5]"
+                                        style={{ flexShrink: 0 }}
+                                      ></span>
+                                      <span
+                                        className="text-gray-600 text-sm"
+                                        style={{ whiteSpace: "nowrap" }}
+                                      >
+                                        Positive:
+                                      </span>
+                                    </div>
+                                    <span
+                                      className="text-gray-600 text-sm font-medium"
+                                      style={{ marginLeft: "auto" }}
+                                    >
+                                      {positivePercent != null
+                                        ? positivePercent
+                                        : 0}
+                                      %
+                                    </span>
+                                  </div>
+                                  <div
+                                    className="flex items-center gap-3"
+                                    style={{ minWidth: "150px" }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className="inline-block w-4 h-4 rounded-full bg-[#C4B99D]"
+                                        style={{ flexShrink: 0 }}
+                                      ></span>
+                                      <span
+                                        className="text-gray-600 text-sm"
+                                        style={{ whiteSpace: "nowrap" }}
+                                      >
+                                        Negative:
+                                      </span>
+                                    </div>
+                                    <span
+                                      className="text-gray-600 text-sm font-medium"
+                                      style={{ marginLeft: "auto" }}
+                                    >
+                                      {negativePercent != null
+                                        ? negativePercent
+                                        : 0}
+                                      %
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div
+                                  className="flex flex-col items-center mb-4"
+                                  style={{
+                                    marginTop: "60px",
+                                    paddingTop: "20px",
+                                  }}
+                                >
+                                  <div className="flex justify-center items-start gap-3 flex-wrap">
+                                    {numericData.map((item) => (
+                                      <div
+                                        key={item.value}
+                                        className="flex flex-col items-center"
+                                      >
+                                        <div
+                                          className="w-9 h-9 rounded-md flex items-center justify-center text-sm font-semibold text-white mb-2 shadow-sm"
+                                          style={{
+                                            backgroundColor: item.color,
+                                          }}
+                                        >
+                                          {item.value}
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                          {item.percentage}% ({item.count})
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="flex items-center justify-between w-full max-w-[520px] mt-5 text-xs font-semibold text-gray-700">
+                                    <span>0 - NOT LIKELY</span>
+                                    <span>10 - VERY LIKELY</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+
                     // Handle rating questions
                     if (question.qtype === "rating") {
                       const ratingData =

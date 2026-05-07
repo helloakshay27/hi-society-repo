@@ -122,6 +122,16 @@ const textareaStyles = {
   },
 };
 
+const parseApiBoolean = (value: unknown): boolean => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1";
+  }
+  return false;
+};
+
 export const EditSurveyPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -294,7 +304,7 @@ export const EditSurveyPage = () => {
       setCheckType(mappedCheckType);
 
       // Set form view flag
-      setFormView(surveyData.form_view || false);
+      setFormView(parseApiBoolean(surveyData.form_view));
 
       // Check if ticket creation is enabled based on existing data
       const hasTicketConfig =
