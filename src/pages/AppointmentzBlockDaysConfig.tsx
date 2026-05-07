@@ -182,7 +182,7 @@ const AppointmentzBlockDaysConfig = () => {
       if (isEditMode && selectedId) {
         const item = data.find((d) => d.id === selectedId);
         const response = await updateBlockDay(selectedId, {
-          blocked_dates: formData.blockDate,
+          blocked_date: formData.blockDate,
           block_day: {
             resource_id: formData.rmUserId,
             resource_type: "RmUser",

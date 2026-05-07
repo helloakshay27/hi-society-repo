@@ -276,9 +276,6 @@ export const createRMUser = async (
   return response.data;
 };
 
-/**
- * Update RM user
- */
 export const updateRMUser = async (
   userId: number,
   payload: UpdateRMUserPayload
@@ -286,7 +283,7 @@ export const updateRMUser = async (
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token = localStorage.getItem("token");
 
-  const response = await axios.put(
+  const response = await axios.patch(
     `https://${baseUrl}/crm/admin/rm_users/${userId}.json`,
     payload,
     {
@@ -502,6 +499,7 @@ export interface CreateBlockDayPayload {
 
 export interface UpdateBlockDayPayload {
   blocked_dates?: string;
+  blocked_date?: string;
   block_day: {
     resource_id?: number;
     resource_type?: string;
@@ -569,7 +567,7 @@ export const updateBlockDay = async (
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token = localStorage.getItem("token");
 
-  const response = await axios.put(
+  const response = await axios.patch(
     `https://${baseUrl}/crm/admin/block_days/${blockDayId}.json`,
     payload,
     {
