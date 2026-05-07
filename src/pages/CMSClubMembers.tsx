@@ -4,10 +4,11 @@ import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { ColumnConfig } from '@/hooks/useEnhancedTable'
 import { Switch } from '@mui/material';
 import axios from 'axios';
-import { Download, Edit, Eye, Plus, QrCode, Users } from 'lucide-react';
+import { Download, Edit, Eye, Plus, QrCode, Users, UserCheck, Clock, UserX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CMSClubMembersFilterModal } from '@/components/CMSClubMembersFilterModal';
+import { StatsCard } from '@/components/StatsCard';
 
 const columns: ColumnConfig[] = [
   {
@@ -101,6 +102,12 @@ const CMSClubMembers = () => {
   const [modalData, setModalData] = useState<{ isOpen: boolean, title: string, items: string[] }>({ isOpen: false, title: '', items: [] });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<MemberFilters>({});
+  const [summaryData, setSummaryData] = useState({
+    total_members: 0,
+    total_active: 0,
+    total_inactive: 0,
+    total_pending: 0,
+  });
 
   const fetchMembers = async (filters: MemberFilters = appliedFilters) => {
     try {
@@ -139,6 +146,9 @@ const CMSClubMembers = () => {
       })
 
       setMembers(response.data?.club_member_allocations);
+      if (response.data?.summary) {
+        setSummaryData(response.data.summary);
+      }
     } catch (error) {
       console.log(error)
     } finally {
@@ -377,6 +387,35 @@ const CMSClubMembers = () => {
           onClearSelection={() => setShowActionPanel(false)}
         />
       )}
+
+      {/* Summary Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <StatsCard
+          title="Total Members"
+          value={summaryData.total_members.toString()}
+          icon={<Users className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+        <StatsCard
+          title="Active"
+          value={summaryData.total_active.toString()}
+          icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+        <StatsCard
+          title="Inactive"
+          value={summaryData.total_inactive.toString()}
+          icon={<UserX className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+        <StatsCard
+          title="Pending"
+          value={summaryData.total_pending.toString()}
+          icon={<Clock className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+      </div>
+
       <EnhancedTable
         data={members || []}
         columns={columns}

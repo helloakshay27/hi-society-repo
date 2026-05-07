@@ -806,6 +806,10 @@ const BookingListDashboard = () => {
             )}
           </Select>
         );
+      case "scheduledTime":
+        return <div className="truncate w-[200px]" title={item.scheduledTime}>
+          {item.scheduledTime}
+        </div>
       default:
         return item[columnKey as keyof BookingData];
     }
