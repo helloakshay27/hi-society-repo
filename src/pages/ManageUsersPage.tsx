@@ -770,6 +770,8 @@ const ManageUsersPage = () => {
       }
       case "membership_type":
         return user.membershipType;
+      case "phase":
+        return user.phase === "Pre Sales" ? "Post Sales" : user.phase === "Post Sales" ? "Post Possession" : "-"
       default:
         return <span className="text-sm">{user[columnKey] || "-"}</span>;
     }
