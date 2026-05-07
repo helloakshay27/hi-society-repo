@@ -148,7 +148,6 @@ const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_
     full_name: `${formData.firstName} ${formData.lastName}`,
     country_code: formData.countryCode,
     country_code_name: "IN",
-    phase: formData.phase,
     alternate_email_1: formData.alternateEmail1,
     alternate_email_2: formData.alternateEmail2,
     alternate_address: formData.alternateAddress,
