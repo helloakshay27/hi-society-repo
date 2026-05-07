@@ -12,11 +12,20 @@ import {
   ThumbsUp,
   ClipboardList,
   HelpCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Pagination,
   PaginationItem,
@@ -45,6 +54,12 @@ interface FilterState {
   surveyType: string;
   startDate: Date | null;
   endDate: Date | null;
+}
+
+interface ExportFilterState {
+  surveyTitle: string;
+  fromDate: string;
+  uptoDate: string;
 }
 
 interface AnalyticsData {
@@ -206,6 +221,15 @@ export const SurveyResponsePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportFilterOpen, setIsExportFilterOpen] = useState(false);
+  const [pendingExportVisibility, setPendingExportVisibility] = useState<
+    Record<string, boolean> | undefined
+  >(undefined);
+  const [exportFilters, setExportFilters] = useState<ExportFilterState>({
+    surveyTitle: "",
+    fromDate: "",
+    uptoDate: "",
+  });
   const [activeTab, setActiveTab] = useState("list");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -230,6 +254,14 @@ export const SurveyResponsePage = () => {
     startDate: null,
     endDate: null,
   });
+
+  const formatDateForInput = (date: Date | null) => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   // Column visibility state - matching SurveyMappingDashboard
   const [columns, setColumns] = useState([
@@ -379,8 +411,38 @@ export const SurveyResponsePage = () => {
     }
   };
 
-  // Export handler for survey response data
-  const handleSurveyResponseExport = async (visibility?: Record<string, boolean>) => {
+  const handleSurveyResponseExport = (visibility?: Record<string, boolean>) => {
+    setPendingExportVisibility(visibility);
+    setExportFilters({
+      surveyTitle: appliedFilters.surveyTitle || "",
+      fromDate: formatDateForInput(appliedFilters.startDate),
+      uptoDate: formatDateForInput(appliedFilters.endDate),
+    });
+    setIsExportFilterOpen(true);
+  };
+
+  const handleExportFilterChange = (
+    field: keyof ExportFilterState,
+    value: string
+  ) => {
+    setExportFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleResetExportFilters = () => {
+    setExportFilters({
+      surveyTitle: "",
+      fromDate: "",
+      uptoDate: "",
+    });
+  };
+
+  const executeSurveyResponseExport = async (
+    visibility?: Record<string, boolean>,
+    filters: ExportFilterState = exportFilters
+  ) => {
     try {
       setIsExporting(true);
       // console.log('📤 Exporting survey response data with current filters:', appliedFilters);
@@ -399,10 +461,10 @@ export const SurveyResponsePage = () => {
       }
 
       // Add current filters to export
-      if (appliedFilters.surveyTitle && appliedFilters.surveyTitle.trim()) {
+      if (filters.surveyTitle && filters.surveyTitle.trim()) {
         urlWithParams.searchParams.append(
           "q[name_cont]",
-          appliedFilters.surveyTitle.trim()
+          filters.surveyTitle.trim()
         );
         // console.log('🔍 Adding survey title filter to export:', appliedFilters.surveyTitle);
       }
@@ -417,18 +479,20 @@ export const SurveyResponsePage = () => {
       }
 
       // Add date range filters if provided
-      if (appliedFilters.startDate) {
+      if (filters.fromDate) {
+        const fromDate = new Date(`${filters.fromDate}T00:00:00`);
         urlWithParams.searchParams.append(
           "q[created_at_gteq]",
-          appliedFilters.startDate.toISOString()
+          fromDate.toISOString()
         );
         // console.log('🔍 Adding start date filter to export:', appliedFilters.startDate);
       }
 
-      if (appliedFilters.endDate) {
+      if (filters.uptoDate) {
+        const uptoDate = new Date(`${filters.uptoDate}T23:59:59`);
         urlWithParams.searchParams.append(
           "q[created_at_lteq]",
-          appliedFilters.endDate.toISOString()
+          uptoDate.toISOString()
         );
         // console.log('🔍 Adding end date filter to export:', appliedFilters.endDate);
       }
@@ -482,8 +546,8 @@ export const SurveyResponsePage = () => {
         .toISOString()
         .slice(0, 19)
         .replace(/:/g, "-");
-      const filterSuffix = appliedFilters.surveyTitle
-        ? `-${appliedFilters.surveyTitle.replace(/[^a-zA-Z0-9]/g, "_")}`
+      const filterSuffix = filters.surveyTitle
+        ? `-${filters.surveyTitle.replace(/[^a-zA-Z0-9]/g, "_")}`
         : "";
       link.download = `survey-response-export${filterSuffix}-${timestamp}.xlsx`;
 
@@ -495,11 +559,33 @@ export const SurveyResponsePage = () => {
 
       // console.log('✅ Survey response data exported successfully!');
       toast.success("Survey response data exported successfully!");
+      return true;
     } catch (error) {
       console.error("❌ Export error:", error);
       toast.error("Failed to export survey response data. Please try again.");
+      return false;
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleApplyExportFilters = async () => {
+    if (exportFilters.fromDate && exportFilters.uptoDate) {
+      const fromDate = new Date(`${exportFilters.fromDate}T00:00:00`);
+      const uptoDate = new Date(`${exportFilters.uptoDate}T23:59:59`);
+      if (fromDate > uptoDate) {
+        toast.error("From Date cannot be after Upto Date");
+        return;
+      }
+    }
+
+    const exported = await executeSurveyResponseExport(
+      pendingExportVisibility,
+      exportFilters
+    );
+    if (exported) {
+      setIsExportFilterOpen(false);
+      setPendingExportVisibility(undefined);
     }
   };
 
@@ -1584,6 +1670,108 @@ export const SurveyResponsePage = () => {
           <SurveyAnalyticsContent />
         </TabsContent>
       </Tabs>
+
+      <Dialog
+        open={isExportFilterOpen}
+        onOpenChange={(open) => {
+          if (!isExporting) setIsExportFilterOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader className="relative pb-2">
+            <DialogTitle className="text-xl text-slate-950 font-normal">
+              DOWNLOAD FILTER
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setIsExportFilterOpen(false)}
+              className="absolute right-0 top-0 p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+              disabled={isExporting}
+              aria-label="Close download filter"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label
+                htmlFor="export-survey-title"
+                className="text-sm font-medium text-gray-700"
+              >
+                Survey Title
+              </label>
+              <Input
+                id="export-survey-title"
+                value={exportFilters.surveyTitle}
+                onChange={(event) =>
+                  handleExportFilterChange("surveyTitle", event.target.value)
+                }
+                placeholder="Enter survey title"
+                disabled={isExporting}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="export-from-date"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  From Date
+                </label>
+                <Input
+                  id="export-from-date"
+                  type="date"
+                  value={exportFilters.fromDate}
+                  onChange={(event) =>
+                    handleExportFilterChange("fromDate", event.target.value)
+                  }
+                  disabled={isExporting}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="export-upto-date"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Upto Date
+                </label>
+                <Input
+                  id="export-upto-date"
+                  type="date"
+                  value={exportFilters.uptoDate}
+                  onChange={(event) =>
+                    handleExportFilterChange("uptoDate", event.target.value)
+                  }
+                  disabled={isExporting}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-center items-center gap-3 pt-2 sm:justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetExportFilters}
+              disabled={isExporting}
+              className="text-[#C72030] border-[#C72030] hover:bg-[#C72030] hover:text-white px-8"
+            >
+              Reset
+            </Button>
+            <Button
+              type="button"
+              onClick={handleApplyExportFilters}
+              disabled={isExporting}
+              className="bg-[#C72030] text-white hover:bg-[#A01828] px-8"
+            >
+              {isExporting ? "Downloading..." : "Apply"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filter Modal */}
       <SurveyResponseFilterModal

@@ -4314,6 +4314,7 @@ export const SurveyResponseDetailPage = () => {
             </div>
 
             {/* Summary Location Details Section */}
+            {/* Commented out - Location Details section disabled for summary tab
             {activeFilterTab === "summary" && (
               <div>
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
@@ -4476,16 +4477,112 @@ export const SurveyResponseDetailPage = () => {
                     </MuiSelect>
                   </FormControl>
                 </div>
-                {/* <div className="grid grid-cols-2 gap-6 mt-4">
-                
-                </div> */}
-                {/* <div className="grid grid-cols-2 gap-6 mt-4">
-                 
-                </div> */}
               </div>
             )}
+            */}
 
-            {/* Tabular Location Details Section */}
+            {/* Location Hierarchy Section */}
+            <div>
+              <h3 className="text-sm font-medium text-[#C72030] mb-4">
+                Location Hierarchy
+              </h3>
+              <div className="grid grid-cols-3 gap-6">
+                {/* Tower Selection */}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink>Tower</InputLabel>
+                  <MuiSelect
+                    value={summaryFormFilters.buildingId ?? ""}
+                    onChange={(e) =>
+                      setSummaryFormFilters((prev) => ({
+                        ...prev,
+                        buildingId: e.target.value || undefined,
+                        wingId: undefined,
+                        areaId: undefined,
+                        floorId: undefined,
+                        roomId: undefined,
+                      }))
+                    }
+                    label="Tower"
+                    displayEmpty
+                    MenuProps={selectMenuProps}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">
+                      <em>Select Tower</em>
+                    </MenuItem>
+                    {buildings.map((t) => (
+                      <MenuItem key={t.id} value={t.id.toString()}>
+                        {t.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+
+                {/* Flat Selection */}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink>Flat</InputLabel>
+                  <MuiSelect
+                    value={summaryFormFilters.wingId ?? ""}
+                    onChange={(e) =>
+                      setSummaryFormFilters((prev) => ({
+                        ...prev,
+                        wingId: e.target.value || undefined,
+                        areaId: undefined,
+                        floorId: undefined,
+                        roomId: undefined,
+                      }))
+                    }
+                    label="Flat"
+                    displayEmpty
+                    MenuProps={selectMenuProps}
+                    sx={fieldStyles}
+                    disabled={!summaryFormFilters.buildingId}
+                  >
+                    <MenuItem value="">
+                      <em>Select Flat</em>
+                    </MenuItem>
+                    {wings.map((f) => (
+                      <MenuItem key={f.id} value={f.id.toString()}>
+                        {f.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+
+                {/* User Selection */}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink>User</InputLabel>
+                  <MuiSelect
+                    value={summaryFormFilters.areaId ?? ""}
+                    onChange={(e) =>
+                      setSummaryFormFilters((prev) => ({
+                        ...prev,
+                        areaId: e.target.value || undefined,
+                        floorId: undefined,
+                        roomId: undefined,
+                      }))
+                    }
+                    label="User"
+                    displayEmpty
+                    MenuProps={selectMenuProps}
+                    sx={fieldStyles}
+                    disabled={!summaryFormFilters.wingId}
+                  >
+                    <MenuItem value="">
+                      <em>Select User</em>
+                    </MenuItem>
+                    {areas.map((u) => (
+                      <MenuItem key={u.id} value={u.id.toString()}>
+                        {u.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              </div>
+            </div>
+
+            {/* Tabular Location Details Section - Commented Out */}
+            {/* Commented out - Location Details section disabled for tabular tab
             {activeFilterTab === "tabular" && (
               <div>
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
@@ -4663,14 +4760,9 @@ export const SurveyResponseDetailPage = () => {
                     </MuiSelect>
                   </FormControl>
                 </div>
-                {/* <div className="grid grid-cols-2 gap-6 mt-4">
-                 
-                </div> */}
-                {/* <div className="grid grid-cols-2 gap-6 mt-4">
-                 
-                </div> */}
               </div>
             )}
+            */}
           </div>
 
           {/* Action Buttons */}
@@ -4977,7 +5069,7 @@ export const SurveyResponseDetailPage = () => {
             <div ref={summaryContentRef}>
               {/* Summary Statistics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                {/* Total Questions */}
+                {/* CSAT */}
 
                 <Card className="bg-[#F6F4EE]">
                   <CardContent className="p-6">
@@ -4987,8 +5079,8 @@ export const SurveyResponseDetailPage = () => {
                       </div>
                       <div>
                         <p className="text-xl font-semibold text-[#C72030]">
-                          {surveyData.csat
-                            ? surveyData.csat.toFixed(2)
+                          {csatData?.summary?.csat_avg !== null && csatData?.summary?.csat_avg !== undefined
+                            ? csatData.summary.csat_avg.toFixed(2)
                             : "0.00"}
                         </p>
                         <p className="text-sm text-gray-600">CSAT</p>
@@ -5031,7 +5123,7 @@ export const SurveyResponseDetailPage = () => {
                       </div>
                       <div>
                         <p className="text-xl font-semibold text-[#C72030]">
-                          {surveyData.positive_responses || 0}
+                          {csatData?.summary?.positive || 0}
                         </p>
                         <p className="text-sm text-gray-600">Positive</p>
                         {Object.keys(summaryCurrentFilters).length > 0 && (
@@ -5064,7 +5156,7 @@ export const SurveyResponseDetailPage = () => {
                       </div>
                       <div>
                         <p className="text-xl font-semibold text-[#C72030]">
-                          {surveyData.negative_responses || 0}
+                          {csatData?.summary?.negative || 0}
                         </p>
                         <p className="text-sm text-gray-600">Negative</p>
                         {Object.keys(summaryCurrentFilters).length > 0 && (
@@ -5170,25 +5262,35 @@ export const SurveyResponseDetailPage = () => {
                 // Get all questions from survey details in their original order
                 const surveyDetails =
                   surveyDetailsData?.survey_details?.surveys?.[0];
-                const allQuestions = surveyDetails?.questions || [];
+                const detailQuestions = surveyDetails?.questions || [];
+                const summaryQuestions = surveyData?.questions || [];
+                const questionMap = new Map<number, SurveyQuestion>();
 
-                // Filter questions that have responses and should be displayed
-                const questionsWithResponses = allQuestions.filter(
-                  (question: SurveyQuestion) => {
-                    const totalResponses =
-                      question.options?.reduce(
-                        (sum, option) => sum + option.response_count,
-                        0
-                      ) || 0;
-                    return totalResponses > 0;
+                [...summaryQuestions, ...detailQuestions].forEach(
+                  (question) => {
+                    questionMap.set(question.question_id, {
+                      ...questionMap.get(question.question_id),
+                      ...question,
+                      options:
+                        question.options?.length
+                          ? question.options
+                          : questionMap.get(question.question_id)?.options || [],
+                    });
                   }
                 );
 
-                if (questionsWithResponses.length === 0) {
+                const allQuestions =
+                  questionMap.size > 0
+                    ? Array.from(questionMap.values())
+                    : detailQuestions.length >= summaryQuestions.length
+                      ? detailQuestions
+                      : summaryQuestions;
+
+                if (allQuestions.length === 0) {
                   return null;
                 }
 
-                return questionsWithResponses
+                return allQuestions
                   .map((question: SurveyQuestion, questionIndex: number) => {
                     const totalResponses =
                       question.options?.reduce(
@@ -5483,8 +5585,7 @@ export const SurveyResponseDetailPage = () => {
                                 index % multipleChoiceColors.length
                                 ],
                             };
-                          })
-                          .filter((item) => item.value > 0) || [];
+                          }) || [];
 
                       return (
                         <Card
@@ -5526,7 +5627,68 @@ export const SurveyResponseDetailPage = () => {
                       );
                     }
 
-                    return null;
+                    const textResponses = getSummaryFilteredResponseData()
+                      .flatMap((response: SurveyResponse) =>
+                        response.answers?.filter(
+                          (answer: ResponseAnswer) =>
+                            answer.question_id === question.question_id
+                        ) || []
+                      )
+                      .map(
+                        (answer: ResponseAnswer) =>
+                          answer.ans_descr ||
+                          answer.option_name ||
+                          answer.comments ||
+                          "-"
+                      )
+                      .filter((answer) => answer && answer !== "-");
+
+                    return (
+                      <Card
+                        key={question.question_id}
+                        className="mb-6 border border-[#D9D9D9] bg-[#F6F7F7] my-pdf-card"
+                      >
+                        <CardHeader className="bg-[#F6F4EE] mb-6">
+                          <CardTitle className="text-lg flex items-center">
+                            <div className="w-9 h-9 bg-[#C7203014] text-white rounded-full flex items-center justify-center mr-3">
+                              <HelpCircle className="h-4 w-4 text-[#C72030]" />
+                            </div>
+                            <span className="text-black font-semibold mr-2 header-text">
+                              Q{questionNumber}.
+                            </span>
+                            <span className="header-text">
+                              {question.question}
+                            </span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="bg-white border border-gray-300 rounded-md overflow-hidden">
+                            <div className="px-6 py-4 text-sm text-gray-800">
+                              <span className="font-medium">
+                                Total Responses:
+                              </span>{" "}
+                              {textResponses.length || totalResponses || 0}
+                            </div>
+                            {textResponses.length > 0 ? (
+                              <div className="border-t border-gray-300 divide-y divide-gray-200">
+                                {textResponses.map((response, index) => (
+                                  <div
+                                    key={`${question.question_id}-${index}`}
+                                    className="px-6 py-3 text-sm text-gray-700"
+                                  >
+                                    {response}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="border-t border-gray-300 px-6 py-8 text-center text-gray-500">
+                                No responses available for this question
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
                   })
                   .filter(Boolean);
               })()}

@@ -142,9 +142,23 @@ const AppointmentzRMConfig = () => {
   };
 
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    // Find the current user data
+    const currentUser = data.find(user => user.id === id);
+    if (!currentUser) {
+      setTimeout(() => {
+        toast.error("User not found");
+      }, 0);
+      return;
+    }
+
     try {
       await updateRMUser(id, {
         user: {
+          first_name: currentUser.firstName,
+          last_name: currentUser.lastName,
+          mobile: currentUser.mobile,
+          user_type: currentUser.userType === "Customer Support" ? "cs_user" : "rm_user",
+          section: "", // Default as in edit
           active: !currentStatus,
         },
       });
@@ -157,10 +171,31 @@ const AppointmentzRMConfig = () => {
       setTimeout(() => {
         toast.success("Status updated successfully!");
       }, 0);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error updating status:", error);
+      console.error("Response data:", (error as any)?.response?.data);
+
+      let errorMessage = "Failed to update status";
+
+      if (error && typeof error === 'object' && 'response' in error && error.response) {
+        const errorData = (error.response as any).data;
+        if (errorData?.message) {
+          errorMessage = errorData.message;
+        } else if (errorData?.error) {
+          errorMessage = typeof errorData.error === 'string'
+            ? errorData.error
+            : JSON.stringify(errorData.error);
+        } else if (errorData?.errors) {
+          errorMessage = Object.keys(errorData.errors).map((key) => {
+            const errorArray = errorData.errors[key];
+            const errorText = Array.isArray(errorArray) ? errorArray.join(", ") : String(errorArray);
+            return `${key}: ${errorText}`;
+          }).join(', ');
+        }
+      }
+
       setTimeout(() => {
-        toast.error("Failed to update status");
+        toast.error(errorMessage);
       }, 0);
     }
   };

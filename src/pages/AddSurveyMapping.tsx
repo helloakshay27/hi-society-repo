@@ -62,6 +62,35 @@ interface LocationItem {
   name: string;
 }
 
+const mapQuestionTypeToInputType = (qtype?: string) => {
+  switch ((qtype || "").trim().toLowerCase()) {
+    case "multiple":
+      return "multiple_choice";
+    case "yesno":
+    case "yes_no":
+    case "boolean":
+      return "yes_no";
+    case "rating":
+      return "rating";
+    case "input":
+    case "text":
+      return "text_input";
+    case "input_box":
+      return "input_box";
+    case "description":
+    case "textarea":
+      return "description";
+    case "numeric":
+      return "numeric";
+    case "emoji":
+      return "emoji";
+    case "smiley":
+      return "smiley";
+    default:
+      return "";
+  }
+};
+
 interface SurveyMapping {
   id: string;
   selectedLocation: {
@@ -540,33 +569,7 @@ export const AddSurveyMapping = () => {
     if (selectedSurvey && selectedSurvey.snag_questions) {
       const mappedQuestions = selectedSurvey.snag_questions.map(
         (q: SnagQuestion) => {
-          // Map API question types to UI input types
-          let inputType = "";
-          switch (q.qtype) {
-            case "multiple":
-              inputType = "multiple_choice";
-              break;
-            case "yesno":
-              inputType = "yes_no";
-              break;
-            case "rating":
-              inputType = "rating";
-              break;
-            case "input":
-              inputType = "text_input";
-              break;
-            case "input_box":
-              inputType = "input_box";
-              break;
-            case "description":
-              inputType = "description";
-              break;
-            case "emoji":
-              inputType = "emoji";
-              break;
-            default:
-              inputType = "";
-          }
+          const inputType = mapQuestionTypeToInputType(q.qtype);
 
           return {
             id: q.id.toString(),
@@ -1126,7 +1129,9 @@ export const AddSurveyMapping = () => {
                         <MenuItem value="text_input">Text Input</MenuItem>
                         <MenuItem value="input_box">Input Box</MenuItem>
                         <MenuItem value="description">Description</MenuItem>
+                        <MenuItem value="numeric">Numeric</MenuItem>
                         <MenuItem value="emoji">Emoji</MenuItem>
+                        <MenuItem value="smiley">Smiley</MenuItem>
                       </Select>
                     </FormControl>
                   </div>
