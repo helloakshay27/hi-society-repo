@@ -118,6 +118,22 @@ interface Log {
     }>;
 }
 
+interface RenewalLog {
+    id: number;
+    updated_by: string;
+    updated_at: string;
+    date: string;
+    time: string;
+    start_date: {
+        from: string;
+        to: string;
+    };
+    end_date: {
+        from: string;
+        to: string;
+    };
+}
+
 interface GroupMembershipDetail {
     id: number;
     membership_plan_id: number;
@@ -130,6 +146,7 @@ interface GroupMembershipDetail {
     club_members: ClubMember[];
     bills?: Bill[];
     logs?: Log[];
+    renewal_logs?: RenewalLog[];
     allocation_payment_detail?: {
         id: number;
         club_member_allocation_id: number;
@@ -785,6 +802,12 @@ export const CMSClubMembersDetails = () => {
                         >
                             Logs
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="renewal-logs"
+                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                        >
+                            Renewal Logs
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="p-4 sm:p-6">
@@ -1379,6 +1402,52 @@ export const CMSClubMembersDetails = () => {
                                 <Logs className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                                 <p className="text-gray-600 font-medium">No logs available</p>
                                 <p className="text-sm text-gray-500 mt-1">Activity logs will appear here</p>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="renewal-logs" className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <RefreshCw className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-[#1a1a1a]">
+                                Renewal Logs
+                            </h2>
+                        </div>
+                        {membershipData.renewal_logs && membershipData.renewal_logs.length > 0 ? (
+                            <div className="overflow-x-auto px-3">
+                                <LogsTimeline
+                                    logs={membershipData.renewal_logs.map((log) => {
+                                        const formatRenewalDate = (date: string) => {
+                                            if (!date || date === 'nil') return 'null';
+
+                                            // Handle complex format: "Fri, 01 May 2026 00:00:00.000000000 IST +05:30"
+                                            if (date.includes('.') && date.includes('IST')) {
+                                                const parts = date.split('.');
+                                                if (parts[0]) return formatDate(parts[0]);
+                                            }
+
+                                            return formatDate(date);
+                                        };
+
+                                        const startDateChange = `Start Date: ${formatRenewalDate(log.start_date.from)} → ${formatRenewalDate(log.start_date.to)}`;
+                                        const endDateChange = `End Date: ${formatRenewalDate(log.end_date.from)} → ${formatRenewalDate(log.end_date.to)}`;
+                                        const description = `Membership Renewed\n${startDateChange} | ${endDateChange}`;
+
+                                        return {
+                                            id: log.id.toString(),
+                                            description: description,
+                                            timestamp: `${log.updated_by} • ${log.date} ${log.time}`,
+                                        };
+                                    })}
+                                />
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                                <RefreshCw className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-gray-600 font-medium">No renewal logs available</p>
+                                <p className="text-sm text-gray-500 mt-1">Renewal history will appear here</p>
                             </div>
                         )}
                     </TabsContent>
