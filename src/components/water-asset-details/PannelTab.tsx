@@ -89,7 +89,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
 
         <div className="flex items-center gap-2 sm:gap-3 ml-2 sm:ml-8">
           {defaultActions.map((action, index) => {
-            const Icon = action.icon;
+            const Icon = action.label.toLowerCase().includes('qr') ? Plus : action.icon;
             return (
               <Button
                 key={index}
