@@ -1522,9 +1522,9 @@ export const CMSClubMembersDetails = () => {
                                     <MenuItem value="" disabled>
                                         Select Bill
                                     </MenuItem>
-                                    {membershipData?.bills?.map((bill) => (
+                                    {membershipData?.bills?.filter(b => b.status !== "PAID").map((bill) => (
                                         <MenuItem key={bill.id} value={bill.id.toString()}>
-                                            ₹{bill.total_amount}
+                                            Bill #{bill.bill_number} - ₹{bill.total_amount}
                                         </MenuItem>
                                     ))}
                                 </MuiSelect>
