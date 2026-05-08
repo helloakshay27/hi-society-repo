@@ -4983,7 +4983,7 @@ export const SurveyResponseDetailPage = () => {
             {[
               { label: "Survey Information", value: "summary" },
               { label: "Tabular", value: "tabular" },
-              { label: "Tickets", value: "tickets" },
+              // { label: "Tickets", value: "tickets" },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}

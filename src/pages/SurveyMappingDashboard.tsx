@@ -1113,13 +1113,15 @@ export const SurveyMappingDashboard = () => {
           actions={[
             {
               label: "User QR Setup",
-              icon: Plus,
+              icon: QrCode,
               onClick: handleUserQRSetup,
             },
           ]}
           onAdd={handleAddMapping}
+          addLabel="Society QR Setup"
           onImport={() => setShowImportModal(true)}
           onClearSelection={() => setShowActionPanel(false)}
+          subtitle={null}
         />
       )}
 

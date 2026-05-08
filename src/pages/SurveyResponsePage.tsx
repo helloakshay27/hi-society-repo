@@ -27,6 +27,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Pagination,
   PaginationItem,
   PaginationContent,
@@ -230,6 +237,9 @@ export const SurveyResponsePage = () => {
     fromDate: "",
     uptoDate: "",
   });
+  const [exportSurveyTitles, setExportSurveyTitles] = useState<string[]>([]);
+  const [isLoadingExportSurveyTitles, setIsLoadingExportSurveyTitles] =
+    useState(false);
   const [activeTab, setActiveTab] = useState("list");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -438,6 +448,61 @@ export const SurveyResponsePage = () => {
       uptoDate: "",
     });
   };
+
+  const fetchExportSurveyTitles = useCallback(async () => {
+    try {
+      setIsLoadingExportSurveyTitles(true);
+
+      const url = getFullUrl(
+        "/survey_mappings/response_list.json?list_response=true"
+      );
+      const urlWithParams = new URL(url);
+      urlWithParams.searchParams.set("page", "1");
+      urlWithParams.searchParams.set("per_page", "1000");
+
+      if (API_CONFIG.TOKEN) {
+        urlWithParams.searchParams.append("access_token", API_CONFIG.TOKEN);
+      }
+
+      const response = await fetch(
+        urlWithParams.toString(),
+        getAuthenticatedFetchOptions()
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch surveys");
+      }
+
+      const data: NewSurveyResponseApiResponse = await response.json();
+      const fetchedTitles = (data.responses || [])
+        .map((survey) => survey.survey_name)
+        .filter((title): title is string => Boolean(title?.trim()));
+
+      const visibleTitles = responseData
+        .map((survey) => survey.survey_name)
+        .filter((title): title is string => Boolean(title?.trim()));
+
+      setExportSurveyTitles(
+        Array.from(new Set([...visibleTitles, ...fetchedTitles])).sort((a, b) =>
+          a.localeCompare(b)
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching survey titles for export filter:", error);
+      const visibleTitles = responseData
+        .map((survey) => survey.survey_name)
+        .filter((title): title is string => Boolean(title?.trim()));
+      setExportSurveyTitles(Array.from(new Set(visibleTitles)));
+    } finally {
+      setIsLoadingExportSurveyTitles(false);
+    }
+  }, [responseData]);
+
+  useEffect(() => {
+    if (isExportFilterOpen) {
+      fetchExportSurveyTitles();
+    }
+  }, [fetchExportSurveyTitles, isExportFilterOpen]);
 
   const executeSurveyResponseExport = async (
     visibility?: Record<string, boolean>,
@@ -1701,15 +1766,39 @@ export const SurveyResponsePage = () => {
               >
                 Survey Title
               </label>
-              <Input
-                id="export-survey-title"
-                value={exportFilters.surveyTitle}
-                onChange={(event) =>
-                  handleExportFilterChange("surveyTitle", event.target.value)
+              <Select
+                value={exportFilters.surveyTitle || "__all__"}
+                onValueChange={(value) =>
+                  handleExportFilterChange(
+                    "surveyTitle",
+                    value === "__all__" ? "" : value
+                  )
                 }
-                placeholder="Enter survey title"
-                disabled={isExporting}
-              />
+                disabled={isExporting || isLoadingExportSurveyTitles}
+              >
+                <SelectTrigger
+                  id="export-survey-title"
+                  className="h-10 w-full bg-white"
+                >
+                  <SelectValue
+                    placeholder={
+                      isLoadingExportSurveyTitles
+                        ? "Loading surveys..."
+                        : "Select survey title"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent className="z-[60] max-h-72 overflow-y-auto bg-white">
+                  <SelectItem value="__all__">All Surveys</SelectItem>
+                  {exportSurveyTitles.map((title) => (
+                    <SelectItem key={title} value={title}>
+                      <span className="block max-w-[360px] truncate" title={title}>
+                        {title}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

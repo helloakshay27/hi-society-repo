@@ -20,18 +20,22 @@ interface SelectionAction {
 interface SelectionPanelProps {
   actions?: SelectionAction[];
   onAdd?: () => void;
+  addLabel?: string;
   onImport?: () => void;
   onChecklist?: () => void;
   onClearSelection?: () => void;
+  subtitle?: string | null;
   loading?: boolean;
 }
 
 export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   actions = [],
   onAdd,
+  addLabel = 'Add',
   onImport,
   onChecklist,
   onClearSelection,
+  subtitle = 'Quick actions available',
   loading
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -47,7 +51,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   }, [onClearSelection]);
 
   const defaultActions: SelectionAction[] = [
-    ...(onAdd ? [{ label: 'Add', icon: Plus, onClick: onAdd }] : []),
+    ...(onAdd ? [{ label: addLabel, icon: Plus, onClick: onAdd }] : []),
     ...(onImport ? [{ label: 'Import', icon: Upload, onClick: onImport }] : []),
     ...actions,
   ];
@@ -75,13 +79,15 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
             <span className="text-[13px] sm:text-[16px] font-semibold text-[#1A1A1A] whitespace-nowrap leading-none">
               Actions
             </span>
-            <span className="text-[10px] sm:text-[12px] font-medium text-[#6B7280] whitespace-nowrap leading-tight mt-1">
-              Quick actions available
-            </span>
+            {subtitle && (
+              <span className="text-[10px] sm:text-[12px] font-medium text-[#6B7280] whitespace-nowrap leading-tight mt-1">
+                {subtitle}
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 ml-2 sm:ml-8">
+        <div className="flex items-center gap-2 sm:gap-3 ml-2 sm:ml-8">
           {defaultActions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -91,8 +97,8 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
                 size="sm"
                 onClick={action.onClick}
                 disabled={action.loading}
-                className="text-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center h-auto p-1 sm:p-2 disabled:opacity-50 min-w-[45px] sm:min-w-[60px]"
-                style={{ width: "45px", height: "50px" }}
+                className="text-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center h-auto p-1 sm:p-2 disabled:opacity-50 min-w-[72px] sm:min-w-[96px] max-w-[120px]"
+                style={{ minHeight: "54px" }}
               >
                 <Icon className="w-3 h-3 sm:w-5 sm:h-5 mb-1" />
                 <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">{action.label}</span>
