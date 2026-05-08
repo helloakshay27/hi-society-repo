@@ -405,7 +405,15 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                     <InputLabel shrink>Share With</InputLabel>
                     <MuiSelect
                       value={shareOption}
-                      onChange={(e) => setShareOption(e.target.value)}
+                      onChange={(e) => {
+                        const nextShareOption = e.target.value;
+                        setShareOption(nextShareOption);
+
+                        if (nextShareOption === "All") {
+                          setSelectedFlats([]);
+                          setSelectAllFlats(false);
+                        }
+                      }}
                       label="Share With"
                       notched
                       displayEmpty
@@ -500,8 +508,8 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
             </div>
 
             {/* Share Settings */}
-            {shareAccess === "true" && (
-              <div className={`grid grid-cols-1 ${shareOption === "Flats" ? "md:grid-cols-2" : "md:grid-cols-1"} gap-8 border-t border-gray-100 mt-2 pt-6`}>
+            {shareAccess === "true" && shareOption === "Flats" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-100 mt-2 pt-6">
                 {/* Left Column */}
                 <div>
                   <h3 className="text-lg font-normal text-gray-700 border-b border-gray-200 pb-2 mb-4">Share with</h3>

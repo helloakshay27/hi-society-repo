@@ -227,6 +227,55 @@ interface SurveyMappingForm {
   };
 }
 
+const mapQuestionTypeToInputType = (qtype?: string) => {
+  switch ((qtype || "").trim().toLowerCase().replace(/[\s-]+/g, "_")) {
+    case "multiple":
+    case "multiple_choice":
+      return "multiple_choice";
+    case "yesno":
+    case "yes_no":
+    case "boolean":
+      return "yes_no";
+    case "rating":
+      return "rating";
+    case "input":
+    case "text":
+    case "text_input":
+      return "text_input";
+    case "input_box":
+    case "inputbox":
+      return "input_box";
+    case "description":
+    case "textarea":
+      return "description";
+    case "numeric":
+    case "number":
+    case "integer":
+      return "numeric";
+    case "emoji":
+      return "emoji";
+    case "smiley":
+      return "smiley";
+    default:
+      return "";
+  }
+};
+
+const inputTypeLabels: Record<string, string> = {
+  yes_no: "Yes/No",
+  multiple_choice: "Multiple Choice",
+  rating: "Rating",
+  text_input: "Text Input",
+  input_box: "Input Box",
+  description: "Description",
+  numeric: "Numeric",
+  emoji: "Emoji",
+  smiley: "Smiley",
+};
+
+const getInputTypeLabel = (inputType: string) =>
+  inputTypeLabels[inputType] || "Input Type";
+
 // Section component matching PatrollingCreatePage
 const Section: React.FC<{
   title: string;
@@ -956,38 +1005,10 @@ export const EditSurveyMapping = () => {
       if (selectedSurvey && selectedSurvey.snag_questions) {
         const mappedQuestions = selectedSurvey.snag_questions.map(
           (q: SnagQuestion) => {
-            // Map API question types to UI input types
-            let inputType = "";
-            switch (q.qtype) {
-              case "multiple":
-                inputType = "multiple_choice";
-                break;
-              case "yesno":
-                inputType = "yes_no";
-                break;
-              case "rating":
-                inputType = "rating";
-                break;
-              case "input":
-                inputType = "text_input";
-                break;
-              case "input_box":
-                inputType = "input_box";
-                break;
-              case "description":
-                inputType = "description";
-                break;
-              case "emoji":
-                inputType = "emoji";
-                break;
-              default:
-                inputType = "";
-            }
-
             return {
               id: q.id.toString(),
               task: q.descr,
-              inputType,
+              inputType: mapQuestionTypeToInputType(q.qtype),
               mandatory: !!q.quest_mandatory,
               options: q.snag_quest_options
                 ? q.snag_quest_options.map((opt: SnagQuestOption) => opt.qname)
@@ -1175,38 +1196,10 @@ export const EditSurveyMapping = () => {
     if (selectedSurvey && selectedSurvey.snag_questions) {
       const mappedQuestions = selectedSurvey.snag_questions.map(
         (q: SnagQuestion) => {
-          // Map API question types to UI input types
-          let inputType = "";
-          switch (q.qtype) {
-            case "multiple":
-              inputType = "multiple_choice";
-              break;
-            case "yesno":
-              inputType = "yes_no";
-              break;
-            case "rating":
-              inputType = "rating";
-              break;
-            case "input":
-              inputType = "text_input";
-              break;
-            case "input_box":
-              inputType = "input_box";
-              break;
-            case "description":
-              inputType = "description";
-              break;
-            case "emoji":
-              inputType = "emoji";
-              break;
-            default:
-              inputType = "";
-          }
-
           return {
             id: q.id.toString(),
             task: q.descr,
-            inputType,
+            inputType: mapQuestionTypeToInputType(q.qtype),
             mandatory: !!q.quest_mandatory,
             options: q.snag_quest_options
               ? q.snag_quest_options.map((opt: SnagQuestOption) => opt.qname)
@@ -1961,9 +1954,11 @@ export const EditSurveyMapping = () => {
                         label="Question"
                         notched
                         disabled
-                        renderValue={() => q.task}
+                        renderValue={() => `Q${idx + 1}. ${q.task || "Untitled question"}`}
                       >
-                        <MenuItem value={q.task}>{q.task}</MenuItem>
+                        <MenuItem value={q.task}>
+                          {`Q${idx + 1}. ${q.task || "Untitled question"}`}
+                        </MenuItem>
                       </Select>
                     </FormControl>
                   </div>
@@ -1979,6 +1974,10 @@ export const EditSurveyMapping = () => {
                         label="Input Type"
                         notched
                         disabled
+                        displayEmpty
+                        renderValue={(value) =>
+                          getInputTypeLabel(String(value || ""))
+                        }
                       >
                         <MenuItem value="yes_no">Yes/No</MenuItem>
                         <MenuItem value="multiple_choice">
@@ -1988,7 +1987,9 @@ export const EditSurveyMapping = () => {
                         <MenuItem value="text_input">Text Input</MenuItem>
                         <MenuItem value="input_box">Input Box</MenuItem>
                         <MenuItem value="description">Description</MenuItem>
+                        <MenuItem value="numeric">Numeric</MenuItem>
                         <MenuItem value="emoji">Emoji</MenuItem>
+                        <MenuItem value="smiley">Smiley</MenuItem>
                       </Select>
                     </FormControl>
                   </div>

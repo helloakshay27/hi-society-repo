@@ -1,7 +1,7 @@
 ﻿import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Folder, File, FileText, Upload, RefreshCw, Loader2, Download, Search, FileVideo, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, ChevronRight, Folder, File, FileText, Upload, RefreshCw, Loader2, Download, Search, FileVideo, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -52,10 +52,9 @@ const getFileIcon = (fileType?: string) => {
 
 const BMSDocumentsCommonFiles: React.FC = () => {
   const navigate = useNavigate();
-  const [currentFolderId, setCurrentFolderId] = useState<string | number>("All");
-  const [breadcrumbs, setBreadcrumbs] = useState<{ id: string | number; name: string }[]>([
-    { id: "All", name: "Common Files" }
-  ]);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string | number>>(
+    new Set(["All"])
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
@@ -91,31 +90,40 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     staleTime: 30000,
   });
 
-  // Transform tree data to get children of current folder
-  const visibleItems = useMemo(() => {
-    if (!treeData) return [];
-
-    // Get all items that are direct children of currentFolderId
-    let items = treeData.filter(node => node.parent === currentFolderId);
-
-    // Apply search filter
-    if (searchQuery) {
-      items = items.filter(item =>
-        item.text.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Toggle folder expansion
+  const toggleFolder = (folderId: string | number) => {
+    const newExpanded = new Set(expandedFolders);
+    if (newExpanded.has(folderId)) {
+      newExpanded.delete(folderId);
+    } else {
+      newExpanded.add(folderId);
     }
-
-    return items;
-  }, [treeData, currentFolderId, searchQuery]);
-
-  const handleFolderClick = (id: string | number, name: string) => {
-    setCurrentFolderId(id);
-    setBreadcrumbs(prev => [...prev, { id, name }]);
+    setExpandedFolders(newExpanded);
   };
 
-  const handleBreadcrumbClick = (id: string | number, index: number) => {
-    setCurrentFolderId(id);
-    setBreadcrumbs(prev => prev.slice(0, index + 1));
+  // Get children of a specific node
+  const getChildren = (parentId: string | number): TreeNode[] => {
+    if (!treeData) return [];
+    return treeData.filter(node => node.parent === parentId);
+  };
+
+  // Check if node is a folder
+  const isFolder = (nodeId: string | number): boolean => {
+    return getChildren(nodeId).length > 0;
+  };
+
+  // Check if node matches search
+  const matchesSearch = (node: TreeNode): boolean => {
+    if (!searchQuery) return true;
+    return node.text.toLowerCase().includes(searchQuery.toLowerCase());
+  };
+
+  // Recursively check if any descendants match search
+  const hasMatchingDescendant = (nodeId: string | number): boolean => {
+    const children = getChildren(nodeId);
+    return children.some(child => 
+      matchesSearch(child) || hasMatchingDescendant(child.id)
+    );
   };
 
   const handleUpload = () => {
@@ -124,11 +132,8 @@ const BMSDocumentsCommonFiles: React.FC = () => {
 
   const handleDownload = (fileName: string, nodeId: string | number) => {
     try {
-      // Get the token from auth header
       const authHeader = getAuthHeader();
       const token = authHeader.replace("Bearer ", "").replace("Token ", "");
-
-      // Construct download URL with token
       const baseUrl = getFullUrl("/crm/admin/attachments_common");
       const downloadUrl = `${baseUrl}?id=${nodeId}&token=${token}`;
       
@@ -145,19 +150,55 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     toast.success("Folder refreshed");
   };
 
-  const renderNode = (node: TreeNode): React.ReactNode => {
-    const isFolder = treeData?.some(item => item.parent === node.id) ?? false;
+  // Render tree node recursively
+  const renderTreeNode = (node: TreeNode, depth: number = 0): React.ReactNode => {
+    const isNodeFolder = isFolder(node.id);
+    const isFolderExpanded = expandedFolders.has(node.id);
+    const children = getChildren(node.id);
+    const visibleChildren = children.filter(
+      child => matchesSearch(child) || hasMatchingDescendant(child.id)
+    );
+    const childrenVisible = visibleChildren.length > 0;
 
-    if (isFolder) {
+    if (isNodeFolder) {
       return (
-        <div 
-          key={node.id}
-          className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 cursor-pointer rounded border-b border-gray-50 last:border-0"
-          onClick={() => handleFolderClick(node.id, node.text)}
-        >
-          <Folder className="w-5 h-5 text-blue-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-gray-700 truncate">{node.text}</span>
-          <ChevronRight className="ml-auto w-4 h-4 text-gray-400" />
+        <div key={node.id} className="select-none">
+          {/* Folder item */}
+          <div
+            className="flex items-center gap-2 py-2 px-3 hover:bg-blue-50 cursor-pointer rounded transition-colors"
+            style={{ paddingLeft: `${12 + depth * 20}px` }}
+            onClick={() => toggleFolder(node.id)}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFolder(node.id);
+              }}
+              className="flex-shrink-0 p-0 h-5 w-5 flex items-center justify-center hover:bg-blue-100 rounded"
+            >
+              {childrenVisible && (
+                isFolderExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-blue-600" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                )
+              )}
+            </button>
+            <Folder className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <span className="text-sm font-medium text-gray-700 truncate">
+              {node.text}
+            </span>
+            <span className="ml-auto text-xs text-gray-400">
+              ({visibleChildren.length})
+            </span>
+          </div>
+
+          {/* Render children if expanded */}
+          {isFolderExpanded && childrenVisible && (
+            <div className="border-l border-gray-200">
+              {visibleChildren.map(child => renderTreeNode(child, depth + 1))}
+            </div>
+          )}
         </div>
       );
     }
@@ -167,17 +208,22 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     return (
       <div
         key={node.id}
-        className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 rounded group cursor-pointer border-b border-gray-50 last:border-0"
-        onClick={() => handleDownload(node.text, node.id)}
+        className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 cursor-pointer rounded group transition-colors"
+        style={{ paddingLeft: `${12 + (depth + 1) * 20}px` }}
       >
+        <div className="flex-shrink-0 w-4">{/* Spacer for alignment */}</div>
         <div className="flex-shrink-0">{getFileIcon(fileType)}</div>
-        <span className="text-sm text-gray-600 flex-1 truncate" title={node.text}>
+        <span
+          className="text-sm text-gray-600 flex-1 truncate hover:text-blue-600"
+          title={node.text}
+          onClick={() => handleDownload(node.text, node.id)}
+        >
           {node.text}
         </span>
         <Button
           size="sm"
           variant="ghost"
-          className="opacity-0 group-hover:opacity-100 h-7 px-2 flex-shrink-0"
+          className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation();
             handleDownload(node.text, node.id);
@@ -188,6 +234,15 @@ const BMSDocumentsCommonFiles: React.FC = () => {
       </div>
     );
   };
+
+  // Get root folders (children of "All")
+  const rootFolders = useMemo(() => {
+    if (!treeData) return [];
+    const roots = getChildren("All");
+    return roots.filter(
+      child => matchesSearch(child) || hasMatchingDescendant(child.id)
+    );
+  }, [treeData, searchQuery]);
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
@@ -214,33 +269,14 @@ const BMSDocumentsCommonFiles: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        {/* Breadcrumbs */}
-        <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/50 flex items-center gap-1 overflow-x-auto no-scrollbar">
-          {breadcrumbs.map((bc, idx) => (
-            <React.Fragment key={idx}>
-              <button
-                onClick={() => handleBreadcrumbClick(bc.id, idx)}
-                className={`text-xs font-medium whitespace-nowrap hover:text-blue-600 transition-colors ${
-                  idx === breadcrumbs.length - 1 ? "text-gray-900 cursor-default" : "text-gray-500"
-                }`}
-              >
-                {bc.name}
-              </button>
-              {idx < breadcrumbs.length - 1 && (
-                <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         {/* Search */}
         <div className="p-4 border-b border-gray-200">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search in this folder..."
+              placeholder="Search in all folders..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -248,8 +284,8 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           </div>
         </div>
 
-        {/* Contents */}
-        <div className="p-2 min-h-[400px]">
+        {/* Tree Contents */}
+        <div className="p-2 min-h-[400px] max-h-[600px] overflow-y-auto">
           {isLoading ? (
             <div className="flex flex-col justify-center items-center py-24">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-2" />
@@ -266,16 +302,16 @@ const BMSDocumentsCommonFiles: React.FC = () => {
                 Retry
               </Button>
             </div>
-          ) : visibleItems.length === 0 ? (
+          ) : rootFolders.length === 0 ? (
             <div className="text-center py-24">
               <Folder className="w-12 h-12 text-gray-200 mx-auto mb-3" />
               <p className="text-gray-400 text-sm">
-                {searchQuery ? "No items match your search" : "This folder is empty"}
+                {searchQuery ? "No items match your search" : "No folders available"}
               </p>
             </div>
           ) : (
-            <div className="flex flex-col">
-              {visibleItems.map((node) => renderNode(node))}
+            <div className="space-y-0">
+              {rootFolders.map((folder) => renderTreeNode(folder))}
             </div>
           )}
         </div>

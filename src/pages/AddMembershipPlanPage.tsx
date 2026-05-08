@@ -191,10 +191,6 @@ export const AddMembershipPlanPage = () => {
       toast.error("Please select Payment Plan");
       return false;
     }
-    if (formData.amenities.length === 0) {
-      toast.error("Please select at least one amenity");
-      return false;
-    }
     // Validate frequency for each selected amenity
     // for (const amenityId of formData.amenities) {
     //   const details = formData.amenityDetails[amenityId];

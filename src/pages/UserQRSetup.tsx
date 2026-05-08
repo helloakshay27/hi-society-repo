@@ -597,9 +597,9 @@ export const UserQRSetup = () => {
               className="border border-gray-200 rounded-lg p-4 bg-gray-50"
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-gray-800">
+                {/* <h3 className="font-semibold text-gray-800">
                   Configuration {configIdx + 1}
-                </h3>
+                </h3> */}
                 {locationConfigs.length > 1 && (
                   <Button
                     variant="outline"
