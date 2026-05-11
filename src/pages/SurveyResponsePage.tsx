@@ -12,6 +12,7 @@ import {
   ThumbsUp,
   ClipboardList,
   HelpCircle,
+  ChevronDown,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,19 +21,20 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  TextField,
+} from "@mui/material";
+import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Pagination,
   PaginationItem,
@@ -240,6 +242,9 @@ export const SurveyResponsePage = () => {
   const [exportSurveyTitles, setExportSurveyTitles] = useState<string[]>([]);
   const [isLoadingExportSurveyTitles, setIsLoadingExportSurveyTitles] =
     useState(false);
+  const [isExportSurveyDropdownOpen, setIsExportSurveyDropdownOpen] =
+    useState(false);
+  const [exportSurveySearch, setExportSurveySearch] = useState("");
   const [activeTab, setActiveTab] = useState("list");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -447,6 +452,8 @@ export const SurveyResponsePage = () => {
       fromDate: "",
       uptoDate: "",
     });
+    setExportSurveySearch("");
+    setIsExportSurveyDropdownOpen(false);
   };
 
   const fetchExportSurveyTitles = useCallback(async () => {
@@ -635,6 +642,8 @@ export const SurveyResponsePage = () => {
   };
 
   const handleApplyExportFilters = async () => {
+    setIsExportSurveyDropdownOpen(false);
+
     if (exportFilters.fromDate && exportFilters.uptoDate) {
       const fromDate = new Date(`${exportFilters.fromDate}T00:00:00`);
       const uptoDate = new Date(`${exportFilters.uptoDate}T23:59:59`);
@@ -1368,6 +1377,19 @@ export const SurveyResponsePage = () => {
   // Note: Since we're using server-side pagination, we should show exactly what the API returns
   // The search filtering is now handled server-side through the API
   const filteredResponses = responseData;
+  const exportSurveyDropdownOptions = React.useMemo(
+    () => ["__all__", ...exportSurveyTitles],
+    [exportSurveyTitles]
+  );
+  const filteredExportSurveyOptions = React.useMemo(() => {
+    const normalizedSearch = exportSurveySearch.trim().toLowerCase();
+    if (!normalizedSearch) return exportSurveyDropdownOptions;
+
+    return exportSurveyDropdownOptions.filter((title) => {
+      const label = title === "__all__" ? "All Surveys" : title;
+      return label.toLowerCase().includes(normalizedSearch);
+    });
+  }, [exportSurveyDropdownOptions, exportSurveySearch]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -1739,6 +1761,8 @@ export const SurveyResponsePage = () => {
       <Dialog
         open={isExportFilterOpen}
         onOpenChange={(open) => {
+          setIsExportSurveyDropdownOpen(false);
+          setExportSurveySearch("");
           if (!isExporting) setIsExportFilterOpen(open);
         }}
       >
@@ -1766,39 +1790,151 @@ export const SurveyResponsePage = () => {
               >
                 Survey Title
               </label>
-              <Select
-                value={exportFilters.surveyTitle || "__all__"}
-                onValueChange={(value) =>
-                  handleExportFilterChange(
-                    "surveyTitle",
-                    value === "__all__" ? "" : value
-                  )
-                }
-                disabled={isExporting || isLoadingExportSurveyTitles}
+              <div
+                className="relative"
+                onBlur={(event) => {
+                  if (
+                    !event.currentTarget.contains(
+                      event.relatedTarget as Node | null
+                    )
+                  ) {
+                    setIsExportSurveyDropdownOpen(false);
+                  }
+                }}
               >
-                <SelectTrigger
+                <TextField
                   id="export-survey-title"
-                  className="h-10 w-full bg-white"
-                >
-                  <SelectValue
-                    placeholder={
-                      isLoadingExportSurveyTitles
-                        ? "Loading surveys..."
-                        : "Select survey title"
+                  value={exportFilters.surveyTitle || "All Surveys"}
+                  placeholder={
+                    isLoadingExportSurveyTitles
+                      ? "Loading surveys..."
+                      : "Select survey title"
+                  }
+                  size="small"
+                  fullWidth
+                  disabled={isExporting}
+                  onClick={() => {
+                    if (!isExporting) {
+                      setIsExportSurveyDropdownOpen((open) => !open);
                     }
-                  />
-                </SelectTrigger>
-                <SelectContent className="z-[60] max-h-72 overflow-y-auto bg-white">
-                  <SelectItem value="__all__">All Surveys</SelectItem>
-                  {exportSurveyTitles.map((title) => (
-                    <SelectItem key={title} value={title}>
-                      <span className="block max-w-[360px] truncate" title={title}>
-                        {title}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  }}
+                  inputProps={{
+                    readOnly: true,
+                  }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    backgroundColor: "white",
+                    "& .MuiOutlinedInput-root": {
+                      height: 40,
+                      cursor: "pointer",
+                    },
+                    "& .MuiInputBase-input": {
+                      cursor: "pointer",
+                    },
+                  }}
+                />
+
+                {isExportSurveyDropdownOpen && (
+                  <Paper
+                    elevation={4}
+                    tabIndex={-1}
+                    className="absolute left-0 right-0 top-[calc(100%+4px)]"
+                    sx={{
+                      zIndex: 1300,
+                      maxHeight: 288,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div className="p-2 border-b border-gray-200">
+                      <TextField
+                        value={exportSurveySearch}
+                        onChange={(event) =>
+                          setExportSurveySearch(event.target.value)
+                        }
+                        placeholder="Search survey..."
+                        size="small"
+                        fullWidth
+                        autoFocus
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Search className="h-4 w-4 text-gray-500" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </div>
+                    <List
+                      dense
+                      sx={{
+                        maxHeight: 224,
+                        overflowY: "auto",
+                        padding: 0,
+                      }}
+                    >
+                      {isLoadingExportSurveyTitles ? (
+                        <ListItemText
+                          primary="Loading surveys..."
+                          primaryTypographyProps={{
+                            color: "text.secondary",
+                            fontSize: 14,
+                            textAlign: "center",
+                          }}
+                          sx={{ py: 2 }}
+                        />
+                      ) : filteredExportSurveyOptions.length > 0 ? (
+                        filteredExportSurveyOptions.map((title) => {
+                          const label =
+                            title === "__all__" ? "All Surveys" : title;
+                          const isSelected =
+                            (exportFilters.surveyTitle || "__all__") === title;
+
+                          return (
+                            <ListItemButton
+                              key={title}
+                              selected={isSelected}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                handleExportFilterChange(
+                                  "surveyTitle",
+                                  title === "__all__" ? "" : title
+                                );
+                                setExportSurveySearch("");
+                                setIsExportSurveyDropdownOpen(false);
+                              }}
+                            >
+                              <ListItemText
+                                primary={label}
+                                primaryTypographyProps={{
+                                  noWrap: true,
+                                  title: label,
+                                  fontSize: 14,
+                                }}
+                              />
+                            </ListItemButton>
+                          );
+                        })
+                      ) : (
+                        <ListItemText
+                          primary="No surveys found"
+                          primaryTypographyProps={{
+                            color: "text.secondary",
+                            fontSize: 14,
+                            textAlign: "center",
+                          }}
+                          sx={{ py: 2 }}
+                        />
+                      )}
+                    </List>
+                  </Paper>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
