@@ -372,6 +372,9 @@ export const UserQRSetup = () => {
             case "emoji":
               inputType = "emoji";
               break;
+            case "numeric":
+              inputType = "numeric";
+              break;
             default:
               inputType = "";
           }
@@ -850,7 +853,7 @@ export const UserQRSetup = () => {
                 )}
 
                 {/* Options for rating */}
-                {(q.inputType === "rating" || q.inputType === "numeric") && (
+                {/*{(q.inputType === "rating" || q.inputType === "numeric") && (
                   <div className="mt-4">
                     <FormControl
                       fullWidth
@@ -871,7 +874,7 @@ export const UserQRSetup = () => {
                       </Select>
                     </FormControl>
                   </div>
-                )}
+                ) */}
               </div>
             ))}
           </div>
