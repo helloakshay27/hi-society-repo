@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SearchableSelect } from "@/components/SearchSelect";
 
 interface ConfigureTowerDialogProps {
   open: boolean;
@@ -215,18 +216,19 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Project</Label>
-              <select
+              <SearchableSelect
                 value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="w-full border rounded p-2 text-sm"
-              >
-                <option value="">Select Project</option>
-                {projects.map((p: any) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name || p.project_name}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedProject}
+                options={[
+                  { value: "", label: "Select Project" },
+                  ...projects.map((p: any) => ({
+                    value: p.id.toString(),
+                    label: p.name || p.project_name,
+                  })),
+                ]}
+                placeholder="Select Project"
+                className=""
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tower-name">Tower Name <span className="text-red-500">*</span></Label>
@@ -310,9 +312,9 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                           </select>
                         ) : (
                           <span className="text-gray-900 text-sm">
-                            {projects.find((p: any) => p.id === tower.project_id)?.name || 
-                             projects.find((p: any) => p.id === tower.project_id)?.project_name || 
-                             tower.project_id || "-"}
+                            {projects.find((p: any) => p.id === tower.project_id)?.name ||
+                              projects.find((p: any) => p.id === tower.project_id)?.project_name ||
+                              tower.project_id || "-"}
                           </span>
                         )}
                       </td>
