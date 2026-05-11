@@ -245,6 +245,18 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return { isValid: true, message: "Password is valid." };
   };
 
+  const validateEmailOrMobile = (value: string): { isValid: boolean; message: string } => {
+    if (!value || value.trim() === "") {
+      return { isValid: false, message: "Email or mobile number is required." };
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (emailRegex.test(value) || mobileRegex.test(value)) {
+      return { isValid: true, message: "" };
+    }
+    return { isValid: false, message: "Please enter a valid email address or 10-digit mobile number." };
+  };
+
   const handleEmailSubmit = async () => {
     const validation = validateEmailOrMobile(email);
     if (!validation.isValid) {
