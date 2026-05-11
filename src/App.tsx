@@ -1110,6 +1110,7 @@ import OpeningBalance from "./pages/ClubManagement/OpeningBalance";
 import ProfitAndLossReport from "./pages/ClubManagement/ProfitAndLossReport";
 import RecurringJournalAdd from "./pages/ClubManagement/RecurringJournalAdd";
 import TaxSetup from "./pages/ClubManagement/TaxSetup";
+import TaxSetupTabView from "./pages/ClubManagement/TaxSetupTabView";
 import TaxSummaryReport from "./pages/ClubManagement/TaxSummaryReport";
 import TransactionsAdd from "./pages/ClubManagement/TransationsAdd";
 import TransactionsDashboard from "./pages/ClubManagement/TransactionsDashboard";

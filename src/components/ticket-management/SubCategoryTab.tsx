@@ -1,15 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
+import { EditSubCategoryModal } from './modals/EditSubCategoryModal';
+import { ticketManagementAPI } from '@/services/ticketManagementAPI';
 import { toast } from 'sonner';
 import { Edit, Trash2, Upload, Plus, X, Search } from 'lucide-react';
 import {
@@ -30,19 +44,31 @@ import { fetchZones } from '@/store/slices/zonesSlice';
 import { fetchRooms } from '@/store/slices/roomsSlice';
 import { API_CONFIG, getAuthHeader, getFullUrl } from '@/config/apiConfig';
 
-interface SubCategoryItem {
-  id: number;
-  issue_type_id: number;
-  issue_type: string;
-  category_id: number;
-  category_type: string;
-  sub_category: string;
-  helpdesk_text: string;
-}
+const subCategorySchema = z.object({
+  category: z.string().min(1, 'Category selection is required'),
+  customerEnabled: z.boolean(),
+  building: z.boolean(),
+  wing: z.boolean(),
+  floor: z.boolean(),
+  zone: z.boolean(),
+  room: z.boolean(),
+});
 
-interface IssueType {
-  id: number;
+type SubCategoryFormData = z.infer<typeof subCategorySchema>;
+
+interface SubCategoryType {
+  id: string;
+  helpdesk_category_name: string;
   name: string;
+  icon_url: string;
+  customer_enabled?: boolean;
+  location_config: {
+    building_enabled: boolean;
+    wing_enabled: boolean;
+    zone_enabled: boolean;
+    floor_enabled: boolean;
+    room_enabled: boolean;
+  };
 }
 
 interface CategoryOption {
@@ -157,47 +183,31 @@ export const SubCategoryTab: React.FC = () => {
   const [zonesDropdownOpen, setZonesDropdownOpen] = useState(false);
   const [roomsDropdownOpen, setRoomsDropdownOpen] = useState(false);
 
-  // Create form state
-  const [selectedIssueType, setSelectedIssueType] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [subCategoryTags, setSubCategoryTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
-  const [helpdeskText, setHelpdeskText] = useState('');
+  // Get data from Redux state
+  const availableCategories = helpdeskCategoriesData?.helpdesk_categories || [];
+  const availableBuildings = buildingsData?.buildings || [];
+  const availableWings = wingsData?.wings || [];
+  const availableFloors = floorsData?.floors || [];
+  const availableZones = zonesData?.zones || [];
+  const availableRooms = roomsData?.rooms || [];
 
-  // Edit modal state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editIssueType, setEditIssueType] = useState('');
-  const [editCategory, setEditCategory] = useState('');
-  const [editSubCategoryName, setEditSubCategoryName] = useState('');
-  const [editHelpdeskText, setEditHelpdeskText] = useState('');
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const getCategoryName = (categoryId: number) => {
+    const category = availableCategories.find(cat => cat.id === categoryId);
+    return category?.name || 'Unknown Category';
+  };
 
-  // Fetch categories filtered by issue type
-  const fetchCategoriesByIssueType = useCallback(async (issueTypeId: string) => {
-    if (!issueTypeId) {
-      setCategories([]);
-      return;
-    }
-    setLoadingCategories(true);
-    try {
-      const res = await fetch(
-        getFullUrl(`/dropdown/categories.json?q[issue_type_id_eq]=${issueTypeId}`),
-        { headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' } },
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const cats = Array.isArray(data) ? data : (data.categories || []);
-        setCategories(cats.map((cat: { id: number; name: string }) => ({ id: cat.id, name: cat.name })));
-      } else {
-        toast.error('Failed to fetch categories');
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Failed to fetch categories');
-    } finally {
-      setLoadingCategories(false);
-    }
-  }, []);
+  const form = useForm<SubCategoryFormData>({
+    resolver: zodResolver(subCategorySchema),
+    defaultValues: {
+      category: '',
+      customerEnabled: false,
+      building: false,
+      wing: false,
+      floor: false,
+      zone: false,
+      room: false,
+    },
+  });
 
   // Debounce search term
   useEffect(() => {
@@ -251,92 +261,74 @@ export const SubCategoryTab: React.FC = () => {
       }
 
     } catch (error) {
-      console.error('Error fetching sub-categories:', error);
-      toast.error('Failed to fetch sub-categories');
+      console.error('Error fetching data:', error);
+      toast.error('Failed to fetch data');
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  const fetchAllData = useCallback(async () => {
-    try {
-      const issueTypesRes = await fetch(getFullUrl('/user/issue_type.json'), {
-        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-      });
-
-      if (issueTypesRes.ok) {
-        const data = await issueTypesRes.json();
-        setIssueTypes(
-          (data.data || []).map((it: { id: number; name: string }) => ({
-            id: it.id,
-            name: it.name,
-          }))
-        );
-      } else {
-        toast.error('Failed to fetch issue types');
-      }
-    } catch (error) {
-      console.error('Error fetching issue types:', error);
-      toast.error('Failed to fetch issue types');
-    }
-  }, []);
-
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    fetchSubCategories(page);
   };
 
-  useEffect(() => {
-    fetchAllData();
-    fetchSubCategories(1);
-  }, [fetchAllData, fetchSubCategories]);
-
-  // Tag input helpers
-  const addTag = (raw: string) => {
-    const trimmed = raw.trim();
-    if (trimmed && !subCategoryTags.includes(trimmed)) {
-      setSubCategoryTags((prev) => [...prev, trimmed]);
-    }
-    setTagInput('');
-  };
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag(tagInput);
-    } else if (e.key === 'Backspace' && tagInput === '' && subCategoryTags.length > 0) {
-      setSubCategoryTags((prev) => prev.slice(0, -1));
-    }
-  };
-
-  // Handle create submit
   const handleCreateSubmit = async () => {
-    if (!selectedIssueType) {
-      toast.error('Please select issue type');
+    // Get form values directly from the form inputs
+    const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
+    const tagsInput = document.querySelector('input[placeholder="Enter tag"]') as HTMLInputElement;
+    
+    // Check for required fields with specific messages like CategoryTypeTab
+    if (!form.getValues('category')) {
+      toast.error('Please select a category');
       return;
     }
-    if (!selectedCategory) {
-      toast.error('Please select category');
+    
+    if (!tagsInput?.value?.trim()) {
+      toast.error('Please enter at least one tag');
       return;
     }
-    // flush any unconfirmed tag still in the input
-    const finalTags = tagInput.trim()
-      ? [...subCategoryTags, tagInput.trim()]
-      : subCategoryTags;
-    if (finalTags.length === 0) {
-      toast.error('Please enter at least one sub-category name');
+    
+    if (selectedEngineers.length === 0) {
+      toast.error('Please assign at least one engineer');
       return;
     }
 
+    // Get the form data
+    const data: SubCategoryFormData = {
+      category: form.getValues('category'),
+      customerEnabled: form.getValues('customerEnabled'),
+      building: form.getValues('building'),
+      wing: form.getValues('wing'),
+      floor: form.getValues('floor'),
+      zone: form.getValues('zone'),
+      room: form.getValues('room'),
+    };
+
+    // Continue with the rest of the validation and submission logic
+    await handleSubmit(data);
+  };
+
+  const handleSubmit = async (data: SubCategoryFormData) => {
     setIsSubmitting(true);
     try {
-      const payload: Record<string, unknown> = {
-        helpdesk_sub_category: {
-          helpdesk_category_id: Number(selectedCategory),
-          issue_type_id: Number(selectedIssueType),
-          ...(helpdeskText.trim() ? { helpdesk_text: helpdeskText.trim() } : {}),
+      const subCategoryData = {
+        helpdesk_category_id: parseInt(data.category),
+        customer_enabled: data.customerEnabled,
+        icon: iconFile, // This will be properly handled by the API service as helpdesk_sub_category[icon]
+        sub_category_tags: tags.filter(tag => tag.trim()),
+        location_enabled: {
+          building: data.building,
+          wing: data.wing,
+          zone: data.zone,
+          floor: data.floor,
+          room: data.room,
         },
-        sub_category_tags: [finalTags.join(',')],
+        location_data: {
+          building_ids: data.building ? selectedBuildings : [],
+          wing_ids: data.wing ? selectedWings : [],
+          zone_ids: data.zone ? selectedZones : [],
+          floor_ids: data.floor ? selectedFloors : [],
+          room_ids: data.room ? selectedRooms : [],
+        },
+        complaint_worker: {
+          assign_to: selectedEngineers,
+        },
       };
 
       await ticketManagementAPI.createSubCategory(subCategoryData);
@@ -352,151 +344,105 @@ export const SubCategoryTab: React.FC = () => {
       setIconFile(null);
       fetchData(currentPage, searchTerm);
     } catch (error) {
-      console.error('Error creating sub-category:', error);
       toast.error('Failed to create sub-category');
+      console.error('Error creating sub-category:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle edit
-  const handleEdit = (subCategory: SubCategoryItem) => {
-    const issueTypeId = subCategory.issue_type_id?.toString() || '';
-    setEditingSubCategory(subCategory);
-    setEditIssueType(issueTypeId);
-    setEditCategory(subCategory.category_id?.toString() || '');
-    setEditSubCategoryName(subCategory.sub_category || '');
-    setEditHelpdeskText(subCategory.helpdesk_text || '');
-    if (issueTypeId) fetchCategoriesByIssueType(issueTypeId);
-    setIsEditModalOpen(true);
+  const addTag = () => {
+    setTags([...tags, '']);
   };
 
-  // Handle edit submit
-  const handleEditSubmit = async () => {
-    if (!editingSubCategory) return;
+  const updateTag = (index: number, value: string) => {
+    const updated = tags.map((tag, i) => i === index ? value : tag);
+    setTags(updated);
+  };
 
-    if (!editIssueType) {
-      toast.error('Please select issue type');
-      return;
-    }
-    if (!editCategory) {
-      toast.error('Please select category');
-      return;
-    }
-    if (!editSubCategoryName.trim()) {
-      toast.error('Please enter sub-category name');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append('id', editingSubCategory.id.toString());
-      formData.append('name', editSubCategoryName.trim());
-      formData.append('issue_type_id', editIssueType);
-      formData.append('helpdesk_category_id', editCategory);
-      formData.append('active', '1');
-
-      if (editHelpdeskText.trim()) {
-        formData.append('helpdesk_text', editHelpdeskText.trim());
-      }
-
-      const response = await fetch(
-        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': getAuthHeader(),
-          },
-          body: formData,
-        }
-      );
-
-      if (response.ok) {
-        toast.success('Sub-category updated successfully!');
-        setIsEditModalOpen(false);
-        setEditingSubCategory(null);
-        fetchSubCategories(currentPage);
-      } else {
-        const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || 'Failed to update sub-category');
-      }
-    } catch (error) {
-      console.error('Error updating sub-category:', error);
-      toast.error('Failed to update sub-category');
-    } finally {
-      setIsSubmitting(false);
+  const removeTag = (index: number) => {
+    if (tags.length > 1) {
+      setTags(tags.filter((_, i) => i !== index));
     }
   };
 
-  // Handle delete
-  const handleDelete = async (subCategory: SubCategoryItem) => {
-    if (!confirm('Are you sure you want to delete this sub-category?')) {
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append('id', subCategory.id.toString());
-      formData.append('name', subCategory.sub_category || '');
-      formData.append('issue_type_id', subCategory.issue_type_id?.toString() || '');
-      formData.append('helpdesk_category_id', subCategory.category_id?.toString() || '');
-      formData.append('active', '0');
-
-      const response = await fetch(
-        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
-        {
-          method: 'POST',
-          headers: { 'Authorization': getAuthHeader() },
-          body: formData,
-        }
-      );
-
-      if (response.ok) {
-        setSubCategories(subCategories.filter(sc => sc.id !== subCategory.id));
-        toast.success('Sub-category deleted successfully!');
-        fetchSubCategories(currentPage);
-      } else {
-        const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || 'Failed to delete sub-category');
-      }
-    } catch (error) {
-      console.error('Error deleting sub-category:', error);
-      toast.error('Failed to delete sub-category');
+  const handleIconChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('Icon file selected:', file.name, file.type, file.size);
+      setIconFile(file);
     }
   };
 
-  // Table columns
+  const handleMultiSelect = (value: string, currentValues: number[], setter: (values: number[]) => void) => {
+    const numValue = parseInt(value);
+    if (currentValues.includes(numValue)) {
+      setter(currentValues.filter(v => v !== numValue));
+    } else {
+      setter([...currentValues, numValue]);
+    }
+  };
+
   const columns = [
-    { key: 'srno', label: 'S.No.', sortable: false },
-    { key: 'issue_type', label: 'Issue Type', sortable: true },
-    { key: 'category', label: 'Category', sortable: true },
+    { key: 'id', label: 'S.No', sortable: true },
+    { key: 'helpdesk_category_name', label: 'Category Type', sortable: true },
     { key: 'name', label: 'Sub Category', sortable: true },
-    { key: 'helpdesk_text', label: 'Text', sortable: false },
+    { key: 'building', label: 'Building', sortable: true },
+    { key: 'wing', label: 'Wing', sortable: true },
+    { key: 'floor', label: 'Floor', sortable: true },
+    { key: 'zone', label: 'Zone', sortable: true },
+    { key: 'room', label: 'Room', sortable: true },
+    { key: 'icon_url', label: 'Icon', sortable: false },
   ];
 
-  const renderCell = (item: SubCategoryItem, columnKey: string) => {
-    const index = subCategories.findIndex(sc => sc.id === item.id);
-
+  const renderCell = (item: SubCategoryType, columnKey: string) => {
     switch (columnKey) {
-      case 'srno':
-        return index + 1;
-      case 'issue_type':
-        return item.issue_type || '--';
-      case 'category':
-        return item.category_type || '--';
+      case 'building':
+      case 'wing':
+      case 'floor':
+      case 'zone':
+      case 'room': {
+        const key = `${columnKey}_enabled` as keyof typeof item.location_config;
+        return (
+          <div className="flex justify-center">
+            <Checkbox
+              checked={item.location_config?.[key] || false}
+              disabled
+            />
+          </div>
+        );
+      }
+      case 'helpdesk_category_name':
+        return item.helpdesk_category_name || '--';
       case 'name':
-        return item.sub_category || '--';
-      case 'helpdesk_text':
-        return item.helpdesk_text || '--';
+        return item.name || '--';
+      case 'id':
+        return item.id || '--';
+      case 'icon_url':
+        if (!item.icon_url) return <span className="text-gray-400">No icon</span>;
+        return (
+          <div className="flex justify-center">
+            <img 
+              src={item.icon_url} 
+              alt="Icon" 
+              className="w-8 h-8 object-cover rounded" 
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        );
       default:
         return '--';
     }
   };
 
-  const renderActions = (item: SubCategoryItem) => (
-    <div className="flex gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+  const renderActions = (item: SubCategoryType) => (
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" size="sm" onClick={() => {
+        setEditingSubCategory(item);
+        setEditModalOpen(true);
+      }}>
         <Edit className="h-4 w-4" />
       </Button>
       <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
@@ -660,168 +606,107 @@ export const SubCategoryTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Add Sub-Category Dialog */}
-      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
-        setAddDialogOpen(open);
-        if (!open) {
-          setSelectedIssueType('');
-          setSelectedCategory('');
-          setSubCategoryTags([]);
-          setTagInput('');
-          setHelpdeskText('');
-        }
-      }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add Sub-Category</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
-                Select Issue Type <span style={{ color: '#ef4444' }}>*</span>
-              </InputLabel>
-              <MuiSelect
-                label="Select Issue Type *"
-                displayEmpty
-                value={selectedIssueType}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedIssueType(val);
-                  setSelectedCategory('');
-                  fetchCategoriesByIssueType(val);
-                }}
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
-                {issueTypes.map((type) => (
-                  <MenuItem key={type.id} value={type.id.toString()}>{type.name}</MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
-                Select Category <span style={{ color: '#ef4444' }}>*</span>
-              </InputLabel>
-              <MuiSelect
-                label="Select Category *"
-                displayEmpty
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                disabled={!selectedIssueType || loadingCategories}
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value="" disabled>
-                  <em>{loadingCategories ? 'Loading...' : !selectedIssueType ? 'Select issue type first' : 'Select Category'}</em>
-                </MenuItem>
-                {categories.map((cat) => (
-                  <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-            {/* Tag input for multiple sub-category names */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sub-category Names <span className="text-red-500">*</span>
-                <span className="text-xs text-gray-400 ml-2">Press Enter or comma to add</span>
-              </label>
-              <div
-                className="flex flex-wrap gap-1.5 min-h-[42px] border border-gray-300 rounded px-2 py-1.5 focus-within:ring-1 focus-within:ring-[#C72030] focus-within:border-[#C72030] cursor-text"
-                onClick={() => document.getElementById('tag-input-create')?.focus()}
-              >
-                {subCategoryTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 bg-red-50 text-[#C72030] border border-red-200 rounded px-2 py-0.5 text-sm"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setSubCategoryTags((prev) => prev.filter((t) => t !== tag)); }}
-                      className="hover:text-red-800 font-bold leading-none"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-                <input
-                  id="tag-input-create"
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
-                  placeholder={subCategoryTags.length === 0 ? 'e.g. Leakage, Blockage, Pipe Burst' : ''}
-                  className="flex-1 min-w-[120px] outline-none text-sm bg-transparent py-0.5"
+      <Card>
+        <CardHeader>
+          <CardTitle>Add Sub-Category</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category <span className="text-red-500">*</span></FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="relative">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent 
+                          position="popper" 
+                          side="bottom" 
+                          align="start" 
+                          sideOffset={8}
+                          avoidCollisions={false}
+                          className="z-[9999] min-w-[var(--radix-select-trigger-width)] max-h-[200px] overflow-y-auto"
+                        >
+                          {(() => {
+                            console.log('Rendering categories in dropdown:', availableCategories);
+                            return availableCategories.length === 0 ? (
+                              <SelectItem value="no-categories" disabled>
+                                {categoriesLoading ? "Loading categories..." : "No categories available"}
+                              </SelectItem>
+                            ) : (
+                              availableCategories.map((category) => (
+                                <SelectItem key={category.id} value={category.id.toString()}>
+                                  {category.name}
+                                </SelectItem>
+                              ))
+                            );
+                          })()}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-            <TextField
-              label="Text"
-              placeholder="Enter text"
-              value={helpdeskText}
-              onChange={(e) => setHelpdeskText(e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setAddDialogOpen(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateSubmit}
-              disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#a01828] text-white"
-            >
-              {isSubmitting ? 'Adding...' : 'Add'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* Main Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <EnhancedTable
-          data={subCategories}
-          columns={columns}
-          renderCell={renderCell}
-          renderActions={renderActions}
-          storageKey="sub-categories-table"
-          enableSearch={true}
-          searchPlaceholder="Search sub-categories..."
-          leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-              className="bg-[#C72030] hover:bg-[#a01828] text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
-          }
-        />
-        {/* Pagination */}
-        {subCategories.length > 0 && totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="text-sm text-gray-500">
-                    Showing {totalCount > 0 ? (currentPage - 1) * perPage + 1 : 0}–{Math.min(currentPage * perPage, totalCount || subCategories.length)} of {totalCount || subCategories.length} sub-categories
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Icon
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="subcategory-icon-upload" className="cursor-pointer">
+                      <Button type="button" variant="outline" size="sm" asChild>
+                        <span>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload Icon
+                        </span>
+                      </Button>
+                    </label>
+                    <input
+                      id="subcategory-icon-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleIconChange}
+                    />
+                    {iconFile && (
+                      <span className="text-sm text-gray-600">{iconFile.name}</span>
+                    )}
                   </div>
-                  {totalPages > 1 && (
-                    <div className="flex items-center gap-1">
+                </div>
+              </div>
+
+              {/* Tags Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Subcategory <span className="text-red-500">*</span></h3>
+                  {/* <Button type="button" onClick={addTag} variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Tag
+                  </Button> */}
+                </div>
+
+                {tags.map((tag, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder="Enter tag"
+                      value={tag}
+                      onChange={(e) => updateTag(index, e.target.value)}
+                    />
+                    {tags.length > 1 && (
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => handlePageChange(1)}
-                        disabled={currentPage === 1}
+                        onClick={() => removeTag(index)}
                       >
-                        «
+                        <X className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
@@ -1379,24 +1264,13 @@ export const SubCategoryTab: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setEditingSubCategory(null);
-                  }}
-                  variant="outline"
-                  className="px-8"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleEditSubmit}
+              <div className="flex justify-end">
+                <Button 
+                  onClick={handleCreateSubmit}
                   disabled={isSubmitting}
-                  className="bg-[#C72030] hover:bg-[#a01828] text-white px-8"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
                 >
-                  {isSubmitting ? 'Updating...' : 'Update'}
+                  {isSubmitting ? 'Saving...' : 'Submit'}
                 </Button>
               </div>
             </div>

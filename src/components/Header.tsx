@@ -50,7 +50,6 @@ import axios from "axios";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/contexts/NotificationContext";
-import { useLayout } from "../contexts/LayoutContext";
 
 export interface Company {
   id: number;

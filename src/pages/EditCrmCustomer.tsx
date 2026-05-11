@@ -450,6 +450,7 @@ export const EditCrmCustomer = () => {
                                         />
                                     </div>
                                 </div>
+                            </div>
                         </div>
 
                         {/* Enable Sites Multi-Select */}
