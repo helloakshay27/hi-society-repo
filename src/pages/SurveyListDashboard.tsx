@@ -277,6 +277,13 @@ export const SurveyListDashboard = () => {
         defaultVisible: true,
       },
       {
+        key: "id",
+        label: "ID",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: "name",
         label: "Title/Question Name",
         sortable: true,
