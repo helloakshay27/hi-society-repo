@@ -16,6 +16,7 @@ import {
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
+import { API_CONFIG } from "@/config/apiConfig";
 
 interface SurveyMappingFilterDialogProps {
   isOpen: boolean;
@@ -74,6 +75,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
   onApply,
 }) => {
   const [surveyTitle, setSurveyTitle] = useState("");
+  const [surveyTitles, setSurveyTitles] = useState<{id: number, name: string}[]>([]);
   const [selectedSite, setSelectedSite] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedWing, setSelectedWing] = useState("");
@@ -100,9 +102,10 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch sites on component mount
+  // Fetch sites and survey titles on component mount
   useEffect(() => {
     fetchSites();
+    fetchSurveyTitles();
     fetchTowers();
   }, []);
 
@@ -231,6 +234,38 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
     } catch (error) {
       console.error("Error fetching sites:", error);
       toast.error("Failed to fetch sites");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch survey titles for dropdown
+  const fetchSurveyTitles = async () => {
+    try {
+      setIsLoading(true);
+      const response = await apiClient.get("/survey_mappings/response_list.json?page=1&per_page=1000");
+      
+      if (API_CONFIG.TOKEN) {
+        // Add token to request if needed
+        const urlWithToken = new URL(response.config.url || "");
+        urlWithToken.searchParams.append("access_token", API_CONFIG.TOKEN);
+      }
+
+      const data = response.data;
+      const surveyData = Array.isArray(data?.responses) 
+        ? (data.responses as any[]).map((response: { survey_id?: number; survey_name?: string }) => ({
+            id: response.survey_id || 0,
+            name: response.survey_name || ""
+          }))
+        : [];
+      
+      // Filter out entries with no ID or name and remove duplicates by ID
+      const validSurveys = surveyData.filter((survey: {id: number, name: string}) => survey.id && survey.name.trim());
+      const uniqueSurveys = Array.from(new Map(validSurveys.map((survey: {id: number, name: string}) => [survey.id, survey])).values());
+      setSurveyTitles(uniqueSurveys as {id: number, name: string}[]);
+    } catch (error) {
+      console.error("Error fetching survey titles:", error);
+      toast.error("Failed to fetch survey titles");
     } finally {
       setIsLoading(false);
     }
@@ -381,6 +416,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
       // per_page and page are default sample values, caller can adjust as needed
       params.push("per_page=10");
       params.push("page=1");
+      if (surveyTitle) params.push(`q[survey_id_eq]=${surveyTitle}`);
       if (selectedTower) params.push(`q[building_id_eq]=${selectedTower}`);
       if (selectedFlat) params.push(`q[wing_id_eq]=${selectedFlat}`);
       if (selectedUser) params.push(`q[user_society_id_eq]=${selectedUser}`);
@@ -470,16 +506,26 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
               Survey Details
             </h3>
             <div className="grid grid-cols-1 gap-6">
-              <TextField
-                label="Survey Title"
-                placeholder="Enter Survey Title"
-                value={surveyTitle}
-                onChange={(e) => setSurveyTitle(e.target.value)}
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: fieldStyles }}
-              />
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Survey Title</InputLabel>
+                <MuiSelect
+                  value={surveyTitle}
+                  onChange={(e) => setSurveyTitle(e.target.value)}
+                  label="Survey Title"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">
+                    <em>Select Survey</em>
+                  </MenuItem>
+                  {surveyTitles.map((survey) => (
+                    <MenuItem key={survey.id} value={survey.id}>
+                      {survey.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             </div>
           </div>
 
