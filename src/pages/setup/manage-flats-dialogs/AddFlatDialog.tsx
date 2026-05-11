@@ -72,7 +72,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
   const fetchTowers = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json?society_id=${localStorage.getItem('selectedSocietyId')}`, {
+      const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json?society_id=${localStorage.getItem('selectedSocietyId')}&q[active_eq]=1`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -90,7 +90,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
       return;
     }
     try {
-      const response = await axios.get(`https://${baseUrl}/wings.json?tower_id=${formData.tower}`, {
+      const response = await axios.get(`https://${baseUrl}/wings.json?tower_id=${formData.tower}&q[active_eq]=1`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -103,7 +103,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
   const fetchFloors = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/society_floors.json?society_block_id=${formData.tower}`, {
+      const response = await axios.get(`https://${baseUrl}/society_floors.json?society_block_id=${formData.tower}&q[active_eq]=1`, {
         headers: {
           Authorization: `Bearer ${token}`,
         }

@@ -35,13 +35,13 @@ export const ConfigureWingDialog: React.FC<ConfigureWingDialogProps> = ({
   const [projects, setProjects] = useState<any[]>([]);
   const [towers, setTowers] = useState<any[]>([]);
   const [wings, setWings] = useState<any[]>([]);
-  
+
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTower, setSelectedTower] = useState("");
-  
+
   const [selectedProjectForWings, setSelectedProjectForWings] = useState("");
   const [selectedTowerForWings, setSelectedTowerForWings] = useState("");
-  
+
   const [wingName, setWingName] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetchingWings, setFetchingWings] = useState(false);
@@ -66,7 +66,7 @@ export const ConfigureWingDialog: React.FC<ConfigureWingDialogProps> = ({
 
   const fetchTowers = async () => {
     try {
-      const response = await axios.get(`${baseUrl}/crm/admin/society_blocks.json?society_id=${societyId}`, {
+      const response = await axios.get(`${baseUrl}/crm/admin/society_blocks.json?society_id=${societyId}&q[active_eq]=1`, {
         headers: {
           Authorization: `Bearer ${token}`,
         }
@@ -164,21 +164,19 @@ export const ConfigureWingDialog: React.FC<ConfigureWingDialogProps> = ({
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Project</Label>
-              <select
+              <SearchableSelect
                 value={selectedProject}
-                onChange={(e) => {
-                  setSelectedProject(e.target.value);
+                onChange={(value) => {
+                  setSelectedProject(value);
                   setSelectedTower("");
                 }}
-                className="w-full border rounded p-2 text-sm"
-              >
-                <option value="">Select Project</option>
-                {projects.map((p: any) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name || p.project_name}
-                  </option>
-                ))}
-              </select>
+                options={projects.map((p: any) => ({
+                  value: p.id.toString(),
+                  label: p.name || p.project_name,
+                }))}
+                placeholder="Select Project"
+                className=""
+              />
             </div>
             <div className="space-y-2">
               <Label>Tower <span className="text-red-500">*</span></Label>
@@ -219,21 +217,22 @@ export const ConfigureWingDialog: React.FC<ConfigureWingDialogProps> = ({
               <h3 className="text-lg font-semibold">Wing List</h3>
               <div className="flex items-center gap-2">
                 <div className="w-48">
-                  <select
+                  <SearchableSelect
                     value={selectedProjectForWings}
-                    onChange={(e) => {
-                      setSelectedProjectForWings(e.target.value);
+                    onChange={(value) => {
+                      setSelectedProjectForWings(value);
                       setSelectedTowerForWings("");
                     }}
-                    className="w-full border rounded p-2 text-sm"
-                  >
-                    <option value="">All Projects</option>
-                    {projects.map((p: any) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name || p.project_name}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "All Projects" },
+                      ...projects.map((p: any) => ({
+                        value: p.id.toString(),
+                        label: p.name || p.project_name,
+                      })),
+                    ]}
+                    placeholder="All Projects"
+                    className=""
+                  />
                 </div>
                 <div className="w-48">
                   <SearchableSelect

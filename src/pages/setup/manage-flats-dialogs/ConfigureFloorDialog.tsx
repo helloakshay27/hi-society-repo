@@ -40,7 +40,7 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
 
   const fetchTowers = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json?society_id=${societyId}`, {
+      const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json?society_id=${societyId}&q[active_eq]=1`, {
         headers: {
           Authorization: `Bearer ${token}`,
         }
