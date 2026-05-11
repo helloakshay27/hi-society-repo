@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 // Utility to map PO API response to bill fields
 function mapPurchaseOrderToBill(poData, customers, itemOptions) {
@@ -39,6 +39,78 @@ function mapPurchaseOrderToBill(poData, customers, itemOptions) {
         sourceOfSupply: poData?.billing_address?.state || poData?.supplier?.state || '',
         destinationOfSupply: poData?.shipping_address?.state || '',
         // Add more mappings as needed
+    };
+}
+
+function mapRecurringBillToBill(recurringBill, customers, itemOptions) {
+    const toDateInputValue = (value) => {
+        if (!value) return '';
+        return String(value).slice(0, 10);
+    };
+    const supplierId =
+        recurringBill?.pms_supplier_id ||
+        recurringBill?.supplier?.id ||
+        recurringBill?.vendor?.id;
+    const vendor = customers.find(c => String(c.id) === String(supplierId));
+    const recurringItems =
+        recurringBill?.item_details ||
+        recurringBill?.lock_account_bill_charges ||
+        recurringBill?.lock_account_bill_charges_attributes ||
+        [];
+    const mappedItems = Array.isArray(recurringItems)
+        ? recurringItems.map((item, index) => {
+            const itemId =
+                item.lock_account_item_id ||
+                item.item_id ||
+                item.lock_account_item?.id;
+            const matchedItem = itemOptions.find(opt => String(opt.id) === String(itemId));
+            const quantity = Number(item.quantity || 1);
+            const rate = Number(item.rate || 0);
+            const amount = Number(item.total_amount ?? item.amount ?? quantity * rate);
+
+            return {
+                id: String(itemId || item.id || `${Date.now()}-${index}`),
+                name: matchedItem?.name || item.item_name || item.name || '',
+                description: item.description || item.name || '',
+                quantity,
+                rate,
+                discount: Number(item.discount || 0),
+                discountType: 'percentage' as const,
+                tax: item.tax_group?.name || '',
+                taxRate: Number(item.tax_group?.rate || 0),
+                amount,
+                customer: String(item.lock_account_customer_id || ''),
+                account: String(item.lock_account_ledger_id || matchedItem?.account || ''),
+                item_id: itemId ? String(itemId) : '',
+                item_tax_type: item.tax_type || item.item_tax_type || '',
+                tax_group_id: item.tax_group_id || item.tax_group?.id || null,
+                tax_exemption_id: item.tax_exemption_id || null,
+            };
+        })
+        : [];
+
+    return {
+        vendor,
+        items: mappedItems,
+        referenceNumber: recurringBill?.order_number || recurringBill?.reference_number || recurringBill?.bill_number || "",
+        subject: recurringBill?.subject || '',
+        salesOrderDate: toDateInputValue(recurringBill?.bill_date || recurringBill?.recurring_detail?.start_date),
+        expectedShipmentDate: toDateInputValue(recurringBill?.due_date || recurringBill?.recurring_detail?.end_date),
+        selectedTerm: recurringBill?.payment_term_id ? String(recurringBill.payment_term_id) : '',
+        billingAddress: recurringBill?.billing_address?.formatted_address || recurringBill?.supplier?.formatted_address || '',
+        shippingAddress: recurringBill?.shipping_address?.formatted_address || '',
+        sourceOfSupply: recurringBill?.source_of_supply,
+        // || recurringBill?.billing_address?.state || recurringBill?.supplier?.state || '',
+        destinationOfSupply: recurringBill?.destination_of_supply,
+        // || recurringBill?.shipping_address?.state || '',
+        customerNotes: recurringBill?.notes || recurringBill?.customer_notes || '',
+        termsAndConditions: recurringBill?.terms_and_conditions || '',
+        discountOnTotal: Number(recurringBill?.discount_per ?? recurringBill?.discount_amount ?? 0),
+        discountTypeOnTotal: recurringBill?.discount_per ? 'percentage' : 'amount',
+        adjustment: Number(recurringBill?.charge_amount || 0),
+        adjustmentLabel: recurringBill?.charge_name || 'Adjustment',
+        taxType: recurringBill?.tax_type ? String(recurringBill.tax_type).toUpperCase() : '',
+        selectedTax: recurringBill?.lock_account_tax_id ? String(recurringBill.lock_account_tax_id) : '',
     };
 }
 import {
@@ -203,10 +275,18 @@ export const BillsAdd: React.FC = () => {
         location.state?.saleOrderId ||
         location.state?.purchaseOrderId ||
         searchParams.get('po_id');
+    const recurringBillId =
+        location.state?.recurringBillId ||
+        searchParams.get('recurring_bill_id');
 
-        // Prefill state
-        const [poPrefill, setPoPrefill] = useState<any>(null);
+    // Prefill state
+    const [poPrefill, setPoPrefill] = useState<any>(null);
+    const [recurringBillPrefill, setRecurringBillPrefill] = useState<any>(null);
+    const shouldPreserveRecurringSupply = useRef(false);
     const [subject, setSubject] = useState('');
+
+    const [reverseCharge, setReverseCharge] = useState(false);
+
     // Fetch item list from API
     const lock_account_id = localStorage.getItem("lock_account_id");
     useEffect(() => {
@@ -260,24 +340,73 @@ export const BillsAdd: React.FC = () => {
         fetchSalespersons();
     }, []);
     // Fetch payment terms from API and set as dropdown options
+    // useEffect(() => {
+    //     const fetchPaymentTerms = async () => {
+    //         const baseUrl = localStorage.getItem('baseUrl');
+    //         const token = localStorage.getItem('token');
+    //         try {
+    //             const res = await axios.get(`https://${baseUrl}/payment_terms.json?lock_account_id=${lock_account_id}`, {
+    //                 headers: {
+    //                     Authorization: token ? `Bearer ${token}` : undefined,
+    //                     'Content-Type': 'application/json'
+    //                 }
+    //             });
+    //             if (res && res.data && Array.isArray(res.data)) {
+    //                 setPaymentTermsList(res.data.map(pt => ({ id: pt.id, name: pt.name, days: pt.no_of_days })));
+    //                 const dueOnReceipt = paymentTermsList.find(t => t.name.toLowerCase() === 'due on receipt');
+    //                 if (dueOnReceipt) {
+    //                     setSelectedTerm(dueOnReceipt.id);
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             setPaymentTermsList([]);
+    //         }
+    //     };
+    //     fetchPaymentTerms();
+    // }, []);
+
+
     useEffect(() => {
         const fetchPaymentTerms = async () => {
             const baseUrl = localStorage.getItem('baseUrl');
             const token = localStorage.getItem('token');
+
             try {
-                const res = await axios.get(`https://${baseUrl}/payment_terms.json?lock_account_id=${lock_account_id}`, {
-                    headers: {
-                        Authorization: token ? `Bearer ${token}` : undefined,
-                        'Content-Type': 'application/json'
+                const res = await axios.get(
+                    `https://${baseUrl}/payment_terms.json?lock_account_id=${lock_account_id}`,
+                    {
+                        headers: {
+                            Authorization: token ? `Bearer ${token}` : undefined,
+                            'Content-Type': 'application/json',
+                        },
                     }
-                });
-                if (res && res.data && Array.isArray(res.data)) {
-                    setPaymentTermsList(res.data.map(pt => ({ id: pt.id, name: pt.name, days: pt.no_of_days })));
+                );
+
+                if (res && Array.isArray(res.data)) {
+                    const mappedTerms = res.data.map((pt) => ({
+                        id: pt.id,
+                        name: pt.name,
+                        days: pt.no_of_days,
+                    }));
+
+                    setPaymentTermsList(mappedTerms);
+
+                    // ✅ Use mappedTerms instead of state
+                    const dueOnReceipt = mappedTerms.find(
+                        (t) => t.name.toLowerCase() === 'due on receipt'
+                    );
+
+                    if (dueOnReceipt) {
+                        setSelectedTerm(String(dueOnReceipt.id));
+                    } else {
+                        setSelectedTerm(""); // fallback
+                    }
                 }
             } catch (err) {
                 setPaymentTermsList([]);
             }
         };
+
         fetchPaymentTerms();
     }, []);
     // Payment Terms Modal Handlers
@@ -494,6 +623,11 @@ export const BillsAdd: React.FC = () => {
         "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
         "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
     ];
+    const normalizeIndianState = (value?: string) => {
+        if (!value) return '';
+        const normalized = String(value).trim().toLowerCase();
+        return indianStates.find(state => state.toLowerCase() === normalized) || String(value).trim();
+    };
 
     const taxTypeOptions = [
         { value: "non_taxable", label: "Non-Taxable" },
@@ -615,13 +749,24 @@ export const BillsAdd: React.FC = () => {
     });
 
     // Dropdowns data
-    const [itemOptions, setItemOptions] = useState<{ id: string; name: string; rate: number }[]>([]);
+    const [itemOptions, setItemOptions] = useState<{
+        id: string;
+        name: string;
+        rate: number;
+        description?: string;
+        account?: string | number;
+        tax_preference?: string;
+        tax_exemption_id?: number | string | null;
+        tax_group_id?: number | string | null;
+        inter_state_tax_rate_id?: number | string | null;
+    }[]>([]);
     const [salespersons, setSalespersons] = useState<{ id: string; name: string }[]>([]);
     // const [taxOptions, setTaxOptions] = useState<{ id: string; name: string; rate: number }[]>([]);
     const [taxType, setTaxType] = useState<'TDS' | 'TCS'>('TDS');
     const [taxOptions, setTaxOptions] = useState<any[]>([]);
     const [selectedTax, setSelectedTax] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRecurringPrefillLoading, setIsRecurringPrefillLoading] = useState(Boolean(recurringBillId));
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [customerOptions, setCustomerOptions] = useState<CustomerOptions[]>([]);
     const fieldStyles = {
@@ -748,8 +893,8 @@ export const BillsAdd: React.FC = () => {
             if (!preserveCurrentText || !shippingAddress) {
                 setShippingAddress(formatAddressText(finalShipping));
             }
-            if (finalBilling?.state) setSourceOfSupply(finalBilling.state);
-            if (finalShipping?.state) setDestinationOfSupply(finalShipping.state);
+            if (!preserveCurrentText && finalBilling?.state) setSourceOfSupply(finalBilling.state);
+            if (!preserveCurrentText && finalShipping?.state) setDestinationOfSupply(finalShipping.state);
         } catch (error) {
             console.error('Error fetching supplier addresses:', error);
             setBillingAddressBook([]);
@@ -758,7 +903,7 @@ export const BillsAdd: React.FC = () => {
     };
     // Fetch and prefill PO details
     const fetchAndPrefillPO = async (poId, customersList, itemsList) => {
-         const baseUrl = localStorage.getItem('baseUrl');
+        const baseUrl = localStorage.getItem('baseUrl');
         const token = localStorage.getItem('token');
 
         try {
@@ -773,11 +918,51 @@ export const BillsAdd: React.FC = () => {
         }
     };
 
+    const fetchAndPrefillRecurringBill = async (billId, customersList, itemsList) => {
+        const baseUrl = localStorage.getItem('baseUrl');
+        const token = localStorage.getItem('token');
+        const lockAccountId = localStorage.getItem('lock_account_id');
+
+        setIsRecurringPrefillLoading(true);
+        try {
+            const res = await axios.get(
+                `https://${baseUrl}/lock_account_bills/${billId}.json?q[recurring_eq]=true&lock_account_id=${lockAccountId}&show=true`,
+                {
+                    headers: {
+                        Authorization: token ? `Bearer ${token}` : undefined,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            const recurringBill = res.data?.lock_account_bill || res.data;
+            if (recurringBill?.id) {
+                const mapped = mapRecurringBillToBill(recurringBill, customersList, itemsList || itemOptions);
+                setRecurringBillPrefill(mapped);
+            }
+        } catch (err) {
+            toast.error('Failed to fetch recurring bill details');
+            setIsRecurringPrefillLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (!purchaseOrderId || customers.length === 0) return;
         fetchAndPrefillPO(purchaseOrderId, customers, itemOptions);
         // eslint-disable-next-line
     }, [purchaseOrderId, customers, itemOptions]);
+
+    useEffect(() => {
+        if (!recurringBillId) {
+            setIsRecurringPrefillLoading(false);
+            return;
+        }
+        if (customers.length === 0) {
+            setIsRecurringPrefillLoading(true);
+            return;
+        }
+        fetchAndPrefillRecurringBill(recurringBillId, customers, itemOptions);
+        // eslint-disable-next-line
+    }, [recurringBillId, customers, itemOptions]);
 
     // When PO prefill data is ready, set fields
     useEffect(() => {
@@ -793,6 +978,35 @@ export const BillsAdd: React.FC = () => {
         }
         // eslint-disable-next-line
     }, [poPrefill]);
+
+    useEffect(() => {
+        if (recurringBillPrefill) {
+            shouldPreserveRecurringSupply.current = true;
+            if (recurringBillPrefill.vendor) setSelectedCustomer(recurringBillPrefill.vendor);
+            if (recurringBillPrefill.items && recurringBillPrefill.items.length > 0) setItems(recurringBillPrefill.items);
+            if (recurringBillPrefill.referenceNumber) setReferenceNumber(recurringBillPrefill.referenceNumber);
+            if (recurringBillPrefill.subject) setSubject(recurringBillPrefill.subject);
+            if (recurringBillPrefill.salesOrderDate) setSalesOrderDate(recurringBillPrefill.salesOrderDate);
+            if (recurringBillPrefill.expectedShipmentDate) setExpectedShipmentDate(recurringBillPrefill.expectedShipmentDate);
+            if (recurringBillPrefill.selectedTerm) setSelectedTerm(recurringBillPrefill.selectedTerm);
+            if (recurringBillPrefill.billingAddress) setBillingAddress(recurringBillPrefill.billingAddress);
+            if (recurringBillPrefill.shippingAddress) setShippingAddress(recurringBillPrefill.shippingAddress);
+            if (recurringBillPrefill.sourceOfSupply) setSourceOfSupply(normalizeIndianState(recurringBillPrefill.sourceOfSupply));
+            if (recurringBillPrefill.destinationOfSupply) setDestinationOfSupply(normalizeIndianState(recurringBillPrefill.destinationOfSupply));
+            if (recurringBillPrefill.customerNotes) setCustomerNotes(recurringBillPrefill.customerNotes);
+            if (recurringBillPrefill.termsAndConditions) setTermsAndConditions(recurringBillPrefill.termsAndConditions);
+            setDiscountOnTotal(recurringBillPrefill.discountOnTotal || 0);
+            setDiscountTypeOnTotal(recurringBillPrefill.discountTypeOnTotal || 'percentage');
+            setAdjustment(recurringBillPrefill.adjustment || 0);
+            setAdjustmentLabel(recurringBillPrefill.adjustmentLabel || 'Adjustment');
+            if (recurringBillPrefill.taxType === 'TDS' || recurringBillPrefill.taxType === 'TCS') {
+                setTaxType(recurringBillPrefill.taxType);
+            }
+            if (recurringBillPrefill.selectedTax) setSelectedTax(recurringBillPrefill.selectedTax);
+            setIsRecurringPrefillLoading(false);
+        }
+        // eslint-disable-next-line
+    }, [recurringBillPrefill]);
 
 
     // Fetch customers on mount
@@ -872,7 +1086,7 @@ export const BillsAdd: React.FC = () => {
             fetchSupplierDetails(selectedCustomer.id);
             fetchSupplierAddresses(
                 selectedCustomer.id,
-                Boolean(purchaseOrderId || billingAddress || shippingAddress)
+                Boolean(purchaseOrderId || recurringBillId || billingAddress || shippingAddress)
             );
             setPaymentTerms(selectedCustomer.paymentTerms || selectedCustomer.payment_terms || '');
         } else {
@@ -895,14 +1109,14 @@ export const BillsAdd: React.FC = () => {
     useEffect(() => {
         if (selectedBillingAddress) {
             setBillingAddress(formatAddressText(selectedBillingAddress));
-            if (selectedBillingAddress.state) setSourceOfSupply(selectedBillingAddress.state);
+            if (!shouldPreserveRecurringSupply.current && selectedBillingAddress.state) setSourceOfSupply(selectedBillingAddress.state);
         }
         // eslint-disable-next-line
     }, [selectedBillingAddressId, billingAddressBook.length]);
     useEffect(() => {
         if (!sameAsBilling && selectedShippingAddress) {
             setShippingAddress(formatAddressText(selectedShippingAddress));
-            if (selectedShippingAddress.state) setDestinationOfSupply(selectedShippingAddress.state);
+            if (!shouldPreserveRecurringSupply.current && selectedShippingAddress.state) setDestinationOfSupply(selectedShippingAddress.state);
         }
         // eslint-disable-next-line
     }, [selectedShippingAddressId, shippingAddressBook.length, sameAsBilling]);
@@ -1345,6 +1559,10 @@ export const BillsAdd: React.FC = () => {
                 saveAsDraft ? 'draft' : 'open'
             );
             formData.append('lock_account_bill[subject]', subject || '');
+            formData.append(
+                'lock_account_bill[reverse_charge]',
+                reverseCharge ? 'true' : 'false'
+            );
             formData.append('lock_account_bill[total_amount]', String(totalAmount2));
             if (discountTypeOnTotal === 'percentage') {
                 formData.append('lock_account_bill[discount_per]', String(discountOnTotal));
@@ -1471,6 +1689,7 @@ export const BillsAdd: React.FC = () => {
     const taxBreakdown: any[] = [];
 
     // Tax group breakdown
+    if (!reverseCharge) {
     selectedTaxGroups.forEach(group => {
         group.taxRates.forEach(rate => {
             const taxAmount = (group.itemAmount * rate.rate) / 100;
@@ -1498,6 +1717,8 @@ export const BillsAdd: React.FC = () => {
                 taxBreakdown.push({ name: rate.name, rate: rateValue, amount: taxAmount });
             }
         });
+
+    }
     // Re-preselect tax on all taxable items when destination or orgState changes
     useEffect(() => {
         if (!destinationOfSupply) return;
@@ -1516,23 +1737,49 @@ export const BillsAdd: React.FC = () => {
 
     // Calculate Final Total
 
-    const totalTax = taxBreakdown.reduce((sum, t) => sum + t.amount, 0);
+    // const totalTax = taxBreakdown.reduce((sum, t) => sum + t.amount, 0);
+    const totalTax = reverseCharge
+    ? 0
+    : taxBreakdown.reduce((sum, t) => sum + t.amount, 0);
+
+    // useEffect(() => {
+    //     const total =
+    //         afterDiscount +
+    //         totalTax  // tax from tax groups
+    //         - taxAmount2 + // TDS/TCS
+    //         (Number(adjustment) || 0);
+
+    //     setTotalAmount2(total);
+
+
+    // }, [afterDiscount, totalTax, taxAmount2, adjustment]);
+
     useEffect(() => {
-        const total =
-            afterDiscount +
-            totalTax  // tax from tax groups
-            - taxAmount2 + // TDS/TCS
-            (Number(adjustment) || 0);
+    const total =
+        afterDiscount +
+        totalTax -        // will be 0 if reverseCharge
+        taxAmount2 +      // TDS/TCS
+        (Number(adjustment) || 0);
 
-        setTotalAmount2(total);
-
-
-    }, [afterDiscount, totalTax, taxAmount2, adjustment]);
+    setTotalAmount2(total);
+}, [afterDiscount, totalTax, taxAmount2, adjustment, reverseCharge]);
     console.log('Tax Options:', taxOptions);
+
+    if (isRecurringPrefillLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4 text-muted-foreground">Loading ...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 space-y-6 relative">
             {isSubmitting && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="absolute inset-0 bg-white/80 flex flex-col gap-3 items-center justify-center z-20 rounded-lg">
                     <CircularProgress size={60} />
                 </div>
             )}
@@ -1583,6 +1830,7 @@ export const BillsAdd: React.FC = () => {
                                         value={selectedCustomer?.id || ''}
                                         onChange={(e) => {
                                             const customer = customers.find(c => c.id === e.target.value);
+                                            shouldPreserveRecurringSupply.current = false;
                                             setBillingAddress('');
                                             setShippingAddress('');
                                             setSelectedBillingAddressId(null);
@@ -1908,7 +2156,7 @@ export const BillsAdd: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-2">
+                            {/* <label className="block text-sm font-medium mb-2">
                                 Payment Terms<span className="text-red-500">*</span>
                             </label>
                             <FormControl fullWidth error={!!errors.paymentTerms}>
@@ -1921,6 +2169,39 @@ export const BillsAdd: React.FC = () => {
                                     <MenuItem value="" >Select payment term</MenuItem>
                                     {filteredTerms.map(term => (
                                         <MenuItem key={term.id || term.name} value={term.id}>{term.name}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl> */}
+                            <label className="block text-sm font-medium mb-2">
+                                Payment Terms<span className="text-red-500">*</span>
+                            </label>
+
+                            <FormControl fullWidth error={!!errors.paymentTerms}>
+                                <Select
+                                    value={selectedTerm || ""}
+                                    onChange={(e) => setSelectedTerm(e.target.value)}
+                                    displayEmpty
+                                    renderValue={(val) => {
+                                        if (!val) {
+                                            return <span className="text-gray-400">Select payment term</span>;
+                                        }
+
+                                        const found = paymentTermsList.find(
+                                            (term) => String(term.id) === String(val)
+                                        );
+
+                                        return found ? found.name : val;
+                                    }}
+                                    sx={fieldStyles}
+                                >
+                                    <MenuItem value="">
+                                        <span className="text-gray-400">Select payment term</span>
+                                    </MenuItem>
+
+                                    {filteredTerms.map((term) => (
+                                        <MenuItem key={term.id || term.name} value={String(term.id)}>
+                                            {term.name}
+                                        </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
@@ -1941,6 +2222,21 @@ export const BillsAdd: React.FC = () => {
                                 placeholder="Enter subject"
                             />
                             <p className="text-xs text-gray-400 text-right mt-1">{subject.length}/500</p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                            <input
+                                type="checkbox"
+                                id="reverseCharge"
+                                checked={reverseCharge}
+                                onChange={(e) => setReverseCharge(e.target.checked)}
+                                className="w-4 h-4 accent-[#bf213e] cursor-pointer"
+                            />
+                            <label
+                                htmlFor="reverseCharge"
+                                className="text-sm font-medium text-gray-700 cursor-pointer"
+                            >
+                                This transaction is applicable for reverse charge
+                            </label>
                         </div>
 
                         {/* <div>
@@ -2025,9 +2321,9 @@ export const BillsAdd: React.FC = () => {
                                                             account: (selected as any).account || '',
                                                             item_tax_type: selected.tax_preference === 'non_taxable' ? 'non_taxable'
                                                                 : selected.tax_preference === 'taxable' ? (isSameState ? 'tax_group' : 'tax_rate')
-                                                                : selected.tax_preference === 'out_of_scope' ? 'out_of_scope'
-                                                                : selected.tax_preference === 'non_gst_supply' ? 'non_gst_supply'
-                                                                : undefined,
+                                                                    : selected.tax_preference === 'out_of_scope' ? 'out_of_scope'
+                                                                        : selected.tax_preference === 'non_gst_supply' ? 'non_gst_supply'
+                                                                            : undefined,
                                                             tax_group_id: selected.tax_preference === 'taxable' ? (isSameState ? selected.tax_group_id : selected.inter_state_tax_rate_id) : null,
                                                             tax_exemption_id: selected.tax_preference === 'non_taxable' ? selected.tax_exemption_id : null,
                                                         });
@@ -2333,7 +2629,7 @@ export const BillsAdd: React.FC = () => {
                                     <span className="font-semibold text-base text-red-600 ml-2">-₹{totalDiscount.toFixed(2)}</span>
                                 </div>
                             </div>
-                            {taxBreakdown.length > 0 && (
+                            {!reverseCharge && taxBreakdown.length > 0 && (
                                 <>
                                     <div className="flex justify-between items-center py-1">
                                         <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Tax Summary</span>
@@ -2602,13 +2898,13 @@ export const BillsAdd: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 justify-center pt-2">
-                <Button variant="outline" onClick={() => navigate('/accounting/bills')} disabled={isSubmitting}>
+                <Button variant="outline" onClick={() => navigate('/accounting/bills')} disabled={isSubmitting || isRecurringPrefillLoading}>
                     Cancel
                 </Button>
-                <Button className="bg-[#C72030] hover:bg-[#A01020] text-white px-4 py-2 rounded" onClick={() => handleSubmit(true)} disabled={isSubmitting}>
+                <Button className="bg-[#C72030] hover:bg-[#A01020] text-white px-4 py-2 rounded" onClick={() => handleSubmit(true)} disabled={isSubmitting || isRecurringPrefillLoading}>
                     {isSubmitting ? 'Saving...' : 'Save as Draft'}
                 </Button>
-                <Button className="bg-[#C72030] hover:bg-[#A01020] text-white px-4 py-2 rounded" onClick={() => handleSubmit(false)} disabled={isSubmitting}>
+                <Button className="bg-[#C72030] hover:bg-[#A01020] text-white px-4 py-2 rounded" onClick={() => handleSubmit(false)} disabled={isSubmitting || isRecurringPrefillLoading}>
                     {isSubmitting ? 'Saving...' : 'Save as Open'}
                 </Button>
             </div>

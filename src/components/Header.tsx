@@ -17,6 +17,7 @@ import {
   ChartArea,
   ChartAreaIcon,
   Shield,
+  Menu,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -49,6 +50,7 @@ import axios from "axios";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/contexts/NotificationContext";
+import { useLayout } from "../contexts/LayoutContext";
 
 export interface Company {
   id: number;
@@ -110,6 +112,8 @@ export const Header = () => {
   const { layoutMode, toggleLayoutMode } = useLayout();
   console.log("layoutMode:-", layoutMode);
 
+
+  const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
 
   // Use Notification Context
   const {
@@ -247,7 +251,7 @@ export const Header = () => {
             role_name: data?.role_name,
           });
         })
-        .catch(() => { });
+        .catch(() => {});
     } catch {
       /* no-op */
     }
@@ -466,9 +470,7 @@ export const Header = () => {
       );
     }
     if (notification.ntype === "projectspace") {
-      navigate(
-        `/vas/channels/groups/${notification.payload.project_space_id}`
-      );
+      navigate(`/vas/channels/groups/${notification.payload.project_space_id}`);
     }
     if (notification.payload.ntype === "newtaskmanagement") {
       navigate(`/vas/tasks/${notification.payload.task_management_id}`);
@@ -818,7 +820,7 @@ export const Header = () => {
 
           {/* Dashboard Button */}
           {!isRestrictedUser && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               {!isViSite && (
                 <button
                   onClick={() => (window.location.href = "/dashboard")}
@@ -1269,7 +1271,7 @@ export const Header = () => {
                 <p className="text-sm font-semibold text-gray-900">
                   {isViSite && viAccount
                     ? `${viAccount.firstname || ""} ${viAccount.lastname || ""}`.trim() ||
-                    "User"
+                      "User"
                     : `${user.firstname} ${user.lastname}`}
                 </p>
                 <div className="flex items-center text-gray-600 text-xs mt-0.5">

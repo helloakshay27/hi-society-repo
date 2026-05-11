@@ -21,6 +21,8 @@ interface LayoutContextType {
   setCurrentSection: (section: string) => void;
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (collapsed: boolean) => void;
+  isMobileSidebarOpen: boolean;
+  setIsMobileSidebarOpen: (open: boolean) => void;
   getLayoutByCompanyId: (companyId: number | null) => LayoutConfig;
   layoutMode: 'fm-matrix' | 'hi-society';
   toggleLayoutMode: () => void;
@@ -199,6 +201,8 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     localStorage.setItem("layoutMode", initialMode);
     return initialMode;
   });
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] =
+    useState<boolean>(false);
 
   // Toggle between FM Matrix and Hi-Society layouts
   const toggleLayoutMode = () => {
@@ -283,6 +287,11 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
       "sidebarCollapsed",
       JSON.stringify(isSidebarCollapsed)
     );
+    if (isSidebarCollapsed) {
+      document.body.classList.add("sidebar-collapsed");
+    } else {
+      document.body.classList.remove("sidebar-collapsed");
+    }
   }, [isSidebarCollapsed]);
 
   // Company ID to layout mapping function
@@ -297,6 +306,8 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
         setCurrentSection,
         isSidebarCollapsed,
         setIsSidebarCollapsed,
+        isMobileSidebarOpen,
+        setIsMobileSidebarOpen,
         getLayoutByCompanyId,
         layoutMode,
         toggleLayoutMode,

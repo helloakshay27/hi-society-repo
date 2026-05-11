@@ -29,6 +29,9 @@ import {
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
 import axios from "axios";
+import Quill from "quill";
+import "quill/dist/quill.snow.css";
+import { ClubGalleryImageUpload } from "@/components/ClubGalleryImageUpload";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -99,33 +102,20 @@ export const EditBookingSetupClubPage = () => {
 
     const coverImageRef = useRef(null);
     const bookingImageRef = useRef(null);
-    const [selectedFile, setSelectedFile] = useState<
-        {
-            id: string;
-            file: File | null;
-            _destroy: boolean;
-        }[]
-    >([]);
-    const [selectedBookingFiles, setSelectedBookingFiles] = useState<{
-        id: string;
-        file: File | null;
-        _destroy: boolean;
-    }[]>([
-        {
-            id: "",
-            file: null,
-            _destroy: false,
-        }
-    ]);
-    console.log(selectedFile.length)
-    const [existingCoverImage, setExistingCoverImage] =
-        useState<{ id: number; url: string } | null>(null);
-    const [existingBookingAttachments, setExistingBookingAttachments] = useState<
-        { id: number; url: string }[]
-    >([]);
-    const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
-    const [deletedCoverImageId, setDeletedCoverImageId] = useState<number | null>(null);
-    const [deletedBlockDayIds, setDeletedBlockDayIds] = useState<number[]>([]);
+    const descriptionQuillRef = useRef<HTMLDivElement>(null);
+    const descriptionEditorRef = useRef<Quill | null>(null);
+    const termsQuillRef = useRef<HTMLDivElement>(null);
+    const termsEditorRef = useRef<Quill | null>(null);
+    const cancellationQuillRef = useRef<HTMLDivElement>(null);
+    const cancellationEditorRef = useRef<Quill | null>(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [selectedBookingFiles, setSelectedBookingFiles] = useState([]);
+    const [imageIdsToRemove, setImageIdsToRemove] = useState([]);
+    const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+    const [selectedGalleryImages, setSelectedGalleryImages] = useState<any[]>([]);
+    const [existingGalleryImages, setExistingGalleryImages] = useState<any[]>([]);
+    const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>({});
+    const [additionalOpen, setAdditionalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>(
         {}
@@ -275,9 +265,212 @@ export const EditBookingSetupClubPage = () => {
         setSelectedFile(selectedFile.filter((_, index) => index !== indexToRemove));
     };
 
-    const removeBookingImage = (indexToRemove) => {
-        setSelectedBookingFiles(
-            selectedBookingFiles.filter((_, index) => index !== indexToRemove)
+    const handleGalleryModalOpen = () => {
+        setGalleryModalOpen(true);
+    };
+
+    const handleGalleryModalClose = () => {
+        setGalleryModalOpen(false);
+    };
+
+    const handleGalleryModalContinue = (galleryImages: any[]) => {
+        setSelectedGalleryImages(galleryImages);
+        setGalleryModalOpen(false);
+    };
+
+    const fetchBlockDaySlots = async (facilityId: string, date: string, blockIndex: number) => {
+        try {
+            const formattedDate = date.replace(/-/g, '/');
+            const response = await axios.get(
+                `https://${baseUrl}/pms/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    params: {
+                        on_date: formattedDate,
+                    }
+                }
+            );
+
+            if (response.data && response.data.slots) {
+                console.log(`Slots fetched for block day ${blockIndex}:`, response.data.slots);
+                console.log(`Sample slot IDs:`, response.data.slots.slice(0, 3).map((s: any) => ({ id: s.id, type: typeof s.id, ampm: s.ampm })));
+                setBlockDaySlots(prev => ({
+                    ...prev,
+                    [blockIndex]: response.data.slots
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching block day slots:', error);
+            setBlockDaySlots(prev => ({
+                ...prev,
+                [blockIndex]: []
+            }));
+        }
+    };
+
+    const addBlockDay = () => {
+        const newBlockDay = {
+            id: undefined,
+            startDate: "",
+            endDate: "",
+            dayType: "entireDay",
+            blockReason: "",
+            selectedSlots: [],
+        };
+        setFormData({
+            ...formData,
+            blockDays: [...formData.blockDays, newBlockDay],
+        });
+    };
+
+    console.log(formData);
+
+    useEffect(() => {
+        fetchDepartments();
+        fetchInventories();
+        fetchFacilityBookingDetails();
+    }, [id]);
+
+    // Initialize Quill editors for Description, Terms & Conditions, and Cancellation Policy
+    useEffect(() => {
+        // Description editor
+        if (descriptionQuillRef.current && !descriptionEditorRef.current) {
+            descriptionEditorRef.current = new Quill(descriptionQuillRef.current, {
+                theme: "snow",
+                placeholder: "Enter description...",
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ["bold", "italic", "underline", "strike"],
+                        ["blockquote", "code-block"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["link", "image"],
+                        ["clean"],
+                    ],
+                },
+            });
+
+            if (formData.description) {
+                descriptionEditorRef.current.root.innerHTML = formData.description;
+            }
+
+            descriptionEditorRef.current.on("text-change", () => {
+                const html = descriptionEditorRef.current?.root.innerHTML;
+                const sanitized = html && html !== '<p><br></p>' ? html : "";
+                setFormData((prev) => ({ ...prev, description: sanitized }));
+            });
+        }
+
+        // Terms & Conditions editor
+        if (termsQuillRef.current && !termsEditorRef.current) {
+            termsEditorRef.current = new Quill(termsQuillRef.current, {
+                theme: "snow",
+                placeholder: "Enter terms and conditions...",
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ["bold", "italic", "underline", "strike"],
+                        ["blockquote", "code-block"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["link", "image"],
+                        ["clean"],
+                    ],
+                },
+            });
+
+            if (formData.termsConditions) {
+                termsEditorRef.current.root.innerHTML = formData.termsConditions;
+            }
+
+            termsEditorRef.current.on("text-change", () => {
+                const html = termsEditorRef.current?.root.innerHTML;
+                const sanitized = html && html !== '<p><br></p>' ? html : "";
+                setFormData((prev) => ({ ...prev, termsConditions: sanitized }));
+            });
+        }
+
+        // Cancellation Policy editor
+        if (cancellationQuillRef.current && !cancellationEditorRef.current) {
+            cancellationEditorRef.current = new Quill(cancellationQuillRef.current, {
+                theme: "snow",
+                placeholder: "Enter cancellation policy...",
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ["bold", "italic", "underline", "strike"],
+                        ["blockquote", "code-block"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["link"],
+                        ["clean"],
+                    ],
+                },
+            });
+
+            if (formData.cancellationText) {
+                cancellationEditorRef.current.root.innerHTML = formData.cancellationText;
+            }
+
+            cancellationEditorRef.current.on("text-change", () => {
+                const html = cancellationEditorRef.current?.root.innerHTML;
+                const sanitized = html && html !== '<p><br></p>' ? html : "";
+                setFormData((prev) => ({ ...prev, cancellationText: sanitized }));
+            });
+        }
+
+        return () => {
+            // Cleanup not strictly necessary for Quill; if required, set refs to null here
+        };
+    }, []);
+
+    // Sync updates from formData to editors (useful if formData is pre-filled)
+    useEffect(() => {
+        if (descriptionEditorRef.current && formData.description !== (descriptionEditorRef.current.root.innerHTML || "")) {
+            descriptionEditorRef.current.root.innerHTML = formData.description || "";
+        }
+    }, [formData.description]);
+
+    useEffect(() => {
+        if (termsEditorRef.current && formData.termsConditions !== (termsEditorRef.current.root.innerHTML || "")) {
+            termsEditorRef.current.root.innerHTML = formData.termsConditions || "";
+        }
+    }, [formData.termsConditions]);
+
+    useEffect(() => {
+        if (cancellationEditorRef.current && formData.cancellationText !== (cancellationEditorRef.current.root.innerHTML || "")) {
+            cancellationEditorRef.current.root.innerHTML = formData.cancellationText || "";
+        }
+    }, [formData.cancellationText]);
+
+    const handleCoverImageChange = (e) => {
+        const file = e.target.files?.[0] || null;
+        if (file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            if (!["image/png", "image/jpeg"].includes(file.type)) {
+                toast.error("Only PNG or JPEG files are allowed");
+                return;
+            }
+            if (file.size > maxSize) {
+                toast.error("File size must not exceed 5MB");
+                return;
+            }
+        }
+        setSelectedFile(file);
+    };
+
+    const handleBookingImageChange = (e) => {
+        const files = Array.from(e.target.files || []).map(file => ({
+            file,
+            id: null
+        }));
+        setSelectedBookingFiles((prevFiles) => [...prevFiles, ...files]);
+    };
+
+    const handleRemoveBookingImage = (index, imageId) => {
+        setSelectedBookingFiles((prevFiles) =>
+            prevFiles.filter((_, i) => i !== index)
         );
     };
 
@@ -1714,10 +1907,447 @@ export const EditBookingSetupClubPage = () => {
                                     <label htmlFor="request">Request</label>
                                 </div>
 
-                                <div className="">
-                                    <div className="flex items-center gap-2">
-                                        <Switch
-                                            checked={formData.addSubFacility}
+
+                    {/* Charge Setup Card */}
+                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <DollarSign className="w-4 h-4" />
+                            </div>
+                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CHARGE SETUP</h3>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full border">
+                                <thead>
+                                    <tr className="bg-gray-50">
+                                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
+                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
+                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border border-gray-300 px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    checked={!!formData.chargeSetup.member.selected}
+                                                    onCheckedChange={(checked) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            chargeSetup: {
+                                                                ...formData.chargeSetup,
+                                                                member: {
+                                                                    ...formData.chargeSetup.member,
+                                                                    selected: !!checked,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
+                                                />
+                                                <span>Member</span>
+                                            </div>
+                                        </td>
+                                        <td className="border border-gray-300 px-4 py-3">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Checkbox
+                                                    checked={!!formData.chargeSetup.member.adult}
+                                                    onChange={(e) => {
+                                                        if (!e.target.checked) {
+                                                            setFormData({
+                                                                ...formData,
+                                                                chargeSetup: {
+                                                                    ...formData.chargeSetup,
+                                                                    member: {
+                                                                        ...formData.chargeSetup.member,
+                                                                        adult: "",
+                                                                    },
+                                                                },
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                <TextField
+                                                    size="small"
+                                                    variant="outlined"
+                                                    value={formData.chargeSetup.member.adult}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            chargeSetup: {
+                                                                ...formData.chargeSetup,
+                                                                member: {
+                                                                    ...formData.chargeSetup.member,
+                                                                    adult: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
+                                                    className="w-full max-w-[200px]"
+                                                />
+                                            </div>
+                                        </td>
+                                        <td className="border border-gray-300 px-4 py-3">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Checkbox
+                                                    checked={!!formData.chargeSetup.member.child}
+                                                    onChange={(e) => {
+                                                        if (!e.target.checked) {
+                                                            setFormData({
+                                                                ...formData,
+                                                                chargeSetup: {
+                                                                    ...formData.chargeSetup,
+                                                                    member: {
+                                                                        ...formData.chargeSetup.member,
+                                                                        child: "",
+                                                                    },
+                                                                },
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                <TextField
+                                                    size="small"
+                                                    variant="outlined"
+                                                    value={formData.chargeSetup.member.child}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            chargeSetup: {
+                                                                ...formData.chargeSetup,
+                                                                member: {
+                                                                    ...formData.chargeSetup.member,
+                                                                    child: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
+                                                    className="w-full max-w-[200px]"
+                                                />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-gray-300 px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    checked={!!formData.chargeSetup.guest.selected}
+                                                    onCheckedChange={(checked) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            chargeSetup: {
+                                                                ...formData.chargeSetup,
+                                                                guest: {
+                                                                    ...formData.chargeSetup.guest,
+                                                                    selected: !!checked,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
+                                                />
+                                                <span>Guest</span>
+                                            </div>
+                                        </td>
+                                        <td className="border border-gray-300 px-4 py-3">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Checkbox
+                                                    checked={!!formData.chargeSetup.guest.adult}
+                                                    onChange={(e) => {
+                                                        if (!e.target.checked) {
+                                                            setFormData({
+                                                                ...formData,
+                                                                chargeSetup: {
+                                                                    ...formData.chargeSetup,
+                                                                    guest: {
+                                                                        ...formData.chargeSetup.guest,
+                                                                        adult: "",
+                                                                    },
+                                                                },
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                <TextField
+                                                    size="small"
+                                                    variant="outlined"
+                                                    value={formData.chargeSetup.guest.adult}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            chargeSetup: {
+                                                                ...formData.chargeSetup,
+                                                                guest: {
+                                                                    ...formData.chargeSetup.guest,
+                                                                    adult: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
+                                                    className="w-full max-w-[200px]"
+                                                />
+                                            </div>
+                                        </td>
+                                        <td className="border border-gray-300 px-4 py-3">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Checkbox
+                                                    checked={!!formData.chargeSetup.guest.child}
+                                                    onChange={(e) => {
+                                                        if (!e.target.checked) {
+                                                            setFormData({
+                                                                ...formData,
+                                                                chargeSetup: {
+                                                                    ...formData.chargeSetup,
+                                                                    guest: {
+                                                                        ...formData.chargeSetup.guest,
+                                                                        child: "",
+                                                                    },
+                                                                },
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                <TextField
+                                                    size="small"
+                                                    variant="outlined"
+                                                    value={formData.chargeSetup.guest.child}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            chargeSetup: {
+                                                                ...formData.chargeSetup,
+                                                                guest: {
+                                                                    ...formData.chargeSetup.guest,
+                                                                    child: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
+                                                    className="w-full max-w-[200px]"
+                                                />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                            <div className="flex items-center gap-3">
+                                <label className="text-sm font-semibold whitespace-nowrap">Minimum Person Allowed</label>
+                                <TextField
+                                    size="small"
+                                    variant="outlined"
+                                    value={formData.chargeSetup.minimumPersonAllowed}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            chargeSetup: {
+                                                ...formData.chargeSetup,
+                                                minimumPersonAllowed: e.target.value,
+                                            },
+                                        })
+                                    }
+                                    className="w-32"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <label className="text-sm font-semibold whitespace-nowrap">Maximum Person Allowed</label>
+                                <TextField
+                                    size="small"
+                                    variant="outlined"
+                                    value={formData.chargeSetup.maximumPersonAllowed}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            chargeSetup: {
+                                                ...formData.chargeSetup,
+                                                maximumPersonAllowed: e.target.value,
+                                            },
+                                        })
+                                    }
+                                    className="w-32"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <CalendarDays className="w-4 h-4" />
+                            </div>
+                            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Facility Operational Timings & Booking</h3>
+                        </div>
+                        <div>
+                            <Button
+                                onClick={addSlot}
+                                className="bg-purple-600 hover:bg-purple-700 mb-4"
+                            >
+                                Add
+                            </Button>
+                            <div className="grid grid-cols-4 gap-2 mb-2 text-sm font-medium text-gray-600">
+                                <div>Start Time</div>
+                                {/* <div>Break Time Start</div>
+                                <div>Break Time End</div> */}
+                                <div>End Time</div>
+                                <div>Concurrent Slots</div>
+                                <div>Slot by</div>
+                                {/* <div>Wrap Time</div> */}
+                            </div>
+                            {formData.slots.map((slot, index) => (
+                                <div key={index} className="grid grid-cols-4 gap-2 mb-2">
+                                    <div className="flex gap-1">
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.startTime.hour}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].startTime.hour = e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 24 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.startTime.minute}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].startTime.minute = e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 60 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </div>
+                                    {/* <div className="flex gap-1">
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.breakTimeStart.hour}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].breakTimeStart.hour =
+                                                        e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 24 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.breakTimeStart.minute}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].breakTimeStart.minute =
+                                                        e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 60 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.breakTimeEnd.hour}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].breakTimeEnd.hour = e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 24 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.breakTimeEnd.minute}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].breakTimeEnd.minute =
+                                                        e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 60 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </div> */}
+                                    <div className="flex gap-1">
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.endTime.hour}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].endTime.hour = e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 24 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl size="small">
+                                            <Select
+                                                value={slot.endTime.minute}
+                                                onChange={(e) => {
+                                                    const newSlots = [...formData.slots];
+                                                    newSlots[index].endTime.minute = e.target.value;
+                                                    setFormData({ ...formData, slots: newSlots });
+                                                }}
+                                            >
+                                                {Array.from({ length: 60 }, (_, i) => (
+                                                    <MenuItem key={i} value={i.toString()}>
+                                                        {i.toString().padStart(2, "0")}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </div>
+                                    <TextField
+                                        size="small"
+                                        value={slot.concurrentSlots}
+                                        onChange={(e) => {
+                                            const newSlots = [...formData.slots];
+                                            newSlots[index].concurrentSlots = e.target.value;
+                                            setFormData({ ...formData, slots: newSlots });
+                                        }}
+                                        variant="outlined"
+                                    />
+                                    <FormControl size="small">
+                                        <Select
+                                            value={slot.slotBy}
                                             onChange={(e) => {
                                                 if (
                                                     e.target.checked &&
@@ -4440,13 +5070,14 @@ export const EditBookingSetupClubPage = () => {
                         </div>
 
                         <div>
-                            <Textarea
-                                placeholder="Enter description"
-                                value={formData.description}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, description: e.target.value })
-                                }
-                                className="min-h-[100px]"
+                            <div
+                                ref={descriptionQuillRef}
+                                style={{
+                                    backgroundColor: "#fff",
+                                    borderRadius: "6px",
+                                    border: "1px solid #ccc",
+                                    minHeight: "200px",
+                                }}
                             />
                         </div>
                     </div>
@@ -4464,16 +5095,14 @@ export const EditBookingSetupClubPage = () => {
                             </div>
 
                             <div>
-                                <Textarea
-                                    placeholder="Enter terms and conditions"
-                                    value={formData.termsConditions}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            termsConditions: e.target.value,
-                                        })
-                                    }
-                                    className="min-h-[100px]"
+                                <div
+                                    ref={termsQuillRef}
+                                    style={{
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        border: "1px solid #ccc",
+                                        minHeight: "200px",
+                                    }}
                                 />
                             </div>
                         </div>
@@ -4596,16 +5225,14 @@ export const EditBookingSetupClubPage = () => {
                             <div className="font-medium text-gray-700">
                                 Cancellation Policy <span>*</span>
                             </div>
-                            <Textarea
-                                placeholder="Enter cancellation text"
-                                value={formData.cancellationText}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        cancellationText: e.target.value,
-                                    })
-                                }
-                                className="min-h-[100px]"
+                            <div
+                                ref={cancellationQuillRef}
+                                style={{
+                                    backgroundColor: "#fff",
+                                    borderRadius: "6px",
+                                    border: "1px solid #ccc",
+                                    minHeight: "200px",
+                                }}
                             />
                         </div>
                     </div>

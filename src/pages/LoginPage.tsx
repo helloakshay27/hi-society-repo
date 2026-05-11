@@ -246,13 +246,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   };
 
   const handleEmailSubmit = async () => {
-    if (!email) {
-      toast.error("Please enter your email address.");
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      toast.error("Please enter a valid email address.");
+    const validation = validateEmailOrMobile(email);
+    if (!validation.isValid) {
+      toast.error(validation.message);
       return;
     }
 
@@ -629,14 +625,14 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           htmlFor="email"
           className="text-gray-700 font-medium text-base block mb-2"
         >
-          Email Address
+          Email Address or Mobile Number
         </Label>
 
         {/* Input Field */}
         <TextField
           variant="outlined"
-          placeholder="Enter your email address"
-          type="email"
+          placeholder="Enter email or mobile number"
+          type="text"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && handleEmailSubmit()}
@@ -703,7 +699,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         )}
       </div>
       <p className="text-grey-300 text-sm mb-6 ">
-        Email: <span className="text-grey-500 font-bold">{email}</span>
+        Email / Mobile: <span className="text-grey-500 font-bold">{email}</span>
       </p>
 
       <p className="text-gray-500 text-sm">

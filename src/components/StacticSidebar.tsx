@@ -106,6 +106,10 @@ const navigationStructure = {
             href: "/settings/company-hub/team-setup",
           },
           {
+            name: "Face Authentication",
+            href: "/settings/company-hub/face-authentication",
+          },
+          {
             name: "Jobs",
             href: "/settings/company-hub/jobs",
           },
@@ -896,7 +900,11 @@ const modulesByPackage = {
       icon: FileText,
       href: "/utility/utility-request",
     },
-    // { name: 'Utility Consumption', icon: BarChart3, href: '/utility/utility-consumption' },
+    {
+      name: "Utility Consumption",
+      icon: BarChart3,
+      href: "/utility/utility-consumption",
+    },
     { name: "EV Consumption", icon: Car, href: "/utility/ev-consumption" },
     { name: "Solar Generator", icon: Sun, href: "/utility/solar-generator" },
   ],
@@ -1531,6 +1539,10 @@ const modulesByPackage = {
           href: "/settings/company-hub/team-setup",
         },
         {
+          name: "Face Authentication",
+          href: "/settings/company-hub/face-authentication",
+        },
+        {
           name: "Jobs",
           href: "/settings/company-hub/jobs",
         },
@@ -1945,6 +1957,7 @@ export const StacticSidebar = () => {
     setCurrentSection,
     isSidebarCollapsed,
     setIsSidebarCollapsed,
+    isMobileSidebarOpen,
   } = useLayout();
   const user = getUser();
   const assetRestricted = isAssetRestrictedUser(user);
@@ -2368,7 +2381,7 @@ export const StacticSidebar = () => {
     <div
       className={`${
         isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB]  fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40 ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       style={{ top: "4rem", height: "calc(100vh - 65px)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>

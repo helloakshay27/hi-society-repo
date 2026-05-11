@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -717,6 +718,7 @@ import { EmailRuleSetupPage } from "./pages/maintenance/EmailRuleSetupPage";
 import { TaskEscalationPage } from "./pages/maintenance/TaskEscalationPage";
 import { TicketManagementSetupPage } from "./pages/maintenance/TicketManagementSetupPage";
 import { MobileTicketsPage } from "./pages/mobile/MobileTicketsPage";
+import { MobileNewTicketPage } from "./pages/mobile/MobileNewTicketPage";
 import { TicketListPage } from "./pages/TicketListPage";
 import { MobileRestaurantPage } from "./pages/mobile/MobileRestaurantPage";
 import { MobileAssetPage } from "./pages/mobile/MobileAssetPage";
@@ -794,6 +796,7 @@ import DetailsVendorPage from "./pages/DetailsVendorPage";
 import { EditPODashboard } from "./pages/EditPODashboard";
 import { EditWODashboard } from "./pages/EditWODashboard";
 import GateNumberPage from "./pages/master/GateNumberPage";
+import FieldsSetupPage from "./pages/master/FieldsSetupPage";
 import GatePassTypePage from "./pages/master/GatePassTypePage";
 import InventoryTypePage from "./pages/master/InventoryTypePage";
 import InventorySubTypePage from "./pages/master/InventorySubTypePage";
@@ -3141,7 +3144,6 @@ function App() {
                             path="/master/plant-detail"
                             element={<PlantDetailSetupPage />}
                           />
-
                           {/* CRM Routes */}
                           <Route path="/crm/campaign" element={<CRMCampaignPage />} />
                           <Route path="/crm/campaign/add" element={<AddLeadPage />} />
@@ -3557,6 +3559,10 @@ function App() {
                             path="/accounting/tax-setup"
                             element={<TaxSetup />}
                           />
+                           <Route
+                            path="/accounting/tax-setup-tab"
+                            element={<TaxSetupTabView />}
+                          />
                           <Route
                             path="/accounting/charge-setup"
                             element={<ChargeSetupDashboard />}
@@ -3720,7 +3726,7 @@ function App() {
                           />
                           <Route
                             path="/accounting/bills/edit/:id"
-                            element={<BillCreatePage />}
+                            element={<BillEdit />}
                           />
 
                           {/* Recurring Bills Routes */}
@@ -3732,7 +3738,6 @@ function App() {
                             path="/accounting/recurring-bills/create"
                             element={<RecurringBillCreatePage />}
                           />
-
                           {/* Expense Routes */}
                           <Route
                             path="/accounting/expense"
@@ -3748,7 +3753,7 @@ function App() {
                           />
                           <Route
                             path="/accounting/expense/edit/:id"
-                            element={<ExpenseCreatePage />}
+                            element={<ExpenseEditPage />}
                           />
 
                           <Route
@@ -3907,7 +3912,6 @@ function App() {
                             path="/transitioning/hoto"
                             element={<HOTODashboard />}
                           />
-
                           <Route
                             path="/maintenance/task/details/:id"
                             element={<TaskDetailsPage />}
