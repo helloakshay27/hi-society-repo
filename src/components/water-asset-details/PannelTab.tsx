@@ -1,13 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import {
-  X,
-  Plus,
-  Upload,
-  Filter,
-  AlertCircle,
-  Trash2,
-  FileText,
-} from "lucide-react";
+import { X, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SelectionAction {
@@ -26,6 +18,7 @@ interface SelectionPanelProps {
   onClearSelection?: () => void;
   subtitle?: string | null;
   loading?: boolean;
+  className?: string;
 }
 
 export const SelectionPanel: React.FC<SelectionPanelProps> = ({
@@ -37,6 +30,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   onClearSelection,
   subtitle,
   loading,
+  className = "",
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -58,64 +52,64 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
     ...(onImport ? [{ label: "Import", icon: Upload, onClick: onImport }] : []),
     ...actions,
   ];
+  const panelSubtitle = subtitle ?? "";
 
   return (
     <div
-      className="selection-panel bg-white"
-      style={{ top: "50%", left: "30%", width: "max-content", height: "105px" }}
+      className={`selection-panel bg-white ${className}`}
       ref={panelRef}
     >
-      <div
-        className="flex items-center w-full pr-4 md:pr-6"
-        style={{ minHeight: "105px" }}
-      >
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="text-[#C72030] bg-[#C4B89D] rounded-lg w-[44px] flex-shrink-0 flex items-center justify-center text-xs font-bold self-stretch">
-            A
-          </div>
-          <div className="flex flex-col justify-center px-2 md:px-3 py-2">
-            <span className="text-[16px] font-semibold text-[#1A1A1A] whitespace-nowrap leading-none">
-              Actions
-            </span>
-            {subtitle && (
-              <span className="text-[10px] sm:text-[12px] font-medium text-[#6B7280] whitespace-nowrap leading-tight mt-1">
-                {subtitle}
-              </span>
-            )}
-          </div>
+      <div className="flex items-stretch w-full min-h-[105px]">
+        <div className="w-11 flex-shrink-0 bg-[#C4B89D] flex items-center justify-center">
+          <span className="text-[#C72030] text-xs font-bold">
+            {addLabel?.trim()?.[0]?.toUpperCase() || "A"}
+          </span>
         </div>
 
-        <div className="flex items-center ml-2 md:ml-8 gap-1 md:gap-4 flex-wrap md:flex-nowrap flex-1">
-          {defaultActions.map((action, index) => {
-            const Icon = action.label.toLowerCase().includes('qr') ? Plus : action.icon;
-            return (
-              <Button
-                key={index}
-                variant="ghost"
-                size="sm"
-                onClick={action.onClick}
-                disabled={action.loading}
-                className="text-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center h-auto p-2 disabled:opacity-50"
-                style={{ width: "60px", height: "70px" }}
-              >
-                <Icon className="w-5 h-5 mb-1" />
-                <span className="text-xs font-medium text-center leading-tight">
-                  {action.label}
-                </span>
-              </Button>
-            );
-          })}
+        <div className="flex items-center min-w-0">
+          <div className="w-[190px] px-6">
+            <div className="text-[16px] font-semibold text-[#1A1A1A] leading-tight">
+              Actions
+            </div>
+            {panelSubtitle && (
+              <div className="mt-1 text-[13px] font-medium text-[#6B7280] leading-tight whitespace-nowrap">
+                {panelSubtitle}
+              </div>
+            )}
+          </div>
 
-          <div className="w-px h-12 bg-gray-300 mx-1 md:mx-2"></div>
+          <div className="flex items-center gap-8 px-4">
+            {defaultActions.map((action, index) => {
+              const Icon = action.label.toLowerCase().includes("qr")
+                ? Plus
+                : action.icon;
+              return (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="sm"
+                  onClick={action.onClick}
+                  disabled={action.loading}
+                  className="w-[74px] h-[76px] p-0 text-gray-700 hover:bg-gray-50 flex flex-col items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <Icon className="w-5 h-5 text-black" />
+                  <span className="text-[13px] font-semibold text-[#4B5563] text-center leading-tight">
+                    {action.label}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+
+          <div className="w-px h-12 bg-gray-300 mx-3" />
 
           <Button
             variant="ghost"
             size="icon"
             onClick={onClearSelection}
-            className="text-gray-600 hover:bg-gray-100 flex items-center justify-center"
-            style={{ width: "40px", height: "40px" }}
+            className="w-12 h-12 mr-5 text-black hover:bg-gray-50 flex items-center justify-center"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
       </div>

@@ -1110,6 +1110,7 @@ export const SurveyMappingDashboard = () => {
 
       {showActionPanel && (
         <SelectionPanel
+          className="selection-panel--center"
           actions={[
             {
               label: "User QR Setup",

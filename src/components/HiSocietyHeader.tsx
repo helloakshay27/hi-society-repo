@@ -16,6 +16,7 @@ import {
   ChartArea,
   ChartAreaIcon,
   Shield,
+  Menu,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -71,7 +72,7 @@ export const HiSocietyHeader = () => {
   const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
 
   // Layout mode
-  const { layoutMode, toggleLayoutMode } = useLayout();
+  const { layoutMode, toggleLayoutMode, isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
 
   const currentPath = window.location.pathname;
 
@@ -361,9 +362,17 @@ export const HiSocietyHeader = () => {
   const tempSwitchToEmployee = tempType === "pms_organization_admin";
 
   return (
-    <header className="h-16 bg-white border-b border-[#D5DbDB] fixed top-0 right-0 left-0 z-20 w-full shadow-sm">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="flex align-items-center gap-14">
+    <header className="h-16 bg-white border-b border-[#D5DbDB] fixed top-0 right-0 left-0 z-50 w-full shadow-sm">
+      <div className="flex items-center justify-between h-full px-4 md:px-6">
+        <div className="flex items-center gap-3 md:gap-14">
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden p-2 rounded-md hover:bg-[#f6f4ee] text-[#1a1a1a]"
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           {isOmanSite ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
