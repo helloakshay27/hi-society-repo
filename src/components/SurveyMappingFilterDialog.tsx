@@ -16,6 +16,7 @@ import {
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 interface SurveyMappingFilterDialogProps {
   isOpen: boolean;
@@ -50,6 +51,36 @@ interface SurveyTitleOption {
   name: string;
 }
 
+interface SocietyItem {
+  id: number;
+  building_name: string;
+  url: string;
+  address1: string;
+  address2: string;
+  area: string;
+  postcode: number;
+  city: string;
+  latitude: null;
+  longitude: null;
+  state: string;
+  country: string;
+}
+
+interface SocietyItem {
+  id: number;
+  building_name: string;
+  url: string;
+  address1: string;
+  address2: string;
+  area: string;
+  postcode: number;
+  city: string;
+  latitude: null;
+  longitude: null;
+  state: string;
+  country: string;
+}
+
 const fieldStyles = {
   height: { xs: 28, sm: 36, md: 45 },
   "& .MuiInputBase-input, & .MuiSelect-select": {
@@ -81,6 +112,8 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 }) => {
   const [surveyTitle, setSurveyTitle] = useState("");
   const [surveyTitles, setSurveyTitles] = useState<SurveyTitleOption[]>([]);
+  const [selectedSociety, setSelectedSociety] = useState("");
+  const [societies, setSocieties] = useState<SocietyItem[]>([]);
   const [selectedSite, setSelectedSite] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedWing, setSelectedWing] = useState("");
@@ -109,6 +142,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
   // Fetch sites and survey titles on component mount
   useEffect(() => {
+    fetchSocieties();
     fetchSites();
     fetchSurveyTitles();
     fetchTowers();
@@ -131,6 +165,20 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
       setSelectedRoom("");
     }
   }, [selectedSite]);
+
+  // Reset towers when society changes
+  useEffect(() => {
+    if (selectedSociety) {
+      fetchTowersForSociety(selectedSociety);
+    } else {
+      setTowers([]);
+      setSelectedTower("");
+      setFlats([]);
+      setSelectedFlat("");
+      setUsers([]);
+      setSelectedUser("");
+    }
+  }, [selectedSociety]);
 
   // Fetch wings when building changes
   useEffect(() => {
@@ -226,6 +274,57 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
   }, [selectedFlat]);
 
   // New: fetch flats when tower (selectedSiteTower) changes - we'll use selectedSite variable for tower id mapping in this component
+
+  // Fetch societies from current user's company
+  const fetchSocieties = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get company ID from accounts API using apiClient
+      const accountResponse = await apiClient.get("/api/users/account.json");
+      const companyId = accountResponse.data?.society?.company_id;
+      
+      if (!companyId) {
+        console.error("No company_id found in account data", accountResponse.data);
+        toast.error("Company information not found in account", { duration: 3000 });
+        return;
+      }
+      
+      console.log("Fetching societies for company_id:", companyId);
+      
+      // Fetch societies using company_id
+      const societiesResponse = await apiClient.get(`/api/societies/search.json?q[company_id_eq]=${companyId}`);
+      const societiesArray = societiesResponse.data?.societies || [];
+      
+      console.log("Fetched societies:", societiesArray);
+      setSocieties(societiesArray);
+      
+      if (societiesArray.length === 0) {
+        toast.warning("No societies found for your account", { duration: 3000 });
+      }
+    } catch (error) {
+      console.error("Error fetching societies:", error);
+      toast.error("Failed to fetch societies. Please try again.", { duration: 5000 });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch towers for a specific society
+  const fetchTowersForSociety = async (societyId: string) => {
+    try {
+      setIsLoading(true);
+      if (!societyId) return;
+      const response = await apiClient.get(`/get_society_blocks.json?society_id=${societyId}`);
+      const towersArray = response.data?.society_blocks || [];
+      setTowers(towersArray);
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to fetch towers");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchSites = async () => {
     try {
@@ -456,6 +555,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
       // per_page and page are default sample values, caller can adjust as needed
       params.push("per_page=10");
       params.push("page=1");
+      if (selectedSociety) params.push(`q[site_id_eq]=${selectedSociety}`);
       if (surveyTitle) params.push(`q[survey_id_eq]=${surveyTitle}`);
       if (selectedTower) params.push(`q[building_id_eq]=${selectedTower}`);
       if (selectedFlat) params.push(`q[wing_id_eq]=${selectedFlat}`);
@@ -464,9 +564,9 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
       const mappingListQuery = `/survey_mappings/mappings_list.json?${params.join("&")}`;
 
       const filters: SurveyMappingFilters = {
-        surveyTitle: surveyTitle.trim() || undefined,
+        surveyTitle: typeof surveyTitle === 'string' ? surveyTitle.trim() : undefined,
         // keep existing hierarchical fields if used elsewhere
-        siteIds: selectedSite ? [selectedSite] : undefined,
+        siteIds: selectedSociety ? [selectedSociety] : selectedSite ? [selectedSite] : undefined,
         buildingIds: selectedBuilding ? [selectedBuilding] : undefined,
         wingIds: selectedWing ? [selectedWing] : undefined,
         floorIds: selectedFloor ? [selectedFloor] : undefined,
@@ -493,6 +593,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
   const handleClear = () => {
     setSurveyTitle("");
+    setSelectedSociety("");
     setSelectedSite("");
     setSelectedBuilding("");
     setSelectedWing("");
@@ -540,6 +641,35 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Society Selection Section */}
+          {/* <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Society
+            </h3>
+            <div className="grid grid-cols-1 gap-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Select Society</InputLabel>
+                <MuiSelect
+                  value={selectedSociety}
+                  onChange={(e) => setSelectedSociety(e.target.value)}
+                  label="Select Society"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">
+                    <em>Select Society</em>
+                  </MenuItem>
+                  {societies.map((society) => (
+                    <MenuItem key={society.id} value={society.id.toString()}>
+                      {society.building_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
+          </div> */}
+
           {/* Survey Details Section */}
           <div>
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
@@ -574,6 +704,29 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
               Location Hierarchy
             </h3>
+            {/* Society Selection */}
+            <div className="grid grid-cols-1 gap-6 mb-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Select Society</InputLabel>
+                <MuiSelect
+                  value={selectedSociety}
+                  onChange={(e) => setSelectedSociety(e.target.value)}
+                  label="Select Society"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">
+                    <em>Select Society</em>
+                  </MenuItem>
+                  {societies.map((society) => (
+                    <MenuItem key={society.id} value={society.id.toString()}>
+                      {society.building_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
             <div className="grid grid-cols-3 gap-6">
               {/* Tower Selection (mapped to building_id_eq) */}
               <FormControl fullWidth variant="outlined">
@@ -622,7 +775,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
               {/* User Selection (mapped to user_society_id_eq) */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>User</InputLabel>
+                <InputLabel shrink>Customer</InputLabel>
                 <MuiSelect
                   value={selectedUser}
                   onChange={(e) => setSelectedUser(e.target.value)}
@@ -633,7 +786,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
                   disabled={!selectedFlat}
                 >
                   <MenuItem value="">
-                    <em>Select User</em>
+                    <em>Select Customer</em>
                   </MenuItem>
                   {users.map((u) => (
                     <MenuItem key={u.id} value={u.id.toString()}>

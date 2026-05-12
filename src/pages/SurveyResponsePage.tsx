@@ -1232,7 +1232,7 @@ export const SurveyResponsePage = () => {
       },
       {
         key: "user_names",
-        label: "User",
+        label: "Customer",
         sortable: true,
         draggable: true,
         defaultVisible: true,

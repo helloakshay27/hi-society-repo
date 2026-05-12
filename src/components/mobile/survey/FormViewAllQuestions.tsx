@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { SurveyQuestion, SurveyOption, SurveyAnswers } from "./types";
 import { MultipleChoiceQuestion } from "./MultipleChoiceQuestion";
 import { StarRatingQuestion } from "./StarRatingQuestion";
@@ -25,6 +25,41 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
     finalComment,
     onFinalCommentChange,
 }) => {
+    const [showPreview, setShowPreview] = useState(false);
+
+    // Helper function to format answer for preview display
+    const formatAnswerForPreview = (question: SurveyQuestion, answer: any) => {
+        if (!answer) return "Not answered";
+        
+        switch (question.qtype) {
+            case "multiple":
+                return answer.selectedOptions?.map((opt: SurveyOption) => opt.qname).join(", ") || "Not answered";
+            case "rating":
+                return answer.rating ? `${answer.rating} stars` : "Not answered";
+            case "emoji":
+            case "smiley":
+                return answer.emoji && answer.label ? `${answer.emoji} ${answer.label}` : "Not answered";
+            case "numeric":
+                return answer.rating ? answer.rating : "Not answered";
+            case "input":
+            case "input_box":
+            case "text":
+            case "description":
+                return answer.value || "Not answered";
+            default:
+                return "Not answered";
+        }
+    };
+
+    // Handle preview instead of direct submission
+    const handlePreviewSubmit = () => {
+        setShowPreview(true);
+    };
+
+    // Handle final submission after preview
+    const handleFinalSubmit = () => {
+        onSubmit();
+    };
     const handleMultipleChoice = (questionId: number, option: SurveyOption) => {
         onAnswerChange(questionId, {
             qtype: "multiple",
@@ -115,7 +150,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                         {/* Question Header */}
                         <div className="mb-4">
                             <div className="flex items-start justify-between mb-2">
-                                <h3 className="text-lg font-semibold text-gray-800 flex-1">
+                                <h3 className="text-sm text-gray-800 flex-1">
                                     {index + 1}. {question.descr}
                                     {question.quest_mandatory && (
                                         <span className="text-red-500 ml-1">*</span>
@@ -170,7 +205,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                                     value={answer?.value?.toString() || ""}
                                     onChange={(e) => handleTextChange(question.id, e.target.value, "input")}
                                     placeholder="Enter your answer..."
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             )}
 
@@ -181,7 +216,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                                     value={answer?.value?.toString() || ""}
                                     onChange={(e) => handleTextChange(question.id, e.target.value, "input_box")}
                                     placeholder="Enter your response..."
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             )}
 
@@ -191,7 +226,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                                     value={answer?.value?.toString() || ""}
                                     onChange={(e) => handleTextChange(question.id, e.target.value, "text")}
                                     placeholder="Please enter your comments..."
-                                    className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    className="w-full h-32 p-3 text-base border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             )}
 
@@ -203,7 +238,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                                         handleTextChange(question.id, e.target.value, "description")
                                     }
                                     placeholder="Enter your description..."
-                                    className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    className="w-full h-32 p-3 text-base border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             )}
                         </div>
@@ -214,7 +249,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             {/* Final Comments Section */}
             <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-md">
                 <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    <h3 className="text-sm text-gray-800 mb-2">
                         Additional Comments (Optional)
                     </h3>
                     <p className="text-sm text-gray-600">
@@ -225,7 +260,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                     value={finalComment}
                     onChange={(e) => onFinalCommentChange(e.target.value)}
                     placeholder="Please share your thoughts..."
-                    className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full h-32 p-3 text-base border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
             </div>
 
@@ -233,20 +268,94 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg">
                 <button
                     type="button"
-                    onClick={onSubmit}
+                    onClick={handlePreviewSubmit}
                     disabled={!isFormValid() || isSubmitting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
+                    className="w-full bg-[#B88B15] hover:bg-[#B88B15] disabled:bg-gray-400 text-white py-3 px-4 rounded-lg text-base font-semibold transition-colors disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? (
                         <div className="flex items-center justify-center">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Submitting...
+                            <span className="text-base">Submiting...</span>
                         </div>
                     ) : (
-                        "Submit Survey"
+                        "Preview Survey"
                     )}
                 </button>
             </div>
+
+            {/* Preview Modal */}
+            {showPreview && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                        {/* Header */}
+                        <div className="bg-gray-50 px-4 py-3 border-b">
+                            <h2 className="text-lg font-semibold text-gray-800">Survey Preview</h2>
+                            <p className="text-sm text-gray-600">Please review your answers before submitting</p>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-4">
+                            <div className="space-y-4">
+                                {questions.map((question, index) => {
+                                    const answer = answers[question.id];
+                                    return (
+                                        <div key={question.id} className="bg-gray-50 rounded-lg p-3">
+                                            <div className="flex items-start">
+                                                <span className="font-medium text-gray-800 mr-2">{index + 1}.</span>
+                                                <div className="flex-1">
+                                                    <h3 className="font-medium text-gray-800">
+                                                        {question.descr}
+                                                        {question.quest_mandatory && (
+                                                            <span className="text-red-500 ml-1">*</span>
+                                                        )}
+                                                    </h3>
+                                                    <div className="mt-1 text-sm text-gray-600">
+                                                        {formatAnswerForPreview(question, answer)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                
+                                {/* Final Comments */}
+                                {finalComment && (
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <h3 className="font-medium text-gray-800 mb-1">Additional Comments</h3>
+                                        <p className="text-sm text-gray-600">{finalComment}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="bg-gray-50 px-4 py-3 border-t flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowPreview(false)}
+                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg font-medium transition-colors"
+                            >
+                                Back to Edit
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleFinalSubmit}
+                                disabled={isSubmitting}
+                                className="flex-1 bg-[#B88B15] hover:bg-[#B88B15] disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting ? (
+                                    <div className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        <span className="text-base">Submiting...</span>
+                                    </div>
+                                ) : (
+                                    "Submit Survey"
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

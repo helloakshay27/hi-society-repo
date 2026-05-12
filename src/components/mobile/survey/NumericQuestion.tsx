@@ -46,30 +46,30 @@ export const NumericQuestion: React.FC<NumericQuestionProps> = ({
             </div>
 
             {/* Labels */}
-            <div className="flex justify-between text-xs sm:text-sm font-semibold text-gray-500">
+            <div className="flex justify-between text-xs font-semibold text-gray-500">
                 <span>😠 0 - NOT LIKELY</span>
                 <span>10 - VERY LIKELY 😌</span>
             </div>
 
             {/* Selected state feedback */}
             {selectedRating !== null && (
-                <div className="mt-2 p-3 rounded-lg border-2 text-center">
-                    <p className="font-semibold">
-                        Selected value: <span className="text-2xl">{selectedRating}</span>
+                <div className="mt-2 p-2 rounded-lg border-2 text-center">
+                    <p className="text-sm">
+                        Selected value: <span className="text-sm">{selectedRating}</span>
                     </p>
                     <div className="mt-1">
                         {selectedRating <= 6 && (
-                            <span className="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                            <span className="inline-block px-3 bg-red-100 text-red-800 rounded-full text-sm">
                                 Poor (0-6)
                             </span>
                         )}
                         {selectedRating >= 7 && selectedRating <= 8 && (
-                            <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                            <span className="inline-block px-3 bg-yellow-100 text-yellow-800 rounded-full text-sm">
                                 Average (7-8)
                             </span>
                         )}
                         {selectedRating >= 9 && (
-                            <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                            <span className="inline-block px-3 bg-green-100 text-green-800 rounded-full text-sm">
                                 Excellent (9-10)
                             </span>
                         )}

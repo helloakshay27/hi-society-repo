@@ -9,6 +9,7 @@ import {
   API_CONFIG,
   getFullUrl,
   getAuthenticatedFetchOptions,
+  getAuthHeader,
 } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
@@ -27,6 +28,7 @@ interface FilterState {
   startDate: Date | null;
   endDate: Date | null;
   // Location hierarchy filters
+  societyId: string;
   towerId: string;
   flatId: string;
   userId: string;
@@ -38,6 +40,21 @@ interface LocationOption {
   id: number;
   name: string;
   flat_no?: string;
+}
+
+interface SocietyItem {
+  id: number;
+  building_name: string;
+  url: string;
+  address1: string;
+  address2: string;
+  area: string;
+  postcode: number;
+  city: string;
+  latitude: null;
+  longitude: null;
+  state: string;
+  country: string;
 }
 
 export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
@@ -52,6 +69,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
     surveyType: '',
     startDate: null,
     endDate: null,
+    societyId: '',
     towerId: '',
     flatId: '',
     userId: '',
@@ -62,6 +80,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
   const [surveyTitles, setSurveyTitles] = useState<string[]>([]);
 
   // Location options
+  const [societies, setSocieties] = useState<SocietyItem[]>([]);
   const [towers, setTowers] = useState<LocationOption[]>([]);
   const [flats, setFlats] = useState<LocationOption[]>([]);
   const [users, setUsers] = useState<LocationOption[]>([]);
@@ -92,13 +111,30 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
     disableEnforceFocus: true,
   };
 
-  // Fetch towers and survey titles when the filter opens
+  // Fetch societies, towers and survey titles when the filter opens
   useEffect(() => {
     if (open) {
-      fetchTowers();
+      fetchSocieties();
       fetchSurveyTitles();
     }
   }, [open]);
+
+  // Fetch towers when society changes
+  useEffect(() => {
+    if (filters.societyId) {
+      fetchTowers(filters.societyId);
+    } else {
+      setTowers([]);
+      setFilters(prev => ({
+        ...prev,
+        towerId: '',
+        flatId: '',
+        userId: ''
+      }));
+      setFlats([]);
+      setUsers([]);
+    }
+  }, [filters.societyId]);
 
   // Fetch flats when tower changes
   useEffect(() => {
@@ -113,6 +149,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
       }));
       setUsers([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.towerId]);
 
   // Fetch users when flat changes
@@ -128,13 +165,47 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
     }
   }, [filters.flatId]);
 
-  // Fetch towers (blocks)
-  const fetchTowers = async () => {
+  // Fetch societies from current user's company
+  const fetchSocieties = async () => {
     try {
       setIsLoading(true);
-      const idSociety = localStorage.getItem("selectedSocietyId") || "";
-      if (!idSociety) return;
-      const response = await apiClient.get(`/get_society_blocks.json?society_id=${idSociety}`);
+      
+      // Get company ID from accounts API using apiClient
+      const accountResponse = await apiClient.get("/api/users/account.json");
+      const companyId = accountResponse.data?.society?.company_id;
+      
+      if (!companyId) {
+        console.error("No company_id found in account data", accountResponse.data);
+        toast.error("Company information not found in account", { duration: 3000 });
+        return;
+      }
+      
+      console.log("Fetching societies for company_id:", companyId);
+      
+      // Fetch societies using company_id
+      const societiesResponse = await apiClient.get(`/api/societies/search.json?q[company_id_eq]=${companyId}`);
+      const societiesArray = societiesResponse.data?.societies || [];
+      
+      console.log("Fetched societies:", societiesArray);
+      setSocieties(societiesArray);
+      
+      if (societiesArray.length === 0) {
+        toast.warning("No societies found for your account", { duration: 3000 });
+      }
+    } catch (error) {
+      console.error("Error fetching societies:", error);
+      toast.error("Failed to fetch societies. Please try again.", { duration: 5000 });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch towers (blocks)
+  const fetchTowers = async (societyId: string) => {
+    try {
+      setIsLoading(true);
+      if (!societyId) return;
+      const response = await apiClient.get(`/get_society_blocks.json?society_id=${societyId}`);
       const towersArray = response.data?.society_blocks || [];
       setTowers(towersArray);
     } catch (error) {
@@ -149,9 +220,8 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
   const fetchFlats = async (towerId: string) => {
     try {
       setIsLoading(true);
-      const idSociety = localStorage.getItem("selectedSocietyId") || "";
       if (!towerId) return;
-      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
+      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${filters.societyId}`);
       const flatsArray = response.data?.society_flats || [];
       setFlats(flatsArray);
     } catch (error) {
@@ -261,6 +331,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
       surveyType: '',
       startDate: null,
       endDate: null,
+      societyId: '',
       towerId: '',
       flatId: '',
       userId: ''
@@ -277,7 +348,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
 
   const handleApply = () => {
     try {
-      // Build query params based on selected tower/flat/user
+      // Build query params based on selected society/tower/flat/user
       const params: string[] = [];
       
       // Add survey title filter if present
@@ -285,7 +356,8 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
         params.push(`q[survey_title_cont]=${encodeURIComponent(filters.surveyTitle)}`);
       }
       
-      // Add location hierarchy filters
+      // Add society/location hierarchy filters
+      if (filters.societyId) params.push(`q[survey_mappings_site_id_eq]=${filters.societyId}`);
       if (filters.towerId) params.push(`q[survey_mappings_building_id_eq]=${filters.towerId}`);
       if (filters.flatId) params.push(`q[survey_mappings_wing_id_eq]=${filters.flatId}`);
       if (filters.userId) params.push(`q[survey_mappings_user_society_id_eq]=${filters.userId}`);
@@ -360,11 +432,14 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
               <X className="h-4 w-4" />
             </Button>
             <div id="survey-response-filter-dialog-description" className="sr-only">
-              Filter survey responses by survey title and location hierarchy (tower, flat, user)
+              Filter survey responses by survey title and location hierarchy (tower, flat, Customer)
             </div>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
+            {/* Society Selection Section */}
+           
+
             {/* Survey Details Section */}
             <div>
               <h3 className="text-sm font-medium text-[#C72030] mb-4">
@@ -399,7 +474,35 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
               <h3 className="text-sm font-medium text-[#C72030] mb-4">
                 Location Hierarchy
               </h3>
-              <div className="grid grid-cols-3 gap-6">
+               <div>
+              {/* <h3 className="text-sm font-medium text-[#C72030] mb-4">
+                Society
+              </h3> */}
+              <div className="grid grid-cols-1 gap-6">
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink>Select Society</InputLabel>
+                  <Select
+                    value={filters.societyId}
+                    onChange={(e) => handleInputChange('societyId', e.target.value)}
+                    label="Select Society"
+                    displayEmpty
+                    MenuProps={selectMenuProps}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">
+                      <em>Select Society</em>
+                    </MenuItem>
+                    {societies.map((society) => (
+                      <MenuItem key={society.id} value={society.id.toString()}>
+                        {society.building_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+            </div>
+              <div className="grid grid-cols-3 gap-6 mt-6">
+                
                 {/* Tower Selection */}
                 <FormControl fullWidth variant="outlined">
                   <InputLabel shrink>Tower</InputLabel>
@@ -409,6 +512,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
                     label="Tower"
                     displayEmpty
                     MenuProps={selectMenuProps}
+                    disabled={!filters.societyId}
                   >
                     <MenuItem value="">
                       <em>Select Tower</em>
@@ -445,7 +549,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
 
                 {/* User Selection */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink>User</InputLabel>
+                  <InputLabel shrink>Customer</InputLabel>
                   <Select
                     value={filters.userId}
                     onChange={(e) => handleInputChange('userId', e.target.value)}
@@ -455,7 +559,7 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
                     disabled={!filters.flatId}
                   >
                     <MenuItem value="">
-                      <em>Select User</em>
+                      <em>Select Customer</em>
                     </MenuItem>
                     {users.map((u) => (
                       <MenuItem key={u.id} value={u.id.toString()}>
