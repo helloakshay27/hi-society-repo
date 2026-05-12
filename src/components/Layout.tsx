@@ -393,7 +393,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Mobile overlay backdrop - closes sidebar when tapping outside */}
       {isMobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed top-0 bottom-0 left-0 right-0 bg-black/50 z-30 md:hidden"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}

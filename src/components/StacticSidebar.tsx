@@ -1958,6 +1958,7 @@ export const StacticSidebar = () => {
     isSidebarCollapsed,
     setIsSidebarCollapsed,
     isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
   } = useLayout();
   const user = getUser();
   const assetRestricted = isAssetRestrictedUser(user);
@@ -2008,6 +2009,7 @@ export const StacticSidebar = () => {
     if (section && section !== currentSection) {
       setCurrentSection(section);
     }
+    setIsMobileSidebarOpen(false);
     navigate(href);
   };
 
@@ -2377,19 +2379,22 @@ export const StacticSidebar = () => {
     );
   };
 
+  // On mobile (sidebar open as overlay), always show expanded regardless of isSidebarCollapsed
+  const showCollapsed = isSidebarCollapsed && !isMobileSidebarOpen;
+
   return (
     <div
       className={`${
-        isSidebarCollapsed ? "w-16" : "w-64"
+        showCollapsed ? "w-16" : "w-64"
       } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40 ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       style={{ top: "4rem", height: "calc(100vh - 65px)" }}
     >
-      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
+      <div className={`${showCollapsed ? "px-2 py-2" : "p-2"}`}>
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
+          className="hidden md:block absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
         >
-          {isSidebarCollapsed ? (
+          {showCollapsed ? (
             <div className="flex justify-center items-center w-8 h-8 bg-[#f6f4ee] border border-[#e5e1d8] mx-auto">
               <ChevronRight className="w-4 h-4" />
             </div>
@@ -2400,11 +2405,9 @@ export const StacticSidebar = () => {
         <div className="w-full h-4 bg-[#f6f4ee]  border-[#e5e1d8] mb-2"></div>
 
         {/* Show section label for Settings and Accounting */}
-        {!isSidebarCollapsed && currentSection && (
-          <div className={`mb-4 ${isSidebarCollapsed ? "text-center" : ""}`}>
-            <h3
-              className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${isSidebarCollapsed ? "text-center" : "tracking-wide"}`}
-            >
+        {!showCollapsed && currentSection && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-[#1a1a1a] opacity-70 uppercase tracking-wide">
               {currentSection}
             </h3>
           </div>
@@ -2412,7 +2415,7 @@ export const StacticSidebar = () => {
 
         <nav className="space-y-2">
           {currentSection === "Settings" || currentSection === "Accounting" ? (
-            isSidebarCollapsed ? (
+            showCollapsed ? (
               <div className="flex flex-col items-center space-y-3 pt-4">
                 {currentModules.map((module) => (
                   <CollapsedMenuItem key={module.name} module={module} />
@@ -2421,7 +2424,7 @@ export const StacticSidebar = () => {
             ) : (
               currentModules.map((module) => renderMenuItem(module))
             )
-          ) : isSidebarCollapsed ? (
+          ) : showCollapsed ? (
             <div className="flex flex-col items-center space-y-5 pt-4">
               {currentModules.map((module) => (
                 <button

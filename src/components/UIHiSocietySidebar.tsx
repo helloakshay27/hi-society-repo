@@ -1003,7 +1003,8 @@ export const UIHiSocietySidebar: React.FC = () => {
   // Render menu item
   const renderMenuItem = (
     item: MenuItem,
-    level: number = 0
+    level: number = 0,
+    showCollapsed: boolean = isSidebarCollapsed
   ): React.ReactNode => {
     const hasSubItems = item.subItems && item.subItems.length > 0;
     const isExpanded = expandedSections[item.id] || false;
@@ -1035,7 +1036,7 @@ export const UIHiSocietySidebar: React.FC = () => {
     //   : undefined;
     // handleNavigation(subItem.path, navState);
 
-    if (isSidebarCollapsed) {
+    if (showCollapsed) {
       // Collapsed view - show only icons
       return (
         <div key={item.id}>
@@ -1157,20 +1158,23 @@ export const UIHiSocietySidebar: React.FC = () => {
     return null;
   }
 
+  // On mobile (sidebar open as overlay), always show expanded regardless of isSidebarCollapsed
+  const showCollapsed = isSidebarCollapsed && !isMobileSidebarOpen;
+
   return (
     <div
-      className={`${isSidebarCollapsed ? "md:w-16 w-64" : "w-64"
+      className={`${showCollapsed ? "w-16" : "w-64"
         } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40
         ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
-      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
-        {/* Collapse Button */}
+      <div className={`${showCollapsed ? "px-2 py-2" : "p-2"}`}>
+        {/* Collapse Button — hidden on mobile */}
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
+          className="hidden md:block absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
         >
-          {isSidebarCollapsed ? (
+          {showCollapsed ? (
             <div className="flex justify-center items-center w-8 h-8 bg-[#f6f4ee] border border-[#e5e1d8] mx-auto">
               <ChevronRight className="w-4 h-4" />
             </div>
@@ -1183,7 +1187,7 @@ export const UIHiSocietySidebar: React.FC = () => {
         <div className="w-full h-4 bg-[#f6f4ee] border-[#e5e1d8] mb-2 mt-4" />
 
         {/* Header */}
-        {!isSidebarCollapsed && currentConfig.title && (
+        {!showCollapsed && currentConfig.title && (
           <div className="mb-4">
             <h3 className="text-sm font-medium text-[#1a1a1a] opacity-70 uppercase tracking-wide">
               {currentConfig.title}
@@ -1193,7 +1197,7 @@ export const UIHiSocietySidebar: React.FC = () => {
 
         {/* Menu */}
         <nav className="space-y-2">
-          {currentConfig.items.map((item) => renderMenuItem(item))}
+          {currentConfig.items.map((item) => renderMenuItem(item, 0, showCollapsed))}
         </nav>
       </div>
     </div>
