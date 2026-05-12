@@ -53,14 +53,31 @@ interface UserItem {
 
 interface LocationConfig {
   id: string;
+  society_id: string;
   building_id: string;
   flat_id: string;
   user_id: string;
   locationData: {
+    societies: SocietyItem[];
     towers: LocationItem[];
     flats: LocationItem[];
     users: UserItem[];
   };
+}
+
+interface SocietyItem {
+  id: number;
+  building_name: string;
+  url: string;
+  address1: string;
+  address2: string;
+  area: string;
+  postcode: number;
+  city: string;
+  latitude: null;
+  longitude: null;
+  state: string;
+  country: string;
 }
 
 interface Question {
@@ -93,7 +110,7 @@ export const UserQRSetup = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "User QR Setup";
+    document.title = "Customer QR Setup";
   }, []);
 
   // Form state
@@ -103,6 +120,8 @@ export const UserQRSetup = () => {
   const [selectedSurveyQuestions, setSelectedSurveyQuestions] = useState<Question[]>([]);
 
   // Location configuration state
+  const [societies, setSocieties] = useState<SocietyItem[]>([]);
+  const [loadingSocieties, setLoadingSocieties] = useState(false);
   const [towers, setTowers] = useState<LocationItem[]>([]);
   const [loadingTowers, setLoadingTowers] = useState(false);
 
@@ -110,10 +129,12 @@ export const UserQRSetup = () => {
   const [locationConfigs, setLocationConfigs] = useState<LocationConfig[]>([
     {
       id: initialConfigId,
+      society_id: "",
       building_id: "",
       flat_id: "",
       user_id: "",
       locationData: {
+        societies: [],
         towers: [],
         flats: [],
         users: [],
@@ -125,7 +146,7 @@ export const UserQRSetup = () => {
 
   // Fetch towers and surveys on component mount
   useEffect(() => {
-    fetchTowers();
+    fetchSocieties();
     fetchSurveys();
   }, []);
 
@@ -133,6 +154,54 @@ export const UserQRSetup = () => {
   useEffect(() => {
     updateSurveyQuestions(selectedSurveyId || undefined);
   }, [selectedSurveyId, surveys]);
+
+  // Fetch societies
+  const fetchSocieties = async () => {
+    try {
+      setLoadingSocieties(true);
+      
+      // Get company ID from accounts API
+      const response = await fetch(getFullUrl("/api/users/account.json"), {
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch user account");
+      }
+      
+      const accountData = await response.json();
+      const companyId = accountData?.society?.company_id;
+      
+      if (!companyId) {
+        console.error("No company_id found in account data");
+        toast.error("Company information not found in account", { duration: 3000 });
+        return;
+      }
+      
+      const societiesResponse = await apiClient.get(`/api/societies/search.json?q[company_id_eq]=${companyId}`);
+      const societiesArray = societiesResponse.data?.societies || [];
+      setSocieties(societiesArray);
+      
+      // Update all location configs with societies data
+      setLocationConfigs((prev) =>
+        prev.map((config) => ({
+          ...config,
+          locationData: {
+            ...config.locationData,
+            societies: societiesArray,
+          },
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching societies:", error);
+      toast.error("Failed to fetch societies", { duration: 5000 });
+    } finally {
+      setLoadingSocieties(false);
+    }
+  };
 
   // Fetch towers
   const fetchTowers = async () => {
@@ -189,12 +258,11 @@ export const UserQRSetup = () => {
   };
 
   // Fetch flats for a tower
-  const fetchFlatsForConfig = async (configIndex: number, towerId: string) => {
+  const fetchFlatsForConfig = async (configIndex: number, towerId: string, societyId: string) => {
     try {
-      if (!towerId) return;
-      const idSociety = localStorage.getItem("selectedSocietyId") || "";
+      if (!towerId || !societyId) return;
 
-      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
+      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${societyId}`);
       const flatsArray = response.data?.society_flats || [];
 
       setLocationConfigs((prev) =>
@@ -251,6 +319,60 @@ export const UserQRSetup = () => {
 
 
 
+  // Handle society change
+  const handleSocietyChange = async (configIndex: number, societyId: string) => {
+    setLocationConfigs((prev) =>
+      prev.map((config, i) => {
+        if (i !== configIndex) return config;
+        return {
+          ...config,
+          society_id: societyId,
+          building_id: "",
+          flat_id: "",
+          user_id: "",
+          locationData: {
+            ...config.locationData,
+            towers: [],
+            flats: [],
+            users: [],
+          },
+        };
+      })
+    );
+
+    if (societyId) {
+      await fetchTowersForConfig(configIndex, societyId);
+    }
+  };
+
+  // Fetch towers for a specific config and society
+  const fetchTowersForConfig = async (configIndex: number, societyId: string) => {
+    try {
+      if (!societyId) return;
+
+      const response = await apiClient.get(`/get_society_blocks.json?society_id=${societyId}`);
+      const towersArray = response.data?.society_blocks || [];
+
+      setLocationConfigs((prev) =>
+        prev.map((config, i) => {
+          if (i !== configIndex) return config;
+          return {
+            ...config,
+            locationData: {
+              ...config.locationData,
+              towers: towersArray,
+              flats: [], // Clear flats when towers change
+              users: [], // Clear users when towers change
+            },
+          };
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to fetch towers", { duration: 3000 });
+    }
+  };
+
   // Handle tower change
   const handleTowerChange = async (configIndex: number, towerId: string) => {
     setLocationConfigs((prev) =>
@@ -271,7 +393,10 @@ export const UserQRSetup = () => {
     );
 
     if (towerId) {
-      await fetchFlatsForConfig(configIndex, towerId);
+      const societyId = locationConfigs[configIndex]?.society_id;
+      if (societyId) {
+        await fetchFlatsForConfig(configIndex, towerId, societyId);
+      }
     }
   };
 
@@ -317,10 +442,12 @@ export const UserQRSetup = () => {
       ...prev,
       {
         id: newConfigId,
+        society_id: "",
         building_id: "",
         flat_id: "",
         user_id: "",
         locationData: {
+          societies: societies,
           towers: [],
           flats: [],
           users: [],
@@ -437,7 +564,7 @@ export const UserQRSetup = () => {
 
     // Check that all location configs are valid
     const invalidConfigs = locationConfigs.filter(
-      (config) => !config.building_id || !config.flat_id || !config.user_id
+      (config) => !config.society_id || !config.building_id || !config.flat_id || !config.user_id
     );
 
     if (invalidConfigs.length > 0) {
@@ -452,6 +579,7 @@ export const UserQRSetup = () => {
       const requestData = {
         survey_mappings: locationConfigs.map((config) => ({
           survey_id: selectedSurveyId,
+          society_id: parseInt(config.society_id),
           tower_id: parseInt(config.building_id),
           flat_id: parseInt(config.flat_id),
           user_society_id: parseInt(config.user_id),
@@ -518,7 +646,7 @@ export const UserQRSetup = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-xl font-bold tracking-wide uppercase">
-            User QR Setup
+            Customer QR Setup
           </h1>
         </div>
       </header>
@@ -592,7 +720,7 @@ export const UserQRSetup = () => {
       </Section>
 
       {/* Location Configuration Section */}
-      <Section title="User Configuration" icon={<MapPin className="w-3.5 h-3.5" />}>
+      <Section title="Customer Configuration" icon={<MapPin className="w-3.5 h-3.5" />}>
         <div className="space-y-6">
           {locationConfigs.map((config, configIdx) => (
             <div
@@ -615,7 +743,35 @@ export const UserQRSetup = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Society Selection */}
+                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                  <InputLabel shrink>
+                    Society <span className="text-red-500">*</span>
+                  </InputLabel>
+                  <Select
+                    value={config.society_id}
+                    onChange={(e: SelectChangeEvent<string>) =>
+                      handleSocietyChange(configIdx, e.target.value)
+                    }
+                    input={<OutlinedInput label="Society" />}
+                    disabled={loadingSocieties || societies.length === 0}
+                    displayEmpty
+                    notched
+                  >
+                    <MenuItem value="">
+                      <em>
+                        {loadingSocieties ? "Loading..." : "Select society"}
+                      </em>
+                    </MenuItem>
+                    {config.locationData.societies.map((society) => (
+                      <MenuItem key={society.id} value={society.id.toString()}>
+                        {society.building_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
                 {/* Tower Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
@@ -627,16 +783,21 @@ export const UserQRSetup = () => {
                       handleTowerChange(configIdx, e.target.value)
                     }
                     input={<OutlinedInput label="Tower" />}
-                    disabled={loadingTowers || towers.length === 0}
+                    disabled={
+                      !config.society_id || 
+                      config.locationData.towers.length === 0
+                    }
                     displayEmpty
                     notched
                   >
                     <MenuItem value="">
                       <em>
-                        {loadingTowers ? "Loading..." : "Select tower"}
+                        {!config.society_id
+                          ? "Select society first"
+                          : "Select tower"}
                       </em>
                     </MenuItem>
-                    {towers.map((tower) => (
+                    {config.locationData.towers.map((tower) => (
                       <MenuItem key={tower.id} value={tower.id.toString()}>
                         {tower.name}
                       </MenuItem>

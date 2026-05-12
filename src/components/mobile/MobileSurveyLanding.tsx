@@ -1995,7 +1995,7 @@ export const MobileSurveyLanding: React.FC = () => {
     >
       {/* Header with Logo */}
       <div className="bg-transparent pt-6 pb-3 px-4 relative z-10">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-center items-center">
           <div className="flex justify-start items-center">
             {!isFormView &&
               ((currentQuestion &&
@@ -2036,7 +2036,7 @@ export const MobileSurveyLanding: React.FC = () => {
                 </button>
               )}
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-center">
             <div className="w-40 h-16 sm:w-32 sm:h-20 flex items-center justify-center overflow-hidden">
               {surveyData?.company_logo_url ? (
                 <img
@@ -2094,7 +2094,7 @@ export const MobileSurveyLanding: React.FC = () => {
 
       {/* Main Content */}
       {isFormView && (
-        <h1 className="text-2xl font-bold text-black/100 mb-4 text-center">
+        <h1 className="text-xl font-semibold text-black/100 mb-4 text-center m-4">
           {surveyData.survey_title}
         </h1>
       )}

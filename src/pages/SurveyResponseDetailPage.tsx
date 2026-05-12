@@ -3082,7 +3082,7 @@ export const SurveyResponseDetailPage = () => {
       },
       { key: "tower", label: "Tower", defaultVisible: true, sortable: true },
       { key: "flat", label: "Flat", defaultVisible: true, sortable: true },
-      { key: "user", label: "User", defaultVisible: true, sortable: true },
+      { key: "user", label: "Customer", defaultVisible: true, sortable: true },
     ];
 
     // Add dynamic question columns with grouped structure

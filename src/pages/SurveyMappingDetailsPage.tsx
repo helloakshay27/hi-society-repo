@@ -345,7 +345,7 @@ export const SurveyMappingDetailsPage = () => {
     },
     {
       key: "user_name",
-      label: "User",
+      label: "Customer",
       sortable: false,
       draggable: false,
       defaultVisible: true,

@@ -731,7 +731,7 @@ export const SurveyMappingDashboard = () => {
       },
       {
         key: "user_name",
-        label: "User",
+        label: "Customer",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -1113,13 +1113,13 @@ export const SurveyMappingDashboard = () => {
           className="selection-panel--center"
           actions={[
             {
-              label: "User QR Setup",
+              label: "Customer QR Setup",
               icon: QrCode,
               onClick: handleUserQRSetup,
             },
           ]}
           onAdd={handleAddMapping}
-          addLabel="Society QR Setup"
+          addLabel="Company QR Setup"
           onImport={() => setShowImportModal(true)}
           onClearSelection={() => setShowActionPanel(false)}
           subtitle={null}

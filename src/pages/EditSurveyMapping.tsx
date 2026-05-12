@@ -193,15 +193,32 @@ interface SurveyMappingResponse {
 interface SurveyMappingPayload {
   id?: number;
   survey_id: number;
+  society_id?: number;
   tower_id?: number;
   flat_id?: number;
   user_society_id?: number;
+}
+
+interface SocietyItem {
+  id: number;
+  building_name: string;
+  url: string;
+  address1: string;
+  address2: string;
+  area: string;
+  postcode: number;
+  city: string;
+  latitude: null;
+  longitude: null;
+  state: string;
+  country: string;
 }
 
 interface SurveyMappingForm {
   id: string;
   selectedLocation: {
     site: string;
+    society: string;
     building: string;
     wing: string;
     area: string;
@@ -224,6 +241,36 @@ interface SurveyMappingForm {
     areas: LocationItem[];
     floors: LocationItem[];
     rooms: LocationItem[];
+  };
+}
+
+interface Flat {
+  id: number;
+  flat_no: string;
+  name?: string;
+}
+
+interface Tower {
+  id: number;
+  name: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+}
+
+interface UserConfig {
+  id: string;
+  society_id: string;
+  building_id: string;
+  flat_id: string;
+  user_id: string;
+  locationData: {
+    societies: SocietyItem[];
+    towers: Tower[];
+    flats: Flat[];
+    users: User[];
   };
 }
 
@@ -331,21 +378,11 @@ export const EditSurveyMapping = () => {
   const [userConfigMappings, setUserConfigMappings] = useState<SurveyMappingItem[]>([]);
 
   // User configuration dropdown data
-  const [towers, setTowers] = useState<LocationItem[]>([]);
+  const [societies, setSocieties] = useState<SocietyItem[]>([]);
+  const [loadingSocieties, setLoadingSocieties] = useState(false);
+  const [towers, setTowers] = useState<Tower[]>([]);
   const [loadingTowers, setLoadingTowers] = useState(false);
-  const [userConfigs, setUserConfigs] = useState<
-    Array<{
-      id: string;
-      building_id: string;
-      flat_id: string;
-      user_id: string;
-      locationData: {
-        towers: LocationItem[];
-        flats: LocationItem[];
-        users: Array<{ id: number; name: string }>;
-      };
-    }>
-  >([]);
+  const [userConfigs, setUserConfigs] = useState<UserConfig[]>([]);
 
   // Form state - updated to match AddSurveyMapping pattern
   const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
@@ -355,6 +392,7 @@ export const EditSurveyMapping = () => {
       id: `sm-${Date.now()}`,
       selectedLocation: {
         site: "",
+        society: "",
         building: "",
         wing: "",
         area: "",
@@ -389,17 +427,77 @@ export const EditSurveyMapping = () => {
   // Fetch original mapping data and surveys on component mount
   useEffect(() => {
     const initializeData = async () => {
-      // First fetch surveys, then mapping data to ensure surveys are available when setting selected survey
+      // Step 1: Fetch societies from current user's company (following UserQRSetup pattern)
+      const societiesArray = await fetchSocieties();
+      
+      // Step 2: Fetch surveys and tower data
       await fetchSurveys();
-      await fetchSurveyMappingData();
       await fetchTowers();
+      
+      // Step 3: Fetch survey mapping data with societies already loaded
+      // This is done after societies are fetched so user configs have the data
+      await fetchSurveyMappingData(societiesArray);
     };
     initializeData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const fetchSurveyMappingData = async () => {
-    if (!id) return;
+  // Fetch societies
+  const fetchSocieties = async (): Promise<SocietyItem[]> => {
+    try {
+      setLoadingSocieties(true);
+      
+      // Get company ID from accounts API
+      const response = await fetch(getFullUrl("/api/users/account.json"), {
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch user account");
+      }
+      
+      const accountData = await response.json();
+      const companyId = accountData?.society?.company_id;
+      
+      if (!companyId) {
+        console.error("No company_id found in account data");
+        toast.error("Company information not found in account", { duration: 3000 });
+        return [];
+      }
+      
+      // Use only company_id parameter for fetching societies
+      const societiesResponse = await apiClient.get(`/api/societies/search.json?q[company_id_eq]=${companyId}`);
+      const societiesArray = societiesResponse.data?.societies || [];
+      setSocieties(societiesArray);
+      
+      // Update all location configs with societies data
+      setUserConfigs((prev) =>
+        prev.map((config) => ({
+          ...config,
+          locationData: {
+            ...config.locationData,
+            societies: societiesArray,
+          },
+        }))
+      );
+      
+      // Return the societies array for use in initialization
+      return societiesArray;
+    } catch (error) {
+      console.error("Error fetching societies:", error);
+      toast.error("Failed to fetch societies", { duration: 5000 });
+      return [];
+    } finally {
+      setLoadingSocieties(false);
+    }
+  };
+
+  // Modified to accept and use societies array for initialization
+  const fetchSurveyMappingData = async (societiesArray: SocietyItem[] = []) => {
+    if (!id) return [];
 
     try {
       setPageLoading(true);
@@ -419,7 +517,7 @@ export const EditSurveyMapping = () => {
       }
 
       const responseData = await response.json();
-      console.log("Survey mappings list response:", responseData);
+      console.error("Survey mappings list response:", responseData);
 
       if (
         responseData?.survey_mappings &&
@@ -430,7 +528,7 @@ export const EditSurveyMapping = () => {
         // Set the survey ID from the first mapping's survey_id
         if (surveyData.mappings && surveyData.mappings.length > 0) {
           const surveyId = surveyData.mappings[0].survey_id;
-          console.log("Setting selectedSurveyId to:", surveyId);
+          console.error("Setting selectedSurveyId to:", surveyId);
           setSelectedSurveyId(surveyId);
         }
 
@@ -464,7 +562,7 @@ export const EditSurveyMapping = () => {
           })
         );
 
-        console.log("Form mappings created:", formMappings);
+        console.error("Form mappings created:", formMappings);
         setSurveyMappings(formMappings);
 
         // Fetch location data for each configuration independently
@@ -532,81 +630,111 @@ export const EditSurveyMapping = () => {
           setHasUserConfigData(hasUserData);
           setUserConfigMappings(surveyData.mappings);
 
-          // Initialize user configs with existing data
+          // Initialize user configs with existing data and fetched societies
           const initialUserConfigs = surveyData.mappings
             .filter((m: SurveyMappingItem) => m.tower_name || m.flat_no || m.user_name)
             .map((m: SurveyMappingItem) => ({
               id: `uc-${m.id}`,
+              society_id: m.site_id?.toString() || "", // Map site_id to society_id
               building_id: m.building_id?.toString() || "",
               flat_id: m.wing_id?.toString() || "", // Map wing_id to flat_id
               user_id: m.user_society_id?.toString() || "", // Map user_society_id to user_id
               locationData: {
+                societies: societiesArray.length > 0 ? societiesArray : [], // Use passed societies array
                 towers: [],
                 flats: [],
                 users: [],
               },
             }));
-          
-          console.log("Initial user configs:", initialUserConfigs);
+
+          console.error("Initial user configs:", initialUserConfigs);
           setUserConfigs(initialUserConfigs);
 
-          // Fetch flats and users for existing configs
+          // Fetch towers, flats and users for existing configs
           // Use a local copy to avoid async state issues
-          let workingConfigs = [...initialUserConfigs];
+          const workingConfigs = [...initialUserConfigs];
           
           for (let i = 0; i < workingConfigs.length; i++) {
             const config = workingConfigs[i];
-            console.log(`Fetching data for config ${i}:`, config);
+            console.error(`Fetching data for config ${i}:`, config);
+            
+            // First fetch towers if society_id is set
+            if (config.society_id) {
+              try {
+                const towersResponse = await apiClient.get(`/get_society_blocks.json?society_id=${config.society_id}`);
+                const towersArray = (towersResponse.data?.society_blocks || []) as Tower[];
+                
+                workingConfigs[i] = {
+                  ...workingConfigs[i],
+                  locationData: {
+                    ...workingConfigs[i].locationData,
+                    towers: towersArray,
+                  },
+                };
+              } catch (error) {
+                console.error(`Error fetching towers for config ${i}:`, error);
+              }
+            }
             
             if (config.building_id) {
-              // Fetch flats
-              const idSociety = localStorage.getItem("selectedSocietyId") || "";
-              const flatsResponse = await apiClient.get(`/get_society_flats.json?society_block_id=${config.building_id}&society_id=${idSociety}`);
-              const flatsArray = flatsResponse.data?.society_flats || [];
-              console.log("Fetched flats:", flatsArray);
-              
-              workingConfigs[i] = {
-                ...workingConfigs[i],
-                locationData: {
-                  ...workingConfigs[i].locationData,
-                  flats: flatsArray,
-                  users: [],
-                },
-              };
+              try {
+                // Fetch flats
+                const flatsResponse = await apiClient.get(`/get_society_flats.json?society_block_id=${config.building_id}&society_id=${config.society_id}`);
+                const flatsArray = (flatsResponse.data?.society_flats || []) as Flat[];
+                
+                workingConfigs[i] = {
+                  ...workingConfigs[i],
+                  locationData: {
+                    ...workingConfigs[i].locationData,
+                    flats: flatsArray,
+                    users: [],
+                  },
+                };
+              } catch (error) {
+                console.error(`Error fetching flats for config ${i}:`, error);
+              }
             }
             
             if (config.flat_id) {
-              // Fetch users
-              const usersResponse = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${config.flat_id}&q[approve_eq]=true`);
-              const usersArray = Array.isArray(usersResponse.data) 
-                ? usersResponse.data.map(([name, id]: [string, number]) => ({
-                    id,
-                    name,
-                  }))
-                : [];
-              console.log("Fetched users:", usersArray);
-              
-              workingConfigs[i] = {
-                ...workingConfigs[i],
-                locationData: {
-                  ...workingConfigs[i].locationData,
-                  users: usersArray,
-                },
-              };
+              try {
+                // Fetch users
+                const usersResponse = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${config.flat_id}&q[approve_eq]=true`);
+                const usersArray: User[] = Array.isArray(usersResponse.data) 
+                  ? usersResponse.data.map(([name, id]: [string, number]) => ({
+                      id,
+                      name,
+                    }))
+                  : [];
+                console.error("Fetched users:", usersArray);
+                
+                workingConfigs[i] = {
+                  ...workingConfigs[i],
+                  locationData: {
+                    ...workingConfigs[i].locationData,
+                    users: usersArray,
+                  },
+                };
+              } catch (error) {
+                console.error(`Error fetching users for config ${i}:`, error);
+              }
             }
           }
           
           // Update state with fetched data
           setUserConfigs(workingConfigs);
         }
+        // Return mappings for use in initialization
+        return surveyData.mappings;
       } else {
         toast.error("Survey mapping not found");
         navigate("/maintenance/survey/mapping");
+        return [];
       }
     } catch (error: unknown) {
       console.error("Error fetching survey mapping:", error);
       toast.error("Failed to load survey mapping data");
       navigate("/maintenance/survey/mapping");
+      return [];
     } finally {
       setPageLoading(false);
     }
@@ -630,13 +758,13 @@ export const EditSurveyMapping = () => {
       }
 
       const surveyData = await response.json();
-      console.log("Surveys data response:", surveyData);
+      console.error("Surveys data response:", surveyData);
 
       // Filter only active surveys
       const activeSurveys = (surveyData || []).filter(
         (survey: Survey) => survey.active === 1
       );
-      console.log("Filtered active surveys:", activeSurveys);
+      console.error("Filtered active surveys:", activeSurveys);
       setSurveys(activeSurveys);
     } catch (error) {
       console.error("Error fetching surveys:", error);
@@ -751,12 +879,12 @@ export const EditSurveyMapping = () => {
   };
 
   // Handle location changes with cascading behavior
-  const handleLocationChange = async (
+    const handleLocationChange = async (
     mappingIndex: number,
-    field: "site" | "building" | "wing" | "area" | "floor" | "room",
+    field: "site" | "society" | "building" | "wing" | "area" | "floor" | "room",
     value: string
   ) => {
-    console.log(
+    console.error(
       `Location change: ${field} = ${value} for mapping ${mappingIndex}`
     );
 
@@ -772,12 +900,24 @@ export const EditSurveyMapping = () => {
         switch (field) {
           case "site":
             newSelectedLocation.site = value;
+            newSelectedLocation.society = "";
             newSelectedLocation.building = "";
             newSelectedLocation.wing = "";
             newSelectedLocation.area = "";
             newSelectedLocation.floor = "";
             newSelectedLocation.room = "";
-            newLocationData.buildings = [];
+            newLocationData.wings = [];
+            newLocationData.areas = [];
+            newLocationData.floors = [];
+            newLocationData.rooms = [];
+            break;
+          case "society":
+            newSelectedLocation.society = value;
+            newSelectedLocation.building = "";
+            newSelectedLocation.wing = "";
+            newSelectedLocation.area = "";
+            newSelectedLocation.floor = "";
+            newSelectedLocation.room = "";
             newLocationData.wings = [];
             newLocationData.areas = [];
             newLocationData.floors = [];
@@ -929,6 +1069,7 @@ export const EditSurveyMapping = () => {
         id: `sm-new-${Date.now()}`, // Use "new-" prefix + timestamp for new mappings
         selectedLocation: {
           site: "",
+          society: "",
           building: "",
           wing: "",
           area: "",
@@ -949,7 +1090,7 @@ export const EditSurveyMapping = () => {
           rooms: [],
         },
       },
-    ]);
+    ] as SurveyMappingForm[]);
   };
 
   const removeSurveyMapping = (idx: number) => {
@@ -980,7 +1121,7 @@ export const EditSurveyMapping = () => {
   const updateSurveyQuestions = useCallback(
     (surveyId?: number) => {
       const targetSurveyId = surveyId || selectedSurveyId;
-      console.log(
+      console.error(
         "updateSurveyQuestions called with surveyId:",
         surveyId,
         "targetSurveyId:",
@@ -988,7 +1129,7 @@ export const EditSurveyMapping = () => {
       );
 
       if (!targetSurveyId) {
-        console.log("No target survey ID, clearing questions");
+        console.error("No target survey ID, clearing questions");
         setSelectedSurveyQuestions([]);
         return;
       }
@@ -996,7 +1137,7 @@ export const EditSurveyMapping = () => {
       const selectedSurvey = surveys.find(
         (survey) => survey.id === targetSurveyId
       );
-      console.log(
+      console.error(
         "Found survey:",
         selectedSurvey?.name,
         "with questions:",
@@ -1029,6 +1170,34 @@ export const EditSurveyMapping = () => {
     [selectedSurveyId, surveys]
   );
 
+  // Fetch towers for a specific config and society
+  const fetchTowersForConfig = async (configIndex: number, societyId: string) => {
+    try {
+      if (!societyId) return;
+
+      const response = await apiClient.get(`/get_society_blocks.json?society_id=${societyId}`);
+      const towersArray = (response.data?.society_blocks || []) as Tower[];
+
+      setUserConfigs((prev) =>
+        prev.map((config, i) => {
+          if (i !== configIndex) return config;
+          return {
+            ...config,
+            locationData: {
+              ...config.locationData,
+              towers: towersArray,
+              flats: [], // Clear flats when towers change
+              users: [], // Clear users when towers change
+            },
+          };
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to fetch towers", { duration: 3000 });
+    }
+  };
+
   // Fetch towers
   const fetchTowers = async () => {
     try {
@@ -1042,7 +1211,7 @@ export const EditSurveyMapping = () => {
       }
       
       const response = await apiClient.get(`/get_society_blocks.json?society_id=${idSociety}`);
-      const towersArray = response.data?.society_blocks || [];
+      const towersArray = (response.data?.society_blocks || []) as Tower[];
       setTowers(towersArray);
     } catch (error) {
       console.error("Error fetching towers:", error);
@@ -1056,13 +1225,11 @@ export const EditSurveyMapping = () => {
   const fetchFlatsForConfig = async (configIndex: number, towerId: string, preserveSelection = false) => {
     try {
       if (!towerId) return;
-      const idSociety = localStorage.getItem("selectedSocietyId") || "";
+      const config = userConfigs[configIndex];
+      const societyId = config?.society_id || localStorage.getItem("selectedSocietyId") || "";
 
-      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
-      const flatsArray = response.data?.society_flats || [];
-      
-      console.log("Fetched flats for tower:", towerId, "flats:", flatsArray);
-      console.log("Current config flat_id to preserve:", userConfigs[configIndex]?.flat_id);
+      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${societyId}`);
+      const flatsArray = (response.data?.society_flats || []) as Flat[];
 
       setUserConfigs((prev) =>
         prev.map((config, i) => {
@@ -1092,15 +1259,12 @@ export const EditSurveyMapping = () => {
 
       const response = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
       // Response is an array of [name, id] tuples
-      const usersArray = Array.isArray(response.data) 
+      const usersArray: User[] = Array.isArray(response.data) 
         ? response.data.map(([name, id]: [string, number]) => ({
             id,
             name,
           }))
         : [];
-      
-      console.log("Fetched users for flat:", flatId, "users:", usersArray);
-      console.log("Current config user_id to preserve:", userConfigs[configIndex]?.user_id);
 
       setUserConfigs((prev) =>
         prev.map((config, i) => {
@@ -1118,6 +1282,32 @@ export const EditSurveyMapping = () => {
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to fetch users", { duration: 3000 });
+    }
+  };
+
+  // Handle society change
+  const handleUserConfigSocietyChange = async (configIndex: number, societyId: string) => {
+    setUserConfigs((prev) =>
+      prev.map((config, i) => {
+        if (i !== configIndex) return config;
+        return {
+          ...config,
+          society_id: societyId,
+          building_id: "",
+          flat_id: "",
+          user_id: "",
+          locationData: {
+            ...config.locationData,
+            towers: [],
+            flats: [],
+            users: [],
+          },
+        };
+      })
+    );
+
+    if (societyId) {
+      await fetchTowersForConfig(configIndex, societyId);
     }
   };
 
@@ -1243,7 +1433,7 @@ export const EditSurveyMapping = () => {
         "0"
       );
 
-      // Build payload from userConfigs with tower_id, flat_id, and user_society_id
+      // Build payload from userConfigs with society_id, tower_id, flat_id, and user_society_id
       const surveyMappingsPayload: SurveyMappingPayload[] = userConfigs.map((config, index) => {
         const originalMapping = userConfigMappings[index];
         
@@ -1254,6 +1444,11 @@ export const EditSurveyMapping = () => {
         // Include the original mapping ID
         if (originalMapping) {
           mappingData.id = originalMapping.id;
+        }
+
+        // Include society_id if selected
+        if (config.society_id) {
+          mappingData.society_id = parseInt(config.society_id);
         }
 
         // Include tower_id if selected
@@ -1278,7 +1473,7 @@ export const EditSurveyMapping = () => {
         survey_mappings: surveyMappingsPayload,
       };
 
-      console.log("Updating survey mappings with payload:", payload);
+      console.error("Updating survey mappings with payload:", payload);
 
       const response = await fetch(
         getFullUrl("/survey_mappings/update_survey_mappings.json"),
@@ -1294,7 +1489,7 @@ export const EditSurveyMapping = () => {
 
       if (response.ok) {
         const responseData = await response.json();
-        console.log("Survey mappings updated successfully:", responseData);
+        console.error("Survey mappings updated successfully:", responseData);
         toast.success("Survey mapping updated successfully!");
         navigate("/maintenance/survey/mapping");
       } else {
@@ -1316,7 +1511,7 @@ export const EditSurveyMapping = () => {
 
   // Effect to show questions for the selected survey when data is loaded
   useEffect(() => {
-    console.log(
+    console.error(
       "Effect triggered - originalMapping:",
       originalMapping?.survey_id,
       "surveys.length:",
@@ -1331,7 +1526,7 @@ export const EditSurveyMapping = () => {
       !userChangedSurvey
     ) {
       // Only set the survey ID from original mapping if user hasn't manually changed it
-      console.log(
+      console.error(
         "Setting survey ID from original mapping:",
         originalMapping.survey_id
       );
@@ -1343,14 +1538,14 @@ export const EditSurveyMapping = () => {
 
   // Effect to update questions when selectedSurveyId changes and surveys are loaded
   useEffect(() => {
-    console.log(
+    console.error(
       "Survey questions effect triggered - selectedSurveyId:",
       selectedSurveyId,
       "surveys.length:",
       surveys.length
     );
     if (selectedSurveyId && surveys.length > 0) {
-      console.log("Updating survey questions for survey ID:", selectedSurveyId);
+      console.error("Updating survey questions for survey ID:", selectedSurveyId);
       updateSurveyQuestions(selectedSurveyId);
     }
   }, [selectedSurveyId, surveys, updateSurveyQuestions]);
@@ -1480,10 +1675,10 @@ export const EditSurveyMapping = () => {
 
       {/* User Configuration Section - Only show if data exists */}
       {hasUserConfigData && (
-      <Section title="User Configuration" icon={<MapPin className="w-3.5 h-3.5" />}>
+      <Section title="Customer Configuration" icon={<MapPin className="w-3.5 h-3.5" />}>
         <div className="space-y-6">
           <div className="mb-4 text-sm text-gray-600">
-            Edit the user configurations associated with this survey mapping.
+            Edit the Customer configurations associated with this survey mapping.
           </div>
           {userConfigs.map((config, configIdx) => (
             <div
@@ -1499,7 +1694,35 @@ export const EditSurveyMapping = () => {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {/* Society Selection */}
+                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                  <InputLabel shrink>
+                    Society <span className="text-red-500">*</span>
+                  </InputLabel>
+                  <Select
+                    value={config.society_id}
+                    onChange={(e: SelectChangeEvent<string>) =>
+                      handleUserConfigSocietyChange(configIdx, e.target.value)
+                    }
+                    input={<OutlinedInput label="Society" />}
+                    disabled={loadingSocieties || config.locationData.societies.length === 0}
+                    displayEmpty
+                    notched
+                  >
+                    <MenuItem value="">
+                      <em>
+                        {loadingSocieties ? "Loading..." : "Select society"}
+                      </em>
+                    </MenuItem>
+                    {config.locationData.societies.map((society) => (
+                      <MenuItem key={society.id} value={society.id.toString()}>
+                        {society.building_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
                 {/* Tower Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
@@ -1511,16 +1734,21 @@ export const EditSurveyMapping = () => {
                       handleUserConfigTowerChange(configIdx, e.target.value)
                     }
                     input={<OutlinedInput label="Tower" />}
-                    disabled={loadingTowers || towers.length === 0}
+                    disabled={
+                      !config.society_id || 
+                      config.locationData.towers.length === 0
+                    }
                     displayEmpty
                     notched
                   >
                     <MenuItem value="">
                       <em>
-                        {loadingTowers ? "Loading..." : "Select tower"}
+                        {!config.society_id
+                          ? "Select society first"
+                          : "Select tower"}
                       </em>
                     </MenuItem>
-                    {towers.map((tower) => (
+                    {config.locationData.towers.map((tower) => (
                       <MenuItem key={tower.id} value={tower.id.toString()}>
                         {tower.name}
                       </MenuItem>
