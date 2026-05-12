@@ -229,9 +229,10 @@ export const ServicePRDetailsPage = () => {
   const [openDeletionModal, setOpenDeletionModal] = useState(false)
   const [printing, setPrinting] = useState(false)
   const [testRunLoading, setTestRunLoading] = useState(false)
+  const [sapPushDisabled, setSapPushDisabled] = useState(false)
   const [updatedWbsCodes, setUpdatedWbsCodes] = useState<{
     [key: string]: string;
-  }>({});
+  }>({})
   const [buttonCondition, setButtonCondition] = useState({
     showSap: false,
     editWbsCode: false,
@@ -270,9 +271,9 @@ export const ServicePRDetailsPage = () => {
         });
         // Set external API calls if available
         console.log("response.page", response.page.api_responses);
-        if (response.api_calls && Array.isArray(response.api_calls)) {
-          setExternalApiCalls(response.api_calls);
-          console.log("API Calls set in state:", response.api_calls);
+        if (response.page?.api_responses && Array.isArray(response.page.api_responses)) {
+          setExternalApiCalls(response.page.api_responses);
+          console.log("API Calls set in state:", response.page.api_responses);
         }
         // Initialize updatedWbsCodes with current WBS codes
         const initialWbsCodes = response.page?.inventories?.reduce(
@@ -387,51 +388,124 @@ export const ServicePRDetailsPage = () => {
   }, [id]);
 
   // Handle send to SAP
-  const handleSendToSap = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const baseUrl = localStorage.getItem("baseUrl");
-    if (!baseUrl || !token || !id) {
-      toast.error("Missing required configuration");
-      return;
+ const handleSendToSap = useCallback(async () => {
+  const token = localStorage.getItem("token");
+  const baseUrl = localStorage.getItem("baseUrl");
+  
+
+  if (!baseUrl || !token || !id) {
+    toast.error("Missing required configuration");
+    return;
+  }
+  setSapPushDisabled(true);
+  try {
+    const response = await axios.get<{ message: string }>(
+      `https://${baseUrl}/pms/work_orders/${id}.json?send_sap=yes`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    toast.success(response.data.message || "Sent to SAP successfully");
+
+    // wait for server-side processing
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const detailsResponse = await axios.get(
+      `https://${baseUrl}/pms/work_orders/${id}.json`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (detailsResponse.data?.page) {
+      setServicePR(detailsResponse.data.page);
+
+      if (
+        detailsResponse.data.page?.api_responses &&
+        Array.isArray(detailsResponse.data.page.api_responses)
+      ) {
+        setExternalApiCalls(detailsResponse.data.page.api_responses);
+        console.log(
+          "API Calls updated after send to SAP:",
+          detailsResponse.data.page.api_responses
+        );
+      }
+
+      toast.success("Data refreshed after send to SAP");
     }
 
-    try {
-      const response = await axios.get<{ message: string }>(
-        `https://${baseUrl}/pms/work_orders/${id}.json?send_sap=yes`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success(response.data.message);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send to SAP");
-    }
-  }, [id]);
+    // Disable the button after successful push
+    
+  } catch (error: any) {
+    console.error("Send to SAP error:", error);
+
+    toast.error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Failed to send to SAP"
+    );
+  }
+}, [id]);
 
   // Handle test run
-  const handleTestRun = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const baseUrl = localStorage.getItem("baseUrl");
-    if (!baseUrl || !token || !id) {
-      toast.error("Missing required configuration");
-      return;
-    }
+const handleTestRun = useCallback(async () => {
+  const token = localStorage.getItem("token");
+  const baseUrl = localStorage.getItem("baseUrl");
 
-    try {
-      setTestRunLoading(true);
-      const response = await axios.get<{ message: string }>(
-        `https://${baseUrl}/pms/work_orders/test_run?id=${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success(response.data.message || "Test run completed successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to run test run");
-    } finally {
-      setTestRunLoading(false);
+  if (!baseUrl || !token || !id) {
+    toast.error("Missing required configuration");
+    return;
+  }
+
+  try {
+    setTestRunLoading(true);
+
+    const response = await axios.get<{ message: string }>(
+      `https://${baseUrl}/pms/work_orders/test_run?id=${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    toast.success(
+      response.data.message || "Test run completed successfully"
+    );
+
+    // wait for server-side processing
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const detailsResponse = await axios.get(
+      `https://${baseUrl}/pms/work_orders/${id}.json`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (detailsResponse.data?.page) {
+      setServicePR(detailsResponse.data.page);
+
+      if (
+        detailsResponse.data.page?.api_responses &&
+        Array.isArray(detailsResponse.data.page.api_responses)
+      ) {
+        setExternalApiCalls(detailsResponse.data.page.api_responses);
+      }
+
+      toast.success("Data refreshed after test run");
     }
-  }, [id]);
+  } catch (error: any) {
+    console.error("Test run error:", error);
+
+    toast.error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Failed to run test run"
+    );
+  } finally {
+    setTestRunLoading(false);
+  }
+}, [id]);
 
   const handleApproveDeletionRequest = async () => {
     const payload = {
@@ -677,6 +751,7 @@ export const ServicePRDetailsPage = () => {
                   variant="outline"
                   className="border-gray-300 bg-purple-600 text-white hover:bg-purple-700"
                   onClick={handleSendToSap}
+                  disabled={sapPushDisabled}
                 >
                   Push To SAP
                 </Button>

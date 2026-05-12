@@ -12,6 +12,73 @@ const Index = () => {
   const { selectedCompany } = useSelector((state: RootState) => state.project);
   const org_id = localStorage.getItem("org_id");
 
+  // Helper function to get first available employee link
+  const getFirstEmployeeLink = useCallback((): string => {
+    if (!userRole || !userRole.lock_modules) {
+      return "/vas/projects"; // Fallback
+    }
+
+    // Find first module from Employee modules (Employee Sidebar or Employee Projects Sidebar)
+    for (const module of userRole.lock_modules) {
+      // Only look for Employee-specific modules
+      if (
+        module.module_name === "Employee Sidebar" ||
+        module.module_name === "Employee Projects Sidebar" ||
+        module.module_name === "Employee Business Compass" ||
+        module.module_name === "Employee Admin Compass"
+      ) {
+        // Find first active function with a react_link
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const firstActiveFunction = (module.lock_functions as any[]).find(
+          (func) =>
+            func.function_active === 1 &&
+            func.react_link &&
+            !func.parent_function
+        );
+
+        if (firstActiveFunction && firstActiveFunction.react_link) {
+          return firstActiveFunction.react_link;
+        }
+      }
+    }
+
+    return "/vas/projects"; // Fallback to projects
+  }, [userRole]);
+
+  // Helper function to get first available admin link
+  const getFirstAdminLink = useCallback((): string => {
+    if (!userRole || !userRole.lock_modules) {
+      return "/maintenance/asset"; // Fallback to asset management
+    }
+
+    // Find first module with active functions (excluding Employee modules)
+    for (const module of userRole.lock_modules) {
+      // Skip Employee Sidebar and Employee Projects Sidebar modules
+      if (
+        module.module_name === "Employee Sidebar" ||
+        module.module_name === "Employee Projects Sidebar" ||
+        module.module_name === "Employee Business Compass" ||
+        module.module_name === "Employee Admin Compass"
+      ) {
+        continue;
+      }
+
+      // Find first active function with a react_link
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const firstActiveFunction = (module.lock_functions as any[]).find(
+        (func) =>
+          func.function_active === 1 && func.react_link && !func.parent_function
+      );
+
+      if (firstActiveFunction && firstActiveFunction.react_link) {
+        return firstActiveFunction.react_link;
+      }
+    }
+
+    return "/maintenance/asset"; // Fallback to asset management
+  }, [userRole]);
+
+  // First check if view selection is needed
   useEffect(() => {
     // Wait for permissions to load
     if (loading) return;

@@ -130,17 +130,29 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
         endpoint = '/patrolling_checkpoints_bulk_upload_sample.xlsx';
         filename = 'patrolling_checkpoints_bulk_upload_sample.xlsx';
       } else {
-        endpoint = '/assets/asset.xlsx';
-        filename = 'asset_sample_format.xlsx';
+        endpoint = '/asset_audit_import.xlsx';
+        filename = 'asset_audit_import.xlsx';
       }
 
       // Call the API to download the sample file
-      const response = await apiClient.get(endpoint, {
-        responseType: 'blob'
+      const baseUrl = localStorage.getItem('baseUrl') || '';
+      const token = localStorage.getItem('token') || '';
+      const normalizedBaseUrl = baseUrl.startsWith('http://') || baseUrl.startsWith('https://') ? baseUrl : `https://${baseUrl}`;
+      const sampleUrl = `${normalizedBaseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
+      const response = await fetch(sampleUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to download sample file');
+      }
+
       // Create blob URL and trigger download
-      const blob = response.data;
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -186,50 +198,28 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
       // 🔹 ASSETS → BACKGROUND IMPORT
       // ===============================
       if (context === "assets") {
+        const baseUrl = localStorage.getItem('baseUrl') || '';
+        const token = localStorage.getItem('token') || '';
+        const normalizedBaseUrl = baseUrl.startsWith('http://') || baseUrl.startsWith('https://') ? baseUrl : `https://${baseUrl}`;
+        const importUrl = `${normalizedBaseUrl}/pms/asset_audits/import.json`;
+
         const formData = new FormData();
-        formData.append("pms_asset_file", selectedFile);
+        formData.append('file', selectedFile);
 
-        // STEP 1: Start background import
-        const response = await apiClient.post(
-          "/pms/assets/asset_import",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        const response = await fetch(importUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData,
+        });
 
-        const { import_key } = response.data;
-
-        if (!import_key) {
-          throw new Error("Import key not returned from server");
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Failed to import asset audits');
         }
 
-        toast.info("Import started", {
-          description: "Assets are being imported in background…",
-        });
-
-        // STEP 2: Poll until finished
-        const result = await waitForAssetImportDone(import_key);
-
-        toast.success("Import completed", {
-          description: `${result.success_count || 0} assets imported, ${result.error_count || 0} errors`,
-        });
-
-        setSelectedFile(null);
-        onOpenChange(false);
-        return; // ⛔ IMPORTANT: stop here
-      }
-
-      // ==================================
-      // 🔹 STAFF BULK UPLOAD
-      // ==================================
-      if (context === "staff") {
-        const formData = new FormData();
-        formData.append("society_staff_file", selectedFile);
-
-        await apiClient.post(ENDPOINTS.STAFF_BULK_UPLOAD, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        toast.success("Staff imported successfully");
+        toast.success('Import completed successfully');
         setSelectedFile(null);
         onOpenChange(false);
         return;

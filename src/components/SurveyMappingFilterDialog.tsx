@@ -42,6 +42,12 @@ export interface SurveyMappingFilters {
 interface LocationOption {
   id: number;
   name: string;
+  flat_no?: string;
+}
+
+interface SurveyTitleOption {
+  id: number;
+  name: string;
 }
 
 const fieldStyles = {
@@ -74,6 +80,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
   onApply,
 }) => {
   const [surveyTitle, setSurveyTitle] = useState("");
+  const [surveyTitles, setSurveyTitles] = useState<SurveyTitleOption[]>([]);
   const [selectedSite, setSelectedSite] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedWing, setSelectedWing] = useState("");
@@ -100,9 +107,10 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch sites on component mount
+  // Fetch sites and survey titles on component mount
   useEffect(() => {
     fetchSites();
+    fetchSurveyTitles();
     fetchTowers();
   }, []);
 
@@ -231,6 +239,73 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
     } catch (error) {
       console.error("Error fetching sites:", error);
       toast.error("Failed to fetch sites");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch survey titles for dropdown
+  const fetchSurveyTitles = async () => {
+    try {
+      setIsLoading(true);
+      const extractSurveyTitles = (data: unknown): SurveyTitleOption[] => {
+        const surveyMappings = (data as { survey_mappings?: unknown })
+          ?.survey_mappings;
+
+        return Array.isArray(surveyMappings)
+          ? surveyMappings.map(
+              (survey: {
+                id?: number;
+                survey_id?: number;
+                name?: string;
+                survey_name?: string;
+                survey_title?: string;
+              }) => ({
+                id: survey.id || survey.survey_id || 0,
+                name:
+                  survey.name ||
+                  survey.survey_name ||
+                  survey.survey_title ||
+                  "",
+              })
+            )
+          : [];
+      };
+
+      const firstResponse = await apiClient.get(
+        "/survey_mappings/mappings_list.json?page=1"
+      );
+      const totalPages = Number(firstResponse.data?.pagination?.total_pages) || 1;
+      let surveyData = extractSurveyTitles(firstResponse.data);
+
+      if (totalPages > 1) {
+        const pageResponses = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, index) =>
+            apiClient.get(
+              `/survey_mappings/mappings_list.json?page=${index + 2}`
+            )
+          )
+        );
+
+        surveyData = [
+          ...surveyData,
+          ...pageResponses.flatMap((response) =>
+            extractSurveyTitles(response.data)
+          ),
+        ];
+      }
+
+      // Filter out entries with no ID or name and remove duplicates by ID
+      const validSurveys = surveyData.filter(
+        (survey) => survey.id && survey.name.trim()
+      );
+      const uniqueSurveys = Array.from(
+        new Map(validSurveys.map((survey) => [survey.id, survey])).values()
+      );
+      setSurveyTitles(uniqueSurveys);
+    } catch (error) {
+      console.error("Error fetching survey titles:", error);
+      toast.error("Failed to fetch survey titles");
     } finally {
       setIsLoading(false);
     }
@@ -381,6 +456,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
       // per_page and page are default sample values, caller can adjust as needed
       params.push("per_page=10");
       params.push("page=1");
+      if (surveyTitle) params.push(`q[survey_id_eq]=${surveyTitle}`);
       if (selectedTower) params.push(`q[building_id_eq]=${selectedTower}`);
       if (selectedFlat) params.push(`q[wing_id_eq]=${selectedFlat}`);
       if (selectedUser) params.push(`q[user_society_id_eq]=${selectedUser}`);
@@ -470,16 +546,26 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
               Survey Details
             </h3>
             <div className="grid grid-cols-1 gap-6">
-              <TextField
-                label="Survey Title"
-                placeholder="Enter Survey Title"
-                value={surveyTitle}
-                onChange={(e) => setSurveyTitle(e.target.value)}
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: fieldStyles }}
-              />
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Survey Title</InputLabel>
+                <MuiSelect
+                  value={surveyTitle}
+                  onChange={(e) => setSurveyTitle(e.target.value)}
+                  label="Survey Title"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">
+                    <em>Select Survey</em>
+                  </MenuItem>
+                  {surveyTitles.map((survey) => (
+                    <MenuItem key={survey.id} value={survey.id}>
+                      {survey.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             </div>
           </div>
 

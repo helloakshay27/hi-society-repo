@@ -43,6 +43,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     currentSection,
     setCurrentSection,
     layoutMode,
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
   } = useLayout();
   const { isActionSidebarVisible } = useActionLayout();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
@@ -206,6 +208,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       userEmail === "deveshjain928@gmail.com" ||
       userEmail === "abdul.ghaffar@lockated.com" ||
       userEmail === "mailroom2@zs.com" ||
+      userEmail === "tested4@gmail.com" ||
+      userEmail === "tested3@gmail.com" ||
+      userEmail === "testtwo@gmail.com" ||
+      // userEmail === "ps1@gophygital.work" ||
+      userEmail === "ps@gophygital.work" ||
       userEmail === "abdul.g@gophygital.work"
     ) {
       console.log("✅ Rendering ActionSidebar (company-specific)");
@@ -274,6 +281,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       userEmail === "deveshjain928@gmail.com" ||
       userEmail === "abdul.ghaffar@lockated.com" ||
       userEmail === "mailroom2@zs.com" ||
+      userEmail === "tested4@gmail.com" ||
+      userEmail === "tested3@gmail.com" ||
+      userEmail === "testtwo@gmail.com" ||
+      // userEmail === "ps1@gophygital.work" ||
+      userEmail === "ps@gophygital.work" ||
       userEmail === "abdul.g@gophygital.work"
     ) {
       return <ActionHeader />;
@@ -347,6 +359,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, [location.search]);
 
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname, setIsMobileSidebarOpen]);
+
   const [activeNavMenu, setActiveNavMenu] = useState<string | null>(null);
   const isNewEmpHubRoute = location.pathname === "/employee/company-hub-new";
 
@@ -372,6 +389,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Conditional Header - Hi-Society mode shows HiSocietyHeader, FM Matrix mode shows admin Header */}
       {layoutMode === "hi-society" ? <HiSocietyHeader /> : <Header />}
+
+      {/* Mobile overlay backdrop - closes sidebar when tapping outside */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
 
       {renderSidebar()}
 

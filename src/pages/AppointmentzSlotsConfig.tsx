@@ -11,7 +11,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -23,7 +22,6 @@ import {
   getSiteSchedules,
   createSiteSchedule,
   updateSiteSchedule,
-  SiteSchedule as APISiteSchedule,
   getRMUsers,
 } from "@/services/appointmentzService";
 
@@ -35,6 +33,10 @@ interface SlotConfig {
   endDate?: string;
   startTime: string;
   endTime: string;
+  startHour: string;
+  startMinute: string;
+  endHour: string;
+  endMinute: string;
   mon: number;
   tue: number;
   wed: number;
@@ -52,6 +54,19 @@ const AppointmentzSlotsConfig = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [rmUsers, setRmUsers] = useState<{ id: number; name: string }[]>([]);
+
+  const formatTimePart = (value: string | number | null | undefined) =>
+    String(value ?? 0).padStart(2, "0");
+
+  const normalizeDateForInput = (date?: string) => {
+    if (!date) return "";
+    if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.slice(0, 10);
+    if (date.includes("/")) {
+      const [day, month, year] = date.split("/");
+      return `${year}-${month}-${day}`;
+    }
+    return date;
+  };
 
   // Form Data State
   const [formData, setFormData] = useState({
@@ -99,6 +114,10 @@ const AppointmentzSlotsConfig = () => {
           endDate: schedule.end_date,
           startTime: startTime || "",
           endTime: endTime || "",
+          startHour: formatTimePart(schedule.start_hour),
+          startMinute: formatTimePart(schedule.start_minute),
+          endHour: formatTimePart(schedule.end_hour),
+          endMinute: formatTimePart(schedule.end_minute),
           mon: schedule.mon,
           tue: schedule.tue,
           wed: schedule.wed,
@@ -211,21 +230,15 @@ const AppointmentzSlotsConfig = () => {
     setIsEditMode(true);
     setSelectedId(item.id);
 
-    // Parse time
-    const startParts = item.startTime.split(/[: ]/);
-    const endParts = item.endTime.split(/[: ]/);
-
     setFormData({
       rmUser: item.rmUser,
       rmUserId: item.rmUserId,
-      startDate: item.startDate
-        ? item.startDate.split("/").reverse().join("-")
-        : "",
-      endDate: item.endDate ? item.endDate.split("/").reverse().join("-") : "",
-      startHour: startParts[0] || "00",
-      startMinute: startParts[1] || "00",
-      endHour: endParts[0] || "00",
-      endMinute: endParts[1] || "00",
+      startDate: normalizeDateForInput(item.startDate),
+      endDate: normalizeDateForInput(item.endDate),
+      startHour: item.startHour,
+      startMinute: item.startMinute,
+      endHour: item.endHour,
+      endMinute: item.endMinute,
       days: {
         mon: item.mon,
         tue: item.tue,
@@ -247,33 +260,49 @@ const AppointmentzSlotsConfig = () => {
       return;
     }
 
+    if (!formData.startDate || !formData.endDate) {
+      setTimeout(() => {
+        toast.error("Please select start and end dates");
+      }, 0);
+      return;
+    }
+
     try {
-      const payload = {
+      const schedulePayload = {
+        rm_user_id: formData.rmUserId,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        start_hour: formData.startHour,
+        start_minute: formData.startMinute,
+        end_hour: formData.endHour,
+        end_minute: formData.endMinute,
+        mon: formData.days.mon,
+        tue: formData.days.tue,
+        wed: formData.days.wed,
+        thu: formData.days.thu,
+        fri: formData.days.fri,
+        sat: formData.days.sat,
+        sun: formData.days.sun,
+      };
+
+      const createPayload = {
         site_schedule: {
+          ...schedulePayload,
           rm_user_ids: [formData.rmUserId],
-          start_date: formData.startDate || undefined,
-          end_date: formData.endDate || undefined,
-          start_hour: formData.startHour,
-          start_minute: formData.startMinute,
-          end_hour: formData.endHour,
-          end_minute: formData.endMinute,
-          mon: formData.days.mon,
-          tue: formData.days.tue,
-          wed: formData.days.wed,
-          thu: formData.days.thu,
-          fri: formData.days.fri,
-          sat: formData.days.sat,
-          sun: formData.days.sun,
         },
       };
 
+      const updatePayload = {
+        site_schedule: schedulePayload,
+      };
+
       if (isEditMode && selectedId) {
-        await updateSiteSchedule(selectedId, payload);
+        await updateSiteSchedule(selectedId, updatePayload);
         setTimeout(() => {
           toast.success("Slot updated successfully!");
         }, 0);
       } else {
-        await createSiteSchedule(payload);
+        await createSiteSchedule(createPayload);
         setTimeout(() => {
           toast.success("Slot added successfully!");
         }, 0);

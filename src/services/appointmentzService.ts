@@ -333,7 +333,27 @@ export interface SiteSchedulesResponse {
 
 export interface CreateSiteSchedulePayload {
   site_schedule: {
+    rm_user_id?: number;
     rm_user_ids: number[];
+    start_date?: string;
+    end_date?: string;
+    start_hour: string | number;
+    start_minute: string | number;
+    end_hour: string | number;
+    end_minute: string | number;
+    mon: number;
+    tue: number;
+    wed: number;
+    thu: number;
+    fri: number;
+    sat: number;
+    sun: number;
+  };
+}
+
+export interface UpdateSiteSchedulePayload {
+  site_schedule: {
+    rm_user_id: number;
     start_date?: string;
     end_date?: string;
     start_hour: string | number;
@@ -429,12 +449,12 @@ export const createSiteSchedule = async (
  */
 export const updateSiteSchedule = async (
   scheduleId: number,
-  payload: CreateSiteSchedulePayload
+  payload: UpdateSiteSchedulePayload
 ): Promise<{ success: boolean; message: string }> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token =  localStorage.getItem("token");
 
-  const response = await axios.put(
+  const response = await axios.patch(
     `https://${baseUrl}/crm/admin/site_schedules/${scheduleId}.json`,
     payload,
     {

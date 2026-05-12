@@ -526,9 +526,31 @@ export const AddMaterialPRDashboard = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []) as File[];
+    const validFileTypes = ['application/pdf'];
+    const maxFileSizeBytes = 12 * 1024 * 1024; // 12 MB
+    const validFiles: File[] = [];
+
+    selectedFiles.forEach((file) => {
+      // Validate file type
+      if (!validFileTypes.includes(file.type)) {
+        toast.error(`Invalid file type: ${file.name}. Only PDF files are accepted.`);
+        return;
+      }
+
+      // Validate file size
+      if (file.size > maxFileSizeBytes) {
+        toast.error(`File size exceeded: ${file.name}. Maximum allowed size is 12 MB`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (validFiles.length > 0) {
+      setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+    }
   };
 
   const removeFile = (indexToRemove) => {
@@ -1103,7 +1125,7 @@ export const AddMaterialPRDashboard = () => {
                       ))}
                     </MuiSelect>
                   </FormControl>
-                  {overallWbs && (
+                  {/* {overallWbs && (
                     <Button
                       variant="ghost"
                       type="button"
@@ -1116,7 +1138,7 @@ export const AddMaterialPRDashboard = () => {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                  )}
+                  )} */}
                 </div>
               )}
 
@@ -1440,6 +1462,10 @@ export const AddMaterialPRDashboard = () => {
                   <span className="ml-1">
                     {files.length > 0 ? `${files.length} image(s) selected` : "No images chosen"}
                   </span>
+                </div>
+                <div className="text-xs text-gray-500 mt-3 space-y-1">
+                  <p>Accepts up to 12 MB files</p>
+                  <p>Supported formats: PDF </p>
                 </div>
               </div>
 

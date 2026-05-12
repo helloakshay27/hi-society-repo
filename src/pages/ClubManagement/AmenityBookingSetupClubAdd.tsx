@@ -33,6 +33,9 @@ import {
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
+import Quill from "quill";
+import "quill/dist/quill.snow.css";
+import { ClubGalleryImageUpload } from "@/components/ClubGalleryImageUpload";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -102,6 +105,12 @@ export const AddBookingSetupClubPage = () => {
 
   const coverImageRef = useRef(null);
   const bookingImageRef = useRef(null);
+  const descriptionQuillRef = useRef<HTMLDivElement>(null);
+  const descriptionEditorRef = useRef<Quill | null>(null);
+  const termsQuillRef = useRef<HTMLDivElement>(null);
+  const termsEditorRef = useRef<Quill | null>(null);
+  const cancellationQuillRef = useRef<HTMLDivElement>(null);
+  const cancellationEditorRef = useRef<Quill | null>(null);
   const [selectedFile, setSelectedFile] = useState<File[]>([]);
   const [selectedBookingFiles, setSelectedBookingFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -236,22 +245,216 @@ export const AddBookingSetupClubPage = () => {
     bookingImageRef.current?.click();
   };
 
+  const handleGalleryModalOpen = () => {
+    setGalleryModalOpen(true);
+  };
+
+  const handleGalleryModalClose = () => {
+    setGalleryModalOpen(false);
+  };
+
+  const handleGalleryModalContinue = (galleryImages: any[]) => {
+    setSelectedGalleryImages(galleryImages);
+    setGalleryModalOpen(false);
+  };
+
+  const handleAdditionalOpen = () => {
+    setAdditionalOpen(!additionalOpen);
+  };
+
+  const fetchDepartments = async () => {
+    if (departments.length > 0) return; // Don't fetch if already loaded
+
+    setLoadingDepartments(true);
+    try {
+      const response = await fetch(
+        `https://${baseUrl}/pms/departments.json`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+
+      // Handle different response structures
+      let departmentsList = [];
+      if (Array.isArray(data)) {
+        departmentsList = data;
+      } else if (Array.isArray(data.departments)) {
+        departmentsList = data.departments;
+      } else if (data && data.length !== undefined) {
+        // Handle case where data might be array-like
+        departmentsList = Array.from(data);
+      }
+
+      setDepartments(departmentsList);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      setDepartments([]);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
+  const fetchInventories = async () => {
+    if (inventories.length > 0) return; // Don't fetch if already loaded
+
+    setLoadingInventories(true);
+    try {
+      const response = await fetch(
+        `https://${baseUrl}/pms/inventories.json?q[active_eq]=true`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+
+      if (data && Array.isArray(data.inventories)) {
+        setInventories(data.inventories);
+      } else {
+        setInventories([]);
+      }
+    } catch (error) {
+      console.error("Error fetching inventories:", error);
+      setInventories([]);
+    } finally {
+      setLoadingInventories(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchInventories();
+  }, []);
+
+  // Initialize Quill editors for Description, Terms & Conditions, and Cancellation Policy
+  useEffect(() => {
+    // Description editor
+    if (descriptionQuillRef.current && !descriptionEditorRef.current) {
+      descriptionEditorRef.current = new Quill(descriptionQuillRef.current, {
+        theme: "snow",
+        placeholder: "Enter description...",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            ["blockquote", "code-block"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link", "image"],
+            ["clean"],
+          ],
+        },
+      });
+
+      if (formData.description) {
+        descriptionEditorRef.current.root.innerHTML = formData.description;
+      }
+
+      descriptionEditorRef.current.on("text-change", () => {
+        const html = descriptionEditorRef.current?.root.innerHTML;
+        const sanitized = html && html !== '<p><br></p>' ? html : "";
+        setFormData((prev) => ({ ...prev, description: sanitized }));
+      });
+    }
+
+    // Terms & Conditions editor
+    if (termsQuillRef.current && !termsEditorRef.current) {
+      termsEditorRef.current = new Quill(termsQuillRef.current, {
+        theme: "snow",
+        placeholder: "Enter terms and conditions...",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            ["blockquote", "code-block"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link", "image"],
+            ["clean"],
+          ],
+        },
+      });
+
+      if (formData.termsConditions) {
+        termsEditorRef.current.root.innerHTML = formData.termsConditions;
+      }
+
+      termsEditorRef.current.on("text-change", () => {
+        const html = termsEditorRef.current?.root.innerHTML;
+        const sanitized = html && html !== '<p><br></p>' ? html : "";
+        setFormData((prev) => ({ ...prev, termsConditions: sanitized }));
+      });
+    }
+
+    // Cancellation Policy editor
+    if (cancellationQuillRef.current && !cancellationEditorRef.current) {
+      cancellationEditorRef.current = new Quill(cancellationQuillRef.current, {
+        theme: "snow",
+        placeholder: "Enter cancellation policy...",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            ["blockquote", "code-block"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link"],
+            ["clean"],
+          ],
+        },
+      });
+
+      if (formData.cancellationText) {
+        cancellationEditorRef.current.root.innerHTML = formData.cancellationText;
+      }
+
+      cancellationEditorRef.current.on("text-change", () => {
+        const html = cancellationEditorRef.current?.root.innerHTML;
+        const sanitized = html && html !== '<p><br></p>' ? html : "";
+        setFormData((prev) => ({ ...prev, cancellationText: sanitized }));
+      });
+    }
+
+    return () => {
+      // Cleanup not strictly necessary for Quill; if required, set refs to null here
+    };
+  }, []);
+
+  // Sync updates from formData to editors (useful if formData is pre-filled)
+  useEffect(() => {
+    if (descriptionEditorRef.current && formData.description !== (descriptionEditorRef.current.root.innerHTML || "")) {
+      descriptionEditorRef.current.root.innerHTML = formData.description || "";
+    }
+  }, [formData.description]);
+
+  useEffect(() => {
+    if (termsEditorRef.current && formData.termsConditions !== (termsEditorRef.current.root.innerHTML || "")) {
+      termsEditorRef.current.root.innerHTML = formData.termsConditions || "";
+    }
+  }, [formData.termsConditions]);
+
+  useEffect(() => {
+    if (cancellationEditorRef.current && formData.cancellationText !== (cancellationEditorRef.current.root.innerHTML || "")) {
+      cancellationEditorRef.current.root.innerHTML = formData.cancellationText || "";
+    }
+  }, [formData.cancellationText]);
+
   const validateForm = () => {
     if (!formData.facilityName) {
       toast.error("Please enter Facility Name");
       return false;
+    } else if (!formData.facilityBookedTimes) {
+      toast.error("Please enter how many times facility can be booked per day");
+      return false;
     }
-    // else if (
-    //   formData.facilityBookings.length === 0 ||
-    //   !formData.facilityBookings.some((fb) => fb.isChecked && fb.times)
-    // ) {
-    //   toast.error("Please add at least one facility booking rule");
+    // else if (!formData.termsConditions) {
+    //   toast.error("Please enter Terms and Conditions");
     //   return false;
     // }
-    else if (!formData.termsConditions) {
-      toast.error("Please enter Terms and Conditions");
-      return false;
-    } else if (!formData.cancellationText) {
+    else if (!formData.cancellationText) {
       toast.error("Please enter Cancellation Policies");
       return false;
     }
@@ -2561,26 +2764,7 @@ export const AddBookingSetupClubPage = () => {
                   CONFIGURE SLOT
                 </h3>
               </div>
-              {formData.isRequest && (
-                <Button
-                  onClick={() => {
-                    setFormData({
-                      ...formData,
-                      customSlots: [
-                        ...formData.customSlots,
-                        {
-                          startTime: { hour: "00", minute: "00" },
-                          endTime: { hour: "00", minute: "00" },
-                          amount: "",
-                        },
-                      ],
-                    });
-                  }}
-                  className="bg-purple-600 hover:bg-purple-700 mb-4"
-                >
-                  Add
-                </Button>
-              )}
+              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Facility Operational Timings & Booking</h3>
             </div>
 
             <div>
@@ -3679,13 +3863,14 @@ export const AddBookingSetupClubPage = () => {
             </div>
 
             <div>
-              <Textarea
-                placeholder="Enter description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="min-h-[100px]"
+              <div
+                ref={descriptionQuillRef}
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  minHeight: "200px",
+                }}
               />
             </div>
           </div>
@@ -3697,25 +3882,42 @@ export const AddBookingSetupClubPage = () => {
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                   <ReceiptText className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                  TERMS & CONDITIONS <span className="text-[#C72030]">*</span>
-                </h3>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">TERMS & CONDITIONS</h3>
               </div>
 
               <div>
-                <Textarea
-                  placeholder="Enter terms and conditions"
-                  value={formData.termsConditions}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      termsConditions: e.target.value,
-                    })
-                  }
-                  className="min-h-[100px]"
+                <div
+                  ref={termsQuillRef}
+                  style={{
+                    backgroundColor: "#fff",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                    minHeight: "200px",
+                  }}
                 />
               </div>
             </div>
+
+            {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                  <MessageSquareX className="w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CANCELLATION POLICY*</h3>
+              </div>
+
+              <div>
+                <div
+                  ref={cancellationQuillRef}
+                  style={{
+                    backgroundColor: "#fff",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                    minHeight: "200px",
+                  }}
+                />
+              </div>
+            </div> */}
           </div>
 
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
@@ -3835,16 +4037,14 @@ export const AddBookingSetupClubPage = () => {
               <div className="font-medium text-gray-700">
                 Cancellation Policy <span className="text-[#C72030]">*</span>
               </div>
-              <Textarea
-                placeholder="Enter cancellation text"
-                value={formData.cancellationText}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    cancellationText: e.target.value,
-                  })
-                }
-                className="min-h-[100px]"
+              <div
+                ref={cancellationQuillRef}
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  minHeight: "200px",
+                }}
               />
             </div>
           </div>

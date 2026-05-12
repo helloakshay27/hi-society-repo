@@ -63,6 +63,12 @@ interface FilterState {
   surveyType: string;
   startDate: Date | null;
   endDate: Date | null;
+  // Location hierarchy filters
+  towerId: string;
+  flatId: string;
+  userId: string;
+  // Query string for API calls
+  queryString?: string;
 }
 
 interface ExportFilterState {
@@ -268,6 +274,11 @@ export const SurveyResponsePage = () => {
     surveyType: "",
     startDate: null,
     endDate: null,
+    // Location hierarchy filters
+    towerId: "",
+    flatId: "",
+    userId: "",
+    queryString: "",
   });
 
   const formatDateForInput = (date: Date | null) => {
@@ -373,6 +384,19 @@ export const SurveyResponsePage = () => {
           filters.surveyTitle.trim()
         );
         // console.log('🔍 Adding survey title filter:', filters.surveyTitle);
+      }
+
+      // Add queryString from filters if provided (contains tower, flat, user filters)
+      if (filters?.queryString && filters.queryString.trim()) {
+        // Parse the queryString and add each parameter to URL
+        const queryParams = filters.queryString.split("&");
+        queryParams.forEach(param => {
+          const [key, value] = param.split("=");
+          if (key && value) {
+            urlWithParams.searchParams.append(decodeURIComponent(key), decodeURIComponent(value));
+          }
+        });
+        // console.log('🔍 Adding location hierarchy filters:', filters.queryString);
       }
 
       // console.log('🚀 Calling survey response list API:', urlWithParams.toString());
@@ -1041,6 +1065,11 @@ export const SurveyResponsePage = () => {
       surveyType: "",
       startDate: null,
       endDate: null,
+      // Location hierarchy filters
+      towerId: "",
+      flatId: "",
+      userId: "",
+      queryString: "",
     };
     setAppliedFilters(resetFilters);
     // Reset to page 1 when filters are reset

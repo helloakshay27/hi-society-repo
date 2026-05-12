@@ -17,6 +17,7 @@ import {
   ChartArea,
   ChartAreaIcon,
   Shield,
+  Menu,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -39,7 +40,7 @@ import {
   changeSite,
   clearSites,
 } from "@/store/slices/siteSlice";
-import { getUser, clearAuth, fetchLockAccount } from "@/utils/auth";
+import { getUser, saveUser, clearAuth, fetchLockAccount } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
@@ -61,8 +62,8 @@ export interface Site {
 }
 
 export interface HiSocietySociety {
-  id: number;
-  id_society: string;
+  id: number;               // user_society.id (the user_society_id)
+  id_society: string;      // society_id as string
   society: {
     id: number;
     building_name: string;
@@ -70,7 +71,22 @@ export interface HiSocietySociety {
   user_flat?: {
     id: number;
     flat: string;
-    block: string;
+    block: string | null;
+  };
+}
+
+interface AccountResidence {
+  id: number;
+  society_id: number;
+  flat: string;
+  block: string | null;
+  user_society?: {
+    id: number;
+    approve: boolean | null;
+  };
+  society?: {
+    id: number;
+    building_name: string;
   };
 }
 
@@ -95,6 +111,8 @@ export const Header = () => {
   const { layoutMode, toggleLayoutMode } = useLayout();
   console.log("layoutMode:-", layoutMode);
 
+
+  const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
 
   // Use Notification Context
   const {
@@ -232,27 +250,78 @@ export const Header = () => {
             role_name: data?.role_name,
           });
         })
-        .catch(() => { });
+        .catch(() => {});
     } catch {
       /* no-op */
     }
   }, [isViSite]);
 
-  // Load Hi-Society data from localStorage
+  // Load Hi-Society data: build society list from account.json residences
   useEffect(() => {
-    const loadHiSocietyData = () => {
-      const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
-      const selectedUserSociety = localStorage.getItem("selectedUserSociety");
+    const loadHiSocietyData = async () => {
+      const currentUser = getUser();
+      if (!currentUser?.spree_api_key) return;
 
-      if (societiesData) {
-        const societies: HiSocietySociety[] = JSON.parse(societiesData);
-        setHiSocietySocieties(societies);
+      try {
+        const accountUrl = `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${currentUser.spree_api_key}`;
+        const res = await fetch(accountUrl);
+        if (!res.ok) return;
+        const accountData = await res.json();
 
-        // Find and set selected society
-        if (selectedUserSociety) {
-          const selected = societies.find(s => s.id.toString() === selectedUserSociety);
+        const residences: AccountResidence[] = accountData?.residences || [];
+        const selectedUserSocietyId: number = accountData?.selected_user_society;
+
+        // Map residences → HiSocietySociety shape
+        const societies: HiSocietySociety[] = residences
+          .filter((r) => r.user_society?.approve === true)
+          .map((r) => ({
+            id: r.user_society?.id,           // user_society.id = the user_society_id
+            id_society: String(r.society_id),
+            society: {
+              id: r.society?.id,
+              building_name: r.society?.building_name || "Unknown",
+            },
+            user_flat: {
+              id: r.id,
+              flat: r.flat || "",
+              block: r.block || null,
+            },
+          }));
+
+        // Deduplicate by society id (keep first occurrence per society)
+        const seen = new Set<number>();
+        const uniqueSocieties = societies.filter((s) => {
+          if (seen.has(s.society.id)) return false;
+          seen.add(s.society.id);
+          return true;
+        });
+
+        setHiSocietySocieties(uniqueSocieties);
+        localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(uniqueSocieties));
+
+        // Set the currently selected society based on selected_user_society
+        if (selectedUserSocietyId) {
+          const selected = uniqueSocieties.find(
+            (s) => s.id === selectedUserSocietyId
+          );
           if (selected) {
             setSelectedSociety(selected);
+            localStorage.setItem("selectedUserSociety", String(selectedUserSocietyId));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load Hi-Society data", err);
+        // Fallback to localStorage cache
+        const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
+        const selectedUserSociety = localStorage.getItem("selectedUserSociety");
+        if (societiesData) {
+          const societies: HiSocietySociety[] = JSON.parse(societiesData);
+          setHiSocietySocieties(societies);
+          if (selectedUserSociety) {
+            const selected = societies.find(
+              (s) => s.id.toString() === selectedUserSociety
+            );
+            if (selected) setSelectedSociety(selected);
           }
         }
       }
@@ -277,31 +346,75 @@ export const Header = () => {
   const handleSocietyChange = async (societyId: number) => {
     setHiSocietyLoading(true);
     try {
-      const user = getUser();
-      if (!user?.spree_api_key) {
+      const currentUser = getUser();
+      if (!currentUser?.spree_api_key) {
         console.error("No token found");
         return;
       }
 
-      const response = await fetch(
-        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.CHANGE_USER_SOCIETY}?token=${user.spree_api_key}&user_society_id=${societyId}`
+      // Step 1: Call change_user_society
+      const changeRes = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.CHANGE_USER_SOCIETY}?token=${currentUser.spree_api_key}&user_society_id=${societyId}`
       );
-
-      if (!response.ok) {
+      if (!changeRes.ok) {
         throw new Error("Failed to change society");
       }
 
-      const data = await response.json();
+      // Step 2: Fetch fresh account data
+      const accountRes = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${currentUser.spree_api_key}`
+      );
+      if (!accountRes.ok) {
+        throw new Error("Failed to fetch account data");
+      }
+      const accountData = await accountRes.json();
 
-      // Update selected society
-      const selected = hiSocietySocieties.find(s => s.id === societyId);
+      // Step 3: Save updated user to localStorage
+      saveUser({ ...currentUser, ...accountData });
+
+      // Step 4: Rebuild societies from residences
+      const residences: AccountResidence[] = accountData?.residences || [];
+      const selectedUserSocietyId: number = accountData?.selected_user_society;
+
+      const societies: HiSocietySociety[] = residences
+        .filter((r) => r.user_society?.approve === true)
+        .map((r) => ({
+          id: r.user_society?.id,
+          id_society: String(r.society_id),
+          society: {
+            id: r.society?.id,
+            building_name: r.society?.building_name || "Unknown",
+          },
+          user_flat: {
+            id: r.id,
+            flat: r.flat || "",
+            block: r.block || null,
+          },
+        }));
+
+      // Deduplicate by society id
+      const seen = new Set<number>();
+      const uniqueSocieties = societies.filter((s) => {
+        if (seen.has(s.society.id)) return false;
+        seen.add(s.society.id);
+        return true;
+      });
+
+      setHiSocietySocieties(uniqueSocieties);
+      localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(uniqueSocieties));
+
+      // Step 5: Find and set the newly selected society
+      const selected = uniqueSocieties.find(
+        (s) => s.id === selectedUserSocietyId
+      ) || uniqueSocieties.find((s) => s.id === societyId);
+
       if (selected) {
         setSelectedSociety(selected);
-        localStorage.setItem("selectedUserSociety", societyId.toString());
-        sessionStorage.setItem("selectedUserSociety", societyId.toString());
+        localStorage.setItem("selectedUserSociety", String(selected.id));
+        sessionStorage.setItem("selectedUserSociety", String(selected.id));
       }
 
-      // Reload page to reflect changes
+      // Step 6: Reload to reflect all context changes
       window.location.reload();
     } catch (error) {
       console.error("Failed to change society:", error);
@@ -356,9 +469,7 @@ export const Header = () => {
       );
     }
     if (notification.ntype === "projectspace") {
-      navigate(
-        `/vas/channels/groups/${notification.payload.project_space_id}`
-      );
+      navigate(`/vas/channels/groups/${notification.payload.project_space_id}`);
     }
     if (notification.payload.ntype === "newtaskmanagement") {
       navigate(`/vas/tasks/${notification.payload.task_management_id}`);
@@ -708,7 +819,7 @@ export const Header = () => {
 
           {/* Dashboard Button */}
           {!isRestrictedUser && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               {!isViSite && (
                 <button
                   onClick={() => (window.location.href = "/dashboard")}
@@ -813,18 +924,27 @@ export const Header = () => {
                   )}
                   <ChevronDown className="w-3 h-3" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
+                <DropdownMenuContent className="w-56 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
                   {hiSocietySocieties.map((society) => (
                     <DropdownMenuItem
                       key={society.id}
                       onClick={() => handleSocietyChange(society.id)}
                       className={
-                        selectedSociety?.id === society.id
-                          ? "bg-[#f6f4ee] text-[#C72030]"
-                          : ""
+                        `flex flex-col items-start gap-0.5 py-2 ${
+                          selectedSociety?.id === society.id
+                            ? "bg-[#f6f4ee] text-[#C72030]"
+                            : ""
+                        }`
                       }
                     >
-                      {society.society.building_name}
+                      <span className="font-medium text-sm">{society.society.building_name}</span>
+                      {society.user_flat && (
+                        <span className="text-xs text-gray-500">
+                          {society.user_flat.block
+                            ? `${society.user_flat.block} - ${society.user_flat.flat}`
+                            : society.user_flat.flat}
+                        </span>
+                      )}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -835,8 +955,9 @@ export const Header = () => {
                 <div className="flex items-center gap-2 text-[#1a1a1a]">
                   <Home className="w-4 h-4" />
                   <span className="text-sm font-medium">
-                    {selectedSociety.user_flat.block && `${selectedSociety.user_flat.block} - `}
-                    {selectedSociety.user_flat.flat}
+                    {selectedSociety.user_flat.block
+                      ? `${selectedSociety.user_flat.block} - ${selectedSociety.user_flat.flat}`
+                      : selectedSociety.user_flat.flat}
                   </span>
                 </div>
               )}
@@ -1149,7 +1270,7 @@ export const Header = () => {
                 <p className="text-sm font-semibold text-gray-900">
                   {isViSite && viAccount
                     ? `${viAccount.firstname || ""} ${viAccount.lastname || ""}`.trim() ||
-                    "User"
+                      "User"
                     : `${user.firstname} ${user.lastname}`}
                 </p>
                 <div className="flex items-center text-gray-600 text-xs mt-0.5">

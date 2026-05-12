@@ -390,7 +390,7 @@ export const AddRolePage = () => {
       console.log("Creating role with payload:", payload);
 
       await roleService.createRoleWithPayload(
-        window.location.hostname === "web.hisociety.lockated.com"  ? viPayload : payload
+        window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost"  ? viPayload : payload
       );
       toast.success("Role created successfully");
       navigate("/settings/roles/role");
