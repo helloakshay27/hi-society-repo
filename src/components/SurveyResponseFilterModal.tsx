@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TextField, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
-import { DateField } from '@mui/x-date-pickers/DateField';
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { X } from 'lucide-react';
-import { API_CONFIG, getFullUrl, getAuthenticatedFetchOptions } from '@/config/apiConfig';
+import {
+  API_CONFIG,
+  getFullUrl,
+  getAuthenticatedFetchOptions,
+} from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 
@@ -89,11 +92,13 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
     disableEnforceFocus: true,
   };
 
-  // Fetch towers and survey titles on component mount
+  // Fetch towers and survey titles when the filter opens
   useEffect(() => {
-    fetchTowers();
-    fetchSurveyTitles();
-  }, []);
+    if (open) {
+      fetchTowers();
+      fetchSurveyTitles();
+    }
+  }, [open]);
 
   // Fetch flats when tower changes
   useEffect(() => {
@@ -179,18 +184,65 @@ export const SurveyResponseFilterModal: React.FC<FilterModalProps> = ({
   const fetchSurveyTitles = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get("/survey_mappings/mappings_list.json?page=1&per_page=1000");
-      
-      if (API_CONFIG.TOKEN) {
-        // Add token to request if needed
-        const urlWithToken = new URL(response.config.url || "");
-        urlWithToken.searchParams.append("access_token", API_CONFIG.TOKEN);
-      }
+      const extractSurveyNames = (data: unknown): string[] => {
+        const responseData = data as {
+          responses?: unknown;
+          survey_mappings?: unknown;
+        };
+        const rows = Array.isArray(responseData.responses)
+          ? responseData.responses
+          : responseData.survey_mappings;
 
-      const data = response.data;
-      const surveyTitles = Array.isArray(data?.survey_mappings) 
-        ? data.survey_mappings.map((mapping: { survey_name?: string }) => mapping.survey_name || "")
-        : [];
+        return Array.isArray(rows)
+          ? rows.map((row: { survey_name?: string; name?: string }) =>
+              row.survey_name || row.name || ""
+            )
+          : [];
+      };
+
+      const fetchSurveyResponsePage = async (page: number) => {
+        const url = getFullUrl(
+          "/survey_mappings/response_list.json?list_response=true"
+        );
+        const urlWithParams = new URL(url);
+        urlWithParams.searchParams.set("page", page.toString());
+
+        if (API_CONFIG.TOKEN) {
+          urlWithParams.searchParams.append("access_token", API_CONFIG.TOKEN);
+        }
+
+        const response = await fetch(
+          urlWithParams.toString(),
+          getAuthenticatedFetchOptions()
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch survey titles: ${response.status} ${response.statusText}`
+          );
+        }
+
+        return response.json();
+      };
+
+      const firstPageData = await fetchSurveyResponsePage(1);
+      const totalPages = Number(firstPageData?.pagination?.total_pages) || 1;
+      let surveyTitles = extractSurveyNames(firstPageData);
+
+      if (totalPages > 1) {
+        const pageResponses = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, index) =>
+            fetchSurveyResponsePage(index + 2)
+          )
+        );
+
+        surveyTitles = [
+          ...surveyTitles,
+          ...pageResponses.flatMap((responseData) =>
+            extractSurveyNames(responseData)
+          ),
+        ];
+      }
       
       const uniqueTitles = Array.from(new Set(surveyTitles.filter((title: string) => Boolean(title?.trim()))));
       setSurveyTitles(uniqueTitles);

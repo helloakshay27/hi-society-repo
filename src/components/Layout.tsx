@@ -43,6 +43,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     currentSection,
     setCurrentSection,
     layoutMode,
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
   } = useLayout();
   const { isActionSidebarVisible } = useActionLayout();
   const { selectedCompany } = useSelector((state: RootState) => state.project);

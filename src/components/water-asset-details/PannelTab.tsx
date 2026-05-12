@@ -35,6 +35,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   onImport,
   onChecklist,
   onClearSelection,
+  subtitle,
   loading,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -53,7 +54,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   }, [onClearSelection]);
 
   const defaultActions: SelectionAction[] = [
-    ...(onAdd ? [{ label: "Add", icon: Plus, onClick: onAdd }] : []),
+    ...(onAdd ? [{ label: addLabel, icon: Plus, onClick: onAdd }] : []),
     ...(onImport ? [{ label: "Import", icon: Upload, onClick: onImport }] : []),
     ...actions,
   ];
