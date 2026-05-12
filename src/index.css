@@ -1835,6 +1835,17 @@ body {
   left: calc(64px + ((100vw - 64px) / 2)) !important;
 }
 
+.selection-panel.selection-panel--center {
+  top: 50% !important;
+  bottom: auto !important;
+  left: calc(256px + ((100vw - 256px) / 2)) !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.sidebar-collapsed .selection-panel.selection-panel--center {
+  left: calc(64px + ((100vw - 64px) / 2)) !important;
+}
+
 /* ── Mobile (<640px): full-width bottom sheet ── */
 @media (max-width: 639px) {
   .selection-panel {

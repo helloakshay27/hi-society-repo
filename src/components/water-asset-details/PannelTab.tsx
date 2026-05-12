@@ -26,6 +26,7 @@ interface SelectionPanelProps {
   onClearSelection?: () => void;
   subtitle?: string | null;
   loading?: boolean;
+  className?: string;
 }
 
 export const SelectionPanel: React.FC<SelectionPanelProps> = ({
@@ -37,6 +38,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   onClearSelection,
   subtitle,
   loading,
+  className = "",
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +63,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
 
   return (
     <div
-      className="selection-panel bg-white"
+      className={`selection-panel bg-white ${className}`}
       style={{ top: "50%", left: "30%", width: "max-content", height: "105px" }}
       ref={panelRef}
     >
