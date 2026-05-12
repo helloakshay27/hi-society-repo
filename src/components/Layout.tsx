@@ -403,26 +403,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {renderDynamicHeader()}
 
       <main
-        className={`${
+        className={`transition-all duration-300 ${
           // Hi-Society mode styling
           layoutMode === "hi-society"
             ? isSidebarCollapsed
-              ? "ml-16"
-              : "ml-64"
+              ? "md:ml-16 ml-0"
+              : "md:ml-64 ml-0"
             : // FM Matrix mode - always show sidebar margin for admin users
             isActionSidebarVisible
-              ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
+              ? "md:ml-64 ml-0 pt-28"
               : isSidebarCollapsed
-                ? "ml-16"
-                : "ml-64"
-          } ${
+                ? "md:ml-16 ml-0"
+                : "md:ml-64 ml-0"
+        } ${
           // Top padding based on mode
           layoutMode === "hi-society"
-            ? "pt-28" // Header (16) + Navigation (12) = 28
+            ? "pt-28"
             : isActionSidebarVisible
               ? ""
               : "pt-28"
-          } transition-all duration-300`}
+        }`}
       >
         <RouteErrorBoundary locationKey={location.key}>
           <Outlet />

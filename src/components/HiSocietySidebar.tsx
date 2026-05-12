@@ -64,7 +64,7 @@ interface SectionConfig {
 export const HiSocietySidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
+  const { isSidebarCollapsed, setIsSidebarCollapsed, isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
 
   // Domain detection
   const hostname = window.location.hostname;
@@ -1250,8 +1250,8 @@ export const HiSocietySidebar: React.FC = () => {
     );
   };
 
-  // before: const handleNavigation = (path: string) => { ... }
   const handleNavigation = (path: string, navState?: Record<string, any>) => {
+    setIsMobileSidebarOpen(false);
     startTransition(() => {
       navigate(path, { state: navState });
     });
@@ -1417,8 +1417,9 @@ export const HiSocietySidebar: React.FC = () => {
   return (
     <div
       className={`${
-        isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+        isSidebarCollapsed ? "md:w-16 w-64" : "w-64"
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40
+        ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
