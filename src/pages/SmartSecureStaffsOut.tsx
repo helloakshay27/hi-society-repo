@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Loader2 } from "lucide-react";
@@ -88,6 +94,11 @@ const SmartSecureStaffsOut: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
+
+  // Image preview state
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>("");
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -182,11 +193,21 @@ const SmartSecureStaffsOut: React.FC = () => {
         case "photo":
           return (
             <div className="flex justify-center">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-orange-400 flex items-center justify-center flex-shrink-0">
+              <button
+                onClick={() => {
+                  // Generate initials from staff name
+                  const initials = getInitials(record.staff.first_name, record.staff.last_name);
+                  setPreviewImageUrl(`data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23fb923c" width="100" height="100"/><text x="50" y="50" font-size="40" fill="white" text-anchor="middle" dy=".3em" font-weight="bold">${initials}</text></svg>`);
+                  setPreviewImageName(`${record.staff.first_name} ${record.staff.last_name}`.trim());
+                  setPreviewImageOpen(true);
+                }}
+                className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-300 to-orange-400 flex items-center justify-center flex-shrink-0 hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+                title="Click to preview"
+              >
                 <span className="text-white font-semibold text-sm">
                   {getInitials(record.staff.first_name, record.staff.last_name)}
                 </span>
-              </div>
+              </button>
             </div>
           );
 
@@ -337,6 +358,24 @@ const SmartSecureStaffsOut: React.FC = () => {
           </Button>
         }
       />
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

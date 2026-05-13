@@ -140,13 +140,18 @@ export const LocationSelectionPanel: React.FC<LocationSelectionPanelProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-600">
-              {selectedLocationObjects
-                .slice(0, 2)
-                .map((loc) => `${loc.site_name} - ${loc.building_name}`)
-                .join(", ")}
-              {selectedLocationObjects.length > 2 &&
-                ` +${selectedLocationObjects.length - 2} more`}
-            </span>
+  {selectedLocationObjects
+    .slice(0, 2)
+    .map((loc) =>
+      [loc.society_name, loc.user_name]
+        .filter(Boolean)
+        .join(" - ")
+    )
+    .join(", ")}
+
+  {selectedLocationObjects.length > 2 &&
+    ` +${selectedLocationObjects.length - 2} more`}
+</span>
           </div>
         </div>
 

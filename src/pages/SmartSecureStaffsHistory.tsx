@@ -110,6 +110,9 @@ const SmartSecureStaffsHistory: React.FC = () => {
   const [filters, setFilters] = useState<StaffHistoryFilters>({});
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>('');
   const perPage = 20;
 
   // Build Ransack query params from filters
@@ -250,8 +253,13 @@ const SmartSecureStaffsHistory: React.FC = () => {
           );
         case "image":
           return (
-            <div
-              className="flex items-center justify-center"
+            <button
+              onClick={() => {
+                const imageUrl = staff.image_url || '/images/male.jpg';
+                setPreviewImageUrl(imageUrl);
+                setPreviewImageName(staff.name || 'Staff');
+                setPreviewImageOpen(true);
+              }}
               style={{
                 width: 36,
                 height: 36,
@@ -263,7 +271,17 @@ const SmartSecureStaffsHistory: React.FC = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                border: "2px solid transparent",
+                cursor: "pointer",
+                transition: "border-color 0.2s",
               }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = '#C72030';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'transparent';
+              }}
+              title="Click to preview"
             >
               {staff.image_url ? (
                 <img
@@ -277,7 +295,7 @@ const SmartSecureStaffsHistory: React.FC = () => {
                   }}
                   draggable={false}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
+                    (e.target as HTMLImageElement).src = '/images/male.jpg';
                   }}
                 />
               ) : (
@@ -296,7 +314,7 @@ const SmartSecureStaffsHistory: React.FC = () => {
                   }}
                 />
               )}
-            </div>
+            </button>
           );
         case "name":
           return <span className="font-medium">{staff.name}</span>;
@@ -534,6 +552,24 @@ const SmartSecureStaffsHistory: React.FC = () => {
             >
               {isExporting ? 'Exporting...' : 'Export'}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -5,6 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Filter, Eye, Edit, QrCode, Search } from 'lucide-react';
@@ -85,6 +91,11 @@ export const StaffsDashboard = () => {
   const [uploadType, setUploadType] = useState<'import' | 'update'>('import');
   const [isExporting, setIsExporting] = useState(false);
   const [activeFilters, setActiveFilters] = useState<StaffFilters>({});
+
+  // Image preview state
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>('');
 
   // Get resource ID from user data in localStorage or account API
   useEffect(() => {
@@ -492,14 +503,25 @@ export const StaffsDashboard = () => {
     ),
     image: (
       <div className="flex justify-center">
-        <img
-          src={staff.imageUrl.startsWith('http') ? staff.imageUrl : `https://www.lockated.com${staff.imageUrl}`}
-          alt={staff.name}
-          className="w-10 h-10 rounded-full object-cover border border-gray-200"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://www.lockated.com/images/male.jpg';
+        <button
+          onClick={() => {
+            const imageUrl = staff.imageUrl.startsWith('http') ? staff.imageUrl : `https://www.lockated.com${staff.imageUrl}`;
+            setPreviewImageUrl(imageUrl);
+            setPreviewImageName(staff.name || 'Staff');
+            setPreviewImageOpen(true);
           }}
-        />
+          className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+          title="Click to preview"
+        >
+          <img
+            src={staff.imageUrl.startsWith('http') ? staff.imageUrl : `https://www.lockated.com${staff.imageUrl}`}
+            alt={staff.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://www.lockated.com/images/male.jpg';
+            }}
+          />
+        </button>
       </div>
     ),
     id: <span className="font-medium">{staff.id}</span>,
@@ -854,6 +876,25 @@ export const StaffsDashboard = () => {
         onOpenChange={setIsBulkUploadOpen}
         title={uploadType === 'import' ? 'Import Staff' : 'Update Staff'}
         context="staff"
-      />    </div>
+      />
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
