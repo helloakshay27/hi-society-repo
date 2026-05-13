@@ -156,7 +156,7 @@ const visitorOutColumns: ColumnConfig[] = [
   { key: "primary_host",   label: "Host",          sortable: true,  hideable: true,  draggable: true  },
   { key: "visit_purpose",  label: "Purpose",       sortable: true,  hideable: true,  draggable: true  },
   { key: "checked_in_at",  label: "Checked In At", sortable: true,  hideable: true,  draggable: true  },
-  { key: "check_in_action",label: "Check In",      sortable: false, hideable: false, draggable: false },
+  { key: "check_in_action",label: "Building Gate In/Out",      sortable: false, hideable: false, draggable: false },
   { key: "out_action",     label: "OUT",           sortable: false, hideable: false, draggable: false },
 ];
 

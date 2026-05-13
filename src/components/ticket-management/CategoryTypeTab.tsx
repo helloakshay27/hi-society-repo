@@ -263,7 +263,7 @@ export const CategoryTypeTab: React.FC = () => {
 
   const fetchIssueTypes = async () => {
     try {
-      const response = await fetch(getFullUrl('/user/issue_type.json'), {
+      const response = await fetch(getFullUrl('/dropdown/issue_types.json'), {
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json',
@@ -271,7 +271,7 @@ export const CategoryTypeTab: React.FC = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setIssueTypes(data.data || []);
+        setIssueTypes(data.issue_types || []);
       }
     } catch (error) {
       console.error('Error fetching issue types:', error);
