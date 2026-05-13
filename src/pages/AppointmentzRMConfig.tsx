@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@mui/material";
 import { Plus, Edit, X } from "lucide-react";
 import {
   Dialog,
@@ -79,9 +78,11 @@ const AppointmentzRMConfig = () => {
         userId: `${user.user_id}`,
         name:
           user.full_name ||
-          `${user.first_name || ""} ${user.last_name || ""}`.trim(),
-        firstName: user.first_name || "",
-        lastName: user.last_name || "",
+          `${user.first_name || user.firstname || ""} ${
+            user.last_name || user.lastname || ""
+          }`.trim(),
+        firstName: user.first_name || user.firstname || "",
+        lastName: user.last_name || user.lastname || "",
         email: user.email,
         mobile: user.mobile,
         userType: user.user_type === "cs_user" ? "Customer Support" : "RM User",
@@ -139,65 +140,6 @@ const AppointmentzRMConfig = () => {
     setSearchTerm(term);
     // Search is handled by filtering the already-fetched data
     // For server-side search, you would call the API with search params
-  };
-
-  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
-    // Find the current user data
-    const currentUser = data.find(user => user.id === id);
-    if (!currentUser) {
-      setTimeout(() => {
-        toast.error("User not found");
-      }, 0);
-      return;
-    }
-
-    try {
-      await updateRMUser(id, {
-        user: {
-          first_name: currentUser.firstName,
-          last_name: currentUser.lastName,
-          mobile: currentUser.mobile,
-          user_type: currentUser.userType === "Customer Support" ? "cs_user" : "rm_user",
-          section: "", // Default as in edit
-          active: !currentStatus,
-        },
-      });
-      // Update local state
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, status: !currentStatus } : item
-        )
-      );
-      setTimeout(() => {
-        toast.success("Status updated successfully!");
-      }, 0);
-    } catch (error: unknown) {
-      console.error("Error updating status:", error);
-      console.error("Response data:", (error as any)?.response?.data);
-
-      let errorMessage = "Failed to update status";
-
-      if (error && typeof error === 'object' && 'response' in error && error.response) {
-        const errorData = (error.response as any).data;
-        if (errorData?.message) {
-          errorMessage = errorData.message;
-        } else if (errorData?.error) {
-          errorMessage = typeof errorData.error === 'string'
-            ? errorData.error
-            : JSON.stringify(errorData.error);
-        } else if (errorData?.errors) {
-          errorMessage = Object.keys(errorData.errors).map((key) => {
-            const errorArray = errorData.errors[key];
-            const errorText = Array.isArray(errorArray) ? errorArray.join(", ") : String(errorArray);
-            return `${key}: ${errorText}`;
-          }).join(', ');
-        }
-      }
-
-      setTimeout(() => {
-        toast.error(errorMessage);
-      }, 0);
-    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -349,6 +291,8 @@ const AppointmentzRMConfig = () => {
           user: {
             first_name: formData.firstName,
             last_name: formData.lastName,
+            firstname: formData.firstName,
+            lastname: formData.lastName,
             mobile: formData.mobile,
             user_type: formData.userType,
             section: "",
@@ -362,9 +306,12 @@ const AppointmentzRMConfig = () => {
           user: {
             first_name: formData.firstName,
             last_name: formData.lastName,
+            firstname: formData.firstName,
+            lastname: formData.lastName,
             email: formData.email,
             mobile: formData.mobile,
             password: formData.password,
+            password_confirmation: formData.password,
             user_type: formData.userType,
             section: "", // Default empty as it's removed from UI
           },
@@ -386,21 +333,25 @@ const AppointmentzRMConfig = () => {
         const errorData = error.response.data;
         
         // Handle field-level errors
-        if (errorData.errors) {
+        if (Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.join(", ");
+        } else if (errorData.errors) {
           Object.keys(errorData.errors).forEach((key) => {
             const errorArray = errorData.errors[key];
             const errorText = Array.isArray(errorArray) ? errorArray.join(", ") : String(errorArray);
             
             // Map API field names to form field names
-            if (key === "first_name") {
+            if (key === "first_name" || key === "firstname") {
               apiErrors.firstName = errorText;
-            } else if (key === "last_name") {
+            } else if (key === "last_name" || key === "lastname") {
               apiErrors.lastName = errorText;
             } else if (key === "mobile") {
               apiErrors.mobile = errorText;
             } else if (key === "email") {
               apiErrors.email = errorText;
             } else if (key === "password") {
+              apiErrors.password = errorText;
+            } else if (key === "password_confirmation") {
               apiErrors.password = errorText;
             } else if (key === "user_type") {
               apiErrors.userType = errorText;
@@ -447,20 +398,7 @@ const AppointmentzRMConfig = () => {
           </Button>
         );
       case "status":
-        return (
-          <Switch
-            checked={item.status}
-            onChange={() => handleToggleStatus(item.id, item.status)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#65C466",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#65C466",
-              },
-            }}
-          />
-        );
+        return item.status ? "true" : "false";
       default:
         return item[columnKey as keyof RMUser];
     }
