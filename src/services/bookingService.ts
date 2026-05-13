@@ -1,5 +1,6 @@
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
+import { format } from 'date-fns';
 export interface PaginationInfo {
   current_page: number;
   total_count: number;
@@ -101,7 +102,7 @@ const transformBookingData = (apiData: FacilityBookingResponse): BookingData => 
     facilityType: safeValue(apiData.fac_type),
     scheduledDate: formatDate(apiData.startdate),
     scheduledTime: safeValue(apiData.show_schedule),
-    createdOn: formatDate(apiData.created_at),
+    createdOn: format(apiData?.created_at, 'dd MMMM yyyy, hh:mm a'),
     totalAmount: safeValue(apiData.amount_full),
     refundableAmount: safeValue(apiData.refunded_amount),
     gst: safeValue(apiData.gst),
