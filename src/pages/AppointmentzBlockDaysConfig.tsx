@@ -189,6 +189,18 @@ const AppointmentzBlockDaysConfig = () => {
             active: item ? item.status : true,
           },
         });
+        setData((prev) =>
+          prev.map((blockDay) =>
+            blockDay.id === selectedId
+              ? {
+                  ...blockDay,
+                  rmUser: formData.rmUser,
+                  rmUserId: formData.rmUserId,
+                  blockedDate: formData.blockDate,
+                }
+              : blockDay
+          )
+        );
         setTimeout(() => {
           toast.success(response.message || "Block Day updated successfully!");
         }, 0);
@@ -207,7 +219,11 @@ const AppointmentzBlockDaysConfig = () => {
       }
 
       // Refresh the list
-      await fetchBlockDays(currentPage);
+      if (!isEditMode) {
+        await fetchBlockDays(currentPage);
+      } else {
+        fetchBlockDays(currentPage);
+      }
       setIsAddModalOpen(false);
       setFormData({ rmUser: "", rmUserId: 0, blockDate: "" });
     } catch (error) {

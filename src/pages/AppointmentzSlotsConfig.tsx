@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { toast } from "sonner";
 import {
+  Autocomplete,
+  TextField,
+} from "@mui/material";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -22,7 +26,7 @@ import {
   getSiteSchedules,
   createSiteSchedule,
   updateSiteSchedule,
-  getRMUsers,
+  getAllRMUsers,
 } from "@/services/appointmentzService";
 
 interface SlotConfig {
@@ -54,6 +58,7 @@ const AppointmentzSlotsConfig = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [rmUsers, setRmUsers] = useState<{ id: number; name: string }[]>([]);
+  const [isRmDropdownOpen, setIsRmDropdownOpen] = useState(false);
 
   const formatTimePart = (value: string | number | null | undefined) =>
     String(value ?? 0).padStart(2, "0");
@@ -96,8 +101,7 @@ const AppointmentzSlotsConfig = () => {
       const response = await getSiteSchedules();
 
       // Fetch users once to map names
-      const rmResponse = await getRMUsers();
-      const users = rmResponse.data;
+      const users = await getAllRMUsers();
 
       // Transform API data to component format
       const transformedData: SlotConfig[] = response.data.map((schedule) => {
@@ -140,12 +144,17 @@ const AppointmentzSlotsConfig = () => {
 
   const fetchRMUsers = useCallback(async () => {
     try {
-      const response = await getRMUsers();
-      const users = response.data.map((user) => ({
+      const users = (await getAllRMUsers()).map((user) => ({
         id: user.id,
-        name: user.full_name || `User ID: ${user.user_id}`,
+        name:
+          user.full_name ||
+          `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+          `User ID: ${user.user_id}`,
       }));
-      setRmUsers(users);
+      const uniqueUsers = Array.from(
+        new Map(users.map((user) => [user.id, user])).values()
+      ).sort((a, b) => a.name.localeCompare(b.name));
+      setRmUsers(uniqueUsers);
     } catch (error) {
       console.error("Error fetching RM users:", error);
     }
@@ -155,6 +164,12 @@ const AppointmentzSlotsConfig = () => {
     fetchSiteSchedules();
     fetchRMUsers();
   }, [fetchSiteSchedules, fetchRMUsers]);
+
+  useEffect(() => {
+    if (!isAddModalOpen) {
+      setIsRmDropdownOpen(false);
+    }
+  }, [isAddModalOpen]);
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
@@ -287,8 +302,21 @@ const AppointmentzSlotsConfig = () => {
 
       const createPayload = {
         site_schedule: {
-          ...schedulePayload,
+          rm_user_id: formData.rmUserId,
           rm_user_ids: [formData.rmUserId],
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          start_hour: formData.startHour,
+          start_minute: formData.startMinute,
+          end_hour: formData.endHour,
+          end_minute: formData.endMinute,
+          mon: formData.days.mon,
+          tue: formData.days.tue,
+          wed: formData.days.wed,
+          thu: formData.days.thu,
+          fri: formData.days.fri,
+          sat: formData.days.sat,
+          sun: formData.days.sun,
         },
       };
 
@@ -311,10 +339,31 @@ const AppointmentzSlotsConfig = () => {
       // Refresh the list
       await fetchSiteSchedules();
       setIsAddModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving slot:", error);
+      const errorData = error?.response?.data;
+      let errorMessage = "Failed to save slot";
+
+      if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (errorData?.error) {
+        errorMessage =
+          typeof errorData.error === "string"
+            ? errorData.error
+            : JSON.stringify(errorData.error);
+      } else if (Array.isArray(errorData?.errors)) {
+        errorMessage = errorData.errors.join(", ");
+      } else if (errorData?.errors) {
+        errorMessage = Object.entries(errorData.errors)
+          .map(([key, value]) => {
+            const text = Array.isArray(value) ? value.join(", ") : String(value);
+            return `${key}: ${text}`;
+          })
+          .join(", ");
+      }
+
       setTimeout(() => {
-        toast.error("Failed to save slot");
+        toast.error(errorMessage);
       }, 0);
     }
   };
@@ -379,8 +428,38 @@ const AppointmentzSlotsConfig = () => {
         loading={loading}
       />
 
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[700px] bg-white p-0">
+      <Dialog
+        open={isAddModalOpen}
+        onOpenChange={(open) => {
+          setIsRmDropdownOpen(false);
+          setIsAddModalOpen(open);
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-[700px] bg-white p-0"
+          onMouseDownCapture={(event) => {
+            const target = event.target as HTMLElement;
+            const isRmDropdownTarget =
+              target.closest(".rm-user-autocomplete") ||
+              target.closest(".rm-user-autocomplete-popper");
+
+            if (!isRmDropdownTarget) {
+              setIsRmDropdownOpen(false);
+            }
+          }}
+          onEscapeKeyDown={(event) => {
+            if (isRmDropdownOpen) {
+              event.preventDefault();
+              setIsRmDropdownOpen(false);
+            }
+          }}
+          onInteractOutside={(event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest(".rm-user-autocomplete-popper")) {
+              event.preventDefault();
+            }
+          }}
+        >
           <DialogHeader className="p-4 border-b">
             <DialogTitle className="text-center font-bold">
               {isEditMode ? "Edit" : "Add"}
@@ -391,24 +470,104 @@ const AppointmentzSlotsConfig = () => {
             {/* Row 1: RM User and Start Date */}
             <div className="grid grid-cols-2 gap-8">
               <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  Rm User
-                </label>
-                <Select
-                  onValueChange={(val) => handleSelectChange("rmUser", val)}
-                  value={formData.rmUserId ? formData.rmUserId.toString() : ""}
-                >
-                <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
-                    <SelectValue placeholder="Select Rm User" />
-                  </SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
-                    {rmUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Autocomplete
+                  className="rm-user-autocomplete"
+                  disablePortal
+                  open={isRmDropdownOpen}
+                  onOpen={() => setIsRmDropdownOpen(true)}
+                  onClose={(_, reason) => {
+                    if (reason !== "blur") {
+                      setIsRmDropdownOpen(false);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Tab") {
+                      setIsRmDropdownOpen(false);
+                    }
+                  }}
+                  options={rmUsers}
+                  value={
+                    rmUsers.find((user) => user.id === formData.rmUserId) ||
+                    null
+                  }
+                  onChange={(_, selectedUser) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      rmUser: selectedUser?.name || "",
+                      rmUserId: selectedUser?.id || 0,
+                    }));
+                    setIsRmDropdownOpen(false);
+                  }}
+                  getOptionLabel={(option) => option.name}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
+                  noOptionsText="No RM users found"
+                  ListboxProps={{
+                    className: "rm-user-autocomplete-listbox",
+                    onMouseDown: (event) => {
+                      event.stopPropagation();
+                    },
+                    onWheel: (event) => {
+                      event.stopPropagation();
+                    },
+                    style: {
+                      maxHeight: 220,
+                      overflow: "auto",
+                      overscrollBehavior: "contain",
+                    },
+                  }}
+                  slotProps={{
+                    popper: {
+                      className: "rm-user-autocomplete-popper",
+                      sx: {
+                        zIndex: 1300,
+                      },
+                    },
+                    paper: {
+                      onMouseDown: (event) => {
+                        event.stopPropagation();
+                      },
+                    },
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Rm User"
+                      placeholder="Select Rm User"
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  )}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 32,
+                      padding: "0 34px 0 8px !important",
+                      backgroundColor: "#fff",
+                      "& fieldset": {
+                        borderColor: "#d1d5db",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#C72030",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#C72030",
+                        borderWidth: "1px",
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      padding: "0 !important",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "0.75rem",
+                    },
+                    "& .MuiAutocomplete-endAdornment": {
+                      right: 8,
+                    },
+                  }}
+                />
               </div>
 
               <div className="relative">

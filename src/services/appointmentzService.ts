@@ -156,6 +156,8 @@ export interface RMUserData {
   admin: boolean;
   first_name: string;
   last_name: string;
+  firstname?: string;
+  lastname?: string;
   full_name: string;
   email: string;
   mobile: string;
@@ -177,9 +179,12 @@ export interface CreateRMUserPayload {
   user: {
     first_name: string;
     last_name: string;
+    firstname?: string;
+    lastname?: string;
     email: string;
     mobile: string;
     password?: string;
+    password_confirmation?: string;
     user_type: string;
     section: string;
   };
@@ -189,6 +194,8 @@ export interface UpdateRMUserPayload {
   user: {
     first_name?: string;
     last_name?: string;
+    firstname?: string;
+    lastname?: string;
     mobile?: string;
     user_type?: string;
     section?: string;
@@ -219,6 +226,29 @@ export const getRMUsers = async (page: number = 1): Promise<RMUsersResponse> => 
   );
 
   return response.data;
+};
+
+/**
+ * Fetch every RM user page for dropdowns that need the full RM Config list.
+ */
+export const getAllRMUsers = async (): Promise<RMUserData[]> => {
+  const firstPage = await getRMUsers(1);
+  const totalPages = firstPage.pagination?.total_pages || 1;
+
+  if (totalPages <= 1) {
+    return firstPage.data;
+  }
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) =>
+      getRMUsers(index + 2)
+    )
+  );
+
+  return [
+    ...firstPage.data,
+    ...remainingPages.flatMap((response) => response.data),
+  ];
 };
 
 /**
@@ -258,17 +288,46 @@ export const createRMUser = async (
 ): Promise<CreateRMUserResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token = localStorage.getItem("token");
+  const selectedSocietyId = localStorage.getItem("selectedSocietyId");
+  const formData = new FormData();
+  const user = payload.user;
+
+  const appendUserField = (key: string, value?: string) => {
+    if (value !== undefined && value !== null) {
+      formData.append(`user[${key}]`, value);
+      formData.append(`rm_user[${key}]`, value);
+      formData.append(`rm_user[user_attributes][${key}]`, value);
+      formData.append(key, value);
+    }
+  };
+
+  appendUserField("firstname", user.firstname || user.first_name);
+  appendUserField("lastname", user.lastname || user.last_name);
+  appendUserField("first_name", user.first_name || user.firstname);
+  appendUserField("last_name", user.last_name || user.lastname);
+  appendUserField("email", user.email);
+  appendUserField("mobile", user.mobile);
+  appendUserField("password", user.password);
+  appendUserField("password_confirmation", user.password_confirmation || user.password);
+  appendUserField("user_type", user.user_type);
+  appendUserField("section", user.section);
+  appendUserField("active", "true");
+
+  if (selectedSocietyId) {
+    formData.append("society_id", selectedSocietyId);
+    formData.append("user[society_id]", selectedSocietyId);
+    formData.append("rm_user[society_id]", selectedSocietyId);
+  }
 
   const response = await axios.post(
     `https://${baseUrl}/crm/admin/rm_users.json`,
-    payload,
+    formData,
     {
       params: {
         token,
       },
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
       },
     }
   );
@@ -426,10 +485,14 @@ export const createSiteSchedule = async (
 ): Promise<{ success: boolean; message: string }> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token =  localStorage.getItem("token");
+  const requestPayload = {
+    ...payload,
+    rm_user_ids: payload.site_schedule.rm_user_ids,
+  };
 
   const response = await axios.post(
     `https://${baseUrl}/crm/admin/site_schedules.json`,
-    payload,
+    requestPayload,
     {
       params: {
         token,

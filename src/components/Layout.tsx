@@ -415,14 +415,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               : isSidebarCollapsed
                 ? "md:ml-16 ml-0"
                 : "md:ml-64 ml-0"
-        } ${
+          } ${
           // Top padding based on mode
           layoutMode === "hi-society"
             ? "pt-28"
             : isActionSidebarVisible
               ? ""
               : "pt-28"
-        }`}
+          }`}
       >
         <RouteErrorBoundary locationKey={location.key}>
           <Outlet />
