@@ -131,41 +131,41 @@ export const MobileSurveyThankYou: React.FC = () => {
           }}
         />
       )}
-      <div className="absolute top-8 right-6 z-10">
-        <div className="w-32 h-32 sm:w-48 sm:h-32 flex items-center justify-center overflow-hidden   p-2">
-          {surveyData?.company_logo_url ? (
-            <img
-              src={surveyData.company_logo_url}
-              alt="Company Logo"
-              className="w-full h-full object-contain"
-            />
-          ) : window.location.origin === "https://oig.gophygital.work" ? (
-            <img
-              src="/Without bkg.svg"
-              alt="OIG Logo"
-              className="w-full h-full object-contain"
-            />
-          ) : window.location.origin === "https://web.gophygital.work" ? (
-            <img
-              src="/PSIPL-logo (1).png"
-              alt="PSIPL Logo"
-              className="w-full h-full object-contain"
-            />
-          ) : window.location.origin === "https://fm-matrix.lockated.com" ? (
-            <img
-              src="/gophygital-logo-min.jpg"
-              alt="gophygital Logo"
-              className="w-full h-full object-contain"
-            />
-          ) : (
-            <img
-              src="/gophygital-logo-min.jpg"
-              alt="gophygital Logo"
-              className="w-full h-full object-contain"
-            />
-          )}
-        </div>
-      </div>
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10">
+  <div className="w-32 h-32 sm:w-48 sm:h-32 flex items-center justify-center overflow-hidden p-2">
+    {surveyData?.company_logo_url ? (
+      <img
+        src={surveyData.company_logo_url}
+        alt="Company Logo"
+        className="w-full h-full object-contain"
+      />
+    ) : window.location.origin === "https://oig.gophygital.work" ? (
+      <img
+        src="/Without bkg.svg"
+        alt="OIG Logo"
+        className="w-full h-full object-contain"
+      />
+    ) : window.location.origin === "https://web.gophygital.work" ? (
+      <img
+        src="/PSIPL-logo (1).png"
+        alt="PSIPL Logo"
+        className="w-full h-full object-contain"
+      />
+    ) : window.location.origin === "https://fm-matrix.lockated.com" ? (
+      <img
+        src="/gophygital-logo-min.jpg"
+        alt="gophygital Logo"
+        className="w-full h-full object-contain"
+      />
+    ) : (
+      <img
+        src="/gophygital-logo-min.jpg"
+        alt="gophygital Logo"
+        className="w-full h-full object-contain"
+      />
+    )}
+  </div>
+</div>
 
       {/* Thank You Card */}
       <div className="bg-white backdrop-blur-sm rounded-[0.20rem] p-8 text-center max-w-sm w-full shadow-xl relative z-10">

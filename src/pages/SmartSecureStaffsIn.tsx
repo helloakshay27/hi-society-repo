@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Loader2 } from "lucide-react";
@@ -75,6 +81,11 @@ const SmartSecureStaffsIn: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingInId, setLoadingInId] = useState<number | null>(null);
+
+  // ── Image Preview State ────────────────────────────────────────────────────
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>("");
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -168,7 +179,18 @@ const SmartSecureStaffsIn: React.FC = () => {
       case "photo":
         return (
           <div className="flex justify-center">
-            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+            <button
+              onClick={() => {
+                if (!isDefaultImage(staff.image_url)) {
+                  setPreviewImageUrl(staff.image_url);
+                  setPreviewImageName(staff.name || "Staff");
+                  setPreviewImageOpen(true);
+                }
+              }}
+              className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 hover:ring-2 hover:ring-green-600 cursor-pointer transition-all"
+              title={!isDefaultImage(staff.image_url) ? "Click to preview" : "No image"}
+              disabled={isDefaultImage(staff.image_url)}
+            >
               {!isDefaultImage(staff.image_url) ? (
                 <img
                   src={staff.image_url}
@@ -182,7 +204,7 @@ const SmartSecureStaffsIn: React.FC = () => {
                   </span>
                 </div>
               )}
-            </div>
+            </button>
           </div>
         );
 
@@ -282,6 +304,24 @@ const SmartSecureStaffsIn: React.FC = () => {
           </Button>
         }
       />
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

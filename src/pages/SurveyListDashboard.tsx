@@ -318,6 +318,13 @@ export const SurveyListDashboard = () => {
         draggable: true,
         defaultVisible: true,
       },
+       {
+        key: "created_by",
+        label: "Created By",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
       {
         key: "created_at",
         label: "Created At",

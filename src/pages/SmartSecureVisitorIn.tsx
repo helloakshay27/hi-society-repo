@@ -162,6 +162,11 @@ const SmartSecureVisitorIn: React.FC = () => {
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
   const perPage = 20;
 
+  // ── Image Preview State ────────────────────────────────────────────────────
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>("");
+
   // ── Verify OTP State ───────────────────────────────────────────────────────
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
   const [otpValue, setOtpValue] = useState("");
@@ -237,7 +242,17 @@ const SmartSecureVisitorIn: React.FC = () => {
       case "visitor_image":
         return (
           <div className="flex justify-center">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+            <button
+              onClick={() => {
+                if (visitor.image) {
+                  setPreviewImageUrl(visitor.image);
+                  setPreviewImageName(visitor.guest_name || "Visitor");
+                  setPreviewImageOpen(true);
+                }
+              }}
+              className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+              title="Click to preview"
+            >
               {visitor.image ? (
                 <img
                   src={visitor.image}
@@ -251,7 +266,7 @@ const SmartSecureVisitorIn: React.FC = () => {
                   </svg>
                 </div>
               )}
-            </div>
+            </button>
           </div>
         );
 
@@ -557,6 +572,24 @@ const SmartSecureVisitorIn: React.FC = () => {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

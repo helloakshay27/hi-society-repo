@@ -310,6 +310,11 @@ const SmartSecureVisitorHistory: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
 
+  // Image preview state
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>('');
+
   const { data: apiData, isLoading, isError, error, refetch } = useQuery<ApiResponse>({
     queryKey: ["visitor-history-list", currentPage, activeFilters],
     queryFn: async () => {
@@ -384,11 +389,31 @@ const SmartSecureVisitorHistory: React.FC = () => {
       case "visitor_image":
         return (
           <div className="flex justify-center">
-            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-              </svg>
-            </div>
+            <button
+              onClick={() => {
+                // Check if row has image field (or image_url)
+                const imageUrl = (row as any).image || (row as any).image_url;
+                if (imageUrl) {
+                  setPreviewImageUrl(imageUrl);
+                  setPreviewImageName(row.guest_name || 'Visitor');
+                  setPreviewImageOpen(true);
+                }
+              }}
+              className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+              title="Click to preview"
+            >
+              {(row as any).image || (row as any).image_url ? (
+                <img
+                  src={(row as any).image || (row as any).image_url}
+                  alt={row.guest_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              )}
+            </button>
           </div>
         );
 
@@ -574,6 +599,24 @@ const SmartSecureVisitorHistory: React.FC = () => {
         onApply={handleApplyFilter}
         onReset={handleResetFilter}
       />
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -351,7 +351,9 @@ export const SurveyDetailsPage = () => {
                                           ? "bg-purple-100 text-purple-800"
                                           : question.qtype === "description"
                                             ? "bg-indigo-100 text-indigo-800"
-                                            : "bg-gray-100 text-gray-800"
+                                            : question.qtype === "numeric"
+                                              ? "bg-orange-100 text-orange-800"
+                                              : "bg-gray-100 text-gray-800"
                                 }
                               `}
                               >
@@ -366,7 +368,9 @@ export const SurveyDetailsPage = () => {
                                         ? "Emoji"
                                         : question.qtype === "description"
                                           ? "Description"
-                                          : question.qtype || "Unknown"}
+                                          : question.qtype === "numeric"
+                                            ? "Numeric"
+                                            : question.qtype || "Unknown"}
                               </span>
                               {question.quest_mandatory && (
                                 <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
@@ -407,7 +411,9 @@ export const SurveyDetailsPage = () => {
                                             ? "Emojis"
                                             : question.qtype === "description"
                                               ? "Description Box"
-                                              : "Unknown Type"
+                                              : question.qtype === "numeric"
+                                                ? "Numeric"
+                                                : "Unknown Type"
                                   }
                                   disabled
                                 >
@@ -426,6 +432,9 @@ export const SurveyDetailsPage = () => {
                                     </SelectItem>
                                     <SelectItem value="Rating">
                                       Rating
+                                    </SelectItem>
+                                    <SelectItem value="Numeric">
+                                      Numeric
                                     </SelectItem>
                                     <SelectItem value="Emojis">
                                       Emojis
@@ -465,6 +474,12 @@ export const SurveyDetailsPage = () => {
                                                   {RATING_STARS[optIdx]}
                                                 </span>
                                               </div>
+                                            ) : question.qtype === "numeric" ? (
+                                              <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-md border border-gray-300">
+                                                <span className="text-base font-semibold text-gray-700">
+                                                  {option.qname}
+                                                </span>
+                                              </div>
                                             ) : (
                                               <div className="w-12 h-12 flex items-center justify-center text-gray-400">
                                                 {optIdx + 1}
@@ -478,7 +493,9 @@ export const SurveyDetailsPage = () => {
                                                   ? "Enter rating description"
                                                   : question.qtype === "emoji"
                                                     ? `Enter description for ${EMOJIS[optIdx]}`
-                                                    : "Answer Option"
+                                                    : question.qtype === "numeric"
+                                                      ? "Numeric value"
+                                                      : "Answer Option"
                                               }
                                               className="flex-1 h-10 px-3 border border-gray-300 rounded-md bg-gray-50 text-gray-700"
                                               value={option.qname || ""}
