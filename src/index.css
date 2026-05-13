@@ -1811,78 +1811,51 @@ body {
    =========================================== */
 
 /* ── Desktop base (640px+) ── */
-.selection-panel {
-  position: fixed !important;
-  bottom: 1.5rem !important;
-  /* Center inside content area (sidebar 256px) */
-  left: calc(256px + ((100vw - 256px) / 2)) !important;
-  transform: translateX(-50%) !important;
-  top: auto !important;
-  width: auto !important;
-  min-width: 560px;
-  max-width: calc(100vw - 320px);
-  height: 105px !important;
-  border-radius: 8px !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: 0px 8px 32px rgba(0, 0, 0, 0.16) !important;
-  z-index: 50;
-  background: #fff !important;
-  overflow: visible;
-}
-
-/* Collapsed sidebar (64px) */
-.sidebar-collapsed .selection-panel {
-  left: calc(64px + ((100vw - 64px) / 2)) !important;
-}
-
-.selection-panel.selection-panel--center {
-  top: 50% !important;
-  bottom: auto !important;
-  left: calc(256px + ((100vw - 256px) / 2)) !important;
-  transform: translate(-50%, -50%) !important;
-}
-
-.sidebar-collapsed .selection-panel.selection-panel--center {
-  left: calc(64px + ((100vw - 64px) / 2)) !important;
-}
-
-/* ── Mobile (<640px): full-width bottom sheet ── */
+/* ── SelectionPanel — desktop only (≥640px)
+   Fixed bottom bar, centered in the content area beside the sidebar.
+   The mobile sheet is handled entirely in the component via Tailwind. ── */
+/* Mobile: hide desktop panel completely */
 @media (max-width: 639px) {
   .selection-panel {
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    transform: none !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    height: auto !important;
-    min-height: 80px;
-    max-height: 60vh;
-    border-radius: 12px 12px 0 0 !important;
-    border: none !important;
-    border-top: 2px solid #c4b89d !important;
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18) !important;
-    overflow-y: auto;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: none !important;
+  }
+}
+
+/* Desktop (≥640px): fixed bottom bar centered in content area */
+@media (min-width: 640px) {
+  .selection-panel {
+    position: fixed !important;
+    bottom: 1.5rem !important;
+    top: auto !important;
+    left: calc(256px + ((100vw - 256px) / 2)) !important;
+    transform: translateX(-50%) !important;
+    display: flex !important;
+    align-items: stretch !important;
+    width: auto !important;
+    min-width: 480px;
+    max-width: calc(100vw - 320px);
+    height: 105px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0px 8px 32px rgba(0, 0, 0, 0.16) !important;
+    z-index: 50;
+    background: #fff !important;
+    overflow: hidden;
   }
 
-  /* Inner flex row — wrap on mobile */
-  .selection-panel > div:first-child {
-    flex-wrap: wrap !important;
-    height: auto !important;
-    padding: 12px !important;
-    gap: 8px;
-    align-items: flex-start !important;
+  .sidebar-collapsed .selection-panel {
+    left: calc(64px + ((100vw - 64px) / 2)) !important;
   }
 
-  /* Action buttons row — full row */
-  .selection-panel .flex.items-center.ml-8,
-  .selection-panel .flex.items-center.ml-10 {
-    margin-left: 0 !important;
-    flex-wrap: wrap !important;
-    gap: 4px !important;
-    width: 100% !important;
-    justify-content: flex-start;
+  .selection-panel.selection-panel--center {
+    top: 50% !important;
+    bottom: auto !important;
+    left: calc(256px + ((100vw - 256px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .sidebar-collapsed .selection-panel.selection-panel--center {
+    left: calc(64px + ((100vw - 64px) / 2)) !important;
   }
 }
 

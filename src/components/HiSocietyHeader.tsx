@@ -535,59 +535,50 @@ export const HiSocietyHeader = () => {
           {/* Project Dropdown */}
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Layout Mode Toggle Button - Available on localhost and dev environments */}
-          {/* {(hostname.includes("localhost") || hostname.includes("dev-hisociety.lockated.com")) && ( */}
+        <div className="flex items-center gap-1 sm:gap-3">
+          {/* Layout Mode Toggle Button */}
           {!isUIHiSocietySite && (
             <Button
               onClick={() => {
-                // Set base URL BEFORE toggling mode to ensure proper API routing
                 if (layoutMode === 'hi-society') {
-                  // Switching to FM Matrix - set FM Matrix base URL
-                  // localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
                   toggleLayoutMode();
-                  // Use React Router navigate for client-side navigation (preserves auth)
                   navigate('/maintenance/asset');
                 } else {
-                  // Switching to Hi-Society - set Hi-Society base URL
-                  // localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
                   toggleLayoutMode();
-                  // Use React Router navigate for client-side navigation (preserves auth)
                   navigate('/maintenance/project-details-list');
                 }
               }}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors"
+              className="flex items-center gap-1 sm:gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors px-2 sm:px-3"
             >
               {layoutMode === 'fm-matrix' ? (
                 <>
-                  <Building2 className="w-3.5 h-3.5" />
-                  Switch to Hi-Society
+                  <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Switch to Hi-Society</span>
                 </>
               ) : (
                 <>
-                  <Home className="w-3.5 h-3.5" />
-                  Switch to FM Matrix
+                  <Home className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Switch to FM Matrix</span>
                 </>
               )}
             </Button>
           )}
-          {/* )} */}
 
           {/* Society Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
-              <Building2 className="w-4 h-4" />
+            <DropdownMenuTrigger className="flex items-center gap-1 sm:gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
+              <Building2 className="w-4 h-4 flex-shrink-0" />
 
               {hiSocietyLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <span className="text-sm font-medium">
+                <span className="hidden sm:inline text-sm font-medium">
                   {selectedSociety?.society?.building_name || "Select Society"}
                 </span>
               )}
-              <ChevronDown className="w-3 h-3" />
+              <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
               {uniqueSocieties.length === 0 ? (
@@ -613,14 +604,14 @@ export const HiSocietyHeader = () => {
           {/* Flats Dropdown */}
           {availableFlats.length > 0 && (
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
-                <Home className="w-4 h-4" />
-                <span className="text-sm font-medium">
+              <DropdownMenuTrigger className="flex items-center gap-1 sm:gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
+                <Home className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline text-sm font-medium">
                   {selectedFlat?.user_flat
                     ? `${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + ' - ' : ''}${selectedFlat.user_flat.flat}`
                     : "Select Flat"}
                 </span>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3 flex-shrink-0" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
                 {availableFlats.map((flat) => (

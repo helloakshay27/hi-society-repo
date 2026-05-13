@@ -24,22 +24,17 @@ interface SelectionPanelProps {
 export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   actions = [],
   onAdd,
-  addLabel = 'Add',
+  addLabel = "Add",
   onImport,
-  onChecklist,
   onClearSelection,
   subtitle,
-  loading,
   className = "",
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        panelRef.current &&
-        !panelRef.current.contains(event.target as Node)
-      ) {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
         onClearSelection?.();
       }
     };
@@ -52,21 +47,29 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
     ...(onImport ? [{ label: "Import", icon: Upload, onClick: onImport }] : []),
     ...actions,
   ];
+
   const panelSubtitle = subtitle ?? "";
 
   return (
-    <div
-      className={`selection-panel bg-white ${className}`}
-      ref={panelRef}
-    >
-      <div className="flex items-stretch w-full min-h-[105px]">
-        <div className="w-11 flex-shrink-0 bg-[#C4B89D] flex items-center justify-center">
+    <>
+      {/* ══════════════════════════════════════════
+          DESKTOP layout  (hidden on mobile)
+          Fixed bottom bar, centered in content area
+      ══════════════════════════════════════════ */}
+      <div
+        ref={panelRef}
+        className={`selection-panel hidden sm:flex ${className}`}
+      >
+        {/* Colored initial strip */}
+        <div className="w-11 flex-shrink-0 bg-[#C4B89D] flex items-center justify-center self-stretch">
           <span className="text-[#C72030] text-xs font-bold">
             {addLabel?.trim()?.[0]?.toUpperCase() || "A"}
           </span>
         </div>
 
+        {/* Content row */}
         <div className="flex items-center min-w-0">
+          {/* Label */}
           <div className="w-[190px] px-6">
             <div className="text-[16px] font-semibold text-[#1A1A1A] leading-tight">
               Actions
@@ -78,11 +81,10 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
             )}
           </div>
 
+          {/* Action buttons */}
           <div className="flex items-center gap-8 px-4">
             {defaultActions.map((action, index) => {
-              const Icon = action.label.toLowerCase().includes("qr")
-                ? Plus
-                : action.icon;
+              const Icon = action.label.toLowerCase().includes("qr") ? Plus : action.icon;
               return (
                 <Button
                   key={index}
@@ -101,8 +103,10 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
             })}
           </div>
 
+          {/* Divider */}
           <div className="w-px h-12 bg-gray-300 mx-3" />
 
+          {/* Close */}
           <Button
             variant="ghost"
             size="icon"
@@ -113,6 +117,64 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
           </Button>
         </div>
       </div>
-    </div>
+
+      {/* ══════════════════════════════════════════
+          MOBILE layout  (hidden on desktop)
+          Fixed bottom sheet, full width
+      ══════════════════════════════════════════ */}
+      <div
+        ref={panelRef}
+        className={`sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white
+          border-t-2 border-[#C4B89D]
+          rounded-t-2xl
+          shadow-[0_-4px_24px_rgba(0,0,0,0.15)]
+          pb-safe ${className}`}
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        {/* Header row: label + close button */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <div>
+            <div className="text-[15px] font-semibold text-[#1A1A1A]">
+              Actions
+            </div>
+            {panelSubtitle && (
+              <div className="text-[12px] font-medium text-[#6B7280] mt-0.5">
+                {panelSubtitle}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={onClearSelection}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Buttons row */}
+        <div className="flex items-center gap-2 px-4 pb-4 overflow-x-auto no-scrollbar">
+          {defaultActions.map((action, index) => {
+            const Icon = action.label.toLowerCase().includes("qr") ? Plus : action.icon;
+            return (
+              <button
+                key={index}
+                onClick={action.onClick}
+                disabled={action.loading}
+                className="flex flex-col items-center justify-center gap-1.5
+                  min-w-[72px] h-[72px] px-2
+                  rounded-xl bg-gray-50 hover:bg-[#f6f4ee]
+                  border border-gray-200
+                  disabled:opacity-50 flex-shrink-0"
+              >
+                <Icon className="w-5 h-5 text-[#1A1A1A]" />
+                <span className="text-[11px] font-semibold text-[#4B5563] text-center leading-tight">
+                  {action.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 };
