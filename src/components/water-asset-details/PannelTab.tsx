@@ -30,11 +30,17 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   subtitle,
   className = "",
 }) => {
-  const panelRef = useRef<HTMLDivElement>(null);
+  const desktopPanelRef = useRef<HTMLDivElement>(null);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isClickedOutside = 
+        (desktopPanelRef.current && !desktopPanelRef.current.contains(target)) &&
+        (mobilePanelRef.current && !mobilePanelRef.current.contains(target));
+      
+      if (isClickedOutside) {
         onClearSelection?.();
       }
     };
@@ -57,7 +63,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
           Fixed bottom bar, centered in content area
       ══════════════════════════════════════════ */}
       <div
-        ref={panelRef}
+        ref={desktopPanelRef}
         className={`selection-panel hidden sm:flex ${className}`}
       >
         {/* Colored initial strip */}
@@ -123,7 +129,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
           Fixed bottom sheet, full width
       ══════════════════════════════════════════ */}
       <div
-        ref={panelRef}
+        ref={mobilePanelRef}
         className={`sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white
           border-t-2 border-[#C4B89D]
           rounded-t-2xl

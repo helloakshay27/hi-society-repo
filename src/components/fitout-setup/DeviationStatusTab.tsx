@@ -137,7 +137,7 @@ export const DeviationStatusTab: React.FC = () => {
   };
 
   const handleAdd = async () => {
-    if (!statusName.trim() || !statusPosition || !fixedState) {
+    if (!statusName.trim() || !statusPosition ) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -458,7 +458,9 @@ export const DeviationStatusTab: React.FC = () => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="fixed-state">Fixed State <span className='text-red-600'>*</span></Label>
+              <Label htmlFor="fixed-state">Fixed State 
+                {/* <span className='text-red-600'>*</span> */}
+                </Label>
               <Select value={fixedState} onValueChange={setFixedState}>
                 <SelectTrigger id="fixed-state">
                   <SelectValue placeholder="Select Fixed State" />
