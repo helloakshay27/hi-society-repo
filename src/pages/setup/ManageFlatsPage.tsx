@@ -672,14 +672,14 @@ export const ManageFlatsPage = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Tower
                 </Button>
-                <Button
+                {/* <Button
                   size="sm"
                   onClick={handleAddWing}
                   className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Wing
-                </Button>
+                </Button> */}
                 <Button
                   size="sm"
                   onClick={handleAddFloor}
