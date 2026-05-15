@@ -75,7 +75,7 @@ const formattedResponse = (data) => {
     email: item.email || "-",
     residentType: item.resident_type || "-",
     phase: item.display_view || "-",
-    livesHere: (item.lives_here === "1" || item.lives_here === "true") ? "Yes" : "No",
+    livesHere: item.lives_here ? item.lives_here.charAt(0).toUpperCase() + item.lives_here.slice(1) : "-",
     membershipType: item?.is_primary ? "Primary" : "Secondary",
     status: item.approve ? "Approved" : item.approve === false ? "Rejected" : "Pending",
     staff: item.staff || "-",
