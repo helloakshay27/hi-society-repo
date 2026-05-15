@@ -186,7 +186,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
     const payload = {
       society_flat: {
-        project_id: formData.project || null,
+        // project_id: formData.project || null,
         society_block_id: formData.tower,
         wing_id: formData.wing || null,
         society_floor_id: formData.floor,
@@ -286,7 +286,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
           {/* Project, Tower, Wing, Flat */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
+            {/* <div className="relative">
               <Label htmlFor="project" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 Project
               </Label>
@@ -304,7 +304,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder="Select Project"
                 className="pt-2"
               />
-            </div>
+            </div> */}
 
             <div className="relative">
               <Label htmlFor="tower" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">

@@ -170,7 +170,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
     try {
       await axios.put(`${baseUrl}/crm/admin/society_blocks/${tower.id}.json`, {
         society_block: {
-          project_id: editedTowerData.project_id ? parseInt(editedTowerData.project_id) : null,
+          // project_id: editedTowerData.project_id ? parseInt(editedTowerData.project_id) : null,
           society_id: societyId ? parseInt(societyId) : null,
           estate_builder_id: builderId || null,
           name: editedTowerData.name,
@@ -213,8 +213,8 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
 
         <div className="flex-1 overflow-y-auto py-6 space-y-6 px-6">
           {/* Add New Tower Form */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-4">
+            {/* <div className="space-y-2">
               <Label>Project</Label>
               <SearchableSelect
                 value={selectedProject}
@@ -229,7 +229,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                 placeholder="Select Project"
                 className=""
               />
-            </div>
+            </div> */}
             <div className="space-y-2">
               <Label htmlFor="tower-name">Tower Name <span className="text-red-500">*</span></Label>
               <Input
