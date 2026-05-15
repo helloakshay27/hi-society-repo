@@ -154,6 +154,8 @@ interface GroupMembershipDetail {
         discount: string;
         cgst: string;
         sgst: string;
+        cgst_per?: number;
+        sgst_per?: number;
         total_tax: string;
         total_amount: string;
         landed_amount: string;
@@ -161,6 +163,19 @@ interface GroupMembershipDetail {
         payment_status: string;
         created_at: string;
         updated_at: string;
+        paid_bills?: Array<{
+            id: number;
+            bill_number: string;
+            total_amount: number;
+            due_date: string;
+            status: string;
+            invoice_file: string | null;
+            lock_payment?: {
+                transaction_id: string;
+                paid_amount: string;
+                paid_date: string;
+            };
+        }>;
     } | null;
 }
 
@@ -998,6 +1013,69 @@ export const CMSClubMembersDetails = () => {
                                     <span className="text-gray-900 font-medium">{formatDateTime(membershipData.allocation_payment_detail.created_at)}</span>
                                 </div>
                             </div>
+
+                            {membershipData.allocation_payment_detail.paid_bills && membershipData.allocation_payment_detail.paid_bills.length > 0 && (
+                                <div className="mt-6">
+                                    <h3 className="text-base font-semibold text-[#1a1a1a] mb-3 flex items-center gap-2">
+                                        <CreditCard className="w-4 h-4 text-[#C72030]" />
+                                        Paid Bills
+                                    </h3>
+                                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-gray-50 border-b border-gray-200">
+                                                <tr>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Bill #</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Amount</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Due Date</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Transaction ID</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Amount</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Date</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Status</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Invoice</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {membershipData.allocation_payment_detail.paid_bills.map((bill) => (
+                                                    <tr key={bill.id} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 font-medium text-gray-900">#{bill.bill_number}</td>
+                                                        <td className="px-4 py-3 text-gray-900">
+                                                            ₹{bill.total_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-700">{formatDate(bill.due_date)}</td>
+                                                        <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.transaction_id || '-'}</td>
+                                                        <td className="px-4 py-3 text-gray-900">
+                                                            {bill.lock_payment?.paid_amount
+                                                                ? `₹${Number(bill.lock_payment.paid_amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-700">
+                                                            {bill.lock_payment?.paid_date ? formatDateTime(bill.lock_payment.paid_date) : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <Badge className="bg-green-100 text-green-800 border-0 capitalize">
+                                                                {bill.status}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            {bill.invoice_file ? (
+                                                                <button
+                                                                    onClick={() => window.open(bill.invoice_file!, '_blank')}
+                                                                    className="text-[#C72030] hover:underline flex items-center gap-1 text-xs font-medium"
+                                                                >
+                                                                    <Download className="w-3 h-3" />
+                                                                    Download
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-gray-400 text-xs">N/A</span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </TabsContent>
                     )}
 
