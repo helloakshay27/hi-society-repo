@@ -173,6 +173,8 @@ interface GroupMembershipDetail {
             lock_payment?: {
                 transaction_id: string;
                 paid_amount: string;
+                payment_mode: string;
+                notes: string;
                 paid_date: string;
             };
         }>;
@@ -1029,6 +1031,8 @@ export const CMSClubMembersDetails = () => {
                                                     <th className="text-left px-4 py-3 text-gray-500 font-medium">Due Date</th>
                                                     <th className="text-left px-4 py-3 text-gray-500 font-medium">Transaction ID</th>
                                                     <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Amount</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Payment Mode</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Notes</th>
                                                     <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Date</th>
                                                     <th className="text-left px-4 py-3 text-gray-500 font-medium">Status</th>
                                                     <th className="text-left px-4 py-3 text-gray-500 font-medium">Invoice</th>
@@ -1048,6 +1052,8 @@ export const CMSClubMembersDetails = () => {
                                                                 ? `₹${Number(bill.lock_payment.paid_amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                                                 : '-'}
                                                         </td>
+                                                        <td className="px-4 py-3 text-gray-700 capitalize">{bill.lock_payment?.payment_mode || '-'}</td>
+                                                        <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.notes || '-'}</td>
                                                         <td className="px-4 py-3 text-gray-700">
                                                             {bill.lock_payment?.paid_date ? formatDateTime(bill.lock_payment.paid_date) : '-'}
                                                         </td>
