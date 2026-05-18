@@ -20,7 +20,6 @@ import {
   Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-
 const EventCommunicationCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();

@@ -24,7 +24,6 @@ import MuiMultiSelect from "../components/MuiMultiSelect";
 import { API_CONFIG } from "../config/apiConfig";
 import { toast } from "sonner";
 import { useLayout } from "@/contexts/LayoutContext";
-
 // Define types for form data
 interface Attendee {
   id: number;

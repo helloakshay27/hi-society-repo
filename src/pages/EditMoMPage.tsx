@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 import { Button as SButton } from "../components/ui/button";
 import MuiSelectField from "../components/MuiSelectField";
-
 interface Attendee {
   id: number;
   name?: string;

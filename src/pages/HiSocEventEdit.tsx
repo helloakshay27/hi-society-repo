@@ -30,7 +30,6 @@ import {
 } from "../components/ui/table";
 import SelectBox from "@/components/ui/select-box";
 import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
-
 const HiSocEventEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();

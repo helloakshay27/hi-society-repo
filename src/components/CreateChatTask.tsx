@@ -19,7 +19,6 @@ import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
-
 const fieldStyles = {
     height: { xs: 28, sm: 36, md: 45 },
     "& .MuiInputBase-input, & .MuiSelect-select": {
