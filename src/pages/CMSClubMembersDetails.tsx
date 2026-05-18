@@ -1043,29 +1043,29 @@ export const CMSClubMembersDetails = () => {
                                                     <tr key={bill.id} className="hover:bg-gray-50">
                                                         <td className="px-4 py-3 font-medium text-gray-900">#{bill.bill_number}</td>
                                                         <td className="px-4 py-3 text-gray-900">
-                                                            ₹{bill.total_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                            ₹{bill?.total_amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </td>
                                                         <td className="px-4 py-3 text-gray-700">{formatDate(bill.due_date)}</td>
                                                         <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.transaction_id || '-'}</td>
                                                         <td className="px-4 py-3 text-gray-900">
                                                             {bill.lock_payment?.paid_amount
-                                                                ? `₹${Number(bill.lock_payment.paid_amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                ? `₹${Number(bill?.lock_payment.paid_amount)?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                                                 : '-'}
                                                         </td>
                                                         <td className="px-4 py-3 text-gray-700 capitalize">{bill.lock_payment?.payment_mode || '-'}</td>
                                                         <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.notes || '-'}</td>
                                                         <td className="px-4 py-3 text-gray-700">
-                                                            {bill.lock_payment?.paid_date ? formatDateTime(bill.lock_payment.paid_date) : '-'}
+                                                            {bill.lock_payment?.paid_date ? formatDateTime(bill?.lock_payment?.paid_date) : '-'}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <Badge className="bg-green-100 text-green-800 border-0 capitalize">
-                                                                {bill.status}
+                                                                {bill?.status}
                                                             </Badge>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            {bill.invoice_file ? (
+                                                            {bill?.invoice_file ? (
                                                                 <button
-                                                                    onClick={() => window.open(bill.invoice_file!, '_blank')}
+                                                                    onClick={() => window.open(bill?.invoice_file!, '_blank')}
                                                                     className="text-[#C72030] hover:underline flex items-center gap-1 text-xs font-medium"
                                                                 >
                                                                     <Download className="w-3 h-3" />
