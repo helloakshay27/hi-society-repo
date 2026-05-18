@@ -46,7 +46,6 @@ import {
   Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-
 const EventCreate = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({

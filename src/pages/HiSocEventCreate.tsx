@@ -21,7 +21,6 @@ import {
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
-
 const HiSocEventCreate = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({

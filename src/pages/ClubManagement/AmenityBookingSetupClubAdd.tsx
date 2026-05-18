@@ -36,7 +36,6 @@ import { toast } from "sonner";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { ClubGalleryImageUpload } from "@/components/ClubGalleryImageUpload";
-
 // Custom theme for MUI components
 const muiTheme = createTheme({
   components: {

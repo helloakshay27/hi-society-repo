@@ -29,7 +29,6 @@ import {
   TableRow,
 } from "../components/ui/table";
 import SelectBox from "@/components/ui/select-box";
-
 const EventEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();

@@ -28,7 +28,6 @@ import { Button } from "react-day-picker";
 import { DeleteCompanyModal } from "@/components/DeleteCompanyModal";
 import { DeleteCountryModal } from "@/components/DeleteCountryModal";
 import { DeletePatrollingModal } from "@/components/DeletePatrollingModal";
-
 // Custom MultiValue component for react-select
 const CustomMultiValue = (props) => (
   <div

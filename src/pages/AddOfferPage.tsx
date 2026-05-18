@@ -40,7 +40,6 @@ import { styled } from '@mui/material/styles';
 import { boxShadow } from 'html2canvas/dist/types/css/property-descriptors/box-shadow';
 
 
-
 // Styled Components
 const CustomStepConnector = styled(StepConnector)(() => ({
     top: 20,
