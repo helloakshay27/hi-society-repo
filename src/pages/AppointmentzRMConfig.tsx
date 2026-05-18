@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, X } from "lucide-react";
 import {
   Dialog,
@@ -24,6 +25,7 @@ import {
   getRMUserById,
   createRMUser,
   updateRMUser,
+  updateRMUserActiveStatus,
   RMUserData as APIRMUser,
 } from "@/services/appointmentzService";
 
@@ -40,11 +42,22 @@ interface RMUser {
   status: boolean;
 }
 
+const parseActiveStatus = (value: unknown): boolean => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalizedValue = value.trim().toLowerCase();
+    return normalizedValue === "true" || normalizedValue === "1";
+  }
+  return false;
+};
+
 const AppointmentzRMConfig = () => {
   const [data, setData] = useState<RMUser[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<Record<number, boolean>>({});
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [editingUserName, setEditingUserName] = useState("");
@@ -87,7 +100,7 @@ const AppointmentzRMConfig = () => {
         mobile: user.mobile,
         userType: user.user_type === "cs_user" ? "Customer Support" : "RM User",
         createdOn: new Date(user.created_at).toLocaleDateString("en-GB"),
-        status: user.active,
+        status: parseActiveStatus(user.active),
       }));
       setData(transformedData);
       setTotalPages(response.pagination.total_pages);
@@ -182,6 +195,63 @@ const AppointmentzRMConfig = () => {
 
   const handleSelectChange = (value: string) => {
     setFormData((prev) => ({ ...prev, userType: value }));
+  };
+
+  const handleStatusToggle = async (item: RMUser, nextStatus: boolean) => {
+    if (updatingStatus[item.id]) return;
+
+    setUpdatingStatus((prev) => ({ ...prev, [item.id]: true }));
+    setData((prev) =>
+      prev.map((row) =>
+        row.id === item.id ? { ...row, status: nextStatus } : row
+      )
+    );
+
+    try {
+      const response = await updateRMUserActiveStatus(item.id);
+
+      setTimeout(() => {
+        toast.success(
+          response.message ||
+            `User ${nextStatus ? "activated" : "deactivated"} successfully`
+        );
+      }, 0);
+    } catch (error: unknown) {
+      console.error("Error updating user status:", error);
+
+      setData((prev) =>
+        prev.map((row) =>
+          row.id === item.id ? { ...row, status: item.status } : row
+        )
+      );
+
+      let errorMessage = "Failed to update status";
+      if (error && typeof error === "object" && "response" in error) {
+        const errorData = (
+          error as {
+            response?: { data?: { message?: string; error?: unknown } };
+          }
+        ).response?.data;
+        if (errorData?.message) {
+          errorMessage = errorData.message;
+        } else if (errorData?.error) {
+          errorMessage =
+            typeof errorData.error === "string"
+              ? errorData.error
+              : JSON.stringify(errorData.error);
+        }
+      }
+
+      setTimeout(() => {
+        toast.error(errorMessage);
+      }, 0);
+    } finally {
+      setUpdatingStatus((prev) => {
+        const next = { ...prev };
+        delete next[item.id];
+        return next;
+      });
+    }
   };
 
   const handleOpenAdd = () => {
@@ -398,7 +468,17 @@ const AppointmentzRMConfig = () => {
           </Button>
         );
       case "status":
-        return item.status ? "true" : "false";
+        return (
+          <div className="flex items-center">
+            <Switch
+              checked={item.status}
+              onCheckedChange={(checked) => handleStatusToggle(item, checked)}
+              disabled={!!updatingStatus[item.id]}
+              aria-label={`Set ${item.name || "user"} status`}
+              className="data-[state=checked]:!bg-green-500 data-[state=unchecked]:!bg-gray-300"
+            />
+          </div>
+        );
       default:
         return item[columnKey as keyof RMUser];
     }

@@ -359,6 +359,36 @@ export const updateRMUser = async (
   return response.data;
 };
 
+export interface UpdateRMUserActiveStatusResponse {
+  success: boolean;
+  message: string;
+  rm_user_id: number;
+  active: boolean | null;
+}
+
+export const updateRMUserActiveStatus = async (
+  userId: number
+): Promise<UpdateRMUserActiveStatusResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token");
+
+  const response = await axios.put(
+    `https://${baseUrl}/crm/admin/rm_users/${userId}/update_active`,
+    null,
+    {
+      params: {
+        token,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
 // Slot Config interfaces and functions
 export interface SiteSchedule {
   id: number;
