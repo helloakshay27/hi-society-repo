@@ -325,7 +325,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
               />
             </div>
 
-            <div className="relative">
+            {/* <div className="relative">
               <Label htmlFor="wing" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 Wing
               </Label>
@@ -339,7 +339,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder="Select Wing"
                 className="pt-2"
               />
-            </div>
+            </div> */}
 
             <div className="relative">
               <Label htmlFor="floor" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
