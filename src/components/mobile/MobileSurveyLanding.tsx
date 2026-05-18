@@ -1984,7 +1984,7 @@ export const MobileSurveyLanding: React.FC = () => {
 
   return (
     <div
-      className="h-screen w-screen max-w-md mx-auto flex flex-col relative bg-gray-50"
+      className="h-screen w-screen max-w-md mx-auto flex flex-col relative bg-white-50"
       style={{
         backgroundImage: `url(${surveyData?.snag_checklist?.survey_attachment?.url})`,
         backgroundSize: "cover",
