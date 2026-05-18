@@ -1127,7 +1127,7 @@ export const CMSClubMembersDetails = () => {
                                                 <div className="flex items-center justify-between text-sm">
                                                     <span className="text-gray-600">Total Amount</span>
                                                     <span className="text-lg font-bold text-[#C72030]">
-                                                        ₹{bill.total_amount.toLocaleString('en-IN', {
+                                                        ₹{bill.total_amount?.toLocaleString('en-IN', {
                                                             minimumFractionDigits: 2,
                                                             maximumFractionDigits: 2
                                                         })}
