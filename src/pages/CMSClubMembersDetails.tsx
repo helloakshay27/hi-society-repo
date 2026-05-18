@@ -1515,8 +1515,8 @@ export const CMSClubMembersDetails = () => {
                                             return formatDate(date);
                                         };
 
-                                        const startDateChange = `Start Date: ${formatRenewalDate(log.start_date.from)} → ${formatRenewalDate(log.start_date.to)}`;
-                                        const endDateChange = `End Date: ${formatRenewalDate(log.end_date.from)} → ${formatRenewalDate(log.end_date.to)}`;
+                                        const startDateChange = `Start Date: ${formatRenewalDate(log?.start_date?.from)} → ${formatRenewalDate(log?.start_date?.to)}`;
+                                        const endDateChange = `End Date: ${formatRenewalDate(log?.end_date?.from)} → ${formatRenewalDate(log?.end_date?.to)}`;
                                         const description = `Membership Renewed\n${startDateChange} | ${endDateChange}`;
 
                                         return {
