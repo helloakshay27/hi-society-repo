@@ -30,6 +30,7 @@ import { fetchUserGroups } from '@/store/slices/userGroupSlice';
 import axios from 'axios';
 import { toast } from 'sonner';
 import CircularProgress from "@mui/material/CircularProgress";
+import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
 
 interface User {
   id: number;
@@ -64,27 +65,62 @@ const AddPollPage = () => {
   const [loading, setLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
   const [groupSearch, setGroupSearch] = useState('');
+const [memberFilter, setMemberFilter] = useState<MemberFilterState>({
+  roles: [],
+  towers: [],
+});
+
+const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
+  roles: [],
+  towers: [],
+});
+
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         `https://${baseUrl}/usergroups/get_members_list.json`,
+  //         {
+  //           params: { token }
+  //         }
+  //       );
+
+  //       console.log("Users API response+++++++:", res.data);
+
+  //       // ⚠️ adjust if API response structure differs
+  //       setUsers(res.data || []);
+
+  //     } catch (error) {
+  //       console.error("Failed to fetch users", error);
+  //     }
+  //   };
 
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(
-          `https://${baseUrl}/usergroups/get_members_list.json`,
-          {
-            params: { token }
-          }
-        );
+    const fetchUsers = async (
+  activeFilters: MemberFilterState = { roles: [], towers: [] }
+) => {
+  const params = new URLSearchParams();
 
-        console.log("Users API response+++++++:", res.data);
+  activeFilters.roles.forEach((r) =>
+    params.append("values[]", r)
+  );
 
-        // ⚠️ adjust if API response structure differs
-        setUsers(res.data || []);
+  activeFilters.towers.forEach((tid) =>
+    params.append("block_ids[]", tid)
+  );
 
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      }
-    };
+  params.append("token", token || "");
+
+  try {
+    const res = await axios.get(
+      `https://${baseUrl}/usergroups/get_members_list.json?${params.toString()}`
+    );
+
+    setUsers(res.data || []);
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+  }
+};
 
     // const fetchGroups = async () => {
     //   try {
@@ -96,28 +132,59 @@ const AddPollPage = () => {
     // };
 
 
-    const fetchGroups = async () => {
-      try {
-        const res = await axios.get(
-          `https://${baseUrl}/crm/usergroups.json`,
-          {
-            params: { token }
-          }
-        );
+    // const fetchGroups = async () => {
+    //   try {
+    //     const res = await axios.get(
+    //       `https://${baseUrl}/crm/usergroups.json`,
+    //       {
+    //         params: { token }
+    //       }
+    //     );
 
-        console.log("groups API response+++++++:", res.data);
+    //     console.log("groups API response+++++++:", res.data);
 
-        // ⚠️ adjust if API response structure differs
-        setGroups(res.data.usergroups || []);
+    //     // ⚠️ adjust if API response structure differs
+    //     setGroups(res.data.usergroups || []);
 
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      }
-    };
+    //   } catch (error) {
+    //     console.error("Failed to fetch users", error);
+    //   }
+    // };
 
-    fetchUsers();
-    fetchGroups();
-  }, [dispatch, token, baseUrl]);
+    const fetchGroups = async (
+  activeFilters: MemberFilterState = { roles: [], towers: [] }
+) => {
+  const params = new URLSearchParams();
+
+  activeFilters.roles.forEach((r) =>
+    params.append("values[]", r)
+  );
+
+  activeFilters.towers.forEach((tid) =>
+    params.append("block_ids[]", tid)
+  );
+
+  params.append("token", token || "");
+
+  try {
+    const res = await axios.get(
+      `https://${baseUrl}/crm/usergroups.json?${params.toString()}`
+    );
+
+    setGroups(res.data.usergroups || []);
+  } catch (error) {
+    console.error("Failed to fetch groups", error);
+  }
+};
+
+  //   fetchUsers();
+  //   fetchGroups();
+  // }, [dispatch, token, baseUrl]);
+
+  useEffect(() => {
+  fetchUsers();
+  fetchGroups();
+}, []);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -547,6 +614,26 @@ const AddPollPage = () => {
                 </RadioGroup>
                 {selectedShareWith === 'individual' && (
                   <Box sx={{ mt: 2 }}>
+                    <Box
+  sx={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    mb: 2,
+  }}
+>
+  <Typography variant="body2" color="text.secondary">
+    Filter members by role or tower
+  </Typography>
+
+  <MemberFilterPanel
+    value={memberFilter}
+    onChange={(newFilters) => {
+      setMemberFilter(newFilters);
+      fetchUsers(newFilters);
+    }}
+  />
+</Box>
                     <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                       Select Users ({selectedUsers.length} selected)
                     </Typography>
@@ -572,6 +659,42 @@ const AddPollPage = () => {
                         ) : null,
                       }}
                     />
+                    {users.length > 0 && (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      p: 1.5,
+      border: "1px solid #e0e0e0",
+      borderRadius: 1,
+      mb: 1,
+      bgcolor: "#fafafa",
+    }}
+  >
+    <Checkbox
+      checked={
+        selectedUsers.length === users.length &&
+        users.length > 0
+      }
+      onChange={(e) => {
+        if (e.target.checked) {
+          setSelectedUsers(users.map((u) => u.id));
+        } else {
+          setSelectedUsers([]);
+        }
+      }}
+      sx={{
+        "&.Mui-checked": {
+          color: "#C72030",
+        },
+      }}
+    />
+
+    <Typography variant="body2" fontWeight={500}>
+      Select All Members ({selectedUsers.length}/{users.length})
+    </Typography>
+  </Box>
+)}
                     <Paper
                       variant="outlined"
                       sx={{
@@ -660,6 +783,26 @@ const AddPollPage = () => {
                 )}
                 {selectedShareWith === 'group' && (
                   <Box sx={{ mt: 2 }}>
+                    <Box
+  sx={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    mb: 2,
+  }}
+>
+  <Typography variant="body2" color="text.secondary">
+    Filter groups by role or tower
+  </Typography>
+
+  <MemberFilterPanel
+    value={groupFilter}
+    onChange={(newFilters) => {
+      setGroupFilter(newFilters);
+      fetchGroups(newFilters);
+    }}
+  />
+</Box>
                     <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                       Select Groups ({selectedGroups.length} selected)
                     </Typography>
