@@ -86,10 +86,15 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
     active: true,
   });
 
-  // Local state for headquarters/countries
   const [headquartersDropdown, setHeadquartersDropdown] = useState<
     Array<{ id: number; name: string }>
   >(countriesDropdown || []);
+
+  useEffect(() => {
+    if (!formData.company_id) {
+      setHeadquartersDropdown(countriesDropdown || []);
+    }
+  }, [countriesDropdown]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -106,43 +111,46 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
     }
 
     // If company_id changes, fetch headquarters
-    if (field === "company_id" && value) {
-      try {
-        const apiUrl = getFullUrl(
-          `/headquarters.json?q[company_setup_id_eq]=${value}`
-        );
-        const response = await fetch(apiUrl, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: getAuthHeader(),
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Expecting headquarters array with id and name
-          if (Array.isArray(data.headquarters)) {
-            setHeadquartersDropdown(
-              data.headquarters.map((hq: any) => ({
-                id: hq.id,
-                name: hq.headquarter_name,
-              }))
-            );
-          } else if (Array.isArray(data)) {
-            setHeadquartersDropdown(
-              data.map((hq: any) => ({ id: hq.id, name: hq.headquarter_name }))
-            );
+    if (field === "company_id") {
+      if (value) {
+        try {
+          const apiUrl = getFullUrl(
+            `/headquarters.json?q[company_setup_id_eq]=${value}`
+          );
+          const response = await fetch(apiUrl, {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: getAuthHeader(),
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data.headquarters)) {
+              setHeadquartersDropdown(
+                data.headquarters.map((hq: any) => ({
+                  id: hq.id,
+                  name: hq.country_name,
+                }))
+              );
+            } else if (Array.isArray(data)) {
+              setHeadquartersDropdown(
+                data.map((hq: any) => ({ id: hq.id, name: hq.country_name }))
+              );
+            } else {
+              setHeadquartersDropdown(countriesDropdown || []);
+            }
           } else {
-            setHeadquartersDropdown([]);
+            setHeadquartersDropdown(countriesDropdown || []);
           }
-        } else {
-          setHeadquartersDropdown([]);
+        } catch (error) {
+          setHeadquartersDropdown(countriesDropdown || []);
         }
-        // Reset country_id when company changes
-        setFormData((prev) => ({ ...prev, country_id: "" }));
-      } catch (error) {
-        setHeadquartersDropdown([]);
+      } else {
+        setHeadquartersDropdown(countriesDropdown || []);
       }
+      // Reset country_id when company changes
+      setFormData((prev) => ({ ...prev, country_id: "" }));
     }
   };
 

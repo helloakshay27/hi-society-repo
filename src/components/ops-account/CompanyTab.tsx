@@ -536,7 +536,10 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
         <div>
           <div className="font-medium">{company?.name || "N/A"}</div>
           {company?.remarks && (
-            <div className="text-sm text-gray-500">{company.remarks}</div>
+            <div className="text-sm text-gray-500" title={company.remarks}>
+              {company.remarks.split(" ").slice(0, 5).join(" ")}
+              {company.remarks.split(" ").length > 5 ? "..." : ""}
+            </div>
           )}
         </div>
       </div>

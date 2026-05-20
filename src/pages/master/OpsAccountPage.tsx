@@ -27,7 +27,7 @@ export const OpsAccountPage = () => {
         <TabsList className="grid w-full grid-cols-9 mb-6">
           <TabsTrigger value="organization">Organization</TabsTrigger>
           <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="country">Country</TabsTrigger>
+          <TabsTrigger value="country">Headquarter</TabsTrigger>
           <TabsTrigger value="region">Region</TabsTrigger>
           <TabsTrigger value="society">Society</TabsTrigger>
           {/* <TabsTrigger value="zone">Zone</TabsTrigger> */}

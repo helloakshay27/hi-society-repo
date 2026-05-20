@@ -617,6 +617,7 @@ export const RegionTab: React.FC<RegionTabProps> = ({
             searchTerm={searchTerm}
             onSearchChange={handleSearch}
             onFilterClick={() => setIsFilterOpen(true)}
+            pagination={true}
             leftActions={
               <Button
                 className="bg-primary text-primary-foreground hover:bg-primary/90"

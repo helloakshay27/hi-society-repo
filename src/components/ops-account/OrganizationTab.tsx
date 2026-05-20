@@ -98,12 +98,20 @@ interface OrganizationTabProps {
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
+  
   {
     key: "actions",
     label: "Action",
     sortable: false,
     hideable: false,
     draggable: false,
+  },
+  {
+    key: "sr_no",
+    label: "Sr No",
+    sortable: false,
+    hideable: true,
+    draggable: true,
   },
   {
     key: "name",
@@ -474,6 +482,11 @@ console.log("auth :",getFullUrl, getAuthHeader());
 
   // Render row function for enhanced table
   const renderRow = (org: OrganizationItem) => ({
+    sr_no: (
+      <span className="text-sm text-gray-600">
+        {(currentPage - 1) * perPage + organizations.indexOf(org) + 1}
+      </span>
+    ),
     actions: (
       <div className="flex items-center gap-2">
         <button
