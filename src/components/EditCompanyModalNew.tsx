@@ -920,9 +920,10 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
                   label="Mobile"
                   placeholder="Enter mobile number"
                   value={formData.finance_spoc.mobile}
-                  onChange={(e) =>
-                    handleNestedChange("finance_spoc", "mobile", e.target.value)
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    handleNestedChange("finance_spoc", "mobile", val);
+                  }}
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -995,13 +996,10 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
                   label="Mobile"
                   placeholder="Enter mobile number"
                   value={formData.operation_spoc.mobile}
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "operation_spoc",
-                      "mobile",
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    handleNestedChange("operation_spoc", "mobile", val);
+                  }}
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}

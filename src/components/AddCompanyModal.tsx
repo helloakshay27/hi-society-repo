@@ -923,9 +923,10 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 label="Mobile"
                 placeholder="Enter mobile number"
                 value={formData.finance_spoc.mobile}
-                onChange={(e) =>
-                  handleNestedChange("finance_spoc", "mobile", e.target.value)
-                }
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  handleNestedChange("finance_spoc", "mobile", val);
+                }}
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{
@@ -934,6 +935,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 }}
                 InputProps={{ sx: fieldStyles }}
                 disabled={isSubmitting}
+                
               />
             </div>
           </div>
@@ -1006,9 +1008,10 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 label="Mobile"
                 placeholder="Enter mobile number"
                 value={formData.operation_spoc.mobile}
-                onChange={(e) =>
-                  handleNestedChange("operation_spoc", "mobile", e.target.value)
-                }
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  handleNestedChange("operation_spoc", "mobile", val);
+                }}
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{

@@ -54,6 +54,11 @@ interface SurveyMapping {
   message?: string;
   location?: string;
   company_logo_url?: string | null;
+  society_name?: string;
+  created_by?: string;
+  user_name?: string;
+  tower_name?: string;
+  flat_no?: string;
   snag_checklist: {
     id: number;
     name: string;
@@ -2094,9 +2099,40 @@ export const MobileSurveyLanding: React.FC = () => {
 
       {/* Main Content */}
       {isFormView && (
-        <h1 className="text-xl font-semibold text-black/100 mb-4 text-center m-4">
-          {surveyData.survey_title}
-        </h1>
+        <div className="px-4 pt-2 pb-1">
+          {(surveyData.society_name || surveyData.created_by || surveyData.user_name) && (
+            <div className="flex justify-start mb-3">
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-md border border-gray-100">
+                {surveyData.society_name && (
+                  <p className="text-[13px] font-bold text-gray-900 leading-tight">
+                    {surveyData.society_name}
+                  </p>
+                )}
+                {surveyData.tower_name && (
+                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <span className="font-semibold text-gray-700">Tower:</span>{" "}
+                    {surveyData.tower_name}
+                  </p>
+                )}
+                {surveyData.flat_no && (
+                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <span className="font-semibold text-gray-700">Flat:</span>{" "}
+                    {surveyData.flat_no}
+                  </p>
+                )}
+                {surveyData.user_name && (
+                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <span className="font-semibold text-gray-700">Customer:</span>{" "}
+                    {surveyData.user_name}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          <h1 className="text-xl font-semibold text-black/100 mb-3 text-center">
+            {surveyData.survey_title}
+          </h1>
+        </div>
       )}
 
       <div
@@ -2126,8 +2162,37 @@ export const MobileSurveyLanding: React.FC = () => {
               <div className="flex-1 flex flex-col justify-center">
                 {/* Survey Title for Normal View */}
                 {currentQuestion && currentQuestion.qtype !== "emoji" && currentQuestion.qtype !== "smiley" && (
-                  <div className="text-center mb-6">
-                    <h1 className="text-xl font-bold text-black/100 mb-2">
+                  <div className="mb-6">
+                    {(surveyData.society_name || surveyData.created_by || surveyData.user_name) && (
+                      <div className="flex justify-start mb-3">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-md border border-gray-100">
+                          {surveyData.society_name && (
+                            <p className="text-[13px] font-bold text-gray-900 leading-tight">
+                              {surveyData.society_name}
+                            </p>
+                          )}
+                          {surveyData.tower_name && (
+                            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                              <span className="font-semibold text-gray-700">Tower:</span>{" "}
+                              {surveyData.tower_name}
+                            </p>
+                          )}
+                           {surveyData.flat_no && (
+                            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                              <span className="font-semibold text-gray-700">Flat:</span>{" "}
+                              {surveyData.flat_no}
+                            </p>
+                          )}
+                          {surveyData.user_name && (
+                            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                              <span className="font-semibold text-gray-700">Customer:</span>{" "}
+                              {surveyData.user_name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <h1 className="text-xl font-bold text-black/100 mb-2 text-center">
                       {surveyData.survey_title}
                     </h1>
                   </div>
