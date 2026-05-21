@@ -117,7 +117,7 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
-    key: "status",
+    key: "approve",
     label: "Status",
     sortable: true,
     hideable: true,
@@ -578,7 +578,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
         {formatDate(company?.live_date)}
       </span>
     ),
-    status: (
+    approve: (
       <div className="flex items-center gap-2">
         <Switch
           checked={!!company?.active}
@@ -611,7 +611,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
     try {
       const formDataToSend = new FormData();
       formDataToSend.append(
-        "pms_company_setup[active]",
+        "pms_company_setup[approve]",
         (!isActive).toString()
       );
 

@@ -475,10 +475,13 @@ console.log("auth :",getFullUrl, getAuthHeader());
   };
 
   const totalRecords = pagination.total_count;
-  const totalPages = pagination.total_pages;
+  const totalPages = Math.ceil(pagination.total_count / perPage) || 1;
 
-  // Use API data directly instead of client-side filtering
-  const displayedData = organizations;
+  const startIndex = (currentPage - 1) * perPage;
+  const displayedData =
+    organizations.length > perPage
+      ? organizations.slice(startIndex, startIndex + perPage)
+      : organizations;
 
   // Render row function for enhanced table
   const renderRow = (org: OrganizationItem) => ({

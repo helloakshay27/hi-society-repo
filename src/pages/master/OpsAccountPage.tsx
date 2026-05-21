@@ -24,16 +24,43 @@ export const OpsAccountPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-9 mb-6">
-          <TabsTrigger value="organization">Organization</TabsTrigger>
-          <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="country">Headquarter</TabsTrigger>
-          <TabsTrigger value="region">Region</TabsTrigger>
-          <TabsTrigger value="society">Society</TabsTrigger>
-          {/* <TabsTrigger value="zone">Zone</TabsTrigger> */}
-          <TabsTrigger value="site">Site</TabsTrigger>
-          {/* <TabsTrigger value="entity">Entity</TabsTrigger>
-          <TabsTrigger value="user-category">User Category</TabsTrigger> */}
+        <TabsList className="grid w-full grid-cols-6 bg-white border border-gray-200">
+          <TabsTrigger
+            value="organization"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Organization
+          </TabsTrigger>
+          <TabsTrigger
+            value="company"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Company
+          </TabsTrigger>
+          <TabsTrigger
+            value="country"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Headquarter
+          </TabsTrigger>
+          <TabsTrigger
+            value="region"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Region
+          </TabsTrigger>
+          <TabsTrigger
+            value="society"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Society
+          </TabsTrigger>
+          <TabsTrigger
+            value="site"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Site
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="organization" className="space-y-4">
