@@ -22,6 +22,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Autocomplete,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -492,15 +493,26 @@ export const ViewHiSocietyUserPage = () => {
         <Divider />
         <DialogContent sx={{ pt: 2, pb: 1 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <MuiSearchableDropdown
-              label="Society"
-              value={selectedSociety}
-              onChange={handleSocietyChange}
+            <Autocomplete
               options={societyOptions}
-              placeholder="Select Society"
+              value={societyOptions.find((o) => o.value === selectedSociety) || null}
+              onChange={(_, newValue) => handleSocietyChange(newValue ? newValue.value : "")}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.value === value.value}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Society"
+                  placeholder="Search society..."
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
               loading={societiesLoading}
               loadingText="Loading societies..."
+              noOptionsText="No societies found"
               fullWidth
+              disablePortal
+              size="small"
             />
             <MuiSearchableDropdown
               label="Flat"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
@@ -56,9 +56,53 @@ export const AddCountryModal: React.FC<AddCountryModalProps> = ({
     company_setup_id: '',
     country_id: '',
   });
+  const [filteredCompanies, setFilteredCompanies] = useState<any[]>(companiesDropdown || []);
+
+  useEffect(() => {
+    if (formData.organization_id) {
+      fetchCompaniesByOrganization(formData.organization_id);
+    } else {
+      setFilteredCompanies(companiesDropdown || []);
+    }
+  }, [formData.organization_id, companiesDropdown]);
+
+  const fetchCompaniesByOrganization = async (orgId: string) => {
+    try {
+      const url = getFullUrl(
+        `/pms/company_setups/company_index.json?q[organization_id_eq]=${orgId}`
+      );
+      const response = await fetch(url, {
+        headers: {
+          Authorization: getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.code === 200 && Array.isArray(data.data)) {
+          setFilteredCompanies(data.data);
+        } else if (data && Array.isArray(data.companies)) {
+          setFilteredCompanies(data.companies);
+        } else if (Array.isArray(data)) {
+          setFilteredCompanies(data);
+        } else {
+          setFilteredCompanies(companiesDropdown || []);
+        }
+      } else {
+        setFilteredCompanies(companiesDropdown || []);
+      }
+    } catch (error) {
+      console.error('Error fetching companies by organization:', error);
+      setFilteredCompanies(companiesDropdown || []);
+    }
+  };
 
   const handleInputChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === 'organization_id' ? { company_setup_id: '' } : {}),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -166,7 +210,7 @@ export const AddCountryModal: React.FC<AddCountryModalProps> = ({
                 disabled={isSubmitting}
               >
                 <MenuItem value=""><em>Select Company</em></MenuItem>
-                {companiesDropdown.map((company) => (
+                {filteredCompanies.map((company) => (
                   <MenuItem key={company.id} value={company.id.toString()}>{company.name}</MenuItem>
                 ))}
               </MuiSelect>

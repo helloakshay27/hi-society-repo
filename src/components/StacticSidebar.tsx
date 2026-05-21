@@ -399,7 +399,7 @@ const modulesByPackage = {
         },
         {
           name: "Hi Society Users",
-          href: "/master/user/hi-society-users",
+          href: "/ops-console/master/user/hi-society-users",
           color: "text-[#1a1a1a]",
         },
       ],

@@ -67,13 +67,13 @@ const columns: ColumnConfig[] = [
     hideable: true,
     draggable: true,
   },
-  {
-    key: "code",
-    label: "Code",
-    sortable: true,
-    hideable: true,
-    draggable: true,
-  },
+  // {
+  //   key: "code",
+  //   label: "Code",
+  //   sortable: true,
+  //   hideable: true,
+  //   draggable: true,
+  // },
   {
     key: "company",
     label: "Company",

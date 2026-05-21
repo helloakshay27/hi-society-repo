@@ -1405,6 +1405,14 @@ function App() {
                             element={<ViewFMUserPage />}
                           />
                           <Route
+                            path="master/user/hi-society-users"
+                            element={<HiSocietyUsersDashboard />}
+                          />
+                          <Route
+                            path="master/user/hi-society-users/view/:id"
+                            element={<ViewHiSocietyUserPage />}
+                          />
+                          <Route
                             path="settings/roles/role"
                             element={<RoleDashboard />}
                           />
