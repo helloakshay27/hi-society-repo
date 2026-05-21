@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ReactDOM from "react-dom";
 import { SurveyQuestion, SurveyOption, SurveyAnswers } from "./types";
 import { MultipleChoiceQuestion } from "./MultipleChoiceQuestion";
 import { StarRatingQuestion } from "./StarRatingQuestion";
@@ -145,7 +146,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                 return (
                     <div
                         key={question.id}
-                        className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-md"
+                        className="bg-white rounded-lg p-4 shadow-md"
                     >
                         {/* Question Header */}
                         <div className="mb-4">
@@ -247,7 +248,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             })}
 
             {/* Final Comments Section */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-md">
+            <div className="bg-white rounded-lg p-4 shadow-md">
                 <div className="mb-4">
                     <h3 className="text-sm text-gray-800 mb-2">
                         Additional Comments (Optional)
@@ -265,7 +266,10 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             </div>
 
             {/* Submit Button */}
-            <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+            <div
+                className="sticky bottom-0 bg-white/95 backdrop-blur-sm px-4 pt-4 rounded-lg shadow-lg"
+                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 16px))' }}
+            >
                 <button
                     type="button"
                     onClick={handlePreviewSubmit}
@@ -284,22 +288,22 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             </div>
 
             {/* Preview Modal */}
-            {showPreview && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            {showPreview && ReactDOM.createPortal(
+                <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                         {/* Header */}
-                        <div className="bg-gray-50 px-4 py-3 border-b">
+                        <div className="bg-white px-4 py-3 border-b">
                             <h2 className="text-lg font-semibold text-gray-800">Survey Preview</h2>
                             <p className="text-sm text-gray-600">Please review your answers before submitting</p>
                         </div>
                         
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-4">
+                        <div className="flex-1 overflow-y-auto p-4 bg-white">
                             <div className="space-y-4">
                                 {questions.map((question, index) => {
                                     const answer = answers[question.id];
                                     return (
-                                        <div key={question.id} className="bg-gray-50 rounded-lg p-3">
+                                        <div key={question.id} className="bg-white rounded-lg p-3 border">
                                             <div className="flex items-start">
                                                 <span className="font-medium text-gray-800 mr-2">{index + 1}.</span>
                                                 <div className="flex-1">
@@ -320,7 +324,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                                 
                                 {/* Final Comments */}
                                 {finalComment && (
-                                    <div className="bg-gray-50 rounded-lg p-3">
+                                    <div className="bg-white rounded-lg p-3 border">
                                         <h3 className="font-medium text-gray-800 mb-1">Additional Comments</h3>
                                         <p className="text-sm text-gray-600">{finalComment}</p>
                                     </div>
@@ -329,7 +333,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                         </div>
                         
                         {/* Footer */}
-                        <div className="bg-gray-50 px-4 py-3 border-t flex gap-3">
+                        <div className="bg-white px-4 py-3 border-t flex gap-3">
                             <button
                                 type="button"
                                 onClick={() => setShowPreview(false)}
@@ -355,7 +359,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                         </div>
                     </div>
                 </div>
-            )}
+            , document.body)}
         </div>
     );
 };
