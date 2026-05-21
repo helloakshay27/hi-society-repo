@@ -146,7 +146,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                 return (
                     <div
                         key={question.id}
-                        className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-md"
+                        className="bg-white rounded-lg p-4 shadow-md"
                     >
                         {/* Question Header */}
                         <div className="mb-4">
@@ -248,7 +248,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             })}
 
             {/* Final Comments Section */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-md">
+            <div className="bg-white rounded-lg p-4 shadow-md">
                 <div className="mb-4">
                     <h3 className="text-sm text-gray-800 mb-2">
                         Additional Comments (Optional)
@@ -266,7 +266,10 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             </div>
 
             {/* Submit Button */}
-            <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+            <div
+                className="sticky bottom-0 bg-white/95 backdrop-blur-sm px-4 pt-4 rounded-lg shadow-lg"
+                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 16px))' }}
+            >
                 <button
                     type="button"
                     onClick={handlePreviewSubmit}

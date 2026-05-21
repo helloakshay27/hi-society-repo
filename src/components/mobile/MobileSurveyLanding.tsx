@@ -1989,15 +1989,19 @@ export const MobileSurveyLanding: React.FC = () => {
 
   return (
     <div
-      className="h-screen w-screen max-w-md mx-auto flex flex-col relative bg-white-50"
-      style={{
-        backgroundImage: `url(${surveyData?.snag_checklist?.survey_attachment?.url})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        filter: "brightness(0.85)",
-      }}
+      className="h-screen w-screen max-w-md mx-auto flex flex-col relative bg-white"
     >
+      {/* Background image overlay - filter only affects this element */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url(${surveyData?.snag_checklist?.survey_attachment?.url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: "brightness(0.85)",
+        }}
+      />
       {/* Header with Logo */}
       <div className="bg-transparent pt-6 pb-3 px-4 relative z-10">
         <div className="flex justify-center items-center">
