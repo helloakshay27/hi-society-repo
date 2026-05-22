@@ -94,7 +94,7 @@ const navigationItems: NavigationItem[] = [
     id: "osr",
     label: "OSR",
     icon: <MessageSquare className="w-4 h-4" />,
-    path: "/osr/setup",
+    path: "/osr/manage-bookings",
   },
   {
     id: "settings",

@@ -84,6 +84,7 @@ const HiSocNoticeList = () => {
         const params = new URLSearchParams();
         params.set("page", String(page));
         params.set("per_page", String(PER_PAGE));
+        params.set("q[s]", "created_at desc");
         if (search) {
           params.set("q[notice_heading_or_notice_text_cont]", search);
         }

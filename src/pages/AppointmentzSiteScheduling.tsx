@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Download } from "lucide-react";
+import { Pencil, Download, Loader2 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Badge } from "@/components/ui/badge";
 import { EditRequestModal } from "@/components/EditRequestModal";
@@ -15,6 +15,8 @@ import {
 const AppointmentzSiteScheduling = () => {
   const [data, setData] = useState<SiteScheduleRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -63,6 +65,9 @@ const AppointmentzSiteScheduling = () => {
   };
 
   const handleExportCSV = async () => {
+    if (isExporting) return;
+
+    setIsExporting(true);
     try {
       const blob = await exportSiteRequestsData();
       const url = window.URL.createObjectURL(blob);
@@ -81,6 +86,8 @@ const AppointmentzSiteScheduling = () => {
       setTimeout(() => {
         toast.error("Failed to export CSV");
       }, 0);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -89,8 +96,9 @@ const AppointmentzSiteScheduling = () => {
     reason: string;
     token?: string;
   }) => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || isEditSubmitting) return;
 
+    setIsEditSubmitting(true);
     try {
       const response = await updateSiteScheduleRequest(selectedRequest.id, {
         status: updatedData.status,
@@ -106,12 +114,16 @@ const AppointmentzSiteScheduling = () => {
               `Request ${updatedData.token} updated successfully`
           );
         }, 0);
+        setIsEditModalOpen(false);
+        setSelectedRequest(null);
       }
     } catch (error) {
       console.error("Error updating request:", error);
       setTimeout(() => {
         toast.error("Failed to update request");
       }, 0);
+    } finally {
+      setIsEditSubmitting(false);
     }
   };
 
@@ -123,6 +135,7 @@ const AppointmentzSiteScheduling = () => {
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0"
+            disabled={isEditSubmitting}
             onClick={() => handleEditClick(item)}
           >
             <Pencil className="h-4 w-4" />
@@ -175,8 +188,24 @@ const AppointmentzSiteScheduling = () => {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           enableExport={true}
-          onExport={handleExportCSV}
+          hideTableExport={true}
           exportFileName="site-visit-requests"
+          rightActions={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={isExporting}
+              className="flex items-center gap-2"
+              title="Export"
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+            </Button>
+          }
           storageKey="appointmentz-site-scheduling-table"
           enableGlobalSearch={true}
           searchPlaceholder="Search..."
@@ -186,9 +215,14 @@ const AppointmentzSiteScheduling = () => {
 
       <EditRequestModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => {
+          if (!isEditSubmitting) {
+            setIsEditModalOpen(false);
+          }
+        }}
         onSubmit={handleEditSubmit}
         token={selectedRequest?.id.toString()}
+        isSubmitting={isEditSubmitting}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, X } from "lucide-react";
+import { Plus, Edit, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -57,7 +57,11 @@ const AppointmentzRMConfig = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [updatingStatus, setUpdatingStatus] = useState<Record<number, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingRowId, setEditingRowId] = useState<number | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<
+    Record<number, boolean>
+  >({});
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [editingUserName, setEditingUserName] = useState("");
@@ -270,6 +274,9 @@ const AppointmentzRMConfig = () => {
   };
 
   const handleOpenEdit = async (item: RMUser) => {
+    if (editingRowId || isSubmitting) return;
+
+    setEditingRowId(item.id);
     try {
       setIsEditMode(true);
       setSelectedId(item.id);
@@ -312,10 +319,14 @@ const AppointmentzRMConfig = () => {
       setTimeout(() => {
         toast.error(errorMessage);
       }, 0);
+    } finally {
+      setEditingRowId(null);
     }
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     // Reset errors
     setFormErrors({});
     const newErrors: Record<string, string> = {};
@@ -355,6 +366,7 @@ const AppointmentzRMConfig = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       if (isEditMode && selectedId) {
         await updateRMUser(selectedId, {
@@ -451,6 +463,8 @@ const AppointmentzRMConfig = () => {
           toast.error(errorMessage);
         }, 0);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -462,14 +476,19 @@ const AppointmentzRMConfig = () => {
             variant="ghost"
             size="sm"
             className="text-gray-500 hover:text-blue-600"
+            disabled={!!editingRowId || isSubmitting}
             onClick={() => handleOpenEdit(item)}
           >
-            <Edit className="w-4 h-4" />
+            {editingRowId === item.id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Edit className="w-4 h-4" />
+            )}
           </Button>
         );
       case "status":
         return (
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <Switch
               checked={item.status}
               onCheckedChange={(checked) => handleStatusToggle(item, checked)}
@@ -477,6 +496,9 @@ const AppointmentzRMConfig = () => {
               aria-label={`Set ${item.name || "user"} status`}
               className="data-[state=checked]:!bg-green-500 data-[state=unchecked]:!bg-gray-300"
             />
+            {updatingStatus[item.id] && (
+              <Loader2 className="w-4 h-4 animate-spin text-[#C72030]" />
+            )}
           </div>
         );
       default:
@@ -660,9 +682,11 @@ const AppointmentzRMConfig = () => {
           <DialogFooter className="p-4 bg-white border-t flex justify-center">
             <Button
               onClick={handleSubmit}
+              disabled={isSubmitting}
               className="bg-[#00A651] hover:bg-[#008f45] text-white px-8"
             >
-              Submit
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </DialogFooter>
         </DialogContent>

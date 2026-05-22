@@ -727,6 +727,10 @@ import { MobileOrdersPage } from "./components/mobile/MobileOrdersPage";
 import { QRTestPage } from "./pages/QRTestPage";
 
 import { EscalationMatrixPage } from "./pages/maintenance/EscalationMatrixPage";
+import { OSRAssignEscalationPage } from "./pages/setup/OSRAssignEscalationPage";
+import { OSRSchedulePage } from "./pages/setup/OSRSchedulePage";
+import { OSRSetupRulePage } from "./pages/setup/OSRSetupRulePage";
+import { OSRSetupPage } from "./pages/setup/OSRSetupPage";
 
 // Import Setup pages
 import { PermitSetupDashboard } from "./pages/PermitSetupDashboard";
@@ -1132,6 +1136,8 @@ import ModulesManagement from "./pages/settings/ModulesManagement";
 import { LoyaltyTDS } from "./pages/ops-console/admin/LoyaltyTDS";
 import { HiSocietyUsersDashboard } from "./pages/master/HiSocietyUsersDashboard";
 import { ViewHiSocietyUserPage } from "./pages/master/ViewHiSocietyUserPage";
+import { GCMList } from "./pages/master/GCMList";
+import { APNSList } from "./pages/master/APNSList";
 import { InvoiceAdd } from "./pages/ClubManagement/InvoiceAdd";
 import { InvoiceDashboardAccounting } from "./pages/ClubManagement/InvoiceDashboard";
 import { QuotesDashboard } from "./pages/ClubManagement/QuotesDashboard";
@@ -1148,6 +1154,7 @@ import LockFees from "./pages/LockFees";
 import LockFeesAdd from "./pages/LockFeesAdd";
 import LockFeesDetail from "./pages/LockFeesDetail";
 import EditLockFeesPage from "./pages/EditLockFeesPage";
+import SocietyDetailsPage from "./pages/master/SocietyDetailsPage";
 
 const queryClient = new QueryClient();
 
@@ -1379,6 +1386,10 @@ function App() {
                             path="settings/roles/role"
                             element={<RoleDashboard />}
                           />
+                           <Route
+                            path="master/location/account/societies/details/:id"
+                            element={<SocietyDetailsPage />}
+                          />
                           <Route
                             path="settings/roles/role/add"
                             element={<AddRolePage />}
@@ -1411,6 +1422,14 @@ function App() {
                           <Route
                             path="master/user/hi-society-users/view/:id"
                             element={<ViewHiSocietyUserPage />}
+                          />
+                          <Route
+                            path="master/gcm"
+                            element={<GCMList />}
+                          />
+                          <Route
+                            path="master/apns"
+                            element={<APNSList />}
                           />
                           <Route
                             path="settings/roles/role"
@@ -6769,6 +6788,22 @@ function App() {
                           <Route
                             path="/settings/ticket-management/escalation-matrix"
                             element={<EscalationMatrixPage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/assign-escalation"
+                            element={<OSRAssignEscalationPage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/setup"
+                            element={<OSRSetupPage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/schedule"
+                            element={<OSRSchedulePage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/setup-rule"
+                            element={<OSRSetupRulePage />}
                           />
                           <Route
                             path="/settings/ticket-management/cost-approval"

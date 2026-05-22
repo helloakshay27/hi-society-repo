@@ -39,6 +39,20 @@ const adminNavigationStructure = {
         ],
       },
       {
+        name: "Push Notifications",
+        icon: Building,
+        subItems: [
+          {
+            name: "GCM",
+            href: "/ops-console/master/gcm",
+          },
+          {
+            name: "APNS",
+            href: "/ops-console/master/apns",
+          },
+        ],
+      },
+      {
         name: "Access Control",
         icon: Lock,
         subItems: [

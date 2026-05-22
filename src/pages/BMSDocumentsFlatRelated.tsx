@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -48,6 +48,9 @@ interface DocumentNode {
 const getExtension = (name: string | null | undefined): string =>
   name ? (name.split(".").pop()?.toLowerCase() ?? "") : "";
 
+const FILE_EXTENSION_PATTERN =
+  /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
+
 const inferFileType = (name: string | null | undefined): string => {
   const ext = getExtension(name);
   if (["mp4", "mov", "avi", "mkv", "webm"].includes(ext)) return "video";
@@ -58,24 +61,44 @@ const inferFileType = (name: string | null | undefined): string => {
   return "file";
 };
 
-const isFile = (node: ApiNode): boolean =>
-  String(node.id).startsWith("documents_");
+const isFile = (node: ApiNode): boolean => {
+  const id = String(node.id);
+  if (id.startsWith("documents_")) return true;
+  // A folder node typically has no file extension in its text. Only treat as
+  // a file when the text clearly looks like a filename (has an extension)
+  // AND the id isn't a flat-folder id. This keeps flat folders like
+  // "FM-101", "T1-201", "-Office" rendering as folders.
+  return FILE_EXTENSION_PATTERN.test(node.text ?? "");
+};
+
+const digitsOnly = (value: string): string => value.replace(/\D/g, "");
 
 /** Transform flat jstree array into nested DocumentNode[] */
 const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
   const map = new Map<string, DocumentNode>();
+  // Secondary index: digits-only id → folder node. Used to recover newly
+  // uploaded files whose parent id format ("5") doesn't exactly match the
+  // flat folder id format ("j1_5") returned by the tree endpoint.
+  const folderByDigits = new Map<string, DocumentNode>();
 
   // First pass: create all nodes
   for (const n of nodes) {
     const key = String(n.id);
     const file = isFile(n);
-    map.set(key, {
+    const node: DocumentNode = {
       id: key,
       name: n.text ?? "",
       type: file ? "file" : "folder",
       fileType: file ? inferFileType(n.text) : undefined,
       children: file ? undefined : [],
-    });
+    };
+    map.set(key, node);
+    if (!file) {
+      const digits = digitsOnly(key);
+      if (digits && !folderByDigits.has(digits)) {
+        folderByDigits.set(digits, node);
+      }
+    }
   }
 
   // Second pass: wire parent-child
@@ -83,13 +106,21 @@ const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
   for (const n of nodes) {
     const key = String(n.id);
     const node = map.get(key)!;
-    if (n.parent === "#") {
+    const parentKey = String(n.parent);
+
+    if (parentKey === "#") {
       roots.push(node);
-    } else {
-      const parentNode = map.get(String(n.parent));
-      if (parentNode && parentNode.children) {
-        parentNode.children.push(node);
-      }
+      continue;
+    }
+
+    let parentNode = map.get(parentKey);
+    if (!parentNode) {
+      const fuzzy = folderByDigits.get(digitsOnly(parentKey));
+      if (fuzzy) parentNode = fuzzy;
+    }
+
+    if (parentNode && parentNode.children) {
+      parentNode.children.push(node);
     }
   }
 
@@ -148,14 +179,19 @@ const BMSDocumentsFlatRelated: React.FC = () => {
   } = useQuery<ApiNode[]>({
     queryKey: ["flat-related-documents"],
     queryFn: async () => {
-      const { data } = await axios.get(getFullUrl("/crm/admin/attachments.json"), {
-        headers: { Authorization: getAuthHeader() },
-      });
-      return data;
+      const { data } = await axios.get(
+        getFullUrl("/crm/admin/attachments.json"),
+        {
+          params: API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : undefined,
+          headers: { Authorization: getAuthHeader() },
+        }
+      );
+      return Array.isArray(data) ? data : [];
     },
     retry: 2,
-    staleTime: 30000,
+    staleTime: 5000,
     gcTime: 60000,
+    refetchOnMount: "always",
   });
 
   const allDocuments: DocumentNode[] = rawNodes ? buildTree(rawNodes) : [];
@@ -174,8 +210,11 @@ const BMSDocumentsFlatRelated: React.FC = () => {
   };
 
   const handleUpload = () => {
-    navigate("/bms/documents/upload-flat", { 
-      state: { returnPath: "/bms/documents/flat-related" } 
+    navigate("/bms/documents/upload-flat", {
+      state: {
+        returnPath: "/bms/documents/flat-related",
+        fromFlatRelated: true,
+      },
     });
   };
 
