@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit, Loader2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -46,7 +46,7 @@ const defaultForm: APNSFormData = {
 };
 
 const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  Authorization: `Bearer ${API_CONFIG.TOKEN}`,
   "Content-Type": "application/json",
 });
 
@@ -324,6 +324,7 @@ export const APNSList = () => {
               <input
                 type="checkbox"
                 id="create_sandbox_mode"
+                title="Sandbox Mode"
                 checked={formData.sandbox_mode}
                 onChange={(e) =>
                   setFormData((f) => ({ ...f, sandbox_mode: e.target.checked }))
@@ -415,6 +416,7 @@ export const APNSList = () => {
               <input
                 type="checkbox"
                 id="edit_sandbox_mode"
+                title="Sandbox Mode"
                 checked={formData.sandbox_mode}
                 onChange={(e) =>
                   setFormData((f) => ({ ...f, sandbox_mode: e.target.checked }))

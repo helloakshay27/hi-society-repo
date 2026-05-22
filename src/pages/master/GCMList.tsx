@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit, Loader2, CheckCircle, XCircle } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -45,7 +45,7 @@ const defaultForm: GCMFormData = {
 };
 
 const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  Authorization: `Bearer ${API_CONFIG.TOKEN}`,
   "Content-Type": "application/json",
 });
 

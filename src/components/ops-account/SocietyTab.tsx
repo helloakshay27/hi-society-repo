@@ -264,7 +264,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
   };
 
   const handleView = (id: number) => {
-    navigate(`/ops-account/society/${id}`);
+    navigate(`/ops-console/master/location/account/societies/details/${id}`);
   };
 
   const handleEdit = (id: number) => {
