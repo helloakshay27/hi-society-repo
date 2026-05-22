@@ -730,6 +730,7 @@ import { EscalationMatrixPage } from "./pages/maintenance/EscalationMatrixPage";
 import { OSRAssignEscalationPage } from "./pages/setup/OSRAssignEscalationPage";
 import { OSRSchedulePage } from "./pages/setup/OSRSchedulePage";
 import { OSRSetupRulePage } from "./pages/setup/OSRSetupRulePage";
+import { OSRSetupPage } from "./pages/setup/OSRSetupPage";
 
 // Import Setup pages
 import { PermitSetupDashboard } from "./pages/PermitSetupDashboard";
@@ -6786,6 +6787,10 @@ function App() {
                           <Route
                             path="/settings/osr-setup/assign-escalation"
                             element={<OSRAssignEscalationPage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/setup"
+                            element={<OSRSetupPage />}
                           />
                           <Route
                             path="/settings/osr-setup/schedule"
