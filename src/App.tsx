@@ -727,6 +727,9 @@ import { MobileOrdersPage } from "./components/mobile/MobileOrdersPage";
 import { QRTestPage } from "./pages/QRTestPage";
 
 import { EscalationMatrixPage } from "./pages/maintenance/EscalationMatrixPage";
+import { OSRAssignEscalationPage } from "./pages/setup/OSRAssignEscalationPage";
+import { OSRSchedulePage } from "./pages/setup/OSRSchedulePage";
+import { OSRSetupRulePage } from "./pages/setup/OSRSetupRulePage";
 
 // Import Setup pages
 import { PermitSetupDashboard } from "./pages/PermitSetupDashboard";
@@ -6779,6 +6782,18 @@ function App() {
                           <Route
                             path="/settings/ticket-management/escalation-matrix"
                             element={<EscalationMatrixPage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/assign-escalation"
+                            element={<OSRAssignEscalationPage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/schedule"
+                            element={<OSRSchedulePage />}
+                          />
+                          <Route
+                            path="/settings/osr-setup/setup-rule"
+                            element={<OSRSetupRulePage />}
                           />
                           <Route
                             path="/settings/ticket-management/cost-approval"
