@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Autocomplete,
@@ -54,6 +54,7 @@ const AppointmentzSlotsConfig = () => {
   const [data, setData] = useState<SlotConfig[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -268,6 +269,8 @@ const AppointmentzSlotsConfig = () => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!formData.rmUserId) {
       setTimeout(() => {
         toast.error("Please select an RM User");
@@ -282,6 +285,7 @@ const AppointmentzSlotsConfig = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const schedulePayload = {
         rm_user_id: formData.rmUserId,
@@ -365,6 +369,8 @@ const AppointmentzSlotsConfig = () => {
       setTimeout(() => {
         toast.error(errorMessage);
       }, 0);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -738,9 +744,11 @@ const AppointmentzSlotsConfig = () => {
           <DialogFooter className="p-4 border-t flex justify-center bg-white">
             <Button
               onClick={handleSubmit}
+              disabled={isSubmitting}
               className="bg-[#00B4D8] hover:bg-[#009bb8] text-white min-w-[100px]"
             >
-              Submit
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -32,13 +32,23 @@ const FILE_EXTENSION_PATTERN =
   /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
 
 const isFileNode = (node: TreeNode): boolean => {
-  const id = String(node.id).toLowerCase();
   return (
-    id.startsWith("documents_") ||
+    String(node.id).startsWith("documents_") ||
     Boolean(node.a_attr?.href) ||
     FILE_EXTENSION_PATTERN.test(node.text)
   );
 };
+
+const ALL_ROOT_NODE: TreeNode = { id: "All", parent: "#", text: "All" };
+
+const isAllRootNode = (node: TreeNode): boolean =>
+  String(node.id) === "All" ||
+  String(node.text ?? "")
+    .trim()
+    .toLowerCase() === "all";
+
+const isRootParent = (parentId: string, allRootId: string): boolean =>
+  parentId === "#" || parentId === "All" || parentId === allRootId;
 
 const getExtension = (name: string): string =>
   name.split(".").pop()?.toLowerCase() ?? "";
@@ -128,14 +138,34 @@ const BMSDocumentsCommonFiles: React.FC = () => {
       return Array.isArray(data) ? data : [];
     },
     retry: 1,
-    staleTime: 30000,
+    staleTime: 5000,
+    refetchOnMount: "always",
   });
 
   const childrenByParent = useMemo(() => {
     const map = new Map<string, TreeNode[]>();
+    const allRootNode = (treeData ?? []).find(isAllRootNode);
+    const allRootId = String(allRootNode?.id ?? ALL_ROOT_NODE.id);
+    const knownNodeIds = new Set(
+      (treeData ?? []).map((node) => String(node.id))
+    );
 
     for (const node of treeData ?? []) {
-      const parentId = String(node.parent);
+      const nodeId = String(node.id);
+      const rawParentId = String(node.parent);
+      const parentExists =
+        isRootParent(rawParentId, allRootId) || knownNodeIds.has(rawParentId);
+
+      if (nodeId === allRootId) {
+        continue;
+      }
+
+      // Place root-level files and orphan files directly under the All root
+      // so they remain visible instead of being silently dropped.
+      const parentId =
+        isRootParent(rawParentId, allRootId) || !parentExists
+          ? allRootId
+          : rawParentId;
       const siblings = map.get(parentId) ?? [];
       siblings.push(node);
       map.set(parentId, siblings);
@@ -153,28 +183,19 @@ const BMSDocumentsCommonFiles: React.FC = () => {
   const roots = useMemo<TreeNode[]>(() => {
     if (!treeData?.length) return [];
 
-    const directRoots = childrenByParent.get("#") ?? [];
-    if (directRoots.length > 0) return directRoots;
-
-    const allNode = treeData.find((node) => String(node.id) === "All");
+    const allNode = treeData.find(isAllRootNode);
     if (allNode) return [allNode];
 
-    if ((childrenByParent.get("All") ?? []).length > 0) {
-      return [{ id: "All", parent: "#", text: "All" }];
-    }
-
-    return treeData.filter(
-      (node) =>
-        !treeData.some(
-          (possibleParent) => String(possibleParent.id) === String(node.parent)
-        )
-    );
-  }, [childrenByParent, treeData]);
+    return [ALL_ROOT_NODE];
+  }, [treeData]);
 
   useEffect(() => {
     if (!treeData?.length) return;
 
-    const nextExpanded = new Set<string | number>(["All"]);
+    const allRootNode = treeData.find(isAllRootNode);
+    const nextExpanded = new Set<string | number>([
+      allRootNode?.id ?? ALL_ROOT_NODE.id,
+    ]);
     for (const node of treeData) {
       if (
         (childrenByParent.get(String(node.id)) ?? []).length > 0 ||
@@ -200,7 +221,9 @@ const BMSDocumentsCommonFiles: React.FC = () => {
   };
 
   const handleUpload = () => {
-    navigate("/bms/documents/upload");
+    navigate("/bms/documents/upload", {
+      state: { returnPath: "/bms/documents/common-files" },
+    });
   };
 
   const handleRefresh = () => {

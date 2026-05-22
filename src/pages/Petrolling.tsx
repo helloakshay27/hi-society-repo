@@ -508,7 +508,7 @@ const Petrolling = () => {
 
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
 
-  const ModalForm = ({ title, isEdit = false }: { title: string, isEdit?: boolean }) => (
+  const renderModalForm = (title: string, isEdit = false) => (
     <>
       <DialogHeader className="p-2 border-b bg-gray-50 flex flex-row items-center justify-between">
         <DialogTitle className="text-md font-bold text-center w-full">{title}</DialogTitle>
@@ -519,7 +519,9 @@ const Petrolling = () => {
             placeholder="Enter Area" 
             className="h-9 rounded-none border-gray-300 text-sm"
             value={formData.area}
-            onChange={(e) => setFormData({...formData, area: e.target.value})}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, area: e.target.value }))
+            }
           />
         </div>
 
@@ -528,19 +530,34 @@ const Petrolling = () => {
           <div className="flex gap-3">
             <Input 
               value={formData.frequencyStart}
-              onChange={(e) => setFormData({...formData, frequencyStart: e.target.value})}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  frequencyStart: e.target.value,
+                }))
+              }
               className="h-8 rounded-none border-gray-300 text-sm"
             />
             <Input 
               value={formData.frequencyEnd}
-              onChange={(e) => setFormData({...formData, frequencyEnd: e.target.value})}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  frequencyEnd: e.target.value,
+                }))
+              }
               className="h-8 rounded-none border-gray-300 text-sm"
             />
           </div>
 
           <RadioGroup 
             value={formData.occurrenceType} 
-            onValueChange={(val) => setFormData({...formData, occurrenceType: val as 'every' | 'specific'})}
+            onValueChange={(val) =>
+              setFormData((prev) => ({
+                ...prev,
+                occurrenceType: val as 'every' | 'specific',
+              }))
+            }
             className="space-y-2"
           >
             <div className="flex items-center space-x-2">
@@ -550,7 +567,12 @@ const Petrolling = () => {
                 <Input 
                   className="w-12 h-7 rounded-none inline-block border-gray-300 text-xs px-1" 
                   value={formData.everyHours}
-                  onChange={(e) => setFormData({...formData, everyHours: e.target.value})}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      everyHours: e.target.value,
+                    }))
+                  }
                   onClick={(e) => e.stopPropagation()}
                 /> 
                 hour(s)
@@ -662,14 +684,14 @@ const Petrolling = () => {
       {/* Add Modal */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="max-w-lg bg-white rounded-none p-0 flex flex-col border border-gray-300">
-          <ModalForm title="Add" isEdit={false} />
+          {renderModalForm("Add", false)}
         </DialogContent>
       </Dialog>
 
       {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg bg-white rounded-none p-0 flex flex-col border border-gray-300">
-          <ModalForm title="Edit" isEdit={true} />
+          {renderModalForm("Edit", true)}
         </DialogContent>
       </Dialog>
 

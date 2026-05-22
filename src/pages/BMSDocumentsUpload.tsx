@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,8 @@ import {
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import axios from "axios";
-import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader, getFullUrl } from "@/config/apiConfig";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,51 @@ interface BMSDocumentsUploadProps {
   returnPath?: string;
 }
 
+interface AttachmentTreeNode {
+  id: string | number;
+  parent: string | number;
+  text: string;
+  icon?: string;
+  a_attr?: {
+    href?: string;
+  };
+}
+
+interface FlatOption {
+  id: string;
+  name: string;
+}
+
+/**
+ * Mirrors BMSDocumentsFlatRelated's isFile check:
+ * a node is a file if its id starts with "documents_".
+ */
+const isAttachmentFileNode = (node: AttachmentTreeNode): boolean =>
+  String(node.id).startsWith("documents_");
+
+/**
+ * Returns the top-level flat folders — exactly the nodes shown as
+ * root folders in BMSDocumentsFlatRelated.
+ * Rule: parent === "#" AND NOT a file node.
+ */
+const getFlatOptionsFromAttachmentTree = (
+  nodes: AttachmentTreeNode[] = []
+): FlatOption[] => {
+  const seen = new Set<string>();
+  return nodes.reduce<FlatOption[]>((options, node) => {
+    if (String(node.parent) !== "#") return options;
+    if (isAttachmentFileNode(node)) return options;
+
+    const id = String(node.id);
+    const name = String(node.text ?? "").trim();
+    if (!id || !name || seen.has(id)) return options;
+
+    seen.add(id);
+    options.push({ id, name });
+    return options;
+  }, []);
+};
+
 const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
   pageTitle = "Upload Folder & Files",
   onUploadSuccess,
@@ -39,39 +85,96 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const stateReturnPath = (location.state as { returnPath?: string } | null)
-    ?.returnPath;
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const locationState = location.state as
+    | { returnPath?: string; fromFlatRelated?: boolean }
+    | null;
+  const stateReturnPath = locationState?.returnPath;
   const finalReturnPath = stateReturnPath || returnPath;
 
-  const [uploadType, setUploadType] = useState<"folder" | "files">("folder");
+  // If we arrived from the Flat Related page, pre-select "Files" + Share=Flats
+  const cameFromFlat =
+    locationState?.fromFlatRelated === true ||
+    stateReturnPath === "/bms/documents/flat-related";
+
+  const [uploadType, setUploadType] = useState<"folder" | "files">(
+    cameFromFlat ? "files" : "folder"
+  );
   const [folderName, setFolderName] = useState("");
   const [uploadDate, setUploadDate] = useState("");
   const [description, setDescription] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [shareAccess, setShareAccess] = useState("false");
-  const [shareOption, setShareOption] = useState("All");
+  const [shareAccess, setShareAccess] = useState(
+    cameFromFlat ? "true" : "false"
+  );
+  const [shareOption, setShareOption] = useState(
+    cameFromFlat ? "Flats" : "All"
+  );
 
   // Share with states
   const [isOwner, setIsOwner] = useState(true);
   const [isTenant, setIsTenant] = useState(false);
   const [isBuilder, setIsBuilder] = useState(false);
-  
+
   const [occupancyType, setOccupancyType] = useState("primary");
   const [livingStatus, setLivingStatus] = useState("living_here");
 
-  // Dummy mapping for demo flats to IDs, in real usage this comes from API
-  const flatsList = [
-    { name: "FM Office", id: "1" },
-    { name: "A 101", id: "2" },
-    { name: "A 102", id: "10103" },
-    { name: "A 103", id: "10104" },
-    { name: "A 104", id: "10105" },
-    { name: "A 105", id: "10106" },
-  ];
   const [selectedFlats, setSelectedFlats] = useState<string[]>([]);
-  const [selectAllFlats, setSelectAllFlats] = useState(false);
+  const [flatSearchQuery, setFlatSearchQuery] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const {
+    data: flatAttachmentNodes,
+    isLoading: isFlatListLoading,
+    isError: isFlatListError,
+    refetch: refetchFlatList,
+  } = useQuery<AttachmentTreeNode[]>({
+    queryKey: ["flat-related-documents"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        getFullUrl("/crm/admin/attachments.json"),
+        {
+          params: API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : undefined,
+          headers: { Authorization: getAuthHeader() },
+        }
+      );
+
+      return Array.isArray(data) ? data : [];
+    },
+    retry: 1,
+    staleTime: 30000,
+  });
+
+  const flatsList = useMemo(
+    () => getFlatOptionsFromAttachmentTree(flatAttachmentNodes),
+    [flatAttachmentNodes]
+  );
+
+  const filteredFlats = useMemo(() => {
+    const query = flatSearchQuery.trim().toLowerCase();
+    if (!query) return flatsList;
+
+    return flatsList.filter((flat) => flat.name.toLowerCase().includes(query));
+  }, [flatSearchQuery, flatsList]);
+
+  const allFlatIds = useMemo(
+    () => flatsList.map((flat) => flat.id),
+    [flatsList]
+  );
+
+  const allFlatsSelected =
+    allFlatIds.length > 0 &&
+    allFlatIds.every((id) => selectedFlats.includes(id));
+
+  useEffect(() => {
+    const validFlatIds = new Set(allFlatIds);
+    setSelectedFlats((current) =>
+      current.filter((flatId) => validFlatIds.has(flatId))
+    );
+  }, [allFlatIds]);
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -114,31 +217,47 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       toast.error("Folder name is required");
       return;
     }
-    
-    if (uploadType === "files" && (!selectedFiles || selectedFiles.length === 0)) {
+
+    if (
+      uploadType === "files" &&
+      (!selectedFiles || selectedFiles.length === 0)
+    ) {
       toast.error("Please select at least one file");
       return;
+    }
+
+    if (shareAccess === "true" && shareOption === "Flats") {
+      if (isFlatListLoading) {
+        toast.error("Flat list is still loading. Please wait.");
+        return;
+      }
+
+      if (selectedFlats.length === 0) {
+        toast.error("Please select at least one flat");
+        return;
+      }
     }
 
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("file_type", uploadType);
-      
+
       const sharingTypeVal = shareOption === "Flats" ? "flats" : "common";
       formData.append("sharing_type", sharingTypeVal);
-      
+
       if (shareAccess === "true") {
         formData.append("primary_radio", occupancyType);
         formData.append("lives_here_radio", livingStatus);
-        
+
         formData.append("file_permissions[is_owner]", isOwner.toString());
         formData.append("file_permissions[is_tenant]", isTenant.toString());
         formData.append("file_permissions[is_builder]", isBuilder.toString());
-        
+
         if (shareOption === "Flats") {
-          selectedFlats.forEach(id => {
-            formData.append("shared_file_document[society_flat_id][]", id);
+          selectedFlats.forEach((id) => {
+            const cleanId = id.replace(/\D/g, "");
+            formData.append("shared_file_document[society_flat_id][]", cleanId);
           });
         }
       }
@@ -164,26 +283,38 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       const url = getFullUrl(`/crm/admin/share_multiple_documents.json`);
 
       await axios.post(url, formData, {
-        headers: { 
+        params: API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : undefined,
+        headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: getAuthHeader()
-        }
+          Authorization: getAuthHeader(),
+        },
       });
-      
+
       toast.success(
-        uploadType === "folder" 
-          ? `Folder "${folderName}" uploaded successfully!` 
+        uploadType === "folder"
+          ? `Folder "${folderName}" uploaded successfully!`
           : `${selectedFiles.length} file(s) uploaded successfully!`
       );
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["attachment-common"] }),
+        queryClient.invalidateQueries({ queryKey: ["common-files"] }),
+        queryClient.invalidateQueries({ queryKey: ["flat-related-documents"] }),
+      ]);
 
       resetForm();
       if (onUploadSuccess) {
         onUploadSuccess();
-      } else {
-        navigate(finalReturnPath);
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Failed to upload.");
+    } catch (err: unknown) {
+      const errorMessage = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string } | undefined)?.message ||
+          err.message
+        : err instanceof Error
+          ? err.message
+          : "Failed to upload.";
+
+      toast.error(errorMessage || "Failed to upload.");
       console.error("Upload error:", err);
     } finally {
       setLoading(false);
@@ -195,9 +326,19 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
     setUploadDate("");
     setDescription("");
     setSelectedFiles([]);
-    setShareAccess("false");
-    setShareOption("All");
-    setUploadType("folder");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setShareAccess(cameFromFlat ? "true" : "false");
+    setShareOption(cameFromFlat ? "Flats" : "All");
+    setUploadType(cameFromFlat ? "files" : "folder");
+    setSelectedFlats([]);
+    setFlatSearchQuery("");
+    setIsOwner(true);
+    setIsTenant(false);
+    setIsBuilder(false);
+    setOccupancyType("primary");
+    setLivingStatus("living_here");
   };
 
   const handleCancel = () => {
@@ -384,6 +525,8 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                         } else {
                           setShareAccess("false");
                           setShareOption("All");
+                          setSelectedFlats([]);
+                          setFlatSearchQuery("");
                         }
                       }}
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
@@ -411,7 +554,6 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
 
                         if (nextShareOption === "All") {
                           setSelectedFlats([]);
-                          setSelectAllFlats(false);
                         }
                       }}
                       label="Share With"
@@ -439,6 +581,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                 {/* Always-visible small upload button box */}
                 <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-[#D9D9D9] rounded-lg w-[130px] h-[40px] bg-gray-50/50 hover:bg-gray-100 transition-colors shrink-0">
                   <input
+                    ref={fileInputRef}
                     type="file"
                     multiple
                     onChange={handleFileUpload}
@@ -512,36 +655,90 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-100 mt-2 pt-6">
                 {/* Left Column */}
                 <div>
-                  <h3 className="text-lg font-normal text-gray-700 border-b border-gray-200 pb-2 mb-4">Share with</h3>
-                  
+                  <h3 className="text-lg font-normal text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    Share with
+                  </h3>
+
                   {/* Share Group Checkboxes */}
                   <div className="flex gap-6 mb-6">
                     <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" checked={isOwner} onChange={(e) => setIsOwner(e.target.checked)} className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300" style={{ accentColor: '#C72030' }} />
-                      <span className="ml-2 text-sm text-gray-700 font-medium">Owner</span>
+                      <input
+                        type="checkbox"
+                        checked={isOwner}
+                        onChange={(e) => setIsOwner(e.target.checked)}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700 font-medium">
+                        Owner
+                      </span>
                     </label>
                     <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" checked={isTenant} onChange={(e) => setIsTenant(e.target.checked)} className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300" style={{ accentColor: '#C72030' }} />
-                      <span className="ml-2 text-sm text-gray-700 font-medium">Tenant</span>
+                      <input
+                        type="checkbox"
+                        checked={isTenant}
+                        onChange={(e) => setIsTenant(e.target.checked)}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700 font-medium">
+                        Tenant
+                      </span>
                     </label>
                     <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" checked={isBuilder} onChange={(e) => setIsBuilder(e.target.checked)} className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300" style={{ accentColor: '#C72030' }} />
-                      <span className="ml-2 text-sm text-gray-700 font-medium">Builder</span>
+                      <input
+                        type="checkbox"
+                        checked={isBuilder}
+                        onChange={(e) => setIsBuilder(e.target.checked)}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700 font-medium">
+                        Builder
+                      </span>
                     </label>
                   </div>
 
                   {/* Primary / Secondary / All */}
                   <div className="flex gap-6 mb-6">
                     <label className="flex items-center cursor-pointer">
-                      <input type="radio" value="primary" checked={occupancyType === "primary"} onChange={(e) => setOccupancyType(e.target.value)} name="occupancyType" className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300" style={{ accentColor: '#C72030' }} />
-                      <span className="ml-2 text-sm text-gray-700">Primary</span>
+                      <input
+                        type="radio"
+                        value="primary"
+                        checked={occupancyType === "primary"}
+                        onChange={(e) => setOccupancyType(e.target.value)}
+                        name="occupancyType"
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Primary
+                      </span>
                     </label>
                     <label className="flex items-center cursor-pointer">
-                      <input type="radio" value="secondary" checked={occupancyType === "secondary"} onChange={(e) => setOccupancyType(e.target.value)} name="occupancyType" className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300" style={{ accentColor: '#C72030' }} />
-                      <span className="ml-2 text-sm text-gray-700">Secondary</span>
+                      <input
+                        type="radio"
+                        value="secondary"
+                        checked={occupancyType === "secondary"}
+                        onChange={(e) => setOccupancyType(e.target.value)}
+                        name="occupancyType"
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Secondary
+                      </span>
                     </label>
                     <label className="flex items-center cursor-pointer">
-                      <input type="radio" value="all" checked={occupancyType === "all"} onChange={(e) => setOccupancyType(e.target.value)} name="occupancyType" className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300" style={{ accentColor: '#C72030' }} />
+                      <input
+                        type="radio"
+                        value="all"
+                        checked={occupancyType === "all"}
+                        onChange={(e) => setOccupancyType(e.target.value)}
+                        name="occupancyType"
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
                       <span className="ml-2 text-sm text-gray-700">All</span>
                     </label>
                   </div>
@@ -549,15 +746,43 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                   {/* Living Status */}
                   <div className="flex gap-6">
                     <label className="flex items-center cursor-pointer">
-                      <input type="radio" value="living_here" checked={livingStatus === "living_here"} onChange={(e) => setLivingStatus(e.target.value)} name="livingStatus" className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300" style={{ accentColor: '#C72030' }} />
-                      <span className="ml-2 text-sm text-gray-700">Living Here</span>
+                      <input
+                        type="radio"
+                        value="living_here"
+                        checked={livingStatus === "living_here"}
+                        onChange={(e) => setLivingStatus(e.target.value)}
+                        name="livingStatus"
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Living Here
+                      </span>
                     </label>
                     <label className="flex items-center cursor-pointer">
-                      <input type="radio" value="not_living_here" checked={livingStatus === "not_living_here"} onChange={(e) => setLivingStatus(e.target.value)} name="livingStatus" className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300" style={{ accentColor: '#C72030' }} />
-                      <span className="ml-2 text-sm text-gray-700">Not Living Here</span>
+                      <input
+                        type="radio"
+                        value="not_living_here"
+                        checked={livingStatus === "not_living_here"}
+                        onChange={(e) => setLivingStatus(e.target.value)}
+                        name="livingStatus"
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Not Living Here
+                      </span>
                     </label>
                     <label className="flex items-center cursor-pointer">
-                      <input type="radio" value="all" checked={livingStatus === "all"} onChange={(e) => setLivingStatus(e.target.value)} name="livingStatus" className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300" style={{ accentColor: '#C72030' }} />
+                      <input
+                        type="radio"
+                        value="all"
+                        checked={livingStatus === "all"}
+                        onChange={(e) => setLivingStatus(e.target.value)}
+                        name="livingStatus"
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
+                        style={{ accentColor: "#C72030" }}
+                      />
                       <span className="ml-2 text-sm text-gray-700">All</span>
                     </label>
                   </div>
@@ -566,66 +791,105 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                 {/* Right Column */}
                 {shareOption === "Flats" && (
                   <div>
-                    <h3 className="text-lg font-normal text-gray-700 border-b border-gray-200 pb-2 mb-4">Select Flats</h3>
-                    
+                    <h3 className="text-lg font-normal text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                      Select Flats
+                    </h3>
+
                     <TextField
                       placeholder="Search"
+                      value={flatSearchQuery}
+                      onChange={(e) => setFlatSearchQuery(e.target.value)}
                       fullWidth
                       variant="outlined"
                       size="small"
                       sx={{
                         mb: 2,
-                        backgroundColor: '#fff',
-                        '& .MuiOutlinedInput-root': {
-                          height: '35px', 
-                          fontSize: '14px',
-                          '& fieldset': {
-                            borderColor: '#ddd',
+                        backgroundColor: "#fff",
+                        "& .MuiOutlinedInput-root": {
+                          height: "35px",
+                          fontSize: "14px",
+                          "& fieldset": {
+                            borderColor: "#ddd",
                           },
-                          '&:hover fieldset': {
-                            borderColor: '#C72030',
+                          "&:hover fieldset": {
+                            borderColor: "#C72030",
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#C72030',
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#C72030",
                           },
-                        }
+                        },
                       }}
                     />
-                    
-                    <button 
-                      type="button" 
+
+                    <button
+                      type="button"
                       onClick={() => {
-                        if (selectAllFlats) {
+                        if (allFlatsSelected) {
                           setSelectedFlats([]);
-                          setSelectAllFlats(false);
                         } else {
-                          setSelectedFlats(flatsList.map(f => f.id));
-                          setSelectAllFlats(true);
+                          setSelectedFlats(allFlatIds);
                         }
                       }}
+                      disabled={isFlatListLoading || flatsList.length === 0}
                       className="text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 bg-white shadow-sm mb-4"
                     >
-                      {selectAllFlats ? "Deselect All Flats" : "Select All Flats"}
+                      {allFlatsSelected
+                        ? "Deselect All Flats"
+                        : "Select All Flats"}
                     </button>
-  
+
                     <div className="max-h-[300px] overflow-y-auto pr-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2">
-                         {flatsList.map((flat) => (
-                            <label key={flat.id} className="flex items-center cursor-pointer border-b border-gray-100 border-dashed pb-2">
-                               <input 
-                                 type="checkbox" 
-                                 checked={selectedFlats.includes(flat.id)}
-                                 onChange={(e) => {
-                                   if (e.target.checked) setSelectedFlats(p => [...p, flat.id]);
-                                   else setSelectedFlats(p => p.filter(id => id !== flat.id));
-                                 }}
-                                 className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300" 
-                                 style={{ accentColor: '#C72030' }} 
-                               />
-                               <span className="ml-2 text-xs text-gray-600">{flat.name}</span>
+                      {isFlatListLoading ? (
+                        <p className="text-xs text-gray-500">
+                          Loading flats...
+                        </p>
+                      ) : isFlatListError ? (
+                        <div className="text-xs text-gray-500">
+                          <p className="mb-2 text-red-600">
+                            Unable to load flats.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => refetchFlatList()}
+                            className="border border-gray-300 bg-white px-3 py-1.5 text-xs hover:bg-gray-50"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      ) : filteredFlats.length === 0 ? (
+                        <p className="text-xs text-gray-500">
+                          {flatSearchQuery
+                            ? "No flats match your search"
+                            : "No flats available"}
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2">
+                          {filteredFlats.map((flat) => (
+                            <label
+                              key={flat.id}
+                              className="flex items-center cursor-pointer border-b border-gray-100 border-dashed pb-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedFlats.includes(flat.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked)
+                                    setSelectedFlats((p) => [...p, flat.id]);
+                                  else
+                                    setSelectedFlats((p) =>
+                                      p.filter((id) => id !== flat.id)
+                                    );
+                                }}
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
+                                style={{ accentColor: "#C72030" }}
+                              />
+                              <span className="ml-2 text-xs text-gray-600">
+                                {flat.name}
+                              </span>
                             </label>
-                         ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

@@ -14,13 +14,18 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 interface EditRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { status: string; reason: string; token?: string }) => void;
+  onSubmit: (data: {
+    status: string;
+    reason: string;
+    token?: string;
+  }) => void | Promise<void>;
   token?: string;
+  isSubmitting?: boolean;
 }
 
 export const EditRequestModal: React.FC<EditRequestModalProps> = ({
@@ -28,18 +33,28 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
   onClose,
   onSubmit,
   token,
+  isSubmitting = false,
 }) => {
   const [status, setStatus] = React.useState("Cancel");
   const [reason, setReason] = React.useState("");
 
-  const handleSubmit = () => {
-    onSubmit({ status, reason, token });
-    setReason(""); // Reset for next time
-    onClose();
+  React.useEffect(() => {
+    if (!isOpen) {
+      setReason("");
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    await onSubmit({ status, reason, token });
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => !open && !isSubmitting && onClose()}
+    >
       <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader className="bg-[#f6f4ee] px-4 py-2.5 flex flex-row items-center justify-between border-b border-[#D5DbDB]">
           <div className="flex-1 text-center">
@@ -48,7 +63,8 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
             </DialogTitle>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => !isSubmitting && onClose()}
+            disabled={isSubmitting}
             className="text-red-500 hover:text-red-700 transition-colors p-1"
           >
             <X className="h-5 w-5 stroke-[3px]" />
@@ -60,7 +76,11 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
             <label className="text-sm font-semibold text-gray-700">
               Status
             </label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select
+              value={status}
+              onValueChange={setStatus}
+              disabled={isSubmitting}
+            >
               <SelectTrigger className="w-full border-gray-300 focus:ring-0 focus:border-gray-400 h-10 shadow-none">
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
@@ -81,6 +101,7 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
               placeholder="Add Reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
+              disabled={isSubmitting}
               className="min-h-[80px] border-gray-300 focus:ring-0 focus:border-gray-400 shadow-none text-sm p-3"
             />
           </div>
@@ -89,9 +110,11 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
         <div className="bg-white px-6 py-4 flex justify-center border-t border-[#D5DbDB]">
           <Button
             onClick={handleSubmit}
+            disabled={isSubmitting}
             className="bg-[#00A65A] hover:bg-[#008D4C] text-white px-10 h-10 font-semibold rounded-md transition-all active:scale-95"
           >
-            Submit
+            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         </div>
       </DialogContent>
