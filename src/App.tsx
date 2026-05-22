@@ -1132,6 +1132,8 @@ import ModulesManagement from "./pages/settings/ModulesManagement";
 import { LoyaltyTDS } from "./pages/ops-console/admin/LoyaltyTDS";
 import { HiSocietyUsersDashboard } from "./pages/master/HiSocietyUsersDashboard";
 import { ViewHiSocietyUserPage } from "./pages/master/ViewHiSocietyUserPage";
+import { GCMList } from "./pages/master/GCMList";
+import { APNSList } from "./pages/master/APNSList";
 import { InvoiceAdd } from "./pages/ClubManagement/InvoiceAdd";
 import { InvoiceDashboardAccounting } from "./pages/ClubManagement/InvoiceDashboard";
 import { QuotesDashboard } from "./pages/ClubManagement/QuotesDashboard";
@@ -1411,6 +1413,14 @@ function App() {
                           <Route
                             path="master/user/hi-society-users/view/:id"
                             element={<ViewHiSocietyUserPage />}
+                          />
+                          <Route
+                            path="master/gcm"
+                            element={<GCMList />}
+                          />
+                          <Route
+                            path="master/apns"
+                            element={<APNSList />}
                           />
                           <Route
                             path="settings/roles/role"
