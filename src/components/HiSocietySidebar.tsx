@@ -1148,12 +1148,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: AlertTriangle,
               path: "/settings/safety/incident",
             },
-            {
-              id: "osr-setup",
-              label: "OSR Setup",
-              icon: Calendar,
-              path: "/osr/setup",
-            },
+            // {
+            //   id: "osr-setup",
+            //   label: "OSR Setup",
+            //   icon: Calendar,
+            //   path: "/osr/setup",
+            // },
             {
               id: "ticket-management",
               label: "Ticket Management",
@@ -1223,6 +1223,43 @@ export const HiSocietySidebar: React.FC = () => {
           label: "General Settings",
           icon: FileText,
           path: "/settings/general-settings",
+        },
+         {
+          id: "osr-setup",
+          label: "OSR Setup",
+          icon: SettingsIcon,
+          subItems: [
+            {
+              id: "setup",
+              label: "Setup",
+              icon: AlertTriangle,
+              path: "/settings/osr-setup/setup",
+            },
+            {
+              id: "schedule",
+              label: "Schedule",
+              icon: AlertTriangle,
+              path: "/settings/osr-setup/schedule",
+            },
+            {
+              id: "assign-escalation",
+              label: "Assign & Escalation Setup",
+              icon: AlertTriangle,
+              path: "/settings/osr-setup/assign-escalation",
+            },
+            // {
+            //   id: "cost-approval",
+            //   label: "Cost Approval",
+            //   icon: DollarSign,
+            //   path: "/settings/ticket-management/cost-approval",
+            // },
+            {
+              id: "setup-rule",
+              label: "Setup Rules",
+              icon: DollarSign,
+              path: "/settings/osr-setup/setup-rule",
+            },
+          ],
         },
       ],
     },
