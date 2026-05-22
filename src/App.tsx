@@ -1154,6 +1154,7 @@ import LockFees from "./pages/LockFees";
 import LockFeesAdd from "./pages/LockFeesAdd";
 import LockFeesDetail from "./pages/LockFeesDetail";
 import EditLockFeesPage from "./pages/EditLockFeesPage";
+import SocietyDetailsPage from "./pages/master/SocietyDetailsPage";
 
 const queryClient = new QueryClient();
 
@@ -1384,6 +1385,10 @@ function App() {
                           <Route
                             path="settings/roles/role"
                             element={<RoleDashboard />}
+                          />
+                           <Route
+                            path="master/location/account/societies/details/:id"
+                            element={<SocietyDetailsPage />}
                           />
                           <Route
                             path="settings/roles/role/add"

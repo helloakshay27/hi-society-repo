@@ -62,12 +62,13 @@ const FitoutRequests: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalEntries, setTotalEntries] = useState(0);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const perPage = 15;
 
   const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null) => {
     try {
       setLoading(true);
 
-      let url = `/crm/admin/fitout_requests.json?page=${page}`;
+      let url = `/crm/admin/fitout_requests.json?page=${page}&per_page=${perPage}`;
       if (statusFilter) {
         url += `&status_filter=${encodeURIComponent(statusFilter)}`;
       }
@@ -402,7 +403,7 @@ const FitoutRequests: React.FC = () => {
     (item: FitoutRequestItem, columnKey: string, index: number) => {
       switch (columnKey) {
         case "sr_no":
-          return <span>{index + 1}</span>;
+          return <span>{(currentPage - 1) * perPage + index + 1}</span>;
         case "actions":
           return (
             <div className="flex justify-center items-center gap-2 mb-2">
@@ -537,7 +538,7 @@ const FitoutRequests: React.FC = () => {
           );
       }
     },
-    [navigate, toast]
+    [navigate, toast, currentPage, perPage]
   );
 
   const filteredRequests = useMemo(() => {

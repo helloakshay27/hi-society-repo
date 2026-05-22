@@ -99,6 +99,77 @@ const columns = [
   { key: "created_on", label: "Created On", sortable: true },
 ];
 
+// ─── Image Cell Component ──────────────────────────────────────────────────────
+
+const StaffImageCell: React.FC<{
+  imageUrl: string | null | undefined;
+  name: string;
+  onPreview: (url: string | null, name: string) => void;
+}> = ({ imageUrl, name, onPreview }) => {
+  const [imgError, setImgError] = useState(false);
+  const hasImage = !!imageUrl && !imgError;
+  const initials = name
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "?";
+
+  return (
+    <button
+      onClick={() => onPreview(imageUrl || null, name || "Staff")}
+      style={{
+        width: 36,
+        height: 36,
+        minWidth: 36,
+        minHeight: 36,
+        background: hasImage ? "transparent" : "#e5e7eb",
+        borderRadius: "50%",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "2px solid transparent",
+        cursor: "pointer",
+        transition: "border-color 0.2s",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
+      }}
+      title="Click to preview"
+    >
+      {hasImage ? (
+        <img
+          src={imageUrl!}
+          alt=""
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+          draggable={false}
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#6b7280",
+            lineHeight: 1,
+          }}
+        >
+          {initials}
+        </span>
+      )}
+    </button>
+  );
+};
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 const SmartSecureStaffsHistory: React.FC = () => {
@@ -253,68 +324,15 @@ const SmartSecureStaffsHistory: React.FC = () => {
           );
         case "image":
           return (
-            <button
-              onClick={() => {
-                const imageUrl = staff.image_url || '/images/male.jpg';
-                setPreviewImageUrl(imageUrl);
-                setPreviewImageName(staff.name || 'Staff');
+            <StaffImageCell
+              imageUrl={staff.image_url}
+              name={staff.name}
+              onPreview={(url, name) => {
+                setPreviewImageUrl(url);
+                setPreviewImageName(name);
                 setPreviewImageOpen(true);
               }}
-              style={{
-                width: 36,
-                height: 36,
-                minWidth: 36,
-                minHeight: 36,
-                background: "#f3f4f6",
-                borderRadius: "50%",
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "2px solid transparent",
-                cursor: "pointer",
-                transition: "border-color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = '#C72030';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = 'transparent';
-              }}
-              title="Click to preview"
-            >
-              {staff.image_url ? (
-                <img
-                  src={staff.image_url}
-                  alt={staff.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                  draggable={false}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/images/male.jpg';
-                  }}
-                />
-              ) : (
-                <img
-                  src="/images/male.jpg"
-                  alt={staff.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                  draggable={false}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              )}
-            </button>
+            />
           );
         case "name":
           return <span className="font-medium">{staff.name}</span>;

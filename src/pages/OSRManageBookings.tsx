@@ -398,11 +398,11 @@ const OSRManageBookings: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 flex justify-center">
+        {/* <div className="p-4 border-t border-gray-200 flex justify-center">
           <div className="text-sm text-gray-600">
             Powered by <span className="font-semibold">LOCKATED</span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <CreateScheduleModal
