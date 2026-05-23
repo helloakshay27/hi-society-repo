@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +51,11 @@ const getExtension = (name: string | null | undefined): string =>
 const FILE_EXTENSION_PATTERN =
   /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
 
+const getAttachmentRequestParams = () => ({
+  ...(API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : {}),
+  _: Date.now(),
+});
+
 const inferFileType = (name: string | null | undefined): string => {
   const ext = getExtension(name);
   if (["mp4", "mov", "avi", "mkv", "webm"].includes(ext)) return "video";
@@ -64,22 +69,56 @@ const inferFileType = (name: string | null | undefined): string => {
 const isFile = (node: ApiNode): boolean => {
   const id = String(node.id);
   if (id.startsWith("documents_")) return true;
-  // A folder node typically has no file extension in its text. Only treat as
-  // a file when the text clearly looks like a filename (has an extension)
-  // AND the id isn't a flat-folder id. This keeps flat folders like
-  // "FM-101", "T1-201", "-Office" rendering as folders.
+  if (node.a_attr?.href?.includes("/society_flats/")) return false;
   return FILE_EXTENSION_PATTERN.test(node.text ?? "");
 };
 
 const digitsOnly = (value: string): string => value.replace(/\D/g, "");
 
+/** jsTree flat ids (e.g. "j1_5") vs API parent ids (e.g. "5") */
+const lastUnderscoreSegment = (value: string): string => {
+  const idx = value.lastIndexOf("_");
+  return idx >= 0 ? value.slice(idx + 1) : "";
+};
+
+const resolveFolderParent = (
+  parentKey: string,
+  map: Map<string, DocumentNode>,
+  folderLookup: Map<string, DocumentNode>
+): DocumentNode | undefined => {
+  const direct = map.get(parentKey);
+  if (direct?.type === "folder") return direct;
+
+  const parentLookupKeys = [
+    parentKey,
+    lastUnderscoreSegment(parentKey),
+    digitsOnly(parentKey),
+  ].filter(Boolean);
+
+  for (const lookupKey of parentLookupKeys) {
+    const fromLookup = folderLookup.get(lookupKey);
+    if (fromLookup) return fromLookup;
+  }
+
+  for (const [folderId, folder] of map) {
+    if (folder.type !== "folder") continue;
+    if (
+      parentLookupKeys.includes(folderId) ||
+      parentLookupKeys.includes(lastUnderscoreSegment(folderId)) ||
+      parentLookupKeys.includes(digitsOnly(folderId)) ||
+      folderId.endsWith(`_${parentKey}`)
+    ) {
+      return folder;
+    }
+  }
+
+  return undefined;
+};
+
 /** Transform flat jstree array into nested DocumentNode[] */
 const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
   const map = new Map<string, DocumentNode>();
-  // Secondary index: digits-only id → folder node. Used to recover newly
-  // uploaded files whose parent id format ("5") doesn't exactly match the
-  // flat folder id format ("j1_5") returned by the tree endpoint.
-  const folderByDigits = new Map<string, DocumentNode>();
+  const folderLookup = new Map<string, DocumentNode>();
 
   // First pass: create all nodes
   for (const n of nodes) {
@@ -94,10 +133,15 @@ const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
     };
     map.set(key, node);
     if (!file) {
+      const register = (lookupKey: string) => {
+        if (lookupKey && !folderLookup.has(lookupKey)) {
+          folderLookup.set(lookupKey, node);
+        }
+      };
+      register(key);
+      register(lastUnderscoreSegment(key));
       const digits = digitsOnly(key);
-      if (digits && !folderByDigits.has(digits)) {
-        folderByDigits.set(digits, node);
-      }
+      if (digits) register(digits);
     }
   }
 
@@ -113,14 +157,12 @@ const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
       continue;
     }
 
-    let parentNode = map.get(parentKey);
-    if (!parentNode) {
-      const fuzzy = folderByDigits.get(digitsOnly(parentKey));
-      if (fuzzy) parentNode = fuzzy;
-    }
+    const parentNode = resolveFolderParent(parentKey, map, folderLookup);
 
-    if (parentNode && parentNode.children) {
+    if (parentNode?.children) {
       parentNode.children.push(node);
+    } else if (node.type === "file") {
+      roots.push(node);
     }
   }
 
@@ -182,7 +224,7 @@ const BMSDocumentsFlatRelated: React.FC = () => {
       const { data } = await axios.get(
         getFullUrl("/crm/admin/attachments.json"),
         {
-          params: API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : undefined,
+          params: getAttachmentRequestParams(),
           headers: { Authorization: getAuthHeader() },
         }
       );
@@ -196,6 +238,15 @@ const BMSDocumentsFlatRelated: React.FC = () => {
 
   const allDocuments: DocumentNode[] = rawNodes ? buildTree(rawNodes) : [];
   const documents = filterTree(allDocuments, searchQuery);
+
+  const fileHrefById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const node of rawNodes ?? []) {
+      const href = node.a_attr?.href;
+      if (href) map.set(String(node.id), href);
+    }
+    return map;
+  }, [rawNodes]);
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
@@ -218,8 +269,14 @@ const BMSDocumentsFlatRelated: React.FC = () => {
     });
   };
 
-  const handleDownload = (fileName: string) => {
-    toast.success(`Downloading ${fileName}...`);
+  const handleDownload = (nodeId: string, fileName: string) => {
+    const href = fileHrefById.get(nodeId);
+    if (href) {
+      window.open(href, "_blank", "noopener,noreferrer");
+      toast.success(`Opening ${fileName}...`);
+      return;
+    }
+    toast.error("Unable to open file. Please try again.");
   };
 
   const handleRefresh = () => {
@@ -240,14 +297,10 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             style={{ paddingLeft: `${level * 24 + 12}px` }}
             onClick={() => toggleFolder(node.id)}
           >
-            {hasChildren ? (
-              isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-gray-500" />
-              )
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4 text-gray-500" />
             ) : (
-              <div className="w-4" />
+              <ChevronRight className="w-4 h-4 text-gray-500" />
             )}
             {isExpanded ? (
               <FolderOpen className="w-5 h-5 text-yellow-500" />
@@ -259,9 +312,18 @@ const BMSDocumentsFlatRelated: React.FC = () => {
               <span className="ml-auto text-xs text-gray-400">{childCount}</span>
             )}
           </div>
-          {isExpanded && hasChildren && (
+          {isExpanded && (
             <div>
-              {node.children!.map((child) => renderNode(child, level + 1))}
+              {hasChildren ? (
+                node.children!.map((child) => renderNode(child, level + 1))
+              ) : (
+                <p
+                  className="py-2 text-xs text-gray-400 italic"
+                  style={{ paddingLeft: `${(level + 1) * 24 + 36}px` }}
+                >
+                  No documents in this flat
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -279,7 +341,7 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             size="sm"
             variant="ghost"
             className="opacity-0 group-hover:opacity-100 transition-opacity h-7 px-2"
-            onClick={() => handleDownload(node.name)}
+            onClick={() => handleDownload(node.id, node.name)}
           >
             <Download className="w-4 h-4" />
           </Button>
