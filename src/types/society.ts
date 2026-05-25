@@ -93,6 +93,10 @@ export interface Society {
   start_date?: string;
   end_date?: string;
   project_type?: string;
+  ivr_enabled?: boolean;
+  ivr_api_key?: string | null;
+  ivr_name?: string | null;
+  ivr_caller_id?: string | null;
 }
 
 export interface SocietyListResponse {
@@ -147,15 +151,27 @@ export interface SocietyFormData {
   IsDelete?: number;
   super_society_id?: number;
   company_id?: number;
+  ivr_enabled?: boolean;
+  ivr_api_key?: string;
+  ivr_name?: string;
+  ivr_caller_id?: string;
 }
 
 export interface Headquarter {
   id: number;
-  name: string;
+  name?: string;
   country_id?: number;
   company_name?: string;
   country_name?: string;
   active?: boolean;
+  company?: {
+    id: number;
+    name: string;
+  };
+  country?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface Region {

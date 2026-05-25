@@ -91,6 +91,7 @@ export const SiteDetailsPage: React.FC = () => {
   const [site, setSite] = useState<SiteDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>("");
 
   const fetchSiteDetails = async (siteId: number) => {
     setLoading(true);
@@ -125,6 +126,30 @@ export const SiteDetailsPage: React.FC = () => {
       }
 
       setSite(siteData);
+
+      // Fetch company name
+      if (siteData.company_id) {
+        try {
+          const compRes = await fetch(
+            getFullUrl("/pms/company_setups/all_companies.json"),
+            {
+              headers: { Authorization: getAuthHeader() },
+            }
+          );
+          if (compRes.ok) {
+            const compData = await compRes.json();
+            const compList = compData.companies || compData;
+            if (Array.isArray(compList)) {
+              const match = compList.find(
+                (c: any) => c.id === siteData.company_id
+              );
+              if (match) setCompanyName(match.name);
+            }
+          }
+        } catch {
+          // company name is optional
+        }
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -305,7 +330,7 @@ export const SiteDetailsPage: React.FC = () => {
                       Company Name
                     </label>
                     <p className="text-gray-900 font-mono">
-                      {site?.company_name}
+                      {companyName || `Company #${site.company_id}`}
                     </p>
                   </div>
                 </div>
@@ -315,7 +340,7 @@ export const SiteDetailsPage: React.FC = () => {
                       Region
                     </label>
                     <p className="text-gray-900">
-                      {site.region_name || "Not specified"}
+                      {site.pms_region?.name || "Not specified"}
                     </p>
                   </div>
                   <div>
@@ -323,7 +348,7 @@ export const SiteDetailsPage: React.FC = () => {
                       Zone
                     </label>
                     <p className="text-gray-900">
-                      {site?.name_with_zone || "Not specified"}
+                      {site.pms_zone?.name || "Not specified"}
                     </p>
                   </div>
                 </div>
@@ -332,7 +357,7 @@ export const SiteDetailsPage: React.FC = () => {
                     Headquarters
                   </label>
                   <p className="text-gray-900">
-                    {site?.headquarter_name || "Not specified"}
+                    {site.pms_region?.headquarter?.name || "Not specified"}
                   </p>
                 </div>
               </div>

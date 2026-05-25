@@ -228,6 +228,33 @@ const HiSocNoticeEdit = () => {
           });
         }
 
+        // Existing attached_files
+        if (notice.attached_files && Array.isArray(notice.attached_files)) {
+          notice.attached_files.forEach((af: any, idx: number) => {
+            const url = af.document_url || "";
+            const name = url ? url.split("/").pop() : `Attachment ${idx + 1}`;
+            const isVideo =
+              url.includes(".mp4") ||
+              url.includes(".mov") ||
+              url.includes(".avi") ||
+              url.includes(".webm");
+            const isDoc =
+              url.includes(".pdf") ||
+              url.includes(".doc") ||
+              url.includes(".xls") ||
+              url.includes(".txt");
+            existingBroadcastImages.push({
+              file: null,
+              name,
+              preview: isDoc ? null : url,
+              ratio: "1:1",
+              type: isVideo ? "video" : isDoc ? "document" : "image",
+              isExisting: true,
+              id: `existing-attached-${idx}-${Date.now()}`,
+            });
+          });
+        }
+
         setFormData({
           notice_heading: notice.notice_heading || "",
           notice_text: notice.notice_text || "",
