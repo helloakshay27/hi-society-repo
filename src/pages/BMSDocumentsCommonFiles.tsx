@@ -32,10 +32,11 @@ const FILE_EXTENSION_PATTERN =
   /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
 
 const isFileNode = (node: TreeNode): boolean => {
+  if (String(node.parent) === "#") return false;
   return (
     String(node.id).startsWith("documents_") ||
     Boolean(node.a_attr?.href) ||
-    FILE_EXTENSION_PATTERN.test(node.text)
+    FILE_EXTENSION_PATTERN.test(node.text ?? "")
   );
 };
 
@@ -50,10 +51,10 @@ const isAllRootNode = (node: TreeNode): boolean =>
 const isRootParent = (parentId: string, allRootId: string): boolean =>
   parentId === "#" || parentId === "All" || parentId === allRootId;
 
-const getExtension = (name: string): string =>
-  name.split(".").pop()?.toLowerCase() ?? "";
+const getExtension = (name: string | null | undefined): string =>
+  (name ?? "").split(".").pop()?.toLowerCase() ?? "";
 
-const inferFileType = (name: string): string => {
+const inferFileType = (name: string | null | undefined): string => {
   const extension = getExtension(name);
 
   if (["mp4", "mov", "avi", "mkv", "webm"].includes(extension)) {
@@ -193,20 +194,10 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     if (!treeData?.length) return;
 
     const allRootNode = treeData.find(isAllRootNode);
-    const nextExpanded = new Set<string | number>([
-      allRootNode?.id ?? ALL_ROOT_NODE.id,
-    ]);
-    for (const node of treeData) {
-      if (
-        (childrenByParent.get(String(node.id)) ?? []).length > 0 ||
-        !isFileNode(node)
-      ) {
-        nextExpanded.add(node.id);
-      }
-    }
-
-    setExpandedFolders(nextExpanded);
-  }, [childrenByParent, treeData]);
+    setExpandedFolders(
+      new Set<string | number>([allRootNode?.id ?? ALL_ROOT_NODE.id])
+    );
+  }, [treeData]);
 
   const toggleFolder = (folderId: string | number) => {
     setExpandedFolders((current) => {
@@ -299,14 +290,14 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           key={node.id}
           className="relative flex h-[20px] cursor-pointer items-center whitespace-nowrap text-[12px] leading-none text-[#333] hover:bg-[#eef6fb]"
           style={{ paddingLeft: `${16 + depth * 18}px` }}
-          title={node.text}
-          onClick={() => handleDownload(node.text, node.id)}
+          title={node.text ?? ""}
+          onClick={() => handleDownload(node.text ?? "file", node.id)}
         >
           {renderConnectorLines(depth, isLast, ancestorHasNextSibling)}
           <span className="relative z-[1] flex h-full items-center gap-[5px]">
             <span className="h-[14px] w-[13px] shrink-0" aria-hidden="true" />
-            <FileIcon fileType={inferFileType(node.text)} />
-            <span>{node.text}</span>
+            <FileIcon fileType={inferFileType(node.text ?? "")} />
+            <span>{node.text ?? ""}</span>
           </span>
         </div>
       );
@@ -327,7 +318,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
             ) : (
               <Folder className="h-5 w-5 shrink-0 text-yellow-500" />
             )}
-            <span>{node.text}</span>
+            <span>{node.text ?? ""}</span>
           </span>
         </div>
 

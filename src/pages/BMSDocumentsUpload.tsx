@@ -46,7 +46,16 @@ interface AttachmentTreeNode {
 interface FlatOption {
   id: string;
   name: string;
+  societyFlatId: string;
 }
+
+const COMMON_SHARING_TYPE = "common";
+const FLAT_SPECIFIC_SHARING_TYPE = "flat_specific";
+
+const getAttachmentRequestParams = () => ({
+  ...(API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : {}),
+  _: Date.now(),
+});
 
 /**
  * Mirrors BMSDocumentsFlatRelated's isFile check:
@@ -60,6 +69,30 @@ const isAttachmentFileNode = (node: AttachmentTreeNode): boolean =>
  * root folders in BMSDocumentsFlatRelated.
  * Rule: parent === "#" AND NOT a file node.
  */
+/** Map jsTree flat node id (e.g. "j1_5") to society_flat_id for the upload API */
+const extractSocietyFlatId = (flatTreeId: string): string => {
+  const id = String(flatTreeId).trim();
+  if (!id) return "";
+
+  const suffix = lastUnderscoreSegment(id);
+  if (suffix && /^\d+$/.test(suffix)) return suffix;
+  if (/^\d+$/.test(id)) return id;
+
+  return id.replace(/\D/g, "");
+};
+
+const lastUnderscoreSegment = (value: string): string => {
+  const idx = value.lastIndexOf("_");
+  return idx >= 0 ? value.slice(idx + 1) : "";
+};
+
+const getSocietyFlatIdFromNode = (node: AttachmentTreeNode): string => {
+  const hrefMatch = node.a_attr?.href?.match(/society_flats\/(\d+)/);
+  if (hrefMatch?.[1]) return hrefMatch[1];
+
+  return extractSocietyFlatId(String(node.id));
+};
+
 const getFlatOptionsFromAttachmentTree = (
   nodes: AttachmentTreeNode[] = []
 ): FlatOption[] => {
@@ -73,7 +106,7 @@ const getFlatOptionsFromAttachmentTree = (
     if (!id || !name || seen.has(id)) return options;
 
     seen.add(id);
-    options.push({ id, name });
+    options.push({ id, name, societyFlatId: getSocietyFlatIdFromNode(node) });
     return options;
   }, []);
 };
@@ -96,6 +129,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
 
   // If we arrived from the Flat Related page, pre-select "Files" + Share=Flats
   const cameFromFlat =
+    location.pathname === "/bms/documents/upload-flat" ||
     locationState?.fromFlatRelated === true ||
     stateReturnPath === "/bms/documents/flat-related";
 
@@ -137,7 +171,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       const { data } = await axios.get(
         getFullUrl("/crm/admin/attachments.json"),
         {
-          params: API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : undefined,
+          params: getAttachmentRequestParams(),
           headers: { Authorization: getAuthHeader() },
         }
       );
@@ -243,21 +277,31 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       const formData = new FormData();
       formData.append("file_type", uploadType);
 
-      const sharingTypeVal = shareOption === "Flats" ? "flats" : "common";
+      const sharingTypeVal =
+        shareOption === "Flats"
+          ? FLAT_SPECIFIC_SHARING_TYPE
+          : COMMON_SHARING_TYPE;
       formData.append("sharing_type", sharingTypeVal);
 
       if (shareAccess === "true") {
         formData.append("primary_radio", occupancyType);
         formData.append("lives_here_radio", livingStatus);
 
-        formData.append("file_permissions[is_owner]", isOwner.toString());
-        formData.append("file_permissions[is_tenant]", isTenant.toString());
-        formData.append("file_permissions[is_builder]", isBuilder.toString());
+        formData.append("file_permission[is_owner]", isOwner.toString());
+        formData.append("file_permission[is_tenant]", isTenant.toString());
+        formData.append("file_permission[is_builder]", isBuilder.toString());
 
         if (shareOption === "Flats") {
           selectedFlats.forEach((id) => {
-            const cleanId = id.replace(/\D/g, "");
-            formData.append("shared_file_document[society_flat_id][]", cleanId);
+            const societyFlatId =
+              flatsList.find((flat) => flat.id === id)?.societyFlatId ||
+              extractSocietyFlatId(id);
+            if (societyFlatId) {
+              formData.append(
+                "shared_file_document[society_flat_id][]",
+                societyFlatId
+              );
+            }
           });
         }
       }
@@ -299,12 +343,16 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["attachment-common"] }),
         queryClient.invalidateQueries({ queryKey: ["common-files"] }),
-        queryClient.invalidateQueries({ queryKey: ["flat-related-documents"] }),
+        queryClient.refetchQueries({ queryKey: ["flat-related-documents"] }),
       ]);
 
       resetForm();
       if (onUploadSuccess) {
         onUploadSuccess();
+      }
+
+      if (cameFromFlat) {
+        navigate(finalReturnPath, { replace: true });
       }
     } catch (err: unknown) {
       const errorMessage = axios.isAxiosError(err)
