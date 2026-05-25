@@ -640,6 +640,39 @@ export const SocietyDetailsPage: React.FC = () => {
               </div>
             </div>
 
+            {/* IVR Information Card */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                IVR Configuration
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                  <span className="text-sm font-medium text-gray-700">IVR Enabled</span>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      society.ivr_enabled
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {society.ivr_enabled ? "Enabled" : "Disabled"}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">IVR Name</label>
+                  <p className="text-gray-900">{society.ivr_name || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">IVR API Key</label>
+                  <p className="text-gray-900 font-mono text-sm break-all">{society.ivr_api_key || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">IVR Caller ID</label>
+                  <p className="text-gray-900">{society.ivr_caller_id || "N/A"}</p>
+                </div>
+              </div>
+            </div>
+
             {/* Timeline Card */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">

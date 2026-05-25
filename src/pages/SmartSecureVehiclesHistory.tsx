@@ -203,7 +203,7 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose, onSucc
           const d = json.data || {};
           setHosts((d.host_names || []).map((h: { id: number; name: string }) => ({ id: h.id, name: h.name })));
           setGuests((d.guest_names || []).map((g: { id: number; name: string }) => ({ id: g.id, name: g.name })));
-          setParkingSlots((d.parking_slots || []).map((p: { id: number; name: string }) => ({ id: p.id, name: p.name })));
+          setParkingSlots((d.parking_slots || []).map((p: { id: number; number: string; vehicle_type: string }) => ({ id: p.id, name: `${p.number} (${p.vehicle_type})` })));
           setEntryGates((d.entry_gates || []).map((e: { id: number; name: string }) => ({ id: e.id, name: e.name })));
         }
       } catch { /* silently ignore — dropdowns stay empty */ }

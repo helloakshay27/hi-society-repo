@@ -22,7 +22,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Autocomplete,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -49,14 +48,16 @@ const selectMenuProps = {
   PaperProps: {
     style: {
       maxHeight: 224,
+      width: "10%",
       backgroundColor: "white",
       border: "1px solid #e2e8f0",
       borderRadius: "8px",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       zIndex: 9999,
     },
   },
-  disablePortal: false,
+  disablePortal: true,
   disableAutoFocus: true,
   disableEnforceFocus: true,
 };
@@ -493,38 +494,53 @@ export const ViewHiSocietyUserPage = () => {
         <Divider />
         <DialogContent sx={{ pt: 2, pb: 1 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Autocomplete
-              options={societyOptions}
-              value={societyOptions.find((o) => o.value === selectedSociety) || null}
-              onChange={(_, newValue) => handleSocietyChange(newValue ? newValue.value : "")}
-              getOptionLabel={(option) => option.label}
-              isOptionEqualToValue={(option, value) => option.value === value.value}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Society"
-                  placeholder="Search society..."
-                  InputLabelProps={{ shrink: true }}
-                />
-              )}
-              loading={societiesLoading}
-              loadingText="Loading societies..."
-              noOptionsText="No societies found"
-              fullWidth
-              disablePortal
-              size="small"
-            />
-            <MuiSearchableDropdown
-              label="Flat"
-              value={selectedFlat}
-              onChange={setSelectedFlat}
-              options={flatOptions}
-              placeholder={!selectedSociety ? "Select society first" : "Select Flat"}
-              loading={flatsLoading}
-              loadingText="Loading flats..."
-              disabled={!selectedSociety}
-              fullWidth
-            />
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink>Society</InputLabel>
+              <Select
+                value={selectedSociety?.toString() || ""}
+                onChange={(e) => handleSocietyChange(e.target.value as string)}
+                label="Society"
+                displayEmpty
+                MenuProps={selectMenuProps}
+                sx={fieldStyles}
+              >
+                <MenuItem value="" disabled>
+                  Select Society
+                </MenuItem>
+                {societyOptions.map((s) => (
+                  <MenuItem key={s.id} value={s.value}>
+                    {s.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink>Flat</InputLabel>
+              <Select
+                value={selectedFlat?.toString() || ""}
+                onChange={(e) => setSelectedFlat(e.target.value as string)}
+                label="Flat"
+                displayEmpty
+                MenuProps={selectMenuProps}
+                sx={fieldStyles}
+                disabled={!selectedSociety || flatsLoading}
+              >
+                <MenuItem value="" disabled>
+                  {!selectedSociety
+                    ? "Select society first"
+                    : flatsLoading
+                      ? "Loading flats..."
+                      : flatOptions.length === 0
+                        ? "No flats available"
+                        : "Select Flat"}
+                </MenuItem>
+                {flatOptions.map((f) => (
+                  <MenuItem key={f.id} value={f.value}>
+                    {f.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink>Ownership</InputLabel>
               <Select

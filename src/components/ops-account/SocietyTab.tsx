@@ -2,6 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
+  TextField,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Plus,
   Download,
   Filter,
@@ -10,6 +21,7 @@ import {
   Edit,
   Trash2,
   Loader2,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AddSocietyModal } from "@/components/AddSocietyModal";
@@ -91,9 +103,9 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
-    key: "created_at",
-    label: "Created At",
-    sortable: true,
+    key: "ivr_enabled",
+    label: "IVR Enabled",
+    sortable: false,
     hideable: true,
     draggable: true,
   },
@@ -129,6 +141,17 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSocietyId, setSelectedSocietyId] = useState<number | null>(null);
   const [selectedSocietyName, setSelectedSocietyName] = useState("");
+
+  // IVR modal state
+  const [isIvrModalOpen, setIsIvrModalOpen] = useState(false);
+  const [ivrSocietyId, setIvrSocietyId] = useState<number | null>(null);
+  const [ivrForm, setIvrForm] = useState({
+    ivr_enabled: true,
+    ivr_name: "",
+    ivr_api_key: "",
+    ivr_caller_id: "",
+  });
+  const [isIvrSubmitting, setIsIvrSubmitting] = useState(false);
 
   // Debug modal states
   useEffect(() => {
@@ -309,6 +332,67 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
     }
   };
 
+  const handleIvrToggle = async (id: number, currentIvr: boolean) => {
+    if (currentIvr) {
+      // Disabling — call API directly, no modal
+      submitIvrUpdate(id, { ivr_enabled: false, ivr_name: "", ivr_api_key: "", ivr_caller_id: "" });
+      return;
+    }
+
+    // Enabling — fetch current data, pre-fill modal
+    try {
+      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
+      const token = HI_SOCIETY_CONFIG.TOKEN;
+      const response = await fetch(`${baseUrl}/admin/societies/${id}.json?token=${token}`);
+      if (!response.ok) throw new Error("Failed to fetch society data");
+      const data = await response.json();
+
+      setIvrSocietyId(id);
+      setIvrForm({
+        ivr_enabled: true,
+        ivr_name: data.ivr_name || "",
+        ivr_api_key: data.ivr_api_key || "",
+        ivr_caller_id: data.ivr_caller_id || "",
+      });
+      setIsIvrModalOpen(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load IVR data");
+    }
+  };
+
+  const submitIvrUpdate = async (
+    id: number,
+    data: { ivr_enabled: boolean; ivr_name: string; ivr_api_key: string; ivr_caller_id: string }
+  ) => {
+    try {
+      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
+      const token = HI_SOCIETY_CONFIG.TOKEN;
+      const url = `${baseUrl}/admin/societies/${id}.json?token=${token}`;
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ society: data }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update IVR settings");
+
+      toast.success(`IVR ${data.ivr_enabled ? "enabled" : "disabled"} successfully`);
+      fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update IVR settings");
+    }
+  };
+
+  const handleIvrModalSubmit = async () => {
+    if (!ivrSocietyId) return;
+    setIsIvrSubmitting(true);
+    await submitIvrUpdate(ivrSocietyId, ivrForm);
+    setIsIvrSubmitting(false);
+    setIsIvrModalOpen(false);
+    setIvrSocietyId(null);
+  };
+
   const renderRow = (society: Society) => ({
     actions: (
       <div className="flex items-center gap-2">
@@ -361,12 +445,12 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         disabled={!canEditSociety}
       />
     ),
-    created_at: (
-      <span className="text-sm text-gray-600">
-        {society.created_at
-          ? new Date(society.created_at).toLocaleDateString()
-          : "-"}
-      </span>
+    ivr_enabled: (
+      <Switch
+        checked={society.ivr_enabled === true}
+        onCheckedChange={() => handleIvrToggle(society.id, society.ivr_enabled === true)}
+        disabled={!canEditSociety}
+      />
     ),
   });
 
@@ -482,6 +566,85 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         societyName={selectedSocietyName}
         canEdit={canEditSociety}
       />
+
+      {/* IVR Configuration Modal */}
+      <Dialog open={isIvrModalOpen} onOpenChange={(open) => { if (!open) setIsIvrModalOpen(false); }} modal={false}>
+        <DialogContent className="max-w-md bg-white z-50">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              IVR CONFIGURATION
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsIvrModalOpen(false)}
+              className="h-6 w-6 p-0 hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div>
+                <span className="text-sm font-medium">IVR Enabled</span>
+                <p className="text-xs text-gray-500">Enable IVR for this society</p>
+              </div>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={ivrForm.ivr_enabled}
+                    onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_enabled: e.target.checked }))}
+                  />
+                }
+                label={ivrForm.ivr_enabled ? "Enabled" : "Disabled"}
+              />
+            </div>
+            <TextField
+              label="IVR Name"
+              placeholder="Enter IVR name"
+              value={ivrForm.ivr_name}
+              onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_name: e.target.value }))}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+            />
+            <TextField
+              label="IVR API Key"
+              placeholder="Enter IVR API key"
+              value={ivrForm.ivr_api_key}
+              onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_api_key: e.target.value }))}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+            />
+            <TextField
+              label="IVR Caller ID"
+              placeholder="Enter IVR caller ID"
+              value={ivrForm.ivr_caller_id}
+              onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_caller_id: e.target.value }))}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+            />
+            <div className="flex justify-end gap-3 pt-2 border-t">
+              <Button variant="outline" onClick={() => setIsIvrModalOpen(false)} disabled={isIvrSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleIvrModalSubmit}
+                disabled={isIvrSubmitting}
+                className="bg-[#c72030] hover:bg-[#a01828]"
+              >
+                {isIvrSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Save IVR Settings
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

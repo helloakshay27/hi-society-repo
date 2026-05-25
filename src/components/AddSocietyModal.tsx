@@ -115,6 +115,10 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
     IsDelete: 0,
     company_id: undefined,
     super_society_id: undefined,
+    ivr_enabled: false,
+    ivr_api_key: "",
+    ivr_name: "",
+    ivr_caller_id: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -187,11 +191,11 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
 
   const fetchHeadquarters = async () => {
     try {
-      const url = getFullUrl("/headquarters.json");
+      const url = getFullUrl("/headquarters/all_headquarters.json");
       const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch headquarters");
       const data = await response.json();
-      const headquartersData = data.headquarters || data || [];
+      const headquartersData = Array.isArray(data) ? data : data.headquarters || [];
       setHeadquarters(headquartersData);
     } catch (error) {
       console.error("Error fetching headquarters:", error);
@@ -201,11 +205,11 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
 
   const fetchRegions = async (headquarterId: number) => {
     try {
-      const url = getFullUrl(`/pms/headquarters/${headquarterId}/regions.json`);
+      const url = getFullUrl(`/headquarters/${headquarterId}/regions`);
       const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch regions");
       const data = await response.json();
-      setRegions(data.regions || []);
+      setRegions(data.regions || data || []);
     } catch (error) {
       console.error("Error fetching regions:", error);
       toast.error("Failed to load regions");
@@ -214,11 +218,11 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
 
   const fetchZones = async (regionId: number) => {
     try {
-      const url = getFullUrl(`/pms/regions/${regionId}/zones.json`);
+      const url = getFullUrl(`/pms/regions/${regionId}/zones`);
       const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch zones");
       const data = await response.json();
-      setZones(data.zones || []);
+      setZones(data.zones || data || []);
     } catch (error) {
       console.error("Error fetching zones:", error);
       toast.error("Failed to load zones");
@@ -328,6 +332,10 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
       IsDelete: 0,
       company_id: undefined,
       super_society_id: undefined,
+      ivr_enabled: false,
+      ivr_api_key: "",
+      ivr_name: "",
+      ivr_caller_id: "",
     });
     setErrors({});
     onClose();
@@ -535,7 +543,8 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
                   <MenuItem value=""><em>Select Headquarter</em></MenuItem>
                   {headquarters.map((hq) => (
                     <MenuItem key={hq.id} value={hq.id}>
-                      {hq.company_name} ({hq?.country_name || ""})
+                      {/* {hq.company?.name || hq.company_name || hq.name || `HQ ${hq.id}`} */}
+                      {hq.country?.name ? ` ${hq.country.name}` : ""}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -836,6 +845,62 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
                   />
                 }
                 label="Allow View Toggle"
+              />
+            </div>
+          </div>
+
+          {/* IVR Configuration Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              IVR Configuration
+            </h3>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
+              <div className="space-y-1">
+                <span className="text-sm font-medium">IVR Enabled</span>
+                <p className="text-xs text-gray-600">Enable or disable IVR for this society</p>
+              </div>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.ivr_enabled ?? false}
+                    onChange={(e) => handleChange("ivr_enabled", e.target.checked)}
+                  />
+                }
+                label={formData.ivr_enabled ? "Enabled" : "Disabled"}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <TextField
+                label="IVR Name"
+                placeholder="Enter IVR name"
+                value={formData.ivr_name || ""}
+                onChange={(e) => handleChange("ivr_name", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="IVR API Key"
+                placeholder="Enter IVR API key"
+                value={formData.ivr_api_key || ""}
+                onChange={(e) => handleChange("ivr_api_key", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <TextField
+                label="IVR Caller ID"
+                placeholder="Enter IVR caller ID"
+                value={formData.ivr_caller_id || ""}
+                onChange={(e) => handleChange("ivr_caller_id", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
             </div>
           </div>

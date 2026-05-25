@@ -74,8 +74,6 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingDropdowns, setIsLoadingDropdowns] = useState(false);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
-  const [headquarters, setHeadquarters] = useState<HeadquarterOption[]>([]);
-  const [regions, setRegions] = useState<RegionOption[]>([]);
   const [filteredRegions, setFilteredRegions] = useState<RegionOption[]>([]);
 
   const [formData, setFormData] = useState<SiteFormData>({
@@ -122,6 +120,11 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
   const [siteImagePreviewUrl, setSiteImagePreviewUrl] = useState<string | null>(
     null
   );
+
+  // Zones state
+  const [filteredZones, setFilteredZones] = useState<
+    { id: number; name: string; active?: boolean }[]
+  >([]);
 
   // Fetch dropdown data on component mount (moved below after declaration)
 
@@ -222,35 +225,135 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
     }
   }, [editingSite, isOpen]);
 
-  // Country dropdown should not auto-select on company change; keep all countries available
-  useEffect(() => {
-    setFilteredHeadquarters(headquarters);
-  }, [formData.company_id, headquarters]);
-
-  // Filter regions based on selected company
-  useEffect(() => {
-    if (formData.company_id) {
-      const filtered = regions.filter(
-        (region) => region.company_id === formData.company_id
-      );
-      setFilteredRegions(filtered);
-
-      // Reset region if current selection is not valid
-      if (
-        formData.region_id &&
-        !filtered.find((r) => r.id === formData.region_id)
-      ) {
-        setFormData((prev) => ({ ...prev, region_id: 0 }));
-      }
-    } else {
-      setFilteredRegions([]);
-    }
-  }, [formData.company_id, regions, formData.region_id]);
-
   // Set all companies as available initially
   useEffect(() => {
     setFilteredCompanies(companies);
   }, [companies]);
+
+  // Preload dependent dropdowns for edit mode
+  useEffect(() => {
+    if (!isLoadingDropdowns && editingSite && isOpen) {
+      const loadEditData = async () => {
+        if (editingSite.company_id) {
+          await fetchHeadquartersByCompany(editingSite.company_id);
+        }
+        if (editingSite.headquarter_id) {
+          await fetchRegionsByHeadquarter(editingSite.headquarter_id);
+        }
+        if (editingSite.region_id) {
+          const rid =
+            typeof editingSite.region_id === "string"
+              ? parseInt(editingSite.region_id)
+              : editingSite.region_id;
+          await fetchZonesByRegion(rid);
+        }
+      };
+      loadEditData();
+    }
+  }, [isLoadingDropdowns, editingSite, isOpen]);
+
+  const fetchHeadquartersByCompany = React.useCallback(
+    async (companyId: number) => {
+      if (!companyId) {
+        setFilteredHeadquarters([]);
+        return;
+      }
+      try {
+        const apiUrl = getFullUrl(
+          `/headquarters/all_headquarters.json?q[company_setup_id_eq]=${companyId}`
+        );
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setFilteredHeadquarters(data);
+          } else if (
+            data?.code === 200 &&
+            Array.isArray(data.headquarters)
+          ) {
+            setFilteredHeadquarters(data.headquarters);
+          } else {
+            setFilteredHeadquarters([]);
+          }
+        } else {
+          setFilteredHeadquarters([]);
+        }
+      } catch {
+        setFilteredHeadquarters([]);
+      }
+    },
+    [getFullUrl, getAuthHeader]
+  );
+
+  const fetchRegionsByHeadquarter = React.useCallback(
+    async (headquarterId: number) => {
+      if (!headquarterId) {
+        setFilteredRegions([]);
+        setFilteredZones([]);
+        return;
+      }
+      try {
+        const apiUrl = getFullUrl(
+          `/headquarters/${headquarterId}/regions`
+        );
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.regions && Array.isArray(data.regions)) {
+            setFilteredRegions(data.regions);
+          } else {
+            setFilteredRegions([]);
+          }
+        } else {
+          setFilteredRegions([]);
+        }
+      } catch {
+        setFilteredRegions([]);
+      }
+    },
+    [getFullUrl, getAuthHeader]
+  );
+
+  const fetchZonesByRegion = React.useCallback(
+    async (regionId: number) => {
+      if (!regionId) {
+        setFilteredZones([]);
+        return;
+      }
+      try {
+        const apiUrl = getFullUrl(`/pms/regions/${regionId}/zones`);
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.zones && Array.isArray(data.zones)) {
+            setFilteredZones(data.zones);
+          } else {
+            setFilteredZones([]);
+          }
+        } else {
+          setFilteredZones([]);
+        }
+      } catch {
+        setFilteredZones([]);
+      }
+    },
+    [getFullUrl, getAuthHeader]
+  );
 
   const fetchDropdownData = React.useCallback(async () => {
     setIsLoadingDropdowns(true);
@@ -259,7 +362,7 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
 
       // Fetch companies
       const companiesResponse = await fetch(
-        getFullUrl("/pms/company_setups/company_index.json"),
+        getFullUrl("/pms/company_setups/all_companies.json"),
         {
           method: "GET",
           headers: {
@@ -271,16 +374,10 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
       let companiesData: CompanyOption[] = [];
       if (companiesResponse.ok) {
         const companiesResult = await companiesResponse.json();
-        console.warn("Companies API response:", companiesResult);
 
         if (
           companiesResult &&
           companiesResult.code === 200 &&
-          Array.isArray(companiesResult.data)
-        ) {
-          companiesData = companiesResult.data;
-        } else if (
-          companiesResult &&
           Array.isArray(companiesResult.companies)
         ) {
           companiesData = companiesResult.companies;
@@ -297,7 +394,7 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
 
       // Fetch headquarters (countries)
       const headquartersResponse = await fetch(
-        getFullUrl("/headquarters.json"),
+        getFullUrl("/headquarters/all_headquarters.json"),
         {
           headers: {
             Authorization: getAuthHeader(),
@@ -309,22 +406,15 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
       let headquartersData: HeadquarterOption[] = [];
       if (headquartersResponse.ok) {
         const headquartersResult = await headquartersResponse.json();
-        console.warn("headquarters API response:", headquartersResult);
 
-        if (Array.isArray(headquartersResult)) {
-          headquartersData = headquartersResult;
-        } else if (
+        if (
           headquartersResult &&
-          headquartersResult.headquarters &&
+          headquartersResult.code === 200 &&
           Array.isArray(headquartersResult.headquarters)
         ) {
           headquartersData = headquartersResult.headquarters;
-        } else if (
-          headquartersResult &&
-          headquartersResult.data &&
-          Array.isArray(headquartersResult.data)
-        ) {
-          headquartersData = headquartersResult.data;
+        } else if (Array.isArray(headquartersResult)) {
+          headquartersData = headquartersResult;
         }
       } else {
         console.error(
@@ -334,57 +424,8 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
         toast.error("Failed to fetch countries");
       }
 
-      // Fetch regions
-      const regionsResponse = await fetch(getFullUrl("/pms/regions.json"), {
-        headers: {
-          Authorization: getAuthHeader(),
-          "Content-Type": "application/json",
-        },
-      });
-
-      let regionsData: RegionOption[] = [];
-      if (regionsResponse.ok) {
-        const regionsResult = await regionsResponse.json();
-        console.warn("Regions API response:", regionsResult);
-
-        if (Array.isArray(regionsResult)) {
-          regionsData = regionsResult;
-        } else if (
-          regionsResult &&
-          regionsResult.regions &&
-          Array.isArray(regionsResult.regions)
-        ) {
-          regionsData = regionsResult.regions;
-        } else if (
-          regionsResult &&
-          regionsResult.data &&
-          Array.isArray(regionsResult.data)
-        ) {
-          regionsData = regionsResult.data;
-        }
-      } else {
-        console.error("Failed to fetch regions:", regionsResponse.statusText);
-        toast.error("Failed to fetch regions");
-      }
-
-      console.warn("Fetched dropdown data counts:", {
-        companies: companiesData?.length || 0,
-        headquarters: headquartersData?.length || 0,
-        regions: regionsData?.length || 0,
-        activeRegions: regionsData?.filter((r) => r.active)?.length || 0,
-      });
-
-      // Log sample data to check structure
-      console.warn("Sample data:", {
-        firstCompany: companiesData?.[0],
-        firstHeadquarter: headquartersData?.[0],
-        firstRegion: regionsData?.[0],
-      });
-
       setCompanies(companiesData || []);
-      setHeadquarters(headquartersData || []);
-      setRegions(regionsData || []);
-      setFilteredRegions(regionsData?.filter((r) => r.active) || []);
+      setFilteredHeadquarters(headquartersData || []);
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
       toast.error("Error loading form data");
@@ -400,7 +441,7 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
     }
   }, [isOpen, fetchDropdownData]);
 
-  const handleInputChange = async (
+  const handleInputChange = (
     field: keyof SiteFormData,
     value: string | number
   ) => {
@@ -409,44 +450,36 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
 
       // Reset dependent fields when parent changes
       if (field === "company_id") {
-        newData.region_id = 0; // Reset region when company changes
-        newData.headquarter_id = 0; // Reset headquarter when company changes
+        newData.headquarter_id = 0;
+        newData.region_id = 0;
+        newData.zone_id = "";
+        setFilteredHeadquarters([]);
+        setFilteredRegions([]);
+        setFilteredZones([]);
+      }
+      if (field === "headquarter_id") {
+        newData.region_id = 0;
+        newData.zone_id = "";
+        setFilteredRegions([]);
+        setFilteredZones([]);
+      }
+      if (field === "region_id") {
+        newData.zone_id = "";
+        setFilteredZones([]);
       }
       return newData;
     });
 
-    // If company_id changes, fetch headquarters
     if (field === "company_id") {
-      if (value && Number(value) > 0) {
-        try {
-          const apiUrl = getFullUrl(
-            `/headquarters.json?q[company_setup_id_eq]=${value}`
-          );
-          const response = await fetch(apiUrl, {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-              Authorization: getAuthHeader(),
-            },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data.headquarters)) {
-              setFilteredHeadquarters(data.headquarters);
-            } else if (Array.isArray(data)) {
-              setFilteredHeadquarters(data);
-            } else {
-              setFilteredHeadquarters([]);
-            }
-          } else {
-            setFilteredHeadquarters([]);
-          }
-        } catch (error) {
-          setFilteredHeadquarters([]);
-        }
-      } else {
-        setFilteredHeadquarters([]);
-      }
+      fetchHeadquartersByCompany(Number(value) || 0);
+    }
+
+    if (field === "headquarter_id") {
+      fetchRegionsByHeadquarter(Number(value) || 0);
+    }
+
+    if (field === "region_id") {
+      fetchZonesByRegion(Number(value) || 0);
     }
   };
 
@@ -539,21 +572,8 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
               </h3>
 
               <div className="grid grid-cols-2 gap-6">
-                <TextField
-                  label="Site Name"
-                  placeholder="Enter site name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } },
-                  }}
-                  InputProps={{ sx: fieldStyles }}
-                  required
-                  disabled={isLoading}
-                />
+               
+                
 
                 <FormControl fullWidth variant="outlined">
                   <InputLabel shrink>Company</InputLabel>
@@ -580,17 +600,14 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
                             : "Select Company"}
                       </em>
                     </MenuItem>
-                    {filteredCompanies.map((company) => (
-                      <MenuItem key={company.id} value={company.id.toString()}>
-                        {company.name}
+                    {filteredCompanies.map((country) => (
+                      <MenuItem key={country.id} value={country.id.toString()}>
+                        {country.name}
                       </MenuItem>
                     ))}
                   </MuiSelect>
                 </FormControl>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 mt-6">
-                <FormControl fullWidth variant="outlined">
+                   <FormControl fullWidth variant="outlined">
                   <InputLabel shrink>Country</InputLabel>
                   <MuiSelect
                     value={formData.headquarter_id?.toString() || ""}
@@ -617,11 +634,17 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
                     </MenuItem>
                     {filteredHeadquarters.map((hq) => (
                       <MenuItem key={hq.id} value={hq.id.toString()}>
-                        {hq.country_name}
+                        {(hq as any).name ||
+                          (hq as any).country?.name ||
+                          hq.country_name}
                       </MenuItem>
                     ))}
                   </MuiSelect>
                 </FormControl>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 mt-6">
+             
                 <FormControl fullWidth variant="outlined">
                   <InputLabel shrink>Region</InputLabel>
                   <MuiSelect
@@ -637,13 +660,15 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
                     MenuProps={selectMenuProps}
                     sx={fieldStyles}
                     disabled={
-                      isLoading || isLoadingDropdowns || !formData.company_id
+                      isLoading ||
+                      isLoadingDropdowns ||
+                      !formData.headquarter_id
                     }
                   >
                     <MenuItem value="">
                       <em>
-                        {!formData.company_id
-                          ? "Select company first"
+                        {!formData.headquarter_id
+                          ? "Select country first"
                           : filteredRegions.length === 0
                             ? "No regions available"
                             : "Select Region"}
@@ -656,6 +681,52 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
                     ))}
                   </MuiSelect>
                 </FormControl>
+                 <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink>Zone</InputLabel>
+                  <MuiSelect
+                    value={formData.zone_id?.toString() || ""}
+                    onChange={(e) => {
+                      handleInputChange("zone_id", e.target.value as string);
+                    }}
+                    label="Zone"
+                    displayEmpty
+                    MenuProps={selectMenuProps}
+                    sx={fieldStyles}
+                    disabled={
+                      isLoading || isLoadingDropdowns || !formData.region_id
+                    }
+                  >
+                    <MenuItem value="">
+                      <em>
+                        {!formData.region_id
+                          ? "Select region first"
+                          : filteredZones.length === 0
+                            ? "No zones available"
+                            : "Select Zone"}
+                      </em>
+                    </MenuItem>
+                    {filteredZones.map((zone) => (
+                      <MenuItem key={zone.id} value={zone.id.toString()}>
+                        {zone.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+                 <TextField
+                  label="Site Name"
+                  placeholder="Enter site name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{
+                    shrink: true,
+                    sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } },
+                  }}
+                  InputProps={{ sx: fieldStyles }}
+                  required
+                  disabled={isLoading}
+                />
               </div>
             </div>
 
@@ -666,17 +737,7 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
               </h3>
 
               <div className="grid grid-cols-2 gap-6">
-                <TextField
-                  label="Zone ID"
-                  placeholder="Enter zone ID"
-                  value={formData.zone_id}
-                  onChange={(e) => handleInputChange("zone_id", e.target.value)}
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{ shrink: true }}
-                  InputProps={{ sx: fieldStyles }}
-                  disabled={isLoading}
-                />
+               
 
                 <TextField
                   label="Latitude"
