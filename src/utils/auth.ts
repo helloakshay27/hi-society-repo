@@ -271,117 +271,55 @@ const isHiSocietySite =
 export const getOrganizationsByEmail = async (
   email: string
 ): Promise<Organization[]> => {
-  if (isRunwalSite) {
+  const fetchOrgs = async (baseApiUrl: string, productName: string) => {
     const response = await fetch(
-      `https://runwal-cp-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+      `${baseApiUrl}/api/users/get_organizations_by_email.json?email=${email}&product_name=${encodeURIComponent(productName)}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch organizations");
     }
     const data = await response.json();
     return data.organizations || [];
+  };
+
+  if (isRunwalSite) {
+    return fetchOrgs("https://runwal-cp-api.lockated.com", "Hi-Society");
   }
 
   if (isHiSocietyUiSite) {
-    const response = await fetch(
-      `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://hi-society.lockated.com", "Hi-Society");
   }
 
-  // For Hi-Society sites (localhost or production), use Hi-Society API
   if (isHiSocietySite) {
-    const apiUrl = isLocalhost
-      ? `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-      : `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
-
-    const response = await fetch(`${apiUrl}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://hi-society.lockated.com", "Hi-Society");
   }
 
   if (isOmanSite || isFmSite) {
-    const response = await fetch(
-      `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://uat.lockated.com", "FM Matrix");
   }
 
   if (isViSite) {
-    const response = await fetch(
-      `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://live-api.gophygital.work", "FM Matrix");
   }
 
   if (isDevSite) {
-    const response = await fetch(
-      `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://dev-api.lockated.com", "FM Matrix");
   }
 
   if (isPulseSite) {
-    const response = await fetch(
-      `https://pulse-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://pulse-api.lockated.com", "Hi-Society");
   }
 
   if (isClubSite) {
-    const response = await fetch(
-      `https://club-uat-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://club-uat-api.lockated.com", "Hi-Society");
   }
 
   if (isPanchshilUatSite) {
-    const response = await fetch(
-      `https://pulse-uat-api.panchshil.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://pulse-uat-api.panchshil.com", "Hi-Society");
   }
 
-  // Default fallback for other sites
-  const response = await fetch(
-    `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch organizations");
-  }
-  const data = await response.json();
-  return data.organizations || [];
+  // Default fallback
+  return fetchOrgs("https://uat-hi-society.lockated.com", "Hi-Society");
 };
 
 // Asset module access restrictions for specific users
