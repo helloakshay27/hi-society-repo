@@ -24,7 +24,7 @@ export const OpsAccountPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200">
           <TabsTrigger
             value="organization"
             className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
@@ -48,6 +48,12 @@ export const OpsAccountPage = () => {
             className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
           >
             Region
+          </TabsTrigger>
+          <TabsTrigger
+            value="zone"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Zone
           </TabsTrigger>
           <TabsTrigger
             value="society"
@@ -108,14 +114,14 @@ export const OpsAccountPage = () => {
         </TabsContent>
 
         
-        {/* <TabsContent value="zone" className="space-y-4">
+        <TabsContent value="zone" className="space-y-4">
           <ZoneTab
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             entriesPerPage={entriesPerPage}
             setEntriesPerPage={setEntriesPerPage}
           />
-        </TabsContent> */}
+        </TabsContent>
 
         <TabsContent value="site" className="space-y-4">
           <SiteTab

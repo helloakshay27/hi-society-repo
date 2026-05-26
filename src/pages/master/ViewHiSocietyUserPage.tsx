@@ -109,6 +109,8 @@ export const ViewHiSocietyUserPage = () => {
   const [selectedSnag, setSelectedSnag] = useState<string | number>("");
   const [assocSnagLoading, setAssocSnagLoading] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<"societies" | "companies" | "snag">("societies");
+
   // UsPhase modal
   const [usPhaseModal, setUsPhaseModal] = useState(false);
   const [usPhaseRow, setUsPhaseRow] = useState<{ id: number; id_society: string } | null>(null);
@@ -373,61 +375,174 @@ export const ViewHiSocietyUserPage = () => {
         </CardContent>
       </Card>
 
-      {/* User Societies */}
+      {/* Tabs: Societies / Companies / Snag */}
       <Card className="border-0 shadow-sm">
-        <CardHeader className="border-b bg-gray-50">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Building className="w-5 h-5 text-[#C72030]" />
-            User Societies
-          </CardTitle>
+        <CardHeader className="border-b bg-gray-50 px-0 pt-0">
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("societies")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "societies"
+                  ? "border-[#C72030] text-[#C72030]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              User Societies
+            </button>
+            <button
+              onClick={() => setActiveTab("companies")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "companies"
+                  ? "border-[#C72030] text-[#C72030]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              User Companies
+            </button>
+            <button
+              onClick={() => setActiveTab("snag")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "snag"
+                  ? "border-[#C72030] text-[#C72030]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              User Snag
+            </button>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
-          {user_societies.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">No societies associated</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Society</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Add Phase</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Phases</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Approval</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Created</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {user_societies.map((us) => (
-                    <tr key={us.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-700">{us.building_name}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => openUsPhaseModal({ id: us.id, id_society: us.id_society })}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
-                        >
-                          UsPhase
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">{us.phase_names || "-"}</td>
-                      <td className="px-4 py-3">{getStatusBadge(us.status)}</td>
-                      <td className="px-4 py-3 text-gray-700">{us.role_name}</td>
-                      <td className="px-4 py-3 text-gray-500">{moment(us.created_at).format("DD/MM/YYYY HH:mm")}</td>
-                      <td className="px-4 py-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openStatusModal({ id: us.id, id_society: us.id_society, role_id: us.role_id, status: us.status })}
-                        >
-                          Edit
-                        </Button>
-                      </td>
+          {/* Societies Tab */}
+          {activeTab === "societies" && (
+            user_societies.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">No societies associated</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Society</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Add Phase</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Phases</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Approval</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Created</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {user_societies.map((us) => (
+                      <tr key={us.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-700">{us.building_name}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => openUsPhaseModal({ id: us.id, id_society: us.id_society })}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                          >
+                            UsPhase
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">{us.phase_names || "-"}</td>
+                        <td className="px-4 py-3">{getStatusBadge(us.status)}</td>
+                        <td className="px-4 py-3 text-gray-700">{us.role_name}</td>
+                        <td className="px-4 py-3 text-gray-500">{moment(us.created_at).format("DD/MM/YYYY HH:mm")}</td>
+                        <td className="px-4 py-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openStatusModal({ id: us.id, id_society: us.id_society, role_id: us.role_id, status: us.status })}
+                          >
+                            Edit
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          )}
+
+          {/* Companies Tab */}
+          {activeTab === "companies" && (
+            (() => {
+              const userCompanies = (selectedDetail as any).user_companies;
+              if (!userCompanies || userCompanies.length === 0) {
+                return <div className="p-6 text-center text-gray-500">No companies associated</div>;
+              }
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Company Name</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Approval</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Created</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userCompanies.map((uc: any, idx: number) => (
+                        <tr key={uc.id || idx} className="border-b hover:bg-gray-50">
+                          <td className="px-4 py-3 text-gray-700">{uc.name || uc.company_name || uc.company?.name || `Company #${uc.company_id || uc.id}`}</td>
+                          <td className="px-4 py-3">{uc.status ? getStatusBadge(uc.status) : <span className="text-gray-400">-</span>}</td>
+                          <td className="px-4 py-3 text-gray-700">{uc.role_name || "-"}</td>
+                          <td className="px-4 py-3 text-gray-500">
+                            {uc.created_at ? moment(uc.created_at).format("DD/MM/YYYY HH:mm") : "-"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Button size="sm" variant="outline" disabled>
+                              Edit
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()
+          )}
+
+          {/* Snag Tab */}
+          {activeTab === "snag" && (
+            (() => {
+              const userSnags = (selectedDetail as any).user_snags;
+              if (!userSnags || userSnags.length === 0) {
+                return <div className="p-6 text-center text-gray-500">No snag projects associated</div>;
+              }
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Project Name</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Approval</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Created</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userSnags.map((us: any, idx: number) => (
+                        <tr key={us.id || idx} className="border-b hover:bg-gray-50">
+                          <td className="px-4 py-3 text-gray-700">{us.name || us.project_name || us.snag_project?.name || `Project #${us.snag_project_id || us.id}`}</td>
+                          <td className="px-4 py-3">{us.status ? getStatusBadge(us.status) : <span className="text-gray-400">-</span>}</td>
+                          <td className="px-4 py-3 text-gray-500">
+                            {us.created_at ? moment(us.created_at).format("DD/MM/YYYY HH:mm") : "-"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Button size="sm" variant="outline" disabled>
+                              Edit
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()
           )}
         </CardContent>
       </Card>
