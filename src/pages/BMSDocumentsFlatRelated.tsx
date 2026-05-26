@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   ChevronRight,
@@ -21,7 +21,11 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import {
+  ENDPOINTS,
+  getCrmAdminRequestConfig,
+  getFullUrl,
+} from "@/config/apiConfig";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -51,11 +55,6 @@ const getExtension = (name: string | null | undefined): string =>
 const FILE_EXTENSION_PATTERN =
   /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
 
-const getAttachmentRequestParams = () => ({
-  ...(API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : {}),
-  _: Date.now(),
-});
-
 const inferFileType = (name: string | null | undefined): string => {
   const ext = getExtension(name);
   if (["mp4", "mov", "avi", "mkv", "webm"].includes(ext)) return "video";
@@ -68,8 +67,11 @@ const inferFileType = (name: string | null | undefined): string => {
 
 const isFile = (node: ApiNode): boolean => {
   const id = String(node.id);
+  // Root-level nodes are flat folders (FM-101, T1-201, etc.)
+  if (String(node.parent) === "#") return false;
   if (id.startsWith("documents_")) return true;
-  if (node.a_attr?.href?.includes("/society_flats/")) return false;
+  const href = node.a_attr?.href ?? "";
+  if (href && !href.includes("/society_flats/")) return true;
   return FILE_EXTENSION_PATTERN.test(node.text ?? "");
 };
 
@@ -139,9 +141,10 @@ const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
         }
       };
       register(key);
-      register(lastUnderscoreSegment(key));
-      const digits = digitsOnly(key);
-      if (digits) register(digits);
+      const suffix = lastUnderscoreSegment(key);
+      if (suffix) register(suffix);
+      // Avoid j1_5 → "15" polluting lookup; only register when id is numeric
+      if (/^\d+$/.test(key)) register(key);
     }
   }
 
@@ -162,11 +165,33 @@ const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
     if (parentNode?.children) {
       parentNode.children.push(node);
     } else if (node.type === "file") {
-      roots.push(node);
+      const flatRoot = roots.find(
+        (root) =>
+          root.type === "folder" &&
+          (root.id === parentKey ||
+            lastUnderscoreSegment(root.id) === parentKey ||
+            root.id.endsWith(`_${parentKey}`))
+      );
+      if (flatRoot?.children) {
+        flatRoot.children.push(node);
+      } else {
+        roots.push(node);
+      }
     }
   }
 
   return roots;
+};
+
+const normalizeAttachmentNodes = (data: unknown): ApiNode[] => {
+  if (Array.isArray(data)) return data as ApiNode[];
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+    for (const key of ["data", "attachments", "nodes", "tree"]) {
+      if (Array.isArray(record[key])) return record[key] as ApiNode[];
+    }
+  }
+  return [];
 };
 
 /** Recursive search filter */
@@ -209,6 +234,7 @@ const FileIcon = ({ fileType }: { fileType?: string }) => {
 
 const BMSDocumentsFlatRelated: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -222,21 +248,21 @@ const BMSDocumentsFlatRelated: React.FC = () => {
     queryKey: ["flat-related-documents"],
     queryFn: async () => {
       const { data } = await axios.get(
-        getFullUrl("/crm/admin/attachments.json"),
-        {
-          params: getAttachmentRequestParams(),
-          headers: { Authorization: getAuthHeader() },
-        }
+        getFullUrl(ENDPOINTS.ATTACHMENTS),
+        getCrmAdminRequestConfig()
       );
-      return Array.isArray(data) ? data : [];
+      return normalizeAttachmentNodes(data);
     },
     retry: 2,
-    staleTime: 5000,
+    staleTime: 0,
     gcTime: 60000,
     refetchOnMount: "always",
   });
 
-  const allDocuments: DocumentNode[] = rawNodes ? buildTree(rawNodes) : [];
+  const allDocuments = useMemo(
+    () => (rawNodes ? buildTree(rawNodes) : []),
+    [rawNodes]
+  );
   const documents = filterTree(allDocuments, searchQuery);
 
   const fileHrefById = useMemo(() => {
@@ -247,6 +273,28 @@ const BMSDocumentsFlatRelated: React.FC = () => {
     }
     return map;
   }, [rawNodes]);
+
+  useEffect(() => {
+    if (!allDocuments.length) return;
+
+    const nextExpanded = new Set<string>();
+    const walk = (nodes: DocumentNode[]) => {
+      for (const node of nodes) {
+        if (node.type === "folder" && (node.children?.length ?? 0) > 0) {
+          nextExpanded.add(node.id);
+          walk(node.children ?? []);
+        }
+      }
+    };
+    walk(allDocuments);
+
+    const fromUpload = (
+      location.state as { expandFlatIds?: string[] } | null
+    )?.expandFlatIds;
+    fromUpload?.forEach((id) => nextExpanded.add(String(id)));
+
+    setExpandedFolders(nextExpanded);
+  }, [allDocuments, location.state]);
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
