@@ -28,8 +28,8 @@ export const ConfigureWingDialog: React.FC<ConfigureWingDialogProps> = ({
     ? savedUrl.startsWith("http")
       ? savedUrl
       : `https://${savedUrl}`
-    : "https://uat-hi-society.lockated.com";
-  const token = localStorage.getItem("token") || "bfa5004e7b0175622be8f7e69b37d01290b737f82e078414";
+    : "";
+  const token = localStorage.getItem("token");
   const societyId = localStorage.getItem("selectedSocietyId");
 
   const [projects, setProjects] = useState<any[]>([]);
