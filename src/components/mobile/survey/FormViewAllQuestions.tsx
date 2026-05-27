@@ -15,6 +15,7 @@ interface FormViewAllQuestionsProps {
     isSubmitting: boolean;
     finalComment: string;
     onFinalCommentChange: (comment: string) => void;
+    surveyImageUrl?: string;
 }
 
 export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
@@ -25,6 +26,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
     isSubmitting,
     finalComment,
     onFinalCommentChange,
+    surveyImageUrl,
 }) => {
     const [showPreview, setShowPreview] = useState(false);
 
@@ -139,7 +141,22 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
     };
 
     return (
-        <div className="w-full space-y-6">
+        <div className="w-full space-y-6 min-h-screen p-4 relative">
+            {/* Background image layer with brightness filter */}
+            {surveyImageUrl && (
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        backgroundImage: `url(${surveyImageUrl})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundRepeat: "no-repeat",
+                        backgroundAttachment: "fixed",
+                        filter: "brightness(0.85)",
+                    }}
+                />
+            )}
+            <div className="relative z-10 space-y-6">
             {questions.map((question, index) => {
                 const answer = answers[question.id];
 
@@ -288,6 +305,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
             </div>
 
             {/* Preview Modal */}
+            </div>
             {showPreview && ReactDOM.createPortal(
                 <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -298,12 +316,26 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                         </div>
                         
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-4 bg-white">
-                            <div className="space-y-4">
+                        <div
+                            className="flex-1 overflow-y-auto p-4 relative"
+                            style={surveyImageUrl ? {
+                                backgroundImage: `url(${surveyImageUrl})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                backgroundRepeat: "no-repeat",
+                            } : undefined}
+                        >
+                            {surveyImageUrl && (
+                                <div
+                                    className="absolute inset-0"
+                                    // style={{ backgroundColor: "rgba(255,255,255,0.7)" }}
+                                />
+                            )}
+                            <div className="relative z-10 space-y-4">
                                 {questions.map((question, index) => {
                                     const answer = answers[question.id];
                                     return (
-                                        <div key={question.id} className="bg-white rounded-lg p-3 border">
+                                        <div key={question.id} className="bg-white rounded-lg p-3 shadow-md">
                                             <div className="flex items-start">
                                                 <span className="font-medium text-gray-800 mr-2">{index + 1}.</span>
                                                 <div className="flex-1">
@@ -324,7 +356,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
                                 
                                 {/* Final Comments */}
                                 {finalComment && (
-                                    <div className="bg-white rounded-lg p-3 border">
+                                    <div className="bg-white rounded-lg p-3 shadow-md">
                                         <h3 className="font-medium text-gray-800 mb-1">Additional Comments</h3>
                                         <p className="text-sm text-gray-600">{finalComment}</p>
                                     </div>

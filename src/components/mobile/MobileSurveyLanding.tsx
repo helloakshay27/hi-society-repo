@@ -2112,6 +2112,12 @@ export const MobileSurveyLanding: React.FC = () => {
                     {surveyData.society_name}
                   </p>
                 )}
+                 {surveyData.user_name && (
+                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <span className="font-semibold text-gray-700">Customer:</span>{" "}
+                    {surveyData.user_name}
+                  </p>
+                )}
                 {surveyData.tower_name && (
                   <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
                     <span className="font-semibold text-gray-700">Tower:</span>{" "}
@@ -2124,12 +2130,7 @@ export const MobileSurveyLanding: React.FC = () => {
                     {surveyData.flat_no}
                   </p>
                 )}
-                {surveyData.user_name && (
-                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
-                    <span className="font-semibold text-gray-700">Customer:</span>{" "}
-                    {surveyData.user_name}
-                  </p>
-                )}
+               
               </div>
             </div>
           )}
@@ -2143,7 +2144,7 @@ export const MobileSurveyLanding: React.FC = () => {
         className={`flex-1 overflow-hidden relative z-10 ${isFormView ? "overflow-y-auto" : ""}`}
       >
         <div
-          className={`h-full ${isFormView ? "overflow-y-scroll px-4 py-4" : "flex flex-col px-4 pb-6"}`}
+          className={`h-full ${isFormView ? "overflow-y-scroll pb-6" : "flex flex-col pb-6"}`}
         >
           {/* Title - Only for Form View */}
 
@@ -2158,6 +2159,7 @@ export const MobileSurveyLanding: React.FC = () => {
                 isSubmitting={isSubmitting}
                 finalComment={finalDescription}
                 onFinalCommentChange={setFinalDescription}
+                surveyImageUrl={surveyData?.snag_checklist?.survey_attachment?.url}
               />
             </div>
           ) : (

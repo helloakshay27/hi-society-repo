@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
@@ -110,6 +110,10 @@ export const ViewHiSocietyUserPage = () => {
   const [assocSnagLoading, setAssocSnagLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"societies" | "companies" | "snag">("societies");
+  const [associatedCompanies, setAssociatedCompanies] = useState<any[]>([]);
+  const [assocCompaniesLoading, setAssocCompaniesLoading] = useState(false);
+  const [associatedSnagProjects, setAssociatedSnagProjects] = useState<any[]>([]);
+  const [assocSnagProjectsLoading, setAssocSnagProjectsLoading] = useState(false);
 
   // UsPhase modal
   const [usPhaseModal, setUsPhaseModal] = useState(false);
@@ -117,13 +121,45 @@ export const ViewHiSocietyUserPage = () => {
   const [selectedPhase, setSelectedPhase] = useState<string | number>("");
   const [usPhaseLoading, setUsPhaseLoading] = useState(false);
 
+  const fetchAssociatedCompanies = useCallback(async () => {
+    if (!id) return;
+    setAssocCompaniesLoading(true);
+    try {
+      const res = await axios.get(`${HI_SOCIETY_CONFIG.BASE_URL}/associate.json?token=${HI_SOCIETY_CONFIG.TOKEN}`, {
+        params: { user_id: Number(id) },
+      });
+      setAssociatedCompanies(res.data.associated_companies || []);
+    } catch {
+      setAssociatedCompanies([]);
+    } finally {
+      setAssocCompaniesLoading(false);
+    }
+  }, [id]);
+
+  const fetchAssociatedSnagProjects = useCallback(async () => {
+    if (!id) return;
+    setAssocSnagProjectsLoading(true);
+    try {
+      const res = await axios.get(`${HI_SOCIETY_CONFIG.BASE_URL}/associate_snag.json?token=${HI_SOCIETY_CONFIG.TOKEN}`, {
+        params: { user_id: Number(id) },
+      });
+      setAssociatedSnagProjects(res.data.associated_snag_projects || []);
+    } catch {
+      setAssociatedSnagProjects([]);
+    } finally {
+      setAssocSnagProjectsLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       dispatch(fetchHiSocietyUserDetail(Number(id)));
       dispatch(fetchHiSocietyRoles());
+      fetchAssociatedCompanies();
+      fetchAssociatedSnagProjects();
     }
     return () => { dispatch(clearDetail()); };
-  }, [id, dispatch]);
+  }, [id, dispatch, fetchAssociatedCompanies, fetchAssociatedSnagProjects]);
 
   const refreshDetail = () => {
     if (id) dispatch(fetchHiSocietyUserDetail(Number(id)));
@@ -193,8 +229,13 @@ export const ViewHiSocietyUserPage = () => {
       toast.success("Society associated successfully");
       setAssocSocietyModal(false);
       refreshDetail();
-    } catch {
-      toast.error("Failed to associate society");
+    } catch (error: any) {
+      const errData = error?.response?.data;
+      if (errData?.id_user?.some((m: string) => m.includes("has already been taken"))) {
+        toast.error("Society has already been associated");
+      } else {
+        toast.error(errData ? JSON.stringify(errData) : "Failed to associate society");
+      }
     } finally {
       setAssocSocietyLoading(false);
     }
@@ -465,84 +506,70 @@ export const ViewHiSocietyUserPage = () => {
 
           {/* Companies Tab */}
           {activeTab === "companies" && (
-            (() => {
-              const userCompanies = (selectedDetail as any).user_companies;
-              if (!userCompanies || userCompanies.length === 0) {
-                return <div className="p-6 text-center text-gray-500">No companies associated</div>;
-              }
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Company Name</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Approval</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Created</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+            assocCompaniesLoading ? (
+              <div className="p-6 text-center text-gray-500">Loading companies...</div>
+            ) : associatedCompanies.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">No companies associated</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">ID</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Company Name</th>
+                      {/* <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th> */}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {associatedCompanies.map((uc: any, idx: number) => (
+                      <tr key={uc.id || idx} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-700">{uc.id}</td>
+                        <td className="px-4 py-3 text-gray-700">{uc.name || `Company #${uc.id}`}</td>
+                        {/* <td className="px-4 py-3">
+                          <Button size="sm" variant="outline" disabled>
+                            Edit
+                          </Button>
+                        </td> */}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {userCompanies.map((uc: any, idx: number) => (
-                        <tr key={uc.id || idx} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-700">{uc.name || uc.company_name || uc.company?.name || `Company #${uc.company_id || uc.id}`}</td>
-                          <td className="px-4 py-3">{uc.status ? getStatusBadge(uc.status) : <span className="text-gray-400">-</span>}</td>
-                          <td className="px-4 py-3 text-gray-700">{uc.role_name || "-"}</td>
-                          <td className="px-4 py-3 text-gray-500">
-                            {uc.created_at ? moment(uc.created_at).format("DD/MM/YYYY HH:mm") : "-"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Button size="sm" variant="outline" disabled>
-                              Edit
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })()
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
 
           {/* Snag Tab */}
           {activeTab === "snag" && (
-            (() => {
-              const userSnags = (selectedDetail as any).user_snags;
-              if (!userSnags || userSnags.length === 0) {
-                return <div className="p-6 text-center text-gray-500">No snag projects associated</div>;
-              }
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Project Name</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Approval</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Created</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {userSnags.map((us: any, idx: number) => (
-                        <tr key={us.id || idx} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-700">{us.name || us.project_name || us.snag_project?.name || `Project #${us.snag_project_id || us.id}`}</td>
-                          <td className="px-4 py-3">{us.status ? getStatusBadge(us.status) : <span className="text-gray-400">-</span>}</td>
-                          <td className="px-4 py-3 text-gray-500">
-                            {us.created_at ? moment(us.created_at).format("DD/MM/YYYY HH:mm") : "-"}
-                          </td>
-                          <td className="px-4 py-3">
+            assocSnagProjectsLoading ? (
+              <div className="p-6 text-center text-gray-500">Loading snag projects...</div>
+            ) : associatedSnagProjects.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">No snag projects associated</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">ID</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Project Name</th>
+                      {/* <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th> */}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {associatedSnagProjects.map((us: any, idx: number) => (
+                      <tr key={us.id || idx} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-700">{us.id}</td>
+                        <td className="px-4 py-3 text-gray-700">{us.name || `Project #${us.id}`}</td>
+                          {/* <td className="px-4 py-3">
                             <Button size="sm" variant="outline" disabled>
                               Edit
                             </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })()
+                          </td> */}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
         </CardContent>
       </Card>
