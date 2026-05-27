@@ -86,7 +86,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
   const fetchZones = useCallback(async (page = 1, per_page = 10, search = "") => {
     setLoading(true);
     try {
-      let url = getFullUrl(`/pms/zones.json?page=${page}&per_page=${per_page}`);
+      let url = getFullUrl(`/pms/zones.json?show_all=true&page=${page}&per_page=${per_page}`);
       if (search.trim()) {
         url += `&q[name_cont]=${encodeURIComponent(search.trim())}`;
       }
@@ -247,7 +247,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
             }
           />
 
-          <TicketPagination
+          {/* <TicketPagination
             currentPage={currentPage}
             totalPages={pagination.total_pages}
             totalRecords={pagination.total_count}
@@ -255,7 +255,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
             isLoading={loading}
             onPageChange={(page) => setCurrentPage(page)}
             onPerPageChange={(newPerPage) => { setPerPage(newPerPage); setCurrentPage(1); }}
-          />
+          /> */}
         </>
       )}
 

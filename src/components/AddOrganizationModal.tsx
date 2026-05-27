@@ -603,7 +603,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 </MuiSelect>
               </FormControl>
             </div>
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <TextField
                 label="Description"
                 placeholder="Enter organization description"
@@ -636,7 +636,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 rows={3}
                 disabled={isSubmitting}
               />
-            </div>
+            </div> */}
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-6">
               <div className="space-y-1">
                 <span className="text-sm font-medium">Status</span>
