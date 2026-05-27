@@ -22,7 +22,11 @@ import {
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import axios from "axios";
-import { API_CONFIG, getAuthHeader, getFullUrl } from "@/config/apiConfig";
+import {
+  ENDPOINTS,
+  getCrmAdminRequestConfig,
+  getFullUrl,
+} from "@/config/apiConfig";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -51,11 +55,6 @@ interface FlatOption {
 
 const COMMON_SHARING_TYPE = "common";
 const FLAT_SPECIFIC_SHARING_TYPE = "flat_specific";
-
-const getAttachmentRequestParams = () => ({
-  ...(API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : {}),
-  _: Date.now(),
-});
 
 /**
  * Mirrors BMSDocumentsFlatRelated's isFile check:
@@ -169,11 +168,8 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
     queryKey: ["flat-related-documents"],
     queryFn: async () => {
       const { data } = await axios.get(
-        getFullUrl("/crm/admin/attachments.json"),
-        {
-          params: getAttachmentRequestParams(),
-          headers: { Authorization: getAuthHeader() },
-        }
+        getFullUrl(ENDPOINTS.ATTACHMENTS),
+        getCrmAdminRequestConfig()
       );
 
       return Array.isArray(data) ? data : [];
@@ -260,7 +256,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       return;
     }
 
-    if (shareAccess === "true" && shareOption === "Flats") {
+    if (cameFromFlat || (shareAccess === "true" && shareOption === "Flats")) {
       if (isFlatListLoading) {
         toast.error("Flat list is still loading. Please wait.");
         return;
@@ -277,13 +273,14 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       const formData = new FormData();
       formData.append("file_type", uploadType);
 
-      const sharingTypeVal =
-        shareOption === "Flats"
-          ? FLAT_SPECIFIC_SHARING_TYPE
-          : COMMON_SHARING_TYPE;
+      const useFlatSharing =
+        cameFromFlat || (shareAccess === "true" && shareOption === "Flats");
+      const sharingTypeVal = useFlatSharing
+        ? FLAT_SPECIFIC_SHARING_TYPE
+        : COMMON_SHARING_TYPE;
       formData.append("sharing_type", sharingTypeVal);
 
-      if (shareAccess === "true") {
+      if (shareAccess === "true" || cameFromFlat) {
         formData.append("primary_radio", occupancyType);
         formData.append("lives_here_radio", livingStatus);
 
@@ -291,7 +288,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
         formData.append("file_permission[is_tenant]", isTenant.toString());
         formData.append("file_permission[is_builder]", isBuilder.toString());
 
-        if (shareOption === "Flats") {
+        if (useFlatSharing) {
           selectedFlats.forEach((id) => {
             const societyFlatId =
               flatsList.find((flat) => flat.id === id)?.societyFlatId ||
@@ -324,13 +321,14 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
         formData.append("flat_document[content][]", file);
       });
 
-      const url = getFullUrl(`/crm/admin/share_multiple_documents.json`);
+      const url = getFullUrl(ENDPOINTS.SHARE_MULTIPLE_DOCUMENTS);
+      const { params, headers } = getCrmAdminRequestConfig();
 
       await axios.post(url, formData, {
-        params: API_CONFIG.TOKEN ? { token: API_CONFIG.TOKEN } : undefined,
+        params,
         headers: {
+          ...headers,
           "Content-Type": "multipart/form-data",
-          Authorization: getAuthHeader(),
         },
       });
 
@@ -352,7 +350,10 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       }
 
       if (cameFromFlat) {
-        navigate(finalReturnPath, { replace: true });
+        navigate(finalReturnPath, {
+          replace: true,
+          state: { expandFlatIds: selectedFlats, fromUpload: true },
+        });
       }
     } catch (err: unknown) {
       const errorMessage = axios.isAxiosError(err)
@@ -567,6 +568,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                       type="checkbox"
                       name="shareAccess"
                       checked={shareAccess === "true"}
+                      disabled={cameFromFlat}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setShareAccess("true");
@@ -608,7 +610,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                       notched
                       displayEmpty
                     >
-                      <MenuItem value="All">All</MenuItem>
+                      {!cameFromFlat && <MenuItem value="All">All</MenuItem>}
                       <MenuItem value="Flats">Flats</MenuItem>
                     </MuiSelect>
                   </FormControl>

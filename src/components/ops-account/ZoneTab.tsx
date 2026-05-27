@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Search, X } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus, Edit, Loader2 } from "lucide-react";
+import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { TicketPagination } from "@/components/TicketPagination";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { useApiConfig } from "@/hooks/useApiConfig";
+import { useDebounce } from "@/hooks/useDebounce";
+import { getUser } from "@/utils/auth";
+import { AddZoneModal } from "@/components/AddZoneModal";
+import { EditZoneModal } from "@/components/EditZoneModal";
+
+interface ZoneItem {
+  id: number;
+  name: string;
+  active: boolean;
+  headquarter_id: number | null;
+  region_id: number | null;
+  created_at: string;
+  headquarter?: { id: number; name: string };
+  pms_region?: { name: string };
+}
 
 interface ZoneTabProps {
   searchQuery: string;
@@ -14,399 +30,258 @@ interface ZoneTabProps {
   setEntriesPerPage: (entries: string) => void;
 }
 
+const columns: ColumnConfig[] = [
+  { key: "actions", label: "Action", sortable: false, hideable: false, draggable: false },
+  { key: "name", label: "Zone Name", sortable: true, hideable: true, draggable: true },
+  { key: "headquarter", label: "Headquarter", sortable: true, hideable: true, draggable: true },
+  { key: "region", label: "Region", sortable: true, hideable: true, draggable: true },
+  { key: "status", label: "Status", sortable: true, hideable: true, draggable: true },
+  { key: "created_at", label: "Created At", sortable: true, hideable: true, draggable: true },
+];
+
 export const ZoneTab: React.FC<ZoneTabProps> = ({
   searchQuery,
   setSearchQuery,
   entriesPerPage,
-  setEntriesPerPage
+  setEntriesPerPage,
 }) => {
-  // Zone state
-  const [zones, setZones] = useState([
-    { country: 'India', region: 'West', zone: 'Bali', status: true, icon: '/placeholder.svg' },
-    { country: 'India', region: 'North', zone: 'Delhi', status: true, icon: '/placeholder.svg' },
-    { country: 'India', region: 'West', zone: 'Mumbai', status: true, icon: '/placeholder.svg' },
-  ]);
-  
-  const [isAddZoneOpen, setIsAddZoneOpen] = useState(false);
-  const [isEditZoneOpen, setIsEditZoneOpen] = useState(false);
-  const [selectedZonesForEdit, setSelectedZonesForEdit] = useState<string[]>([]);
-  const [isEditZoneFormOpen, setIsEditZoneFormOpen] = useState(false);
-  const [editZoneData, setEditZoneData] = useState({
-    zoneName: '',
-    headquarter: '',
-    region: ''
-  });
-  const [newZoneData, setNewZoneData] = useState({
-    country: '',
-    region: '',
-    zoneName: ''
+  const { getFullUrl, getAuthHeader } = useApiConfig();
+
+  const [zones, setZones] = useState<ZoneItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 1000);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    per_page: 10,
+    total_pages: 1,
+    total_count: 0,
+    has_next_page: false,
+    has_prev_page: false,
   });
 
-  const handleZoneStatusChange = (index: number, checked: boolean) => {
-    const updatedZones = [...zones];
-    updatedZones[index].status = checked;
-    setZones(updatedZones);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedZoneId, setSelectedZoneId] = useState<number | null>(null);
+  const [canEdit, setCanEdit] = useState(false);
+
+  const userEmail = getUser()?.email || "";
+
+  useEffect(() => {
+    const allowedEmails = [
+      "abhishek.sharma@lockated.com",
+      "adhip.shetty@lockated.com",
+      "helloakshay27@gmail.com",
+      "dev@lockated.com",
+      "sumitra.patil@lockated.com",
+      "komalshinde0101@lockated.com",
+      "demo@lockated.com",
+      "akshay.shinde@lockated.com",
+    ];
+    setCanEdit(allowedEmails.includes(userEmail));
+  }, [userEmail]);
+
+  const fetchZones = useCallback(async (page = 1, per_page = 10, search = "") => {
+    setLoading(true);
+    try {
+      let url = getFullUrl(`/pms/zones.json?page=${page}&per_page=${per_page}`);
+      if (search.trim()) {
+        url += `&q[name_cont]=${encodeURIComponent(search.trim())}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const result = await response.json();
+
+      if (result && Array.isArray(result.zones)) {
+        setZones(result.zones);
+        if (result.pagination) {
+          setPagination(result.pagination);
+        } else {
+          setPagination({
+            current_page: page,
+            per_page,
+            total_pages: Math.ceil(result.zones.length / per_page),
+            total_count: result.zones.length,
+            has_next_page: false,
+            has_prev_page: false,
+          });
+        }
+      } else {
+        setZones([]);
+      }
+    } catch (error: unknown) {
+      toast.error(`Failed to load zones: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setZones([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [getFullUrl, getAuthHeader]);
+
+  useEffect(() => {
+    fetchZones(currentPage, perPage, debouncedSearch);
+  }, [currentPage, perPage, debouncedSearch, fetchZones]);
+
+  const handleToggleStatus = async (zoneId: number, currentStatus: boolean) => {
+    if (!canEdit) { toast.error("You do not have permission to update zone status"); return; }
+    try {
+      const response = await fetch(getFullUrl(`/pms/zones/${zoneId}.json`), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify({ pms_zone: { active: !currentStatus } }),
+      });
+
+      if (response.ok) {
+        toast.success(`Zone ${!currentStatus ? "activated" : "deactivated"} successfully`);
+        fetchZones(currentPage, perPage, debouncedSearch);
+      } else {
+        toast.error("Failed to update zone status");
+      }
+    } catch {
+      toast.error("Error updating zone status");
+    }
   };
 
-  const handleAddZone = () => {
-    if (!newZoneData.country || !newZoneData.region || !newZoneData.zoneName.trim()) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    // Check if zone already exists
-    const zoneExists = zones.some(zone =>
-      zone.country === newZoneData.country &&
-      zone.region === newZoneData.region &&
-      zone.zone === newZoneData.zoneName
-    );
-
-    if (zoneExists) {
-      toast.error('This zone already exists in the selected country and region');
-      return;
-    }
-
-    // Add the new zone to the zones array
-    const newZone = {
-      country: newZoneData.country,
-      region: newZoneData.region,
-      zone: newZoneData.zoneName,
-      status: true,
-      icon: '/placeholder.svg'
-    };
-
-    setZones([...zones, newZone]);
-    toast.success(`Zone "${newZoneData.zoneName}" added successfully`);
-
-    // Reset form and close dialog
-    setNewZoneData({ country: '', region: '', zoneName: '' });
-    setIsAddZoneOpen(false);
+  const handleEdit = (id: number) => {
+    setSelectedZoneId(id);
+    setIsEditModalOpen(true);
   };
 
-  const handleZoneSelection = (zoneName: string, checked: boolean) => {
-    if (checked) {
-      setSelectedZonesForEdit([...selectedZonesForEdit, zoneName]);
-    } else {
-      setSelectedZonesForEdit(selectedZonesForEdit.filter(name => name !== zoneName));
-    }
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+    if (!term.trim()) fetchZones(1, perPage, "");
   };
 
-  const handleEditSelectedZones = () => {
-    if (selectedZonesForEdit.length === 0) {
-      toast.error('Please select at least one zone to edit');
-      return;
-    }
-
-    // Pre-fill form with data from the first selected zone
-    const firstSelectedZone = selectedZonesForEdit[0];
-    setEditZoneData({
-      zoneName: firstSelectedZone,
-      headquarter: 'India', // Default value
-      region: 'west' // Default value
-    });
-
-    setIsEditZoneOpen(false);
-    setIsEditZoneFormOpen(true);
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric", month: "short", day: "numeric",
+      });
+    } catch { return "Invalid date"; }
   };
 
-  const handleSaveZoneChanges = () => {
-    if (!editZoneData.zoneName.trim() || !editZoneData.headquarter.trim() || !editZoneData.region.trim()) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    toast.success(`Zone "${editZoneData.zoneName}" updated successfully`);
-    setIsEditZoneFormOpen(false);
-    setSelectedZonesForEdit([]);
-    setEditZoneData({ zoneName: '', headquarter: '', region: '' });
-  };
-
-  const handleZoneFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      toast.success('Zone image uploaded successfully');
-    }
-  };
-
-  const filteredZones = zones.filter(zone =>
-    zone.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    zone.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    zone.zone.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const renderRow = (zone: ZoneItem) => ({
+    actions: (
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => handleEdit(zone.id)}
+          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          title="Edit"
+          disabled={!canEdit}
+        >
+          <Edit className="w-4 h-4" />
+        </button>
+      </div>
+    ),
+    name: <div className="font-medium">{zone.name || "N/A"}</div>,
+    headquarter: (
+      <span className="text-sm text-gray-600">{zone.headquarter?.name || "—"}</span>
+    ),
+    region: (
+      <span className="text-sm text-gray-600">{zone.pms_region?.name || "—"}</span>
+    ),
+    status: (
+      <div className="flex items-center gap-2">
+        <Switch
+          checked={zone.active}
+          onCheckedChange={() => handleToggleStatus(zone.id, zone.active)}
+          disabled={!canEdit}
+          aria-label={`Toggle status for ${zone.name}`}
+        />
+      </div>
+    ),
+    created_at: (
+      <span className="text-sm text-gray-600">{formatDate(zone.created_at)}</span>
+    ),
+  });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-2">
-          <Dialog open={isAddZoneOpen} onOpenChange={setIsAddZoneOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#C72030] hover:bg-[#A01020] text-white">
-                Add Zone
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Zone</DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-4 top-4"
-                  onClick={() => setIsAddZoneOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Country
-                  </label>
-                  <select
-                    value={newZoneData.country}
-                    onChange={(e) => setNewZoneData({ ...newZoneData, country: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-                  >
-                    <option value="">Select Country</option>
-                    <option value="India">India</option>
-                    <option value="USA">USA</option>
-                    <option value="UK">UK</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Region
-                  </label>
-                  <select
-                    value={newZoneData.region}
-                    onChange={(e) => setNewZoneData({ ...newZoneData, region: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-                  >
-                    <option value="">Select Region</option>
-                    <option value="North">North</option>
-                    <option value="South">South</option>
-                    <option value="East">East</option>
-                    <option value="West">West</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Zone Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newZoneData.zoneName}
-                    onChange={(e) => setNewZoneData({ ...newZoneData, zoneName: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-                    placeholder="Enter zone name"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsAddZoneOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    className="bg-[#C72030] hover:bg-[#A01020] text-white"
-                    onClick={handleAddZone}
-                  >
-                    Add Zone
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          
-          <Dialog open={isEditZoneOpen} onOpenChange={setIsEditZoneOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#C72030] hover:bg-[#A01020] text-white">
-                Edit Zone
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Select Zone to Edit</DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-4 top-4"
-                  onClick={() => setIsEditZoneOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {['Mumbai', 'Madhya Pradesh', 'Bali', 'Delhi', 'Hyderabad', 'Kolkata', 'NCR', 'Pune'].map((zoneName) => (
-                    <div key={zoneName} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`zone-${zoneName}`}
-                        checked={selectedZonesForEdit.includes(zoneName)}
-                        onChange={(e) => handleZoneSelection(zoneName, e.target.checked)}
-                        className="rounded border-gray-300 text-[#C72030] focus:ring-[#C72030]"
-                      />
-                      <label htmlFor={`zone-${zoneName}`} className="text-sm text-gray-700 cursor-pointer">
-                        {zoneName}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end pt-4">
-                  <Button
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6"
-                    onClick={handleEditSelectedZones}
-                  >
-                    Edit Selected Zone
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <select
-            value={entriesPerPage}
-            onChange={(e) => setEntriesPerPage(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
-          >
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-          <span className="text-sm text-gray-600">entries per page</span>
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search zones..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-            />
-          </div>
-        </div>
-      </div>
+    <div className="p-6 space-y-6">
+      <header className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Zones</h1>
+      </header>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-semibold">Country</TableHead>
-                <TableHead className="font-semibold">Region</TableHead>
-                <TableHead className="font-semibold">Zone</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold">Icon</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredZones.map((zone, index) => (
-                <TableRow key={index}>
-                  <TableCell>{zone.country}</TableCell>
-                  <TableCell>{zone.region}</TableCell>
-                  <TableCell>{zone.zone}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={zone.status}
-                      onCheckedChange={(checked) => handleZoneStatusChange(index, checked)}
-                      className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                      <img src={zone.icon} alt="Zone icon" className="w-6 h-6" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Edit Zone Form Dialog */}
-      <Dialog open={isEditZoneFormOpen} onOpenChange={setIsEditZoneFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Zone Details</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4"
-              onClick={() => setIsEditZoneFormOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Zone Name
-              </label>
-              <input
-                type="text"
-                value={editZoneData.zoneName}
-                onChange={(e) => setEditZoneData({ ...editZoneData, zoneName: e.target.value })}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-                placeholder="Enter zone name"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Headquarter
-              </label>
-              <select
-                value={editZoneData.headquarter}
-                onChange={(e) => setEditZoneData({ ...editZoneData, headquarter: e.target.value })}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-              >
-                <option value="">Select Headquarter</option>
-                <option value="India">India</option>
-                <option value="USA">USA</option>
-                <option value="UK">UK</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Region
-              </label>
-              <select
-                value={editZoneData.region}
-                onChange={(e) => setEditZoneData({ ...editZoneData, region: e.target.value })}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-              >
-                <option value="">Select Region</option>
-                <option value="north">North</option>
-                <option value="south">South</option>
-                <option value="east">East</option>
-                <option value="west">West</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload Image
-              </label>
-              <input
-                type="file"
-                onChange={handleZoneFileUpload}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-                accept="image/*"
-              />
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsEditZoneFormOpen(false)}>
-                Cancel
-              </Button>
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
+          <span className="ml-2 text-gray-600">Loading zones...</span>
+        </div>
+      ) : (
+        <>
+          <EnhancedTaskTable
+            data={zones}
+            columns={columns}
+            renderRow={renderRow}
+            storageKey="zone-dashboard-v1"
+            hideTableExport={true}
+            hideTableSearch={false}
+            enableSearch={true}
+            searchTerm={searchTerm}
+            onSearchChange={handleSearch}
+            pagination={true}
+            leftActions={
               <Button
-                className="bg-[#C72030] hover:bg-[#A01020] text-white"
-                onClick={handleSaveZoneChanges}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => setIsAddModalOpen(true)}
+                disabled={!canEdit}
               >
-                Save Changes
+                <Plus className="w-4 h-4 mr-2" /> Add Zone
               </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+            }
+          />
+
+          <TicketPagination
+            currentPage={currentPage}
+            totalPages={pagination.total_pages}
+            totalRecords={pagination.total_count}
+            perPage={perPage}
+            isLoading={loading}
+            onPageChange={(page) => setCurrentPage(page)}
+            onPerPageChange={(newPerPage) => { setPerPage(newPerPage); setCurrentPage(1); }}
+          />
+        </>
+      )}
+
+      <AddZoneModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          fetchZones(currentPage, perPage, debouncedSearch);
+          setIsAddModalOpen(false);
+        }}
+        canEdit={canEdit}
+      />
+
+      {selectedZoneId !== null && (
+        <EditZoneModal
+          isOpen={isEditModalOpen}
+          onClose={() => { setIsEditModalOpen(false); setSelectedZoneId(null); }}
+          onSuccess={() => {
+            fetchZones(currentPage, perPage, debouncedSearch);
+            setIsEditModalOpen(false);
+            setSelectedZoneId(null);
+          }}
+          zoneId={selectedZoneId}
+          canEdit={canEdit}
+        />
+      )}
     </div>
   );
 };

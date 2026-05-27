@@ -31,16 +31,25 @@ interface AddOrganizationModalProps {
 interface OrganizationFormData {
   name: string;
   description: string;
+  country_id: string;
+  active: boolean;
+  logo: File | null;
+  powered_by_logo: File | null;
+}
+
+interface ProductEntry {
+  product_name: string;
+  product_code: string;
   domain: string;
   sub_domain: string;
   front_domain: string;
   front_subdomain: string;
-  country_id: string;
-  active: boolean;
-  // API accepts one file; we'll preview multiple but submit the first
-  logo: File | null;
-  powered_by_logo: File | null;
 }
+
+const PRODUCT_OPTIONS = [
+  { label: "HiSociety", value: "HiSociety", code: "HS" },
+  { label: "FM Matrix", value: "FM Matrix", code: "FM" },
+];
 interface WelcomeDescription {
   description: string;
   active: boolean;
@@ -105,16 +114,40 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
   const [formData, setFormData] = useState<OrganizationFormData>({
     name: "",
     description: "",
-    domain: "",
-    sub_domain: "",
-    front_domain: "",
-    front_subdomain: "",
     country_id: "",
     active: true,
     logo: null,
     powered_by_logo: null,
   });
+  const [products, setProducts] = useState<ProductEntry[]>([
+    { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+  ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const addProduct = () => {
+    setProducts((prev) => [
+      ...prev,
+      { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+    ]);
+  };
+
+  const updateProduct = (index: number, field: keyof ProductEntry, value: string) => {
+    setProducts((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const updated = { ...item, [field]: value };
+        if (field === "product_name") {
+          const opt = PRODUCT_OPTIONS.find((o) => o.value === value);
+          updated.product_code = opt?.code || "";
+        }
+        return updated;
+      })
+    );
+  };
+
+  const removeProduct = (index: number) => {
+    setProducts((prev) => prev.filter((_, i) => i !== index));
+  };
   const [welcomeDescriptions, setWelcomeDescriptions] = useState<WelcomeDescription[]>([
     { description: "", active: false },
   ]);
@@ -240,33 +273,10 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     if (!formData.name.trim()) {
       newErrors.name = "Organization name is required";
     }
-    if (!formData.domain.trim()) {
-      newErrors.domain = "Main domain is required";
-    }
-    if (!formData.sub_domain.trim()) {
-      newErrors.sub_domain = "Sub domain is required";
-    }
-
-    // Domain validation
-    const domainRegex =
-      /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\.[a-zA-Z]{2,})+$/;
-
-    if (formData.domain && !domainRegex.test(formData.domain)) {
-      newErrors.domain = "Please enter a valid main domain (e.g., example.com)";
-    }
-
-    // No format validation for sub_domain, only required check above
-
-    // if (formData.front_domain && !domainRegex.test(formData.front_domain)) {
-    //   newErrors.front_domain = "Please enter a valid frontend domain (e.g., www.example.com)";
-    // }
-
-    // if (
-    //   formData.front_subdomain &&
-    //   !domainRegex.test(formData.front_subdomain)
-    // ) {
-    //   newErrors.front_subdomain = "Please enter a valid frontend subdomain (e.g., portal.example.com)";
-    // }
+    products.forEach((p, i) => {
+      if (!p.domain.trim()) newErrors[`product_${i}_domain`] = "Domain is required";
+      if (!p.sub_domain.trim()) newErrors[`product_${i}_sub_domain`] = "Sub domain is required";
+    });
 
     setErrors(newErrors);
     console.log("Validation errors:", newErrors, Object.keys(newErrors), errors)
@@ -285,13 +295,14 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     const submitFormData = new FormData();
     submitFormData.append("organization[name]", formData.name);
     submitFormData.append("organization[description]", formData.description);
-    submitFormData.append("organization[domain]", formData.domain);
-    submitFormData.append("organization[sub_domain]", formData.sub_domain);
-    submitFormData.append("organization[front_domain]", formData.front_domain);
-    submitFormData.append(
-      "organization[front_subdomain]",
-      formData.front_subdomain
-    );
+    products.forEach((product, index) => {
+      submitFormData.append(`organization[organization_products_attributes][${index}][product_name]`, product.product_name);
+      submitFormData.append(`organization[organization_products_attributes][${index}][product_code]`, product.product_code);
+      submitFormData.append(`organization[organization_products_attributes][${index}][domain]`, product.domain);
+      submitFormData.append(`organization[organization_products_attributes][${index}][sub_domain]`, product.sub_domain);
+      submitFormData.append(`organization[organization_products_attributes][${index}][front_domain]`, product.front_domain);
+      submitFormData.append(`organization[organization_products_attributes][${index}][front_subdomain]`, product.front_subdomain);
+    });
     if (formData.country_id && formData.country_id !== "none") {
       submitFormData.append("organization[country_id]", formData.country_id);
     }
@@ -398,7 +409,12 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
         onSuccess();
       } else {
         const errorData = await response.json().catch(() => ({}));
-        toast.error(errorData.message || "Failed to create organization");
+        const firstError = Object.entries(errorData as Record<string, string[]>)
+          .map(([key, msgs]) => {
+            const label = key.replace("organization_products.", "Product ").replace(/_/g, " ");
+            return `${label}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`;
+          })[0];
+        toast.error(firstError || errorData.message || "Failed to create organization");
       }
     } catch (error) {
       console.error("Error creating organization:", error);
@@ -487,16 +503,12 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     setFormData({
       name: "",
       description: "",
-      domain: "",
-      sub_domain: "",
-      front_domain: "",
-      front_subdomain: "",
       country_id: "",
       active: true,
       logo: null,
       powered_by_logo: null,
     });
-    // Revoke and clear previews
+    setProducts([{ product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" }]);
     logoPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
     poweredByPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
     setLogoPreviewUrls([]);
@@ -652,96 +664,110 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
               Domain Configuration
             </h3>
-            <div className="grid grid-cols-2 gap-6">
-              <TextField
-                label="Main Domain"
-                placeholder="example.com"
-                value={formData.domain}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setFormData({ ...formData, domain: val });
-                  // Clear error when valid
-                  setErrors((prev) => ({
-                    ...prev,
-                    domain: isValidDomain(val) ? "" : prev.domain,
-                  }));
-                }}
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{
-                  shrink: true,
-                  required: true,
-                  sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } },
-                }}
-                InputProps={{ sx: fieldStyles }}
-                disabled={isSubmitting}
-                required
-                error={!!errors.domain}
-                helperText={errors.domain || "Enter a valid domain (e.g., example.com)"}
-              />
-
-              <TextField
-                label="Sub Domain"
-                placeholder="app.example.com"
-                value={formData.sub_domain}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setFormData({ ...formData, sub_domain: val });
-                  setErrors((prev) => ({
-                    ...prev,
-                    sub_domain: ""
-                  }));
-                }}
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{
-                  shrink: true,
-                  required: true,
-                  sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } },
-                }}
-                InputProps={{ sx: fieldStyles }}
-                disabled={isSubmitting}
-                required
-                error={!!errors.sub_domain}
-                helperText={errors.sub_domain || ""}
-              />
+            <div className="space-y-4">
+              {products.map((product, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-gray-50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Product {index + 1}</span>
+                    {products.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeProduct(index)}
+                        style={{ padding: 0, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        disabled={isSubmitting}
+                      >
+                        <X style={{ color: "red", width: 16, height: 16 }} />
+                      </Button>
+                    )}
+                  </div>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#C72030" } }}>Product</InputLabel>
+                    <MuiSelect
+                      value={product.product_name}
+                      onChange={(e) => updateProduct(index, "product_name", e.target.value)}
+                      label="Product"
+                      displayEmpty
+                      MenuProps={selectMenuProps}
+                      sx={fieldStyles}
+                      disabled={isSubmitting}
+                    >
+                      {PRODUCT_OPTIONS.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+                  <div className="grid grid-cols-2 gap-4">
+                    <TextField
+                      label="Domain"
+                      placeholder="example.com"
+                      value={product.domain}
+                      onChange={(e) => {
+                        updateProduct(index, "domain", e.target.value);
+                        setErrors((prev) => ({ ...prev, [`product_${index}_domain`]: "" }));
+                      }}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } } }}
+                      InputProps={{ sx: fieldStyles }}
+                      disabled={isSubmitting}
+                      required
+                      error={!!errors[`product_${index}_domain`]}
+                      helperText={errors[`product_${index}_domain`] || ""}
+                    />
+                    <TextField
+                      label="Sub Domain"
+                      placeholder="app"
+                      value={product.sub_domain}
+                      onChange={(e) => {
+                        updateProduct(index, "sub_domain", e.target.value);
+                        setErrors((prev) => ({ ...prev, [`product_${index}_sub_domain`]: "" }));
+                      }}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } } }}
+                      InputProps={{ sx: fieldStyles }}
+                      disabled={isSubmitting}
+                      required
+                      error={!!errors[`product_${index}_sub_domain`]}
+                      helperText={errors[`product_${index}_sub_domain`] || ""}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <TextField
+                      label="Frontend Domain"
+                      placeholder="example.com"
+                      value={product.front_domain}
+                      onChange={(e) => updateProduct(index, "front_domain", e.target.value)}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
+                      disabled={isSubmitting}
+                    />
+                    <TextField
+                      label="Frontend Subdomain"
+                      placeholder="web"
+                      value={product.front_subdomain}
+                      onChange={(e) => updateProduct(index, "front_subdomain", e.target.value)}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <div className="grid grid-cols-2 gap-6 mt-6">
-              <TextField
-                label="Frontend Domain"
-                placeholder="example.com"
-                value={formData.front_domain}
-                onChange={(e) =>
-                  setFormData({ ...formData, front_domain: e.target.value })
-                }
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{ sx: fieldStyles }}
-                disabled={isSubmitting}
-                helperText="Enter frontend domain (e.g., example.com)"
-              />
-
-              <TextField
-                label="Frontend Subdomain"
-                placeholder="portal.example.com"
-                value={formData.front_subdomain}
-                onChange={(e) =>
-                  setFormData({ ...formData, front_subdomain: e.target.value })
-                }
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{ sx: fieldStyles }}
-                disabled={isSubmitting}
-                helperText="Enter frontend subdomain "
-              />
-            </div>
+            <Button
+              type="button"
+              onClick={addProduct}
+              className="mt-4 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              disabled={isSubmitting}
+            >
+              + Add Product
+            </Button>
           </div>
 
           {/* Logo Upload Section */}

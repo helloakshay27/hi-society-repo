@@ -129,12 +129,9 @@ const BMSDocumentsCommonFiles: React.FC = () => {
   } = useQuery<TreeNode[]>({
     queryKey: ["attachment-common"],
     queryFn: async () => {
-      const { data } = await axios.get(
-        getFullUrl(ENDPOINTS.ATTACHMENT_COMMON),
-        {
-          headers: { Authorization: getAuthHeader() },
-        }
-      );
+      const { data } = await axios.get(getFullUrl(ENDPOINTS.ATTACHMENT_COMMON), {
+        headers: { Authorization: getAuthHeader() },
+      });
 
       return Array.isArray(data) ? data : [];
     },

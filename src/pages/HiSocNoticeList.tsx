@@ -244,6 +244,8 @@ const HiSocNoticeList = () => {
     { key: "id", label: "Sr No", sortable: true },
     { key: "notice_heading", label: "Notice Heading", sortable: true },
     { key: "notice_type", label: "Notice Type", sortable: true },
+    { key: "block", label: "Block", sortable: true },
+    // { key: "flat", label: "Flat", sortable: true },
     { key: "user_name", label: "Created By", sortable: true },
     { key: "society_name", label: "Society", sortable: true },
     { key: "is_important", label: "Important", sortable: false },
@@ -306,6 +308,10 @@ const HiSocNoticeList = () => {
           ? item.notice_type.charAt(0).toUpperCase() +
               item.notice_type.slice(1).toLowerCase()
           : "-";
+      case "block":
+         return [item.block, item.flat]
+        .filter(Boolean)
+        .join(" - ") || "-";
       case "user_name":
         return item.user_name || "-";
       case "society_name":

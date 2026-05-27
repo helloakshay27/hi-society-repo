@@ -1,12 +1,43 @@
 import { getBaseUrl, getToken } from "@/utils/auth";
 
+/** Hi-Society API host — not the org FM/PMS backend stored at login. */
+export const getHiSocietyBaseUrl = (): string => {
+  const hostname = window.location.hostname;
+
+  if (
+    hostname === "ui-hisociety.lockated.com" ||
+    hostname === "uat-hi-society.lockated.com"
+  ) {
+    return "https://uat-hi-society.lockated.com";
+  }
+
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "web.hisociety.lockated.com"
+  ) {
+    return "https://uat-hi-society.lockated.com";
+  }
+
+  return "https://hi-society.lockated.com";
+};
+
+export const isHiSocietyAppContext = (): boolean => {
+  const hostname = window.location.hostname;
+  if (localStorage.getItem("layoutMode") === "hi-society") return true;
+
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.includes("hisociety") ||
+    hostname === "uat-hi-society.lockated.com"
+  );
+};
+
 // Hi-Society API Configuration
 export const HI_SOCIETY_CONFIG = {
   get BASE_URL() {
-    const savedBaseUrl = getBaseUrl();
-
-    // Default to UAT for other environments
-    return savedBaseUrl;
+    return getHiSocietyBaseUrl();
   },
   get TOKEN() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -354,6 +385,8 @@ export const API_CONFIG = {
     // Endpoint used by BMS documents UI to fetch common folder contents
     COMMON_FOLDER_SHOW: "/crm/admin/common_folder_show",
     ATTACHMENT_COMMON: "/crm/admin/attachment_common.json",
+    ATTACHMENTS: "/crm/admin/attachments.json",
+    SHARE_MULTIPLE_DOCUMENTS: "/crm/admin/share_multiple_documents.json",
   },
 } as const;
 
@@ -385,6 +418,20 @@ export const getAuthHeader = (): string => {
     );
   }
   return `Bearer ${token}`;
+};
+
+/** Auth for /crm/admin/* on the org base_url (login backend). */
+export const getCrmAdminRequestConfig = () => {
+  const token = API_CONFIG.TOKEN;
+  if (!token) {
+    throw new Error(
+      "Authentication token is not available. Please log in again."
+    );
+  }
+  return {
+    params: { token, _: Date.now() },
+    headers: { Authorization: `Bearer ${token}` },
+  };
 };
 
 // Helper to get role name header

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
@@ -114,6 +114,13 @@ const Index = () => {
 
     if (isHiSocietySite) {
       navigate("/maintenance/project-details-list", { replace: true });
+      return;
+    }
+
+    // Hi-Society layout mode (localhost / dev environment)
+    const layoutMode = localStorage.getItem("layoutMode");
+    if (layoutMode === "hi-society") {
+      navigate("/bms/helpdesk", { replace: true });
       return;
     }
 

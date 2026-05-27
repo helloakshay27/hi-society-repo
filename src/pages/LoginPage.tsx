@@ -491,6 +491,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
         // Add a slight delay for better UX, then redirect to dashboard
         setTimeout(() => {
+          // Hi-Society layout — always go to helpdesk
+          const layoutMode = localStorage.getItem("layoutMode");
+          if (layoutMode === "hi-society") {
+            navigate("/bms/helpdesk", { replace: true });
+            return;
+          }
+
           const userType = localStorage.getItem("userType");
           const isLocalhost =
             hostname.includes("lockated.gophygital.work") ||
