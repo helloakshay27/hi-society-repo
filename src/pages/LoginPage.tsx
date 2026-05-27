@@ -21,27 +21,6 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
-// Fetch Hi-Society data function (from HiSocietyHeader)
-const fetchHiSocietyData = async (token: string) => {
-  try {
-    const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
-    if (!accountResponse.ok) throw new Error('Failed to fetch account data');
-    const accountData = await accountResponse.json();
-
-    const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
-    if (!societiesResponse.ok) throw new Error('Failed to fetch societies');
-    const societiesData = await societiesResponse.json();
-
-    // Store account and societies data
-    localStorage.setItem('hiSocietyAccount', JSON.stringify(accountData));
-    localStorage.setItem('hiSocietySocieties', JSON.stringify(societiesData));
-
-    return { accountData, societiesData };
-  } catch (error) {
-    console.error('Error fetching Hi-Society data:', error);
-    throw error;
-  }
-};
 
 const muiFieldStyles = {
   width: "100%",
@@ -171,23 +150,22 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   };
 
-  // Fetch Hi-Society specific data after login
+  // Fetch Hi-Society specific data after login using the org's backend_url
   const fetchHiSocietyData = async (token: string) => {
     try {
-      // Fetch account data
-      const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
+      const savedBase = localStorage.getItem("baseUrl") || "";
+      const base = savedBase.startsWith("http") ? savedBase : `https://${savedBase}`;
+
+      const accountResponse = await fetch(`${base}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
       if (accountResponse.ok) {
         const accountData = await accountResponse.json();
-
-        console.log(accountData)
         localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         localStorage.setItem("selectedUserSociety", accountData?.society?.id?.toString() || "");
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         sessionStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
       }
 
-      // Fetch user approved societies
-      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+      const societiesResponse = await fetch(`${base}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
       if (societiesResponse.ok) {
         const societiesData = await societiesResponse.json();
         const societies = societiesData.user_societies || [];
@@ -196,7 +174,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       }
     } catch (error) {
       console.error("Failed to fetch Hi-Society data:", error);
-      // Don't block login if this fails
     }
   };
 
@@ -280,7 +257,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   };
 
   const handleOrganizationSelect = (org: Organization) => {
-    const baseUrl = `${org.sub_domain}.${org.domain}`;
+    const baseUrl = org.backend_url || `${org.sub_domain}.${org.domain}`;
 
     // Save org details
     localStorage.setItem("selectedOrg", org.name);
@@ -313,22 +290,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
     setLoginLoading(true);
     try {
-      // Check if it's Hi Society site
-      const isHiSocietySiteLogin =
-        hostname.includes("localhost") ||
-        hostname.includes("ui-hisociety.lockated.com") ||
-        hostname.includes("web.hisociety.lockated.com");
-
-      // Determine base URL based on hostname
-      let baseUrl: string;
-      if (isRunwalSite) {
-        baseUrl = 'runwal-cp-api.lockated.com';
-      } else if (isHiSocietySiteLogin) {
-        baseUrl = localStorage.getItem("baseUrl") || "";
-      } else {
-        // Use HI_SOCIETY_CONFIG for other environments
-        baseUrl = HI_SOCIETY_CONFIG.BASE_URL.replace(/^https?:\/\//, '');
-      }
+      // Always use the backend_url saved when the user selected their organisation
+      const baseUrl = localStorage.getItem("baseUrl") || "";
       const response = await loginUser(email, password, baseUrl);
 
       if (!response || !response.access_token) {

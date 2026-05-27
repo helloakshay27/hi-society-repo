@@ -37,7 +37,8 @@ export const isHiSocietyAppContext = (): boolean => {
 // Hi-Society API Configuration
 export const HI_SOCIETY_CONFIG = {
   get BASE_URL() {
-    return getHiSocietyBaseUrl();
+    const savedBaseUrl = getBaseUrl();
+    return savedBaseUrl || "";
   },
   get TOKEN() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -57,8 +58,7 @@ const getApiConfig = () => {
   const savedToken = getToken();
   const savedBaseUrl = getBaseUrl();
 
-  // Use saved base URL or fallback to UAT Hi-Society
-  const finalBaseUrl = savedBaseUrl || "https://uat-hi-society.lockated.com";
+  const finalBaseUrl = savedBaseUrl || "";
 
   return {
     BASE_URL: finalBaseUrl,
