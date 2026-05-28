@@ -44,7 +44,7 @@ const OSRManageBookings: React.FC = () => {
     { key: "rating", label: "Rating", visible: true },
     { key: "createdOn", label: "Created On", visible: true },
   ]);
-
+ 
   const osrData = [
     {
       id: "1265",
