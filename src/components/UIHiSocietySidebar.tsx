@@ -44,6 +44,7 @@ import {
   Settings,
   DollarSign,
   Palette,
+  Wrench,
 } from "lucide-react";
 
 interface MenuItem {
@@ -89,6 +90,7 @@ export const UIHiSocietySidebar: React.FC = () => {
     vehicles: true,
     smartsecureReports: true,
     smartsecureSetup: true,
+    maintenance: true,
   });
 
   // Determine active section based on route
@@ -143,6 +145,21 @@ export const UIHiSocietySidebar: React.FC = () => {
     }
 
     if (path.startsWith("/cms")) return "cms";
+    if (
+      path.startsWith("/maintenance/survey") ||
+      path.startsWith("/maintenance/ticket") ||
+      path.startsWith("/maintenance/task") ||
+      path.startsWith("/maintenance/schedule") ||
+      path.startsWith("/maintenance/service") ||
+      path.startsWith("/maintenance/asset") ||
+      path.startsWith("/maintenance/inventory") ||
+      path.startsWith("/maintenance/amc") ||
+      path.startsWith("/maintenance/audit") ||
+      path.startsWith("/maintenance/waste") ||
+      path.startsWith("/maintenance/vendor") ||
+      path.startsWith("/maintenance/attendance")
+    )
+      return "maintenance";
     if (path.startsWith("/campaigns")) return "campaigns";
     if (path.startsWith("/fb")) return "fb";
     if (path.startsWith("/osr")) return "osr";
@@ -342,6 +359,30 @@ export const UIHiSocietySidebar: React.FC = () => {
           label: "FAQ",
           icon: HelpCircle,
           path: "/maintenance/faq-list",
+        },
+      ],
+    },
+    maintenance: {
+      title: "Maintenance",
+      items: [
+        {
+          id: "survey",
+          label: "Survey",
+          icon: Wrench,
+          subItems: [
+            {
+              id: "survey-mapping",
+              label: "Survey Configuration",
+              icon: FileText,
+              path: "/maintenance/survey/mapping",
+            },
+            {
+              id: "survey-response",
+              label: "Response",
+              icon: FileText,
+              path: "/maintenance/survey/response",
+            },
+          ],
         },
       ],
     },
