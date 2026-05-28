@@ -66,10 +66,8 @@ const CategoryTab: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get('/crm/admin/helpdesk_categories.json', {
-        params: { 'q[of_phase_eq]': 'post_possession' }
-      });
-      const raw = res.data?.helpdesk_categories ?? res.data ?? [];
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_categories ?? [];
       setCategories(Array.isArray(raw) ? raw : []);
     } catch {
       toast.error('Failed to load categories.');
@@ -84,8 +82,9 @@ const CategoryTab: React.FC = () => {
     if (!inputVal.trim()) { toast.error('Please enter a category name.'); return; }
     setSubmitting(true);
     try {
-      await apiClient.post('/crm/admin/helpdesk_categories.json', {
-        helpdesk_category: { name: inputVal.trim(), of_phase: 'post_possession' }
+      await apiClient.post('/crm/admin/create_osr_category.json', {
+        name: inputVal.trim(),
+        active: 1,
       });
       toast.success('Category added successfully.');
       setInputVal('');
@@ -108,8 +107,10 @@ const CategoryTab: React.FC = () => {
     if (!editVal.trim()) { toast.error('Please enter a category name.'); return; }
     setEditSubmitting(true);
     try {
-      await apiClient.put(`/crm/admin/helpdesk_categories/${editId}.json`, {
-        helpdesk_category: { name: editVal.trim() }
+      await apiClient.post('/crm/admin/modify_osr_category.json', {
+        id: editId,
+        name: editVal.trim(),
+        active: 1,
       });
       toast.success('Category updated successfully.');
       setEditOpen(false);
@@ -294,10 +295,8 @@ const SubCategoryTab: React.FC = () => {
 
   const loadCategories = useCallback(async () => {
     try {
-      const res = await apiClient.get('/crm/admin/helpdesk_categories.json', {
-        params: { 'q[of_phase_eq]': 'post_possession' }
-      });
-      const raw = res.data?.helpdesk_categories ?? res.data ?? [];
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_categories ?? [];
       setCategories(Array.isArray(raw) ? raw : []);
     } catch { /* silent */ }
   }, []);

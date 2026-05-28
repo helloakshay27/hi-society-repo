@@ -135,6 +135,10 @@ export const UIHiSocietyNavigation: React.FC = () => {
     ) {
       setActiveNav("bms");
     } else if (
+      path.startsWith("/maintenance/survey")
+    ) {
+      setActiveNav("maintenance");
+    } else if (
       path.startsWith("/maintenance") ||
       path.startsWith("/communication") ||
       path.startsWith("/setup-member") ||
@@ -142,8 +146,7 @@ export const UIHiSocietyNavigation: React.FC = () => {
       homeChildRoutes.includes(firstSegment)
     ) {
       setActiveNav("home");
-    }
-    else {
+    } else {
       setActiveNav("home");
     }
   }, [location.pathname, isCMSDomain, location.state]);
@@ -161,7 +164,7 @@ export const UIHiSocietyNavigation: React.FC = () => {
       <div className="flex items-center h-full px-4 overflow-x-auto">
         <div className="w-full overflow-x-auto md:overflow-visible no-scrollbar">
           {/* Mobile & Tablet: scroll + spacing; Desktop: full width and justify-between */}
-          <div className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start lg:justify-between whitespace-nowrap">
+          <div className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start gap-6 whitespace-nowrap">
             {filteredNavigationItems.map((item) => {
               const isActive = activeNav === item.id;
               return (
