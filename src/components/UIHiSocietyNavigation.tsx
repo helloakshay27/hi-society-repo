@@ -6,6 +6,7 @@ import {
   Settings as SettingsIcon,
   Users,
   Gift,
+  Wrench,
 } from "lucide-react";
 import { useLayout } from "../contexts/LayoutContext";
 
@@ -17,20 +18,19 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-  
+
   {
     id: "loyalty",
     label: "Loyalty",
     icon: <Gift className="w-4 h-4" />,
     path: "/loyalty/dashboard",
   },
-  
-  // {
-  //   id: "settings",
-  //   label: "Settings",
-  //   icon: <SettingsIcon className="w-4 h-4" />,
-  //   path: "/settings/special-users-category",
-  // },
+  {
+    id: "maintenance",
+    label: "Maintenance",
+    icon: <Wrench className="w-4 h-4" />,
+    path: "/maintenance/survey/mapping",
+  },
 ];
 
 export const UIHiSocietyNavigation: React.FC = () => {
