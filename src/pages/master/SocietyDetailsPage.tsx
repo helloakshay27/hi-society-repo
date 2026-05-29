@@ -310,7 +310,7 @@ export const SocietyDetailsPage: React.FC = () => {
             </div>
 
             {/* Building Details Card */}
-            <div className="bg-white rounded-lg shadow p-6">
+            {/* <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Building className="w-5 h-5 text-[#C72030]" />
                 Building Details
@@ -364,7 +364,7 @@ export const SocietyDetailsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Amenities */}
+             
               {amenities.length > 0 && (
                 <div className="mt-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-3">
@@ -411,7 +411,7 @@ export const SocietyDetailsPage: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* Billing Information Card */}
             <div className="bg-white rounded-lg shadow p-6">

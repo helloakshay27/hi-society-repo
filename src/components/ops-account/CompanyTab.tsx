@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -70,6 +70,13 @@ const columns: ColumnConfig[] = [
   {
     key: "actions",
     label: "Action",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
+    key: "srno",
+    label: "S.No.",
     sortable: false,
     hideable: false,
     draggable: false,
@@ -499,10 +506,14 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
   const totalPages = pagination.total_pages;
 
   // Use API data directly instead of client-side filtering
-  const displayedData = companies;
+  const displayedData = useMemo(
+    () => companies.map((c, i) => ({ ...c, srno: (currentPage - 1) * perPage + i + 1 })),
+    [companies, currentPage, perPage],
+  );
 
   // Render row function for enhanced table
-  const renderRow = (company: CompanyItem) => ({
+  const renderRow = (company: CompanyItem & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{company.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         <button

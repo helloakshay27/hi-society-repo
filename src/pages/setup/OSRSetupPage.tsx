@@ -37,14 +37,25 @@ interface Category {
 interface SubCategory {
   id: number;
   name: string;
-  helpdesk_category_id: number;
-  category_name?: string;
+  osr_categories_id: number;
+  active: number;
+  price: number | null;
+  created_by: number;
+}
+
+interface FlatType {
+  id: number;
+  society_flat_type: string;
+  active: number;
 }
 
 interface StatusItem {
   id: number;
   name: string;
   color_code?: string;
+  order_as?: number;
+  can_cancel?: number;
+  second_visit?: number;
   active?: number;
 }
 
@@ -253,22 +264,6 @@ const CategoryTab: React.FC = () => {
   );
 };
 
-// ─── Flat type price keys for sub-category form ─────────────────────────────
-const FLAT_TYPES = [
-  { key: 'bhk_1',    label: '1 BHK price' },
-  { key: 'bhk_2',    label: '2 BHK price' },
-  { key: 'bhk_3',    label: '3 BHK price' },
-  { key: 'bhk_4',    label: '4 BHK price' },
-  { key: 'bhk_5',    label: '5 BHK price' },
-  { key: 'bhk_45',   label: '4.5 BHK price' },
-  { key: 'rk_1',     label: '1 RK price' },
-  { key: 'rk_2',     label: '2 RK price' },
-  { key: 'bhk_1_rk', label: '1 BHK RK price' },
-] as const;
-
-const INIT_PRICES = () =>
-  Object.fromEntries(FLAT_TYPES.map(f => [f.key, ''])) as Record<string, string>;
-
 // ─── Tab 2: Sub Category ─────────────────────────────────────────────────────
 
 const SubCategoryTab: React.FC = () => {
@@ -276,12 +271,13 @@ const SubCategoryTab: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeCatId, setActiveCatId] = useState<number | 'all'>('all');
+  const [flatTypes, setFlatTypes] = useState<FlatType[]>([]);
 
   // Add modal state
   const [addOpen, setAddOpen] = useState(false);
   const [inputVal, setInputVal] = useState('');
   const [description, setDescription] = useState('');
-  const [prices, setPrices] = useState<Record<string, string>>(INIT_PRICES());
+  const [prices, setPrices] = useState<Record<number, string>>({});
   const [selectedCatId, setSelectedCatId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<{ category?: boolean; name?: boolean }>({});
@@ -291,6 +287,8 @@ const SubCategoryTab: React.FC = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [editVal, setEditVal] = useState('');
   const [editCatId, setEditCatId] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPrices, setEditPrices] = useState<Record<number, string>>({});
   const [editSubmitting, setEditSubmitting] = useState(false);
 
   const loadCategories = useCallback(async () => {
@@ -301,13 +299,20 @@ const SubCategoryTab: React.FC = () => {
     } catch { /* silent */ }
   }, []);
 
+  const loadFlatTypes = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/flat_types.json');
+      const raw = res.data ?? [];
+      const active = (Array.isArray(raw) ? raw : []).filter((ft: FlatType) => ft.active === 1);
+      setFlatTypes(active);
+    } catch { /* silent */ }
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get('/pms/admin/get_all_helpdesk_sub_categories.json', {
-        params: { page: 1, per_page: 100, 'q[of_phase_eq]': 'post_possession' }
-      });
-      const raw = res.data?.helpdesk_sub_categories ?? res.data ?? [];
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_sub_categories ?? [];
       setSubCategories(Array.isArray(raw) ? raw : []);
     } catch {
       toast.error('Failed to load sub-categories.');
@@ -318,13 +323,14 @@ const SubCategoryTab: React.FC = () => {
 
   useEffect(() => {
     loadCategories();
+    loadFlatTypes();
     load();
-  }, [loadCategories, load]);
+  }, [loadCategories, loadFlatTypes, load]);
 
   const openAdd = () => {
     setInputVal('');
     setDescription('');
-    setPrices(INIT_PRICES());
+    setPrices(Object.fromEntries(flatTypes.map(ft => [ft.id, ''])));
     setSelectedCatId('');
     setFormErrors({});
     setAddOpen(true);
@@ -336,15 +342,17 @@ const SubCategoryTab: React.FC = () => {
     if (errors.category || errors.name) return;
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('helpdesk_sub_category[name]', inputVal.trim());
-      formData.append('helpdesk_sub_category[helpdesk_category_id]', selectedCatId);
-      formData.append('helpdesk_sub_category[of_phase]', 'post_possession');
-      if (description.trim()) formData.append('helpdesk_sub_category[description]', description.trim());
-      FLAT_TYPES.forEach(f => {
-        if (prices[f.key]) formData.append(`helpdesk_sub_category[${f.key}]`, prices[f.key]);
-      });
-      await apiClient.post('/pms/admin/create_helpdesk_sub_category.json', formData);
+      const osr_subcat_flats_attributes = flatTypes
+        .map(ft => ({ flat_type_id: ft.id, price: Number(prices[ft.id]) }))
+        .filter(f => f.price > 0);
+      const payload: Record<string, any> = {
+        osr_categories_id: Number(selectedCatId),
+        name: inputVal.trim(),
+        active: 1,
+      };
+      if (description.trim()) payload.description = description.trim();
+      if (osr_subcat_flats_attributes.length) payload.osr_subcat_flats_attributes = osr_subcat_flats_attributes;
+      await apiClient.post('/crm/admin/create_osr_sub_category.json', payload);
       toast.success('Sub-category added successfully.');
       setAddOpen(false);
       load();
@@ -358,7 +366,9 @@ const SubCategoryTab: React.FC = () => {
   const openEdit = (sc: SubCategory) => {
     setEditId(sc.id);
     setEditVal(sc.name);
-    setEditCatId(String(sc.helpdesk_category_id));
+    setEditCatId(String(sc.osr_categories_id));
+    setEditDescription('');
+    setEditPrices(Object.fromEntries(flatTypes.map(ft => [ft.id, ''])));
     setEditOpen(true);
   };
 
@@ -366,12 +376,17 @@ const SubCategoryTab: React.FC = () => {
     if (!editVal.trim()) { toast.error('Please enter a name.'); return; }
     setEditSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('helpdesk_sub_category[name]', editVal.trim());
-      formData.append('helpdesk_sub_category[helpdesk_category_id]', editCatId);
-      formData.append('id', String(editId));
-      formData.append('active', '1');
-      await apiClient.post('/pms/admin/modify_helpdesk_sub_category.json', formData);
+      const osr_subcat_flats_attributes = flatTypes
+        .map(ft => ({ flat_type_id: ft.id, price: Number(editPrices[ft.id]) }))
+        .filter(f => f.price > 0);
+      const payload: Record<string, any> = {
+        osr_categories_id: Number(editCatId),
+        name: editVal.trim(),
+        active: 1,
+      };
+      if (editDescription.trim()) payload.description = editDescription.trim();
+      if (osr_subcat_flats_attributes.length) payload.osr_subcat_flats_attributes = osr_subcat_flats_attributes;
+      await apiClient.post(`/crm/admin/modify_osr_sub_category.json?id=${editId}`, payload);
       toast.success('Sub-category updated successfully.');
       setEditOpen(false);
       load();
@@ -384,7 +399,7 @@ const SubCategoryTab: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await apiClient.post('/pms/admin/modify_helpdesk_sub_category.json', { id: String(id), active: '0' });
+      await apiClient.post(`/crm/admin/modify_osr_sub_category.json?id=${id}`, { active: 0 });
       toast.success('Sub-category deleted successfully.');
       load();
     } catch {
@@ -395,7 +410,7 @@ const SubCategoryTab: React.FC = () => {
   // Filter sub-categories based on selected category pill
   const filteredSubs = activeCatId === 'all'
     ? subCategories
-    : subCategories.filter(s => s.helpdesk_category_id === activeCatId);
+    : subCategories.filter(s => s.osr_categories_id === activeCatId);
 
   // Columns — hide Category column when a specific category is selected
   const scColumns = activeCatId === 'all'
@@ -412,7 +427,7 @@ const SubCategoryTab: React.FC = () => {
   const renderScCell = (item: SubCategory, columnKey: string, index: number) => {
     if (columnKey === 'srno') return index + 1;
     if (columnKey === 'category_name')
-      return item.category_name ?? categories.find(c => c.id === item.helpdesk_category_id)?.name ?? '—';
+      return categories.find(c => c.id === item.osr_categories_id)?.name ?? '—';
     if (columnKey === 'name') return item.name;
     return '--';
   };
@@ -469,7 +484,7 @@ const SubCategoryTab: React.FC = () => {
               >
                 <Plus className="w-4 h-4" /> Add
               </Button>
-              <div className="flex items-center gap-1 flex-wrap">
+              {/* <div className="flex items-center gap-1 flex-wrap">
                 <button
                   onClick={() => setActiveCatId('all')}
                   className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
@@ -481,7 +496,7 @@ const SubCategoryTab: React.FC = () => {
                   All ({subCategories.length})
                 </button>
                 {categories.map(cat => {
-                  const count = subCategories.filter(s => s.helpdesk_category_id === cat.id).length;
+                  const count = subCategories.filter(s => s.osr_categories_id === cat.id).length;
                   const isActive = activeCatId === cat.id;
                   return (
                     <button
@@ -497,7 +512,7 @@ const SubCategoryTab: React.FC = () => {
                     </button>
                   );
                 })}
-              </div>
+              </div> */}
             </div>
           }
         />
@@ -544,12 +559,12 @@ const SubCategoryTab: React.FC = () => {
               <div className="flex-1 space-y-1.5">
                 <Label>Prices by Flat Type</Label>
                 <div className="grid grid-cols-3 gap-3">
-                  {FLAT_TYPES.map(ft => (
+                  {flatTypes.filter(ft => ft.active === 1).map(ft => (
                     <Input
-                      key={ft.key}
-                      value={prices[ft.key]}
-                      onChange={e => setPrices(prev => ({ ...prev, [ft.key]: e.target.value }))}
-                      placeholder={ft.label}
+                      key={ft.id}
+                      value={prices[ft.id] ?? ''}
+                      onChange={e => setPrices(prev => ({ ...prev, [ft.id]: e.target.value }))}
+                      placeholder={ft.society_flat_type}
                       type="number"
                       min="0"
                     />
@@ -580,27 +595,55 @@ const SubCategoryTab: React.FC = () => {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Edit Sub Category</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Category</Label>
-              <Select value={editCatId} onValueChange={setEditCatId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(c => (
-                    <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-1.5">
+                <Label>Category <span className="text-red-500">*</span></Label>
+                <Select value={editCatId} onValueChange={setEditCatId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <Label>Sub Category Name <span className="text-red-500">*</span></Label>
+                <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter name" />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Sub Category Name</Label>
-              <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter name" />
+            <div className="flex gap-4 items-start">
+              <div className="flex-1 space-y-1.5">
+                <Label>Prices by Flat Type</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {flatTypes.filter(ft => ft.active === 1).map(ft => (
+                    <Input
+                      key={ft.id}
+                      value={editPrices[ft.id] ?? ''}
+                      onChange={e => setEditPrices(prev => ({ ...prev, [ft.id]: e.target.value }))}
+                      placeholder={ft.society_flat_type}
+                      type="number"
+                      min="0"
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="w-56 space-y-1.5">
+                <Label>Description</Label>
+                <Textarea
+                  value={editDescription}
+                  onChange={e => setEditDescription(e.target.value)}
+                  placeholder="Enter Description"
+                  className="h-[136px] resize-none text-sm"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
@@ -626,6 +669,9 @@ const StatusTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [inputVal, setInputVal] = useState('');
   const [colorVal, setColorVal] = useState('#C72030');
+  const [orderVal, setOrderVal] = useState('');
+  const [canCancel, setCanCancel] = useState(false);
+  const [secondVisit, setSecondVisit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -634,13 +680,16 @@ const StatusTab: React.FC = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [editVal, setEditVal] = useState('');
   const [editColor, setEditColor] = useState('#C72030');
+  const [editOrder, setEditOrder] = useState('');
+  const [editCanCancel, setEditCanCancel] = useState(false);
+  const [editSecondVisit, setEditSecondVisit] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get('/crm/admin/complaint_statuses.json');
-      const raw = res.data?.complaint_statuses ?? res.data ?? [];
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_statuses ?? [];
       setStatuses(Array.isArray(raw) ? raw : []);
     } catch {
       toast.error('Failed to load statuses.');
@@ -655,12 +704,20 @@ const StatusTab: React.FC = () => {
     if (!inputVal.trim()) { toast.error('Please enter a status name.'); return; }
     setSubmitting(true);
     try {
-      await apiClient.post('/crm/admin/helpdesk_categories/create_complaint_statuses.json', {
-        complaint_status: { name: inputVal.trim(), color_code: colorVal, active: 1 }
+      await apiClient.post('/crm/admin/create_osr_status.json', {
+        name: inputVal.trim(),
+        color_code: colorVal,
+        order_as: Number(orderVal) || 0,
+        can_cancel: canCancel ? 1 : 0,
+        second_visit: secondVisit ? 1 : 0,
+        active: 1,
       });
       toast.success('Status added successfully.');
       setInputVal('');
       setColorVal('#C72030');
+      setOrderVal('');
+      setCanCancel(false);
+      setSecondVisit(false);
       setAddOpen(false);
       load();
     } catch {
@@ -674,6 +731,9 @@ const StatusTab: React.FC = () => {
     setEditId(s.id);
     setEditVal(s.name);
     setEditColor(s.color_code ?? '#C72030');
+    setEditOrder(String(s.order_as ?? ''));
+    setEditCanCancel(Boolean(s.can_cancel));
+    setEditSecondVisit(Boolean(s.second_visit));
     setEditOpen(true);
   };
 
@@ -681,8 +741,13 @@ const StatusTab: React.FC = () => {
     if (!editVal.trim()) { toast.error('Please enter a status name.'); return; }
     setEditSubmitting(true);
     try {
-      await apiClient.put(`/crm/admin/complaint_statuses/${editId}.json`, {
-        complaint_status: { name: editVal.trim(), color_code: editColor }
+      await apiClient.post(`/crm/admin/modify_osr_status.json?id=${editId}`, {
+        name: editVal.trim(),
+        color_code: editColor,
+        order_as: Number(editOrder) || 0,
+        can_cancel: editCanCancel ? 1 : 0,
+        second_visit: editSecondVisit ? 1 : 0,
+        active: 1,
       });
       toast.success('Status updated successfully.');
       setEditOpen(false);
@@ -696,7 +761,7 @@ const StatusTab: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await apiClient.delete(`/crm/admin/complaint_statuses/${id}.json`);
+      await apiClient.post(`/crm/admin/modify_osr_status.json?id=${id}`, { active: 0 });
       toast.success('Status deleted successfully.');
       load();
     } catch {
@@ -707,12 +772,14 @@ const StatusTab: React.FC = () => {
   const stColumns = [
     { key: 'srno',       label: 'S.No.',  sortable: false },
     { key: 'name',       label: 'Status', sortable: true  },
+    { key: 'order_as',   label: 'Order',  sortable: true  },
     { key: 'color_code', label: 'Color',  sortable: false },
   ];
 
   const renderStCell = (item: StatusItem, columnKey: string, index: number) => {
     if (columnKey === 'srno') return index + 1;
     if (columnKey === 'name') return item.name;
+    if (columnKey === 'order_as') return item.order_as ?? '-';
     if (columnKey === 'color_code') {
       return (
         <div className="flex items-center gap-2">
@@ -781,7 +848,7 @@ const StatusTab: React.FC = () => {
       </div>
 
       {/* Add Dialog */}
-      <Dialog open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setInputVal(''); setColorVal('#C72030'); } }}>
+      <Dialog open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setInputVal(''); setColorVal('#C72030'); setOrderVal(''); setCanCancel(false); setSecondVisit(false); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Add Status</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
@@ -795,20 +862,42 @@ const StatusTab: React.FC = () => {
                 autoFocus
               />
             </div>
-            <div className="space-y-1.5">
-              <Label>Color</Label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={colorVal}
-                  onChange={e => setColorVal(e.target.value)}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5"
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-1.5">
+                <Label>Order</Label>
+                <Input
+                  value={orderVal}
+                  onChange={e => setOrderVal(e.target.value)}
+                  placeholder="Enter order"
+                  type="number"
+                  min="0"
                 />
-                <span className="text-sm text-gray-600">{colorVal}</span>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Color</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={colorVal}
+                    onChange={e => setColorVal(e.target.value)}
+                    className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5"
+                  />
+                  <span className="text-sm text-gray-600">{colorVal}</span>
+                </div>
               </div>
             </div>
+            {/* <div className="flex gap-4 pt-1">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={canCancel} onChange={e => setCanCancel(e.target.checked)} className="rounded" />
+                Can Cancel
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={secondVisit} onChange={e => setSecondVisit(e.target.checked)} className="rounded" />
+                Second Visit
+              </label>
+            </div> */}
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => { setAddOpen(false); setInputVal(''); setColorVal('#C72030'); }}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setAddOpen(false); setInputVal(''); setColorVal('#C72030'); setOrderVal(''); setCanCancel(false); setSecondVisit(false); }}>Cancel</Button>
               <Button onClick={handleAdd} disabled={submitting} className="bg-[#C72030] hover:bg-[#A61C28] text-white px-8">
                 {submitting ? 'Submitting...' : 'Submit'}
               </Button>
@@ -828,18 +917,40 @@ const StatusTab: React.FC = () => {
               <Label>Status Name</Label>
               <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter status name" />
             </div>
-            <div className="space-y-1.5">
-              <Label>Color</Label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={editColor}
-                  onChange={e => setEditColor(e.target.value)}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5"
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-1.5">
+                <Label>Order</Label>
+                <Input
+                  value={editOrder}
+                  onChange={e => setEditOrder(e.target.value)}
+                  placeholder="Enter order"
+                  type="number"
+                  min="0"
                 />
-                <span className="text-sm text-gray-600">{editColor}</span>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Color</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={editColor}
+                    onChange={e => setEditColor(e.target.value)}
+                    className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5"
+                  />
+                  <span className="text-sm text-gray-600">{editColor}</span>
+                </div>
               </div>
             </div>
+            {/* <div className="flex gap-4 pt-1">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={editCanCancel} onChange={e => setEditCanCancel(e.target.checked)} className="rounded" />
+                Can Cancel
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={editSecondVisit} onChange={e => setEditSecondVisit(e.target.checked)} className="rounded" />
+                Second Visit
+              </label>
+            </div> */}
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
               <Button

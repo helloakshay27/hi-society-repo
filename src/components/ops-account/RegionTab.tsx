@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Download, Filter, Upload, Eye, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -56,6 +56,13 @@ const columns: ColumnConfig[] = [
   {
     key: "actions",
     label: "Action",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
+    key: "srno",
+    label: "S.No.",
     sortable: false,
     hideable: false,
     draggable: false,
@@ -415,10 +422,14 @@ export const RegionTab: React.FC<RegionTabProps> = ({
   const totalPages = pagination.total_pages;
 
   // Use API data directly instead of client-side filtering
-  const displayedData = regions;
+  const displayedData = useMemo(
+    () => regions.map((r, i) => ({ ...r, srno: (currentPage - 1) * perPage + i + 1 })),
+    [regions, currentPage, perPage],
+  );
 
   // Render row function for enhanced table
-  const renderRow = (region: RegionItem) => ({
+  const renderRow = (region: RegionItem & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{region.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         {/* <button

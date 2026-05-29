@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Loader2 } from "lucide-react";
 import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable";
@@ -32,6 +32,7 @@ interface ZoneTabProps {
 
 const columns: ColumnConfig[] = [
   { key: "actions", label: "Action", sortable: false, hideable: false, draggable: false },
+  { key: "srno", label: "S.No.", sortable: false, hideable: false, draggable: false },
   { key: "name", label: "Zone Name", sortable: true, hideable: true, draggable: true },
   { key: "headquarter", label: "Headquarter", sortable: true, hideable: true, draggable: true },
   { key: "region", label: "Region", sortable: true, hideable: true, draggable: true },
@@ -176,7 +177,13 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
     } catch { return "Invalid date"; }
   };
 
-  const renderRow = (zone: ZoneItem) => ({
+  const displayedData = useMemo(
+    () => zones.map((z, i) => ({ ...z, srno: (currentPage - 1) * perPage + i + 1 })),
+    [zones, currentPage, perPage],
+  );
+
+  const renderRow = (zone: ZoneItem & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{zone.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         <button
@@ -226,7 +233,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
       ) : (
         <>
           <EnhancedTaskTable
-            data={zones}
+            data={displayedData}
             columns={columns}
             renderRow={renderRow}
             storageKey="zone-dashboard-v1"

@@ -257,6 +257,7 @@ export const ViewHiSocietyUserPage = () => {
       );
       toast.success("Company associated successfully");
       setAssocCompanyModal(false);
+      fetchAssociatedCompanies();
     } catch {
       toast.error("Failed to associate company");
     } finally {
@@ -304,6 +305,7 @@ export const ViewHiSocietyUserPage = () => {
       );
       toast.success("Snag project associated successfully");
       setAssocSnagModal(false);
+      fetchAssociatedSnagProjects();
     } catch {
       toast.error("Failed to associate snag project");
     } finally {

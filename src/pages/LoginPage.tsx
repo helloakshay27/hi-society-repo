@@ -222,16 +222,38 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return { isValid: true, message: "Password is valid." };
   };
 
-  const validateEmailOrMobile = (value: string): { isValid: boolean; message: string } => {
-    if (!value || value.trim() === "") {
-      return { isValid: false, message: "Email or mobile number is required." };
+  // Smart validator — accepts a valid email OR a mobile number (7-15 digits, optional leading +)
+  const validateEmailOrMobile = (
+    value: string
+  ): { isValid: boolean; message: string } => {
+    const trimmed = value.trim();
+    if (!trimmed)
+      return {
+        isValid: false,
+        message: "Please enter your email or mobile number.",
+      };
+
+    const looksLikeEmail = trimmed.includes("@");
+    if (looksLikeEmail) {
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+      return valid
+        ? { isValid: true, message: "" }
+        : {
+            isValid: false,
+            message:
+              "Please enter a valid email address (e.g. name@example.com).",
+          };
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const mobileRegex = /^[6-9]\d{9}$/;
-    if (emailRegex.test(value) || mobileRegex.test(value)) {
-      return { isValid: true, message: "" };
-    }
-    return { isValid: false, message: "Please enter a valid email address or 10-digit mobile number." };
+
+    // Treat as mobile: strip spaces/dashes, allow optional leading +
+    const digits = trimmed.replace(/[\s\-().]/g, "");
+    const valid = /^\+?[0-9]{7,15}$/.test(digits);
+    return valid
+      ? { isValid: true, message: "" }
+      : {
+          isValid: false,
+          message: "Please enter a valid mobile number (7–15 digits).",
+        };
   };
 
   const handleEmailSubmit = async () => {
