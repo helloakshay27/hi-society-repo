@@ -452,7 +452,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         const from =
           (location.state as { from?: Location })?.from?.pathname +
           (location.state as { from?: Location })?.from?.search ||
-          "/maintenance/asset";
+          "/maintenance/survey/mapping";
         // Hi Society specific logic - fetch additional data
         // Fetch Hi-Society specific data
         await fetchHiSocietyData(response.spree_api_key);
@@ -470,7 +470,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         const from =
           (location.state as { from?: Location })?.from?.pathname +
           (location.state as { from?: Location })?.from?.search ||
-          "/maintenance/asset";
+          "/maintenance/survey/mapping";
 
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
