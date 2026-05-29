@@ -232,14 +232,14 @@ export const OrganizationDetailsPage: React.FC = () => {
                       #{organization.id}
                     </p>
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Created By
                     </label>
                     <p className="text-gray-900">
                       User ID: {organization.created_by_id}
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -264,7 +264,7 @@ export const OrganizationDetailsPage: React.FC = () => {
                     Sub Domain
                   </label>
                   <p className="text-gray-900 font-mono break-all">
-                    {organization.sub_domain || "Not specified"}
+                     {organization.organization_products?.[0]?.sub_domain || "Not specified"}
                   </p>
                 </div>
                 <div>
@@ -272,7 +272,7 @@ export const OrganizationDetailsPage: React.FC = () => {
                     Frontend Domain
                   </label>
                   <p className="text-gray-900 font-mono break-all">
-                    {organization.front_domain || "Not specified"}
+                    {organization.organization_products?.[0]?.front_domain || "Not specified"}
                   </p>
                 </div>
                 <div>
@@ -280,7 +280,7 @@ export const OrganizationDetailsPage: React.FC = () => {
                     Frontend Subdomain
                   </label>
                   <p className="text-gray-900 font-mono break-all">
-                    {organization.front_subdomain || "Not specified"}
+                    {organization.organization_products?.[0]?.front_subdomain || "Not specified"}
                   </p>
                 </div>
               </div>

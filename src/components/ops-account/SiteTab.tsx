@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
@@ -85,6 +85,13 @@ const columns: ColumnConfig[] = [
   {
     key: "actions",
     label: "Action",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
+    key: "srno",
+    label: "S.No.",
     sortable: false,
     hideable: false,
     draggable: false,
@@ -570,10 +577,14 @@ export const SiteTab: React.FC<SiteTabProps> = ({
   const totalPages = pagination.total_pages;
 
   // Use API data directly instead of client-side filtering
-  const displayedData = sites;
+  const displayedData = useMemo(
+    () => sites.map((s, i) => ({ ...s, srno: (currentPage - 1) * perPage + i + 1 })),
+    [sites, currentPage, perPage],
+  );
 
   // Render row function for enhanced table
-  const renderRow = (site: SiteItem) => ({
+  const renderRow = (site: SiteItem & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{site.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         <button

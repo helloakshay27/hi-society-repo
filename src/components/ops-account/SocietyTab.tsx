@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -49,6 +49,13 @@ const columns: ColumnConfig[] = [
   {
     key: "actions",
     label: "Action",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
+    key: "srno",
+    label: "S.No.",
     sortable: false,
     hideable: false,
     draggable: false,
@@ -393,7 +400,13 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
     setIvrSocietyId(null);
   };
 
-  const renderRow = (society: Society) => ({
+  const displayedData = useMemo(
+    () => societies.map((s, i) => ({ ...s, srno: (currentPage - 1) * perPage + i + 1 })),
+    [societies, currentPage, perPage],
+  );
+
+  const renderRow = (society: Society & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{society.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         <button
@@ -467,7 +480,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         <>
           <EnhancedTaskTable
             columns={columns}
-            data={societies}
+            data={displayedData}
             renderRow={renderRow}
             storageKey="society-dashboard-v1"
             hideTableExport={true}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -69,6 +69,13 @@ interface CountryTabProps {
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
+  {
+    key: "srno",
+    label: "S.No.",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
   {
     key: "id",
     label: "ID",
@@ -568,6 +575,10 @@ export const CountryTab: React.FC<CountryTabProps> = ({
   }, [entriesPerPage, perPage]);
 
   // Data is passed directly to EnhancedTaskTable with renderCell and renderActions
+  const displayedData = useMemo(
+    () => countries.map((c, i) => ({ ...c, srno: (currentPage - 1) * perPage + i + 1 })),
+    [countries, currentPage, perPage],
+  );
 
   const totalPages = pagination.total_pages;
   const totalRecords = pagination.total_count;
@@ -581,7 +592,7 @@ export const CountryTab: React.FC<CountryTabProps> = ({
       ) : (
         <>
           <EnhancedTaskTable
-            data={countries}
+            data={displayedData}
             columns={columns}
             searchTerm={searchQuery}
             onSearchChange={setSearchQuery}
@@ -619,8 +630,10 @@ export const CountryTab: React.FC<CountryTabProps> = ({
                 </Button> */}
               </div>
             )}
-            renderCell={(country: CountryItem, columnKey: string) => {
+            renderCell={(country: CountryItem & { srno?: number }, columnKey: string) => {
               switch (columnKey) {
+                case "srno":
+                  return <span className="text-sm text-gray-600">{country.srno}</span>;
                 case "id":
                   return country.id;
                 case "name":
