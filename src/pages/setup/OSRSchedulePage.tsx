@@ -440,11 +440,11 @@ export const OSRSchedulePage: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div className="py-4 flex justify-center border-t border-gray-200 bg-white">
+      {/* <div className="py-4 flex justify-center border-t border-gray-200 bg-white">
         <span className="text-sm text-gray-600">
           Powered by <span className="font-semibold">LOCKATED</span>
         </span>
-      </div>
+      </div> */}
 
       {/* ── Add Modal ─────────────────────────────────────────────────────── */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
