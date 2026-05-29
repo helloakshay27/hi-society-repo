@@ -113,6 +113,7 @@ const AppointmentzBlockDaysConfig = () => {
   }, [fetchBlockDays, fetchRMUsers, currentPage]);
 
   const columns = [
+    { key: "srNo", label: "Sr. No.", sortable: false },
     { key: "actions", label: "Actions", sortable: false },
     { key: "rmUser", label: "RM User", sortable: true },
     { key: "blockedDate", label: "Blocked Date", sortable: true },
@@ -273,8 +274,10 @@ const AppointmentzBlockDaysConfig = () => {
     }
   };
 
-  const renderCell = (item: BlockDayConfig, columnKey: string) => {
+  const renderCell = (item: BlockDayConfig, columnKey: string, index: number) => {
     switch (columnKey) {
+      case "srNo":
+        return (currentPage - 1) * 10 + index + 1;
       case "actions":
         return (
           <Button
@@ -308,7 +311,8 @@ const AppointmentzBlockDaysConfig = () => {
           </div>
         );
       default:
-        return item[columnKey];
+        // @ts-expect-error: Accessing key by string
+        return item[columnKey as keyof BlockDayConfig];
     }
   };
 

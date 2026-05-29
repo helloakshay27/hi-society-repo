@@ -46,6 +46,7 @@ const AppointmentzSiteScheduling = () => {
   }, [fetchSiteScheduleRequests]);
 
   const columns = [
+    { key: "srNo", label: "Sr. No.", sortable: false },
     { key: "actions", label: "Actions", sortable: false },
     { key: "id", label: "Request ID", sortable: true },
     { key: "tower", label: "Tower", sortable: true },
@@ -127,8 +128,10 @@ const AppointmentzSiteScheduling = () => {
     }
   };
 
-  const renderCell = (item: SiteScheduleRequest, columnKey: string) => {
+  const renderCell = (item: SiteScheduleRequest, columnKey: string, index: number) => {
     switch (columnKey) {
+      case "srNo":
+        return (currentPage - 1) * 10 + index + 1;
       case "actions":
         return (
           <Button

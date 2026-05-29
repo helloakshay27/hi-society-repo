@@ -142,6 +142,7 @@ const AppointmentzRMConfig = () => {
   };
 
   const columns = [
+    { key: "srNo", label: "Sr. No.", sortable: false },
     { key: "actions", label: "Actions", sortable: false },
     { key: "id", label: "ID", sortable: true },
     { key: "userId", label: "User ID", sortable: true },
@@ -468,8 +469,10 @@ const AppointmentzRMConfig = () => {
     }
   };
 
-  const renderCell = (item: RMUser, columnKey: string) => {
+  const renderCell = (item: RMUser, columnKey: string, index: number) => {
     switch (columnKey) {
+      case "srNo":
+        return (currentPage - 1) * 10 + index + 1;
       case "actions":
         return (
           <Button

@@ -256,7 +256,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       return;
     }
 
-    if (cameFromFlat || (shareAccess === "true" && shareOption === "Flats")) {
+    if (shareAccess === "true" && shareOption === "Flats") {
       if (isFlatListLoading) {
         toast.error("Flat list is still loading. Please wait.");
         return;
@@ -273,14 +273,13 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       const formData = new FormData();
       formData.append("file_type", uploadType);
 
-      const useFlatSharing =
-        cameFromFlat || (shareAccess === "true" && shareOption === "Flats");
+      const useFlatSharing = shareAccess === "true" && shareOption === "Flats";
       const sharingTypeVal = useFlatSharing
         ? FLAT_SPECIFIC_SHARING_TYPE
         : COMMON_SHARING_TYPE;
       formData.append("sharing_type", sharingTypeVal);
 
-      if (shareAccess === "true" || cameFromFlat) {
+      if (shareAccess === "true") {
         formData.append("primary_radio", occupancyType);
         formData.append("lives_here_radio", livingStatus);
 
@@ -568,10 +567,12 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                       type="checkbox"
                       name="shareAccess"
                       checked={shareAccess === "true"}
-                      disabled={cameFromFlat}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setShareAccess("true");
+                          if (cameFromFlat) {
+                            setShareOption("Flats");
+                          }
                         } else {
                           setShareAccess("false");
                           setShareOption("All");
