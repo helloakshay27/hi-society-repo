@@ -50,9 +50,17 @@ const ActionLayoutContext = createContext<ActionLayoutContextType | undefined>(
 export const useActionLayout = () => {
   const context = useContext(ActionLayoutContext);
   if (context === undefined) {
-    throw new Error(
-      "useActionLayout must be used within an ActionLayoutProvider"
-    );
+    // Return safe defaults instead of throwing — prevents crashes during HMR
+    // and when Layout is momentarily rendered outside the provider tree
+    return {
+      currentModule: "",
+      setCurrentModule: () => {},
+      currentFunction: "",
+      setCurrentFunction: () => {},
+      availableModules: [],
+      getModuleFunctions: () => [],
+      isActionSidebarVisible: false,
+    } as ActionLayoutContextType;
   }
   return context;
 };

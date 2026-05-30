@@ -1302,11 +1302,10 @@ function App() {
             <LayoutProvider>
               <PermissionsProvider>
                 <ActionLayoutProvider>
-                  <ErrorBoundary>
-                    <Suspense fallback={
+                  <Suspense fallback={
                       <div className="min-h-screen flex items-center justify-center bg-gray-50">
                         <div className="flex flex-col items-center gap-4">
-                          <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#C72030] border-r-[#C72030] border-b-gray-200 border-l-gray-200"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#C72030] border-r-[#C72030] border-b-gray-200 border-l-gray-200"></div>
                           <p className="text-gray-600">Loading...</p>
                         </div>
                       </div>
@@ -7212,8 +7211,7 @@ function App() {
                           element={<FitoutRequestCategoryApprovalRequestMobile />}
                         />
                       </Routes>
-                    </Suspense>
-                  </ErrorBoundary>
+                  </Suspense>
                   {/* Mail Inbound Routes */}
                   {/* <Toaster /> */}
                   <SonnerToaster
