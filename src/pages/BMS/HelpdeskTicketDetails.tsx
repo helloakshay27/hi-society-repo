@@ -566,7 +566,9 @@ export const TicketDetailsPage = () => {
   const [goldenTicketEscalationSeconds, setGoldenTicketEscalationSeconds] = useState<number>(0);
   // Extra TAT timings fetched from dedicated endpoints
   const [responseTatTimings, setResponseTatTimings] = useState<any>(null);
+  const [responseTatData, setResponseTatData] = useState<any>(null);
   const [resolutionTatTimings, setResolutionTatTimings] = useState<any>(null);
+  const [ticketFeedsData, setTicketFeedsData] = useState<any>(null);
   // Sequence support for multi-level escalations (response/resolution)
   const [responseSequence, setResponseSequence] = useState<any[] | null>(null);
   const responseSeqRef = useRef<any[] | null>(null);
@@ -914,6 +916,20 @@ export const TicketDetailsPage = () => {
     fetchTicketDetails();
   }, [id]);
 
+  // Fetch ticket feeds (logs) from CRM admin endpoint
+  useEffect(() => {
+    if (!id) return;
+    const fetchFeeds = async () => {
+      try {
+        const data = await ticketManagementAPI.getCrmTicketFeeds(id);
+        setTicketFeedsData(data);
+      } catch (err) {
+        console.error('Error fetching ticket feeds:', err);
+      }
+    };
+    fetchFeeds();
+  }, [id]);
+
   // Function to refresh ticket data from backend (for timer updates)
   const refreshTicketData = useCallback(async () => {
     if (!id) return;
@@ -934,12 +950,27 @@ export const TicketDetailsPage = () => {
     const fetchTatTimings = async () => {
       try {
         const resp = await ticketManagementAPI.getResponseTatTimings(String(ticketData.id || id));
-        setResponseTatTimings(resp);
-        // If the endpoint returned an array of escalation steps, store as sequence
-        if (Array.isArray(resp) && resp.length > 0) {
-          setResponseSequence(resp);
-          responseSeqRef.current = resp;
-          console.log('✅ Response TAT timings fetched:', resp);
+        // Normalize new API response: { complaint, response_tat, escalation_matrix: [{name, tat_minutes, fired, fired_at, escalated_to}] }
+        if (resp?.response_tat) {
+          setResponseTatData(resp.response_tat);
+        }
+        const tatSteps = resp?.escalation_matrix
+          ? resp.escalation_matrix.map((step: any) => ({
+              escalation_name: step.name,
+              minutes: step.tat_minutes,
+              scheduled_minutes: step.tat_minutes,
+              scheduled_seconds: 0,
+              escalate_to_user: step.escalated_to || [],
+              users: step.escalated_to || [],
+              fired: step.fired,
+              fired_at: step.fired_at,
+            }))
+          : Array.isArray(resp) ? resp : [];
+        setResponseTatTimings(tatSteps.length > 0 ? tatSteps : null);
+        if (tatSteps.length > 0) {
+          setResponseSequence(tatSteps);
+          responseSeqRef.current = tatSteps;
+          console.log('✅ Response TAT timings fetched:', tatSteps);
         }
       } catch (err) {
         console.error('Error fetching response TAT timings:', err);
@@ -3855,15 +3886,17 @@ export const TicketDetailsPage = () => {
       {
         label: 'Response TAT',
         value: (() => {
-          // Prefer sequence step minutes when available, otherwise fallback to ticketData
+          // Use actual_response_minutes from response_tat API if available
+          if (responseTatData?.actual_response_minutes != null) {
+            return formatMinutesToDDHHMM(responseTatData.actual_response_minutes);
+          }
+          // Fallback to sequence step minutes or ticketData
           const seq = responseSequence;
           const seqMinutes = (seq && seq.length > 0 && responseSequenceIndex >= 0)
             ? (seq[responseSequenceIndex]?.scheduled_minutes ?? seq[responseSequenceIndex]?.minutes)
             : null;
           const sourceMinutes = seqMinutes ?? ticketData.next_response_escalation?.minutes ?? 0;
-          return (isTicketClosed || isTicketOnHold)
-            ? (sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00')
-            : (sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00');
+          return sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00';
         })()
       },
       {
@@ -4318,7 +4351,7 @@ export const TicketDetailsPage = () => {
               value="action-logs"
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
-              Logs
+              Feeds
             </TabsTrigger>
             <TabsTrigger
               value="feedbacks"
@@ -4541,7 +4574,11 @@ export const TicketDetailsPage = () => {
                           style={{ fontSize: 24 }}
                         >
                           {(() => {
-                            // Prefer sequence step minutes when available, otherwise fallback to ticketData
+                            // Use actual_response_minutes from response_tat API if available
+                            if (responseTatData?.actual_response_minutes != null) {
+                              return formatMinutesToDDHHMM(responseTatData.actual_response_minutes);
+                            }
+                            // Fallback to sequence step minutes or ticketData
                             const seq = responseSequence;
                             const seqMinutes = (seq && seq.length > 0 && responseSequenceIndex >= 0)
                               ? (seq[responseSequenceIndex]?.scheduled_minutes ?? seq[responseSequenceIndex]?.minutes)
@@ -7870,7 +7907,7 @@ export const TicketDetailsPage = () => {
                         </div>
                       </div>
                       <h3 className="text-lg font-semibold uppercase text-black">
-                        Logs
+                        Complaint Logs
                       </h3>
                     </div>
                   </div>
@@ -10770,7 +10807,7 @@ export const TicketDetailsPage = () => {
                     </div>
                   </div>
                   <h3 className="text-lg font-semibold uppercase text-black">
-                    Logs
+                    Complaint Logs
                   </h3>
                 </div>
               </div>
@@ -11614,54 +11651,94 @@ export const TicketDetailsPage = () => {
 
           {/* Action Logs Tab */}
           <TabsContent value="action-logs" className="p-4 sm:p-6">
-            {complaintLogs.length > 0 ? (
-              <div className="bg-white rounded-lg border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date/Time</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>By</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Comments</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {complaintLogs.map((log, index) => (
-                      <TableRow key={log.id || index}>
-                        <TableCell className="font-medium text-sm">
-                          {log.created_at ? formatLogTime(log.created_at) : ''}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className="bg-blue-100 text-blue-700 text-xs">
-                            {log.log_status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {log.log_by || "-"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {getPriorityLabel(log.priority)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {log.log_comment && log.log_comment.length > 5 ? (
-                            <Tooltip title={log.log_comment} arrow>
-                              <span className="cursor-help">
-                                {log.log_comment.substring(0, 5)}...
-                              </span>
-                            </Tooltip>
-                          ) : (
-                            log.log_comment || "No comments"
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+            {ticketFeedsData?.feeds && ticketFeedsData.feeds.length > 0 ? (
+              <div className="space-y-6">
+                {[...ticketFeedsData.feeds].reverse().map((group: any, groupIdx: number) => (
+                  <div key={groupIdx}>
+                    {/* Date Header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-sm font-semibold text-[#C72030]">{group.date}</span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                    {/* Entries */}
+                    <div className="space-y-3 pl-2">
+                      {[...group.entries].reverse().map((entry: any, entryIdx: number) => (
+                        <div key={entryIdx} className="flex gap-4">
+                          {/* Time column */}
+                          <div className="w-20 shrink-0 text-xs text-gray-500 pt-1 text-right">
+                            {entry.time}
+                          </div>
+                          {/* Timeline dot */}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${(entry.type === 'Escalation' || entry.type === 'Executive Escalation') ? 'bg-[#C72030]' : 'bg-gray-400'}`} />
+                            {entryIdx < group.entries.length - 1 && (
+                              <div className="w-px flex-1 bg-gray-200 mt-1" style={{ minHeight: '20px' }} />
+                            )}
+                          </div>
+                          {/* Content card */}
+                          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-2">
+                            {(entry.type === 'Escalation' || entry.type === 'Executive Escalation') ? (
+                              <div>
+                                <p className="text-sm font-semibold text-gray-800 mb-1">{entry.label || entry.type}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="inline-block bg-[#C72030] text-white text-xs font-bold px-2 py-0.5 rounded">
+                                    {entry.name}
+                                  </span>
+                                  {entry.escalated_to && entry.escalated_to.length > 0 && (
+                                    <span className="text-sm text-gray-600">
+                                      escalated to{' '}
+                                      <span className="font-medium text-gray-800">
+                                        {entry.escalated_to.join(', ')}
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+                                {entry.category && (
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {entry.category}{entry.issue_related_to ? ` · ${entry.issue_related_to}` : ''}{entry.worker_esc_type ? ` · ${entry.worker_esc_type}` : ''}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div>
+                                {entry.user && (
+                                  <p className="text-sm font-semibold text-gray-800 mb-1">
+                                    {entry.user} <span className="font-normal text-gray-500">- made below changes</span>
+                                  </p>
+                                )}
+                                {entry.status && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600">Status -</span>
+                                    <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded border border-gray-300">
+                                      {entry.status}
+                                    </span>
+                                  </div>
+                                )}
+                                {entry.comments && entry.comments.length > 0 && entry.comments.map((c: any, ci: number) => (
+                                  <div key={ci} className="mt-1 text-sm text-gray-600 bg-white border border-gray-200 rounded px-3 py-1.5">
+                                    {c?.text ?? c}
+                                  </div>
+                                ))}
+                                {entry.internal_comments && entry.internal_comments.length > 0 && entry.internal_comments.map((c: any, ci: number) => (
+                                  <div key={ci} className="mt-1 text-sm text-gray-500 italic bg-white border border-gray-200 rounded px-3 py-1.5">
+                                    {c?.text ?? c}
+                                  </div>
+                                ))}
+                                {entry.status_reason && (
+                                  <p className="text-xs text-gray-400 mt-1">Reason: {entry.status_reason}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">
-                No action logs found
+                No logs found
               </p>
             )}
           </TabsContent>

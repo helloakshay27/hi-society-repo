@@ -1085,7 +1085,7 @@ export const ticketManagementAPI = {
   // Get response TAT timings for a ticket by ID
   async getResponseTatTimings(ticketId: string) {
     try {
-      const response = await apiClient.get(`/response_tat_timings?id=${ticketId}`);
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/response_tat_timings.json`);
       return response.data;
     } catch (error) {
       console.error('Error fetching response TAT timings:', error);
@@ -1096,8 +1096,19 @@ export const ticketManagementAPI = {
   // Get resolution TAT timings for a ticket by ID
   async getResolutionTatTimings(ticketId: string) {
     try {
-      const response = await apiClient.get(`/resolution_tat_timings?id=${ticketId}`);
-      return response.data;
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/resolution_tat_timings.json`);
+      const data = response.data;
+      const matrix = Array.isArray(data.escalation_matrix) ? data.escalation_matrix : [];
+      return matrix.map((item: any) => ({
+        escalation_name: item.name,
+        scheduled_minutes: item.tat_minutes,
+        minutes: item.tat_minutes,
+        scheduled_seconds: 0,
+        escalate_to_user: Array.isArray(item.escalated_to) ? item.escalated_to : [],
+        users: Array.isArray(item.escalated_to) ? item.escalated_to : [],
+        fired: item.fired,
+        fired_at: item.fired_at,
+      }));
     } catch (error) {
       console.error('Error fetching resolution TAT timings:', error);
       throw error;
@@ -1111,6 +1122,17 @@ export const ticketManagementAPI = {
       return response.data;
     } catch (error) {
       console.error('Error fetching ticket feeds:', error);
+      throw error;
+    }
+  },
+
+  // Get CRM admin ticket feeds by ID (BMS helpdesk)
+  async getCrmTicketFeeds(ticketId: string) {
+    try {
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/feeds.json`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching CRM ticket feeds:', error);
       throw error;
     }
   },

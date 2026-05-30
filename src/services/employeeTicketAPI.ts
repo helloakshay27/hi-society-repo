@@ -324,7 +324,7 @@ class EmployeeTicketAPI {
   // Get response TAT timings for an employee ticket by ID
   async getResponseTatTimings(ticketId: string) {
     try {
-      const response = await apiClient.get(`/response_tat_timings?id=${ticketId}`);
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/resolution_tat_timings.json`);
       return response.data;
     } catch (error) {
       console.error('Error fetching response TAT timings:', error);
