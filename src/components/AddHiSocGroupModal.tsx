@@ -84,8 +84,8 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
       const list: MemberItem[] = Array.isArray(raw)
         ? (raw as MemberItem[])
         : Array.isArray((raw as { members?: MemberItem[] })?.members)
-        ? ((raw as { members: MemberItem[] }).members as MemberItem[])
-        : [];
+          ? ((raw as { members: MemberItem[] }).members as MemberItem[])
+          : [];
 
       setMembers(list.map(transformMember));
     } catch (error) {
@@ -116,9 +116,9 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
               Authorization: getAuthHeader(),
             },
           });
-          
+
           setGroupName(response.data.name || '');
-          
+
           // Extract member IDs from groupmembers (note: API returns 'groupmembers', not 'group_members')
           if (response.data.groupmembers && Array.isArray(response.data.groupmembers)) {
             const memberIds = response.data.groupmembers
@@ -202,8 +202,8 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
           record && (record.active === 1 || record.active === true || record.active === '1')
             ? 1
             : record && (record.active === 0 || record.active === false || record.active === '0')
-            ? 0
-            : 1;
+              ? 0
+              : 1;
         const payload = {
           usergroup: {
             name: groupName,
@@ -213,10 +213,10 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
         };
 
         await axios.put(`${baseURL}/crm/usergroups/${record.id}.json`, payload, {
-           headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "application/json",
-                 },
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
         });
 
         toast.success("Group updated successfully");
@@ -240,10 +240,10 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
         };
 
         await axios.post(`${baseURL}/crm/usergroups.json`, payload, {
-            headers: {
-                    Authorization: getAuthHeader(),
-                    "Content-Type": "application/json",
-                  },
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
         });
 
         toast.success("Group created successfully");
@@ -289,7 +289,7 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
             sx={{ mt: 1 }}
           />
 
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <div className='flex items-center justify-between'>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium text-gray-700">Add Members</Label>
@@ -345,6 +345,108 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
                         </span>
                         <span className="text-gray-400 text-xs">
                           {member.flat} {member.block && `• ${member.block}`}
+                        </span>
+                      </div>
+                    </Label>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-4">
+                  No members found
+                </div>
+              )}
+            </div>
+          </div> */}
+
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-gray-700">
+                Add Members
+              </Label>
+            </div>
+
+            <div className="flex items-start gap-2 mt-1">
+              <div className="flex-1">
+                <TextField
+                  label="Search..."
+                  name="searchTerm"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder="Search..."
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
+              </div>
+
+              <div className="pt-1">
+                <MemberFilterPanel
+                  value={filters}
+                  onChange={handleFilterChange}
+                />
+              </div>
+            </div>
+
+            {filteredMembers.length > 0 && (
+              <div
+                className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50"
+              >
+                <Checkbox
+                  checked={
+                    selectedMembers.length === filteredMembers.length &&
+                    filteredMembers.length > 0
+                  }
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedMembers(
+                        filteredMembers.map((member) => member.id.toString())
+                      );
+                    } else {
+                      setSelectedMembers([]);
+                    }
+                  }}
+                />
+
+                <Label className="text-sm font-medium cursor-pointer ms-2">
+                  Select All Members ({selectedMembers.length}/{filteredMembers.length})
+                </Label>
+              </div>
+            )}
+
+            <div className="space-y-2 max-h-60 overflow-y-auto border rounded-md p-1">
+              {filteredMembers.length > 0 ? (
+                filteredMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded"
+                  >
+                    <Checkbox
+                      id={member.id.toString()}
+                      checked={selectedMembers.includes(member.id.toString())}
+                      onCheckedChange={() =>
+                        handleMemberToggle(member.id.toString())
+                      }
+                    />
+
+                    <Label
+                      htmlFor={member.id.toString()}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {member.firstname} {member.lastname}
+                        </span>
+
+                        <span className="text-gray-500 text-xs">
+                          {member.email}{" "}
+                          {member.mobile && `• ${member.mobile}`}
+                        </span>
+
+                        <span className="text-gray-400 text-xs">
+                          {member.flat}{" "}
+                          {member.block && `• ${member.block}`}
                         </span>
                       </div>
                     </Label>
