@@ -506,7 +506,7 @@ console.log("auth :",getFullUrl, getAuthHeader());
         </button>
         <button
           onClick={() => org?.id && handleEdit(org.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditOrganization || !org?.id}
         >

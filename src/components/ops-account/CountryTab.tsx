@@ -584,7 +584,10 @@ export const CountryTab: React.FC<CountryTabProps> = ({
   const totalRecords = pagination.total_count;
 
   return (
-    <div className="space-y-4">
+    <div className="p-6 space-y-6">
+      <header className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Headquarters</h1>
+      </header>
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />

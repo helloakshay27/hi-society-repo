@@ -132,7 +132,7 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
     setIsLoading(true);
     try {
       const response = await fetch(
-        getFullUrl(`/pms/company_setups/${companyId}/company_show.json`),
+        getFullUrl(`/pms/company_setups/${companyId}.json`),
         {
           method: "GET",
           headers: {

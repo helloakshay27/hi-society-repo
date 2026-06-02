@@ -189,7 +189,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
         <button
           type="button"
           onClick={() => handleEdit(zone.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEdit}
         >

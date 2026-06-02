@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,204 +8,395 @@ import { Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
+import { apiClient } from '@/utils/apiClient';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface ScheduleEntry {
   id: number;
-  categoryType: string;
-  subCategory: string;
-  frequency: string;
-  days: string[];
-  startTime: string;
-  endTime: string;
-  maxCapacity: number;
-  price: number;
-  status: string;
+  society_id: number;
+  osr_category_id: number;
+  osr_sub_category_id: number;
+  start_hour: number;
+  end_hour: number;
+  start_minute: string;
+  end_minute: string;
+  mon: number;
+  tue: number;
+  wed: number;
+  thu: number;
+  fri: number;
+  sat: number;
+  sun: number;
+  active: number;
+  created_by: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
-const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+interface Category {
+  id: number;
+  name: string;
+}
 
-const CATEGORY_TYPES = ['Pets Spa', 'Pest Control', 'Deep Cleaning', 'Invisible Grill', 'Civil & Mason Works'];
-const SUB_CATEGORIES: Record<string, string[]> = {
-  'Pets Spa': ['Full Body Bath', 'Clam Massage', 'Nail Trimming', 'Hair Cut'],
-  'Pest Control': ['Standard Cockroach Control', '4D Cockroach Control', 'Termite Treatment'],
-  'Deep Cleaning': ['Bathroom Cleaning', 'Sofa Cleaning', 'Kitchen Cleaning'],
-  'Invisible Grill': ['Residential Apartment', 'Commercial'],
-  'Civil & Mason Works': ['Grouting Of Tiles', 'Wall Plastering'],
-};
-const FREQUENCIES = ['Daily', 'Weekly', 'Monthly'];
-const STATUSES = ['Active', 'Inactive'];
+interface SubCategory {
+  id: number;
+  osr_categories_id: number;
+  name: string;
+}
 
-const emptyForm = () => ({
-  categoryType: '',
-  subCategory: '',
-  frequency: '',
-  days: [] as string[],
-  startTime: '',
-  endTime: '',
-  maxCapacity: '',
-  price: '',
-  status: 'Active',
-});
+interface SubCatFlat {
+  id: number;
+  osr_sub_category_id: number;
+  flat_type_id: number;
+  flat_type_name: string;
+  price: number;
+}
 
-// ─── Sample Data ─────────────────────────────────────────────────────────────
+interface FormState {
+  osr_category_id: string;
+  osr_sub_category_id: string;
+  flat_type_id: string;
+  startTime: string;
+  endTime: string;
+  mon: number;
+  tue: number;
+  wed: number;
+  thu: number;
+  fri: number;
+  sat: number;
+  sun: number;
+  active: string;
+}
 
-const sampleSchedules: ScheduleEntry[] = [
-  { id: 1, categoryType: 'Pets Spa', subCategory: 'Full Body Bath', frequency: 'Weekly', days: ['Mon', 'Wed', 'Fri'], startTime: '09:00', endTime: '11:00', maxCapacity: 5, price: 1500, status: 'Active' },
-  { id: 2, categoryType: 'Pest Control', subCategory: 'Standard Cockroach Control', frequency: 'Monthly', days: ['Sat'], startTime: '10:00', endTime: '13:00', maxCapacity: 8, price: 2000, status: 'Active' },
-  { id: 3, categoryType: 'Deep Cleaning', subCategory: 'Bathroom Cleaning', frequency: 'Weekly', days: ['Tue', 'Thu', 'Sat'], startTime: '08:00', endTime: '12:00', maxCapacity: 4, price: 1200, status: 'Inactive' },
-  { id: 4, categoryType: 'Invisible Grill', subCategory: 'Residential Apartment', frequency: 'Daily', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], startTime: '09:00', endTime: '17:00', maxCapacity: 3, price: 5000, status: 'Active' },
-  { id: 5, categoryType: 'Pets Spa', subCategory: 'Clam Massage', frequency: 'Weekly', days: ['Mon', 'Wed'], startTime: '11:00', endTime: '13:00', maxCapacity: 6, price: 800, status: 'Active' },
-];
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_KEYS: (keyof FormState)[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────
+
+function formatTime(hour: number, minute: string) {
+  const h = String(hour).padStart(2, '0');
+  return `${h}:${minute}`;
+}
+
+function parseTime(time: string) {
+  const [h, m] = time.split(':');
+  return { hour: parseInt(h, 10), minute: m || '00' };
+}
 
 // ─── Table Columns ─────────────────────────────────────────────────────────
 
 const SCHEDULE_COLUMNS: ColumnConfig[] = [
-  { key: 'srNo',        label: 'Sr No',        sortable: false, hideable: false },
-  { key: 'categoryType', label: 'Category Type', sortable: true },
-  { key: 'subCategory',  label: 'Sub Category',  sortable: true },
-  { key: 'frequency',    label: 'Frequency',     sortable: true },
-  { key: 'days',         label: 'Days',          sortable: false },
-  { key: 'startTime',    label: 'Start Time',    sortable: true },
-  { key: 'endTime',      label: 'End Time',      sortable: true },
-  { key: 'maxCapacity',  label: 'Max Capacity',  sortable: true },
-  { key: 'price',        label: 'Price (₹)',     sortable: true },
-  { key: 'status',       label: 'Status',        sortable: true },
+  { key: 'srNo',             label: 'S.No.',       sortable: false, hideable: false },
+  { key: 'osr_category_id',  label: 'Category',     sortable: true },
+  { key: 'subCategory',      label: 'Sub Category', sortable: true },
+  { key: 'startTime',        label: 'Start Time',   sortable: true },
+  { key: 'endTime',          label: 'End Time',     sortable: true },
+  { key: 'days',             label: 'Days',         sortable: false },
+  { key: 'active',           label: 'Status',       sortable: true },
 ];
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export const OSRSchedulePage: React.FC = () => {
-  const [schedules, setSchedules] = useState<ScheduleEntry[]>(sampleSchedules);
+  const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
+  const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState(emptyForm());
-  const [editFormData, setEditFormData] = useState(emptyForm());
   const [submitting, setSubmitting] = useState(false);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // Cascading dropdowns
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [subCatFlats, setSubCatFlats] = useState<SubCatFlat[]>([]);
+  const [subCatsLoading, setSubCatsLoading] = useState(false);
+  const [flatsLoading, setFlatsLoading] = useState(false);
 
-  const toggleDay = (day: string, form: typeof formData, setter: React.Dispatch<React.SetStateAction<typeof formData>>) => {
-    setter(prev => ({
-      ...prev,
-      days: prev.days.includes(day) ? prev.days.filter(d => d !== day) : [...prev.days, day],
-    }));
+  // ── Initial form state ──────────────────────────────────────────────────
+
+  const emptyForm = (): FormState => ({
+    osr_category_id: '',
+    osr_sub_category_id: '',
+    flat_type_id: '',
+    startTime: '09:00',
+    endTime: '17:00',
+    mon: 0,
+    tue: 0,
+    wed: 0,
+    thu: 0,
+    fri: 0,
+    sat: 0,
+    sun: 0,
+    active: 'Active',
+  });
+
+  const [formData, setFormData] = useState<FormState>(emptyForm());
+  const [editFormData, setEditFormData] = useState<FormState>(emptyForm());
+
+  // ── Load data ──────────────────────────────────────────────────────────────
+
+  const loadCategories = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const cats = res.data?.osr_categories ?? [];
+      const subs = res.data?.osr_sub_categories ?? [];
+      setCategories(Array.isArray(cats) ? cats : []);
+      setAllSubCategories(Array.isArray(subs) ? subs : []);
+    } catch { /* silent */ }
+  }, []);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/crm/admin/osr_schedules.json');
+      const raw = res.data?.osr_schedules ?? [];
+      setSchedules(Array.isArray(raw) ? raw : []);
+    } catch {
+      toast.error('Failed to load schedules.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+    load();
+  }, [loadCategories, load]);
+
+  // ── Cascading fetches ───────────────────────────────────────────────────
+
+  const fetchSubCategories = useCallback(async (categoryId: number, formSetter: typeof setFormData) => {
+    setSubCatsLoading(true);
+    setSubCategories([]);
+    setSubCatFlats([]);
+    formSetter(prev => ({ ...prev, osr_sub_category_id: '', flat_type_id: '' }));
+    try {
+      const res = await apiClient.get(`/get_osr_sub_categories.json?id=${categoryId}`);
+      const raw = res.data?.osr_sub_categories ?? [];
+      setSubCategories(Array.isArray(raw) ? raw : []);
+    } catch {
+      toast.error('Failed to load sub-categories.');
+    } finally {
+      setSubCatsLoading(false);
+    }
+  }, []);
+
+  const fetchFlatTypes = useCallback(async (subCategoryId: number, formSetter: typeof setFormData) => {
+    setFlatsLoading(true);
+    setSubCatFlats([]);
+    formSetter(prev => ({ ...prev, flat_type_id: '' }));
+    try {
+      const res = await apiClient.get(`/osr_subcat_flats.json?q[osr_sub_category_id_eq]=${subCategoryId}`);
+      const raw = res.data?.flat_types ?? [];
+      setSubCatFlats(Array.isArray(raw) ? raw : []);
+    } catch {
+      toast.error('Failed to load flat types.');
+    } finally {
+      setFlatsLoading(false);
+    }
+  }, []);
+
+  // ── Category change handler ─────────────────────────────────────────────
+
+  const handleCategoryChange = (val: string, form: FormState, setter: typeof setFormData) => {
+    setter(prev => ({ ...prev, osr_category_id: val }));
+    if (val) {
+      fetchSubCategories(Number(val), setter);
+    } else {
+      setSubCategories([]);
+      setSubCatFlats([]);
+      setter(prev => ({ ...prev, osr_sub_category_id: '', flat_type_id: '' }));
+    }
   };
 
-  // ── Add ──────────────────────────────────────────────────────────────────
+  // ── Sub Category change handler ─────────────────────────────────────────
 
-  const handleAdd = () => {
-    if (!formData.categoryType || !formData.subCategory || !formData.frequency || !formData.startTime || !formData.endTime) {
+  const handleSubCategoryChange = (val: string, form: FormState, setter: typeof setFormData) => {
+    setter(prev => ({ ...prev, osr_sub_category_id: val }));
+    if (val) {
+      fetchFlatTypes(Number(val), setter);
+    } else {
+      setSubCatFlats([]);
+      setter(prev => ({ ...prev, flat_type_id: '' }));
+    }
+  };
+
+  // ── Day number change ───────────────────────────────────────────────────
+
+  const handleDayChange = (dayKey: keyof FormState, value: string, setter: typeof setFormData) => {
+    const num = Math.min(2, Math.max(0, Number(value) || 0));
+    setter(prev => ({ ...prev, [dayKey]: num }));
+  };
+
+  // ── Build payload ───────────────────────────────────────────────────────
+
+  const buildPayload = (data: FormState) => ({
+    osr_schedule: {
+      osr_category_id: Number(data.osr_category_id),
+      osr_sub_category_id: Number(data.osr_sub_category_id),
+      start_hour: parseTime(data.startTime).hour,
+      start_minute: parseTime(data.startTime).minute,
+      end_hour: parseTime(data.endTime).hour,
+      end_minute: parseTime(data.endTime).minute,
+      mon: data.mon,
+      tue: data.tue,
+      wed: data.wed,
+      thu: data.thu,
+      fri: data.fri,
+      sat: data.sat,
+      sun: data.sun,
+      active: data.active === 'Active' ? 1 : 0,
+    },
+  });
+
+  // ── Validate ────────────────────────────────────────────────────────────
+
+  const validate = (data: FormState) => {
+    if (!data.osr_category_id || !data.osr_sub_category_id || !data.startTime || !data.endTime) {
       toast.error('Please fill in all required fields.');
-      return;
+      return false;
     }
-    if (formData.frequency === 'Weekly' && formData.days.length === 0) {
-      toast.error('Please select at least one day for weekly frequency.');
-      return;
-    }
-    setSubmitting(true);
-    setTimeout(() => {
-      const newEntry: ScheduleEntry = {
-        id: Date.now(),
-        categoryType: formData.categoryType,
-        subCategory: formData.subCategory,
-        frequency: formData.frequency,
-        days: formData.days,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        maxCapacity: Number(formData.maxCapacity) || 0,
-        price: Number(formData.price) || 0,
-        status: formData.status,
-      };
-      setSchedules(prev => [newEntry, ...prev]);
-      setFormData(emptyForm());
-      setShowAddModal(false);
-      setSubmitting(false);
-      toast.success('Schedule added successfully!');
-    }, 500);
+    return true;
   };
 
-  // ── Edit ─────────────────────────────────────────────────────────────────
+  // ── Add ────────────────────────────────────────────────────────────────────
 
-  const handleEditOpen = (entry: ScheduleEntry) => {
+  const handleAdd = async () => {
+    if (!validate(formData)) return;
+    setSubmitting(true);
+    try {
+      await apiClient.post('/crm/admin/create_osr_schedule.json', buildPayload(formData));
+      toast.success('Schedule added successfully.');
+      setShowAddModal(false);
+      setFormData(emptyForm());
+      setSubCategories([]);
+      setSubCatFlats([]);
+      load();
+    } catch {
+      toast.error('Failed to add schedule.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── Open Edit ──────────────────────────────────────────────────────────────
+
+  const openEdit = async (entry: ScheduleEntry) => {
     setEditingId(entry.id);
     setEditFormData({
-      categoryType: entry.categoryType,
-      subCategory: entry.subCategory,
-      frequency: entry.frequency,
-      days: [...entry.days],
-      startTime: entry.startTime,
-      endTime: entry.endTime,
-      maxCapacity: String(entry.maxCapacity),
-      price: String(entry.price),
-      status: entry.status,
+      osr_category_id: String(entry.osr_category_id),
+      osr_sub_category_id: String(entry.osr_sub_category_id),
+      flat_type_id: '',
+      startTime: formatTime(entry.start_hour, entry.start_minute),
+      endTime: formatTime(entry.end_hour, entry.end_minute),
+      mon: entry.mon,
+      tue: entry.tue,
+      wed: entry.wed,
+      thu: entry.thu,
+      fri: entry.fri,
+      sat: entry.sat,
+      sun: entry.sun,
+      active: entry.active === 1 ? 'Active' : 'Inactive',
     });
     setShowEditModal(true);
+
+    // Cascade load: category -> subcategories -> flat types
+    if (entry.osr_category_id) {
+      await fetchSubCategories(entry.osr_category_id, setEditFormData);
+      setEditFormData(prev => ({ ...prev, osr_sub_category_id: String(entry.osr_sub_category_id) }));
+      if (entry.osr_sub_category_id) {
+        await fetchFlatTypes(entry.osr_sub_category_id, setEditFormData);
+      }
+    }
   };
 
-  const handleUpdate = () => {
-    if (!editFormData.categoryType || !editFormData.subCategory || !editFormData.startTime || !editFormData.endTime) {
-      toast.error('Please fill in all required fields.');
-      return;
-    }
+  // ── Update ─────────────────────────────────────────────────────────────────
+
+  const handleUpdate = async () => {
+    if (!validate(editFormData)) return;
     setSubmitting(true);
-    setTimeout(() => {
-      setSchedules(prev =>
-        prev.map(s =>
-          s.id === editingId
-            ? { ...s, ...editFormData, maxCapacity: Number(editFormData.maxCapacity), price: Number(editFormData.price) }
-            : s
-        )
-      );
+    try {
+      await apiClient.post(`/crm/admin/modify_osr_schedule.json?id=${editingId}`, buildPayload(editFormData));
+      toast.success('Schedule updated successfully.');
       setShowEditModal(false);
       setEditingId(null);
+      setSubCategories([]);
+      setSubCatFlats([]);
+      load();
+    } catch {
+      toast.error('Failed to update schedule.');
+    } finally {
       setSubmitting(false);
-      toast.success('Schedule updated successfully!');
-    }, 500);
+    }
   };
 
-  // ── Delete ───────────────────────────────────────────────────────────────
+  // ── Delete ─────────────────────────────────────────────────────────────────
 
-  const handleDelete = (id: number) => {
-    setSchedules(prev => prev.filter(s => s.id !== id));
-    toast.success('Schedule deleted successfully!');
+  const handleDelete = async (id: number) => {
+    try {
+      await apiClient.post(`/crm/admin/modify_osr_schedule.json?id=${id}`, { active: 0 });
+      toast.success('Schedule deleted successfully.');
+      load();
+    } catch {
+      toast.error('Failed to delete schedule.');
+    }
   };
 
   // ── Status badge ─────────────────────────────────────────────────────────
 
-  const getStatusBadge = (status: string) =>
-    status === 'Active'
+  const getStatusBadge = (active: number) =>
+    active === 1
       ? 'bg-green-100 text-green-800'
       : 'bg-gray-100 text-gray-600';
 
-  // ── Schedule Form (shared between Add and Edit) ───────────────────────────
+  // ── Sub Category name lookup ────────────────────────────────────────────
+
+  const getSubCatName = (id: number) =>
+    allSubCategories.find(s => s.id === id)?.name ?? `Sub #${id}`;
+
+  // ── Get active day labels (for table display) ───────────────────────────
+
+  const getActiveDays = (entry: ScheduleEntry) => {
+    const days: string[] = [];
+    const map: Record<string, number> = {
+      mon: entry.mon, tue: entry.tue, wed: entry.wed, thu: entry.thu,
+      fri: entry.fri, sat: entry.sat, sun: entry.sun,
+    };
+    DAY_LABELS.forEach((label, i) => {
+      const key = DAY_KEYS[i];
+      if (map[key] > 0) days.push(label);
+    });
+    return days;
+  };
+
+  // ── Schedule Form (shared between Add and Edit) ──────────────────────────
 
   const ScheduleForm = ({
     data,
     setData,
   }: {
-    data: typeof formData;
-    setData: React.Dispatch<React.SetStateAction<typeof formData>>;
+    data: FormState;
+    setData: typeof setFormData;
   }) => (
     <div className="space-y-5">
-      {/* Row 1: Category Type + Sub Category */}
+      {/* Row 1: Category + Sub Category */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category Type <span className="text-red-500">*</span>
+            Category <span className="text-red-500">*</span>
           </label>
           <Select
-            value={data.categoryType}
-            onValueChange={val => setData(prev => ({ ...prev, categoryType: val, subCategory: '' }))}
+            value={data.osr_category_id}
+            onValueChange={val => handleCategoryChange(val, data, setData)}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Category Type" />
+              <SelectValue placeholder="Select Category" />
             </SelectTrigger>
             <SelectContent>
-              {CATEGORY_TYPES.map(c => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
+              {categories.map(c => (
+                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -213,90 +404,55 @@ export const OSRSchedulePage: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sub Category Type <span className="text-red-500">*</span>
+            Sub Category <span className="text-red-500">*</span>
           </label>
           <Select
-            value={data.subCategory}
-            onValueChange={val => setData(prev => ({ ...prev, subCategory: val }))}
-            disabled={!data.categoryType}
+            value={data.osr_sub_category_id}
+            onValueChange={val => handleSubCategoryChange(val, data, setData)}
+            disabled={!data.osr_category_id || subCatsLoading}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={data.categoryType ? 'Select Sub Category' : 'Select Category first'} />
+              <SelectValue placeholder={
+                !data.osr_category_id ? 'Select Category first'
+                : subCatsLoading ? 'Loading...'
+                : 'Select Sub Category'
+              } />
             </SelectTrigger>
             <SelectContent>
-              {(SUB_CATEGORIES[data.categoryType] || []).map(s => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+              {subCategories.map(sc => (
+                <SelectItem key={sc.id} value={String(sc.id)}>{sc.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Row 2: Frequency + Status */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Frequency <span className="text-red-500">*</span>
-          </label>
-          <Select
-            value={data.frequency}
-            onValueChange={val => setData(prev => ({ ...prev, frequency: val, days: [] }))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Frequency" />
-            </SelectTrigger>
-            <SelectContent>
-              {FREQUENCIES.map(f => (
-                <SelectItem key={f} value={f}>{f}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <Select
-            value={data.status}
-            onValueChange={val => setData(prev => ({ ...prev, status: val }))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUSES.map(s => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Days (shown for Weekly frequency) */}
-      {data.frequency === 'Weekly' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Days <span className="text-red-500">*</span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {DAYS_OF_WEEK.map(day => (
-              <button
-                key={day}
-                type="button"
-                onClick={() => toggleDay(day, data, setData)}
-                className={`px-3 py-1.5 text-sm font-medium rounded border transition-colors ${
-                  data.days.includes(day)
-                    ? 'bg-[#C72030] text-white border-[#C72030]'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-[#C72030] hover:text-[#C72030]'
-                }`}
-              >
-                {day}
-              </button>
+      {/* Flat Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Flat Type</label>
+        <Select
+          value={data.flat_type_id}
+          onValueChange={val => setData(prev => ({ ...prev, flat_type_id: val }))}
+          disabled={!data.osr_sub_category_id || flatsLoading}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={
+              !data.osr_sub_category_id ? 'Select Sub Category first'
+              : flatsLoading ? 'Loading...'
+              : 'Select Flat Type'
+            } />
+          </SelectTrigger>
+          <SelectContent>
+            {subCatFlats.map(f => (
+              <SelectItem key={f.flat_type_id} value={String(f.flat_type_id)}>
+                {f.flat_type_name} (₹{f.price})
+              </SelectItem>
             ))}
-          </div>
-        </div>
-      )}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Row 3: Start Time + End Time */}
+      {/* Row 2: Start Time + End Time */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -320,28 +476,44 @@ export const OSRSchedulePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Row 4: Max Capacity + Price */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Max Capacity</label>
-          <Input
-            type="number"
-            min="1"
-            placeholder="e.g. 5"
-            value={data.maxCapacity}
-            onChange={e => setData(prev => ({ ...prev, maxCapacity: e.target.value }))}
-          />
+      {/* Days — Number inputs */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Days (0/1/2)</label>
+        <div className="grid grid-cols-7 gap-2">
+          {DAY_LABELS.map((label, i) => {
+            const key = DAY_KEYS[i];
+            return (
+              <div key={label} className="flex flex-col items-center gap-1">
+                <label className="text-xs text-gray-500 font-medium">{label}</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={2}
+                  value={data[key]}
+                  onChange={e => handleDayChange(key, e.target.value, setData)}
+                  className="w-full text-center"
+                />
+              </div>
+            );
+          })}
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-          <Input
-            type="number"
-            min="0"
-            placeholder="e.g. 1500"
-            value={data.price}
-            onChange={e => setData(prev => ({ ...prev, price: e.target.value }))}
-          />
-        </div>
+      </div>
+
+      {/* Status */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <Select
+          value={data.active}
+          onValueChange={val => setData(prev => ({ ...prev, active: val }))}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Active">Active</SelectItem>
+            <SelectItem value="Inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
@@ -367,69 +539,87 @@ export const OSRSchedulePage: React.FC = () => {
           onFilterClick={() => toast.info('Filter')}
           pagination={true}
           pageSize={10}
+          loading={loading}
           emptyMessage="No schedules found."
           leftActions={
             <Button
               size="sm"
-              onClick={() => { setFormData(emptyForm()); setShowAddModal(true); }}
+              onClick={() => { setFormData(emptyForm()); setSubCategories([]); setSubCatFlats([]); setShowAddModal(true); }}
               className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 h-auto px-3 py-2"
             >
               <Plus className="w-4 h-4" />
               Add
             </Button>
           }
-          renderActions={(item) => (
-            <>
-              <button
-                className="p-1.5 rounded hover:bg-amber-50 transition-colors text-amber-500"
-                onClick={() => handleEditOpen(item as ScheduleEntry)}
-                title="Edit"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button className="p-1.5 rounded hover:bg-red-50 transition-colors text-red-600" title="Delete">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete this schedule? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleDelete((item as ScheduleEntry).id)}
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </>
-          )}
+          renderActions={(item) => {
+            const entry = item as ScheduleEntry;
+            return (
+              <>
+                <button
+                  className="p-1.5 rounded hover:bg-amber-50 transition-colors text-amber-500"
+                  onClick={() => openEdit(entry)}
+                  title="Edit"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="p-1.5 rounded hover:bg-red-50 transition-colors text-red-600" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this schedule? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(entry.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            );
+          }}
           renderCell={(item, columnKey, index) => {
             const entry = item as ScheduleEntry;
             switch (columnKey) {
               case 'srNo':
                 return <span className="text-gray-500">{index + 1}</span>;
-              case 'categoryType':
-                return <span className="font-semibold text-gray-900">{entry.categoryType}</span>;
-              case 'days':
-                return entry.days.length > 0
-                  ? <span title={entry.days.join(', ')}>{entry.days.join(', ')}</span>
-                  : <span className="text-gray-400">—</span>;
-              case 'price':
-                return `₹${entry.price.toLocaleString()}`;
-              case 'status':
+              case 'osr_category_id':
                 return (
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(entry.status)}`}>
-                    {entry.status}
+                  <span className="font-semibold text-gray-900">
+                    {categories.find(c => c.id === entry.osr_category_id)?.name ?? `Category #${entry.osr_category_id}`}
+                  </span>
+                );
+              case 'subCategory':
+                return (
+                  <span className="text-gray-700">
+                    {getSubCatName(entry.osr_sub_category_id)}
+                  </span>
+                );
+              case 'startTime':
+                return formatTime(entry.start_hour, entry.start_minute);
+              case 'endTime':
+                return formatTime(entry.end_hour, entry.end_minute);
+              case 'days': {
+                const activeDays = getActiveDays(entry);
+                return activeDays.length > 0
+                  ? <span title={activeDays.join(', ')}>{activeDays.join(', ')}</span>
+                  : <span className="text-gray-400">—</span>;
+              }
+              case 'active':
+                return (
+                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(entry.active)}`}>
+                    {entry.active === 1 ? 'Active' : 'Inactive'}
                   </span>
                 );
               default:
@@ -439,16 +629,9 @@ export const OSRSchedulePage: React.FC = () => {
         />
       </div>
 
-      {/* Footer */}
-      {/* <div className="py-4 flex justify-center border-t border-gray-200 bg-white">
-        <span className="text-sm text-gray-600">
-          Powered by <span className="font-semibold">LOCKATED</span>
-        </span>
-      </div> */}
-
       {/* ── Add Modal ─────────────────────────────────────────────────────── */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={showAddModal} onOpenChange={open => { setShowAddModal(open); if (!open) { setSubCategories([]); setSubCatFlats([]); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-900">Add Schedule</DialogTitle>
           </DialogHeader>
@@ -469,8 +652,8 @@ export const OSRSchedulePage: React.FC = () => {
       </Dialog>
 
       {/* ── Edit Modal ────────────────────────────────────────────────────── */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={showEditModal} onOpenChange={open => { setShowEditModal(open); if (!open) { setSubCategories([]); setSubCatFlats([]); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-900">Edit Schedule</DialogTitle>
           </DialogHeader>
@@ -493,6 +676,4 @@ export const OSRSchedulePage: React.FC = () => {
   );
 };
 
-
 export default OSRSchedulePage;
-

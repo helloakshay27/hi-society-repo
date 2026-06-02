@@ -953,7 +953,7 @@ if (ceoInfo) {
 
 
               {/* Welcome Description Section */}
-              <div className="mt-5">
+              {/* <div className="mt-5">
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
                   Welcome Description
                 </h3>
@@ -1037,10 +1037,10 @@ if (ceoInfo) {
                 >
                   + Add Description
                 </Button>
-              </div>
+              </div> */}
 
               {/* Vision Section */}
-              <div className="mt-8">
+              {/* <div className="mt-8">
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
                   Vision
                 </h3>
@@ -1107,7 +1107,7 @@ if (ceoInfo) {
                             // className="text-red-600 hover:text-red-700"
                             style={{ padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            {/* Remove */}
+                         
                             <X style={{ color: 'red', width: 16, height: 16 }} />
                           </Button>
                         )}
@@ -1124,9 +1124,9 @@ if (ceoInfo) {
                 >
                   + Add Vision
                 </Button>
-              </div>
+              </div> */}
               {/* Mission Section */}
-              <div className="mt-8">
+              {/* <div className="mt-8">
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
                   Mission
                 </h3>
@@ -1197,7 +1197,7 @@ if (ceoInfo) {
                             // className="text-red-600 hover:text-red-700"
                             style={{ padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            {/* Remove */}
+                          
                             <X style={{ color: 'red', width: 16, height: 16 }} />
                           </Button>
                         )}
@@ -1214,14 +1214,14 @@ if (ceoInfo) {
                 >
                   + Add Mission
                 </Button>
-              </div>
+              </div> */}
 
               {/* CEO Info Section */}
               <div className="mt-8">
-                <h3 className="text-sm font-medium text-[#C72030] mb-4">CEO Info</h3>
-
+                {/* <h3 className="text-sm font-medium text-[#C72030] mb-4">CEO Info</h3> */}
+{/* 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Name */}
+                 
                   <TextField
                     label="Name"
                     placeholder="Enter CEO name"
@@ -1235,7 +1235,7 @@ if (ceoInfo) {
                     disabled={isSubmitting}
                   />
 
-                  {/* Designation */}
+                 
                   <TextField
                     label="Designation"
                     value={ceoInfo.designation}
@@ -1244,7 +1244,7 @@ if (ceoInfo) {
                     InputLabelProps={{ shrink: true }}
                     disabled
                   />
-                </div>
+                </div> */}
 
                 {/* Description */}
                 {/* <div className="mt-4">
@@ -1265,7 +1265,7 @@ if (ceoInfo) {
                           </div> */}
 
                 {/* CEO Description */}
-                <div className="mt-6">
+                {/* <div className="mt-6">
                   <TextField
                     label="Description"
                     placeholder="Enter CEO description"
@@ -1298,7 +1298,7 @@ if (ceoInfo) {
                     rows={3}
                     disabled={isSubmitting}
                   />
-                </div>
+                </div> */}
 
 
                 {/* Photo Upload */}
@@ -1320,7 +1320,7 @@ if (ceoInfo) {
                   )}
                 </div> */}
 
-                <div className="mt-4 space-y-2">
+                {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Photo</span>
 
               <input
@@ -1355,12 +1355,12 @@ if (ceoInfo) {
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
 {console.log('ceoInfo.videoUrl', ceoInfo.videoUrl)}
                 {/* Video Upload */}
               
 
-                <div className="mt-4 space-y-2">
+                {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Video</span>
 
               <input
@@ -1405,7 +1405,7 @@ if (ceoInfo) {
                   )}
                 </div>
               )}
-            </div>
+            </div> */}
 
                 </div>
             </div>

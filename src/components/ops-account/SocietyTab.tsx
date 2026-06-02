@@ -418,7 +418,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         </button>
         <button
           onClick={() => handleEdit(society.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditSociety}
         >
@@ -426,7 +426,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         </button>
         <button
           onClick={() => handleDelete(society.id, society.building_name)}
-          className="p-1 text-red-600 hover:bg-red-50 rounded"
+          className="p-1 text-black-600 hover:bg-red-50 rounded"
           title="Delete"
           disabled={!canEditSociety}
         >
@@ -472,6 +472,10 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
 
   return (
     <>
+       <div className="p-6 space-y-6">
+      <header className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Society</h1>
+      </header>
       {loading && societies.length === 0 ? (
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-[#c72030]" />
@@ -658,6 +662,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </>
   );
 };

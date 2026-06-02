@@ -442,7 +442,7 @@ export const RegionTab: React.FC<RegionTabProps> = ({
         </button> */}
         <button
           onClick={() => region?.id && handleEdit(region.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditRegion || !region?.id}
         >

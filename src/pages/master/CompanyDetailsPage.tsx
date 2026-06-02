@@ -254,7 +254,7 @@ export const CompanyDetailsPage: React.FC = () => {
                 {company.name}
               </h1>
               <div className="flex items-center gap-2 mt-3">
-                <span
+                {/* <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                     company.active
                       ? "bg-green-100 text-green-800"
@@ -262,12 +262,12 @@ export const CompanyDetailsPage: React.FC = () => {
                   }`}
                 >
                   {company.status || (company.active ? "Active" : "Inactive")}
-                </span>
-                {company.test && (
+                </span> */}
+                {/* {company.test && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                     Test Account
                   </span>
-                )}
+                )} */}
                 {company.white_label && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                     White Label
