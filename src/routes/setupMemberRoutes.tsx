@@ -79,6 +79,8 @@ const AddUserPage = lazy(() => import("@/pages/AddUserPage"));
 const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
 const AddOfferPage = lazy(() => import("@/pages/AddOfferPage"));
 const AddOffersPage = lazy(() => import("@/pages/AddOffersPage"));
+const EditOffersPage = lazy(() => import("@/pages/EditOffersPage"));
+const BMSOfferViewPage = lazy(() => import("@/pages/BMSOfferViewPage"));
 const AddBusinessDirectoryPage = lazy(
   () => import("@/pages/AddBusinessDirectoryPage")
 );
@@ -1724,10 +1726,13 @@ export const setupMemberRoutes = (
 
     {/* Offers Routes */}
     <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
+    <Route path="/bms/offers/add" Component={withSuspense(AddOffersPage)} />
+    <Route path="/bms/offers/edit/:id" Component={withSuspense(EditOffersPage)} />
+    <Route path="/bms/offers/view/:id" Component={withSuspense(BMSOfferViewPage)} />
     <Route path="/offer/add" Component={withSuspense(AddOfferPage)} />
     <Route path="/offer/add/:id" Component={withSuspense(AddOfferPage)} />
     <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
-    <Route path="/loyalty/offers/add" Component={withSuspense(AddOffersPage)} />
+    {/* <Route path="/loyalty/offers/add" Component={withSuspense(AddOffersPage)} /> */}
     <Route path="/loyalty/offer/add" Component={withSuspense(LoyaltyAddOfferPage)} />
     <Route path="/loyalty/offer/add/:id" Component={withSuspense(LoyaltyAddOfferPage)} />
     <Route path="/loyalty/offer/view/:id" Component={withSuspense(LoyaltyOfferViewPage)} />
