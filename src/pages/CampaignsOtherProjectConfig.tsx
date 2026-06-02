@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, X } from "lucide-react";
 import {
   TextField,
   MenuItem,
@@ -38,6 +38,20 @@ const CampaignsOtherProjectConfig: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [estateBuilders, setEstateBuilders] = useState<EstateBuilder[]>([]);
   const [isLoadingBuilders, setIsLoadingBuilders] = useState(false);
+
+  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedGalleryFiles((prev) => [...prev, ...filesArray]);
+    }
+  };
+
+  const handleRemoveSelectedFile = (index: number) => {
+    setSelectedGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const [configForm, setConfigForm] = useState({
     name: "",
@@ -171,6 +185,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
           configForm.externalProjectId
         );
 
+
       if (configForm.latitude)
         formData.append("builder_project[latitude]", configForm.latitude);
       if (configForm.longitude)
@@ -185,6 +200,11 @@ const CampaignsOtherProjectConfig: React.FC = () => {
           configForm.projectLogo
         );
       }
+
+      selectedGalleryFiles.forEach((file) => {
+        formData.append("builder_project[gallery][]", file);
+        formData.append("builder_project[gallery_images][]", file);
+      });
 
       if (configForm.builder_id) {
         formData.append("builder_project[builder_id]", configForm.builder_id);
@@ -730,14 +750,44 @@ const CampaignsOtherProjectConfig: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Gallery images
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
-                <button
-                  type="button"
-                  className="text-gray-500 hover:text-gray-700"
-                >
+              <input
+                type="file"
+                ref={galleryInputRef}
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleGalleryChange}
+              />
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:border-orange-400 transition-colors"
+                onClick={() => galleryInputRef.current?.click()}
+              >
+                <div className="flex flex-col items-center gap-1 text-gray-500">
                   <Plus className="w-6 h-6" />
-                </button>
+                  <span className="text-xs">Click to add images</span>
+                </div>
               </div>
+              {selectedGalleryFiles.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-3">
+                  {selectedGalleryFiles.map((file, idx) => (
+                    <div key={idx} className="relative group">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        className="w-full h-24 object-cover rounded-md border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSelectedFile(idx)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      <p className="text-[10px] text-gray-500 truncate mt-1">{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Amenities */}
