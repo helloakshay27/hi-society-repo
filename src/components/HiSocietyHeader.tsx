@@ -179,6 +179,9 @@ export const HiSocietyHeader = () => {
   // Fetch Hi-Society account and approved societies data
   const fetchHiSocietyData = async (token: string) => {
     try {
+      // Skip if already fetched for this token this session
+      if (sessionStorage.getItem("hiSocietyDataToken") === token) return;
+
       let accountData: any = null;
 
       // Fetch account data
@@ -198,6 +201,8 @@ export const HiSocietyHeader = () => {
         const societies = societiesData.user_societies || [];
         localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
         sessionStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
+        // Mark this token as fetched so refreshes skip the API call
+        sessionStorage.setItem("hiSocietyDataToken", token);
 
         // Update state immediately
         setHiSocietySocieties(societies);

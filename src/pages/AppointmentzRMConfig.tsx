@@ -115,8 +115,12 @@ const AppointmentzRMConfig = () => {
       let errorMessage = "Failed to fetch RM users";
 
       if (error && typeof error === 'object' && 'response' in error && error.response) {
-        const errorData = (error.response as any).data;
-        if (errorData?.message) {
+        interface ErrorResp {
+          message?: string;
+          error?: string | unknown;
+        }
+        const errorData = (error as { response?: { data?: ErrorResp } }).response?.data;
+        if (errorData?.message && typeof errorData.message === 'string') {
           errorMessage = errorData.message;
         } else if (errorData?.error) {
           errorMessage = typeof errorData.error === 'string'
@@ -297,23 +301,29 @@ const AppointmentzRMConfig = () => {
         userType: user.user_type === "cs_user" ? "cs_user" : "rm_user",
       });
       setIsAddModalOpen(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching user details:", error);
 
       let errorMessage = "Failed to fetch user details";
 
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (errorData.error) {
-          errorMessage = typeof errorData.error === 'string'
-            ? errorData.error
-            : JSON.stringify(errorData.error);
-        } else if (errorData.errors) {
-          errorMessage = Object.keys(errorData.errors).map((key) => {
-            return `${key}: ${errorData.errors[key].join(', ')}`;
-          }).join(', ');
+      if (error && typeof error === 'object' && 'response' in error) {
+        interface ErrorResponse {
+          message?: string;
+          error?: string;
+          errors?: Record<string, unknown>;
+        }
+        const errorData = (error as { response?: { data?: ErrorResponse } }).response?.data;
+        if (errorData) {
+          if (errorData.message && typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          } else if (errorData.error && typeof errorData.error === 'string') {
+            errorMessage = errorData.error;
+          } else if (errorData.errors) {
+            errorMessage = Object.keys(errorData.errors).map((key) => {
+              const errors = errorData.errors?.[key];
+              return `${key}: ${Array.isArray(errors) ? errors.join(', ') : String(errors)}`;
+            }).join(', ');
+          }
         }
       }
 
@@ -389,14 +399,12 @@ const AppointmentzRMConfig = () => {
           user: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-            firstname: formData.firstName,
-            lastname: formData.lastName,
             email: formData.email,
             mobile: formData.mobile,
             password: formData.password,
             password_confirmation: formData.password,
             user_type: formData.userType,
-            section: "", // Default empty as it's removed from UI
+            section: "",
           },
         });
         setTimeout(() => {
@@ -406,19 +414,29 @@ const AppointmentzRMConfig = () => {
       // Refresh the list
       await fetchRMUsers();
       setIsAddModalOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving user:", error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosErr = error as { response?: { status?: number; statusText?: string; data?: unknown } };
+        console.error("Full error response:", JSON.stringify({
+          status: axiosErr.response?.status,
+          statusText: axiosErr.response?.statusText,
+          data: axiosErr.response?.data,
+        }, null, 2));
+      }
 
       let errorMessage = "Failed to save user";
       const apiErrors: Record<string, string> = {};
 
-      if (error.response?.data) {
-        const errorData = error.response.data;
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosErr = error as { response?: { data?: unknown } };
+        const errorData = axiosErr.response?.data as Record<string, unknown> | undefined;
         
-        // Handle field-level errors
-        if (Array.isArray(errorData.errors)) {
-          errorMessage = errorData.errors.join(", ");
-        } else if (errorData.errors) {
+        if (errorData) {
+          // Handle field-level errors
+          if (Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors.join(", ");
+          } else if (errorData.errors && typeof errorData.errors === 'object') {
           Object.keys(errorData.errors).forEach((key) => {
             const errorArray = errorData.errors[key];
             const errorText = Array.isArray(errorArray) ? errorArray.join(", ") : String(errorArray);
@@ -436,7 +454,7 @@ const AppointmentzRMConfig = () => {
               apiErrors.password = errorText;
             } else if (key === "password_confirmation") {
               apiErrors.password = errorText;
-            } else if (key === "user_type") {
+            } else if (key === "user_type" || key === "role") {
               apiErrors.userType = errorText;
             } else {
               // Generic field mapping
@@ -444,26 +462,16 @@ const AppointmentzRMConfig = () => {
             }
           });
           setFormErrors(apiErrors);
-          errorMessage = "Please fix the errors below";
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (errorData.error) {
-          errorMessage = typeof errorData.error === "string"
-            ? errorData.error
-            : JSON.stringify(errorData.error);
+          errorMessage = Object.values(apiErrors).join(", ");
+        } else if (errorData.error && typeof errorData.error === 'string') {
+          errorMessage = errorData.error;
+        }
         }
       }
 
-      // Show toast only if we don't have field-level errors
-      if (Object.keys(apiErrors).length === 0) {
-        setTimeout(() => {
-          toast.error(errorMessage);
-        }, 0);
-      } else {
-        setTimeout(() => {
-          toast.error(errorMessage);
-        }, 0);
-      }
+      setTimeout(() => {
+        toast.error(errorMessage);
+      }, 0);
     } finally {
       setIsSubmitting(false);
     }

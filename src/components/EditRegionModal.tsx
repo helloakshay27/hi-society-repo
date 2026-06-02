@@ -288,7 +288,7 @@ export const EditRegionModal: React.FC<EditRegionModalProps> = ({
                 </MuiSelect>
               </FormControl>
 
-              <TextField
+              {/* <TextField
                 label="Description"
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
@@ -297,11 +297,11 @@ export const EditRegionModal: React.FC<EditRegionModalProps> = ({
                 rows={3}
                 sx={fieldStyles}
                 className="md:col-span-2"
-              />
+              /> */}
             </div>
 
             {/* Status Toggle */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-4">
               <label className="text-sm font-medium">Status:</label>
               <div className="flex items-center gap-2">
                 <Switch

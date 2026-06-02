@@ -269,7 +269,7 @@ export const EditCountryModal: React.FC<EditCountryModalProps> = ({
             </FormControl>
           </div>
 
-          <div>
+          {/* <div>
             <span className="text-sm font-medium mb-2 block">Logo</span>
             <input
               type="file"
@@ -284,7 +284,7 @@ export const EditCountryModal: React.FC<EditCountryModalProps> = ({
                 {formData.logo.name}
               </div>
             )}
-          </div>
+          </div> */}
         </div>
         
         {/* Action Buttons */}

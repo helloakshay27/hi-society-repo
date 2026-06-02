@@ -526,7 +526,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
         </button>
         <button
           onClick={() => company?.id && handleEdit(company.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditCompany || !company?.id}
         >

@@ -111,8 +111,8 @@ export const AddCountryModal: React.FC<AddCountryModalProps> = ({
       return;
     }
 
-    if (!formData.company_setup_id || !formData.country_id) {
-      toast.error('Please fill in all required fields (Company and Country)', { duration: 5000 });
+    if (!formData.organization_id || !formData.company_setup_id || !formData.country_id) {
+      toast.error('Please fill in all required fields (Organization, Company and Country)', { duration: 5000 });
       return;
     }
 
@@ -126,9 +126,7 @@ export const AddCountryModal: React.FC<AddCountryModalProps> = ({
         }
       };
 
-      if (formData.organization_id) {
-        requestBody.pms_headquarter.organization_id = parseInt(formData.organization_id);
-      }
+      requestBody.pms_headquarter.organization_id = parseInt(formData.organization_id);
 
       const response = await fetch(getFullUrl('/headquarters.json'), {
         method: 'POST',
@@ -180,8 +178,8 @@ export const AddCountryModal: React.FC<AddCountryModalProps> = ({
 
         <div className="space-y-6 py-4">
           <div className="grid grid-cols-2 gap-6">
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink>Organization</InputLabel>
+            <FormControl fullWidth variant="outlined" required>
+              <InputLabel shrink sx={{ '& .MuiFormLabel-asterisk': { color: '#C72030' } }}>Organization</InputLabel>
               <MuiSelect
                 value={formData.organization_id}
                 onChange={(e) => handleInputChange('organization_id', e.target.value)}

@@ -41,6 +41,7 @@ interface SubCategory {
   active: number;
   price: number | null;
   created_by: number;
+  description?: string | null;
 }
 
 interface FlatType {
@@ -290,6 +291,7 @@ const SubCategoryTab: React.FC = () => {
   const [editDescription, setEditDescription] = useState('');
   const [editPrices, setEditPrices] = useState<Record<number, string>>({});
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   const loadCategories = useCallback(async () => {
     try {
@@ -363,13 +365,39 @@ const SubCategoryTab: React.FC = () => {
     }
   };
 
-  const openEdit = (sc: SubCategory) => {
+  const openEdit = async (sc: SubCategory) => {
     setEditId(sc.id);
-    setEditVal(sc.name);
-    setEditCatId(String(sc.osr_categories_id));
-    setEditDescription('');
-    setEditPrices(Object.fromEntries(flatTypes.map(ft => [ft.id, ''])));
     setEditOpen(true);
+    setEditLoading(true);
+    try {
+      const res = await apiClient.get(`/get_sub_cat.json?id=${sc.id}`);
+      const data = res.data?.osr_sub_category;
+      if (data) {
+        setEditVal(data.name ?? sc.name);
+        setEditCatId(String(data.osr_categories_id ?? sc.osr_categories_id));
+        setEditDescription(data.description ?? '');
+
+        const pricesMap: Record<number, string> = {};
+        if (data.osr_subcat_flats && Array.isArray(data.osr_subcat_flats)) {
+          data.osr_subcat_flats.forEach((f: any) => {
+            pricesMap[f.flat_type_id] = String(f.price ?? '');
+          });
+        } else if (data.price != null) {
+          pricesMap[flatTypes[0]?.id] = String(data.price);
+        }
+        flatTypes.forEach(ft => {
+          if (!(ft.id in pricesMap)) {
+            pricesMap[ft.id] = '';
+          }
+        });
+        setEditPrices(pricesMap);
+      }
+    } catch {
+      toast.error('Failed to load sub-category details.');
+      setEditOpen(false);
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handleUpdate = async () => {
@@ -594,11 +622,17 @@ const SubCategoryTab: React.FC = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog open={editOpen} onOpenChange={open => { if (!open) setEditOpen(false); }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Edit Sub Category</DialogTitle>
           </DialogHeader>
+          {editLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C72030] border-t-transparent" />
+              <span className="ml-3 text-sm text-gray-500">Loading details...</span>
+            </div>
+          ) : (
           <div className="space-y-4 py-2">
             <div className="flex gap-3">
               <div className="flex-1 space-y-1.5">
@@ -656,6 +690,7 @@ const SubCategoryTab: React.FC = () => {
               </Button>
             </div>
           </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

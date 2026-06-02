@@ -289,50 +289,53 @@ export const createRMUser = async (
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token = localStorage.getItem("token");
   const selectedSocietyId = localStorage.getItem("selectedSocietyId");
-  const formData = new FormData();
   const user = payload.user;
 
-  const appendUserField = (key: string, value?: string) => {
-    if (value !== undefined && value !== null) {
-      formData.append(`user[${key}]`, value);
-      formData.append(`rm_user[${key}]`, value);
-      formData.append(`rm_user[user_attributes][${key}]`, value);
-      formData.append(key, value);
-    }
+  // Build minimal JSON payload with ONLY required fields
+  const requestPayload = {
+    user: {
+      first_name: user.first_name || "",
+      last_name: user.last_name || "",
+      email: user.email,
+      mobile: user.mobile,
+      password: user.password || "",
+      password_confirmation: user.password_confirmation || "",
+      user_type: user.user_type,
+      active: true,
+      society_id: selectedSocietyId,
+    },
   };
 
-  appendUserField("firstname", user.firstname || user.first_name);
-  appendUserField("lastname", user.lastname || user.last_name);
-  appendUserField("first_name", user.first_name || user.firstname);
-  appendUserField("last_name", user.last_name || user.lastname);
-  appendUserField("email", user.email);
-  appendUserField("mobile", user.mobile);
-  appendUserField("password", user.password);
-  appendUserField("password_confirmation", user.password_confirmation || user.password);
-  appendUserField("user_type", user.user_type);
-  appendUserField("section", user.section);
-  appendUserField("active", "true");
+  console.warn("Creating RM User with payload:", JSON.stringify(requestPayload, null, 2));
 
-  if (selectedSocietyId) {
-    formData.append("society_id", selectedSocietyId);
-    formData.append("user[society_id]", selectedSocietyId);
-    formData.append("rm_user[society_id]", selectedSocietyId);
-  }
-
-  const response = await axios.post(
-    `https://${baseUrl}/crm/admin/rm_users.json`,
-    formData,
-    {
-      params: {
-        token,
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  try {
+    const response = await axios.post(
+      `https://${baseUrl}/crm/admin/rm_users.json`,
+      requestPayload,
+      {
+        params: {
+          token,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.warn("Create RM User response:", response.data);
+    return response.data;
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosErr = error as { response?: { status?: number; statusText?: string; data?: unknown } };
+      console.error("Create RM User error:", {
+        status: axiosErr.response?.status,
+        statusText: axiosErr.response?.statusText,
+        data: axiosErr.response?.data,
+        payload: requestPayload,
+      });
     }
-  );
-
-  return response.data;
+    throw error;
+  }
 };
 
 export const updateRMUser = async (
@@ -342,9 +345,18 @@ export const updateRMUser = async (
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token = localStorage.getItem("token");
 
+  const updatedPayload = {
+    user: {
+      first_name: payload.user.first_name,
+      last_name: payload.user.last_name,
+      mobile: payload.user.mobile,
+      user_type: payload.user.user_type,
+    }
+  };
+
   const response = await axios.patch(
     `https://${baseUrl}/crm/admin/rm_users/${userId}.json`,
-    payload,
+    updatedPayload,
     {
       params: {
         token,

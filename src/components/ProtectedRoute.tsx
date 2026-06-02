@@ -32,8 +32,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const location = useLocation();
   const { toast } = useToast();
+  // Only re-run auth check when search params change (embedded tokens),
+  // NOT on every pathname change — avoids spinner flash on every navigation
+  const lastCheckedSearch = React.useRef<string | null>(null);
 
   useEffect(() => {
+    // Skip if already authorized and search params haven't changed
+    // (pathname change alone should not re-trigger auth check)
+    if (isAuthorized === true && lastCheckedSearch.current === location.search) return;
+    lastCheckedSearch.current = location.search;
+
     const checkAuthentication = async () => {
       // First, check for embedded mode (org_id + access_token in URL)
       const embeddedConfig = getEmbeddedConfig();
@@ -181,7 +189,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     };
 
     checkAuthentication();
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, isAuthorized]);
 
   // Show loading or spinner while checking auth
   if (isAuthorized === null) {

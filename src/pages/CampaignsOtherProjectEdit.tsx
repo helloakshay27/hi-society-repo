@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft } from "lucide-react";
 import {
@@ -24,6 +24,43 @@ interface EstateBuilder {
   name: string;
 }
 
+interface BuilderProjectDetail {
+  id: number;
+  builder_id: number;
+  name: string;
+  address: string;
+  about: string;
+  active: number;
+  geo_link?: string;
+  reception_number?: string;
+  reception_second_number?: string;
+  project_reference_id?: string;
+  latitude?: string | number;
+  longitude?: string | number;
+  video_link?: string;
+  project_status?: string;
+  description?: string;
+  project_area?: string;
+  external_project_id?: string;
+  configurations?: Array<{ id?: number; name: string; description?: string }>;
+  highlights?: Array<{ id?: number; name: string; description?: string }>;
+  plans?: Array<{ id?: number; name: string }>;
+  amenities?: Array<{ id?: number; name: string; description?: string }>;
+}
+
+interface BuilderProjectDetailResponse {
+  success: boolean;
+  data: BuilderProjectDetail;
+}
+
+const getBuilderProjectUrl = (id: string, token: string) => {
+  const baseUrl = API_CONFIG.BASE_URL.replace(/\/$/, "");
+  if (!baseUrl) {
+    throw new Error("API base URL is not configured.");
+  }
+  return `${baseUrl}/builder_projects/${id}.json?token=${token}`;
+};
+
 const selectMenuProps = {
   PaperProps: {
     style: {
@@ -33,9 +70,11 @@ const selectMenuProps = {
   },
 };
 
-const CampaignsOtherProjectConfig: React.FC = () => {
+const CampaignsOtherProjectEdit: React.FC = () => {
   const navigate = useNavigate();
+  const { id: projectId } = useParams<{ id: string }>();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [estateBuilders, setEstateBuilders] = useState<EstateBuilder[]>([]);
   const [isLoadingBuilders, setIsLoadingBuilders] = useState(false);
 
@@ -71,6 +110,115 @@ const CampaignsOtherProjectConfig: React.FC = () => {
     fetchEstateBuilders();
   }, []);
 
+  useEffect(() => {
+    if (!projectId) {
+      console.warn("No projectId provided");
+      return;
+    }
+
+    console.warn("Fetching project with ID:", projectId);
+
+    const fetchProject = async () => {
+      try {
+        setIsLoadingProject(true);
+        const token = JSON.parse(
+          localStorage.getItem("user") || "{}"
+        )?.spree_api_key;
+        
+        if (!token) {
+          console.error("No token found in localStorage");
+          alert("Authentication token not found. Please log in again.");
+          navigate("/campaigns/other-project");
+          return;
+        }
+
+        const url = getBuilderProjectUrl(projectId, token);
+        console.warn("Fetching from URL:", url);
+        
+        const response = await axios.get<BuilderProjectDetailResponse>(url);
+        
+        console.warn("API Response:", response.data);
+        
+        const project = response.data?.data;
+        if (!response.data?.success || !project) {
+          console.error("Invalid response format:", response.data);
+          throw new Error("Failed to fetch project details");
+        }
+
+        console.warn("Setting form with project data:", project);
+        
+        setConfigForm({
+          name: project.name || "",
+          address: project.address || "",
+          about: project.about || "",
+          coverImage: null,
+          projectLogo: null,
+          showOnOtherProject: project.active === 1,
+          projectReferenceId: project.project_reference_id || "",
+          geoLocationURL: project.geo_link || "",
+          receptionMobile1: project.reception_number || "",
+          receptionMobile2: project.reception_second_number || "",
+          latitude: project.latitude?.toString() || "",
+          longitude: project.longitude?.toString() || "",
+          builder_id: project.builder_id?.toString() || "",
+          videoLink: project.video_link || "",
+          projectStatus: project.project_status || "",
+          description: project.description || "",
+          projectArea: project.project_area || "",
+          externalProjectId: project.external_project_id || "",
+        });
+        setAmenities(
+          project.amenities?.length
+            ? project.amenities.map((item) => ({
+                id: item.id,
+                name: item.name || "",
+                description: item.description || "",
+              }))
+            : [{ name: "", description: "" }]
+        );
+        setConfigurations(
+          project.configurations?.length
+            ? project.configurations.map((item) => ({
+                id: item.id,
+                name: item.name || "",
+                description: item.description || "",
+              }))
+            : [{ name: "", description: "" }]
+        );
+        setHighlights(
+          project.highlights?.length
+            ? project.highlights.map((item) => ({
+                id: item.id,
+                name: item.name || "",
+                description: item.description || "",
+              }))
+            : [{ name: "", description: "" }]
+        );
+        setPlans(
+          project.plans?.length
+            ? project.plans.map((item) => ({
+                id: item.id,
+                name: item.name || "",
+              }))
+            : [{ name: "" }]
+        );
+      } catch (error: unknown) {
+        console.error("Error fetching project details:", error);
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosErr = error as { response?: { status?: number; data?: unknown } };
+          console.error("API Error Status:", axiosErr.response?.status);
+          console.error("API Error Data:", axiosErr.response?.data);
+        }
+        alert("Failed to load project details.");
+        navigate("/campaigns/other-project");
+      } finally {
+        setIsLoadingProject(false);
+      }
+    };
+
+    fetchProject();
+  }, [navigate, projectId]);
+
   const fetchEstateBuilders = async () => {
     try {
       setIsLoadingBuilders(true);
@@ -93,15 +241,25 @@ const CampaignsOtherProjectConfig: React.FC = () => {
     }
   };
 
-  const [configurations, setConfigurations] = useState([
+  interface ListItem {
+    id?: number;
+    name: string;
+    description?: string;
+  }
+  const [configurations, setConfigurations] = useState<ListItem[]>([
     { name: "", description: "" },
   ]);
-  const [highlights, setHighlights] = useState([{ name: "", description: "" }]);
-  const [plans, setPlans] = useState([{ name: "" }]);
-  const [amenities, setAmenities] = useState([{ name: "", description: "" }]);
+  const [highlights, setHighlights] = useState<ListItem[]>([{ name: "", description: "" }]);
+  const [plans, setPlans] = useState<ListItem[]>([{ name: "" }]);
+  const [amenities, setAmenities] = useState<ListItem[]>([{ name: "", description: "" }]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!projectId) {
+      alert("Project ID is required");
+      return;
+    }
 
     // Basic validation
     if (!configForm.name.trim()) {
@@ -192,6 +350,12 @@ const CampaignsOtherProjectConfig: React.FC = () => {
 
       amenities.forEach((item, i) => {
         if (item.name) {
+          if (item.id) {
+            formData.append(
+              `builder_project[amenities_attributes][${i}][id]`,
+              item.id.toString()
+            );
+          }
           formData.append(
             `builder_project[amenities_attributes][${i}][name]`,
             item.name
@@ -205,6 +369,12 @@ const CampaignsOtherProjectConfig: React.FC = () => {
       });
       configurations.forEach((item, i) => {
         if (item.name) {
+          if (item.id) {
+            formData.append(
+              `builder_project[configurations_attributes][${i}][id]`,
+              item.id.toString()
+            );
+          }
           formData.append(
             `builder_project[configurations_attributes][${i}][name]`,
             item.name
@@ -218,6 +388,12 @@ const CampaignsOtherProjectConfig: React.FC = () => {
       });
       highlights.forEach((item, i) => {
         if (item.name) {
+          if (item.id) {
+            formData.append(
+              `builder_project[highlights_attributes][${i}][id]`,
+              item.id.toString()
+            );
+          }
           formData.append(
             `builder_project[highlights_attributes][${i}][name]`,
             item.name
@@ -231,6 +407,12 @@ const CampaignsOtherProjectConfig: React.FC = () => {
       });
       plans.forEach((item, i) => {
         if (item.name) {
+          if (item.id) {
+            formData.append(
+              `builder_project[plans_attributes][${i}][id]`,
+              item.id.toString()
+            );
+          }
           formData.append(
             `builder_project[plans_attributes][${i}][name]`,
             item.name
@@ -253,8 +435,8 @@ const CampaignsOtherProjectConfig: React.FC = () => {
         console.error(`${key}:`, value);
       }
 
-      const response = await axios.post(
-        `${baseUrl}/crm/builder_projects.json?token=${token}`,
+      const response = await axios.put(
+        getBuilderProjectUrl(projectId, token),
         formData
       );
 
@@ -262,7 +444,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
       if (response.data?.code === 401 || response.data?.error) {
         console.error("API Error Response:", response.data);
         alert(
-          `Failed to create project: ${response.data.error || JSON.stringify(response.data)}`
+          `Failed to update project: ${response.data.error || JSON.stringify(response.data)}`
         );
         return;
       }
@@ -276,22 +458,27 @@ const CampaignsOtherProjectConfig: React.FC = () => {
       } else {
         console.error("API Response:", response.data);
         alert(
-          `Failed to create project: ${JSON.stringify(response.data)}`
+          `Failed to update project: ${JSON.stringify(response.data)}`
         );
       }
-    } catch (error: any) {
-      console.error("Error creating project:", error);
+    } catch (error: unknown) {
+      console.error("Error updating project:", error);
 
-      if (error.response?.status === 422) {
-        console.error("422 Error details:", error.response.data);
-        alert(`Validation failed: ${JSON.stringify(error.response.data)}`);
-      } else if (error.response?.status === 401) {
-        alert("Authentication failed. Please log in again.");
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosErr = error as { response?: { status?: number; data?: unknown } };
+        if (axiosErr.response?.status === 422) {
+          console.error("422 Error details:", axiosErr.response.data);
+          alert(`Validation failed: ${JSON.stringify(axiosErr.response.data)}`);
+        } else if (axiosErr.response?.status === 401) {
+          alert("Authentication failed. Please log in again.");
+        } else {
+          alert(
+            (axiosErr.response?.data as { message?: string })?.message ||
+              `An error occurred: ${JSON.stringify(axiosErr.response?.data)}`
+          );
+        }
       } else {
-        alert(
-          error.response?.data?.message ||
-            `An error occurred: ${JSON.stringify(error.response?.data)}`
-        );
+        alert("An unexpected error occurred");
       }
     } finally {
       setIsLoading(false);
@@ -313,12 +500,23 @@ const CampaignsOtherProjectConfig: React.FC = () => {
 
       <div className="flex items-center gap-4 mb-6">
         <h1 className="text-[24px] font-semibold text-[#1a1a1a]">
-          Configure Project
+          Edit Project
         </h1>
       </div>
 
+      {/* Loading Indicator */}
+      {isLoadingProject && (
+        <div className="flex items-center justify-center p-12">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            <p className="mt-4 text-gray-600">Loading project details...</p>
+          </div>
+        </div>
+      )}
+
       {/* Form */}
-      <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
+      {!isLoadingProject && (
+        <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
         <form onSubmit={handleSubmit}>
           <div className="space-y-6">
             {/* Row 1: Name and Cover Image */}
@@ -448,7 +646,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                     size="small"
                     type="file"
                     InputLabelProps={{ shrink: true }}
-                    onChange={(e: any) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setConfigForm({
                         ...configForm,
                         coverImage: e.target.files ? e.target.files[0] : null,
@@ -488,7 +686,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                   size="small"
                   type="file"
                   InputLabelProps={{ shrink: true }}
-                  onChange={(e: any) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setConfigForm({
                       ...configForm,
                       projectLogo: e.target.files ? e.target.files[0] : null,
@@ -1006,15 +1204,15 @@ const CampaignsOtherProjectConfig: React.FC = () => {
             <div className="flex gap-3 justify-center pt-4">
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isLoadingProject}
                 className="bg-[#10b981] hover:bg-[#059669] text-white px-8"
               >
-                {isLoading ? "Submitting..." : "Submit"}
+                {isLoading ? "Updating..." : "Update"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                disabled={isLoading}
+                disabled={isLoading || isLoadingProject}
                 onClick={() => navigate("/campaigns/other-project")}
               >
                 Cancel
@@ -1022,9 +1220,10 @@ const CampaignsOtherProjectConfig: React.FC = () => {
             </div>
           </div>
         </form>
-      </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default CampaignsOtherProjectConfig;
+export default CampaignsOtherProjectEdit;

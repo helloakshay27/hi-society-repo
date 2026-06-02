@@ -876,7 +876,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
 
 
           {/* Welcome Description Section */}
-          <div>
+          {/* <div>
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
               Welcome Description
             </h3>
@@ -960,10 +960,10 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
             >
               + Add Description
             </Button>
-          </div>
+          </div> */}
 
           {/* Vision Section */}
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
               Vision
             </h3>
@@ -1030,7 +1030,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                         // className="text-red-600 hover:text-red-700"
                         style={{ padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        {/* Remove */}
+                      
                         <X style={{ color: 'red', width: 16, height: 16 }} />
                       </Button>
                     )}
@@ -1047,9 +1047,9 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
             >
               + Add Vision
             </Button>
-          </div>
+          </div> */}
           {/* Mission Section */}
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
               Mission
             </h3>
@@ -1120,7 +1120,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                         // className="text-red-600 hover:text-red-700"
                         style={{ padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        {/* Remove */}
+
                         <X style={{ color: 'red', width: 16, height: 16 }} />
                       </Button>
                     )}
@@ -1137,15 +1137,15 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
             >
               + Add Mission
             </Button>
-          </div>
+          </div> */}
 
           {/* CEO Info Section */}
           <div className="mt-8">
-            <h3 className="text-sm font-medium text-[#C72030] mb-4">CEO Info</h3>
+            {/* <h3 className="text-sm font-medium text-[#C72030] mb-4">CEO Info</h3> */}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Name */}
-              <TextField
+              {/* <TextField
                 label="Name"
                 placeholder="Enter CEO name"
                 value={ceoInfo.name}
@@ -1156,20 +1156,20 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 disabled={isSubmitting}
-              />
+              /> */}
 
-              {/* Designation */}
-              <TextField
+            
+              {/* <TextField
                 label="Designation"
                 value={ceoInfo.designation}
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 disabled
-              />
+              /> */}
             </div>
 
-            {/* Description */}
+           
             {/* <div className="mt-4">
               <TextField
                 label="Description"
@@ -1189,7 +1189,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
 
             {/* CEO Description */}
             <div className="mt-6">
-              <TextField
+              {/* <TextField
                 label="Description"
                 placeholder="Enter CEO description"
                 value={ceoInfo.description}
@@ -1220,7 +1220,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 multiline
                 rows={3}
                 disabled={isSubmitting}
-              />
+              /> */}
             </div>
 
 
@@ -1272,7 +1272,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
               )}
             </div> */}
 
-            <div className="mt-4 space-y-2">
+            {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Photo</span>
 
               <input
@@ -1307,7 +1307,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
 
 
 
@@ -1332,7 +1332,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
             {/* </div> */}
 
 
-            <div className="mt-4 space-y-2">
+            {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Video</span>
 
               <input
@@ -1377,7 +1377,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                   )}
                 </div>
               )}
-            </div>
+            </div> */}
 
           </div>
 

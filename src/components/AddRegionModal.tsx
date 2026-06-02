@@ -383,7 +383,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
             </div>
 
             <div className="mt-6">
-              <TextField
+              {/* <TextField
                 label="Description"
                 placeholder="Enter region description"
                 value={formData.description}
@@ -412,7 +412,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                     resize: "none !important",
                   },
                 }}
-              />
+              /> */}
             </div>
 
             {/* Status Toggle */}
