@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Pencil, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -492,7 +492,7 @@ const CampaignsOtherProject: React.FC = () => {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-1">
             <button
               className="p-1 hover:bg-gray-100 rounded"
               disabled={detailLoading}
@@ -514,6 +514,15 @@ const CampaignsOtherProject: React.FC = () => {
               }}
             >
               <Eye className="w-4 h-4 text-blue-600" />
+            </button>
+            <button
+              className="p-1 hover:bg-gray-100 rounded"
+              onClick={() =>
+                navigate(`/campaigns/other-project/edit/${item.id}`)
+              }
+              aria-label={`Edit ${item.project}`}
+            >
+              <Pencil className="w-4 h-4 text-gray-600" />
             </button>
           </div>
         );

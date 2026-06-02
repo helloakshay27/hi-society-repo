@@ -322,6 +322,9 @@ const CampaignsOtherProject = lazy(
 const CampaignsOtherProjectConfig = lazy(
   () => import("@/pages/CampaignsOtherProjectConfig")
 );
+const CampaignsOtherProjectEdit = lazy(
+  () => import("@/pages/CampaignsOtherProjectEdit")
+);
 const CampaignsReferralCreate = lazy(
   () => import("@/pages/CampaignsReferralCreate")
 );
@@ -1387,6 +1390,10 @@ export const setupMemberRoutes = (
     <Route
       path="/campaigns/other-project/configure"
       Component={withSuspense(CampaignsOtherProjectConfig)}
+    />
+    <Route
+      path="/campaigns/other-project/edit/:id"
+      Component={withSuspense(CampaignsOtherProjectEdit)}
     />
     <Route
       path="/campaigns/referrals/create"
