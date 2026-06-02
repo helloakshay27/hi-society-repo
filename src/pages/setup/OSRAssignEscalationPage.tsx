@@ -32,12 +32,25 @@ interface FormData {
   e5: LevelData;
 }
 
+interface OsrEscalation {
+  id?: number;
+  name: string;
+  escalate_to: string | number[];
+  p1: number | null;
+  p2: number | null;
+  p3: number | null;
+  p4: number | null;
+  p5: number | null;
+}
+
 interface OcrAssignEntry {
   id: number;
   osr_category_id: number;
   osr_sub_category_id: number;
   osr_staff_id: number | null;
   osr_status_id: number | null;
+  // list API may return either format
+  osr_escalations?: OsrEscalation[];
   escalation_matrix?: Record<string, {
     name: string;
     p1: number | null;
@@ -45,7 +58,7 @@ interface OcrAssignEntry {
     p3: number | null;
     p4: number | null;
     p5: number | null;
-    escalate_to: number[];
+    escalate_to: string | number[];
   }>;
 }
 
@@ -95,6 +108,138 @@ const emptyForm = (): FormData => ({
   e5: emptyLevel(),
 });
 
+// ─── Module-level form components (must live outside the main component so React ──────────────
+// preserves their identity across renders — inline definitions cause full remount every render)
+
+const PERIOD_LABELS = ['P1', 'P2', 'P3', 'P4', 'P5'];
+const PERIOD_KEYS: ('p1' | 'p2' | 'p3' | 'p4' | 'p5')[] = ['p1', 'p2', 'p3', 'p4', 'p5'];
+
+const LevelForm: React.FC<{
+  data: FormData;
+  setData: React.Dispatch<React.SetStateAction<FormData>>;
+  staffOptions: StaffOption[];
+}> = ({ data, setData, staffOptions }) => (
+  <Table className="border">
+    <TableHeader>
+      <TableRow className="bg-gray-50">
+        <TableHead className="font-semibold text-center border-r w-20">Level</TableHead>
+        <TableHead className="font-semibold text-center border-r">Escalate To</TableHead>
+        {PERIOD_LABELS.map(pl => (
+          <TableHead key={pl} className="font-semibold text-center w-24">{pl} (mins)</TableHead>
+        ))}
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {LEVELS.map(level => (
+        <TableRow key={level} className="border-b">
+          <TableCell className="font-medium text-center border-r">{LEVEL_LABELS[level]}</TableCell>
+          <TableCell className="p-2 border-r">
+            <ReactSelect
+              isMulti
+              options={staffOptions}
+              value={staffOptions.filter(o => data[level].escalate_to.includes(o.value))}
+              onChange={selected => setData(prev => ({
+                ...prev,
+                [level]: { ...prev[level], escalate_to: selected ? selected.map(s => s.value) : [] },
+              }))}
+              placeholder="Select staff..."
+              className="min-w-[180px]"
+              menuPlacement="auto"
+              maxMenuHeight={150}
+              styles={{
+                control: base => ({ ...base, minHeight: '36px', fontSize: '13px', border: '1px solid #e5e7eb', boxShadow: 'none' }),
+                multiValue: base => ({ ...base, fontSize: '11px' }),
+              }}
+            />
+          </TableCell>
+          {PERIOD_KEYS.map(pk => (
+            <TableCell key={pk} className="p-2">
+              <input
+                type="number"
+                min="0"
+                value={data[level][pk]}
+                onChange={e => setData(prev => ({
+                  ...prev,
+                  [level]: { ...prev[level], [pk]: e.target.value },
+                }))}
+                placeholder="0"
+                className="w-full border border-gray-300 rounded px-2 py-2 text-sm text-center focus:outline-none focus:ring-1 focus:ring-[#C72030]"
+              />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+const SelectorRow: React.FC<{
+  data: FormData;
+  setData: React.Dispatch<React.SetStateAction<FormData>>;
+  subCats: SubCategory[];
+  subCatsLoading: boolean;
+  onCategoryChange: (val: string) => void;
+  categories: Category[];
+  statuses: OsrStatus[];
+}> = ({ data, setData, subCats, subCatsLoading, onCategoryChange, categories, statuses }) => (
+  <div className="grid grid-cols-4 gap-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Category <span className="text-red-500">*</span>
+      </label>
+      <Select value={data.osr_category_id} onValueChange={onCategoryChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select Category" />
+        </SelectTrigger>
+        <SelectContent>
+          {categories.map(c => (
+            <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category</label>
+      <Select
+        value={data.osr_sub_category_id}
+        onValueChange={val => setData(prev => ({ ...prev, osr_sub_category_id: val }))}
+        disabled={!data.osr_category_id || subCatsLoading}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={
+            !data.osr_category_id ? 'Select Category first'
+            : subCatsLoading ? 'Loading...'
+            : 'Select Sub Category'
+          } />
+        </SelectTrigger>
+        <SelectContent>
+          {subCats.map(sc => (
+            <SelectItem key={sc.id} value={String(sc.id)}>{sc.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+      <Select
+        value={data.osr_status_id}
+        onValueChange={val => setData(prev => ({ ...prev, osr_status_id: val }))}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select Status" />
+        </SelectTrigger>
+        <SelectContent>
+          {statuses.map(s => (
+            <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+);
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export const OSRAssignEscalationPage: React.FC = () => {
@@ -129,7 +274,10 @@ export const OSRAssignEscalationPage: React.FC = () => {
       const sts = res.data?.osr_statuses ?? [];
       setCategories(Array.isArray(cats) ? cats : []);
       setStatuses(Array.isArray(sts) ? sts : []);
-    } catch { /* silent */ }
+    } catch (err) {
+      console.error('loadSetup failed:', err);
+      toast.error('Failed to load categories/statuses.');
+    }
   }, []);
 
   const loadStaff = useCallback(async () => {
@@ -142,16 +290,19 @@ export const OSRAssignEscalationPage: React.FC = () => {
           label: s.full_name || s.name || `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim() || `Staff #${s.id}`,
         }))
       );
-    } catch { /* silent */ }
+    } catch (err) {
+      console.error('loadStaff failed:', err);
+    }
   }, []);
 
   const loadRules = useCallback(async () => {
     setLoadingRules(true);
     try {
-      const res = await apiClient.get('/crm/admin/osr_assigns.json');
-      const raw = res.data?.osr_assigns ?? res.data ?? [];
+      const res = await apiClient.get('/crm/admin/create_osr_assign.json');
+      const raw = res.data?.osr_assigns ?? (Array.isArray(res.data) ? res.data : []);
       setRules(Array.isArray(raw) ? raw : []);
-    } catch {
+    } catch (err) {
+      console.error('loadRules failed:', err);
       setRules([]);
     } finally {
       setLoadingRules(false);
@@ -205,20 +356,19 @@ export const OSRAssignEscalationPage: React.FC = () => {
     }
   };
 
-  // ── Build escalation matrix payload ────────────────────────────────────────
+  // ── Build escalation matrix payload ─────────────────────────────────────────
 
   const buildEscalationMatrix = (data: FormData) => {
     const matrix: Record<string, Record<string, unknown>> = {};
     LEVELS.forEach(level => {
-      const entry = data[level];
       matrix[level] = {
         name: LEVEL_LABELS[level],
-        p1: entry.p1 ? Number(entry.p1) : null,
-        p2: entry.p2 ? Number(entry.p2) : null,
-        p3: entry.p3 ? Number(entry.p3) : null,
-        p4: entry.p4 ? Number(entry.p4) : null,
-        p5: entry.p5 ? Number(entry.p5) : null,
-        escalate_to: entry.escalate_to,
+        p1: data[level].p1 ? Number(data[level].p1) : null,
+        p2: data[level].p2 ? Number(data[level].p2) : null,
+        p3: data[level].p3 ? Number(data[level].p3) : null,
+        p4: data[level].p4 ? Number(data[level].p4) : null,
+        p5: data[level].p5 ? Number(data[level].p5) : null,
+        escalate_to: data[level].escalate_to,
       };
     });
     return matrix;
@@ -249,12 +399,17 @@ export const OSRAssignEscalationPage: React.FC = () => {
     if (!validate(formData)) return;
     setSubmitting(true);
     try {
-      await apiClient.post('/crm/admin/create_osr_assign.json', buildPayload(formData));
+      console.warn('OSR Create payload:', buildPayload(formData));
+      const res = await apiClient.post('/crm/admin/create_osr_assign.json', buildPayload(formData));
+      const newRule: OcrAssignEntry = res.data?.osr_assign ?? res.data;
+      if (newRule?.id) {
+        setRules(prev => [...prev, newRule]);
+      }
       toast.success('Assign & Escalation created successfully.');
       setFormData(emptyForm());
       setSubCategories([]);
-      loadRules();
-    } catch {
+    } catch (err) {
+      console.error('handleCreate failed:', err);
       toast.error('Failed to create assign & escalation.');
     } finally {
       setSubmitting(false);
@@ -262,6 +417,22 @@ export const OSRAssignEscalationPage: React.FC = () => {
   };
 
   // ── Open Edit ──────────────────────────────────────────────────────────────
+
+  const parseEscalateToIds = (raw: string | number[] | undefined): number[] => {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw as number[];
+    try { return JSON.parse(raw as string); } catch { return []; }
+  };
+
+  const getEscalationEntry = (rule: OcrAssignEntry, levelKey: string) => {
+    if (rule.osr_escalations?.length) {
+      return rule.osr_escalations.find(e => e.name === LEVEL_LABELS[levelKey]) ?? null;
+    }
+    if (rule.escalation_matrix) {
+      return rule.escalation_matrix[levelKey] ?? null;
+    }
+    return null;
+  };
 
   const openEdit = async (entry: OcrAssignEntry) => {
     setEditingId(entry.id);
@@ -272,12 +443,11 @@ export const OSRAssignEscalationPage: React.FC = () => {
     fd.osr_staff_id = String(entry.osr_staff_id ?? '');
     fd.osr_status_id = String(entry.osr_status_id ?? '');
 
-    const matrix = entry.escalation_matrix ?? {};
     LEVELS.forEach(level => {
-      const m = matrix[level];
+      const m = getEscalationEntry(entry, level);
       if (m) {
         fd[level] = {
-          escalate_to: Array.isArray(m.escalate_to) ? m.escalate_to : [],
+          escalate_to: parseEscalateToIds(m.escalate_to),
           p1: m.p1 != null ? String(m.p1) : '',
           p2: m.p2 != null ? String(m.p2) : '',
           p3: m.p3 != null ? String(m.p3) : '',
@@ -304,13 +474,25 @@ export const OSRAssignEscalationPage: React.FC = () => {
     if (editingId === null) return;
     setEditSubmitting(true);
     try {
-      await apiClient.post(`/crm/admin/update_osr_assign.json?id=${editingId}`, buildPayload(editFormData));
+      console.warn('OSR Update payload:', buildPayload(editFormData));
+      const res = await apiClient.post(`/crm/admin/update_osr_assign.json?id=${editingId}`, buildPayload(editFormData));
+      const updated: OcrAssignEntry = res.data?.osr_assign ?? res.data;
+      if (updated?.id) {
+        setRules(prev => prev.map(r => r.id === updated.id ? updated : r));
+      } else {
+        // Fallback: update fields we know changed
+        const payload = buildPayload(editFormData);
+        setRules(prev => prev.map(r => r.id === editingId
+          ? { ...r, ...payload.osr_assign, escalation_matrix: payload.escalation_matrix as OcrAssignEntry['escalation_matrix'] }
+          : r
+        ));
+      }
       toast.success('Assign & Escalation updated successfully.');
       setIsEditOpen(false);
       setEditingId(null);
       setEditSubCategories([]);
-      loadRules();
-    } catch {
+    } catch (err) {
+      console.error('handleUpdate failed:', err);
       toast.error('Failed to update assign & escalation.');
     } finally {
       setEditSubmitting(false);
@@ -322,9 +504,10 @@ export const OSRAssignEscalationPage: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await apiClient.post(`/crm/admin/delete_osr_assign.json?id=${id}`);
+      setRules(prev => prev.filter(r => r.id !== id));
       toast.success('Assign & Escalation deleted successfully.');
-      loadRules();
-    } catch {
+    } catch (err) {
+      console.error('handleDelete failed:', err);
       toast.error('Failed to delete assign & escalation.');
     }
   };
@@ -342,176 +525,13 @@ export const OSRAssignEscalationPage: React.FC = () => {
     return staffOptions.find(s => s.value === id)?.label ?? `Staff #${id}`;
   };
 
-  // ── Level form fields ──────────────────────────────────────────────────────
-
-  const PERIOD_LABELS = ['P1', 'P2', 'P3', 'P4', 'P5'];
-  const PERIOD_KEYS: (keyof LevelData)[] = ['p1', 'p2', 'p3', 'p4', 'p5'];
-
-  const LevelForm = ({
-    data,
-    setData,
-    prefix,
-  }: {
-    data: FormData;
-    setData: typeof setFormData;
-    prefix: 'form' | 'edit';
-  }) => {
-    const setter = prefix === 'form' ? setFormData : setEditFormData;
-    const actualData = prefix === 'form' ? formData : editFormData;
-
-    return (
-      <Table className="border">
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead className="font-semibold text-center border-r w-20">Level</TableHead>
-            <TableHead className="font-semibold text-center border-r">Escalate To</TableHead>
-            {PERIOD_LABELS.map(pl => (
-              <TableHead key={pl} className="font-semibold text-center w-24">{pl} (mins)</TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {LEVELS.map(level => (
-            <TableRow key={level} className="border-b">
-              <TableCell className="font-medium text-center border-r">{LEVEL_LABELS[level]}</TableCell>
-              <TableCell className="p-2 border-r">
-                <ReactSelect
-                  isMulti
-                  options={staffOptions}
-                  value={staffOptions.filter(o => actualData[level].escalate_to.includes(o.value))}
-                  onChange={selected => setter(prev => ({
-                    ...prev,
-                    [level]: { ...prev[level], escalate_to: selected ? selected.map(s => s.value) : [] },
-                  }))}
-                  placeholder="Select staff..."
-                  className="min-w-[180px]"
-                  menuPlacement="auto"
-                  maxMenuHeight={150}
-                  styles={{
-                    control: base => ({ ...base, minHeight: '36px', fontSize: '13px', border: '1px solid #e5e7eb', boxShadow: 'none' }),
-                    multiValue: base => ({ ...base, fontSize: '11px' }),
-                  }}
-                />
-              </TableCell>
-              {PERIOD_KEYS.map(pk => (
-                <TableCell key={pk} className="p-2">
-                  <input
-                    type="number"
-                    min="0"
-                    value={actualData[level][pk]}
-                    onChange={e => setter(prev => ({
-                      ...prev,
-                      [level]: { ...prev[level], [pk]: e.target.value },
-                    }))}
-                    placeholder="0"
-                    className="w-full border border-gray-300 rounded px-2 py-2 text-sm text-center focus:outline-none focus:ring-1 focus:ring-[#C72030]"
-                  />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
-  };
-
-  // ── Category/Sub Category/Status/Staff Selectors ────────────────────────────
-
-  const SelectorRow = ({
-    data,
-    setData,
-    subCats,
-    subCatsLoading,
-    onCategoryChange,
-  }: {
-    data: FormData;
-    setData: typeof setFormData;
-    subCats: SubCategory[];
-    subCatsLoading: boolean;
-    onCategoryChange: (val: string) => void;
-  }) => (
-    <div className="grid grid-cols-4 gap-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Category <span className="text-red-500">*</span>
-        </label>
-        <Select value={data.osr_category_id} onValueChange={onCategoryChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select Category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map(c => (
-              <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category</label>
-        <Select
-          value={data.osr_sub_category_id}
-          onValueChange={val => setData(prev => ({ ...prev, osr_sub_category_id: val }))}
-          disabled={!data.osr_category_id || subCatsLoading}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={
-              !data.osr_category_id ? 'Select Category first'
-              : subCatsLoading ? 'Loading...'
-              : 'Select Sub Category'
-            } />
-          </SelectTrigger>
-          <SelectContent>
-            {subCats.map(sc => (
-              <SelectItem key={sc.id} value={String(sc.id)}>{sc.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Assign Staff</label>
-        <Select
-          value={data.osr_staff_id}
-          onValueChange={val => setData(prev => ({ ...prev, osr_staff_id: val }))}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select Staff" />
-          </SelectTrigger>
-          <SelectContent>
-            {staffOptions.map(s => (
-              <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div> */}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-        <Select
-          value={data.osr_status_id}
-          onValueChange={val => setData(prev => ({ ...prev, osr_status_id: val }))}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statuses.map(s => (
-              <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-
   // ── Render rules list ──────────────────────────────────────────────────────
 
   const renderLevelBadge = (rule: OcrAssignEntry, levelLabel: string) => {
-    const matrix = rule.escalation_matrix ?? {};
-    const entry = matrix[Object.keys(matrix).find(k => matrix[k]?.name === levelLabel) ?? ''];
+    const levelKey = Object.keys(LEVEL_LABELS).find(k => LEVEL_LABELS[k] === levelLabel) ?? '';
+    const entry = getEscalationEntry(rule, levelKey);
     if (!entry) return { to: '-', time: '-' };
-    const names = entry.escalate_to?.map(id => getStaffName(id)).filter(Boolean).join(', ') || '-';
+    const names = parseEscalateToIds(entry.escalate_to).map(id => getStaffName(id)).filter(Boolean).join(', ') || '-';
     const periods = [entry.p1, entry.p2, entry.p3, entry.p4, entry.p5].filter(p => p != null).join(' / ');
     return { to: names, time: periods || '-' };
   };
@@ -536,10 +556,12 @@ export const OSRAssignEscalationPage: React.FC = () => {
             subCats={subCategories}
             subCatsLoading={subCatsLoading}
             onCategoryChange={handleCategoryChange}
+            categories={categories}
+            statuses={statuses}
           />
 
           <div className="mt-6">
-            <LevelForm data={formData} setData={setFormData} prefix="form" />
+            <LevelForm data={formData} setData={setFormData} staffOptions={staffOptions} />
           </div>
 
           <div className="mt-6 flex justify-center">
@@ -654,10 +676,12 @@ export const OSRAssignEscalationPage: React.FC = () => {
             subCats={editSubCategories}
             subCatsLoading={editSubCatsLoading}
             onCategoryChange={handleEditCategoryChange}
+            categories={categories}
+            statuses={statuses}
           />
 
           <div className="mt-6">
-            <LevelForm data={editFormData} setData={setEditFormData} prefix="edit" />
+            <LevelForm data={editFormData} setData={setEditFormData} staffOptions={staffOptions} />
           </div>
 
           <div className="flex justify-center gap-3 mt-6">

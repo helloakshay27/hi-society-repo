@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, Download, RefreshCw, Loader2, Image as ImageIcon, Link, Calendar } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, RefreshCw, Loader2, Link, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import axios from "axios";
 
 interface Offer {
-  id: string;
-  title: string;
-  startDate: string;
-  endDate: string;
-  status: "Active" | "Inactive" | "Expired" | "Scheduled";
+  id: number;
+  society_id: number;
+  start_date: string;
+  end_date: string;
   url: string;
   description: string;
-  imageUrl: string;
-  createdOn: string;
-  createdBy: string;
+  user_id: number;
+  status: "Active" | "Inactive" | "Expired" | "Scheduled";
+  created_at: string;
+  updated_at: string;
 }
 
 const BMSOffers: React.FC = () => {
@@ -37,55 +38,55 @@ const BMSOffers: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Mock data query (replace with actual API call)
   const {
-    data: offersData,
+    data: offers = [],
     isLoading,
     error,
     isError,
     refetch,
-  } = useQuery({
+  } = useQuery<Offer[]>({
     queryKey: ["offers", debouncedSearchQuery, currentPage, pageSize],
     queryFn: async () => {
-      // TODO: Replace with actual API endpoint
-      return {
-        offers: [],
-        pagination: {
-          total_count: 0,
-          total_pages: 0,
-          current_page: currentPage,
-        },
-      };
+      const baseUrl = localStorage.getItem("baseUrl") || "";
+      const token = localStorage.getItem("token") || "";
+      const response = await axios.get(`https://${baseUrl}/log_offers.json`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data as Offer[];
     },
     retry: 2,
     staleTime: 30000,
     gcTime: 60000,
   });
 
-  const offers: Offer[] = offersData?.offers || [];
-  const totalCount = offersData?.pagination?.total_count || 0;
-  const totalPages = offersData?.pagination?.total_pages || 1;
+  const totalCount = offers.length;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+
+  const paginatedOffers = offers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
-    { key: "startDate", label: "Start Date", sortable: true },
-    { key: "endDate", label: "End Date", sortable: true },
+    { key: "start_date", label: "Start Date", sortable: true },
+    { key: "end_date", label: "End Date", sortable: true },
     { key: "status", label: "Status", sortable: true },
-    { key: "url", label: "Url", sortable: false },
-    { key: "description", label: "Description", sortable: true },
-    { key: "imageUrl", label: "Image", sortable: false },
+    { key: "url", label: "URL", sortable: false },
+    { key: "description", label: "Description", sortable: false },
+    { key: "created_at", label: "Created At", sortable: true },
   ];
 
   const handleAddOffer = () => {
-    navigate("/offers/add");
+    navigate("/bms/offers/add");
   };
 
   const handleViewOffer = (item: Offer) => {
-    navigate(`/offers/view/${item.id}`);
+    navigate(`/bms/offers/view/${item.id}`);
   };
 
   const handleEditOffer = (item: Offer) => {
-    navigate(`/offers/edit/${item.id}`);
+    navigate(`/bms/offers/edit/${item.id}`);
   };
 
   const handleDeleteOffer = (item: Offer) => {
@@ -141,22 +142,22 @@ const BMSOffers: React.FC = () => {
             >
               <Edit className="h-4 w-4" />
             </Button>
-            <Button
+            {/* <Button
               size="sm"
               variant="ghost"
               onClick={() => handleDeleteOffer(item)}
               className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
         );
-      case "startDate":
-      case "endDate":
+      case "start_date":
+      case "end_date":
         return (
           <span className="text-sm flex items-center gap-1">
             <Calendar className="w-3 h-3 text-gray-500" />
-            {item[columnKey as keyof Offer]}
+            {item[columnKey as keyof Offer] || "-"}
           </span>
         );
       case "status":
@@ -180,24 +181,19 @@ const BMSOffers: React.FC = () => {
           <span className="text-gray-400">-</span>
         );
       case "description":
-        return <span className="text-sm text-gray-600">{item.description || "-"}</span>;
-      case "imageUrl":
-        return item.imageUrl ? (
-          <img
-            src={item.imageUrl}
-            alt="Offer"
-            className="w-12 h-12 object-cover rounded"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Crect width='48' height='48' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='14' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E";
-            }}
-          />
-        ) : (
-          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-            <ImageIcon className="w-5 h-5 text-gray-400" />
-          </div>
+        return (
+          <span className="text-sm text-gray-600 max-w-xs truncate block" title={item.description}>
+            {item.description || "-"}
+          </span>
+        );
+      case "created_at":
+        return (
+          <span className="text-sm text-gray-600">
+            {item.created_at ? new Date(item.created_at).toLocaleDateString("en-IN") : "-"}
+          </span>
         );
       default:
-        return item[columnKey as keyof Offer];
+        return <span className="text-sm">{String(item[columnKey as keyof Offer] ?? "-")}</span>;
     }
   };
 
@@ -295,21 +291,6 @@ const BMSOffers: React.FC = () => {
     </Button>
   );
 
-  const renderRightActions = () => (
-    <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleRefresh}
-        disabled={isLoading}
-        className="h-9"
-      >
-        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-        Refresh
-      </Button>
-    </div>
-  );
-
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <div className="mb-4 sm:mb-6">
@@ -317,14 +298,13 @@ const BMSOffers: React.FC = () => {
       </div>
 
       <EnhancedTable
-        data={offers}
+        data={paginatedOffers}
         columns={columns}
         renderCell={renderCell}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search offers..."
         enableSearch={true}
         leftActions={renderLeftActions()}
-        rightActions={renderRightActions()}
         emptyMessage="No Matching Records Found"
         loading={isLoading}
         pagination={false}
