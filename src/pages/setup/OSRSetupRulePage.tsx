@@ -186,7 +186,6 @@ export const OSRSetupRulePage: React.FC = () => {
           return { value: String(min), unit: minLabel };
         return { value: '0', unit: minLabel };
       };
-
       // Staff reminders → Select uses 'Hours' / 'Minutes'
       const staff1 = pickValueUnit(r.notifn_one_hr, r.notifn_one_min, 'Hours', 'Minutes');
       const staff2 = pickValueUnit(r.notifn_two_hr, r.notifn_two_min, 'Hours', 'Minutes');
