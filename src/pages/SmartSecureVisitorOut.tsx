@@ -56,6 +56,8 @@ interface ApiVisitor {
     action_color: string;
     action_available: boolean;
   };
+  // Add Visitor Type Specific fields
+   
   support_staff_category: string | null;
   overdue: {
     is_overdue: boolean;
@@ -330,6 +332,7 @@ const SmartSecureVisitorOut: React.FC = () => {
         );
       }
 
+
       case "out_action": {
         const outKey = `out-${visitor.id}`;
         return (
@@ -461,7 +464,7 @@ const SmartSecureVisitorOut: React.FC = () => {
                 </div>
               </div>
             )}
-
+  
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Select Gate</label>
               <Select
