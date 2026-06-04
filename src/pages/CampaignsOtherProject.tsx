@@ -217,6 +217,7 @@ const CampaignsOtherProject: React.FC = () => {
   >(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [dropdownProjects, setDropdownProjects] = useState<Array<{ id: number; name: string }>>([]);
 
   // Fetch builder projects from API
   useEffect(() => {
@@ -235,9 +236,6 @@ const CampaignsOtherProject: React.FC = () => {
         const response = await axios.get<BuilderProjectApiResponse>(apiUrl);
 
         if (response.data.success && response.data.builder_projects) {
-          // Debug: Log raw API response
-          console.log("📍 Raw API response:", response.data.builder_projects);
-          
           // Map API response to component data structure
           const mappedData: OtherProjectData[] =
             response.data.builder_projects.map((project) => ({
@@ -255,9 +253,7 @@ const CampaignsOtherProject: React.FC = () => {
               projectArea: project.project_area || "-",
               externalProjectId: project.external_project_id || "-",
             }));
-          
-          // Debug: Log mapped data
-          console.log("📍 Mapped table data:", mappedData);
+
           setProjectsData(mappedData);
         }
       } catch (err) {
@@ -392,6 +388,21 @@ const CampaignsOtherProject: React.FC = () => {
         console.error("Failed to parse new project:", error);
       }
     }
+  }, []);
+
+  // Fetch dropdown projects for filter
+  useEffect(() => {
+    const loadDropdownProjects = async () => {
+      try {
+        const data = await fetchDropdownProjects();
+        if (data?.builder_projects) {
+          setDropdownProjects(data.builder_projects);
+        }
+      } catch (err) {
+        console.error("Failed to load dropdown projects:", err);
+      }
+    };
+    loadDropdownProjects();
   }, []);
 
   const columns: ColumnConfig[] = [
@@ -559,20 +570,33 @@ const CampaignsOtherProject: React.FC = () => {
     }
   };
 
-  const filteredData = projectsData.filter(
-    (project) =>
+  const filteredData = projectsData.filter((project) => {
+    // Search term filter
+    const matchesSearch =
+      !searchTerm ||
       project.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.projectReferenceId
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+      project.projectReferenceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.geoLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.receptionMobile1.includes(searchTerm) ||
-      project.receptionMobile2.includes(searchTerm)
-  );
+      project.receptionMobile2.includes(searchTerm);
+
+    // Project name filter
+    const matchesProject =
+      !filters.project ||
+      project.project.toLowerCase() === filters.project.toLowerCase();
+
+    // Status filter (active/inactive)
+    const matchesStatus =
+      !filters.status ||
+      (filters.status === "active" && project.active) ||
+      (filters.status === "inactive" && !project.active);
+
+    return matchesSearch && matchesProject && matchesStatus;
+  });
 
   const handleApplyFilters = () => {
-    // Apply filter logic here - connect to API or filter local data
+    setShowFilters(false);
   };
 
   const handleResetFilters = () => {
@@ -726,9 +750,11 @@ const CampaignsOtherProject: React.FC = () => {
                       notched
                     >
                       <MenuItem value="">Select Project</MenuItem>
-                      <MenuItem value="project1">Project 1</MenuItem>
-                      <MenuItem value="project2">Project 2</MenuItem>
-                      <MenuItem value="project3">Project 3</MenuItem>
+                      {dropdownProjects.map((proj) => (
+                        <MenuItem key={proj.id} value={proj.name}>
+                          {proj.name}
+                        </MenuItem>
+                      ))}
                     </MuiSelect>
                   </FormControl>
 

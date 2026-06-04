@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Edit, RefreshCw, Settings2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getReferralSetups, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
+import { getReferralSetups, updateReferralSetup, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
 import {
   Dialog,
   DialogContent,
@@ -57,29 +57,77 @@ const CampaignsReferralSetup: React.FC = () => {
   }, [fetchReferralSetups]);
 
   const handleToggleReferralProgram = async (id: number, currentValue: boolean) => {
-    // Note: The API doesn't have a direct endpoint to toggle status,
-    // so this would need to be implemented on the backend or use the update endpoint
-    // For now, we just update the local state
+    const item = projectsData.find((p) => p.id === id);
+    if (!item) return;
+
+    const newValue = !currentValue;
+
+    // Optimistic update
     setProjectsData((prev) =>
       prev.map((project) =>
         project.id === id
-          ? { ...project, is_referral: !currentValue }
+          ? { ...project, is_referral: newValue }
           : project
       )
     );
+
+    try {
+      await updateReferralSetup(id, {
+        society_banner: {
+          project_name: item.project_name,
+          project_reference_id: parseInt(item.project_reference_id || "0", 10),
+          active: item.active === 1 ? "on" : "off",
+          is_referral: newValue ? "on" : "off",
+        },
+      });
+    } catch (err) {
+      console.error("Failed to update referral program status:", err);
+      // Rollback on failure
+      setProjectsData((prev) =>
+        prev.map((project) =>
+          project.id === id
+            ? { ...project, is_referral: currentValue }
+            : project
+        )
+      );
+    }
   };
 
   const handleToggleBannerStatus = async (id: number, currentValue: boolean) => {
-    // Note: The API doesn't have a direct endpoint to toggle banner status,
-    // so this would need to be implemented on the backend or use the update endpoint
-    // For now, we just update the local state
+    const item = projectsData.find((p) => p.id === id);
+    if (!item) return;
+
+    const newActive = currentValue ? 0 : 1;
+
+    // Optimistic update
     setProjectsData((prev) =>
       prev.map((project) =>
         project.id === id
-          ? { ...project, active: currentValue ? 0 : 1 }
+          ? { ...project, active: newActive }
           : project
       )
     );
+
+    try {
+      await updateReferralSetup(id, {
+        society_banner: {
+          project_name: item.project_name,
+          project_reference_id: parseInt(item.project_reference_id || "0", 10),
+          active: newActive === 1 ? "on" : "off",
+          is_referral: item.is_referral ? "on" : "off",
+        },
+      });
+    } catch (err) {
+      console.error("Failed to update banner status:", err);
+      // Rollback on failure
+      setProjectsData((prev) =>
+        prev.map((project) =>
+          project.id === id
+            ? { ...project, active: currentValue ? 1 : 0 }
+            : project
+        )
+      );
+    }
   };
 
   const handleDelete = async (id: number) => {

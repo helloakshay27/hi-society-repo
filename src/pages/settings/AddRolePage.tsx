@@ -377,8 +377,8 @@ export const AddRolePage = () => {
           name: roleName.trim(),
           active: 1,
           description: "",
-          resource_id: localStorage.getItem("selectedCompanyId"),
-          resource_type: "Pms::CompanySetup",
+          // resource_id: localStorage.getItem("selectedCompanyId"),
+          // resource_type: "Pms::CompanySetup",
 
           the_role: permissionsHash,
           modules: enabledModuleIds,
@@ -390,7 +390,7 @@ export const AddRolePage = () => {
       console.log("Creating role with payload:", payload);
 
       await roleService.createRoleWithPayload(
-        window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost"  ? viPayload : payload
+        window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost" ? viPayload : payload
       );
       toast.success("Role created successfully");
       navigate("/settings/roles/role");
