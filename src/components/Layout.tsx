@@ -114,7 +114,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Detect Hi-Society site - used for fallback when no API role exists
   const isUIHiSocietySite =
     hostname.includes("ui-hisociety.lockated.com") ||
-   ! hostname.includes("localhost") || org_id === "9"
+    hostname.includes("localhost") ||
+    org_id === "9";
 
   const isDevHiSocietySite = hostname.includes("dev-hisociety.lockated.com");
 
@@ -410,19 +411,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               ? "md:ml-16 ml-0"
               : "md:ml-64 ml-0"
             : // FM Matrix mode - always show sidebar margin for admin users
-            isActionSidebarVisible
+              isActionSidebarVisible
               ? "md:ml-64 ml-0 pt-28"
               : isSidebarCollapsed
                 ? "md:ml-16 ml-0"
                 : "md:ml-64 ml-0"
-          } ${
+        } ${
           // Top padding based on mode
           layoutMode === "hi-society"
             ? "pt-28"
             : isActionSidebarVisible
               ? ""
               : "pt-28"
-          }`}
+        }`}
       >
         <RouteErrorBoundary locationKey={location.key}>
           <Outlet />
