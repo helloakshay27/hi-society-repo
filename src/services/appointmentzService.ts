@@ -150,19 +150,33 @@ export interface RMUserData {
   id: number;
   user_id: number;
   society_id: number;
-  active: boolean;
+  active: boolean | null;
   created_at: string;
   updated_at: string;
   admin: boolean;
-  first_name: string;
-  last_name: string;
+  full_name: string;
+  // Individual user endpoint returns these; list endpoint returns only full_name
   firstname?: string;
   lastname?: string;
-  full_name: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
   mobile: string;
-  user_type: string;
-  section: string;
+  user_type: string | null;
+  role_id?: number;
+  section?: string;
+  society_building_name?: string;
+}
+
+export interface CRMRole {
+  id: number;
+  name: string;
+  display_name?: string;
+}
+
+export interface CRMRolesResponse {
+  success: boolean;
+  data: CRMRole[];
 }
 
 export interface RMUsersResponse {
@@ -177,31 +191,49 @@ export interface RMUsersResponse {
 
 export interface CreateRMUserPayload {
   user: {
-    first_name: string;
-    last_name: string;
-    firstname?: string;
-    lastname?: string;
+    firstname: string;
+    lastname: string;
     email: string;
     mobile: string;
     password?: string;
     password_confirmation?: string;
     user_type: string;
-    section: string;
+    role_id?: number;
   };
 }
 
 export interface UpdateRMUserPayload {
   user: {
-    first_name?: string;
-    last_name?: string;
     firstname?: string;
     lastname?: string;
     mobile?: string;
     user_type?: string;
+    role_id?: number;
     section?: string;
     active?: boolean;
   };
 }
+
+/**
+ * Fetch CRM roles for user assignment
+ */
+export const getCRMRoles = async (): Promise<CRMRolesResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token");
+
+  const response = await axios.get(
+    `https://${baseUrl}/crm/admin/roles.json`,
+    {
+      params: { token },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
 
 /**
  * Fetch RM users list
@@ -291,18 +323,17 @@ export const createRMUser = async (
   const selectedSocietyId = localStorage.getItem("selectedSocietyId");
   const user = payload.user;
 
-  // Build minimal JSON payload with ONLY required fields
+  // Build JSON payload matching exact API spec
   const requestPayload = {
     user: {
-      first_name: user.first_name || "",
-      last_name: user.last_name || "",
+      firstname: user.firstname || "",
+      lastname: user.lastname || "",
       email: user.email,
       mobile: user.mobile,
       password: user.password || "",
       password_confirmation: user.password_confirmation || "",
       user_type: user.user_type,
-      active: true,
-      society_id: selectedSocietyId,
+      role_id: user.role_id,
     },
   };
 
@@ -347,10 +378,11 @@ export const updateRMUser = async (
 
   const updatedPayload = {
     user: {
-      first_name: payload.user.first_name,
-      last_name: payload.user.last_name,
+      firstname: payload.user.firstname,
+      lastname: payload.user.lastname,
       mobile: payload.user.mobile,
       user_type: payload.user.user_type,
+      role_id: payload.user.role_id,
     }
   };
 

@@ -159,9 +159,9 @@ export const updateReferralSetup = async (
     `${baseUrl}/crm/admin/referral_setups/${id}.json`,
     formData,
     {
+      params: { token },
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
       },
     }
   );

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Plus } from "lucide-react";
+import { Eye, Pencil, Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ import {
   InputLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 
@@ -405,6 +407,65 @@ const CampaignsOtherProject: React.FC = () => {
     loadDropdownProjects();
   }, []);
 
+  const [updatingStatus, setUpdatingStatus] = useState<Record<string, boolean>>({});
+
+  const handleToggleActive = async (item: OtherProjectData) => {
+    if (updatingStatus[item.id]) return;
+
+    const newActive = !item.active;
+
+    // Optimistic update
+    setUpdatingStatus((prev) => ({ ...prev, [item.id]: true }));
+    setProjectsData((prev) =>
+      prev.map((p) => (p.id === item.id ? { ...p, active: newActive } : p))
+    );
+
+    try {
+      const baseUrl = API_CONFIG.BASE_URL || "https://hi-society.lockated.com";
+      const token = JSON.parse(localStorage.getItem("user") || "{}")?.spree_api_key;
+
+      const response = await axios.put(
+        `${baseUrl}/builder_projects/${item.id}.json`,
+        {
+          builder_project: {
+            active: newActive ? 1 : 0,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: { token },
+        }
+      );
+
+      // Sync active state from API response
+      const apiActive = response.data?.active !== undefined 
+        ? response.data.active 
+        : response.data?.builder_project?.active;
+
+      const updatedActive = apiActive !== undefined 
+        ? (apiActive === 1 || apiActive === true) 
+        : newActive;
+
+      setProjectsData((prev) =>
+        prev.map((p) => (p.id === item.id ? { ...p, active: updatedActive } : p))
+      );
+    } catch (err: any) {
+      // Rollback on failure
+      setProjectsData((prev) =>
+        prev.map((p) => (p.id === item.id ? { ...p, active: item.active } : p))
+      );
+      toast.error("Failed to update project status");
+    } finally {
+      setUpdatingStatus((prev) => {
+        const next = { ...prev };
+        delete next[item.id];
+        return next;
+      });
+    }
+  };
+
   const columns: ColumnConfig[] = [
     {
       key: "actions",
@@ -550,7 +611,19 @@ const CampaignsOtherProject: React.FC = () => {
       case "receptionMobile2":
         return <span className="text-sm">{item.receptionMobile2}</span>;
       case "active":
-        return <span className="text-sm">{item.active ? "Yes" : "No"}</span>;
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={item.active}
+              onCheckedChange={() => handleToggleActive(item)}
+              disabled={!!updatingStatus[item.id]}
+              className="data-[state=checked]:!bg-green-500 data-[state=unchecked]:!bg-gray-300"
+            />
+            {updatingStatus[item.id] && (
+              <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+            )}
+          </div>
+        );
       case "videoLink":
         return item.videoLink && item.videoLink !== "-" ? (
           <a href={item.videoLink} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline truncate block max-w-[200px]">{item.videoLink}</a>
