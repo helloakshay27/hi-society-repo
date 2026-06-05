@@ -138,6 +138,40 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const renderSidebar = () => {
     // If Hi-Society mode is active, use the unified HiSocietySidebar
 
+    // Check for token-based VI access first
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasTokenParam = urlParams.has("access_token");
+    const storedToken = localStorage.getItem("token");
+    const hasToken = hasTokenParam || storedToken;
+
+    if (
+      selectedCompany?.id === 300 ||
+      selectedCompany?.id === 295 ||
+      selectedCompany?.id === 298 ||
+      selectedCompany?.id === 199 ||
+      selectedCompany?.id === 307 ||
+      org_id === "90" ||
+      org_id === "84" ||
+      org_id === "1" ||
+      userEmail === "ubaid.hashmat@lockated.com" ||
+      userEmail === "besis69240@azeriom.com" ||
+      userEmail === "megipow156@aixind.com" ||
+      userEmail === "jevosak839@cimario.com" ||
+      userEmail === "deveshjain928@gmail.com" ||
+      userEmail === "abdul.ghaffar@lockated.com" ||
+      userEmail === "mailroom2@zs.com" ||
+      userEmail === "tested4@gmail.com" ||
+      userEmail === "tested3@gmail.com" ||
+      userEmail === "testtwo@gmail.com" ||
+      // userEmail === "ps1@gophygital.work" ||
+      userEmail === "ps@gophygital.work" ||
+      userEmail === "abdul.g@gophygital.work" ||
+      userEmail === "dineshshinde6666@gmail.com"
+    ) {
+      console.log("✅ Rendering ActionSidebar (company-specific)");
+      return <ActionSidebar />;
+    }
+
     if (layoutMode === "hi-society" && isDevHiSocietySite) {
       return <HiSocietySidebar />;
     }
@@ -187,38 +221,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       // return <HiSocietySidebar />;
     }
 
-    // Check for token-based VI access first
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasTokenParam = urlParams.has("access_token");
-    const storedToken = localStorage.getItem("token");
-    const hasToken = hasTokenParam || storedToken;
 
-    if (
-      selectedCompany?.id === 300 ||
-      selectedCompany?.id === 295 ||
-      selectedCompany?.id === 298 ||
-      selectedCompany?.id === 199 ||
-      selectedCompany?.id === 307 ||
-      org_id === "90" ||
-      org_id === "84" ||
-      org_id === "1" ||
-      userEmail === "ubaid.hashmat@lockated.com" ||
-      userEmail === "besis69240@azeriom.com" ||
-      userEmail === "megipow156@aixind.com" ||
-      userEmail === "jevosak839@cimario.com" ||
-      userEmail === "deveshjain928@gmail.com" ||
-      userEmail === "abdul.ghaffar@lockated.com" ||
-      userEmail === "mailroom2@zs.com" ||
-      userEmail === "tested4@gmail.com" ||
-      userEmail === "tested3@gmail.com" ||
-      userEmail === "testtwo@gmail.com" ||
-      // userEmail === "ps1@gophygital.work" ||
-      userEmail === "ps@gophygital.work" ||
-      userEmail === "abdul.g@gophygital.work"
-    ) {
-      console.log("✅ Rendering ActionSidebar (company-specific)");
-      return <ActionSidebar />;
-    }
 
     if (selectedCompany?.id === 189) {
       return <ZxSidebar />;
@@ -411,19 +414,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               ? "md:ml-16 ml-0"
               : "md:ml-64 ml-0"
             : // FM Matrix mode - always show sidebar margin for admin users
-              isActionSidebarVisible
+            isActionSidebarVisible
               ? "md:ml-64 ml-0 pt-28"
               : isSidebarCollapsed
                 ? "md:ml-16 ml-0"
                 : "md:ml-64 ml-0"
-        } ${
+          } ${
           // Top padding based on mode
           layoutMode === "hi-society"
             ? "pt-28"
             : isActionSidebarVisible
               ? ""
               : "pt-28"
-        }`}
+          }`}
       >
         <RouteErrorBoundary locationKey={location.key}>
           <Outlet />

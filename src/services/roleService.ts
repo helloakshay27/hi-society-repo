@@ -683,6 +683,12 @@ export const roleService = {
         });
       });
 
+      const filteredPermissionsHash = Object.fromEntries(
+        Object.entries(permissionsHash).filter(
+          ([_, value]) => Object.keys(value).length > 0
+        )
+      );
+
       // Get enabled module IDs
       const enabledModuleIds = roleWithModules.modules
         .filter((module) => module.enabled)
@@ -711,7 +717,7 @@ export const roleService = {
           // resource_id: localStorage.getItem("selectedCompanyId"),
           active: true,
           modules: enabledModuleIds,
-          the_role: permissionsHash,
+          the_role: filteredPermissionsHash,
         },
       };
 
