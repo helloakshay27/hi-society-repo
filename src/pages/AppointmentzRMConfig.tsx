@@ -65,6 +65,7 @@ const AppointmentzRMConfig = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [editingUserName, setEditingUserName] = useState("");
+  const [defaultRoleId, setDefaultRoleId] = useState<number | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,23 +90,37 @@ const AppointmentzRMConfig = () => {
     setLoading(true);
     try {
       const response = await getRMUsers(page);
+
       // Transform API data to component format
-      const transformedData: RMUser[] = response.data.map((user) => ({
-        id: user.id,
-        userId: `${user.user_id}`,
-        name:
-          user.full_name ||
-          `${user.first_name || user.firstname || ""} ${
-            user.last_name || user.lastname || ""
-          }`.trim(),
-        firstName: user.first_name || user.firstname || "",
-        lastName: user.last_name || user.lastname || "",
-        email: user.email,
-        mobile: user.mobile,
-        userType: user.user_type === "cs_user" ? "Customer Support" : "RM User",
-        createdOn: new Date(user.created_at).toLocaleDateString("en-GB"),
-        status: parseActiveStatus(user.active),
-      }));
+      // List API returns only full_name (no separate firstname/lastname)
+      const transformedData: RMUser[] = response.data.map((user) => {
+        const fullName = user.full_name || "";
+        const nameParts = fullName.trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ");
+
+        const userTypeLabel =
+          user.user_type === "cs_user"
+            ? "Customer Support"
+            : user.user_type === "rm_user"
+            ? "RM User"
+            : user.user_type || "-";
+
+        return {
+          id: user.id,
+          userId: `${user.user_id}`,
+          name: fullName,
+          firstName,
+          lastName,
+          email: user.email || "",
+          mobile: user.mobile || "",
+          userType: userTypeLabel,
+          createdOn: user.created_at
+            ? new Date(user.created_at).toLocaleDateString("en-GB")
+            : "",
+          status: parseActiveStatus(user.active),
+        };
+      });
       setData(transformedData);
       setTotalPages(response.pagination.total_pages);
       setTotalCount(response.pagination.total_count);
@@ -140,6 +155,28 @@ const AppointmentzRMConfig = () => {
   useEffect(() => {
     fetchRMUsers(currentPage);
   }, [fetchRMUsers, currentPage]);
+
+  // Discover a valid role_id from the first existing user (API requires role_id but roles endpoint is unavailable)
+  useEffect(() => {
+    if (defaultRoleId !== null) return; // already discovered
+    getRMUsers(1)
+      .then(async (res) => {
+        if (res.data.length > 0) {
+          try {
+            const userDetail = await getRMUserById(res.data[0].id);
+            if (userDetail.data.role_id) {
+              setDefaultRoleId(userDetail.data.role_id);
+            }
+          } catch {
+            // silently ignore
+          }
+        }
+      })
+      .catch(() => { /* silently ignore */ });
+  }, [defaultRoleId]);
+
+
+
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -274,7 +311,7 @@ const AppointmentzRMConfig = () => {
       password: "",
       userType: "",
     });
-    setFormErrors({}); // Clear errors when opening dialog
+    setFormErrors({});
     setIsAddModalOpen(true);
   };
 
@@ -292,9 +329,14 @@ const AppointmentzRMConfig = () => {
       const response = await getRMUserById(item.id);
       const user = response.data;
 
+      // Capture role_id for auto-assignment
+      if (user.role_id && defaultRoleId === null) {
+        setDefaultRoleId(user.role_id);
+      }
+
       setFormData({
-        firstName: user.first_name || "",
-        lastName: user.last_name || "",
+        firstName: user.firstname || user.first_name || "",
+        lastName: user.lastname || user.last_name || "",
         email: user.email,
         mobile: user.mobile,
         password: "",
@@ -382,48 +424,43 @@ const AppointmentzRMConfig = () => {
       if (isEditMode && selectedId) {
         await updateRMUser(selectedId, {
           user: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
             firstname: formData.firstName,
             lastname: formData.lastName,
             mobile: formData.mobile,
             user_type: formData.userType,
-            section: "",
+            role_id: defaultRoleId ?? undefined,
           },
         });
         setTimeout(() => {
           toast.success("User updated successfully!");
         }, 0);
+        // Stay on current page after edit
+        await fetchRMUsers(currentPage);
+        setIsAddModalOpen(false);
+        return;
       } else {
         const response = await createRMUser({
           user: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
+            firstname: formData.firstName,
+            lastname: formData.lastName,
             email: formData.email,
             mobile: formData.mobile,
             password: formData.password,
             password_confirmation: formData.password,
             user_type: formData.userType,
-            section: "",
+            role_id: defaultRoleId ?? undefined,
           },
         });
         setTimeout(() => {
           toast.success(response.message || "User added successfully!");
         }, 0);
+        // Go to page 1 to see newly added user
+        setCurrentPage(1);
+        await fetchRMUsers(1);
       }
-      // Refresh the list
-      await fetchRMUsers();
       setIsAddModalOpen(false);
     } catch (error: unknown) {
       console.error("Error saving user:", error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosErr = error as { response?: { status?: number; statusText?: string; data?: unknown } };
-        console.error("Full error response:", JSON.stringify({
-          status: axiosErr.response?.status,
-          statusText: axiosErr.response?.statusText,
-          data: axiosErr.response?.data,
-        }, null, 2));
-      }
 
       let errorMessage = "Failed to save user";
       const apiErrors: Record<string, string> = {};
@@ -431,41 +468,40 @@ const AppointmentzRMConfig = () => {
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosErr = error as { response?: { data?: unknown } };
         const errorData = axiosErr.response?.data as Record<string, unknown> | undefined;
-        
+
         if (errorData) {
-          // Handle field-level errors
           if (Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.join(", ");
+            // e.g. {"errors": ["Role must exist", "Email has already been taken"]}
+            errorMessage = (errorData.errors as string[]).join(", ");
           } else if (errorData.errors && typeof errorData.errors === 'object') {
-          Object.keys(errorData.errors).forEach((key) => {
-            const errorArray = errorData.errors[key];
-            const errorText = Array.isArray(errorArray) ? errorArray.join(", ") : String(errorArray);
-            
-            // Map API field names to form field names
-            if (key === "first_name" || key === "firstname") {
-              apiErrors.firstName = errorText;
-            } else if (key === "last_name" || key === "lastname") {
-              apiErrors.lastName = errorText;
-            } else if (key === "mobile") {
-              apiErrors.mobile = errorText;
-            } else if (key === "email") {
-              apiErrors.email = errorText;
-            } else if (key === "password") {
-              apiErrors.password = errorText;
-            } else if (key === "password_confirmation") {
-              apiErrors.password = errorText;
-            } else if (key === "user_type" || key === "role") {
-              apiErrors.userType = errorText;
-            } else {
-              // Generic field mapping
-              apiErrors[key] = errorText;
-            }
-          });
-          setFormErrors(apiErrors);
-          errorMessage = Object.values(apiErrors).join(", ");
-        } else if (errorData.error && typeof errorData.error === 'string') {
-          errorMessage = errorData.error;
-        }
+            // e.g. {"errors": {"email": ["has already been taken"], "mobile": ["is invalid"]}}
+            const errorsObj = errorData.errors as Record<string, string | string[]>;
+            Object.keys(errorsObj).forEach((key) => {
+              const val = errorsObj[key];
+              const errorText = Array.isArray(val) ? val.join(", ") : String(val);
+              if (key === "first_name" || key === "firstname") {
+                apiErrors.firstName = errorText;
+              } else if (key === "last_name" || key === "lastname") {
+                apiErrors.lastName = errorText;
+              } else if (key === "mobile") {
+                apiErrors.mobile = errorText;
+              } else if (key === "email") {
+                apiErrors.email = errorText;
+              } else if (key === "password" || key === "password_confirmation") {
+                apiErrors.password = errorText;
+              } else if (key === "user_type" || key === "role") {
+                apiErrors.userType = errorText;
+              } else {
+                apiErrors[key] = errorText;
+              }
+            });
+            setFormErrors(apiErrors);
+            errorMessage = Object.values(apiErrors).join(", ");
+          } else if (typeof errorData.error === 'string') {
+            errorMessage = errorData.error;
+          } else if (typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          }
         }
       }
 
@@ -688,6 +724,8 @@ const AppointmentzRMConfig = () => {
                 <p className="text-red-500 text-xs mt-1">{formErrors.userType}</p>
               )}
             </div>
+
+
           </div>
 
           <DialogFooter className="p-4 bg-white border-t flex justify-center">

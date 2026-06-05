@@ -4,6 +4,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Edit, RefreshCw, Settings2, Download } from "lucide-react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { getReferralSetups, updateReferralSetup, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
 import {
@@ -65,14 +66,12 @@ const CampaignsReferralSetup: React.FC = () => {
     // Optimistic update
     setProjectsData((prev) =>
       prev.map((project) =>
-        project.id === id
-          ? { ...project, is_referral: newValue }
-          : project
+        project.id === id ? { ...project, is_referral: newValue } : project
       )
     );
 
     try {
-      await updateReferralSetup(id, {
+      const updated = await updateReferralSetup(id, {
         society_banner: {
           project_name: item.project_name,
           project_reference_id: parseInt(item.project_reference_id || "0", 10),
@@ -80,16 +79,19 @@ const CampaignsReferralSetup: React.FC = () => {
           is_referral: newValue ? "on" : "off",
         },
       });
+      // Sync with actual server response
+      setProjectsData((prev) =>
+        prev.map((project) => (project.id === id ? { ...project, ...updated } : project))
+      );
     } catch (err) {
       console.error("Failed to update referral program status:", err);
-      // Rollback on failure
+      // Rollback
       setProjectsData((prev) =>
         prev.map((project) =>
-          project.id === id
-            ? { ...project, is_referral: currentValue }
-            : project
+          project.id === id ? { ...project, is_referral: currentValue } : project
         )
       );
+      toast.error("Failed to update referral program status");
     }
   };
 
@@ -102,14 +104,12 @@ const CampaignsReferralSetup: React.FC = () => {
     // Optimistic update
     setProjectsData((prev) =>
       prev.map((project) =>
-        project.id === id
-          ? { ...project, active: newActive }
-          : project
+        project.id === id ? { ...project, active: newActive } : project
       )
     );
 
     try {
-      await updateReferralSetup(id, {
+      const updated = await updateReferralSetup(id, {
         society_banner: {
           project_name: item.project_name,
           project_reference_id: parseInt(item.project_reference_id || "0", 10),
@@ -117,16 +117,19 @@ const CampaignsReferralSetup: React.FC = () => {
           is_referral: item.is_referral ? "on" : "off",
         },
       });
+      // Sync with actual server response
+      setProjectsData((prev) =>
+        prev.map((project) => (project.id === id ? { ...project, ...updated } : project))
+      );
     } catch (err) {
       console.error("Failed to update banner status:", err);
-      // Rollback on failure
+      // Rollback
       setProjectsData((prev) =>
         prev.map((project) =>
-          project.id === id
-            ? { ...project, active: currentValue ? 1 : 0 }
-            : project
+          project.id === id ? { ...project, active: currentValue ? 1 : 0 } : project
         )
       );
+      toast.error("Failed to update banner status");
     }
   };
 
