@@ -187,7 +187,7 @@ export const ManageFlatsPage = () => {
         });
       }
       if (searchTerm) {
-        url += `&q[block_no_or_flat_no_cont]=${searchTerm}`;
+        url += `&q[search_all_fields_cont]=${searchTerm}`;
       }
 
       const response = await axios.get(url, {

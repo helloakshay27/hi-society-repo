@@ -186,7 +186,7 @@ interface CreateRoleWithPayload {
 
 const isWebOrg34 = () => {
   const orgId = String(localStorage.getItem("org_id") ?? "").trim();
-  return window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost" ;
+  return window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost";
 };
 
 export const roleService = {
@@ -707,8 +707,8 @@ export const roleService = {
           name: roleWithModules.role_name,
           title: roleWithModules.role_name,
           description: "",
-          resource_type: "Pms::CompanySetup",
-          resource_id: localStorage.getItem("selectedCompanyId"),
+          // resource_type: "Pms::CompanySetup",
+          // resource_id: localStorage.getItem("selectedCompanyId"),
           active: true,
           modules: enabledModuleIds,
           the_role: permissionsHash,
