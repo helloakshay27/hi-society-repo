@@ -282,13 +282,15 @@ export const OSRAssignEscalationPage: React.FC = () => {
 
   const loadStaff = useCallback(async () => {
     try {
-      const res = await apiClient.get('/crm/admin/society_staffs.json');
-      const raw = Array.isArray(res.data) ? res.data : res.data?.staffs ?? res.data?.staff ?? [];
+      const res = await apiClient.get('/crm/user_societies/approved_users.json');
+      const societies = Array.isArray(res.data?.user_societies) ? res.data.user_societies : [];
       setStaffOptions(
-        (Array.isArray(raw) ? raw : []).map((s: { id: number; name?: string; full_name?: string; first_name?: string; last_name?: string }) => ({
-          value: s.id,
-          label: s.full_name || s.name || `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim() || `Staff #${s.id}`,
-        }))
+        societies
+          .filter((s: { id_user?: string | null; user?: { id: number; firstname?: string; lastname?: string } }) => s.id_user && s.user?.id)
+          .map((s: { user: { id: number; firstname?: string; lastname?: string } }) => ({
+            value: s.user.id,
+            label: `${s.user.firstname ?? ''} ${s.user.lastname ?? ''}`.trim(),
+          }))
       );
     } catch (err) {
       console.error('loadStaff failed:', err);
@@ -298,7 +300,7 @@ export const OSRAssignEscalationPage: React.FC = () => {
   const loadRules = useCallback(async () => {
     setLoadingRules(true);
     try {
-      const res = await apiClient.get('/crm/admin/create_osr_assign.json');
+      const res = await apiClient.post('/crm/admin/create_osr_assign.json');
       const raw = res.data?.osr_assigns ?? (Array.isArray(res.data) ? res.data : []);
       setRules(Array.isArray(raw) ? raw : []);
     } catch (err) {

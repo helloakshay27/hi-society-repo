@@ -1356,7 +1356,6 @@ if (ceoInfo) {
                 </div>
               )}
             </div> */}
-{console.log('ceoInfo.videoUrl', ceoInfo.videoUrl)}
                 {/* Video Upload */}
               
 
