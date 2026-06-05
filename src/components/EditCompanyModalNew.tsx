@@ -148,7 +148,6 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
       }
 
       const result = await response.json();
-      console.log("Company details response:", result);
 
       const company = result.data || result.company || result;
 

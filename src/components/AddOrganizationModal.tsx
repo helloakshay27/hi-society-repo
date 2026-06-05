@@ -266,8 +266,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
   };
 
 
-  console.log("welcomeDescriptions:", welcomeDescriptions, visionList, missionList, ceoInfo);
-
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) {
@@ -279,7 +277,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     });
 
     setErrors(newErrors);
-    console.log("Validation errors:", newErrors, Object.keys(newErrors), errors)
     if (Object.keys(newErrors).length > 0) {
       toast.error("Please fix the highlighted errors");
       return;

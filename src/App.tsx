@@ -1155,8 +1155,18 @@ import LockFeesAdd from "./pages/LockFeesAdd";
 import LockFeesDetail from "./pages/LockFeesDetail";
 import EditLockFeesPage from "./pages/EditLockFeesPage";
 import SocietyDetailsPage from "./pages/master/SocietyDetailsPage";
+import BlockDetailsPage from "./pages/master/BlockDetailsPage";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   const dispatch = useAppDispatch();
@@ -1175,9 +1185,6 @@ function App() {
 
   // Initialize global MUI Select search enhancer
   useEffect(() => {
-    console.warn(
-      "🚀 Initializing Global MUI Select Search Enhancer from App.tsx"
-    );
     const cleanup = initializeGlobalMUISelectSearchEnhancer();
 
     return () => {
@@ -1386,9 +1393,17 @@ function App() {
                             element={<RoleDashboard />}
                           />
                            <Route
-                            path="master/location/account/societies/details/:id"
-                            element={<SocietyDetailsPage />}
-                          />
+                             path="master/location/account/societies/details/:id"
+                             element={<SocietyDetailsPage />}
+                           />
+                           <Route
+                             path="master/location/account/societies/details/:societyId/blocks/:blockId"
+                             element={<BlockDetailsPage />}
+                           />
+                           <Route
+                             path="settings/roles/role"
+                             element={<RoleDashboard />}
+                           />
                           <Route
                             path="settings/roles/role/add"
                             element={<AddRolePage />}
