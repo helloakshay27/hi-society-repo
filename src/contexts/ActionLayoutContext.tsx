@@ -54,9 +54,9 @@ export const useActionLayout = () => {
     // and when Layout is momentarily rendered outside the provider tree
     return {
       currentModule: "",
-      setCurrentModule: () => {},
+      setCurrentModule: () => { },
       currentFunction: "",
-      setCurrentFunction: () => {},
+      setCurrentFunction: () => { },
       availableModules: [],
       getModuleFunctions: () => [],
       isActionSidebarVisible: false,
@@ -135,6 +135,7 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
   // Auto-detect module and function from current route
   useEffect(() => {
     const path = location.pathname;
+    const userType = localStorage.getItem("userType");
 
     if (!userRole || !userRole.lock_modules) {
       setIsActionSidebarVisible(false);
