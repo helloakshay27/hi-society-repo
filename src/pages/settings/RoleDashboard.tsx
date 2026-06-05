@@ -63,6 +63,8 @@ export const RoleDashboard = () => {
     (state) => state.roleWithModules
   );
 
+  console.log(roles)
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeModuleTab, setActiveModuleTab] = useState("");
   const [selectedRole, setSelectedRole] = useState<RoleWithModules | null>(
@@ -136,8 +138,8 @@ export const RoleDashboard = () => {
   // Get filtered roles based on search term
   const filteredRoles = Array.isArray(roles)
     ? roles.filter((role) =>
-        role.role_name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      role.role_name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : [];
 
   // Get current role's modules for tabs - Use all available modules instead of just role's modules
@@ -147,11 +149,11 @@ export const RoleDashboard = () => {
     : null;
   const tabs = Array.isArray(allModules)
     ? allModules
-        .filter((module) => (module.module_id ?? module.id) != null)
-        .map((module) => ({
-          id: (module.module_id ?? module.id).toString(),
-          name: module.name || "Unknown Module",
-        }))
+      .filter((module) => (module.module_id ?? module.id) != null)
+      .map((module) => ({
+        id: (module.module_id ?? module.id).toString(),
+        name: module.name || "Unknown Module",
+      }))
     : [];
 
   // Get current module from the selected role's modules (this contains the actual enabled status)
@@ -164,9 +166,9 @@ export const RoleDashboard = () => {
   // Get current module info from all modules (for metadata like name)
   const currentModule = Array.isArray(allModules)
     ? allModules.find((m) => {
-        const moduleId = m.module_id ?? m.id;
-        return moduleId != null && moduleId.toString() === activeModuleTab;
-      })
+      const moduleId = m.module_id ?? m.id;
+      return moduleId != null && moduleId.toString() === activeModuleTab;
+    })
     : null;
 
   const [functionSearchTerm, setFunctionSearchTerm] = useState("");
@@ -263,10 +265,10 @@ export const RoleDashboard = () => {
       enabled,
       roleSubFunction: roleSubFunction
         ? {
-            id: roleSubFunction.sub_function_id ?? roleSubFunction.id,
-            name: roleSubFunction.sub_function_name,
-            enabled: roleSubFunction.enabled,
-          }
+          id: roleSubFunction.sub_function_id ?? roleSubFunction.id,
+          name: roleSubFunction.sub_function_name,
+          enabled: roleSubFunction.enabled,
+        }
         : null,
     });
 
@@ -302,10 +304,10 @@ export const RoleDashboard = () => {
       enabled,
       roleFunction: roleFunction
         ? {
-            id: roleFunction.function_id ?? roleFunction.id,
-            name: roleFunction.function_name,
-            enabled: roleFunction.enabled,
-          }
+          id: roleFunction.function_id ?? roleFunction.id,
+          name: roleFunction.function_name,
+          enabled: roleFunction.enabled,
+        }
         : null,
     });
 
@@ -329,10 +331,10 @@ export const RoleDashboard = () => {
       enabled,
       roleModule: roleModule
         ? {
-            id: roleModule.module_id ?? roleModule.id,
-            name: roleModule.name,
-            enabled: roleModule.enabled,
-          }
+          id: roleModule.module_id ?? roleModule.id,
+          name: roleModule.name,
+          enabled: roleModule.enabled,
+        }
         : null,
     });
 
@@ -615,11 +617,10 @@ export const RoleDashboard = () => {
                   <button
                     key={`${role.role_name}-${index}`}
                     onClick={() => handleRoleClick(role)}
-                    className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-between group ${
-                      currentRole?.role_name === role.role_name
+                    className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-between group ${currentRole?.role_name === role.role_name
                         ? "bg-[#C72030] text-white shadow-md"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
+                      }`}
                   >
                     <span>{role.role_name}</span>
                     {currentRole?.role_name === role.role_name && (
@@ -708,11 +709,10 @@ export const RoleDashboard = () => {
                       setActiveModuleTab(tab.id);
                       setFunctionSearchTerm(""); // Reset search when switching tabs
                     }}
-                    className={`px-4 py-3 border-b-2 text-sm font-medium transition-colors whitespace-nowrap ${
-                      activeModuleTab === tab.id
+                    className={`px-4 py-3 border-b-2 text-sm font-medium transition-colors whitespace-nowrap ${activeModuleTab === tab.id
                         ? "border-[#C72030] text-[#C72030] bg-red-50/30"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
+                      }`}
                   >
                     {tab.name}
                   </button>
@@ -843,17 +843,17 @@ export const RoleDashboard = () => {
                                   checked={
                                     currentModule
                                       ? isFunctionEnabled(
-                                          currentModule.module_id ??
-                                            currentModule.id,
-                                          func.function_id ?? func.id
-                                        )
+                                        currentModule.module_id ??
+                                        currentModule.id,
+                                        func.function_id ?? func.id
+                                      )
                                       : false
                                   }
                                   onCheckedChange={(checked) => {
                                     if (currentModule) {
                                       handleFunctionToggle(
                                         currentModule.module_id ??
-                                          currentModule.id,
+                                        currentModule.id,
                                         func.function_id ?? func.id,
                                         checked as boolean
                                       );
@@ -870,9 +870,8 @@ export const RoleDashboard = () => {
                           // Sub-function rows
                           ...(func.sub_functions || []).map((subFunc) => (
                             <TableRow
-                              key={`subfunc-${
-                                subFunc.sub_function_id ?? subFunc.id
-                              }`}
+                              key={`subfunc-${subFunc.sub_function_id ?? subFunc.id
+                                }`}
                               className="hover:bg-gray-50 border-b border-gray-50 last:border-0"
                             >
                               <TableCell className="py-3 pl-16">
@@ -892,19 +891,19 @@ export const RoleDashboard = () => {
                                     checked={
                                       currentModule
                                         ? isSubFunctionEnabled(
-                                            currentModule.module_id ??
-                                              currentModule.id,
-                                            func.function_id ?? func.id,
-                                            subFunc.sub_function_id ??
-                                              subFunc.id
-                                          )
+                                          currentModule.module_id ??
+                                          currentModule.id,
+                                          func.function_id ?? func.id,
+                                          subFunc.sub_function_id ??
+                                          subFunc.id
+                                        )
                                         : false
                                     }
                                     onCheckedChange={(checked) => {
                                       if (currentModule) {
                                         handleSubFunctionToggle(
                                           currentModule.module_id ??
-                                            currentModule.id,
+                                          currentModule.id,
                                           func.function_id ?? func.id,
                                           subFunc.sub_function_id ?? subFunc.id,
                                           checked as boolean

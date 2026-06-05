@@ -478,141 +478,52 @@ export const roleService = {
 
   // Fetch roles with their associated modules
   async fetchRolesWithModules(): Promise<RoleWithModules[]> {
+    // Step 1: Always fetch the flat roles list — this is the complete source of truth.
+    let allFlatRoles: any[] = [];
     try {
-      console.log(
-        "Fetching roles with modules from:",
-        ENDPOINTS.ROLES_WITH_MODULES
-      );
+      const rolesResponse = await apiClient.get<any>(ENDPOINTS.ROLES);
+      const data = rolesResponse.data;
+      if (Array.isArray(data)) {
+        allFlatRoles = data;
+      } else {
+        allFlatRoles = data?.roles || data?.lock_roles || [];
+      }
+      console.log("Flat roles fetched:", allFlatRoles.length);
+    } catch (err) {
+      console.error("Failed to fetch flat roles list:", err);
+    }
+
+    // Step 2: Try to enrich with module/permission data from the modules endpoint.
+    let transformedRoles: RoleWithModules[] = [];
+    try {
+      console.log("Fetching roles with modules from:", ENDPOINTS.ROLES_WITH_MODULES);
       const response = await apiClient.get<ApiRolesWithModulesResponse>(
         ENDPOINTS.ROLES_WITH_MODULES
       );
       console.log("Raw roles with modules response:", response.data);
-
-      // Also fetch regular roles to get the role IDs
-      console.log("Fetching regular roles for ID mapping...");
-      const rolesResponse = await apiClient.get<ApiRole[]>(ENDPOINTS.ROLES);
-      console.log("Regular roles response:", rolesResponse.data);
-
-      // Transform the API response to match frontend structure
-      return this.transformApiResponseToRoleWithModules(
+      transformedRoles = this.transformApiResponseToRoleWithModules(
         response.data,
-        rolesResponse.data
+        allFlatRoles
       );
-    } catch (error) {
-      console.error("Error fetching roles with modules:", error);
-
-      // Return mock data for testing
-      console.warn("Returning mock roles data for testing...");
-      const mockRoles: RoleWithModules[] = [
-        {
-          id: 1,
-          role_id: 1,
-          role_name: "Admin Role",
-          modules: [
-            {
-              id: 1,
-              module_id: 1,
-              name: "User Management",
-              enabled: true,
-              functions: [
-                {
-                  id: 1,
-                  function_id: 1,
-                  function_name: "User Operations",
-                  enabled: true,
-                  sub_functions: [
-                    {
-                      id: 1,
-                      sub_function_id: 1,
-                      sub_function_name: "Create User",
-                      enabled: true,
-                    },
-                    {
-                      id: 2,
-                      sub_function_id: 2,
-                      sub_function_name: "Edit User",
-                      enabled: true,
-                    },
-                    {
-                      id: 3,
-                      sub_function_id: 3,
-                      sub_function_name: "Delete User",
-                      enabled: false,
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              id: 2,
-              module_id: 2,
-              name: "Asset Management",
-              enabled: true,
-              functions: [
-                {
-                  id: 2,
-                  function_id: 2,
-                  function_name: "Asset Operations",
-                  enabled: false,
-                  sub_functions: [
-                    {
-                      id: 4,
-                      sub_function_id: 4,
-                      sub_function_name: "Add Asset",
-                      enabled: false,
-                    },
-                    {
-                      id: 5,
-                      sub_function_id: 5,
-                      sub_function_name: "View Assets",
-                      enabled: true,
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: 2,
-          role_id: 2,
-          role_name: "Manager Role",
-          modules: [
-            {
-              id: 1,
-              module_id: 1,
-              name: "User Management",
-              enabled: false,
-              functions: [
-                {
-                  id: 1,
-                  function_id: 1,
-                  function_name: "User Operations",
-                  enabled: false,
-                  sub_functions: [
-                    {
-                      id: 1,
-                      sub_function_id: 1,
-                      sub_function_name: "Create User",
-                      enabled: false,
-                    },
-                    {
-                      id: 2,
-                      sub_function_id: 2,
-                      sub_function_name: "Edit User",
-                      enabled: true,
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ];
-
-      console.log("Mock roles data:", mockRoles);
-      return mockRoles;
+    } catch (err) {
+      console.error("Failed to fetch roles_with_modules (will use flat list):", err);
     }
+
+    // Step 3: Any role from the flat list that is missing from the modules response
+    // gets added with empty modules so it still appears in the sidebar.
+    const transformedIds = new Set(transformedRoles.map((r: RoleWithModules) => r.role_id));
+    const extraRoles: RoleWithModules[] = allFlatRoles
+      .filter((role: any) => role.active && !transformedIds.has(role.id))
+      .map((role: any): RoleWithModules => ({
+        id: role.id,
+        role_id: role.id,
+        role_name: role.title || role.name,
+        modules: [],
+      }));
+
+    const result = [...transformedRoles, ...extraRoles];
+    console.log("fetchRolesWithModules result count:", result.length);
+    return result;
   },
 
   // Transform API response to frontend structure
