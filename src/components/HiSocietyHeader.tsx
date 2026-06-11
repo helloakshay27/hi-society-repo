@@ -573,71 +573,50 @@ export const HiSocietyHeader = () => {
             </Button>
           )}
 
-          {/* Society Dropdown */}
+          {/* Society + Flat Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1 sm:gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
               <Building2 className="w-4 h-4 flex-shrink-0" />
-
               {hiSocietyLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <span className="hidden sm:inline text-sm font-medium">
-                  {selectedSociety?.society?.building_name || "Select Society"}
+                  {selectedSociety?.society?.building_name
+                    ? selectedFlat?.user_flat?.flat
+                      ? `${selectedSociety.society.building_name} - ${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + ' - ' : ''}${selectedFlat.user_flat.flat}`
+                      : selectedSociety.society.building_name
+                    : "Select Society"}
                 </span>
               )}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-              {uniqueSocieties.length === 0 ? (
+            <DropdownMenuContent className="w-64 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
+              {hiSocietySocieties.length === 0 ? (
                 <DropdownMenuItem disabled>No societies available</DropdownMenuItem>
               ) : (
-                uniqueSocieties.map((society) => (
+                hiSocietySocieties.map((item) => (
                   <DropdownMenuItem
-                    key={society.id}
-                    onClick={() => handleSocietyChange(society.id)}
+                    key={item.id}
+                    onClick={() => {
+                      if (item.id_society !== selectedSociety?.id_society) {
+                        handleSocietyChange(item.id);
+                      } else {
+                        handleFlatChange(item.id);
+                      }
+                    }}
                     className={
-                      selectedSociety?.id === society.id
+                      selectedFlat?.id === item.id
                         ? "bg-[#f6f4ee] text-[#C72030]"
                         : ""
                     }
                   >
-                    {society.society.building_name}
+                    {item.society.building_name}
+                    {item.user_flat?.flat && ` - ${item.user_flat.block ? item.user_flat.block + ' - ' : ''}${item.user_flat.flat}`}
                   </DropdownMenuItem>
                 ))
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Flats Dropdown */}
-          {availableFlats.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1 sm:gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
-                <Home className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline text-sm font-medium">
-                  {selectedFlat?.user_flat
-                    ? `${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + ' - ' : ''}${selectedFlat.user_flat.flat}`
-                    : "Select Flat"}
-                </span>
-                <ChevronDown className="w-3 h-3 flex-shrink-0" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-                {availableFlats.map((flat) => (
-                  <DropdownMenuItem
-                    key={flat.id}
-                    onClick={() => handleFlatChange(flat.id)}
-                    className={
-                      selectedFlat?.id === flat.id
-                        ? "bg-[#f6f4ee] text-[#C72030]"
-                        : ""
-                    }
-                  >
-                    {flat.user_flat?.block && `${flat.user_flat.block} - `}
-                    {flat.user_flat?.flat}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
 
           <div className="relative">
             <button className="p-2 hover:bg-[#f6f4ee] rounded-lg transition-colors">
