@@ -429,6 +429,7 @@ const AppointmentzRMConfig = () => {
             mobile: formData.mobile,
             user_type: formData.userType,
             role_id: defaultRoleId ?? undefined,
+            role: formData.userType,
           },
         });
         setTimeout(() => {
@@ -449,6 +450,7 @@ const AppointmentzRMConfig = () => {
             password_confirmation: formData.password,
             user_type: formData.userType,
             role_id: defaultRoleId ?? undefined,
+            role: formData.userType,
           },
         });
         setTimeout(() => {
