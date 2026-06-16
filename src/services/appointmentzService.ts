@@ -199,6 +199,7 @@ export interface CreateRMUserPayload {
     password_confirmation?: string;
     user_type: string;
     role_id?: number;
+    role?: string;
   };
 }
 
@@ -209,6 +210,7 @@ export interface UpdateRMUserPayload {
     mobile?: string;
     user_type?: string;
     role_id?: number;
+    role?: string;
     section?: string;
     active?: boolean;
   };
@@ -334,6 +336,7 @@ export const createRMUser = async (
       password_confirmation: user.password_confirmation || "",
       user_type: user.user_type,
       role_id: user.role_id,
+      role: user.role,
     },
   };
 
@@ -383,6 +386,7 @@ export const updateRMUser = async (
       mobile: payload.user.mobile,
       user_type: payload.user.user_type,
       role_id: payload.user.role_id,
+      role: payload.user.role,
     }
   };
 
