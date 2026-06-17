@@ -2281,7 +2281,12 @@ const UpdateTicketsPage: React.FC = () => {
       });
 
       // Redirect to ticket details page
-      navigate(`/maintenance/ticket/details/${ticketId}`);
+      const returnTo = location.state?.returnTo;
+      if (returnTo) {
+        navigate(returnTo, { state: { from: 'edit' } });
+      } else {
+        navigate(`/maintenance/ticket/details/${ticketId}`, { state: { from: 'edit' } });
+      }
     } catch (error) {
       console.error("Error updating tickets:", error);
 

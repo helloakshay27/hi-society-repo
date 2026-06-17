@@ -1244,10 +1244,10 @@ const ProjectDetailsEdit = () => {
             : [],
 
           // Banner images with different ratios
-          image_1_by_1: normalizeImageData(project.image_1_by_1),
-          image_16_by_9: normalizeImageData(project.image_16_by_9),
-          image_9_by_16: normalizeImageData(project.image_9_by_16),
-          image_3_by_2: normalizeImageData(project.image_3_by_2),
+          image_1_by_1: normalizeImageData(project.project_banners_1_by_1),
+          image_16_by_9: normalizeImageData(project.project_banners_16_by_9),
+          image_9_by_16: normalizeImageData(project.project_banners_9_by_16),
+          image_3_by_2: normalizeImageData(project.project_banners_3_by_2),
 
           // Cover images with different ratios
           cover_images_1_by_1: normalizeImageData(project.cover_images_1_by_1),
@@ -2756,7 +2756,7 @@ const ProjectDetailsEdit = () => {
         value.length > 0
       ) {
         value.forEach((img) => {
-          const backendField = key.replace("image", "project[image") + "]";
+          const backendField = `project[${key.replace("image_", "project_banners_")}]`;
           if (img.file instanceof File) {
             data.append(backendField, img.file);
           }

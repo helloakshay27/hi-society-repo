@@ -2099,7 +2099,7 @@ const ProjectDetailsCreate = () => {
         );
       } else if (key.startsWith("image") && Array.isArray(value)) {
         value.forEach((img) => {
-          const backendField = key.replace("image", "project[image") + "]";
+          const backendField = `project[${key.replace("image_", "project_banners_")}]`;
           if (img.file instanceof File) {
             data.append(backendField, img.file);
           }

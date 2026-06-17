@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -545,6 +545,7 @@ const getBalanceTATSeconds = (escalationTime: string | null | undefined): number
 export const TicketDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [ticketData, setTicketData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -917,18 +918,26 @@ export const TicketDetailsPage = () => {
   }, [id]);
 
   // Fetch ticket feeds (logs) from CRM admin endpoint
-  useEffect(() => {
+  const refreshFeeds = useCallback(async () => {
     if (!id) return;
-    const fetchFeeds = async () => {
-      try {
-        const data = await ticketManagementAPI.getCrmTicketFeeds(id);
-        setTicketFeedsData(data);
-      } catch (err) {
-        console.error('Error fetching ticket feeds:', err);
-      }
-    };
-    fetchFeeds();
+    try {
+      const data = await ticketManagementAPI.getCrmTicketFeeds(id);
+      setTicketFeedsData(data);
+    } catch (err) {
+      console.error('Error fetching ticket feeds:', err);
+    }
   }, [id]);
+
+  useEffect(() => {
+    refreshFeeds();
+  }, [refreshFeeds]);
+
+  // Re-fetch feeds when returning from the edit page
+  useEffect(() => {
+    if (location.state?.from === 'edit') {
+      refreshFeeds();
+    }
+  }, [location.state, refreshFeeds]);
 
   // Function to refresh ticket data from backend (for timer updates)
   const refreshTicketData = useCallback(async () => {
@@ -2358,6 +2367,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data to show new comment
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
     } catch (error) {
       console.error('Error submitting comment:', error);
@@ -2457,6 +2467,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
     } catch (error) {
       console.error('Error submitting cost approval:', error);
@@ -2505,6 +2516,7 @@ export const TicketDetailsPage = () => {
       if (id) {
         const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
         setTicketData(ticketDetails);
+        refreshFeeds();
       }
 
       // Close modal and reset state
@@ -2860,6 +2872,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
       toast.success('Ticket management updated successfully');
 
@@ -3051,6 +3064,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
       // Update form data with the fresh ticket data to maintain consistency
       if (ticketDetails) {
@@ -3371,9 +3385,9 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
       toast.success('Location updated successfully!');
-      setTicketData(ticketDetails);
 
       // Close the edit form
       setIsEditingLocation(false);
@@ -3461,6 +3475,7 @@ export const TicketDetailsPage = () => {
 
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
       toast.success('Location updated successfully!');
       setIsEditingSocietyLocation(false);
     } catch (error) {
@@ -7919,7 +7934,7 @@ export const TicketDetailsPage = () => {
                     ) : (
                       (() => {
                         const sorted = [...complaintLogs].sort(
-                          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                         );
 
                         return (
@@ -10819,7 +10834,7 @@ export const TicketDetailsPage = () => {
                 ) : (
                   (() => {
                     const sorted = [...complaintLogs].sort(
-                      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                     );
 
                     return (
@@ -11724,6 +11739,22 @@ export const TicketDetailsPage = () => {
                                     {c?.text ?? c}
                                   </div>
                                 ))}
+                                {entry.changes && entry.changes.length > 0 && (
+                                  <div className="mt-1 space-y-1">
+                                    {entry.changes.map((change: { field: string; from?: string; to: string }, ci: number) => (
+                                      <div key={ci} className="flex items-center gap-1.5 text-xs text-gray-600">
+                                        <span className="font-medium">{change.field}:</span>
+                                        {change.from && (
+                                          <>
+                                            <span className="bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded">{change.from}</span>
+                                            <span className="text-gray-400">→</span>
+                                          </>
+                                        )}
+                                        <span className="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">{change.to}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                                 {entry.status_reason && (
                                   <p className="text-xs text-gray-400 mt-1">Reason: {entry.status_reason}</p>
                                 )}

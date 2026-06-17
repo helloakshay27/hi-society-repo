@@ -102,10 +102,10 @@ const ProjectDetails = () => {
     show_on_booking_page: false,
     featured_projects: false,
     // Banner Images (ratio-based)
-    image_1_by_1: null,
-    image_9_by_16: null,
-    image_3_by_2: null,
-    image_16_by_9: null,
+    image_1_by_1: [],
+    image_9_by_16: [],
+    image_3_by_2: [],
+    image_16_by_9: [],
     // Cover Images (ratio-based)
     cover_images_1_by_1: [],
     cover_images_9_by_16: [],
@@ -225,10 +225,10 @@ const ProjectDetails = () => {
             show_on_booking_page: project.show_on_booking_page || false,
             featured_projects: project.featured_projects || false,
             // Banner Images (ratio-based)
-            image_1_by_1: project.image_1_by_1 || null,
-            image_9_by_16: project.image_9_by_16 || null,
-            image_3_by_2: project.image_3_by_2 || null,
-            image_16_by_9: project.image_16_by_9 || null,
+            image_1_by_1: project.project_banners_1_by_1 || [],
+            image_9_by_16: project.project_banners_9_by_16 || [],
+            image_3_by_2: project.project_banners_3_by_2 || [],
+            image_16_by_9: project.project_banners_16_by_9 || [],
             // Cover Images (ratio-based)
             cover_images_1_by_1: project.cover_images_1_by_1 || [],
             cover_images_9_by_16: project.cover_images_9_by_16 || [],
@@ -1171,8 +1171,8 @@ const ProjectDetails = () => {
                         ];
 
                         const allEventImages = eventGroups
-                          .filter((img) => img && img.document_url)
-                          .map((img) => img);
+                          .flat()
+                          .filter((img) => img && img.document_url);
 
                         return allEventImages.length > 0 ? (
                           allEventImages.map((file, index) => (
