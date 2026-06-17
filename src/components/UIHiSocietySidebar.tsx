@@ -898,7 +898,31 @@ export const UIHiSocietySidebar: React.FC = () => {
     settings: {
       title: "Settings",
       items: [
-
+        {
+          id: "setup",
+          label: "Setup",
+          icon: SettingsIcon,
+          subItems: [
+            {
+              id: "special-users",
+              label: "Special Users Category",
+              icon: Users,
+              path: "/settings/special-users-category",
+            },
+            {
+              id: "manage-users",
+              label: "Manage Users",
+              icon: Users,
+              path: "/settings/manage-users",
+            },
+            {
+              id: "manage-flats",
+              label: "Manage Flats",
+              icon: Building2,
+              path: "/settings/manage-flats",
+            }
+          ],
+        },
         {
           id: "setup-member",
           label: "Setup Member",
