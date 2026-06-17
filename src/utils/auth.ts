@@ -283,7 +283,7 @@ export const getOrganizationsByEmail = async (
   };
 
   if (isRunwalSite) {
-    return fetchOrgs("https://runwal-cp-api.lockated.com", "Hi-Society");
+    return fetchOrgs("https://runwal-cp-api.lockated.com", "Channel Partner");
   }
 
   if (isHiSocietyUiSite) {
