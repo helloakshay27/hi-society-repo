@@ -31,6 +31,7 @@ import { UIHiSocietySidebar } from "./UIHiSocietySidebar";
 import { UIHiSocietyNavigation } from "./UIHiSocietyNavigation";
 import { ZxSidebar } from "./ZxSidebar";
 import { RouteErrorBoundary } from "./ErrorBoundary";
+import { CPNavigation } from "./CPNavigation";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -118,6 +119,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     org_id === "9";
 
   const isDevHiSocietySite = hostname.includes("dev-hisociety.lockated.com");
+  const isCPSite = hostname === "runwal-cp.lockated.com";
 
   const isLocalhost =
     hostname.includes("lockated.gophygital.work") ||
@@ -234,6 +236,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       userEmail === "dineshshinde6666@gmail.com"
     ) {
       return <ActionHeader />;
+    }
+
+    if (layoutMode === "hi-society" && isCPSite) {
+      return <CPNavigation />;
     }
 
     if (layoutMode === "hi-society" && isDevHiSocietySite) {
