@@ -226,8 +226,9 @@ export const SiteTab: React.FC<SiteTabProps> = ({
       "helloakshay27@gmail.com",
       "dev@lockated.com",
       "sumitra.patil@lockated.com",
-"komalshinde0101@lockated.com", 
-"demo@lockated.com",
+      "komalshinde0101@lockated.com",
+      "demo@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEditSite(allowedEmails.includes(userEmail));
   }, [user.email]);
@@ -860,27 +861,27 @@ export const SiteTab: React.FC<SiteTabProps> = ({
                 <Plus className="w-4 h-4 mr-2" /> Add Site
               </Button>
             }
-            // rightActions={(
-            //   <div className="flex items-center gap-2">
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsBulkUploadOpen(true)}
-            //       disabled={!canEditSite}
-            //     >
-            //       <Upload className="w-4 h-4 mr-2" />
-            //       Bulk Upload
-            //     </Button>
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsExportOpen(true)}
-            //     >
-            //       <Download className="w-4 h-4 mr-2" />
-            //       Export
-            //     </Button>
-            //   </div>
-            // )}
+          // rightActions={(
+          //   <div className="flex items-center gap-2">
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsBulkUploadOpen(true)}
+          //       disabled={!canEditSite}
+          //     >
+          //       <Upload className="w-4 h-4 mr-2" />
+          //       Bulk Upload
+          //     </Button>
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsExportOpen(true)}
+          //     >
+          //       <Download className="w-4 h-4 mr-2" />
+          //       Export
+          //     </Button>
+          //   </div>
+          // )}
           />
 
           <TicketPagination

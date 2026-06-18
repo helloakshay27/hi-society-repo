@@ -183,9 +183,10 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       "helloakshay27@gmail.com",
       "dev@lockated.com",
       "sumitra.patil@lockated.com",
-"komalshinde0101@lockated.com",
+      "komalshinde0101@lockated.com",
       "demo@lockated.com",
-      "ajay.ghenand@lockated.com"
+      "ajay.ghenand@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     const hasPermission = allowedEmails.includes(userEmail);
     console.log("🔐 Edit Permission Check:", { userEmail, hasPermission, allowedEmails });
@@ -472,196 +473,196 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
 
   return (
     <>
-       <div className="p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Society</h1>
-      </header>
-      {loading && societies.length === 0 ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-[#c72030]" />
-        </div>
-      ) : (
-        <>
-          <EnhancedTaskTable
-            columns={columns}
-            data={displayedData}
-            renderRow={renderRow}
-            storageKey="society-dashboard-v1"
-            hideTableExport={true}
-            hideTableSearch={false}
-            enableSearch={true}
-            searchTerm={searchQuery}
-            onSearchChange={setSearchQuery}
-            leftActions={
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  console.log("🔵 Add Society button clicked", { canEditSociety });
-                  setIsAddModalOpen(true);
-                }}
-                className="bg-[#c72030] hover:bg-[#A01828]"
-                disabled={!canEditSociety}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Society
-              </Button>
-            }
-            rightActions={
-              <div className="flex items-center gap-2">
+      <div className="p-6 space-y-6">
+        <header className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Society</h1>
+        </header>
+        {loading && societies.length === 0 ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 animate-spin text-[#c72030]" />
+          </div>
+        ) : (
+          <>
+            <EnhancedTaskTable
+              columns={columns}
+              data={displayedData}
+              renderRow={renderRow}
+              storageKey="society-dashboard-v1"
+              hideTableExport={true}
+              hideTableSearch={false}
+              enableSearch={true}
+              searchTerm={searchQuery}
+              onSearchChange={setSearchQuery}
+              leftActions={
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   onClick={() => {
-                    toast.info("Bulk upload feature coming soon");
+                    console.log("🔵 Add Society button clicked", { canEditSociety });
+                    setIsAddModalOpen(true);
                   }}
+                  className="bg-[#c72030] hover:bg-[#A01828]"
                   disabled={!canEditSociety}
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Bulk Upload
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Society
+                </Button>
+              }
+              rightActions={
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      toast.info("Bulk upload feature coming soon");
+                    }}
+                    disabled={!canEditSociety}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Bulk Upload
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      toast.info("Export feature coming soon");
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
+              }
+            />
+
+            <TicketPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalRecords={totalRecords}
+              perPage={perPage}
+              isLoading={loading}
+              onPageChange={handlePageChange}
+              onPerPageChange={handlePerPageChange}
+            />
+          </>
+        )}
+
+        {/* Modals */}
+        <AddSocietyModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={() => {
+            fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+          }}
+          canEdit={canEditSociety}
+        />
+
+        <EditSocietyModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedSocietyId(null);
+          }}
+          onSuccess={() => {
+            fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+          }}
+          societyId={selectedSocietyId}
+          canEdit={canEditSociety}
+        />
+
+        <DeleteSocietyModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setSelectedSocietyId(null);
+            setSelectedSocietyName("");
+          }}
+          onSuccess={() => {
+            fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+          }}
+          societyId={selectedSocietyId}
+          societyName={selectedSocietyName}
+          canEdit={canEditSociety}
+        />
+
+        {/* IVR Configuration Modal */}
+        <Dialog open={isIvrModalOpen} onOpenChange={(open) => { if (!open) setIsIvrModalOpen(false); }} modal={false}>
+          <DialogContent className="max-w-md bg-white z-50">
+            <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                IVR CONFIGURATION
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsIvrModalOpen(false)}
+                className="h-6 w-6 p-0 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium">IVR Enabled</span>
+                  <p className="text-xs text-gray-500">Enable IVR for this society</p>
+                </div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={ivrForm.ivr_enabled}
+                      onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_enabled: e.target.checked }))}
+                    />
+                  }
+                  label={ivrForm.ivr_enabled ? "Enabled" : "Disabled"}
+                />
+              </div>
+              <TextField
+                label="IVR Name"
+                placeholder="Enter IVR name"
+                value={ivrForm.ivr_name}
+                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_name: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+              />
+              <TextField
+                label="IVR API Key"
+                placeholder="Enter IVR API key"
+                value={ivrForm.ivr_api_key}
+                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_api_key: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+              />
+              <TextField
+                label="IVR Caller ID"
+                placeholder="Enter IVR caller ID"
+                value={ivrForm.ivr_caller_id}
+                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_caller_id: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+              />
+              <div className="flex justify-end gap-3 pt-2 border-t">
+                <Button variant="outline" onClick={() => setIsIvrModalOpen(false)} disabled={isIvrSubmitting}>
+                  Cancel
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    toast.info("Export feature coming soon");
-                  }}
+                  onClick={handleIvrModalSubmit}
+                  disabled={isIvrSubmitting}
+                  className="bg-[#c72030] hover:bg-[#a01828]"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
+                  {isIvrSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Save IVR Settings
                 </Button>
               </div>
-            }
-          />
-
-          <TicketPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            perPage={perPage}
-            isLoading={loading}
-            onPageChange={handlePageChange}
-            onPerPageChange={handlePerPageChange}
-          />
-        </>
-      )}
-
-      {/* Modals */}
-      <AddSocietyModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => {
-          fetchSocieties(currentPage, perPage, debouncedSearchQuery);
-        }}
-        canEdit={canEditSociety}
-      />
-
-      <EditSocietyModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedSocietyId(null);
-        }}
-        onSuccess={() => {
-          fetchSocieties(currentPage, perPage, debouncedSearchQuery);
-        }}
-        societyId={selectedSocietyId}
-        canEdit={canEditSociety}
-      />
-
-      <DeleteSocietyModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setSelectedSocietyId(null);
-          setSelectedSocietyName("");
-        }}
-        onSuccess={() => {
-          fetchSocieties(currentPage, perPage, debouncedSearchQuery);
-        }}
-        societyId={selectedSocietyId}
-        societyName={selectedSocietyName}
-        canEdit={canEditSociety}
-      />
-
-      {/* IVR Configuration Modal */}
-      <Dialog open={isIvrModalOpen} onOpenChange={(open) => { if (!open) setIsIvrModalOpen(false); }} modal={false}>
-        <DialogContent className="max-w-md bg-white z-50">
-          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              IVR CONFIGURATION
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsIvrModalOpen(false)}
-              className="h-6 w-6 p-0 hover:bg-gray-100"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div>
-                <span className="text-sm font-medium">IVR Enabled</span>
-                <p className="text-xs text-gray-500">Enable IVR for this society</p>
-              </div>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={ivrForm.ivr_enabled}
-                    onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_enabled: e.target.checked }))}
-                  />
-                }
-                label={ivrForm.ivr_enabled ? "Enabled" : "Disabled"}
-              />
             </div>
-            <TextField
-              label="IVR Name"
-              placeholder="Enter IVR name"
-              value={ivrForm.ivr_name}
-              onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_name: e.target.value }))}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
-            />
-            <TextField
-              label="IVR API Key"
-              placeholder="Enter IVR API key"
-              value={ivrForm.ivr_api_key}
-              onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_api_key: e.target.value }))}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
-            />
-            <TextField
-              label="IVR Caller ID"
-              placeholder="Enter IVR caller ID"
-              value={ivrForm.ivr_caller_id}
-              onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_caller_id: e.target.value }))}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
-            />
-            <div className="flex justify-end gap-3 pt-2 border-t">
-              <Button variant="outline" onClick={() => setIsIvrModalOpen(false)} disabled={isIvrSubmitting}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleIvrModalSubmit}
-                disabled={isIvrSubmitting}
-                className="bg-[#c72030] hover:bg-[#a01828]"
-              >
-                {isIvrSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Save IVR Settings
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
