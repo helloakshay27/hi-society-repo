@@ -80,6 +80,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
       "komalshinde0101@lockated.com",
       "demo@lockated.com",
       "akshay.shinde@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEdit(allowedEmails.includes(userEmail));
   }, [userEmail]);

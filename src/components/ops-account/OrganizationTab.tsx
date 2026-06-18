@@ -98,7 +98,7 @@ interface OrganizationTabProps {
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
-  
+
   {
     key: "actions",
     label: "Action",
@@ -158,7 +158,7 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
 }) => {
   const navigate = useNavigate();
   const { getFullUrl, getAuthHeader } = useApiConfig();
-console.log("auth :",getFullUrl, getAuthHeader());
+  console.log("auth :", getFullUrl, getAuthHeader());
   // State management
   const [organizations, setOrganizations] = useState<OrganizationItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -205,8 +205,9 @@ console.log("auth :",getFullUrl, getAuthHeader());
       "helloakshay27@gmail.com",
       "dev@lockated.com",
       "sumitra.patil@lockated.com",
-"komalshinde0101@lockated.com", 
-"demo@lockated.com",
+      "komalshinde0101@lockated.com",
+      "demo@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEditOrganization(allowedEmails.includes(userEmail));
   };
@@ -494,11 +495,10 @@ console.log("auth :",getFullUrl, getAuthHeader());
       <div className="flex items-center gap-2">
         <button
           onClick={() => org?.id && org?.active && handleView(org.id)}
-          className={`p-1 rounded ${
-            org?.active
-              ? "text-blue-600 hover:bg-blue-50 cursor-pointer"
-              : "text-gray-400 cursor-not-allowed"
-          }`}
+          className={`p-1 rounded ${org?.active
+            ? "text-blue-600 hover:bg-blue-50 cursor-pointer"
+            : "text-gray-400 cursor-not-allowed"
+            }`}
           title={org?.active ? "View" : "Inactive organization - View disabled"}
           disabled={!org?.id || !org?.active}
         >
@@ -725,27 +725,27 @@ console.log("auth :",getFullUrl, getAuthHeader());
                 <Plus className="w-4 h-4 mr-2" /> Add Organization
               </Button>
             }
-            // rightActions={(
-            //   <div className="flex items-center gap-2">
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsBulkUploadOpen(true)}
-            //       disabled={!canEditOrganization}
-            //     >
-            //       <Upload className="w-4 h-4 mr-2" />
-            //       Bulk Upload
-            //     </Button>
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsExportOpen(true)}
-            //     >
-            //       <Download className="w-4 h-4 mr-2" />
-            //       Export
-            //     </Button>
-            //   </div>
-            // )}
+          // rightActions={(
+          //   <div className="flex items-center gap-2">
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsBulkUploadOpen(true)}
+          //       disabled={!canEditOrganization}
+          //     >
+          //       <Upload className="w-4 h-4 mr-2" />
+          //       Bulk Upload
+          //     </Button>
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsExportOpen(true)}
+          //     >
+          //       <Download className="w-4 h-4 mr-2" />
+          //       Export
+          //     </Button>
+          //   </div>
+          // )}
           />
 
           <TicketPagination
