@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Banner {
   id: number;
@@ -47,6 +48,7 @@ interface BannerPermissions {
 }
 
 const BannerList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -209,16 +211,16 @@ const BannerList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {/* {bannerPermissions.update === "true" && ( */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEditBanner(item.id)}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-            {/* )} */}
+            {shouldShow("Banner", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEditBanner(item.id)}
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "id":
@@ -300,13 +302,15 @@ const BannerList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      <Button
-        onClick={handleAddBanner}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        Add
-      </Button>
+      {shouldShow("Banner", "create") && (
+        <Button
+          onClick={handleAddBanner}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          Add
+        </Button>
+      )}
     </div>
   );
 

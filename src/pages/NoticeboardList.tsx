@@ -7,8 +7,10 @@ import { Plus, Eye, Pencil } from "lucide-react";
 import { Switch } from "@mui/material";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const NoticeboardList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [noticeboards, setNoticeboards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +218,7 @@ const NoticeboardList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {noticeboardPermission.show === "true" && (
+            {shouldShow("Broadcast", "show") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -226,11 +228,11 @@ const NoticeboardList = () => {
                 <Eye className="w-4 h-4" />
               </Button>
             )}
-            {/* {noticeboardPermission.update === "true" && (
+            {shouldShow("Broadcast", "update") && (
               <Button variant="ghost" size="sm" onClick={() => handleEditNoticeboard(item.id)} title="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
-            )} */}
+            )}
           </div>
         );
       case "id":
@@ -293,13 +295,15 @@ const NoticeboardList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      <Button
-        onClick={handleAddNoticeboard}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        Add
-      </Button>
+      {shouldShow("Broadcast", "create") && (
+        <Button
+          onClick={handleAddNoticeboard}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          Add
+        </Button>
+      )}
     </div>
   );
 

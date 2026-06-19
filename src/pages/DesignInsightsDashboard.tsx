@@ -8,6 +8,7 @@ import { DesignInsightFilterModal } from '@/components/DesignInsightFilterModal'
 import { ExportModal } from '@/components/ExportModal';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 
 
@@ -21,6 +22,7 @@ interface FilterState {
 }
 
 export const DesignInsightsDashboard = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -173,7 +175,7 @@ export const DesignInsightsDashboard = () => {
           data={filteredData}
           columns={columns}
           renderCell={renderCell}
-          onRowClick={handleRowClick}
+          onRowClick={shouldShow("Design Insights", "show") ? handleRowClick : undefined}
           storageKey="design-insights-table"
           emptyMessage={hasActiveFilters ? 'No results found for the selected filters.' : 'No data available.'}
           searchTerm={searchTerm}
@@ -188,9 +190,11 @@ export const DesignInsightsDashboard = () => {
           onFilterClick={() => setIsFilterOpen(true)}
           leftActions={
             <div className="flex flex-wrap gap-2">
-              <Button onClick={handleAddClick} className="bg-[#C72030] hover:bg-[#A61B28] text-white">
-                <Plus className="w-4 h-4 mr-2" /> Add
-              </Button>
+              {shouldShow("Design Insights", "create") && (
+                <Button onClick={handleAddClick} className="bg-[#C72030] hover:bg-[#A61B28] text-white">
+                  <Plus className="w-4 h-4 mr-2" /> Add
+                </Button>
+              )}
               <Button variant="outline" className="border-[#C72030] text-[#C72030]">
                 <Download className="w-4 h-4 mr-2" /> Download Report With Picture
               </Button>

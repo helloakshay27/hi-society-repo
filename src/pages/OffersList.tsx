@@ -19,6 +19,7 @@ import {
 import { Column } from 'jspdf-autotable';
 import axios from 'axios';
 import { getFullUrl, HI_SOCIETY_CONFIG } from '@/config/apiConfig';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface ApiOffer {
   id: number;
@@ -66,6 +67,7 @@ interface Offer {
 }
 
 export default function OffersList() {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('offers');
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -341,22 +343,26 @@ export default function OffersList() {
       case 'actions':
         return (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/offer/view/${item.id}`)}
-              title="View"
-            >
-              <Eye className="w-4 h-4 text-gray-700" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/offer/add/${item.id}`)}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4 text-gray-700" />
-            </Button>
+            {shouldShow("Offers", "show") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/offer/view/${item.id}`)}
+                title="View"
+              >
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {shouldShow("Offers", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/offer/add/${item.id}`)}
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
           </div>
         );
       
@@ -392,13 +398,15 @@ export default function OffersList() {
   const renderCustomActions = () => {
     return (
       <div className="flex gap-2">
-        <Button 
-          onClick={handleAddOffer}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        >
-          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-          Add
-        </Button>
+        {shouldShow("Offers", "create") && (
+          <Button 
+            onClick={handleAddOffer}
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+            Add
+          </Button>
+        )}
         {selectedOffers.length > 0 && (
           <Button
             variant="outline"

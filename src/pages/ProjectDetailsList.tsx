@@ -9,6 +9,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { Switch } from '@mui/material';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Project {
   id: number;
@@ -23,6 +24,7 @@ interface Project {
 }
 
 const ProjectDetailsList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -224,12 +226,16 @@ const ProjectDetailsList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={() => handleViewProject(item.id)} title="View">
-              <Eye className="w-4 h-4 text-gray-700" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleEditProject(item.id)} title="Edit">
-              <Pencil className="w-4 h-4" />
-            </Button>
+            {shouldShow("Project", "show") && (
+              <Button variant="ghost" size="sm" onClick={() => handleViewProject(item.id)} title="View">
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {shouldShow("Project", "update") && (
+              <Button variant="ghost" size="sm" onClick={() => handleEditProject(item.id)} title="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
           case 'sr_no':
@@ -287,13 +293,15 @@ const ProjectDetailsList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      <Button 
-        onClick={handleAddProject}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-        Add
-      </Button>
+      {shouldShow("Project", "create") && (
+        <Button 
+          onClick={handleAddProject}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+          Add
+        </Button>
+      )}
     </div>
   );
 

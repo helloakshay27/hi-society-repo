@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Faq {
   id: number;
@@ -20,6 +21,7 @@ interface Faq {
 }
 
 const FaqList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [faqs, setFaqs] = useState<Faq[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,14 +173,16 @@ const FaqList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(item.id)}
-              className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
+            {shouldShow("FAQ", "update") && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(item.id)}
+                className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         );
       case "id":
@@ -219,13 +223,15 @@ const FaqList = () => {
   };
 
   const renderCustomActions = () => (
-    <Button
-      onClick={handleAdd}
-      className="bg-[#C72030] hover:bg-[#A01828] text-white"
-    >
-      <Plus className="h-4 w-4 mr-2" />
-      Add
-    </Button>
+    shouldShow("FAQ", "create") && (
+      <Button
+        onClick={handleAdd}
+        className="bg-[#C72030] hover:bg-[#A01828] text-white"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add
+      </Button>
+    )
   );
 
   const renderListTab = () => (
