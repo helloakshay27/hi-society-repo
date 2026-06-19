@@ -52,7 +52,7 @@ export const AddToAnotherFlatModal: React.FC<AddToAnotherFlatModalProps> = ({
         society_id: '',
         flat: '',
         ownership: '',
-        lives_here: false,
+        lives_here: 'No' as string,
         allow_fitout: false,
         is_primary: false,
         intercom: '',
@@ -81,7 +81,7 @@ export const AddToAnotherFlatModal: React.FC<AddToAnotherFlatModalProps> = ({
                 gst_number: userData.gst_number || '',
                 name_on_bill: userData.full_name || '',
                 society_id: userData.society_id || '',
-                lives_here: userData.lives_here !== false,
+                lives_here: userData.lives_here === true || userData.lives_here === 'Yes' ? 'Yes' : 'No',
                 allow_fitout: userData.allow_fitout !== false,
                 status: userData.status !== false,
             }));
@@ -173,7 +173,7 @@ export const AddToAnotherFlatModal: React.FC<AddToAnotherFlatModalProps> = ({
             society_id: '',
             flat: '',
             ownership: '',
-            lives_here: false,
+            lives_here: 'No',
             allow_fitout: false,
             is_primary: false,
             intercom: '',
@@ -315,13 +315,13 @@ export const AddToAnotherFlatModal: React.FC<AddToAnotherFlatModalProps> = ({
                                 <InputLabel>Lives Here</InputLabel>
                                 <Select
                                     name="lives_here"
-                                    value={formData.lives_here ? 'yes' : 'no'}
-                                    onChange={(e) => handleSelectChange('lives_here', e.target.value === 'yes')}
+                                    value={formData.lives_here}
+                                    onChange={(e) => handleSelectChange('lives_here', e.target.value)}
                                     label="Lives Here"
                                     sx={fieldStyles}
                                 >
-                                    <MenuItem value="yes">Yes</MenuItem>
-                                    <MenuItem value="no">No</MenuItem>
+                                    <MenuItem value="Yes">Yes</MenuItem>
+                                    <MenuItem value="No">No</MenuItem>
                                 </Select>
                             </FormControl>
                         </Box>

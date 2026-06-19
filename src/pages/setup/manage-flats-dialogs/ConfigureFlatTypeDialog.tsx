@@ -67,10 +67,6 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
       toast.error("Please select an apartment type");
       return;
     }
-    if (!newConfiguration) {
-      toast.error("Please select a configuration");
-      return;
-    }
 
     try {
       await axios.post(`https://${baseUrl}/crm/flat_types.json`, {
@@ -164,7 +160,7 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="configuration">Configuration <span className="text-red-500">*</span></Label>
+              <Label htmlFor="configuration">Configuration</Label>
               <SearchableSelect
                 value={newConfiguration}
                 onChange={setNewConfiguration}

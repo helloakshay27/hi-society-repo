@@ -24,6 +24,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import MultiSelectBox from "@/components/ui/multi-selector";
+import { SearchableSelect } from "@/components/SearchSelect";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
@@ -947,25 +948,15 @@ const ManageUsersPage = () => {
                 {/* Tower */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-gray-600">Tower</Label>
-                  <Select
+                  <SearchableSelect
+                    options={towerOptions.map((tower) => ({ label: tower.name, value: tower.id.toString() }))}
                     value={filters.tower}
-                    onValueChange={(value) => {
+                    onChange={(value) => {
                       setFilters({ ...filters, tower: value, flat: [] });
                       fetchFlats(parseInt(value));
                     }}
-                  >
-                    <SelectTrigger className="h-9 border-gray-300 text-gray-500 text-sm">
-                      <SelectValue placeholder="Select Tower" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Select Tower</SelectItem>
-                      {towerOptions.map((tower) => (
-                        <SelectItem key={tower.id} value={tower.id.toString()}>
-                          {tower.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select Tower"
+                  />
                 </div>
 
                 {/* Flat Number */}
@@ -982,18 +973,15 @@ const ManageUsersPage = () => {
                 {/* Lives Here */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-gray-600">Lives Here</Label>
-                  <Select
+                  <SearchableSelect
+                    options={[
+                      { label: "Yes", value: "Yes" },
+                      { label: "No", value: "No" },
+                    ]}
                     value={filters.livesHere}
-                    onValueChange={(value) => setFilters({ ...filters, livesHere: value })}
-                  >
-                    <SelectTrigger className="h-9 border-gray-300 text-gray-500 text-sm">
-                      <SelectValue placeholder="Select Lives Here" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={(value) => setFilters({ ...filters, livesHere: value })}
+                    placeholder="Select Lives Here"
+                  />
                 </div>
 
                 {/* Status */}
@@ -1014,18 +1002,15 @@ const ManageUsersPage = () => {
                 {/* Membership Type */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-gray-600">Membership Type</Label>
-                  <Select
+                  <SearchableSelect
+                    options={[
+                      { label: "Primary", value: "1" },
+                      { label: "Secondary", value: "0" },
+                    ]}
                     value={filters.membershipType}
-                    onValueChange={(value) => setFilters({ ...filters, membershipType: value })}
-                  >
-                    <SelectTrigger className="h-9 border-gray-300 text-gray-500 text-sm">
-                      <SelectValue placeholder="Select Membership" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Primary</SelectItem>
-                      <SelectItem value="0">Secondary</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={(value) => setFilters({ ...filters, membershipType: value })}
+                    placeholder="Select Membership"
+                  />
                 </div>
 
                 {/* Start Date */}
