@@ -150,7 +150,7 @@ const ManageUsersPage = () => {
   const [flatOptions, setFlatOptions] = useState<{ label: string; value: string }[]>([]);
 
   const getSocietyId = () => {
-    return localStorage.getItem('selectedUserSociety') || '';
+    return localStorage.getItem('selectedSocietyId') || '';
   };
 
   const fetchTowers = async () => {
@@ -168,6 +168,8 @@ const ManageUsersPage = () => {
       setTowerOptions([]);
     }
   };
+
+  console.log(towerOptions)
 
   const fetchFlats = async (blockId: number) => {
     if (isNaN(blockId)) {
