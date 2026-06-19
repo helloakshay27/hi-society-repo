@@ -15,9 +15,11 @@ import {
   PaginationLink,
   PaginationNext,
 } from "@/components/ui/pagination";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const HiSocNoticeList = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [noticeboards, setNoticeboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [noticeboardPermission, setNoticeboardPermission] = useState<{
@@ -277,7 +279,7 @@ const HiSocNoticeList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {noticeboardPermission.show === "true" && (
+            {noticeboardPermission.show === "true" && shouldShow("Notice","show") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -286,8 +288,9 @@ const HiSocNoticeList = () => {
               >
                 <Eye className="w-4 h-4" />
               </Button>
+  
             )}
-            {noticeboardPermission.update === "true" && (
+            {noticeboardPermission.update === "true" && shouldShow("Notice","update") &&(
               <Button
                 variant="ghost"
                 size="sm"
@@ -471,6 +474,7 @@ const HiSocNoticeList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap gap-2">
+      {shouldShow("Notice","create")&&(
       <Button
         onClick={handleAddNoticeboard}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -478,6 +482,7 @@ const HiSocNoticeList = () => {
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
       </Button>
+      )}
     </div>
   );
 

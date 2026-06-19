@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/SearchSelect";
-
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 interface Category {
   id: string;
   name: string;
@@ -58,7 +58,7 @@ const subCategoryColumns = [
 const BMSBusinessDirectorySetup: React.FC = () => {
   const baseUrl = localStorage.getItem("baseUrl")
   const token = localStorage.getItem("token")
-
+      const { shouldShow } = useDynamicPermissions();
   const [activeTab, setActiveTab] = useState("category");
   const [categoryInput, setCategoryInput] = useState("");
   const [subCategoryInput, setSubCategoryInput] = useState("");
@@ -338,6 +338,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
     if (columnKey === "actions") {
       return (
         <div className="flex gap-1">
+          {shouldShow("Setup","update")&&(
           <Button
             size="sm"
             variant="ghost"
@@ -345,7 +346,8 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
           >
             <Edit className="h-4 w-4" />
-          </Button>
+          </Button>)}
+          {shouldShow("Setup","destroy")&&(
           <Button
             size="sm"
             variant="ghost"
@@ -353,7 +355,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </Button>)}
         </div>
       );
     }
@@ -371,6 +373,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
         <TabsContent value="category" className="space-y-6">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
+
               <Input
                 type="text"
                 placeholder="Enter Category"
@@ -379,13 +382,14 @@ const BMSBusinessDirectorySetup: React.FC = () => {
                 onKeyPress={(e) => e.key === "Enter" && handleAddCategory()}
               />
             </div>
+            {shouldShow("Setup","create")&&(
             <Button
               onClick={handleAddCategory}
               className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add
-            </Button>
+            </Button>)}
           </div>
 
           <EnhancedTable

@@ -23,9 +23,11 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { X } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const CampaignsReferralSetup: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -322,12 +324,13 @@ const CampaignsReferralSetup: React.FC = () => {
             onFilterClick={() => setShowFilters(!showFilters)}
             leftActions={
               <div className="flex items-center gap-2">
+                {shouldShow("Referral Setup","create")&&(
                 <Button
                   className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8"
                   onClick={() => navigate("/campaigns/referral-setup/create")}
                 >
                   Add
-                </Button>
+                </Button>)}
               </div>
             }
           />

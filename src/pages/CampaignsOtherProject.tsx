@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface OtherProjectData {
   id: string;
@@ -203,6 +204,7 @@ interface ProjectDropdownApiResponse {
 
 const CampaignsOtherProject: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -565,6 +567,7 @@ const CampaignsOtherProject: React.FC = () => {
       case "actions":
         return (
           <div className="flex items-center justify-center gap-1">
+          {shouldShow("Other Project","show")&&(
             <button
               className="p-1 hover:bg-gray-100 rounded"
               disabled={detailLoading}
@@ -587,6 +590,8 @@ const CampaignsOtherProject: React.FC = () => {
             >
               <Eye className="w-4 h-4 text-blue-600" />
             </button>
+            )}
+            {shouldShow("Other Project","update")&&(
             <button
               className="p-1 hover:bg-gray-100 rounded"
               onClick={() =>
@@ -596,6 +601,7 @@ const CampaignsOtherProject: React.FC = () => {
             >
               <Pencil className="w-4 h-4 text-gray-600" />
             </button>
+            )}
           </div>
         );
       case "project":
@@ -719,6 +725,7 @@ const CampaignsOtherProject: React.FC = () => {
               onFilterClick={() => setShowFilters(!showFilters)}
               leftActions={
                 <div className="flex items-center gap-2">
+                  {shouldShow("Other Project","create")&&(
                   <Button
                     className="bg-[#14b8a6] hover:bg-[#0d9488] text-white px-6"
                     onClick={() =>
@@ -727,7 +734,7 @@ const CampaignsOtherProject: React.FC = () => {
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Configure Project
-                  </Button>
+                  </Button>)}
                 </div>
               }
             />

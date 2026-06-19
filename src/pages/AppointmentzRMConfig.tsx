@@ -28,6 +28,7 @@ import {
   updateRMUserActiveStatus,
   RMUserData as APIRMUser,
 } from "@/services/appointmentzService";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface RMUser {
   id: number;
@@ -54,6 +55,7 @@ const parseActiveStatus = (value: unknown): boolean => {
 
 const AppointmentzRMConfig = () => {
   const [data, setData] = useState<RMUser[]>([]);
+  const { shouldShow } = useDynamicPermissions();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -521,6 +523,7 @@ const AppointmentzRMConfig = () => {
         return (currentPage - 1) * 10 + index + 1;
       case "actions":
         return (
+          shouldShow("RM/CS Configuration","update")&&(
           <Button
             variant="ghost"
             size="sm"
@@ -534,6 +537,7 @@ const AppointmentzRMConfig = () => {
               <Edit className="w-4 h-4" />
             )}
           </Button>
+        )
         );
       case "status":
         return (
@@ -569,6 +573,7 @@ const AppointmentzRMConfig = () => {
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
         leftActions={
+          shouldShow("RM/CS Configuration","create") &&(
           <Button
             onClick={handleOpenAdd}
             className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
@@ -576,6 +581,7 @@ const AppointmentzRMConfig = () => {
             <Plus className="w-4 h-4 mr-2" />
             Add
           </Button>
+          )
         }
         loading={loading}
       />

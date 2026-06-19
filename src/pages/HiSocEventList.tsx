@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Event {
   id: number;
@@ -43,6 +44,7 @@ interface EventPermissions {
 
 const HiSocEventList = () => {
   const navigate = useNavigate();
+      const { shouldShow } = useDynamicPermissions();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventPermissions, setEventPermissions] = useState<EventPermissions>(
@@ -357,6 +359,7 @@ const HiSocEventList = () => {
         return (
           <div className="flex gap-1">
             {/* {eventPermissions.show === "true" && ( */}
+            {shouldShow("Events","show")&&(
             <Button
               variant="ghost"
               size="sm"
@@ -364,9 +367,10 @@ const HiSocEventList = () => {
               title="View"
             >
               <Eye className="w-4 h-4" />
-            </Button>
+            </Button>)}
             {/* )} */}
             {/* {eventPermissions.update === "true" && ( */}
+            {shouldShow("Events","update")&&(
             <Button
               variant="ghost"
               size="sm"
@@ -374,7 +378,7 @@ const HiSocEventList = () => {
               title="Edit"
             >
               <Pencil className="w-4 h-4" />
-            </Button>
+            </Button>)}
             {/* )} */}
           </div>
         );
@@ -444,13 +448,14 @@ const HiSocEventList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
+      {shouldShow("Events","create")&&(
       <Button
         onClick={handleAddEvent}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
       >
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
-      </Button>
+      </Button>)}
     </div>
   );
 
