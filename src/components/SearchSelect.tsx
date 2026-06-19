@@ -1,20 +1,6 @@
 import * as React from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
-
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-} from "@/components/ui/command"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
 
 type Option = {
     label: string
@@ -43,65 +29,89 @@ export function SearchableSelect({
     disabled,
 }: SearchableSelectProps) {
     const [open, setOpen] = React.useState(false)
-    const triggerRef = React.useRef<HTMLButtonElement>(null);
+    const [search, setSearch] = React.useState("")
+    const containerRef = React.useRef<HTMLDivElement>(null)
 
     const selected = options.find((opt) => opt.value === value)
 
+    const filtered = options.filter((opt) =>
+        opt.label?.toLowerCase().includes(search.toLowerCase())
+    )
+
+    // Close on outside click
+    React.useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setOpen(false)
+                setSearch("")
+            }
+        }
+        document.addEventListener("mousedown", handleClick)
+        return () => document.removeEventListener("mousedown", handleClick)
+    }, [])
+
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    ref={triggerRef}
-                    variant="outline"
-                    role="combobox"
-                    disabled={disabled}
-                    aria-expanded={open}
-                    className={cn("w-full justify-between !border-gray-300 !text-[#1a1a1a] rounded-[10px]", className)}
-                >
-                    {selected ? selected.label : placeholder}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
-                </Button>
-            </PopoverTrigger>
-
-            <PopoverContent
-                style={{
-                    width: triggerRef.current?.offsetWidth,
+        <div ref={containerRef} className={cn("relative w-full", className)}>
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                    if (!disabled) {
+                        setOpen((prev) => !prev)
+                        setSearch("")
+                    }
                 }}
-                className="w-[--radix-popover-trigger-width] p-0"
+                className="flex w-full items-center justify-between rounded-[10px] border border-gray-300 bg-white px-3 py-2 text-sm text-[#1a1a1a] shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
-                <Command onWheel={(e) => e.stopPropagation()}>
-                    {/* 🔍 Search */}
-                    <CommandInput placeholder={searchPlaceholder} />
+                <span className="truncate">
+                    {selected ? selected.label : <span className="text-gray-400">{placeholder}</span>}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </button>
 
-                    <CommandEmpty>{emptyText}</CommandEmpty>
+            {open && (
+                <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
+                    {/* Search input */}
+                    <div className="border-b border-gray-200 px-3 py-2">
+                        <input
+                            autoFocus
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder={searchPlaceholder}
+                            className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+                        />
+                    </div>
 
-                    <CommandGroup
-                        className="max-h-64 overflow-auto"
-                        onPointerDown={(e) => e.stopPropagation()}
-                    >
-                        {options.map((option) => (
-                            <CommandItem
-                                key={option.value}
-                                value={option.label} // important for search
-                                onSelect={() => {
-                                    onChange(option.value)
-                                    setOpen(false)
-                                }}
-                            >
-                                <Check
-                                    className={cn(
-                                        "mr-2 h-4 w-4",
-                                        value === option.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                    )}
-                                />
-                                {option.label}
-                            </CommandItem>
-                        ))}
-                    </CommandGroup>
-                </Command>
-            </PopoverContent>
-        </Popover>
+                    {/* Options list */}
+                    <ul className="max-h-60 overflow-y-auto py-1">
+                        {filtered.length === 0 ? (
+                            <li className="px-3 py-2 text-sm text-gray-400">{emptyText}</li>
+                        ) : (
+                            filtered.map((opt) => (
+                                <li
+                                    key={opt.value}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault()
+                                        onChange(opt.value)
+                                        setOpen(false)
+                                        setSearch("")
+                                    }}
+                                    className="flex cursor-pointer items-center px-3 py-2 text-sm hover:bg-gray-100"
+                                >
+                                    <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4 shrink-0",
+                                            value === opt.value ? "opacity-100 text-[#C72030]" : "opacity-0"
+                                        )}
+                                    />
+                                    {opt.label}
+                                </li>
+                            ))
+                        )}
+                    </ul>
+                </div>
+            )}
+        </div>
     )
 }
