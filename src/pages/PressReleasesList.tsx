@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface PressRelease {
   id: number;
@@ -42,6 +43,7 @@ interface PressReleasePermissions {
 }
 
 const PressReleasesList = () => {
+  const { shouldShow } = useDynamicPermissions();
   // const baseURL = API_CONFIG.BASE_URL;
   const [pressReleases, setPressReleases] = useState<PressRelease[]>([]);
   const [loading, setLoading] = useState(false);
@@ -173,7 +175,7 @@ const PressReleasesList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            {/* {permissions.update === "true" && ( */}
+            {shouldShow("Press Releases", "update") && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -182,7 +184,7 @@ const PressReleasesList = () => {
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case "id":
@@ -228,7 +230,7 @@ const PressReleasesList = () => {
   const renderCustomActions = () => {
     return (
       <>
-        {/* {permissions.create === "true" && ( */}
+        {shouldShow("Press Releases", "create") && (
           <Button
             onClick={handleAdd}
             className="bg-[#C72030] hover:bg-[#A01828] text-white"
@@ -236,7 +238,7 @@ const PressReleasesList = () => {
             <Plus className="h-4 w-4 mr-2" />
             Add
           </Button>
-        {/* // )} */}
+        )}
       </>
     );
   };

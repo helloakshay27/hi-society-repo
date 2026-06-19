@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Offer {
   id: number;
@@ -24,6 +25,7 @@ interface Offer {
 
 const BMSOffers: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,6 +128,7 @@ const BMSOffers: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-1">
+            {shouldShow("Offers","show")&&(
             <Button
               size="sm"
               variant="ghost"
@@ -133,7 +136,8 @@ const BMSOffers: React.FC = () => {
               className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
             >
               <Eye className="h-4 w-4" />
-            </Button>
+            </Button>)}
+            {shouldShow("Offers","update")&&(
             <Button
               size="sm"
               variant="ghost"
@@ -141,7 +145,7 @@ const BMSOffers: React.FC = () => {
               className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
             >
               <Edit className="h-4 w-4" />
-            </Button>
+            </Button>)}
             {/* <Button
               size="sm"
               variant="ghost"
@@ -282,6 +286,7 @@ const BMSOffers: React.FC = () => {
   };
 
   const renderLeftActions = () => (
+    shouldShow("Offers","create")&&(
     <Button
       onClick={handleAddOffer}
       className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
@@ -289,6 +294,7 @@ const BMSOffers: React.FC = () => {
       <Plus className="w-4 h-4 mr-2" />
       Add
     </Button>
+    )
   );
 
   return (

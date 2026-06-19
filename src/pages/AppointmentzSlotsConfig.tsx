@@ -28,6 +28,7 @@ import {
   updateSiteSchedule,
   getAllRMUsers,
 } from "@/services/appointmentzService";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface SlotConfig {
   id: number;
@@ -52,6 +53,8 @@ interface SlotConfig {
 
 const AppointmentzSlotsConfig = () => {
   const [data, setData] = useState<SlotConfig[]>([]);
+  const { shouldShow } = useDynamicPermissions();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -378,6 +381,7 @@ const AppointmentzSlotsConfig = () => {
     switch (columnKey) {
       case "actions":
         return (
+          shouldShow("Slots Configuration","update")&&(
           <Button
             variant="ghost"
             size="sm"
@@ -386,6 +390,7 @@ const AppointmentzSlotsConfig = () => {
           >
             <Edit className="w-4 h-4" />
           </Button>
+          )
         );
       case "mon":
       case "tue":
@@ -423,6 +428,7 @@ const AppointmentzSlotsConfig = () => {
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
         leftActions={
+          shouldShow("Slots Configuration","create")&&(
           <Button
             onClick={handleOpenAddModal}
             className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
@@ -430,6 +436,7 @@ const AppointmentzSlotsConfig = () => {
             <Plus className="w-4 h-4 mr-2" />
             Add
           </Button>
+          )
         }
         loading={loading}
       />

@@ -26,7 +26,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 interface Group {
   id: string;
   groupName: string;
@@ -42,6 +42,7 @@ interface Group {
 
 const BMSGroups: React.FC = () => {
   const navigate = useNavigate();
+      const { shouldShow } = useDynamicPermissions();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -514,6 +515,7 @@ const BMSGroups: React.FC = () => {
             >
               <UserPlus className="h-4 w-4" />
             </Button>
+            {shouldShow("Groups","show")&&(
             <Button
               size="sm"
               variant="ghost"
@@ -521,7 +523,8 @@ const BMSGroups: React.FC = () => {
               className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
             >
               <Eye className="h-4 w-4" />
-            </Button>
+            </Button>)}
+            {shouldShow("Groups","update")&&(
             <Button
               size="sm"
               variant="ghost"
@@ -529,7 +532,8 @@ const BMSGroups: React.FC = () => {
               className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
             >
               <Edit className="h-4 w-4" />
-            </Button>
+            </Button>)}
+            {shouldShow("Groups","destroy")&&(
             <Button
               size="sm"
               variant="ghost"
@@ -537,7 +541,7 @@ const BMSGroups: React.FC = () => {
               className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </Button>)}
           </div>
         );
       default:
@@ -799,6 +803,7 @@ const BMSGroups: React.FC = () => {
 
   // Render custom left actions
   const renderLeftActions = () => (
+
     <Button
       onClick={handleAddGroup}
       className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"

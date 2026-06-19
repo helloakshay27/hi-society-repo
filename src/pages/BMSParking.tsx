@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ReactSelect from "react-select";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
-
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 const reactSelectStyles = {
   control: (base: object) => ({
     ...base,
@@ -86,6 +86,7 @@ const emptyForm = {
 
 const BMSParking: React.FC = () => {
   const navigate = useNavigate();
+      const { shouldShow } = useDynamicPermissions();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -725,6 +726,7 @@ const BMSParking: React.FC = () => {
         enableSearch={true}
         onFilterClick={() => setIsFilterOpen(true)}
         leftActions={
+          shouldShow("Parking","create")&&(
           <Button
             onClick={() => setShowActionPanel(true)}
             className="bg-[#C72030] hover:bg-[#a01828] text-white h-9 px-4 text-sm font-medium"
@@ -732,6 +734,7 @@ const BMSParking: React.FC = () => {
             <Plus className="w-4 h-4 mr-2" />
             Action
           </Button>
+          )
         }
         rightActions={
           Object.values(parkingFilters).some(

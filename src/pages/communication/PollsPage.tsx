@@ -31,11 +31,13 @@ import {
 } from "lucide-react";
 import { Download } from "lucide-react";
 import { toast } from 'sonner';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 
 const PollsPage = () => {
-  const baseUrl = localStorage.getItem('baseUrl')
-  const token = localStorage.getItem('token')
+  const baseUrl = localStorage.getItem('baseUrl');
+  const { shouldShow } = useDynamicPermissions();
+  const token = localStorage.getItem('token');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -232,6 +234,7 @@ const PollsPage = () => {
             Manage your polls and surveys
           </Typography>
         </Box>
+        {shouldShow("Polls","create")&&(
         <Button
           variant="contained"
           startIcon={<Plus size={20} />}
@@ -247,7 +250,7 @@ const PollsPage = () => {
           }}
         >
           Add Poll
-        </Button>
+        </Button>)}
       </Box>
 
       {/* Search and Filter */}

@@ -1318,27 +1318,14 @@ export function EnhancedTable<T extends Record<string, any>>({
               />
             </PaginationItem>
 
-            {generatePageNumbers().map((page, index) => (
-              <PaginationItem key={index}>
-                {page === "ellipsis-start" || page === "ellipsis-end" ? (
-                  <PaginationEllipsis />
-                ) : (
-                  <PaginationLink
-                    onClick={() => {
-                      if (externalOnPageChange) {
-                        externalOnPageChange(page as number);
-                      } else {
-                        setInternalCurrentPage(page as number);
-                      }
-                    }}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                )}
-              </PaginationItem>
-            ))}
+            <PaginationItem>
+              <PaginationLink
+                isActive={true}
+                className="cursor-default"
+              >
+                {currentPage}
+              </PaginationLink>
+            </PaginationItem>
 
             <PaginationItem>
               <PaginationNext

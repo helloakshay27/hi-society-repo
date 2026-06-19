@@ -25,6 +25,7 @@ import {
   BlockDay as APIBlockDay,
   getRMUsers,
 } from "@/services/appointmentzService";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface BlockDayConfig {
   id: number;
@@ -37,6 +38,7 @@ interface BlockDayConfig {
 
 const AppointmentzBlockDaysConfig = () => {
   const [data, setData] = useState<BlockDayConfig[]>([]);
+  const { shouldShow } = useDynamicPermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -280,6 +282,7 @@ const AppointmentzBlockDaysConfig = () => {
         return (currentPage - 1) * 10 + index + 1;
       case "actions":
         return (
+          shouldShow("Block Days Configuration","update") &&(
           <Button
             variant="ghost"
             size="sm"
@@ -288,6 +291,7 @@ const AppointmentzBlockDaysConfig = () => {
           >
             <Edit className="w-4 h-4" />
           </Button>
+          )
         );
       case "status":
         return (
@@ -330,6 +334,7 @@ const AppointmentzBlockDaysConfig = () => {
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
         leftActions={
+          shouldShow("Block Days Configuration","create")&&(
           <Button
             onClick={handleOpenAdd}
             className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
@@ -337,6 +342,7 @@ const AppointmentzBlockDaysConfig = () => {
             <Plus className="w-4 h-4 mr-2" />
             Add
           </Button>
+          )
         }
         loading={loading}
         emptyMessage="No Matching Records Found"

@@ -11,9 +11,11 @@ import {
   updateSiteScheduleRequest,
   SiteScheduleRequest,
 } from "@/services/appointmentzService";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const AppointmentzSiteScheduling = () => {
   const [data, setData] = useState<SiteScheduleRequest[]>([]);
+  const { shouldShow } = useDynamicPermissions();
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
@@ -134,6 +136,7 @@ const AppointmentzSiteScheduling = () => {
         return (currentPage - 1) * 10 + index + 1;
       case "actions":
         return (
+          shouldShow("Site Visit Requests","update") &&(
           <Button
             variant="ghost"
             size="sm"
@@ -143,6 +146,7 @@ const AppointmentzSiteScheduling = () => {
           >
             <Pencil className="h-4 w-4" />
           </Button>
+          )
         );
       case "tower":
         return item.society_flat?.tower?.name || "-";

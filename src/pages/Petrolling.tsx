@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, Edit, QrCode as QrIcon, Printer } from "lucide-react";
+import { Plus, Eye, Edit, Printer } from "lucide-react";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -20,9 +18,11 @@ import {
 interface PatrollingItem {
   id: number;
   area: string;
+  name?: string;
+  description?: string;
   active: boolean;
   qr_code: {
-    url: string;
+    url: string | null;
   };
   created_at: string;
   updated_at: string;
@@ -33,18 +33,145 @@ interface PatrollingItem {
   frequency_start?: number;
   frequency_end?: number;
   occurrences?: string[];
+  validity_start_date?: string;
+  validity_end_date?: string;
+  grace_period_minutes?: number;
+  estimated_duration_minutes?: number;
+  schedules?: {
+    id: number;
+    name?: string;
+    frequency_type?: string;
+    frequency_data?: Record<string, unknown> | string | null;
+    start_date?: string;
+    end_date?: string;
+    start_time?: string;
+    end_time?: string;
+    supervisor_id?: number | null;
+    notes?: string;
+    cron_setting?: { id?: number; cron_expression?: string };
+  }[];
+  checkpoints?: {
+    id: number;
+    name: string;
+    description?: string;
+    order_sequence?: number;
+    estimated_time_minutes?: number;
+    area_name?: string;
+    qr_code_url?: string;
+    building_id?: number | null;
+    wing_id?: number | null;
+    floor_id?: number | null;
+    area_id?: number | null;
+    room_id?: number | null;
+    snag_checklist_id?: number | null;
+    schedule_ids?: number[];
+  }[];
 }
 
 interface PatrollingLog {
   id: number;
-  comment: string;
-  created_at: string;
-  attachments: { id: number; url: string }[];
+  comment?: string;
+  created_at?: string;
+  session_date?: string;
+  status?: string;
+  guard_name?: string;
+  progress?: string | number;
+  attachments?: { id: number; url: string }[];
   created_by_id?: number;
 }
 
+const DEFAULT_PATROL_DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
+
+const formatDateForApi = (date: Date) => date.toISOString().split("T")[0];
+
+const addYears = (date: Date, years: number) => {
+  const nextDate = new Date(date);
+  nextDate.setFullYear(nextDate.getFullYear() + years);
+  return nextDate;
+};
+
+const parseUiTimeToApi = (timeValue: string): string | null => {
+  const trimmed = timeValue.trim();
+  const time24 = trimmed.match(/^([01]?\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/);
+  if (time24) {
+    return `${time24[1].padStart(2, "0")}:${time24[2]}`;
+  }
+
+  const time12 = trimmed.match(/^(\d{1,2})(?::([0-5]\d))?\s*(AM|PM)$/i);
+  if (!time12) return null;
+
+  let hours = Number(time12[1]);
+  if (hours < 1 || hours > 12) return null;
+
+  const minutes = time12[2] || "00";
+  const modifier = time12[3].toUpperCase();
+
+  if (modifier === "PM" && hours < 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes}`;
+};
+
+const formatApiTimeForUi = (timeValue?: string) => {
+  const apiTime = timeValue ? parseUiTimeToApi(timeValue) : null;
+  if (!apiTime) return "";
+
+  const [hourText, minuteText] = apiTime.split(":");
+  const hours = Number(hourText);
+  const modifier = hours >= 12 ? "PM" : "AM";
+  const displayHour = hours % 12 || 12;
+
+  return `${displayHour}:${minuteText} ${modifier}`;
+};
+
+const getMinutesOfDay = (apiTime: string) => {
+  const [hours, minutes] = apiTime.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+const getDurationMinutes = (startTime: string, endTime: string) => {
+  const startMinutes = getMinutesOfDay(startTime);
+  const endMinutes = getMinutesOfDay(endTime);
+  const sameDayDuration = endMinutes - startMinutes;
+  return sameDayDuration > 0 ? sameDayDuration : sameDayDuration + 24 * 60;
+};
+
+const normalizeHours = (hours: string[]) =>
+  hours
+    .map((hour) => Number(hour))
+    .filter((hour) => Number.isInteger(hour) && hour >= 0 && hour <= 23)
+    .sort((a, b) => a - b);
+
+const parseFrequencyData = (frequencyData: unknown): Record<string, unknown> => {
+  if (!frequencyData) return {};
+  if (typeof frequencyData === "string") {
+    try {
+      const parsed = JSON.parse(frequencyData);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  return typeof frequencyData === "object" && !Array.isArray(frequencyData)
+    ? (frequencyData as Record<string, unknown>)
+    : {};
+};
+
+const compactObject = (value: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(value).filter(([, item]) => item !== undefined && item !== null && item !== "")
+  );
+
 const Petrolling = () => {
-  const navigate = useNavigate();
   const [data, setData] = useState<PatrollingItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -68,7 +195,7 @@ const Petrolling = () => {
     frequencyEnd: "11:00 PM",
     occurrenceType: "specific", // 'every' or 'specific'
     everyHours: "",
-    selectedHours: [] as string[],
+    selectedHours: ["12"] as string[],
   });
 
   // Notification State
@@ -92,10 +219,14 @@ const Petrolling = () => {
     { key: "attachments", label: "Attachments", sortable: false },
   ];
 
-  const fetchPatrollingData = async (page = 1) => {
+  const fetchPatrollingData = async (page = 1, searchTerm: string = "") => {
     setLoading(true);
     try {
-      const apiUrl = getFullUrl(`/crm/admin/patrolling_details.json?page=${page}`);
+      const searchValue = encodeURIComponent(searchTerm.trim());
+      const apiUrl = getFullUrl(
+        `/patrolling/setup.json?page=${page}&per_page=${pagination.pageSize}&q[name_cont]=${searchValue}`
+      );
+
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -108,9 +239,19 @@ const Petrolling = () => {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
-      if (result.patrolling_details) {
-        setData(result.patrolling_details);
-        setTotal(result.total || result.patrolling_details.length);
+      if (result.data) {
+        // Map the new API structure to match the existing PatrollingItem type
+        const mappedData = result.data.map((item: any) => ({
+          ...item,
+          area: item.name, // Map name to area for the table
+          qr_code: {
+            // Attempt to use the first checkpoint's QR code if available
+            url: item.checkpoints?.[0]?.qr_code_url || null
+          }
+        }));
+
+        setData(mappedData);
+        setTotal(result.pagination?.total_count || mappedData.length);
         setPagination((prev) => ({
           ...prev,
           currentPage: page,
@@ -124,10 +265,10 @@ const Petrolling = () => {
     }
   };
 
-  const fetchPatrollingLogs = async (patrolId: number) => {
+  const fetchPatrollingLogs = async (id: number) => {
     setLogsLoading(true);
     try {
-      const apiUrl = getFullUrl(`/crm/admin/patrolling_details/${patrolId}.json`);
+      const apiUrl = getFullUrl(`/patrolling/setup/${id}.json?page=1&per_page=10`);
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -140,8 +281,10 @@ const Petrolling = () => {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
-      if (result.patrolling_histories) {
-        setLogs(result.patrolling_histories);
+      if (result.data && result.data.recent_sessions) {
+        setLogs(result.data.recent_sessions);
+      } else {
+        setLogs([]);
       }
     } catch (error) {
       console.error("Error fetching logs:", error);
@@ -186,19 +329,11 @@ const Petrolling = () => {
     fetchPatrollingLogs(item.id);
   };
 
-  const formatHour = (hour: number | undefined) => {
-    if (hour === undefined) return "12:00 AM";
-    let h = hour % 12;
-    if (h === 0) h = 12;
-    const modifier = hour >= 12 ? "PM" : "AM";
-    return `${h.toString().padStart(2, "0")}:00 ${modifier}`;
-  };
-
   const handleEdit = async (item: PatrollingItem) => {
     setSelectedPatrol(item);
     setLoading(true);
     try {
-      const apiUrl = getFullUrl(`/crm/admin/patrolling_details/${item.id}.json`);
+      const apiUrl = getFullUrl(`/patrolling/setup/${item.id}.json?page=1&per_page=10`);
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -209,15 +344,58 @@ const Petrolling = () => {
       });
       if (!response.ok) throw new Error("Failed to fetch detail");
       const result = await response.json();
-      const detail = result.patrolling_detail;
+      const detail = result.data || {};
+
+      // Store full detail in selectedPatrol so handleSubmit can use it
+      setSelectedPatrol({
+        ...item,
+        ...detail,
+        area: detail.name || item.area,
+        schedules: detail.schedules || [],
+        checkpoints: detail.checkpoints || [],
+      });
+
+      // Parse schedule data back into the small modal fields.
+      const schedule = detail.schedules?.[0];
+      const frequencyData = parseFrequencyData(schedule?.frequency_data);
+      let occurrenceType = "specific";
+      let everyHours = "";
+      let selectedHours: string[] = [];
+
+      const everyHoursValue = frequencyData.every_hours ?? frequencyData.interval_hours;
+      const dataHours = frequencyData.hours ?? frequencyData.specific_hours;
+      if (everyHoursValue !== undefined && everyHoursValue !== null) {
+        occurrenceType = "every";
+        everyHours = String(everyHoursValue);
+      } else if (Array.isArray(dataHours)) {
+        occurrenceType = "specific";
+        selectedHours = dataHours.map((hour) => String(hour).padStart(2, "0"));
+      }
+
+      const cronExpr = schedule?.cron_setting?.cron_expression;
+      if (cronExpr) {
+        const parts = cronExpr.split(" ");
+        if (parts.length >= 2) {
+          const hourPart = parts[1];
+          if (hourPart.startsWith("*/")) {
+            // Every N hours pattern: 0 */2 * * *
+            occurrenceType = "every";
+            everyHours = hourPart.replace("*/", "");
+          } else if (hourPart !== "*") {
+            // Specific hours pattern: 0 8,12,18 * * *
+            occurrenceType = "specific";
+            selectedHours = hourPart.split(",");
+          }
+        }
+      }
 
       setFormData({
-        area: detail.area || "",
-        frequencyStart: formatHour(detail.frequency_start),
-        frequencyEnd: formatHour(detail.frequency_end),
-        occurrenceType: detail.occurrence_type === 1 ? "specific" : "every",
-        everyHours: detail.occurrence_type === 2 ? (detail.occurrences?.[0] || "") : "",
-        selectedHours: detail.occurrence_type === 1 ? (detail.occurrences || []) : [],
+        area: detail.name || "",
+        frequencyStart: formatApiTimeForUi(schedule?.start_time) || "12:00 AM",
+        frequencyEnd: formatApiTimeForUi(schedule?.end_time) || "11:00 PM",
+        occurrenceType,
+        everyHours,
+        selectedHours: selectedHours.length ? selectedHours : ["12"],
       });
       setIsEditOpen(true);
     } catch (error) {
@@ -230,17 +408,18 @@ const Petrolling = () => {
 
   const handleToggleStatus = async (item: PatrollingItem) => {
     try {
-      const apiUrl = getFullUrl(`/crm/admin/patrolling_details/${item.id}.json`);
+      const apiUrl = getFullUrl(`/patrolling/setup/${item.id}.json`);
       const response = await fetch(apiUrl, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
           "Authorization": getAuthHeader(),
         },
         body: JSON.stringify({
-          ...item,
-          active: !item.active,
+          patrolling: {
+            active: !item.active,
+          }
         }),
       });
 
@@ -257,33 +436,119 @@ const Petrolling = () => {
   };
 
   const handleSubmit = async (isEdit = false) => {
-    if (!formData.area) {
+    if (!formData.area.trim()) {
       toast.error("Please enter an area name");
       return;
     }
+    if (formData.occurrenceType === "specific" && formData.selectedHours.length === 0) {
+      toast.error("Please select at least one hour");
+      return;
+    }
+    if (formData.occurrenceType === "every") {
+      const everyHours = Number(formData.everyHours);
+      if (!Number.isInteger(everyHours) || everyHours < 1 || everyHours > 23) {
+        toast.error("Please enter a valid hourly interval");
+        return;
+      }
+    }
+    if (isEdit && !selectedPatrol?.id) {
+      toast.error("Patrolling area details are not loaded");
+      return;
+    }
+
+    const startTime = parseUiTimeToApi(formData.frequencyStart);
+    const endTime = parseUiTimeToApi(formData.frequencyEnd);
+    if (!startTime || !endTime) {
+      toast.error("Please enter valid start and end times");
+      return;
+    }
+
     setLoading(true);
     try {
       const apiUrl = isEdit 
-        ? getFullUrl(`/crm/admin/patrolling_details/${selectedPatrol?.id}.json`)
-        : getFullUrl(`/crm/admin/patrolling_details.json`);
-      
-      const parseHour = (timeStr: string) => {
-        const [time, modifier] = timeStr.split(" ");
-        let [hours] = time.split(":").map(Number);
-        if (modifier === "PM" && hours < 12) hours += 12;
-        if (modifier === "AM" && hours === 12) hours = 0;
-        return hours;
-      };
+        ? getFullUrl(`/patrolling/setup/${selectedPatrol?.id}.json`)
+        : getFullUrl(`/patrolling/setup.json`);
 
-      const payload = {
-        area: formData.area,
-        frequency_start: parseHour(formData.frequencyStart),
-        frequency_end: parseHour(formData.frequencyEnd),
-        occurrence_type: formData.occurrenceType === "specific" ? 1 : 2,
-        occurrences: formData.occurrenceType === "specific" ? formData.selectedHours : [formData.everyHours],
-        resource_id: selectedPatrol?.resource_id || 3919, 
-        resource_type: selectedPatrol?.resource_type || "Society",
-      };
+      const routeName = formData.area.trim();
+      const today = new Date();
+      const validityStartDate = selectedPatrol?.validity_start_date || formatDateForApi(today);
+      const validityEndDate =
+        selectedPatrol?.validity_end_date || formatDateForApi(addYears(today, 1));
+      const estimatedDurationMinutes =
+        selectedPatrol?.estimated_duration_minutes || getDurationMinutes(startTime, endTime);
+      const frequencyData =
+        formData.occurrenceType === "specific"
+          ? {
+              days: DEFAULT_PATROL_DAYS,
+              hours: normalizeHours(formData.selectedHours),
+            }
+          : {
+              days: DEFAULT_PATROL_DAYS,
+              every_hours: Number(formData.everyHours),
+            };
+
+      const schedules = isEdit && selectedPatrol?.schedules?.length
+        ? selectedPatrol.schedules.map((schedule, index) =>
+            compactObject({
+              id: schedule.id,
+              name: schedule.name || `${routeName} Schedule`,
+              frequency_type: schedule.frequency_type || "daily",
+              frequency_data: index === 0 ? frequencyData : schedule.frequency_data,
+              start_date: schedule.start_date || validityStartDate,
+              end_date: schedule.end_date || validityEndDate,
+              start_time: index === 0 ? startTime : schedule.start_time,
+              end_time: index === 0 ? endTime : schedule.end_time,
+              supervisor_id: schedule.supervisor_id,
+              notes: schedule.notes,
+            })
+          )
+        : [
+            compactObject({
+              name: `${routeName} Schedule`,
+              frequency_type: "daily",
+              frequency_data: frequencyData,
+              start_date: validityStartDate,
+              end_date: validityEndDate,
+              start_time: startTime,
+              end_time: endTime,
+            }),
+          ];
+
+      const checkpoints = isEdit && selectedPatrol?.checkpoints?.length
+        ? selectedPatrol.checkpoints.map((cp, index) =>
+            compactObject({
+              id: cp.id,
+              name: cp.name || routeName,
+              description: cp.description,
+              order_sequence: cp.order_sequence ?? index + 1,
+              estimated_time_minutes: cp.estimated_time_minutes,
+              building_id: cp.building_id,
+              wing_id: cp.wing_id,
+              floor_id: cp.floor_id,
+              area_id: cp.area_id,
+              room_id: cp.room_id,
+              snag_checklist_id: cp.snag_checklist_id,
+              schedule_ids: cp.schedule_ids,
+            })
+          )
+        : [
+            compactObject({
+              name: routeName,
+              order_sequence: 1,
+              estimated_time_minutes: estimatedDurationMinutes,
+            }),
+          ];
+
+      const payload = compactObject({
+        name: routeName,
+        description: selectedPatrol?.description,
+        estimated_duration_minutes: estimatedDurationMinutes,
+        grace_period_minutes: selectedPatrol?.grace_period_minutes,
+        validity_start_date: validityStartDate,
+        validity_end_date: validityEndDate,
+        schedules,
+        checkpoints,
+      });
 
       const response = await fetch(apiUrl, {
         method: isEdit ? "PUT" : "POST",
@@ -295,9 +560,20 @@ const Petrolling = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        let errorMsg = `HTTP error! status: ${response.status}`;
+        if (errorData.message) errorMsg = errorData.message;
+        else if (errorData.error) errorMsg = errorData.error;
+        else if (errorData.errors) errorMsg = JSON.stringify(errorData.errors);
+        throw new Error(errorMsg);
+      }
 
-      toast.success(isEdit ? "Patrolling area updated successfully!" : "Patrolling area added successfully!");
+      const result = await response.json();
+
+      const successMessage = result.message || (isEdit ? "Patrolling area updated successfully!" : "Patrolling area added successfully!");
+      toast.success(successMessage);
+
       setIsAddOpen(false);
       setIsEditOpen(false);
       setFormData({
@@ -306,12 +582,13 @@ const Petrolling = () => {
         frequencyEnd: "11:00 PM",
         occurrenceType: "specific",
         everyHours: "",
-        selectedHours: [],
+        selectedHours: ["12"],
       });
+      setSelectedPatrol(null);
       fetchPatrollingData();
     } catch (error: any) {
       console.error("Error saving patrolling area:", error);
-      toast.error("Failed to save patrolling area");
+      toast.error(error.message || "Failed to save patrolling area");
     } finally {
       setLoading(false);
     }
@@ -440,7 +717,7 @@ const Petrolling = () => {
       case "qr_code":
         return (
           <div className="flex items-center">
-            {item.qr_code?.url ? (
+            {typeof item.qr_code?.url === 'string' && item.qr_code.url.trim() !== '' ? (
               <div 
                 className="bg-white p-1 rounded border border-gray-200 cursor-pointer hover:border-blue-400 transition-colors"
                 onClick={() => {
@@ -449,7 +726,7 @@ const Petrolling = () => {
                 }}
               >
                  <img 
-                   src={`${API_CONFIG.BASE_URL}${item.qr_code.url}`} 
+                   src={item.qr_code.url.startsWith('http') ? item.qr_code.url : `${API_CONFIG.BASE_URL}${item.qr_code.url}`}
                    alt="QR Code" 
                    className="w-10 h-10 object-contain"
                    onError={(e) => {
@@ -458,8 +735,8 @@ const Petrolling = () => {
                  />
               </div>
             ) : (
-              <div className="bg-gray-100 p-2 rounded border border-gray-200">
-                <span className="text-xs text-gray-400">No QR</span>
+              <div className="w-10 h-10 border bg-gray-100 flex items-center justify-center text-xs text-gray-400 rounded">
+                No QR
               </div>
             )}
           </div>
@@ -470,20 +747,21 @@ const Petrolling = () => {
   };
 
   const renderLogCell = (log: PatrollingLog, columnKey: string) => {
-    const date = new Date(log.created_at);
+    const dateValue = log.created_at || log.session_date;
+    const date = dateValue ? new Date(dateValue) : null;
     switch (columnKey) {
       case "patrolling_date":
-        return date.toLocaleDateString("en-GB");
+        return date ? date.toLocaleDateString("en-GB") : "N/A";
       case "patrolling_time":
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return date ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "N/A";
       case "comments":
-        return log.comment || "N/A";
+        return log.comment || log.status?.replace(/_/g, " ") || "N/A";
       case "submitted_by":
-        return `User ${log.created_by_id}`;
+        return log.guard_name || (log.created_by_id ? `User ${log.created_by_id}` : "N/A");
       case "attachments":
         return (
           <div className="flex gap-1">
-            {log.attachments?.map((att, idx) => {
+            {log.attachments?.length ? log.attachments.map((att, idx) => {
               let url = decodeURIComponent(att.url);
               if (url.startsWith("//")) url = "https:" + url;
               return (
@@ -498,7 +776,7 @@ const Petrolling = () => {
                   }}
                 />
               );
-            })}
+            }) : <span className="text-xs text-gray-400">N/A</span>}
           </div>
         );
       default:
@@ -612,8 +890,22 @@ const Petrolling = () => {
   );
 
   const handleExportQrCodes = () => {
-    const apiUrl = getFullUrl(`/crm/admin/patrolling_details/download_qr_codes.json`);
-    window.open(`${apiUrl}&token=${API_CONFIG.TOKEN || ''}`, '_blank');
+    const checkpointIds = data
+      .flatMap((item) => item.checkpoints || [])
+      .map((checkpoint) => checkpoint.id)
+      .filter((id): id is number => Number.isInteger(id));
+
+    if (checkpointIds.length === 0) {
+      toast.error("No checkpoint QR codes available to export");
+      return;
+    }
+
+    const queryString = checkpointIds
+      .map((id) => `checkpoint_ids[]=${encodeURIComponent(id)}`)
+      .join("&");
+    const apiUrl = getFullUrl(`/patrolling_setups/patrolling_qr_codes?${queryString}`);
+
+    window.open(apiUrl, "_blank");
   };
 
   return (
@@ -646,13 +938,14 @@ const Petrolling = () => {
         <div className="flex">
           <Button 
             onClick={() => {
+              setSelectedPatrol(null);
               setFormData({
                 area: "",
                 frequencyStart: "12:00 AM",
                 frequencyEnd: "11:00 PM",
                 occurrenceType: "specific",
                 everyHours: "",
-                selectedHours: [],
+                selectedHours: ["12"],
               });
               setIsAddOpen(true);
             }}
@@ -675,7 +968,7 @@ const Petrolling = () => {
         totalPages={Math.ceil(total / pagination.pageSize)}
         onPageChange={(page) => fetchPatrollingData(page)}
         enableGlobalSearch={true}
-        onGlobalSearch={(term) => console.log("Searching for:", term)}
+        onGlobalSearch={(term) => fetchPatrollingData(1, term)}
         searchPlaceholder="Search"
         enableExport={true}
         onExport={handleExportQrCodes}
@@ -736,7 +1029,7 @@ const Petrolling = () => {
             <div id="qr-print-area" className="flex flex-col items-center">
                {selectedPatrol?.qr_code?.url ? (
                  <img 
-                   src={`${API_CONFIG.BASE_URL}${selectedPatrol.qr_code.url}`} 
+                   src={selectedPatrol.qr_code.url.startsWith('http') ? selectedPatrol.qr_code.url : `${API_CONFIG.BASE_URL}${selectedPatrol.qr_code.url}`}
                    alt="QR Code" 
                    className="w-64 h-64 object-contain border p-2 bg-white"
                  />

@@ -510,7 +510,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
               }
               rightActions={
                 <div className="flex items-center gap-2">
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
@@ -520,7 +520,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Bulk Upload
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="outline"
                     size="sm"

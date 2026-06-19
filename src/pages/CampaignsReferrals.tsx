@@ -23,9 +23,11 @@ import {
   InputLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const CampaignsReferrals: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -216,12 +218,13 @@ const CampaignsReferrals: React.FC = () => {
             onFilterClick={() => setShowFilters(!showFilters)}
             leftActions={
               <div className="flex items-center gap-2">
+                {shouldShow("Referrals","create")&&(
                 <Button
                   className="bg-[#F2EEE9] hover:bg-[#E5DDD6] text-[#BF213E] px-8"
                   onClick={() => navigate("/campaigns/referrals/create")}
                 >
                   Add
-                </Button>
+                </Button>)}
               </div>
             }
           />

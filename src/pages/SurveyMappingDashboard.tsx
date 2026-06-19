@@ -899,7 +899,7 @@ export const SurveyMappingDashboard = () => {
       case "actions":
         return (
           <div className="flex justify-center items-center gap-2">
-            {shouldShow("survey_mapping", "view") && (
+            {shouldShow("Survey Mapping", "show") && (
               <button
                 onClick={() => handleViewClick(item)}
                 className="p-1 text-black-600 hover:text-black-800 transition-colors"
@@ -908,7 +908,7 @@ export const SurveyMappingDashboard = () => {
                 <Eye className="w-4 h-4" />
               </button>
             )}
-            {shouldShow("survey_mapping", "edit") && (
+            {shouldShow("Survey Mapping", "update") && (
               <button
                 onClick={() => handleEditClick(item)}
                 className="p-1 text-black-600 hover:text-black-800 transition-colors"
@@ -1157,7 +1157,7 @@ export const SurveyMappingDashboard = () => {
             loading={loading}
             leftActions={
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                {shouldShow("survey_mapping", "add") && (
+                {shouldShow("Survey Mapping", "create") && (
                   <Button
                     onClick={() => setShowActionPanel(!showActionPanel)}
                     className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 text-sm px-2 sm:px-3 py-2 h-auto"

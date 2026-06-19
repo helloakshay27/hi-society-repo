@@ -90,7 +90,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
     try {
       let url = getFullUrl(`/pms/zones.json?show_all=true&page=${page}&per_page=${per_page}`);
       if (search.trim()) {
-        url += `&q[name_cont]=${encodeURIComponent(search.trim())}`;
+        url += `&q[search_all_fields_cont]=${encodeURIComponent(search.trim())}`;
       }
 
       const response = await fetch(url, {
