@@ -4,6 +4,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
     Pagination,
     PaginationContent,
@@ -16,6 +17,7 @@ import {
 
 export const LoyaltyCustomers = () => {
     const navigate = useNavigate();
+    const { shouldShow } = useDynamicPermissions();
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -78,6 +80,7 @@ export const LoyaltyCustomers = () => {
             case "actions":
                 return (
                     <div className="flex items-center gap-2">
+                        {shouldShow("Customers", "show") && (
                         <Button
                             variant="ghost"
                             size="icon"
@@ -86,6 +89,7 @@ export const LoyaltyCustomers = () => {
                         >
                             <Eye className="h-4 w-4" />
                         </Button>
+                        )}
                         {/* <Button
                             variant="ghost"
                             size="icon"

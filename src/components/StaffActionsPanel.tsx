@@ -5,6 +5,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface StaffActionsPanelProps {
   onAdd?: () => void;
@@ -21,6 +22,7 @@ export const StaffActionsPanel: React.FC<StaffActionsPanelProps> = ({
   loading,
   addLabel = 'Add Staff',
 }) => {
+  const { shouldShow } = useDynamicPermissions();
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export const StaffActionsPanel: React.FC<StaffActionsPanelProps> = ({
         </div>
 
         <div className="flex items-center ml-8 gap-4">
-          {onAdd && (
+          {onAdd && shouldShow("Staff All", "create") && (
             <Button
               variant="ghost"
               size="sm"

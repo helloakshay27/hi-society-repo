@@ -66,8 +66,23 @@ interface RosterTemplate {
     created_by?: string;
 }
 
-const ProfileRoster = ({ rosterId }) => {
+interface ProfileRosterProps {
+    rosterId?: number | string | null;
+    userId?: number | string | null;
+}
+
+const getStoredUserId = () => {
+    try {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        return storedUser?.id || storedUser?.user_id || storedUser?.userId || localStorage.getItem('user_id') || localStorage.getItem('userId');
+    } catch {
+        return localStorage.getItem('user_id') || localStorage.getItem('userId');
+    }
+};
+
+const ProfileRoster: React.FC<ProfileRosterProps> = ({ rosterId, userId }) => {
     const { selectedSite } = useSelector((state: RootState) => state.site);
+    const resolvedUserId = userId || getStoredUserId();
 
     // Data states
     const [rosterTemplate, setRosterTemplate] = useState<RosterTemplate | null>(null);
@@ -76,10 +91,11 @@ const ProfileRoster = ({ rosterId }) => {
     const [shifts, setShifts] = useState<Shift[]>([]);
     const [currentLocation, setCurrentLocation] = useState<string>('');
     const [loading, setLoading] = useState(true);
+    const [emptyMessage, setEmptyMessage] = useState('No Roster Assigned');
 
     // Fetch data on component mount
     useEffect(() => {
-        if (rosterId) {
+        if (resolvedUserId || rosterId) {
             fetchRosterTemplate();
             fetchFMUsers();
             fetchDepartments();
@@ -88,13 +104,19 @@ const ProfileRoster = ({ rosterId }) => {
         } else {
             setLoading(false);
         }
-    }, [rosterId]);
+    }, [resolvedUserId, rosterId]);
 
     // Fetch Roster Template
     const fetchRosterTemplate = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${rosterId}.json`, {
+            const apiUrl = resolvedUserId
+                ? getFullUrl(
+                    `/spree/manage/user_roasters/get_user_roaster.json?user_id=${encodeURIComponent(String(resolvedUserId))}`
+                )
+                : getFullUrl(`/pms/admin/user_roasters/${rosterId}.json`);
+
+            const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -103,16 +125,45 @@ const ProfileRoster = ({ rosterId }) => {
                 }
             });
 
+            const data = await response.json().catch(() => null);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                if (data?.message) {
+                    setRosterTemplate(null);
+                    setEmptyMessage(data.message);
+                    toast.error(data.message);
+                    return;
+                }
+                throw new Error(data?.message || `HTTP error! status: ${response.status}`);
+            }
+            console.log('📝 Roster Template API Response:', data);
+            if (data?.message) {
+                setRosterTemplate(null);
+                setEmptyMessage(data.message);
+                toast.error(data.message);
+                return;
             }
 
-            const data = await response.json();
-            console.log('📝 Roster Template API Response:', data);
-            setRosterTemplate(data);
+            const rosterData = data?.user_roaster || data?.roaster || data?.roster || data?.data || data;
+            if (!rosterData || rosterData.message) {
+                const message = rosterData?.message || 'No roaster assigned to this user';
+                setRosterTemplate(null);
+                setEmptyMessage(message);
+                toast.error(message);
+                return;
+            }
+
+            setEmptyMessage('');
+            setRosterTemplate({
+                ...rosterData,
+                active: rosterData.active !== undefined ? rosterData.active : true,
+            });
         } catch (error) {
             console.error('Error fetching roster template:', error);
-            toast.error('Failed to load roster template details');
+            const message = error instanceof Error ? error.message : 'Failed to load roster template details';
+            setRosterTemplate(null);
+            setEmptyMessage(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -354,10 +405,10 @@ const ProfileRoster = ({ rosterId }) => {
         return [];
     };
 
-    if (!rosterId) {
+    if (!resolvedUserId && !rosterId) {
         return (
             <div className="bg-white flex items-center justify-center h-24 text-sm">
-                <p>No Roster Assigned</p>
+                <p>{emptyMessage}</p>
             </div>
         );
     }
@@ -377,7 +428,7 @@ const ProfileRoster = ({ rosterId }) => {
         return (
             <div className="p-6 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-gray-600">Roster details not found</p>
+                    <p className="text-gray-600">{emptyMessage || 'Roster details not found'}</p>
                 </div>
             </div>
         );

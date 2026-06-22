@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, MapPin, Building2, Clock, Users, Edit, Download, Trash2, Eye } from 'lucide-react';
@@ -70,7 +70,12 @@ interface RosterTemplate {
 
 export const RosterDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
+  const rosterBasePath = location.pathname.startsWith("/smartsecure/roster")
+    ? "/smartsecure/roster"
+    : "/settings/account/roster";
+  const isSmartSecureRoster = rosterBasePath === "/smartsecure/roster";
 
   // Redux state for site information
   const { selectedSite } = useSelector((state: RootState) => state.site);
@@ -103,7 +108,12 @@ export const RosterDetailPage: React.FC = () => {
   const fetchRosterTemplate = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`, {
+      const apiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
+      );
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +128,10 @@ export const RosterDetailPage: React.FC = () => {
 
       const data = await response.json();
       console.log('📝 Roster Template API Response:', data);
-      setRosterTemplate(data);
+      setRosterTemplate({
+        ...data,
+        active: data.active !== undefined ? data.active : true,
+      });
     } catch (error) {
       console.error('Error fetching roster template:', error);
       toast.error('Failed to load roster template details');
@@ -253,7 +266,12 @@ export const RosterDetailPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`, {
+      const apiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
+      );
+      const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +284,7 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       toast.success('Roster template deleted successfully!');
-      navigate('/roster');
+      navigate(rosterBasePath);
     } catch (error) {
       console.error('Error deleting roster template:', error);
       toast.error('Failed to delete roster template');
@@ -275,7 +293,7 @@ export const RosterDetailPage: React.FC = () => {
 
   // Handle edit
   const handleEdit = () => {
-    navigate(`/settings/account/roster/edit/${id}`);
+    navigate(`${rosterBasePath}/edit/${id}`);
   };
 
   // Handle export
@@ -416,7 +434,7 @@ export const RosterDetailPage: React.FC = () => {
       <div className="p-6 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Roster template not found</p>
-          <Button onClick={() => navigate('/roster')} variant="outline">
+          <Button onClick={() => navigate(rosterBasePath)} variant="outline">
             Back to Roster Management
           </Button>
         </div>
@@ -430,7 +448,7 @@ export const RosterDetailPage: React.FC = () => {
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/settings/account/roster/')}
+            onClick={() => navigate(rosterBasePath)}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             title="Back to Roster Management"
           >
@@ -634,7 +652,7 @@ export const RosterDetailPage: React.FC = () => {
           <Edit className="w-4 h-4 mr-2" />
           Edit Template
         </Button>
-        <Button onClick={() => navigate('/roster')} variant="outline" className="px-8">
+        <Button onClick={() => navigate(rosterBasePath)} variant="outline" className="px-8">
           Back to Roster List
         </Button>
       </div>

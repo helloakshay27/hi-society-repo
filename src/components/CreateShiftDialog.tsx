@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, Loader2 } from "lucide-react";
 import { toast } from 'sonner';
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 interface CreateShiftDialogProps {
   open: boolean;
@@ -25,7 +25,6 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
   const [minMargin, setMinMargin] = useState<string>("0");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
   // Convert 12-hour to 24-hour format
@@ -39,9 +38,53 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
     return String(hourNum).padStart(2, '0');
   };
 
+  const getErrorMessage = (data: unknown, fallback: string) => {
+    if (typeof data === 'string') return data || fallback;
+    if (!data || typeof data !== 'object') return fallback;
+
+    const responseData = data as {
+      message?: unknown;
+      error?: unknown;
+      errors?: unknown;
+      full_messages?: unknown;
+    };
+
+    if (typeof responseData.message === 'string') return responseData.message;
+    if (typeof responseData.error === 'string') return responseData.error;
+    if (Array.isArray(responseData.full_messages)) return responseData.full_messages.join(', ');
+    if (Array.isArray(responseData.errors)) return responseData.errors.join(', ');
+    if (responseData.errors && typeof responseData.errors === 'object') {
+      return Object.entries(responseData.errors as Record<string, unknown>)
+        .map(([key, value]) => `${key} ${Array.isArray(value) ? value.join(', ') : value}`)
+        .join(', ');
+    }
+    return fallback;
+  };
+
+  const parseResponseBody = async (response: Response) => {
+    const text = await response.text();
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  };
+
+  const getSelectedSocietyId = () =>
+    localStorage.getItem('selectedSocietyId') ||
+    localStorage.getItem('society_id') ||
+    '';
+
   const validateForm = () => {
     if (!fromHour || !fromMinute || !fromAmPm || !toHour || !toMinute || !toAmPm) {
       toast.error("Please fill in all time fields");
+      return false;
+    }
+
+    if (!getSelectedSocietyId()) {
+      toast.error("Please select a society");
       return false;
     }
 
@@ -56,38 +99,42 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
     // Convert to 24-hour format for API
     const startHour24 = convertTo24Hour(fromHour, fromAmPm);
     const endHour24 = convertTo24Hour(toHour, toAmPm);
+    const formattedFromMinute = fromMinute.padStart(2, '0');
+    const formattedToMinute = toMinute.padStart(2, '0');
+    const formattedHourMargin = checkInMargin ? hourMargin : '00';
+    const formattedMinMargin = checkInMargin ? minMargin : '00';
+    const societyId = getSelectedSocietyId();
 
-    // Build API payload
     const payload = {
+      society_id: societyId,
       user_shift: {
         start_hour: startHour24,
-        start_min: fromMinute,
+        start_min: formattedFromMinute,
         end_hour: endHour24,
-        end_min: toMinute,
-        hour_margin: checkInMargin ? hourMargin : '00',
-        min_margin: checkInMargin ? minMargin : '00'
-      },
-      check_in_margin: checkInMargin
+        end_min: formattedToMinute,
+        hour_margin: formattedHourMargin,
+        min_margin: formattedMinMargin,
+        society_id: societyId,
+        check_in_margin: checkInMargin
+      }
     };
 
-    console.log('Create shift payload:', payload);
-
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_shifts.json`, {
+      const response = await fetch(getFullUrl('/spree/manage/user_shifts.json'), {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': getAuthHeader()
         },
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const result = await parseResponseBody(response);
 
-      const result = await response.json();
-      console.log('Shift created successfully:', result);
+      if (!response.ok) {
+        throw new Error(getErrorMessage(result, `HTTP error! status: ${response.status}`));
+      }
 
       toast.success('Shift created successfully!');
       
@@ -102,9 +149,10 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
         onShiftCreated();
       }
 
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error creating shift:', error);
-      toast.error(`Failed to create shift: ${error.message}`);
+      toast.error(`Failed to create shift: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

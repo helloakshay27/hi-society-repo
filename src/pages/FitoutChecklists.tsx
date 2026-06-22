@@ -8,6 +8,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/utils/apiClient";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Question {
   id: number;
@@ -51,6 +52,7 @@ interface FilterState {
 
 const FitoutChecklists: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const [checklists, setChecklists] = useState<FitoutChecklistItem[]>([]);
@@ -273,6 +275,7 @@ const FitoutChecklists: React.FC = () => {
         case "actions":
           return (
             <div className="flex justify-center items-center gap-2">
+              {shouldShow("Fitout Checklists", "show") && (
               <button
                 onClick={() => handleRowAction("View", item.id)}
                 className="p-1 text-black-600 hover:text-black-800"
@@ -280,6 +283,8 @@ const FitoutChecklists: React.FC = () => {
               >
                 <Eye className="w-4 h-4" />
               </button>
+              )}
+              {shouldShow("Fitout Checklists", "update") && (
               <button
                 onClick={() => handleRowAction("Edit", item.id)}
                 className="p-1 text-black-600 hover:text-black-800"
@@ -287,6 +292,7 @@ const FitoutChecklists: React.FC = () => {
               >
                 <Edit className="w-4 h-4" />
               </button>
+              )}
             </div>
           );
         case "name":
@@ -411,6 +417,7 @@ const FitoutChecklists: React.FC = () => {
           pagination={false}
           leftActions={
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
+              {shouldShow("Fitout Checklists", "create") && (
               <Button
                 onClick={handleAddChecklist}
                 className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
@@ -418,6 +425,7 @@ const FitoutChecklists: React.FC = () => {
                 <Plus className="w-4 h-4" />
                 Add
               </Button>
+              )}
               {/* <Button
                 onClick={() => navigate('/fitout/categories-subcategories')}
                 className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"

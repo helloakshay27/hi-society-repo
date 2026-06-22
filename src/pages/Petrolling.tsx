@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, Edit, Printer } from "lucide-react";
+import { Plus, Eye, Edit, Printer, Trash2, MapPin } from "lucide-react";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect } from "@mui/material";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,11 @@ interface PatrollingItem {
   validity_end_date?: string;
   grace_period_minutes?: number;
   estimated_duration_minutes?: number;
+  auto_ticket?: boolean;
+  patrol_config?: {
+    alert_on_missed?: boolean;
+    alert_recipient_role?: string;
+  };
   schedules?: {
     id: number;
     name?: string;
@@ -46,8 +53,10 @@ interface PatrollingItem {
     end_date?: string;
     start_time?: string;
     end_time?: string;
+    assigned_guard_id?: number | null;
     supervisor_id?: number | null;
     notes?: string;
+    active?: boolean;
     cron_setting?: { id?: number; cron_expression?: string };
   }[];
   checkpoints?: {
@@ -57,7 +66,12 @@ interface PatrollingItem {
     order_sequence?: number;
     estimated_time_minutes?: number;
     area_name?: string;
+    building_name?: string;
+    wing_name?: string;
+    floor_name?: string;
+    room_name?: string;
     qr_code_url?: string;
+    location_qr_code_url?: string | null;
     building_id?: number | null;
     wing_id?: number | null;
     floor_id?: number | null;
@@ -66,6 +80,20 @@ interface PatrollingItem {
     snag_checklist_id?: number | null;
     schedule_ids?: number[];
   }[];
+  checklist?: {
+    id?: number;
+    name?: string;
+    check_type?: string;
+    active?: boolean;
+  } | null;
+  recent_sessions?: PatrollingLog[];
+  summary?: {
+    questions_count?: number;
+    schedules_count?: number;
+    checkpoints_count?: number;
+    recent_sessions_count?: number;
+    total_sessions_count?: number;
+  };
 }
 
 interface PatrollingLog {
@@ -76,8 +104,70 @@ interface PatrollingLog {
   status?: string;
   guard_name?: string;
   progress?: string | number;
-  attachments?: { id: number; url: string }[];
+  attachments?: { id?: number; url?: string | null }[];
   created_by_id?: number;
+  checkpoints_completed?: number;
+  total_checkpoints?: number;
+}
+
+interface OptionItem {
+  id: number;
+  name: string;
+  description?: string;
+  status?: number | boolean;
+  active?: number | boolean;
+  building_id?: number | null;
+  wing_id?: number | null;
+  area_id?: number | null;
+  floor_id?: number | null;
+}
+
+interface UserOption {
+  id: number;
+  full_name: string;
+}
+
+interface PatrolCheckpointForm {
+  id?: number;
+  name: string;
+  description: string;
+  order_sequence: string;
+  estimated_time_minutes: string;
+  building_id: string;
+  wing_id: string;
+  floor_id: string;
+  area_id: string;
+  room_id: string;
+  snag_checklist_id: string;
+}
+
+interface PatrolScheduleForm {
+  id?: number;
+  name: string;
+  frequency_type: string;
+  days: string[];
+  start_date: string;
+  end_date: string;
+  start_time: string;
+  end_time: string;
+  assigned_guard_id: string;
+  supervisor_id: string;
+  notes: string;
+}
+
+interface PatrolFormData {
+  name: string;
+  description: string;
+  estimated_duration_minutes: string;
+  grace_period_minutes: string;
+  validity_start_date: string;
+  validity_end_date: string;
+  auto_ticket: boolean;
+  alert_on_missed: boolean;
+  alert_recipient_role: string;
+  question_checklist_id: string;
+  checkpoints: PatrolCheckpointForm[];
+  schedules: PatrolScheduleForm[];
 }
 
 const DEFAULT_PATROL_DAYS = [
@@ -90,13 +180,10 @@ const DEFAULT_PATROL_DAYS = [
   "sunday",
 ];
 
-const formatDateForApi = (date: Date) => date.toISOString().split("T")[0];
-
-const addYears = (date: Date, years: number) => {
-  const nextDate = new Date(date);
-  nextDate.setFullYear(nextDate.getFullYear() + years);
-  return nextDate;
-};
+const PATROL_DAY_OPTIONS = DEFAULT_PATROL_DAYS.map((day) => ({
+  value: day,
+  label: day.charAt(0).toUpperCase() + day.slice(1),
+}));
 
 const parseUiTimeToApi = (timeValue: string): string | null => {
   const trimmed = timeValue.trim();
@@ -120,35 +207,10 @@ const parseUiTimeToApi = (timeValue: string): string | null => {
   return `${hours.toString().padStart(2, "0")}:${minutes}`;
 };
 
-const formatApiTimeForUi = (timeValue?: string) => {
-  const apiTime = timeValue ? parseUiTimeToApi(timeValue) : null;
-  if (!apiTime) return "";
-
-  const [hourText, minuteText] = apiTime.split(":");
-  const hours = Number(hourText);
-  const modifier = hours >= 12 ? "PM" : "AM";
-  const displayHour = hours % 12 || 12;
-
-  return `${displayHour}:${minuteText} ${modifier}`;
+const normalizeApiTimeForInput = (timeValue: unknown, fallback = "") => {
+  if (typeof timeValue !== "string") return fallback;
+  return parseUiTimeToApi(timeValue) || fallback;
 };
-
-const getMinutesOfDay = (apiTime: string) => {
-  const [hours, minutes] = apiTime.split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
-const getDurationMinutes = (startTime: string, endTime: string) => {
-  const startMinutes = getMinutesOfDay(startTime);
-  const endMinutes = getMinutesOfDay(endTime);
-  const sameDayDuration = endMinutes - startMinutes;
-  return sameDayDuration > 0 ? sameDayDuration : sameDayDuration + 24 * 60;
-};
-
-const normalizeHours = (hours: string[]) =>
-  hours
-    .map((hour) => Number(hour))
-    .filter((hour) => Number.isInteger(hour) && hour >= 0 && hour <= 23)
-    .sort((a, b) => a - b);
 
 const parseFrequencyData = (frequencyData: unknown): Record<string, unknown> => {
   if (!frequencyData) return {};
@@ -166,10 +228,92 @@ const parseFrequencyData = (frequencyData: unknown): Record<string, unknown> => 
     : {};
 };
 
-const compactObject = (value: Record<string, unknown>) =>
-  Object.fromEntries(
-    Object.entries(value).filter(([, item]) => item !== undefined && item !== null && item !== "")
-  );
+const createDefaultSchedule = (startDate = "", endDate = ""): PatrolScheduleForm => ({
+  name: "",
+  frequency_type: "",
+  days: [],
+  start_date: startDate,
+  end_date: endDate,
+  start_time: "",
+  end_time: "",
+  assigned_guard_id: "",
+  supervisor_id: "",
+  notes: "",
+});
+
+const createDefaultCheckpoint = (): PatrolCheckpointForm => ({
+  name: "",
+  description: "",
+  order_sequence: "",
+  estimated_time_minutes: "",
+  building_id: "",
+  wing_id: "",
+  floor_id: "",
+  area_id: "",
+  room_id: "",
+  snag_checklist_id: "",
+});
+
+const createDefaultPatrolForm = (): PatrolFormData => ({
+  name: "",
+  description: "",
+  estimated_duration_minutes: "",
+  grace_period_minutes: "",
+  validity_start_date: "",
+  validity_end_date: "",
+  auto_ticket: false,
+  alert_on_missed: false,
+  alert_recipient_role: "",
+  question_checklist_id: "",
+  checkpoints: [createDefaultCheckpoint()],
+  schedules: [createDefaultSchedule()],
+});
+
+const toPositiveInteger = (value: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return null;
+
+  const parsed = Number(trimmedValue);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const toNonNegativeInteger = (value: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return null;
+
+  const parsed = Number(trimmedValue);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+};
+
+const getValidDate = (value?: string | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatDisplayDate = (value?: string | null) => {
+  const date = getValidDate(value);
+  return date ? date.toLocaleDateString("en-GB") : "N/A";
+};
+
+const formatDisplayTime = (value?: string | null) => {
+  const date = getValidDate(value);
+  return date ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "N/A";
+};
+
+const formatStatus = (value?: string | null) => value?.replace(/_/g, " ") || "N/A";
+
+const resolveAttachmentUrl = (value?: string | null) => {
+  if (!value || typeof value !== "string") return null;
+  let url = value;
+  try {
+    url = decodeURIComponent(value);
+  } catch {
+    url = value;
+  }
+
+  return url.startsWith("//") ? `https:${url}` : url;
+};
 
 const Petrolling = () => {
   const [data, setData] = useState<PatrollingItem[]>([]);
@@ -189,18 +333,15 @@ const Petrolling = () => {
   const [logsLoading, setLogsLoading] = useState(false);
 
   // Form State
-  const [formData, setFormData] = useState({
-    area: "",
-    frequencyStart: "12:00 AM",
-    frequencyEnd: "11:00 PM",
-    occurrenceType: "specific", // 'every' or 'specific'
-    everyHours: "",
-    selectedHours: ["12"] as string[],
-  });
-
-  // Notification State
-  const [notificationInterval, setNotificationInterval] = useState("5");
-  const [isSavingNotification, setIsSavingNotification] = useState(false);
+  const [formData, setFormData] = useState<PatrolFormData>(() => createDefaultPatrolForm());
+  const [buildingOptions, setBuildingOptions] = useState<OptionItem[]>([]);
+  const [areaOptions, setAreaOptions] = useState<OptionItem[]>([]);
+  const [floorOptions, setFloorOptions] = useState<OptionItem[]>([]);
+  const [roomOptions, setRoomOptions] = useState<OptionItem[]>([]);
+  const [flatOptions, setFlatOptions] = useState<OptionItem[]>([]);
+  const [checklistOptions, setChecklistOptions] = useState<OptionItem[]>([]);
+  const [userOptions, setUserOptions] = useState<UserOption[]>([]);
+  const [formOptionsLoading, setFormOptionsLoading] = useState(false);
 
   const columns: ColumnConfig[] = [
     { key: "actions", label: "Actions", sortable: false },
@@ -265,10 +406,10 @@ const Petrolling = () => {
     }
   };
 
-  const fetchPatrollingLogs = async (id: number) => {
+  const fetchPatrollingLogs = async (item: PatrollingItem) => {
     setLogsLoading(true);
     try {
-      const apiUrl = getFullUrl(`/patrolling/setup/${id}.json?page=1&per_page=10`);
+      const apiUrl = getFullUrl(`/patrolling/setup/${item.id}.json?page=1&per_page=10`);
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -281,11 +422,25 @@ const Petrolling = () => {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
-      if (result.data && result.data.recent_sessions) {
-        setLogs(result.data.recent_sessions);
-      } else {
-        setLogs([]);
-      }
+      const detail = result.data || {};
+      const recentSessions = Array.isArray(detail.recent_sessions) ? detail.recent_sessions : [];
+
+      setSelectedPatrol({
+        ...item,
+        ...detail,
+        area: detail.name || item.area,
+        qr_code: {
+          url:
+            detail.checkpoints?.[0]?.qr_code_url ||
+            detail.checkpoints?.[0]?.location_qr_code_url ||
+            item.qr_code?.url ||
+            null,
+        },
+        schedules: Array.isArray(detail.schedules) ? detail.schedules : item.schedules || [],
+        checkpoints: Array.isArray(detail.checkpoints) ? detail.checkpoints : item.checkpoints || [],
+        recent_sessions: recentSessions,
+      });
+      setLogs(recentSessions);
     } catch (error) {
       console.error("Error fetching logs:", error);
       toast.error("Failed to load patrolling logs");
@@ -294,39 +449,124 @@ const Petrolling = () => {
     }
   };
 
-  const fetchSocietySettings = async () => {
+  const extractOptionItems = (result: any, collectionKeys: string[] = []): OptionItem[] => {
+    const source =
+      (Array.isArray(result) && result) ||
+      collectionKeys.map((key) => result?.[key]).find(Array.isArray) ||
+      result?.data ||
+      [];
+
+    return (Array.isArray(source) ? source : [])
+      .map((item: any) => ({
+        id: Number(item.id),
+        name:
+          item.name ||
+          item.floor_name ||
+          item.floor_no ||
+          item.flat_no ||
+          item.block_no ||
+          item.area_name ||
+          item.title ||
+          `#${item.id}`,
+        description: item.description || "",
+        status: item.status,
+        active: item.active,
+        building_id: item.building_id ?? item.pms_building_id ?? item.society_block_id ?? item.society_location_id ?? null,
+        wing_id: item.wing_id ?? item.pms_wing_id ?? item.society_wing_id ?? null,
+        area_id: item.area_id ?? item.pms_area_id ?? null,
+        floor_id: item.floor_id ?? item.pms_floor_id ?? item.society_floor_id ?? null,
+      }))
+      .filter((item) => Number.isInteger(item.id));
+  };
+
+  const loadFormOptions = async () => {
+    setFormOptionsLoading(true);
     try {
-      // Endpoint provided by user: /societies/3492.json
-      const apiUrl = getFullUrl(`/societies/3492.json`);
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": getAuthHeader(),
-        },
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // Fallback or specific field if found
-        if (result.society?.patrolling_notification_interval) {
-          setNotificationInterval(result.society.patrolling_notification_interval.toString());
-        }
+      const token = API_CONFIG.TOKEN;
+      const requestHeaders = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": getAuthHeader(),
+      };
+      const [areasResult, floorsResult, roomsResult, flatsResult, checklistsResult, societyBlocksResult, usersResult] = await Promise.allSettled([
+        fetch(getFullUrl("/pms/areas.json"), {
+          headers: requestHeaders,
+        }).then((response) => (response.ok ? response.json() : Promise.reject(response))),
+        fetch(getFullUrl("/society_floors.json?society_block_id=5"), {
+          headers: requestHeaders,
+        }).then((response) => (response.ok ? response.json() : Promise.reject(response))),
+        fetch(getFullUrl("/pms/rooms.json"), {
+          headers: requestHeaders,
+        }).then((response) => (response.ok ? response.json() : Promise.reject(response))),
+        fetch(getFullUrl(`/admin/society_flats.json?token=${encodeURIComponent(token)}&society_id=3399`), {
+          headers: requestHeaders,
+        }).then((response) => (response.ok ? response.json() : Promise.reject(response))),
+        fetch(getFullUrl("/pms/admin/snag_checklists.json?site_id=null&q[name_cont]=&q[snag_audit_sub_category_id_eq]=&q[generic_tag_category_name_eq]=&q[check_type_eq]="), {
+          headers: requestHeaders,
+        }).then((response) => (response.ok ? response.json() : Promise.reject(response))),
+        fetch(getFullUrl(`/crm/admin/society_blocks.json?token=${encodeURIComponent(token)}`), {
+          headers: requestHeaders,
+        }).then((response) => (response.ok ? response.json() : Promise.reject(response))),
+        fetch(getFullUrl("/pms/users/get_escalate_to_users.json"), {
+          headers: requestHeaders,
+        }).then((response) => (response.ok ? response.json() : Promise.reject(response))),
+      ]);
+
+      if (areasResult.status === "fulfilled") {
+        setAreaOptions(extractOptionItems(areasResult.value, ["areas", "pms_areas"]));
+      }
+
+      if (floorsResult.status === "fulfilled") {
+        setFloorOptions(extractOptionItems(floorsResult.value, ["society_floors", "floors", "pms_floors"]));
+      }
+
+      if (roomsResult.status === "fulfilled") {
+        setRoomOptions(extractOptionItems(roomsResult.value, ["rooms", "pms_rooms"]));
+      }
+
+      if (flatsResult.status === "fulfilled") {
+        setFlatOptions(extractOptionItems(flatsResult.value, ["society_flats"]));
+      }
+
+      if (checklistsResult.status === "fulfilled") {
+        setChecklistOptions(extractOptionItems(checklistsResult.value, ["snag_checklists", "checklists"]));
+      }
+
+      if (societyBlocksResult.status === "fulfilled") {
+        const societyBlocks = extractOptionItems(societyBlocksResult.value, ["society_blocks"]);
+        setBuildingOptions(societyBlocks);
+      }
+
+      if (usersResult.status === "fulfilled") {
+        const users = Array.isArray(usersResult.value)
+          ? usersResult.value
+          : usersResult.value?.users || usersResult.value?.data || [];
+        setUserOptions(
+          (Array.isArray(users) ? users : [])
+            .map((user: any) => ({
+              id: Number(user.id),
+              full_name: user.full_name || user.name || `${user.firstname || ""} ${user.lastname || ""}`.trim() || `User ${user.id}`,
+            }))
+            .filter((user) => Number.isInteger(user.id))
+        );
       }
     } catch (error) {
-      console.error("Error fetching society settings:", error);
+      console.error("Error loading patrolling form options:", error);
+    } finally {
+      setFormOptionsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchPatrollingData();
-    fetchSocietySettings();
+    loadFormOptions();
   }, []);
 
   const handleView = (item: PatrollingItem) => {
     setSelectedPatrol(item);
+    setLogs([]);
     setIsViewOpen(true);
-    fetchPatrollingLogs(item.id);
+    fetchPatrollingLogs(item);
   };
 
   const handleEdit = async (item: PatrollingItem) => {
@@ -355,47 +595,98 @@ const Petrolling = () => {
         checkpoints: detail.checkpoints || [],
       });
 
-      // Parse schedule data back into the small modal fields.
-      const schedule = detail.schedules?.[0];
-      const frequencyData = parseFrequencyData(schedule?.frequency_data);
-      let occurrenceType = "specific";
-      let everyHours = "";
-      let selectedHours: string[] = [];
+      const fallbackForm = createDefaultPatrolForm();
+      const routeName = detail.name || item.name || item.area || "";
+      const validityStartDate =
+        detail.validity_start_date || item.validity_start_date || fallbackForm.validity_start_date;
+      const validityEndDate =
+        detail.validity_end_date || item.validity_end_date || fallbackForm.validity_end_date;
+      const schedules =
+        Array.isArray(detail.schedules) && detail.schedules.length
+          ? detail.schedules.map((schedule: any) => {
+              const frequencyData = parseFrequencyData(schedule.frequency_data);
+              const days = Array.isArray(frequencyData.days)
+                ? frequencyData.days.map(String).filter(Boolean)
+                : [...DEFAULT_PATROL_DAYS];
 
-      const everyHoursValue = frequencyData.every_hours ?? frequencyData.interval_hours;
-      const dataHours = frequencyData.hours ?? frequencyData.specific_hours;
-      if (everyHoursValue !== undefined && everyHoursValue !== null) {
-        occurrenceType = "every";
-        everyHours = String(everyHoursValue);
-      } else if (Array.isArray(dataHours)) {
-        occurrenceType = "specific";
-        selectedHours = dataHours.map((hour) => String(hour).padStart(2, "0"));
-      }
+              return {
+                id: schedule.id,
+                name: schedule.name || `${routeName} Schedule`,
+                frequency_type: schedule.frequency_type || "daily",
+                days: days.length ? days : [...DEFAULT_PATROL_DAYS],
+                start_date: schedule.start_date || validityStartDate,
+                end_date: schedule.end_date || validityEndDate,
+                start_time: normalizeApiTimeForInput(schedule.start_time, fallbackForm.schedules[0].start_time),
+                end_time: normalizeApiTimeForInput(schedule.end_time, fallbackForm.schedules[0].end_time),
+                assigned_guard_id:
+                  schedule.assigned_guard_id !== undefined && schedule.assigned_guard_id !== null
+                    ? String(schedule.assigned_guard_id)
+                    : "",
+                supervisor_id:
+                  schedule.supervisor_id !== undefined && schedule.supervisor_id !== null
+                    ? String(schedule.supervisor_id)
+                    : "",
+                notes: schedule.notes || "",
+              };
+            })
+          : [createDefaultSchedule(validityStartDate, validityEndDate)];
 
-      const cronExpr = schedule?.cron_setting?.cron_expression;
-      if (cronExpr) {
-        const parts = cronExpr.split(" ");
-        if (parts.length >= 2) {
-          const hourPart = parts[1];
-          if (hourPart.startsWith("*/")) {
-            // Every N hours pattern: 0 */2 * * *
-            occurrenceType = "every";
-            everyHours = hourPart.replace("*/", "");
-          } else if (hourPart !== "*") {
-            // Specific hours pattern: 0 8,12,18 * * *
-            occurrenceType = "specific";
-            selectedHours = hourPart.split(",");
-          }
-        }
-      }
+      const checkpoints =
+        Array.isArray(detail.checkpoints) && detail.checkpoints.length
+          ? detail.checkpoints.map((checkpoint: any, index: number) => ({
+              id: checkpoint.id,
+              name: checkpoint.name || "",
+              description: checkpoint.description || "",
+              order_sequence: String(checkpoint.order_sequence ?? checkpoint.sequence ?? index + 1),
+              estimated_time_minutes:
+                checkpoint.estimated_time_minutes !== undefined && checkpoint.estimated_time_minutes !== null
+                  ? String(checkpoint.estimated_time_minutes)
+                  : "5",
+              building_id:
+                checkpoint.building_id !== undefined && checkpoint.building_id !== null
+                  ? String(checkpoint.building_id)
+                  : "",
+              wing_id:
+                checkpoint.wing_id !== undefined && checkpoint.wing_id !== null ? String(checkpoint.wing_id) : "",
+              floor_id:
+                checkpoint.floor_id !== undefined && checkpoint.floor_id !== null ? String(checkpoint.floor_id) : "",
+              area_id:
+                checkpoint.area_id !== undefined && checkpoint.area_id !== null ? String(checkpoint.area_id) : "",
+              room_id:
+                checkpoint.room_id !== undefined && checkpoint.room_id !== null ? String(checkpoint.room_id) : "",
+              snag_checklist_id:
+                checkpoint.snag_checklist_id !== undefined && checkpoint.snag_checklist_id !== null
+                  ? String(checkpoint.snag_checklist_id)
+                  : "",
+            }))
+          : [createDefaultCheckpoint()];
+      const questionChecklistId =
+        detail.checklist_id !== undefined && detail.checklist_id !== null
+          ? String(detail.checklist_id)
+          : detail.checklist?.id !== undefined && detail.checklist?.id !== null
+            ? String(detail.checklist.id)
+            : checkpoints.find((checkpoint) => checkpoint.snag_checklist_id)?.snag_checklist_id || "";
 
       setFormData({
-        area: detail.name || "",
-        frequencyStart: formatApiTimeForUi(schedule?.start_time) || "12:00 AM",
-        frequencyEnd: formatApiTimeForUi(schedule?.end_time) || "11:00 PM",
-        occurrenceType,
-        everyHours,
-        selectedHours: selectedHours.length ? selectedHours : ["12"],
+        name: routeName,
+        description: detail.description || "",
+        estimated_duration_minutes:
+          detail.estimated_duration_minutes !== undefined && detail.estimated_duration_minutes !== null
+            ? String(detail.estimated_duration_minutes)
+            : fallbackForm.estimated_duration_minutes,
+        grace_period_minutes:
+          detail.grace_period_minutes !== undefined && detail.grace_period_minutes !== null
+            ? String(detail.grace_period_minutes)
+            : fallbackForm.grace_period_minutes,
+        validity_start_date: validityStartDate,
+        validity_end_date: validityEndDate,
+        auto_ticket: detail.auto_ticket ?? fallbackForm.auto_ticket,
+        alert_on_missed: detail.patrol_config?.alert_on_missed ?? fallbackForm.alert_on_missed,
+        alert_recipient_role:
+          detail.patrol_config?.alert_recipient_role || fallbackForm.alert_recipient_role,
+        question_checklist_id: questionChecklistId,
+        schedules,
+        checkpoints,
       });
       setIsEditOpen(true);
     } catch (error) {
@@ -436,30 +727,104 @@ const Petrolling = () => {
   };
 
   const handleSubmit = async (isEdit = false) => {
-    if (!formData.area.trim()) {
-      toast.error("Please enter an area name");
-      return;
-    }
-    if (formData.occurrenceType === "specific" && formData.selectedHours.length === 0) {
-      toast.error("Please select at least one hour");
-      return;
-    }
-    if (formData.occurrenceType === "every") {
-      const everyHours = Number(formData.everyHours);
-      if (!Number.isInteger(everyHours) || everyHours < 1 || everyHours > 23) {
-        toast.error("Please enter a valid hourly interval");
-        return;
-      }
-    }
     if (isEdit && !selectedPatrol?.id) {
       toast.error("Patrolling area details are not loaded");
       return;
     }
 
-    const startTime = parseUiTimeToApi(formData.frequencyStart);
-    const endTime = parseUiTimeToApi(formData.frequencyEnd);
-    if (!startTime || !endTime) {
-      toast.error("Please enter valid start and end times");
+    const estimatedDuration = toPositiveInteger(formData.estimated_duration_minutes);
+    const gracePeriod = toNonNegativeInteger(formData.grace_period_minutes);
+    if (!formData.name.trim()) {
+      toast.error("Please enter patrol name");
+      return;
+    }
+    if (!estimatedDuration) {
+      toast.error("Estimated duration must be a positive whole number");
+      return;
+    }
+    if (gracePeriod === null) {
+      toast.error("Grace period must be zero or a positive whole number");
+      return;
+    }
+    if (!formData.validity_start_date || !formData.validity_end_date) {
+      toast.error("Please select validity start and end dates");
+      return;
+    }
+    if (new Date(formData.validity_end_date) < new Date(formData.validity_start_date)) {
+      toast.error("Validity end date cannot be before start date");
+      return;
+    }
+    if (formData.question_checklist_id && !toPositiveInteger(formData.question_checklist_id)) {
+      toast.error("Please select a valid checklist");
+      return;
+    }
+
+    if (!formData.checkpoints.length) {
+      toast.error("Please add at least one checkpoint");
+      return;
+    }
+    for (const [index, checkpoint] of formData.checkpoints.entries()) {
+      const buildingId = toPositiveInteger(checkpoint.building_id);
+
+      if (!buildingId) {
+        toast.error(`Please select checkpoint ${index + 1} building`);
+        return;
+      }
+      const optionalLocationIds = [
+        checkpoint.floor_id,
+        checkpoint.room_id,
+      ];
+      if (optionalLocationIds.some((value) => value && !toPositiveInteger(value))) {
+        toast.error(`Checkpoint ${index + 1} location selection is invalid`);
+        return;
+      }
+      if (checkpoint.snag_checklist_id && !toPositiveInteger(checkpoint.snag_checklist_id)) {
+        toast.error(`Checkpoint ${index + 1} checklist ID must be a positive whole number`);
+        return;
+      }
+    }
+
+    if (!formData.schedules.length) {
+      toast.error("Please add at least one schedule");
+      return;
+    }
+    for (const [index, schedule] of formData.schedules.entries()) {
+      if (!schedule.name.trim()) {
+        toast.error(`Please enter schedule ${index + 1} name`);
+        return;
+      }
+      if (!schedule.frequency_type.trim()) {
+        toast.error(`Please select schedule ${index + 1} frequency`);
+        return;
+      }
+      if (!schedule.days.length) {
+        toast.error(`Please select at least one day for schedule ${index + 1}`);
+        return;
+      }
+      if (!schedule.start_date || !schedule.end_date) {
+        toast.error(`Please select schedule ${index + 1} start and end dates`);
+        return;
+      }
+      if (new Date(schedule.end_date) < new Date(schedule.start_date)) {
+        toast.error(`Schedule ${index + 1} end date cannot be before start date`);
+        return;
+      }
+      if (!parseUiTimeToApi(schedule.start_time) || !parseUiTimeToApi(schedule.end_time)) {
+        toast.error(`Please enter valid start and end times for schedule ${index + 1}`);
+        return;
+      }
+      if (!toPositiveInteger(schedule.assigned_guard_id)) {
+        toast.error(`Please enter assigned guard ID for schedule ${index + 1}`);
+        return;
+      }
+      if (!toPositiveInteger(schedule.supervisor_id)) {
+        toast.error(`Please enter supervisor ID for schedule ${index + 1}`);
+        return;
+      }
+    }
+
+    if (!formData.alert_recipient_role.trim()) {
+      toast.error("Please enter alert recipient role");
       return;
     }
 
@@ -469,86 +834,49 @@ const Petrolling = () => {
         ? getFullUrl(`/patrolling/setup/${selectedPatrol?.id}.json`)
         : getFullUrl(`/patrolling/setup.json`);
 
-      const routeName = formData.area.trim();
-      const today = new Date();
-      const validityStartDate = selectedPatrol?.validity_start_date || formatDateForApi(today);
-      const validityEndDate =
-        selectedPatrol?.validity_end_date || formatDateForApi(addYears(today, 1));
-      const estimatedDurationMinutes =
-        selectedPatrol?.estimated_duration_minutes || getDurationMinutes(startTime, endTime);
-      const frequencyData =
-        formData.occurrenceType === "specific"
-          ? {
-              days: DEFAULT_PATROL_DAYS,
-              hours: normalizeHours(formData.selectedHours),
-            }
-          : {
-              days: DEFAULT_PATROL_DAYS,
-              every_hours: Number(formData.everyHours),
-            };
-
-      const schedules = isEdit && selectedPatrol?.schedules?.length
-        ? selectedPatrol.schedules.map((schedule, index) =>
-            compactObject({
-              id: schedule.id,
-              name: schedule.name || `${routeName} Schedule`,
-              frequency_type: schedule.frequency_type || "daily",
-              frequency_data: index === 0 ? frequencyData : schedule.frequency_data,
-              start_date: schedule.start_date || validityStartDate,
-              end_date: schedule.end_date || validityEndDate,
-              start_time: index === 0 ? startTime : schedule.start_time,
-              end_time: index === 0 ? endTime : schedule.end_time,
-              supervisor_id: schedule.supervisor_id,
-              notes: schedule.notes,
-            })
-          )
-        : [
-            compactObject({
-              name: `${routeName} Schedule`,
-              frequency_type: "daily",
-              frequency_data: frequencyData,
-              start_date: validityStartDate,
-              end_date: validityEndDate,
-              start_time: startTime,
-              end_time: endTime,
-            }),
-          ];
-
-      const checkpoints = isEdit && selectedPatrol?.checkpoints?.length
-        ? selectedPatrol.checkpoints.map((cp, index) =>
-            compactObject({
-              id: cp.id,
-              name: cp.name || routeName,
-              description: cp.description,
-              order_sequence: cp.order_sequence ?? index + 1,
-              estimated_time_minutes: cp.estimated_time_minutes,
-              building_id: cp.building_id,
-              wing_id: cp.wing_id,
-              floor_id: cp.floor_id,
-              area_id: cp.area_id,
-              room_id: cp.room_id,
-              snag_checklist_id: cp.snag_checklist_id,
-              schedule_ids: cp.schedule_ids,
-            })
-          )
-        : [
-            compactObject({
-              name: routeName,
-              order_sequence: 1,
-              estimated_time_minutes: estimatedDurationMinutes,
-            }),
-          ];
-
-      const payload = compactObject({
-        name: routeName,
-        description: selectedPatrol?.description,
-        estimated_duration_minutes: estimatedDurationMinutes,
-        grace_period_minutes: selectedPatrol?.grace_period_minutes,
-        validity_start_date: validityStartDate,
-        validity_end_date: validityEndDate,
-        schedules,
-        checkpoints,
-      });
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        estimated_duration_minutes: estimatedDuration,
+        grace_period_minutes: gracePeriod,
+        validity_start_date: formData.validity_start_date,
+        validity_end_date: formData.validity_end_date,
+        auto_ticket: formData.auto_ticket,
+        patrol_config: {
+          alert_on_missed: formData.alert_on_missed,
+          alert_recipient_role: formData.alert_recipient_role.trim(),
+        },
+        checkpoints: formData.checkpoints.map((checkpoint, index) => ({
+          ...(isEdit && checkpoint.id ? { id: checkpoint.id } : {}),
+          name: checkpoint.name.trim() || getGeneratedCheckpointName(checkpoint, index),
+          description: checkpoint.description.trim(),
+          order_sequence: toPositiveInteger(checkpoint.order_sequence) || index + 1,
+          estimated_time_minutes: toPositiveInteger(checkpoint.estimated_time_minutes) || estimatedDuration,
+          building_id: toPositiveInteger(checkpoint.building_id),
+          wing_id: checkpoint.wing_id ? toPositiveInteger(checkpoint.wing_id) : null,
+          area_id: checkpoint.area_id ? toPositiveInteger(checkpoint.area_id) : null,
+          floor_id: checkpoint.floor_id ? toPositiveInteger(checkpoint.floor_id) : null,
+          room_id: checkpoint.room_id ? toPositiveInteger(checkpoint.room_id) : null,
+          snag_checklist_id: checkpoint.snag_checklist_id
+            ? toPositiveInteger(checkpoint.snag_checklist_id)
+            : null,
+        })),
+        schedules: formData.schedules.map((schedule) => ({
+          ...(isEdit && schedule.id ? { id: schedule.id } : {}),
+          name: schedule.name.trim(),
+          frequency_type: schedule.frequency_type,
+          frequency_data: {
+            days: schedule.days,
+          },
+          start_date: schedule.start_date,
+          end_date: schedule.end_date,
+          start_time: parseUiTimeToApi(schedule.start_time),
+          end_time: parseUiTimeToApi(schedule.end_time),
+          assigned_guard_id: toPositiveInteger(schedule.assigned_guard_id),
+          supervisor_id: toPositiveInteger(schedule.supervisor_id),
+          notes: schedule.notes.trim(),
+        })),
+      };
 
       const response = await fetch(apiUrl, {
         method: isEdit ? "PUT" : "POST",
@@ -576,14 +904,7 @@ const Petrolling = () => {
 
       setIsAddOpen(false);
       setIsEditOpen(false);
-      setFormData({
-        area: "",
-        frequencyStart: "12:00 AM",
-        frequencyEnd: "11:00 PM",
-        occurrenceType: "specific",
-        everyHours: "",
-        selectedHours: ["12"],
-      });
+      setFormData(createDefaultPatrolForm());
       setSelectedPatrol(null);
       fetchPatrollingData();
     } catch (error: any) {
@@ -594,41 +915,171 @@ const Petrolling = () => {
     }
   };
 
-  const handleNotificationSubmit = async () => {
-    setIsSavingNotification(true);
-    try {
-      const apiUrl = getFullUrl(`/societies/3492.json`);
-      const response = await fetch(apiUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": getAuthHeader(),
-        },
-        body: JSON.stringify({
-          society: {
-            patrolling_notification_interval: parseInt(notificationInterval),
-          },
-        }),
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      toast.success("Notification settings updated successfully!");
-    } catch (error: any) {
-      console.error("Error updating notification settings:", error);
-      toast.error("Failed to update notification settings");
-    } finally {
-      setIsSavingNotification(false);
+  const handleFormCancel = (isEdit = false) => {
+    if (isEdit) {
+      setIsEditOpen(false);
+    } else {
+      setIsAddOpen(false);
+      setFormData(createDefaultPatrolForm());
     }
+
+    setSelectedPatrol(null);
   };
 
-  const toggleHourSelection = (hour: string) => {
+  const updateFormField = <K extends keyof PatrolFormData>(field: K, value: PatrolFormData[K]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateQuestionChecklist = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      selectedHours: prev.selectedHours.includes(hour)
-        ? prev.selectedHours.filter((h) => h !== hour)
-        : [...prev.selectedHours, hour],
+      question_checklist_id: value,
+      checkpoints: prev.checkpoints.map((checkpoint) => ({
+        ...checkpoint,
+        snag_checklist_id:
+          !checkpoint.snag_checklist_id || checkpoint.snag_checklist_id === prev.question_checklist_id
+            ? value
+            : checkpoint.snag_checklist_id,
+      })),
+    }));
+  };
+
+  const updateCheckpointField = <K extends keyof PatrolCheckpointForm>(
+    index: number,
+    field: K,
+    value: PatrolCheckpointForm[K]
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      checkpoints: prev.checkpoints.map((checkpoint, checkpointIndex) =>
+        checkpointIndex === index ? { ...checkpoint, [field]: value } : checkpoint
+      ),
+    }));
+  };
+
+  const updateCheckpointLocationField = (
+    index: number,
+    field: "building_id" | "wing_id" | "area_id" | "floor_id" | "room_id",
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      checkpoints: prev.checkpoints.map((checkpoint, checkpointIndex) => {
+        if (checkpointIndex !== index) return checkpoint;
+
+        if (field === "building_id") {
+          return {
+            ...checkpoint,
+            building_id: value,
+            wing_id: "",
+            area_id: "",
+            floor_id: "",
+            room_id: "",
+          };
+        }
+
+        if (field === "wing_id") {
+          return {
+            ...checkpoint,
+            wing_id: value,
+            area_id: "",
+            floor_id: "",
+            room_id: "",
+          };
+        }
+
+        if (field === "area_id") {
+          return {
+            ...checkpoint,
+            area_id: value,
+            floor_id: "",
+            room_id: "",
+          };
+        }
+
+        if (field === "floor_id") {
+          return {
+            ...checkpoint,
+            floor_id: value,
+            room_id: "",
+          };
+        }
+
+        return {
+          ...checkpoint,
+          room_id: value,
+        };
+      }),
+    }));
+  };
+
+  const updateScheduleField = <K extends keyof PatrolScheduleForm>(
+    index: number,
+    field: K,
+    value: PatrolScheduleForm[K]
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      schedules: prev.schedules.map((schedule, scheduleIndex) =>
+        scheduleIndex === index ? { ...schedule, [field]: value } : schedule
+      ),
+    }));
+  };
+
+  const addCheckpoint = () => {
+    setFormData((prev) => ({
+      ...prev,
+      checkpoints: [
+        ...prev.checkpoints,
+        {
+          ...createDefaultCheckpoint(),
+          snag_checklist_id: prev.question_checklist_id,
+        },
+      ],
+    }));
+  };
+
+  const removeCheckpoint = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      checkpoints: prev.checkpoints
+        .filter((_, checkpointIndex) => checkpointIndex !== index)
+        .map((checkpoint, checkpointIndex) => ({
+          ...checkpoint,
+          order_sequence: String(checkpointIndex + 1),
+        })),
+    }));
+  };
+
+  const addSchedule = () => {
+    setFormData((prev) => ({
+      ...prev,
+      schedules: [
+        ...prev.schedules,
+        createDefaultSchedule(prev.validity_start_date, prev.validity_end_date),
+      ],
+    }));
+  };
+
+  const removeSchedule = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      schedules: prev.schedules.filter((_, scheduleIndex) => scheduleIndex !== index),
+    }));
+  };
+
+  const toggleScheduleDay = (scheduleIndex: number, day: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      schedules: prev.schedules.map((schedule, index) => {
+        if (index !== scheduleIndex) return schedule;
+        return {
+          ...schedule,
+          days: schedule.days.includes(day)
+            ? schedule.days.filter((selectedDay) => selectedDay !== day)
+            : [...schedule.days, day],
+        };
+      }),
     }));
   };
 
@@ -748,136 +1199,562 @@ const Petrolling = () => {
 
   const renderLogCell = (log: PatrollingLog, columnKey: string) => {
     const dateValue = log.created_at || log.session_date;
-    const date = dateValue ? new Date(dateValue) : null;
     switch (columnKey) {
       case "patrolling_date":
-        return date ? date.toLocaleDateString("en-GB") : "N/A";
+        return formatDisplayDate(dateValue);
       case "patrolling_time":
-        return date ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "N/A";
+        return formatDisplayTime(dateValue);
       case "comments":
-        return log.comment || log.status?.replace(/_/g, " ") || "N/A";
+        return log.comment || formatStatus(log.status);
       case "submitted_by":
         return log.guard_name || (log.created_by_id ? `User ${log.created_by_id}` : "N/A");
       case "attachments":
-        return (
-          <div className="flex gap-1">
-            {log.attachments?.length ? log.attachments.map((att, idx) => {
-              let url = decodeURIComponent(att.url);
-              if (url.startsWith("//")) url = "https:" + url;
-              return (
-                <img 
-                  key={idx} 
-                  src={url} 
-                  alt="Attachment" 
-                  className="w-10 h-10 object-cover rounded border border-gray-200 cursor-pointer"
-                  onClick={() => window.open(url, '_blank')}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40?text=IMG';
-                  }}
-                />
-              );
-            }) : <span className="text-xs text-gray-400">N/A</span>}
-          </div>
-        );
+        {
+          const attachmentUrls =
+            log.attachments
+              ?.map((att) => resolveAttachmentUrl(att.url))
+              .filter((url): url is string => Boolean(url)) || [];
+
+          return (
+            <div className="flex gap-1">
+              {attachmentUrls.length ? (
+                attachmentUrls.map((url, idx) => (
+                  <img
+                    key={url || idx}
+                    src={url}
+                    alt="Attachment"
+                    className="w-10 h-10 object-cover rounded border border-gray-200 cursor-pointer"
+                    onClick={() => window.open(url, "_blank")}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/40?text=IMG";
+                    }}
+                  />
+                ))
+              ) : (
+                <span className="text-xs text-gray-400">N/A</span>
+              )}
+            </div>
+          );
+        }
       default:
         return (log as any)[columnKey] || "N/A";
     }
   };
 
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
+  const checkpointFieldSx = {
+    height: 41,
+    borderRadius: "4px",
+    backgroundColor: "#fff",
+    "& .MuiInputBase-input, & .MuiSelect-select": {
+      padding: "10px 12px",
+      fontSize: "14px",
+    },
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#c8c8c8",
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#a8a8a8",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#666",
+      borderWidth: "1px",
+    },
+  };
 
-  const renderModalForm = (title: string, isEdit = false) => (
+  const optionMatchesParent = (optionValue: number | null | undefined, selectedValue: string) =>
+    !selectedValue || optionValue === null || optionValue === undefined || String(optionValue) === selectedValue;
+
+  const getCheckpointLocationOptions = (checkpoint: PatrolCheckpointForm) => {
+    const filteredAreas = areaOptions.filter((area) =>
+      optionMatchesParent(area.building_id, checkpoint.building_id)
+    );
+    const filteredFloors = floorOptions.filter((floor) =>
+      optionMatchesParent(floor.building_id, checkpoint.building_id) &&
+      optionMatchesParent(floor.area_id, checkpoint.area_id)
+    );
+    const filteredRooms = roomOptions.filter((room) =>
+      optionMatchesParent(room.building_id, checkpoint.building_id) &&
+      optionMatchesParent(room.area_id, checkpoint.area_id) &&
+      optionMatchesParent(room.floor_id, checkpoint.floor_id)
+    );
+    return {
+      areas: filteredAreas.length || !checkpoint.building_id ? filteredAreas : areaOptions,
+      floors: filteredFloors.length || !checkpoint.building_id ? filteredFloors : floorOptions,
+      rooms: filteredRooms.length || !checkpoint.floor_id ? filteredRooms : roomOptions,
+      forms: flatOptions,
+    };
+  };
+
+  const getOptionNameById = (options: OptionItem[], value: string) =>
+    options.find((option) => String(option.id) === value)?.name || "";
+
+  const getGeneratedCheckpointName = (checkpoint: PatrolCheckpointForm, index: number) => {
+    const nameParts = [
+      getOptionNameById(buildingOptions, checkpoint.building_id),
+      getOptionNameById(floorOptions, checkpoint.floor_id),
+      getOptionNameById(flatOptions, checkpoint.room_id),
+    ].filter(Boolean);
+
+    return nameParts.length ? nameParts.join(" / ") : `Checkpoint ${index + 1}`;
+  };
+
+  const renderCheckpointSelect = (
+    label: string,
+    value: string,
+    placeholder: string,
+    options: OptionItem[],
+    onChange: (value: string) => void,
+    required = false,
+    disabled = false
+  ) => (
+    <FormControl fullWidth variant="outlined" size="small" disabled={disabled}>
+      <InputLabel shrink>
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </InputLabel>
+      <MuiSelect
+        value={value}
+        onChange={(event) => onChange(event.target.value as string)}
+        displayEmpty
+        label={`${label}${required ? " *" : ""}`}
+        notched
+        renderValue={(selected) => {
+          if (!selected) return <span className="text-gray-400">{placeholder}</span>;
+          const selectedOption = options.find((option) => String(option.id) === String(selected));
+          return selectedOption?.name || placeholder;
+        }}
+        sx={checkpointFieldSx}
+        MenuProps={{
+          PaperProps: {
+            style: {
+              maxHeight: 320,
+            },
+          },
+        }}
+      >
+        <MenuItem value="">{placeholder}</MenuItem>
+        {options.map((option) => (
+          <MenuItem key={option.id} value={String(option.id)}>
+            {option.name}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+    </FormControl>
+  );
+
+  const renderPatrolForm = (title: string, isEdit = false, mode: "dialog" | "page" = "dialog") => (
     <>
-      <DialogHeader className="p-2 border-b bg-gray-50 flex flex-row items-center justify-between">
-        <DialogTitle className="text-md font-bold text-center w-full">{title}</DialogTitle>
-      </DialogHeader>
-      <div className="p-4 space-y-3">
-        <div className="space-y-1">
-          <Input 
-            placeholder="Enter Area" 
-            className="h-9 rounded-none border-gray-300 text-sm"
-            value={formData.area}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, area: e.target.value }))
-            }
-          />
-        </div>
-
-        <div className="space-y-3">
-          <h3 className="text-sm font-bold text-gray-700">Frequency</h3>
-          <div className="flex gap-3">
-            <Input 
-              value={formData.frequencyStart}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  frequencyStart: e.target.value,
-                }))
-              }
-              className="h-8 rounded-none border-gray-300 text-sm"
-            />
-            <Input 
-              value={formData.frequencyEnd}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  frequencyEnd: e.target.value,
-                }))
-              }
-              className="h-8 rounded-none border-gray-300 text-sm"
-            />
-          </div>
-
-          <RadioGroup 
-            value={formData.occurrenceType} 
-            onValueChange={(val) =>
-              setFormData((prev) => ({
-                ...prev,
-                occurrenceType: val as 'every' | 'specific',
-              }))
-            }
-            className="space-y-2"
+      {mode === "page" ? (
+        <div className="p-4 border-b bg-gray-50 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+          <Button
+            variant="outline"
+            className="h-9 rounded-none"
+            onClick={() => handleFormCancel(isEdit)}
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="every" id="every" className="w-4 h-4" />
-              <Label htmlFor="every" className="flex items-center gap-2 text-sm font-normal cursor-pointer">
-                Every 
-                <Input 
-                  className="w-12 h-7 rounded-none inline-block border-gray-300 text-xs px-1" 
-                  value={formData.everyHours}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      everyHours: e.target.value,
-                    }))
-                  }
-                  onClick={(e) => e.stopPropagation()}
-                /> 
-                hour(s)
+            Back
+          </Button>
+        </div>
+      ) : (
+        <DialogHeader className="p-2 border-b bg-gray-50 flex flex-row items-center justify-between">
+          <DialogTitle className="text-md font-bold text-center w-full">{title}</DialogTitle>
+        </DialogHeader>
+      )}
+      <div className={mode === "page" ? "p-4 space-y-5" : "p-4 space-y-5 max-h-[75vh] overflow-y-auto"}>
+        <datalist id="patrolling-area-options">
+          {areaOptions.map((area) => (
+            <option key={area.id} value={String(area.id)} label={area.name} />
+          ))}
+        </datalist>
+        <datalist id="patrolling-checklist-options">
+          {checklistOptions.map((checklist) => (
+            <option key={checklist.id} value={String(checklist.id)} label={checklist.name} />
+          ))}
+        </datalist>
+        <datalist id="patrolling-user-options">
+          {userOptions.map((user) => (
+            <option key={user.id} value={String(user.id)} label={user.full_name} />
+          ))}
+        </datalist>
+
+        {formOptionsLoading && (
+          <div className="text-xs text-gray-500">Loading area, block, checklist and user suggestions...</div>
+        )}
+
+        <section className="space-y-3">
+          <h3 className="text-sm font-bold text-gray-700">Route Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Name *</Label>
+              <Input
+                className="h-9 rounded-none border-gray-300 text-sm"
+                value={formData.name}
+                onChange={(e) => updateFormField("name", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Estimated Duration (mins) *</Label>
+              <Input
+                type="number"
+                min="1"
+                className="h-9 rounded-none border-gray-300 text-sm"
+                value={formData.estimated_duration_minutes}
+                onChange={(e) => updateFormField("estimated_duration_minutes", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <Label className="text-xs text-gray-600">Description</Label>
+              <Textarea
+                className="rounded-none border-gray-300 text-sm min-h-[70px]"
+                value={formData.description}
+                onChange={(e) => updateFormField("description", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Validity Start Date *</Label>
+              <Input
+                type="date"
+                className="h-9 rounded-none border-gray-300 text-sm"
+                value={formData.validity_start_date}
+                onChange={(e) => updateFormField("validity_start_date", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Validity End Date *</Label>
+              <Input
+                type="date"
+                className="h-9 rounded-none border-gray-300 text-sm"
+                value={formData.validity_end_date}
+                onChange={(e) => updateFormField("validity_end_date", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Grace Period (mins) *</Label>
+              <Input
+                type="number"
+                min="0"
+                className="h-9 rounded-none border-gray-300 text-sm"
+                value={formData.grace_period_minutes}
+                onChange={(e) => updateFormField("grace_period_minutes", e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2 pt-6">
+              <Checkbox
+                id="patrolling-auto-ticket"
+                checked={formData.auto_ticket}
+                onCheckedChange={(checked) => updateFormField("auto_ticket", checked === true)}
+              />
+              <Label htmlFor="patrolling-auto-ticket" className="text-sm font-normal cursor-pointer">
+                Auto Ticket
               </Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="specific" id="specific" className="w-4 h-4" />
-              <Label htmlFor="specific" className="text-sm font-normal cursor-pointer">Specific Hours</Label>
-            </div>
-          </RadioGroup>
+          </div>
+        </section>
 
-          {formData.occurrenceType === 'specific' && (
-            <div className="grid grid-cols-6 gap-0 border border-gray-200 bg-gray-50 p-2">
-              {hours.map((hour) => (
-                <div 
-                  key={hour}
-                  onClick={() => toggleHourSelection(hour)}
-                  className={`h-8 flex items-center justify-center cursor-pointer text-xs border border-transparent hover:border-gray-300 ${formData.selectedHours.includes(hour) ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
-                >
-                  {hour}
-                </div>
-              ))}
+        <section className="space-y-3 border-t pt-4">
+          <h3 className="text-sm font-bold text-gray-700">Patrol Config</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="patrolling-alert-missed"
+                checked={formData.alert_on_missed}
+                onCheckedChange={(checked) => updateFormField("alert_on_missed", checked === true)}
+              />
+              <Label htmlFor="patrolling-alert-missed" className="text-sm font-normal cursor-pointer">
+                Alert on Missed
+              </Label>
             </div>
-          )}
-        </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Alert Recipient Role *</Label>
+              <Input
+                className="h-9 rounded-none border-gray-300 text-sm"
+                value={formData.alert_recipient_role}
+                onChange={(e) => updateFormField("alert_recipient_role", e.target.value)}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-3 border-t pt-4">
+          <h3 className="text-sm font-bold text-gray-700">Question</h3>
+          <div className="space-y-1">
+            <Label className="text-xs text-gray-600">Checklist</Label>
+            <FormControl fullWidth size="small">
+              <MuiSelect
+                value={formData.question_checklist_id}
+                onChange={(e) => updateQuestionChecklist(e.target.value as string)}
+                displayEmpty
+                disabled={formOptionsLoading}
+                renderValue={(selected) => {
+                  if (!selected) return "Select Checklist";
+                  const selectedChecklist = checklistOptions.find(
+                    (checklist) => String(checklist.id) === String(selected)
+                  );
+                  return selectedChecklist?.name || "Select Checklist";
+                }}
+                sx={{
+                  height: 36,
+                  borderRadius: 0,
+                  backgroundColor: "#fff",
+                  fontSize: "0.875rem",
+                  "& .MuiSelect-select": {
+                    padding: "7px 12px",
+                  },
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 320,
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="" disabled>
+                  Select Checklist
+                </MenuItem>
+                {checklistOptions.map((checklist) => (
+                  <MenuItem key={checklist.id} value={String(checklist.id)}>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-800">{checklist.name}</span>
+                      {checklist.description?.trim() && (
+                        <span className="text-xs text-gray-500">{checklist.description}</span>
+                      )}
+                    </div>
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+          </div>
+        </section>
+
+        <section className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-bold text-gray-700">Schedules</h3>
+            <Button
+              variant="outline"
+              className="h-8 rounded-none text-xs"
+              onClick={addSchedule}
+              type="button"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              Add Schedule
+            </Button>
+          </div>
+
+          {formData.schedules.map((schedule, scheduleIndex) => (
+            <div key={schedule.id ?? scheduleIndex} className="relative border border-gray-200 bg-gray-50 p-3 space-y-3">
+              {formData.schedules.length > 1 && (
+                <button
+                  type="button"
+                  className="absolute right-2 top-2 text-red-600 hover:text-red-800"
+                  onClick={() => removeSchedule(scheduleIndex)}
+                  aria-label={`Remove schedule ${scheduleIndex + 1}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <div className="text-xs font-semibold text-gray-500">Schedule {scheduleIndex + 1}</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">Name *</Label>
+                  <Input
+                    className="h-9 rounded-none border-gray-300 text-sm"
+                    value={schedule.name}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "name", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">Frequency Type *</Label>
+                  <select
+                    className="h-9 w-full rounded-none border border-gray-300 bg-white px-3 text-sm"
+                    value={schedule.frequency_type}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "frequency_type", e.target.value)}
+                  >
+                    <option value=""></option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">Start Date *</Label>
+                  <Input
+                    type="date"
+                    className="h-9 rounded-none border-gray-300 text-sm"
+                    value={schedule.start_date}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "start_date", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">End Date *</Label>
+                  <Input
+                    type="date"
+                    className="h-9 rounded-none border-gray-300 text-sm"
+                    value={schedule.end_date}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "end_date", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">Start Time *</Label>
+                  <Input
+                    type="time"
+                    className="h-9 rounded-none border-gray-300 text-sm"
+                    value={schedule.start_time}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "start_time", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">End Time *</Label>
+                  <Input
+                    type="time"
+                    className="h-9 rounded-none border-gray-300 text-sm"
+                    value={schedule.end_time}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "end_time", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">Assigned Guard ID *</Label>
+                  <Input
+                    list="patrolling-user-options"
+                    type="number"
+                    min="1"
+                    className="h-9 rounded-none border-gray-300 text-sm"
+                    value={schedule.assigned_guard_id}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "assigned_guard_id", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">Supervisor ID *</Label>
+                  <Input
+                    list="patrolling-user-options"
+                    type="number"
+                    min="1"
+                    className="h-9 rounded-none border-gray-300 text-sm"
+                    value={schedule.supervisor_id}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "supervisor_id", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label className="text-xs text-gray-600">Notes</Label>
+                  <Textarea
+                    className="rounded-none border-gray-300 text-sm min-h-[60px]"
+                    value={schedule.notes}
+                    onChange={(e) => updateScheduleField(scheduleIndex, "notes", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Days *</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                  {PATROL_DAY_OPTIONS.map((day) => (
+                    <label key={day.value} className="flex items-center gap-2 text-xs text-gray-700">
+                      <Checkbox
+                        checked={schedule.days.includes(day.value)}
+                        onCheckedChange={() => toggleScheduleDay(scheduleIndex, day.value)}
+                      />
+                      {day.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <section className="overflow-hidden rounded-lg border border-[#d8c7ad] bg-white">
+          <div className="flex items-center gap-3 border-b border-[#d8c7ad] px-6 py-4">
+            <MapPin className="h-4 w-4 text-[#f05a28]" />
+            <h3 className="text-sm font-bold uppercase text-gray-900">Checkpoint Setup</h3>
+          </div>
+
+          <div className="space-y-6 px-5 py-5">
+            {formData.checkpoints.map((checkpoint, checkpointIndex) => {
+              const locationOptions = getCheckpointLocationOptions(checkpoint);
+
+              return (
+                <div
+                  key={checkpoint.id ?? checkpointIndex}
+                  className="relative rounded-md border border-dashed border-[#d8c7ad] bg-white px-4 pb-4 pt-5"
+                >
+                  {formData.checkpoints.length > 1 && (
+                    <button
+                      type="button"
+                      className="absolute right-3 top-3 text-red-600 hover:text-red-800"
+                      onClick={() => removeCheckpoint(checkpointIndex)}
+                      aria-label={`Remove checkpoint ${checkpointIndex + 1}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  <div className="mb-3 text-sm font-semibold text-gray-500">
+                    Checkpoint {checkpointIndex + 1}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                      {renderCheckpointSelect(
+                        "Building",
+                        checkpoint.building_id,
+                        "Select Building",
+                        buildingOptions,
+                        (value) => updateCheckpointLocationField(checkpointIndex, "building_id", value),
+                        true,
+                        formOptionsLoading
+                      )}
+                    </div>
+
+                    <div>
+                      {renderCheckpointSelect(
+                        "Floor",
+                        checkpoint.floor_id,
+                        "Select Floor",
+                        locationOptions.floors,
+                        (value) => updateCheckpointLocationField(checkpointIndex, "floor_id", value),
+                        false,
+                        formOptionsLoading
+                      )}
+                    </div>
+
+                    <div>
+                      {renderCheckpointSelect(
+                        "Flat",
+                        checkpoint.room_id,
+                        "Select Flat",
+                        locationOptions.forms,
+                        (value) => updateCheckpointLocationField(checkpointIndex, "room_id", value),
+                        false,
+                        formOptionsLoading
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="flex justify-end pt-1">
+              <Button
+                variant="outline"
+                className="h-8 rounded-none border-[#f05a28] px-5 text-xs text-[#f05a28] hover:bg-[#fff5ef] hover:text-[#f05a28]"
+                onClick={addCheckpoint}
+                type="button"
+              >
+                <Plus className="mr-2 h-3.5 w-3.5" />
+                Add Checkpoint
+              </Button>
+            </div>
+          </div>
+        </section>
       </div>
-      <div className="p-3 border-t bg-gray-50 flex justify-center">
+      <div className="p-3 border-t bg-gray-50 flex justify-center gap-3">
+        <Button
+          variant="outline"
+          className="h-9 px-6 rounded-none text-sm"
+          onClick={() => handleFormCancel(isEdit)}
+          disabled={loading}
+        >
+          Cancel
+        </Button>
         <Button 
           className="bg-[#00A65A] hover:bg-[#008d4c] text-white h-9 px-6 rounded-none text-sm"
           onClick={() => handleSubmit(isEdit)}
@@ -888,6 +1765,154 @@ const Petrolling = () => {
       </div>
     </>
   );
+
+  const renderDetailField = (label: string, value: React.ReactNode) => (
+    <div className="space-y-1">
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-sm font-medium text-gray-800">{value || "N/A"}</div>
+    </div>
+  );
+
+  const renderViewContent = () => {
+    const checkpoints = selectedPatrol?.checkpoints || [];
+    const schedules = selectedPatrol?.schedules || [];
+
+    return (
+      <div className="p-6 flex-1 overflow-auto bg-gray-50 space-y-5">
+        {logsLoading && (
+          <div className="border border-gray-200 bg-white p-3 text-sm text-gray-600">
+            Loading patrolling details...
+          </div>
+        )}
+
+        <section className="border border-gray-200 bg-white p-4 space-y-4">
+          <h3 className="text-sm font-bold text-gray-700">Route Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {renderDetailField("Name", selectedPatrol?.name || selectedPatrol?.area)}
+            {renderDetailField("Estimated Duration", selectedPatrol?.estimated_duration_minutes ? `${selectedPatrol.estimated_duration_minutes} mins` : "N/A")}
+            {renderDetailField("Grace Period", selectedPatrol?.grace_period_minutes !== undefined ? `${selectedPatrol.grace_period_minutes} mins` : "N/A")}
+            {renderDetailField("Validity Start", formatDisplayDate(selectedPatrol?.validity_start_date))}
+            {renderDetailField("Validity End", formatDisplayDate(selectedPatrol?.validity_end_date))}
+            {renderDetailField("Status", selectedPatrol?.active ? "Active" : "Inactive")}
+            <div className="md:col-span-3">
+              {renderDetailField("Description", selectedPatrol?.description || "N/A")}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="border border-gray-200 bg-white p-4">
+            <div className="text-xs text-gray-500">Schedules</div>
+            <div className="text-xl font-bold text-gray-800">{selectedPatrol?.summary?.schedules_count ?? schedules.length}</div>
+          </div>
+          <div className="border border-gray-200 bg-white p-4">
+            <div className="text-xs text-gray-500">Checkpoints</div>
+            <div className="text-xl font-bold text-gray-800">{selectedPatrol?.summary?.checkpoints_count ?? checkpoints.length}</div>
+          </div>
+          <div className="border border-gray-200 bg-white p-4">
+            <div className="text-xs text-gray-500">Recent Sessions</div>
+            <div className="text-xl font-bold text-gray-800">{selectedPatrol?.summary?.recent_sessions_count ?? logs.length}</div>
+          </div>
+        </section>
+
+        <section className="border border-gray-200 bg-white p-4 space-y-3">
+          <h3 className="text-sm font-bold text-gray-700">Schedules</h3>
+          {schedules.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="p-2 text-left font-semibold">Name</th>
+                    <th className="p-2 text-left font-semibold">Frequency</th>
+                    <th className="p-2 text-left font-semibold">Start</th>
+                    <th className="p-2 text-left font-semibold">End</th>
+                    <th className="p-2 text-left font-semibold">Guard</th>
+                    <th className="p-2 text-left font-semibold">Supervisor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schedules.map((schedule) => (
+                    <tr key={schedule.id} className="border-t border-gray-100">
+                      <td className="p-2">{schedule.name || "N/A"}</td>
+                      <td className="p-2 capitalize">{schedule.frequency_type || "N/A"}</td>
+                      <td className="p-2">{schedule.start_date || "N/A"} {schedule.start_time || ""}</td>
+                      <td className="p-2">{schedule.end_date || "N/A"} {schedule.end_time || ""}</td>
+                      <td className="p-2">{schedule.assigned_guard_id ?? "N/A"}</td>
+                      <td className="p-2">{schedule.supervisor_id ?? "N/A"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-200 p-4 text-sm text-gray-500">No schedules found</div>
+          )}
+        </section>
+
+        <section className="border border-gray-200 bg-white p-4 space-y-3">
+          <h3 className="text-sm font-bold text-gray-700">Checkpoints</h3>
+          {checkpoints.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="p-2 text-left font-semibold">Seq.</th>
+                    <th className="p-2 text-left font-semibold">Name</th>
+                    <th className="p-2 text-left font-semibold">Area</th>
+                    <th className="p-2 text-left font-semibold">Duration</th>
+                    <th className="p-2 text-left font-semibold">Checklist</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {checkpoints.map((checkpoint, index) => (
+                    <tr key={checkpoint.id ?? index} className="border-t border-gray-100">
+                      <td className="p-2">{checkpoint.order_sequence ?? index + 1}</td>
+                      <td className="p-2">{checkpoint.name || "N/A"}</td>
+                      <td className="p-2">{checkpoint.area_name || checkpoint.area_id || "N/A"}</td>
+                      <td className="p-2">{checkpoint.estimated_time_minutes ? `${checkpoint.estimated_time_minutes} mins` : "N/A"}</td>
+                      <td className="p-2">{checkpoint.snag_checklist_id ?? selectedPatrol?.checklist?.name ?? "N/A"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-200 p-4 text-sm text-gray-500">No checkpoints found</div>
+          )}
+        </section>
+
+        <section className="border border-gray-200 bg-white p-4 space-y-3">
+          <h3 className="text-sm font-bold text-gray-700">Recent Sessions</h3>
+          {logs.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    {logColumns.map((column) => (
+                      <th key={column.key} className="p-2 text-left font-semibold">{column.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log, index) => (
+                    <tr key={log.id ?? index} className="border-t border-gray-100">
+                      {logColumns.map((column) => (
+                        <td key={column.key} className="p-2 align-top">
+                          {renderLogCell(log, column.key)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-200 p-4 text-sm text-gray-500">No logs found</div>
+          )}
+        </section>
+      </div>
+    );
+  };
 
   const handleExportQrCodes = () => {
     const checkpointIds = data
@@ -908,53 +1933,24 @@ const Petrolling = () => {
     window.open(apiUrl, "_blank");
   };
 
+  if (isAddOpen) {
+    return (
+      <div className="p-6 bg-white min-h-screen">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-4">Petrolling</h1>
+        </div>
+
+        <div className="border border-gray-300 bg-white">
+          {renderPatrolForm("Add", false, "page")}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-white min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-4">Petrolling</h1>
-      </div>
-
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <Label htmlFor="notification-after" className="text-gray-600 whitespace-nowrap">
-            Send Notification After(mins):
-          </Label>
-          <Input 
-            id="notification-after"
-            type="number"
-            value={notificationInterval}
-            onChange={(e) => setNotificationInterval(e.target.value)}
-            className="w-24 h-9 rounded-none border-gray-300"
-          />
-          <Button 
-            className="bg-[#00A65A] hover:bg-[#008d4c] text-white h-9 px-6 rounded-none"
-            onClick={handleNotificationSubmit}
-            disabled={isSavingNotification}
-          >
-            {isSavingNotification ? "..." : "Submit"}
-          </Button>
-        </div>
-
-        <div className="flex">
-          <Button 
-            onClick={() => {
-              setSelectedPatrol(null);
-              setFormData({
-                area: "",
-                frequencyStart: "12:00 AM",
-                frequencyEnd: "11:00 PM",
-                occurrenceType: "specific",
-                everyHours: "",
-                selectedHours: ["12"],
-              });
-              setIsAddOpen(true);
-            }}
-            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white rounded-none h-10 px-6 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add
-          </Button>
-        </div>
       </div>
 
       <EnhancedTable
@@ -972,47 +1968,37 @@ const Petrolling = () => {
         searchPlaceholder="Search"
         enableExport={true}
         onExport={handleExportQrCodes}
+        leftActions={
+          <Button
+            onClick={() => {
+              setSelectedPatrol(null);
+              setFormData(createDefaultPatrolForm());
+              setIsAddOpen(true);
+            }}
+            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white rounded-none h-10 px-6 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add
+          </Button>
+        }
       />
-
-      {/* Add Modal */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-lg bg-white rounded-none p-0 flex flex-col border border-gray-300">
-          {renderModalForm("Add", false)}
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-lg bg-white rounded-none p-0 flex flex-col border border-gray-300">
-          {renderModalForm("Edit", true)}
+        <DialogContent className="max-w-4xl bg-white rounded-none p-0 flex flex-col border border-gray-300">
+          {renderPatrolForm("Edit", true)}
         </DialogContent>
       </Dialog>
 
       {/* View Modal */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-none p-0 flex flex-col border-none">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-none p-0 flex flex-col border border-gray-300">
           <DialogHeader className="p-6 border-b">
             <DialogTitle className="text-xl font-bold text-gray-800">
               Patrolling Details - <span className="text-blue-600">{selectedPatrol?.area}</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="p-6 flex-1 overflow-auto bg-gray-50">
-             <EnhancedTable
-                data={logs}
-                columns={logColumns}
-                renderCell={renderLogCell}
-                loading={logsLoading}
-                pagination={true}
-                pageSize={10}
-                currentPage={1}
-                totalPages={1}
-                onPageChange={() => {}}
-                hideTableSearch={true}
-                hideColumnsButton={true}
-                hideTableExport={true}
-                emptyMessage="No logs found"
-             />
-          </div>
+          {renderViewContent()}
           <div className="p-4 border-t bg-white flex justify-end">
             <Button onClick={() => setIsViewOpen(false)} variant="outline">Close</Button>
           </div>

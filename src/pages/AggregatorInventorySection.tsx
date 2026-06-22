@@ -18,9 +18,11 @@ import {
     PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const AggregatorInventorySection = () => {
     const navigate = useNavigate();
+    const { shouldShow } = useDynamicPermissions();
     const baseUrl = localStorage.getItem("baseUrl")
 
     // Tab and category data
@@ -120,6 +122,7 @@ const AggregatorInventorySection = () => {
                             }}
                             className="w-4 h-4 cursor-pointer"
                         />
+                        {shouldShow("Aggregator Inventory", "show") && (
                         <Button
                             variant="ghost"
                             size="sm"
@@ -128,6 +131,7 @@ const AggregatorInventorySection = () => {
                         >
                             <Eye className="w-4 h-4 text-gray-700" />
                         </Button>
+                        )}
                     </div>
                 );
             case "id":
@@ -497,6 +501,7 @@ const AggregatorInventorySection = () => {
                     <TabsContent key={category.value} value={category.value} className="space-y-4 mt-6">
                         {/* Add to Store / Remove from Store Buttons */}
                         <div className="flex justify-end gap-2">
+                            {shouldShow("Aggregator Inventory", "create") && (
                             <Button
                                 onClick={handleAddToStore}
                                 className="bg-[#C72030] hover:bg-[#A01828] text-white disabled:opacity-50 disabled:cursor-not-allowed"
@@ -505,6 +510,8 @@ const AggregatorInventorySection = () => {
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add to Store ({getSelectedProductsStatus().notAddedToStore.length})
                             </Button>
+                            )}
+                            {shouldShow("Aggregator Inventory", "update") && (
                             <Button
                                 onClick={handleRemoveFromStore}
                                 className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
@@ -513,6 +520,7 @@ const AggregatorInventorySection = () => {
                                 <Plus className="mr-2 h-4 w-4" />
                                 Remove from Store ({getSelectedProductsStatus().addedToStore.length})
                             </Button>
+                            )}
                         </div>
 
                         {/* Inventory Table */}
@@ -525,6 +533,7 @@ const AggregatorInventorySection = () => {
                                 enableGlobalSearch={true}
                                 leftActions={
                                     <div className="mb-2">
+                                        {shouldShow("Aggregator Inventory", "update") && (
                                         <Button
                                             onClick={handleSyncInventory}
                                             className="bg-[#F6F4EE] text-[#C72030] border border-[#E5E1D8] rounded-none px-6 py-2 font-medium text-base hover:bg-[#f3e9e9]"
@@ -533,6 +542,7 @@ const AggregatorInventorySection = () => {
                                             <RefreshCwIcon className="mr-2 h-4 w-4" />
                                             Sync Inventory
                                         </Button>
+                                        )}
                                     </div>
                                 }
                                 handleExport={handleExport}

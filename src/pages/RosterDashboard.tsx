@@ -97,232 +97,49 @@ const columns: ColumnConfig[] = [
   // }
 ];
 
-// Mock data for roster management (based on the image provided)
-const mockRosterData: RosterItem[] = [
-  {
-    id: 1,
-    template: 'Mon, Tue, Wed',
-    location: 'Lockated',
-    department: 'Tech',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '18/04/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 2,
-    template: 'MON,TUE,WED',
-    location: 'Lockated',
-    department: 'Tech',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/03/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 3,
-    template: 'Operations',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '09/02/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 4,
-    template: '2023',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '09/02/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 5,
-    template: 'Monday,Wednesday,Friday',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 07:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '29/11/2022',
-    createdBy: '',
-    active: true
-  },
-  {
-    id: 6,
-    template: 'Mon,Wed,Fri',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:30 AM to 06:30 PM',
-    rosterType: 'Permanent',
-    createdOn: '28/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 7,
-    template: 'operations',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '09:00 AM to 06:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '28/11/2022',
-    createdBy: '',
-    active: true
-  },
-  {
-    id: 8,
-    template: 'tech',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:30 AM to 06:30 PM',
-    rosterType: 'Permanent',
-    createdOn: '28/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 9,
-    template: 'Monday to Saturday',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '25/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 10,
-    template: 'ho',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '16/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 11,
-    template: 'IOS',
-    location: 'Lockated',
-    department: 'IOS',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '09/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 12,
-    template: 'Roster R (Mon,Wed,Thu,Fri)',
-    location: 'Lockated',
-    department: 'Marketing',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '12/10/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 13,
-    template: 'Roster Z',
-    location: 'Lockated',
-    department: 'Sales,HR',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '15/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 14,
-    template: 'Mon,Tue, Wed, Thurs,Fri',
-    location: 'Lockated',
-    department: 'kitchen',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '14/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 15,
-    template: 'Monday, Wednesday, Friday',
-    location: 'Lockated',
-    department: 'HR',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '14/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 16,
-    template: 'Tuesday,Thursday,Sat',
-    location: 'Lockated',
-    department: 'Sales,HR,Operations,IR,Tech,Accounts,RM ,BMS,Electrical,IBMS,Housekeeping,kitchen,Finance',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 17,
-    template: 'QA',
-    location: 'Lockated',
-    department: 'Sales,HR,Operations,IR,Tech,Accounts,RM ,BMS,Electrical,IBMS,Housekeeping',
-    shift: '03:15 AM to 11:15 PM',
-    rosterType: 'Permanent',
-    createdOn: '22/06/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 18,
-    template: 'IR Roster',
-    location: 'Lockated',
-    department: 'IR',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '06/01/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 19,
-    template: 'Weekly Roster 4 (Sales,Accounts)',
-    location: 'Lockated',
-    department: 'Sales',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/08/2021',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 20,
-    template: 'Weekly Roster 3 (Tech)',
-    location: 'Lockated',
-    department: 'Tech',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/08/2021',
-    createdBy: 'Robert Day2',
-    active: true
-  }
-];
+interface RosterDashboardProps {
+  basePath?: string;
+}
 
-export const RosterDashboard = () => {
+const getSmartSecureSocietyId = () => {
+  const params = new URLSearchParams(window.location.search);
+  return (
+    params.get("society_id") ||
+    params.get("site_id") ||
+    params.get("resource_id") ||
+    localStorage.getItem("selectedSiteId") ||
+    localStorage.getItem("society_id") ||
+    localStorage.getItem("selectedSocietyId") ||
+    localStorage.getItem("selectedUserSociety") ||
+    "15"
+  );
+};
+
+const getRosterItems = (data: any) => {
+  if (Array.isArray(data)) return data;
+
+  const candidates = [
+    data?.user_roasters,
+    data?.roasters,
+    data?.rosters,
+    data?.data,
+    data?.data?.user_roasters,
+    data?.data?.roasters,
+    data?.data?.rosters,
+  ];
+
+  return candidates.find(Array.isArray) || [];
+};
+
+export const RosterDashboard = ({
+  basePath = "/settings/account/roster",
+}: RosterDashboardProps = {}) => {
   const navigate = useNavigate();
+  const rosterBasePath = basePath.replace(/\/$/, "");
+  const isSmartSecureRoster = rosterBasePath === "/smartsecure/roster";
+  const tableStorageKey = isSmartSecureRoster
+    ? "smartsecure-roster-management-table"
+    : "roster-management-table";
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -342,7 +159,13 @@ export const RosterDashboard = () => {
   const fetchRosterData = async () => {
     setLoading(true);
     try {
-      const apiUrl = getFullUrl('/pms/admin/user_roasters.json');
+      const apiUrl = isSmartSecureRoster
+        ? getFullUrl(
+            `/spree/manage/user_roasters/load_roasters.json?society_id=${encodeURIComponent(
+              getSmartSecureSocietyId()
+            )}`
+          )
+        : getFullUrl('/pms/admin/user_roasters.json');
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -358,16 +181,24 @@ export const RosterDashboard = () => {
 
       const data = await response.json();
       console.log('API Response:', data);
+      const rosterItems = getRosterItems(data);
 
       // Transform API data to match our interface
-      const transformedData: RosterItem[] = data.map((item: any) => {
+      const transformedData: RosterItem[] = rosterItems.map((item: any) => {
         // Handle department mapping - could be string, array, or object
         let departmentName = 'Not assigned';
         if (item.departments) {
           if (typeof item.departments === 'string') {
             departmentName = item.departments;
           } else if (Array.isArray(item.departments)) {
-            departmentName = item.departments.join(', ');
+            departmentName = item.departments
+              .map((department: any) =>
+                typeof department === 'string'
+                  ? department
+                  : department?.name || department?.department_name
+              )
+              .filter(Boolean)
+              .join(', ') || 'Not assigned';
           }
         } else if (item.department) {
           departmentName = item.department;
@@ -413,7 +244,7 @@ export const RosterDashboard = () => {
           location: locationInfo,
           department: departmentName,
           shift: shiftInfo,
-          rosterType: item.allocation_type || item.roaster_type || 'Permanent',
+          rosterType: item.roaster_type || item.allocation_type || 'Permanent',
           createdOn: createdDate,
           createdBy: createdByInfo,
           active: item.active !== undefined ? item.active : true
@@ -429,8 +260,7 @@ export const RosterDashboard = () => {
         duration: 5000,
       });
       
-      // Fallback to mock data on API error
-      setAllRosterData(mockRosterData);
+      setAllRosterData([]);
     } finally {
       setLoading(false);
     }
@@ -550,16 +380,16 @@ export const RosterDashboard = () => {
 
   const handleView = (id: number) => {
     console.log('View roster:', id);
-    navigate(`/settings/account/roster/detail/${id}`);
+    navigate(`${rosterBasePath}/detail/${id}`);
   };
 
   const handleEdit = (id: number) => {
     console.log('Edit roster:', id);
-    navigate(`/settings/account/roster/edit/${id}`);
+    navigate(`${rosterBasePath}/edit/${id}`);
   };
 
   const handleAdd = () => {
-    navigate('/settings/account/roster/create');
+    navigate(`${rosterBasePath}/create`);
   };
 
   const handleExport = () => {
@@ -600,10 +430,13 @@ export const RosterDashboard = () => {
             data={currentRosterData}
             columns={columns}
             renderRow={renderRow}
-            storageKey="roster-management-table"
+            storageKey={tableStorageKey}
             enableSearch={true}
+            searchTerm={searchTerm}
+            searchValue={searchTerm}
             searchPlaceholder="Search rosters..."
             onSearchChange={handleSearch}
+            disableClientSearch={true}
             enableExport={false}
             exportFileName="roster-data"
             leftActions={

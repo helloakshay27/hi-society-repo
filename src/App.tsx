@@ -5102,6 +5102,14 @@ function App() {
                             element={<PatrollingResponsePage />}
                           />
                           <Route
+                            path="/smartsecure/patrolling-response"
+                            element={<PatrollingResponsePage />}
+                          />
+                          <Route
+                            path="/smartsecure/patrolling/response"
+                            element={<PatrollingResponsePage />}
+                          />
+                          <Route
                             path="/security/patrolling/create"
                             element={<PatrollingCreatePage />}
                           />

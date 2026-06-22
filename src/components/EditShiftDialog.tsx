@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 interface ShiftData {
   id: number;
@@ -171,7 +171,7 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
       console.log('🎯 Edit API Payload:', JSON.stringify(payload, null, 2));
 
       // Make the API call
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_shifts/${shift.id}.json`, {
+      const response = await fetch(getFullUrl(`/spree/manage/user_shifts/${shift.id}.json`), {
         method: 'PUT',
         headers: {
           'Accept': 'application/json',

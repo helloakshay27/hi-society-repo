@@ -11,6 +11,8 @@ import {
   MapPin,
   Settings,
   UserCircle,
+  Clock,
+  Calendar,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -302,6 +304,45 @@ export const SmartSecureSidebar: React.FC = () => {
             )}
             <MapPin className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
             {!isSidebarCollapsed && <span className="truncate">Patrolling</span>}
+          </button>
+
+          {/* Patrolling Response */}
+          <button
+            onClick={() => handleNavigation("/smartsecure/patrolling-response")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Patrolling Response"
+          >
+            {isActive("/smartsecure/patrolling-response") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <FileText className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+            {!isSidebarCollapsed && <span className="truncate">Patrolling Response</span>}
+          </button>
+
+          {/* Shift */}
+          <button
+            onClick={() => handleNavigation("/smartsecure/shift")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Shift"
+          >
+            {isActive("/smartsecure/shift") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <Clock className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+            {!isSidebarCollapsed && <span className="truncate">Shift</span>}
+          </button>
+
+          {/* Roster */}
+          <button
+            onClick={() => handleNavigation("/smartsecure/roster")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Roster"
+          >
+            {isActive("/smartsecure/roster") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <Calendar className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+            {!isSidebarCollapsed && <span className="truncate">Roster</span>}
           </button>
 
           {/* Setup parent with sub-items */}

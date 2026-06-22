@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface VisitorParkingSlot {
   id: number;
@@ -213,6 +214,7 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 const SmartSecureSetupVisitorParking: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [data, setData] = useState<VisitorParkingSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
@@ -408,7 +410,7 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
           </span>
         );
       case "action":
-        return item.can_edit ? (
+        return item.can_edit && shouldShow("Visitor Parking", "update") ? (
           <Button
             variant="ghost"
             size="sm"
@@ -427,6 +429,7 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap gap-2">
+      {shouldShow("Visitor Parking", "create") && (
       <Button
         onClick={() => {
           setFormData({ visitor_slot_number: "", vehicle_type: "" });
@@ -437,6 +440,7 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
       </Button>
+      )}
     </div>
   );
 
