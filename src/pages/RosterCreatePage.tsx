@@ -252,8 +252,9 @@ export const RosterCreatePage: React.FC = () => {
     setLoadingFilteredFMUsers(true);
     try {
       const idsParam = departmentIds.join(",");
+      const basePath = isSmartSecureRoster ? "/spree/manage" : "/pms/admin";
       const apiUrl = getFullUrl(
-        `/pms/admin/user_roasters/department_roasters.json?department_id=${encodeURIComponent(idsParam)}`
+        `${basePath}/user_roasters/department_roasters.json?department_id=${encodeURIComponent(idsParam)}`
       );
       const response = await fetch(apiUrl, {
         method: "GET",
