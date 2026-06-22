@@ -18,31 +18,33 @@ import ReactSelect from 'react-select';
 import { TicketPagination } from '@/components/TicketPagination';
 
 interface VisitAttachment {
-  id: number;
-  file_name: string;
-  file_url: string;
-  file_size: number;
-  content_type: string;
-  uploaded_at: string;
+  id?: number;
+  file_name?: string;
+  file_url?: string;
+  url?: string;
+  document_url?: string;
+  file_size?: number;
+  content_type?: string;
+  uploaded_at?: string;
 }
 
 interface Session {
-  id: number;
-  route_name: string;
-  assigned_guard: string;
-  guard_id: number;
-  status: string;
-  scheduled_start: string;
-  actual_start: string;
+  id?: number;
+  route_name?: string;
+  assigned_guard?: string;
+  guard_id?: number;
+  status?: string;
+  scheduled_start?: string;
+  actual_start?: string;
 }
 
 interface Checkpoint {
-  id: number;
-  name: string;
-  description: string;
-  order_sequence: number;
-  building_name: string | null;
-  location_path: string;
+  id?: number;
+  name?: string;
+  description?: string;
+  order_sequence?: number;
+  building_name?: string | null;
+  location_path?: string | null;
 }
 
 interface Answer {
@@ -55,47 +57,47 @@ interface Answer {
   is_negative: boolean;
   answered_at: string;
   quest_map_id: number;
-  comments: string | null;
-  attachments: VisitAttachment[];
+  comments?: string | null;
+  attachments?: VisitAttachment[];
 }
 
 interface Ticket {
-  id: number;
-  ticket_number: string;
-  heading: string;
-  category: string | null;
-  priority: string;
-  status: string;
-  type: string;
-  created_at: string;
-  assigned_to: number | null;
+  id?: number;
+  ticket_number?: string;
+  heading?: string;
+  category?: string | null;
+  priority?: string;
+  status?: string;
+  type?: string;
+  created_at?: string;
+  assigned_to?: number | null;
 }
 
 interface PatrollingVisit {
   id: number;
-  building: string | null;
-  wing: string | null;
-  area: string | null;
-  floor: string | null;
-  room: string | null;
-  schedule_datetime: string;
-  grace_time_hours: number;
-  status: string;
-  patrolling_date: string;
-  patrolling_time: string;
-  comments: string;
-  approve_datetime: string | null;
-  session: Session;
-  checkpoint: Checkpoint;
-  visited_at: string;
-  notes: string;
-  qr_code_scanned: string;
-  was_in_sequence: boolean;
-  attachments: VisitAttachment[];
-  answers: Answer[];
-  tickets: Ticket[];
-  tickets_count: number;
-  issues_count: number;
+  building?: string | null;
+  wing?: string | null;
+  area?: string | null;
+  floor?: string | null;
+  room?: string | null;
+  schedule_datetime?: string | null;
+  grace_time_hours?: number | null;
+  status?: string | null;
+  patrolling_date?: string | null;
+  patrolling_time?: string | null;
+  comments?: string | null;
+  approve_datetime?: string | null;
+  session?: Session;
+  checkpoint?: Checkpoint;
+  visited_at?: string | null;
+  notes?: string | null;
+  qr_code_scanned?: string;
+  was_in_sequence?: boolean;
+  attachments?: VisitAttachment[];
+  answers?: Answer[];
+  tickets?: Ticket[];
+  tickets_count?: number;
+  issues_count?: number;
 }
 
 interface PatrollingResponse {
@@ -148,6 +150,38 @@ const parseCommentsMap = (commentsStr: string): Map<string, string> => {
   return map;
 };
 
+const toNumber = (value: unknown, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const toDate = (value?: string | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatDateTime = (value?: string | null) => {
+  const date = toDate(value);
+  return date ? date.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+};
+
+const formatDateOnly = (value?: string | null) => {
+  const date = toDate(value);
+  return date ? date.toLocaleDateString('en-IN') : '-';
+};
+
+const formatTimeOnly = (value?: string | null) => {
+  const date = toDate(value);
+  return date ? date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-';
+};
+
+const splitLocationPath = (value?: string | null) =>
+  (value || '')
+    .split(/\s*(?:\u2192|->|\u00e2\u2020\u2019|>)\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
 // Collect all unique questions across all visits (preserving first-seen order)
 const collectUniqueQuestions = (visits: PatrollingVisit[]): Array<{ question_id: number | null; question_text: string }> => {
   const seen = new Map<string, { question_id: number | null; question_text: string }>();
@@ -167,14 +201,10 @@ const transformVisitsToResponses = (
   questions: Array<{ question_id: number | null; question_text: string }>,
 ): PatrollingResponse[] => {
   return visits.map((visit) => {
-    const scheduledDate = visit.schedule_datetime ? new Date(visit.schedule_datetime) : null;
-    const scheduleFormatted = scheduledDate
-      ? scheduledDate.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })
-      : '-';
-    const approveDate = visit.approve_datetime ? new Date(visit.approve_datetime) : null;
-    const approveFormatted = approveDate
-      ? approveDate.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })
-      : '-';
+    const scheduledAt = visit.schedule_datetime || visit.session?.scheduled_start || null;
+    const visitedAt = visit.visited_at || null;
+    const approveFormatted = formatDateTime(visit.approve_datetime);
+    const locationParts = splitLocationPath(visit.checkpoint?.location_path);
 
     const answerMap = new Map<string, Answer>();
     (visit.answers || []).forEach(ans => {
@@ -183,22 +213,25 @@ const transformVisitsToResponses = (
     });
 
     const commentsMap = parseCommentsMap(visit.comments || visit.notes || '');
-    const allTickets = (visit.tickets || []).map(t => t.ticket_number).join(', ') || '-';
+    const allTickets = (visit.tickets || [])
+      .map(t => t.ticket_number || (t.id ? `#${t.id}` : ''))
+      .filter(Boolean)
+      .join(', ') || '-';
 
     const baseRow: PatrollingResponse = {
       id: visit.id,
       patrol_name: visit.session?.route_name || '-',
       checkpoint_name: visit.checkpoint?.name || '-',
-      building: visit.building || visit.checkpoint?.building_name || '-',
-      wing: visit.wing || '-',
-      area: visit.area || '-',
-      floor: visit.floor || '-',
-      room: visit.room || '-',
-      schedule_date_time: scheduleFormatted,
+      building: visit.building || visit.checkpoint?.building_name || locationParts[0] || '-',
+      wing: visit.wing || locationParts[1] || '-',
+      area: visit.area || locationParts[3] || '-',
+      floor: visit.floor || locationParts[2] || '-',
+      room: visit.room || locationParts[4] || '-',
+      schedule_date_time: formatDateTime(scheduledAt),
       grace_time: visit.grace_time_hours ?? '-',
       status: visit.status || visit.session?.status || '-',
-      patrolling_date: visit.patrolling_date || '-',
-      patrolling_time: visit.patrolling_time || '-',
+      patrolling_date: visit.patrolling_date || formatDateOnly(visitedAt),
+      patrolling_time: visit.patrolling_time || formatTimeOnly(visitedAt),
       submitted_by: visit.session?.assigned_guard || '-',
       attachments: visit.attachments || [],
       approved_by: '-',
@@ -260,11 +293,11 @@ export const PatrollingResponsePage = () => {
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     current_page: 1,
-    per_page: 10,
+    per_page: 20,
     total_count: 0,
     total_pages: 1,
   });
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(20);
   const [summaryStats, setSummaryStats] = useState({
     total_visits: 0,
     completed: 0,
@@ -384,6 +417,15 @@ export const PatrollingResponsePage = () => {
     }
   };
 
+  const getAttachmentUrl = (attachment: VisitAttachment) =>
+    decodeFileUrl(attachment.file_url || attachment.url || attachment.document_url || '');
+
+  const getAttachmentName = (attachment: VisitAttachment) =>
+    attachment.file_name || `Attachment ${attachment.id ?? ''}`.trim();
+
+  const isImageAttachment = (attachment: VisitAttachment) =>
+    attachment.content_type?.startsWith('image/') || /\.(png|jpe?g|webp|gif)$/i.test(getAttachmentUrl(attachment));
+
   const COLUMN_STORAGE_KEY = 'patrolling-columns-visibility';
 
   const getInitialColumns = () => {
@@ -427,7 +469,7 @@ export const PatrollingResponsePage = () => {
       const urlWithParams = new URL(url);
       
       urlWithParams.searchParams.append('page', page.toString());
-      urlWithParams.searchParams.append('per_page', '20');
+      urlWithParams.searchParams.append('per_page', perPage.toString());
       
       if (API_CONFIG.TOKEN) {
         urlWithParams.searchParams.append('access_token', API_CONFIG.TOKEN);
@@ -485,32 +527,53 @@ export const PatrollingResponsePage = () => {
       setAllQuestions(uniqueQuestions);
       const transformedData = transformVisitsToResponses(rawVisits, uniqueQuestions);
       setResponseData(transformedData);
-      
-      if (result.data.pagination) {
-        setPagination({
-          current_page: parseInt(result.data.pagination.current_page),
-          per_page: parseInt(result.data.pagination.per_page),
-          total_count: result.data.pagination.total_count,
-          total_pages: result.data.pagination.total_pages,
-        });
-      }
 
-      // Summary stats come from pagination object in this API
-      if (result.data.pagination) {
-        setSummaryStats({
-          total_visits: result.data.pagination.total_count || 0,
-          completed: result.data.pagination.completed || 0,
-          missed: result.data.pagination.missed || 0,
-          incident_reported: result.data.pagination.incident_reported || 0,
-          ticket_raised: result.data.pagination.ticket_raised || 0,
+      const summary = result.data.summary;
+      const paginationData = result.data.pagination;
+      const pageMissedCount = rawVisits.filter(
+        (visit: PatrollingVisit) => (visit.status || visit.session?.status) === 'missed'
+      ).length;
+      const pageTicketsCount = rawVisits.reduce(
+        (sum: number, visit: PatrollingVisit) => sum + toNumber(visit.tickets_count, 0),
+        0
+      );
+      const pageIssuesCount = rawVisits.reduce(
+        (sum: number, visit: PatrollingVisit) => sum + toNumber(visit.issues_count, 0),
+        0
+      );
+      if (summary) {
+        const currentPageFromApi = toNumber(summary.current_page, page);
+        const perPageFromApi = toNumber(summary.per_page, perPage);
+        const totalCount = toNumber(summary.total_visits, rawVisits.length);
+        setPagination({
+          current_page: currentPageFromApi,
+          per_page: perPageFromApi,
+          total_count: totalCount,
+          total_pages: toNumber(
+            summary.total_pages,
+            perPageFromApi ? Math.max(1, Math.ceil(totalCount / perPageFromApi)) : 1
+          ),
         });
-      } else if (result.data.summary) {
         setSummaryStats({
-          total_visits: result.data.summary.total_visits || 0,
-          completed: result.data.summary.completed || 0,
-          missed: result.data.summary.missed || 0,
-          incident_reported: result.data.summary.incident_reported || 0,
-          ticket_raised: result.data.summary.total_tickets_raised || 0,
+          total_visits: toNumber(summary.total_sessions, totalCount),
+          completed: toNumber(summary.total_checkpoints_visited, rawVisits.length),
+          missed: toNumber(summary.missed ?? summary.total_missed, pageMissedCount),
+          incident_reported: toNumber(summary.incident_reported ?? summary.total_incidents_reported, pageIssuesCount),
+          ticket_raised: toNumber(summary.total_tickets_raised, pageTicketsCount),
+        });
+      } else if (paginationData) {
+        setPagination({
+          current_page: toNumber(paginationData.current_page, page),
+          per_page: toNumber(paginationData.per_page, perPage),
+          total_count: toNumber(paginationData.total_count, rawVisits.length),
+          total_pages: toNumber(paginationData.total_pages, 1),
+        });
+        setSummaryStats({
+          total_visits: toNumber(paginationData.total_count, 0),
+          completed: toNumber(paginationData.completed, 0),
+          missed: toNumber(paginationData.missed, pageMissedCount),
+          incident_reported: toNumber(paginationData.incident_reported, pageIssuesCount),
+          ticket_raised: toNumber(paginationData.ticket_raised, pageTicketsCount),
         });
       }
     } catch (error) {
@@ -524,7 +587,7 @@ export const PatrollingResponsePage = () => {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [perPage]);
 
   useEffect(() => {
     fetchPatrollingResponses(currentPage, debouncedSearchTerm, selectedStatus, appliedFilters);
@@ -846,18 +909,19 @@ export const PatrollingResponsePage = () => {
               <>
                 <div className="flex items-center gap-1">
                   {item.attachments.slice(0, 3).map((att, idx) => {
-                    const imgUrl = decodeFileUrl(att.file_url);
-                    const isImage = att.content_type?.startsWith('image/');
+                    const imgUrl = getAttachmentUrl(att);
+                    const isImage = isImageAttachment(att);
+                    const fileName = getAttachmentName(att);
                     return isImage ? (
                       <button
-                        key={att.id}
+                        key={att.id ?? `${imgUrl}-${idx}`}
                         onClick={() => openPreview(item.attachments as VisitAttachment[], idx)}
                         className="w-8 h-8 rounded overflow-hidden border border-gray-200 hover:border-[#C72030] transition-colors flex-shrink-0"
-                        title={att.file_name}
+                        title={fileName}
                       >
                         <img
                           src={imgUrl}
-                          alt={att.file_name}
+                          alt={fileName}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
@@ -866,10 +930,10 @@ export const PatrollingResponsePage = () => {
                       </button>
                     ) : (
                       <button
-                        key={att.id}
+                        key={att.id ?? `${imgUrl}-${idx}`}
                         onClick={() => openPreview(item.attachments as VisitAttachment[], idx)}
                         className="w-8 h-8 rounded border border-gray-200 hover:border-[#C72030] transition-colors flex-shrink-0 flex items-center justify-center bg-gray-50"
-                        title={att.file_name}
+                        title={fileName}
                       >
                         <Paperclip className="w-3 h-3 text-gray-500" />
                       </button>
@@ -938,28 +1002,29 @@ export const PatrollingResponsePage = () => {
             <div className="flex items-center gap-1">
               <div className="flex items-center gap-1">
                 {attachments.slice(0, 3).map((att, attIdx) => {
-                  const imgUrl = decodeFileUrl(att.file_url);
-                  const isImage = att.content_type?.startsWith('image/');
+                  const imgUrl = getAttachmentUrl(att);
+                  const isImage = isImageAttachment(att);
+                  const fileName = getAttachmentName(att);
                   return isImage ? (
                     <button
-                      key={att.id}
+                      key={att.id ?? `${imgUrl}-${attIdx}`}
                       onClick={() => openPreview(attachments, attIdx)}
                       className="w-8 h-8 rounded overflow-hidden border border-gray-200 hover:border-[#C72030] transition-colors flex-shrink-0"
-                      title={att.file_name}
+                      title={fileName}
                     >
                       <img
                         src={imgUrl}
-                        alt={att.file_name}
+                        alt={fileName}
                         className="w-full h-full object-cover"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     </button>
                   ) : (
                     <button
-                      key={att.id}
+                      key={att.id ?? `${imgUrl}-${attIdx}`}
                       onClick={() => openPreview(attachments, attIdx)}
                       className="w-8 h-8 rounded border border-gray-200 hover:border-[#C72030] transition-colors flex-shrink-0 flex items-center justify-center bg-gray-50"
-                      title={att.file_name}
+                      title={fileName}
                     >
                       <Paperclip className="w-3 h-3 text-gray-500" />
                     </button>
@@ -1007,18 +1072,19 @@ export const PatrollingResponsePage = () => {
             {/* Image / File */}
             {previewImages[previewIndex] && (() => {
               const att = previewImages[previewIndex];
-              const imgUrl = decodeFileUrl(att.file_url);
-              const isImage = att.content_type?.startsWith('image/');
+              const imgUrl = getAttachmentUrl(att);
+              const isImage = isImageAttachment(att);
+              const fileName = getAttachmentName(att);
               return isImage ? (
                 <img
                   src={imgUrl}
-                  alt={att.file_name}
+                  alt={fileName}
                   className="max-h-[70vh] max-w-full object-contain"
                 />
               ) : (
                 <div className="flex flex-col items-center gap-3 text-white p-8">
                   <Paperclip className="w-12 h-12 opacity-60" />
-                  <p className="text-sm">{att.file_name}</p>
+                  <p className="text-sm">{fileName}</p>
                   <a
                     href={imgUrl}
                     target="_blank"
@@ -1042,7 +1108,9 @@ export const PatrollingResponsePage = () => {
           </div>
           {/* Counter + filename */}
           <div className="bg-black/80 px-4 py-2 flex items-center justify-between text-white text-xs">
-            <span className="truncate max-w-[70%]">{previewImages[previewIndex]?.file_name}</span>
+            <span className="truncate max-w-[70%]">
+              {previewImages[previewIndex] ? getAttachmentName(previewImages[previewIndex]) : ''}
+            </span>
             {previewImages.length > 1 && (
               <span className="flex-shrink-0">{previewIndex + 1} / {previewImages.length}</span>
             )}

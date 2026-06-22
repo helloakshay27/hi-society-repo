@@ -1669,6 +1669,10 @@ export const setupMemberRoutes = (
       Component={withSuspense(Petrolling)}
     />
     <Route
+      path="/smartsecure/patrolling"
+      Component={withSuspense(Petrolling)}
+    />
+    <Route
       path="/smartsecure/shift"
       Component={withSuspense(ShiftPage)}
     />
@@ -1701,6 +1705,8 @@ export const setupMemberRoutes = (
       path="/smartsecure/patrolling-info"
       element={<PatrollingDashboard />}
     />
+    <Route path="/smartsecure/patrolling-response" element={<PatrollingResponsePage />} />
+    <Route path="/smartsecure/patrolling/response" element={<PatrollingResponsePage />} />
     <Route path="/smartsecure/response" element={<PatrollingResponsePage />} />
     <Route
       path="/smartsecure/setup/general"

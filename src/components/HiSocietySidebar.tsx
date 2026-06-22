@@ -815,6 +815,12 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/smartsecure/petrolling",
         },
         {
+          id: "patrolling-response",
+          label: "Patrolling Response",
+          icon: FileText,
+          path: "/smartsecure/patrolling-response",
+        },
+        {
           id: "shift",
           label: "Shift",
           icon: Clock,
