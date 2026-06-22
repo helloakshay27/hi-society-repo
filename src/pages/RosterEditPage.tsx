@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -29,7 +29,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { toast } from "sonner";
-import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { departmentService, Department } from "@/services/departmentService";
 import { RootState } from "@/store/store";
 
@@ -83,7 +83,12 @@ interface RosterFormData {
 
 export const RosterEditPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
+  const rosterBasePath = location.pathname.startsWith("/smartsecure/roster")
+    ? "/smartsecure/roster"
+    : "/settings/account/roster";
+  const isSmartSecureRoster = rosterBasePath === "/smartsecure/roster";
 
   // Redux state for site information
   const { selectedSite } = useSelector((state: RootState) => state.site);
@@ -174,17 +179,19 @@ export const RosterEditPage: React.FC = () => {
   const fetchRosterTemplate = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: getAuthHeader(),
-          },
-        }
+      const apiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
       );
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch roster template");
       const data = await response.json();
       const r = data; // Direct response structure
@@ -453,7 +460,9 @@ export const RosterEditPage: React.FC = () => {
     setLoadingFilteredFMUsers(true);
     try {
       const idsParam = departmentIds.join(",");
-      const apiUrl = `${API_CONFIG.BASE_URL}/pms/admin/user_roasters/department_roasters.json?department_id=${idsParam}`;
+      const apiUrl = getFullUrl(
+        `/pms/admin/user_roasters/department_roasters.json?department_id=${encodeURIComponent(idsParam)}`
+      );
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -798,22 +807,24 @@ export const RosterEditPage: React.FC = () => {
       console.log("🎯 PATCH API Payload:", JSON.stringify(payload, null, 2));
 
       // PATCH API call
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: getAuthHeader(),
-          },
-          body: JSON.stringify(payload),
-        }
+      const updateApiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
       );
+      const response = await fetch(updateApiUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) throw new Error("API error");
 
       toast.success("Roster template updated successfully!");
-      navigate(`/settings/roster/detail/${id}`);
+      navigate(`${rosterBasePath}/detail/${id}`);
     } catch (error) {
       console.error("Error updating roster template:", error);
       toast.error("Failed to update roster template. Please try again.");
@@ -824,7 +835,7 @@ export const RosterEditPage: React.FC = () => {
 
   // Handle cancel
   const handleCancel = () => {
-    navigate(`/settings/account/roster/detail/${id}`);
+    navigate(`${rosterBasePath}/detail/${id}`);
   };
 
   if (isLoading) {

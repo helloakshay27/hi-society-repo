@@ -76,99 +76,7 @@ const columns: ColumnConfig[] = [
   
 ];
 
-// Mock data for shift management (similar to the image provided)
-const mockShiftData: ShiftItem[] = [
-  {
-    id: 1,
-    timings: '08:00 AM to 05:00 PM', // Changed from 'timing' to 'timings'
-    totalHours: 9,
-    checkInMargin: '0h:0m',
-    createdOn: '19/03/2024',
-    createdBy: '',
-    active: true
-  },
-  {
-    id: 2,
-    timings: '02:00 AM to 06:00 AM',
-    totalHours: 4,
-    checkInMargin: '1h:0m',
-    createdOn: '05/05/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 3,
-    timings: '10:15 AM to 07:30 PM',
-    totalHours: 9,
-    checkInMargin: '0h:0m',
-    createdOn: '05/05/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 4,
-    timings: '10:00 AM to 07:00 PM',
-    totalHours: 9,
-    checkInMargin: '0h:0m',
-    createdOn: '29/11/2022',
-    createdBy: '',
-    active: true
-  },
-  {
-    id: 5,
-    timings: '09:00 AM to 06:00 PM',
-    totalHours: 9,
-    checkInMargin: '0h:0m',
-    createdOn: '28/11/2022',
-    createdBy: '',
-    active: true
-  },
-  {
-    id: 6,
-    timings: '10:30 AM to 06:30 PM',
-    totalHours: 8,
-    checkInMargin: '0h:0m',
-    createdOn: '28/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 7,
-    timings: '10:00 AM to 11:00 AM',
-    totalHours: 1,
-    checkInMargin: '0h:0m',
-    createdOn: '21/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 8,
-    timings: '01:00 AM to 11:00 PM',
-    totalHours: 22,
-    checkInMargin: '0h:0m',
-    createdOn: '21/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 9,
-    timings: '03:15 AM to 11:15 PM',
-    totalHours: 20,
-    checkInMargin: '0h:0m',
-    createdOn: '22/06/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 10,
-    timings: '10:00 AM to 08:00 PM',
-    totalHours: 10,
-    checkInMargin: '3h:0m',
-    createdOn: '09/08/2021',
-    createdBy: 'Robert Day2',
-    active: true
-  }
-];
+
 
 export const ShiftDashboard = () => {
   const navigate = useNavigate();
@@ -194,7 +102,8 @@ export const ShiftDashboard = () => {
   const fetchShiftData = async () => {
     setLoading(true);
     try {
-      const apiUrl = getFullUrl('/pms/admin/user_shifts.json');
+      const societyId = localStorage.getItem('selectedSocietyId') || localStorage.getItem('society_id') || '';
+      const apiUrl = getFullUrl(`/spree/manage/user_shifts.json?society_id=${societyId}`);
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -230,8 +139,8 @@ export const ShiftDashboard = () => {
         duration: 5000,
       });
       
-      // Fallback to mock data on API error
-      setAllShiftData(mockShiftData);
+      // Clear data on API error
+      setAllShiftData([]);
     } finally {
       setLoading(false);
     }
@@ -402,22 +311,17 @@ export const ShiftDashboard = () => {
             emptyMessage="No shifts found. Create your first shift to get started."
           />
 
-          {/* Pagination Controls - matching RosterDashboard style */}
+          {/* Pagination Controls */}
           {allShiftData.length > 0 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} shifts
-              </div>
+            <div className="flex items-center justify-center mt-4">
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={goToPrevious}
                   disabled={currentPage === 1}
+                  className="p-2 text-gray-500 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
 
                 <div className="flex items-center space-x-1">
                   {/* Show first page */}
@@ -466,15 +370,13 @@ export const ShiftDashboard = () => {
                   )}
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={goToNext}
                   disabled={currentPage === totalPages}
+                  className="p-2 text-gray-500 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                  <ChevronRight className="h-5 w-5" />
+                </button>
               </div>
             </div>
           )}

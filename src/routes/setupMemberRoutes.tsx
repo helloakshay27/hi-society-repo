@@ -25,6 +25,9 @@ import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
 import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
 import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
 import { StaffsDashboard } from "@/pages/StaffsDashboard";
+import { RosterCreatePage } from "@/pages/RosterCreatePage";
+import { RosterDetailPage } from "@/pages/RosterDetailPage";
+import { RosterEditPage } from "@/pages/RosterEditPage";
 import HiSocEventCreate from "@/pages/HiSocEventCreate";
 import HiSocEventEdit from "@/pages/HiSocEventEdit";
 import HiSocEventList from "@/pages/HiSocEventList";
@@ -485,6 +488,8 @@ const SmartSecureSetupSupportStaff = lazy(
   () => import("@/pages/SmartSecureSetupSupportStaff")
 );
 const Petrolling = lazy(() => import("@/pages/Petrolling"));
+const ShiftPage = lazy(() => import("@/pages/ShiftPage"));
+const RosterPage = lazy(() => import("@/pages/RosterPage"));
 
 
 // Incidents Pages
@@ -1662,6 +1667,26 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/petrolling"
       Component={withSuspense(Petrolling)}
+    />
+    <Route
+      path="/smartsecure/shift"
+      Component={withSuspense(ShiftPage)}
+    />
+    <Route
+      path="/smartsecure/roster"
+      Component={withSuspense(RosterPage)}
+    />
+    <Route
+      path="/smartsecure/roster/create"
+      element={<RosterCreatePage />}
+    />
+    <Route
+      path="/smartsecure/roster/detail/:id"
+      element={<RosterDetailPage />}
+    />
+    <Route
+      path="/smartsecure/roster/edit/:id"
+      element={<RosterEditPage />}
     />
 
     {/* <Route

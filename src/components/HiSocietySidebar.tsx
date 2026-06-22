@@ -46,6 +46,7 @@ import {
   Phone,
   Wrench,
   Trash2,
+  Clock,
 } from "lucide-react";
 
 interface MenuItem {
@@ -812,6 +813,18 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Petrolling",
           icon: History,
           path: "/smartsecure/petrolling",
+        },
+        {
+          id: "shift",
+          label: "Shift",
+          icon: Clock,
+          path: "/smartsecure/shift",
+        },
+        {
+          id: "roster",
+          label: "Roster",
+          icon: Calendar,
+          path: "/smartsecure/roster",
         },
         // {
         //   id: "patrolling",

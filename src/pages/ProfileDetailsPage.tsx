@@ -10,7 +10,7 @@ import axios from 'axios'
 const ProfileDetailsPage = () => {
     const baseUrl = localStorage.getItem('baseUrl') || '';
     const token = localStorage.getItem('token') || '';
-    const id = JSON.parse(localStorage.getItem('user')).id
+    const id = JSON.parse(localStorage.getItem('user') || '{}')?.id
 
     const [details, setDetails] = useState({})
 
@@ -64,7 +64,10 @@ const ProfileDetailsPage = () => {
                     <ProfileAttendance />
                 </TabsContent>
                 <TabsContent value="my_roster">
-                    <ProfileRoster rosterId={details?.lock_user_permission?.user_roaster_id} />
+                    <ProfileRoster
+                        userId={id}
+                        rosterId={details?.lock_user_permission?.user_roaster_id}
+                    />
                 </TabsContent>
                 <TabsContent value="my_wallet">
                     <ProfileWallet />

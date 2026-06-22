@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -28,7 +28,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { toast } from "sonner";
-import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { departmentService, Department } from "@/services/departmentService";
 import { RootState } from "@/store/store";
 
@@ -48,6 +48,8 @@ const Section: React.FC<{
     <div className="p-6">{children}</div>
   </section>
 );
+
+const formatDateForApi = (date: Date) => date.toISOString().split("T")[0];
 
 // Types
 interface FMUser {
@@ -79,8 +81,21 @@ interface RosterFormData {
   rosterType: "Permanent";
 }
 
+interface RosterCreateResponse {
+  id?: number;
+  name?: string;
+  error?: string;
+  errors?: unknown;
+  message?: string;
+}
+
 export const RosterCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isSmartSecureRoster = location.pathname.startsWith("/smartsecure/roster");
+  const rosterBasePath = isSmartSecureRoster
+    ? "/smartsecure/roster"
+    : "/settings/account/roster";
 
   // Redux state for site information
   const { selectedSite } = useSelector((state: RootState) => state.site);
@@ -237,7 +252,9 @@ export const RosterCreatePage: React.FC = () => {
     setLoadingFilteredFMUsers(true);
     try {
       const idsParam = departmentIds.join(",");
-      const apiUrl = `${API_CONFIG.BASE_URL}/pms/admin/user_roasters/department_roasters.json?department_id=${idsParam}`;
+      const apiUrl = getFullUrl(
+        `/pms/admin/user_roasters/department_roasters.json?department_id=${encodeURIComponent(idsParam)}`
+      );
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -597,21 +614,26 @@ export const RosterCreatePage: React.FC = () => {
           selectedSite?.id || localStorage.getItem("selectedSiteId") || "",
         user_shift_id: formData.shift || "",
         seat_category_id: "1", // Required field
-        allocation_type: formData.rosterType,
+        allocation_type: isSmartSecureRoster ? "seat" : formData.rosterType,
         roaster_type: formData.dayType,
       };
 
-      // Common date format (Rails style for all types)
+      // SmartSecure uses JSON date keys; the older settings endpoint uses Rails multiparam dates.
       const commonDateFields =
         period.startDate && period.endDate
-          ? {
-              "start_date(3i)": period.startDate.getDate().toString(),
-              "start_date(2i)": (period.startDate.getMonth() + 1).toString(),
-              "start_date(1i)": period.startDate.getFullYear().toString(),
-              "end_date(3i)": period.endDate.getDate().toString(),
-              "end_date(2i)": (period.endDate.getMonth() + 1).toString(),
-              "end_date(1i)": period.endDate.getFullYear().toString(),
-            }
+          ? isSmartSecureRoster
+            ? {
+                start_date: formatDateForApi(period.startDate),
+                end_date: formatDateForApi(period.endDate),
+              }
+            : {
+                "start_date(3i)": period.startDate.getDate().toString(),
+                "start_date(2i)": (period.startDate.getMonth() + 1).toString(),
+                "start_date(1i)": period.startDate.getFullYear().toString(),
+                "end_date(3i)": period.endDate.getDate().toString(),
+                "end_date(2i)": (period.endDate.getMonth() + 1).toString(),
+                "end_date(1i)": period.endDate.getFullYear().toString(),
+              }
           : {};
 
       // Base payload structure (common for all day types)
@@ -621,7 +643,7 @@ export const RosterCreatePage: React.FC = () => {
           ...commonDateFields,
         },
         department_id: formData.departments.map(String),
-        no_of_days: "",
+        no_of_days: isSmartSecureRoster ? [] : "",
         weekdays: [],
         weekends: [],
         user_ids: formData.selectedEmployees,
@@ -637,6 +659,7 @@ export const RosterCreatePage: React.FC = () => {
         payload = {
           ...basePayload,
           weekdays: weekdays,
+          no_of_days: isSmartSecureRoster ? weekdays : basePayload.no_of_days,
         };
       } else if (formData.dayType === "Weekends") {
         // Weekends payload
@@ -648,6 +671,7 @@ export const RosterCreatePage: React.FC = () => {
         payload = {
           ...basePayload,
           weekends: weekends,
+          no_of_days: isSmartSecureRoster ? weekends : basePayload.no_of_days,
         };
       } else if (formData.dayType === "Recurring") {
         // Recurring payload - matching your example structure
@@ -672,6 +696,7 @@ export const RosterCreatePage: React.FC = () => {
         payload = {
           ...basePayload,
           recurring: [recurringData],
+          no_of_days: isSmartSecureRoster ? [recurringData] : basePayload.no_of_days,
         };
       } else {
         // Default fallback
@@ -681,26 +706,50 @@ export const RosterCreatePage: React.FC = () => {
       // Log payload to console
       console.log("🎯 API Payload:", JSON.stringify(payload, null, 2));
 
-      // Make API call
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/pms/admin/user_roasters.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: getAuthHeader(),
-          },
-          body: JSON.stringify(payload),
-        }
+      const apiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? "/spree/manage/user_roasters.json"
+          : "/pms/admin/user_roasters.json"
       );
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+      });
 
-      if (!response.ok) throw new Error("API error");
+      const result: RosterCreateResponse = await response
+        .json()
+        .catch(() => ({}));
 
-      toast.success("Roster template created successfully!");
-      navigate("/settings/account/roster/");
+      if (!response.ok) {
+        let errorMessage = result.message || result.error || "Failed to create roster template";
+        if (result.errors) errorMessage = JSON.stringify(result.errors);
+        throw new Error(errorMessage);
+      }
+
+      if (result.error || result.errors) {
+        throw new Error(
+          result.error || JSON.stringify(result.errors) || "Failed to create roster template"
+        );
+      }
+
+      toast.success(
+        result.name
+          ? `Roster template "${result.name}" created successfully!`
+          : "Roster template created successfully!"
+      );
+      navigate(rosterBasePath);
     } catch (error) {
       console.error("Error creating roster template:", error);
-      toast.error("Failed to create roster template. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create roster template. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -708,7 +757,7 @@ export const RosterCreatePage: React.FC = () => {
 
   // Handle cancel/back
   const handleCancel = () => {
-    navigate("/settings/account/roster");
+    navigate(rosterBasePath);
   };
 
   return (
@@ -1514,7 +1563,7 @@ export const RosterCreatePage: React.FC = () => {
         <Button
           variant="outline"
           className="px-8"
-          onClick={() => navigate("/roster")}
+          onClick={() => navigate(rosterBasePath)}
           disabled={isSubmitting}
         >
           Cancel
