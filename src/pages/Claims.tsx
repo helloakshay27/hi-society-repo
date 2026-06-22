@@ -5,6 +5,7 @@ import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions"
 
 interface UserContestReward {
     id: number
@@ -106,6 +107,7 @@ const columns: ColumnConfig[] = [
 
 const Claims = () => {
     const navigate = useNavigate();
+    const { shouldShow } = useDynamicPermissions();
 
     const [claims, setClaims] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -172,12 +174,14 @@ const Claims = () => {
     const renderActions = (row: any) => {
         return (
             <div className="flex items-center gap-2">
+                {shouldShow("Claims", "show") && (
                 <Button
                     variant="ghost" size="sm"
                     onClick={() => navigate(`/claims/${row.id}`)}
                 >
                     <Eye className="h-4 w-4" />
                 </Button>
+                )}
             </div>
         )
     }

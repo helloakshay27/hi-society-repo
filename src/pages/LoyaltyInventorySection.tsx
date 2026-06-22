@@ -21,9 +21,11 @@ import {
 } from "@/components/ui/pagination";
 import { Switch as MuiSwitch, Dialog as MuiDialog, DialogTitle as MuiDialogTitle, DialogContent as MuiDialogContent, DialogActions as MuiDialogActions, TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 export const LoyaltyInventorySection = () => {
     const navigate = useNavigate();
+    const { shouldShow } = useDynamicPermissions();
     const [loading, setLoading] = useState(false);
 
     // Tab and category data for product categories (Runwal API)
@@ -351,6 +353,7 @@ export const LoyaltyInventorySection = () => {
                             }}
                             className="w-4 h-4 cursor-pointer"
                         />
+                        {shouldShow("Inventory Section", "show") && (
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -360,6 +363,7 @@ export const LoyaltyInventorySection = () => {
                         >
                             <Eye className="w-4 h-4" />
                         </button>
+                        )}
                     </div>
                 );
             case "image":
@@ -696,6 +700,7 @@ export const LoyaltyInventorySection = () => {
 
     const renderLeftActions = () => (
         <div className="flex items-center gap-3">
+            {shouldShow("Inventory Section", "create") && (
             <Button
                 onClick={handleAddItem}
                 className="bg-[#C72030] hover:bg-[#A01828] text-white"
@@ -703,6 +708,7 @@ export const LoyaltyInventorySection = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Add Item
             </Button>
+            )}
         </div>
     );
 
@@ -986,6 +992,7 @@ export const LoyaltyInventorySection = () => {
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-1 px-2">
+                            {shouldShow("Inventory Section", "update") && (
                             <button
                                 onClick={() => handleToggleActive(true)}
                                 disabled={isUpdatingStatus}
@@ -994,6 +1001,8 @@ export const LoyaltyInventorySection = () => {
                                 <Upload className="w-5 h-5 text-gray-900" strokeWidth={3} />
                                 <span className="text-sm mt-2 font-medium text-gray-900">Activate</span>
                             </button>
+                            )}
+                            {shouldShow("Inventory Section", "update") && (
                             <button
                                 onClick={() => handleToggleActive(false)}
                                 disabled={isUpdatingStatus}
@@ -1005,6 +1014,8 @@ export const LoyaltyInventorySection = () => {
                                 </svg>
                                 <span className="text-sm mt-2 font-medium text-gray-900">Deactivate</span>
                             </button>
+                            )}
+                            {shouldShow("Inventory Section", "update") && (
                             <button
                                 onClick={handleRemoveFromStore}
                                 disabled={loading}
@@ -1018,6 +1029,7 @@ export const LoyaltyInventorySection = () => {
                                 </svg>
                                 <span className="text-sm mt-2 font-medium text-red-600">Remove</span>
                             </button>
+                            )}
                         </div>
 
                         {/* Divider + Close */}

@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Deviation {
   id: number;
@@ -63,6 +64,7 @@ interface TableDeviation {
 
 const FitoutDeviationDetails: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const { flat_id } = useParams<{ flat_id: string }>();
   const baseURL = API_CONFIG.BASE_URL;
   
@@ -355,12 +357,16 @@ const FitoutDeviationDetails: React.FC = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
+            {shouldShow("Fitout Deviations", "show") && (
             <Button variant="ghost" size="sm" onClick={() => handleViewDeviation(item.id)} title="View">
               <Eye className="w-4 h-4 text-gray-700" />
             </Button>
+            )}
+            {shouldShow("Fitout Deviations", "update") && (
             <Button variant="ghost" size="sm" onClick={() => handleEditStatus(item)} title="Edit Status">
               <Pencil className="w-4 h-4 text-orange-600" />
             </Button>
+            )}
           </div>
         );
       case 'id':

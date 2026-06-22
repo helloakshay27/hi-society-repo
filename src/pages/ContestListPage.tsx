@@ -24,6 +24,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TextField, InputAdornment, Switch } from "@mui/material";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { startTransition, useRef } from "react";
 
 interface ContestRecord {
@@ -48,6 +49,7 @@ const statusCards = [
 
 export const ContestListPage: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
 
   const [contests, setContests] = useState<ContestRecord[]>([]);
   const [filteredContests, setFilteredContests] = useState<ContestRecord[]>([]);
@@ -401,6 +403,8 @@ export const ContestListPage: React.FC = () => {
           columns={columns}
           renderRow={contest => ({
             actions: (
+              <div className="flex gap-1">
+              {shouldShow("Contest", "show") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -408,6 +412,8 @@ export const ContestListPage: React.FC = () => {
               >
                 <Eye className="w-4 h-4" />
               </Button>
+              )}
+              </div>
             ),
             name: contest.name,
             description: (
@@ -430,6 +436,7 @@ export const ContestListPage: React.FC = () => {
             ),
             status: (
               <div className="flex items-center gap-2">
+                {shouldShow("Contest", "update") && (
                 <Switch
                   checked={contest.isActive}
                   onChange={() => handleToggleActive(contest.id, contest.isActive)}
@@ -444,6 +451,7 @@ export const ContestListPage: React.FC = () => {
                     },
                   }}
                 />
+                )}
                 <span className="text-sm font-medium">
                   {contest.isActive ? "Active" : "Inactive"}
                 </span>
@@ -460,6 +468,7 @@ export const ContestListPage: React.FC = () => {
           loadingMessage={searchLoading ? "Searching contests..." : "Loading contests..."}
           leftActions={
             <div className="flex items-center gap-2">
+              {shouldShow("Contest", "create") && (
               <Button
                 onClick={() => navigate("/contests/create")}
                 className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
@@ -467,6 +476,7 @@ export const ContestListPage: React.FC = () => {
                 <Plus className="w-4 h-4" />
                 Create Contest
               </Button>
+              )}
             </div>
           }
           storageKey="contest-table"

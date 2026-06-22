@@ -34,6 +34,7 @@ import { staffService } from '@/services/staffService';
 import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 import { API_CONFIG } from '@/config/apiConfig';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
@@ -67,6 +68,7 @@ const getStatusBadgeColor = (status: string) => {
 
 export const StaffsDashboard = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
@@ -475,6 +477,7 @@ export const StaffsDashboard = () => {
   const renderRow = (staff: ReturnType<typeof transformedApiData>[0]) => ({
     actions: (
       <div className="flex justify-center gap-2">
+        {shouldShow("Staff All", "show") && (
         <Button
           variant="ghost"
           size="sm"
@@ -487,6 +490,8 @@ export const StaffsDashboard = () => {
         >
           <Eye className="w-4 h-4 text-gray-600 hover:text-[#C72030]" />
         </Button>
+        )}
+        {shouldShow("Staff All", "update") && (
         <Button
           variant="ghost"
           size="sm"
@@ -499,6 +504,7 @@ export const StaffsDashboard = () => {
         >
           <Edit className="w-4 h-4 text-gray-600 hover:text-[#C72030]" />
         </Button>
+        )}
       </div>
     ),
     image: (

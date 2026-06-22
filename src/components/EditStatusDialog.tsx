@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,6 +9,7 @@ import { X } from 'lucide-react';
 import ReactSelect from 'react-select';
 import { apiClient } from '@/utils/apiClient';
 import { toast } from 'sonner';
+import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 
 interface EditStatusDialogProps {
   open: boolean;
@@ -27,29 +28,22 @@ interface Status {
   active: number;
 }
 
-interface CommunicationTemplate {
+interface ResponsiblePerson {
   id: number;
-  identifier: string;
-  identifier_action: string;
-  body: string;
-  resource_id: number;
-  resource_type: string;
-  active: boolean;
+  full_name: string;
 }
 
 interface Complaint {
   id: number;
   complaint_status_id: number;
   issue_status: string;
-  rca_template_ids?: number[];
-  corrective_action_template_ids?: number[];
-  preventive_action_template_ids?: number[];
-  root_cause?: string;
-  corrective_action?: string;
-  preventive_action?: string;
   asset_service?: string;
   asset_or_service_id?: number;
   reopen_status?: boolean;
+  preventive_action?: string;
+  corrective_action?: string;
+  review_tracking?: string;
+  responsible_person?: string;
 }
 
 export const EditStatusDialog = ({
@@ -57,23 +51,29 @@ export const EditStatusDialog = ({
   onOpenChange,
   complaintId,
   currentStatusId,
-  currentStatus,
   onSuccess
 }: EditStatusDialogProps) => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [statuses, setStatuses] = useState<Status[]>([]);
-  const [communicationTemplates, setCommunicationTemplates] = useState<CommunicationTemplate[]>([]);
-  const [rcaTemplateIds, setRcaTemplateIds] = useState<number[]>([]);
-  const [correctiveActionTemplateIds, setCorrectiveActionTemplateIds] = useState<number[]>([]);
-  const [preventiveActionTemplateIds, setPreventiveActionTemplateIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [ticketData, setTicketData] = useState<Complaint | null>(null);
-  // Text input states for org_id 63
-  const [rcaText, setRcaText] = useState('');
-  const [correctiveActionText, setCorrectiveActionText] = useState('');
   const [preventiveActionText, setPreventiveActionText] = useState('');
+  const [correctiveActionText, setCorrectiveActionText] = useState('');
+  const [reviewTracking, setReviewTracking] = useState('');
+  const [responsiblePersonId, setResponsiblePersonId] = useState('');
+  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>([]);
 
   useEffect(() => {
+    if (!open) return;
+
+    // Reset all fields when dialog opens
+    setPreventiveActionText('');
+    setCorrectiveActionText('');
+    setReviewTracking('');
+    setResponsiblePersonId('');
+    setSelectedStatus(currentStatusId ? currentStatusId.toString() : '');
+    setTicketData(null);
+
     const fetchStatuses = async () => {
       try {
         const response = await apiClient.get('/crm/admin/complaint_statuses.json');
@@ -84,62 +84,63 @@ export const EditStatusDialog = ({
       }
     };
 
-    const fetchCommunicationTemplates = async () => {
+    const fetchResponsiblePersons = async () => {
       try {
-        const response = await apiClient.get('/communication_templates.json');
-        setCommunicationTemplates(response.data || []);
+        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const url = `https://${baseUrl}/dropdown/service_engineers`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const engineers = Array.isArray(data.helpdesk_users) ? data.helpdesk_users : [];
+        setResponsiblePersons(
+          engineers.map((e: { id: number; full_name: string }) => ({ id: e.id, full_name: e.full_name }))
+        );
       } catch (error) {
-        console.error('Failed to fetch communication templates:', error);
-        toast.error("Failed to fetch templates");
+        console.error('Failed to fetch responsible persons:', error);
       }
     };
 
     const fetchTicketData = async () => {
       if (!complaintId) return;
-
       try {
         const response = await apiClient.get(`/crm/admin/complaints/${complaintId}.json`);
-        const data = response.data;
+        const data: Complaint = response.data;
         setTicketData(data);
 
-        // Pre-populate template IDs if they exist, otherwise set empty arrays
-        if (data.rca_template_ids && Array.isArray(data.rca_template_ids)) {
-          setRcaTemplateIds(data.rca_template_ids);
-        } else {
-          setRcaTemplateIds([]);
-        }
-        if (data.corrective_action_template_ids && Array.isArray(data.corrective_action_template_ids)) {
-          setCorrectiveActionTemplateIds(data.corrective_action_template_ids);
-        } else {
-          setCorrectiveActionTemplateIds([]);
-        }
-        if (data.preventive_action_template_ids && Array.isArray(data.preventive_action_template_ids)) {
-          setPreventiveActionTemplateIds(data.preventive_action_template_ids);
-        } else {
-          setPreventiveActionTemplateIds([]);
+        if (data.preventive_action) setPreventiveActionText(data.preventive_action);
+        if (data.corrective_action) setCorrectiveActionText(data.corrective_action);
+
+        if (data.review_tracking) {
+          let dateVal = data.review_tracking;
+          // Convert DD/MM/YYYY → YYYY-MM-DD for the date input
+          if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateVal)) {
+            const [day, month, year] = dateVal.split('/');
+            dateVal = `${year}-${month}-${day}`;
+          }
+          setReviewTracking(dateVal);
         }
       } catch (error) {
         console.error('Failed to fetch ticket data:', error);
-        toast.error("Failed to fetch ticket data");
       }
     };
 
-    if (open) {
-      // Reset state when dialog opens with new complaint
-      setRcaTemplateIds([]);
-      setCorrectiveActionTemplateIds([]);
-      setPreventiveActionTemplateIds([]);
-      setSelectedStatus('');
-
-      fetchStatuses();
-      fetchCommunicationTemplates();
-      fetchTicketData();
-      // Set initial status if provided
-      if (currentStatusId) {
-        setSelectedStatus(currentStatusId.toString());
-      }
-    }
+    fetchStatuses();
+    fetchResponsiblePersons();
+    fetchTicketData();
   }, [open, currentStatusId, complaintId]);
+
+  // Match responsible_person name to an ID once both persons list and ticket data are available
+  useEffect(() => {
+    if (!ticketData?.responsible_person || responsiblePersons.length === 0) return;
+    const matched = responsiblePersons.find(p => p.full_name === ticketData.responsible_person);
+    if (matched) setResponsiblePersonId(matched.id.toString());
+  }, [responsiblePersons, ticketData]);
 
   const handleApply = async () => {
     if (!complaintId || !selectedStatus) {
@@ -149,27 +150,24 @@ export const EditStatusDialog = ({
 
     setLoading(true);
     try {
-      // Create FormData to match TicketDetailsPage format exactly
       const formDataToSend = new FormData();
       formDataToSend.append('complaint_log[complaint_id]', complaintId.toString());
+      formDataToSend.append('complaint_log[complaint_status_id]', selectedStatus);
 
-      // Add issue_status
-      formDataToSend.append('issue_status', selectedStatus);
+      if (preventiveActionText) {
+        formDataToSend.append('complaint[preventive_action]', preventiveActionText);
+      }
+      if (correctiveActionText) {
+        formDataToSend.append('complaint[corrective_action]', correctiveActionText);
+      }
+      if (responsiblePersonId) {
+        formDataToSend.append('complaint[person_id]', responsiblePersonId);
+      }
+      if (reviewTracking) {
+        formDataToSend.append('complaint[review_tracking_date]', reviewTracking);
+      }
 
-      // Add template IDs using the exact format from TicketDetailsPage
-      rcaTemplateIds.forEach(templateId => {
-        formDataToSend.append('root_cause[template_ids][]', String(templateId));
-      });
-
-      preventiveActionTemplateIds.forEach(templateId => {
-        formDataToSend.append('preventive_action[template_ids][]', String(templateId));
-      });
-
-      correctiveActionTemplateIds.forEach(templateId => {
-        formDataToSend.append('corrective_action[template_ids][]', String(templateId));
-      });
-
-      // Add asset_id and service_id based on current ticket's association
+      // Preserve asset/service association from the ticket
       if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
         formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
         formDataToSend.append('service_id', '');
@@ -181,18 +179,13 @@ export const EditStatusDialog = ({
         formDataToSend.append('service_id', '');
       }
 
-      // Use apiClient.post with FormData (apiClient handles authorization header)
       const loadingToastId = toast.loading("Updating status...");
-
       await apiClient.post('/complaint_logs.json', formDataToSend);
-
       toast.dismiss(loadingToastId);
       toast.success("Status updated successfully!");
 
       onOpenChange(false);
-      if (onSuccess) {
-        onSuccess();
-      }
+      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Failed to update status:', error);
       toast.error("Failed to update status. Please try again.");
@@ -202,21 +195,18 @@ export const EditStatusDialog = ({
   };
 
   const handleReset = () => {
-    setSelectedStatus('');
-    setRcaTemplateIds([]);
-    setCorrectiveActionTemplateIds([]);
-    setPreventiveActionTemplateIds([]);
+    setSelectedStatus(currentStatusId?.toString() || '');
+    setPreventiveActionText('');
+    setCorrectiveActionText('');
+    setReviewTracking('');
+    setResponsiblePersonId('');
   };
 
-  // Determine if selected status is "closed" for conditional field display
-  const selectedStatusObj = statuses.find(s => s.id.toString() === selectedStatus);
-  const isClosedStatus = selectedStatusObj?.fixed_state === 'closed';
-  // const isOrg63 = orgId === 63;
-  // const showRcaFields = isOrg63 && isClosedStatus;
+  const responsiblePersonOption = responsiblePersons.find(p => p.id.toString() === responsiblePersonId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="relative">
           <DialogTitle>Edit Status</DialogTitle>
           <Button
@@ -228,7 +218,9 @@ export const EditStatusDialog = ({
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
-        <div className="space-y-4">
+
+        <div className="space-y-5">
+          {/* Status */}
           <div>
             <Label htmlFor="status" className="text-sm font-medium">
               Status
@@ -240,7 +232,6 @@ export const EditStatusDialog = ({
               <SelectContent>
                 {statuses
                   .filter((status) => {
-                    // If ticket's reopen_status is false, hide statuses with fixed_state "reopen"
                     if (ticketData?.reopen_status === false && status.fixed_state === 'reopen') {
                       return false;
                     }
@@ -255,79 +246,64 @@ export const EditStatusDialog = ({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Preventive Action & Corrective Action */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="rootCause" className="text-sm font-medium">
-                Root Cause Analysis
-              </Label>
-              <ReactSelect
-                isMulti
-                value={communicationTemplates
-                  .filter(template =>
-                    rcaTemplateIds.includes(template.id) &&
-                    template.identifier === "Root Cause Analysis" &&
-                    template.active === true
-                  )
-                  .map(t => ({ value: t.id, label: t.identifier_action }))}
-                onChange={(selected) => {
-                  setRcaTemplateIds(selected ? selected.map((s) => s.value as number) : []);
-                }}
-                options={communicationTemplates
-                  .filter(template =>
-                    template.identifier === "Root Cause Analysis" &&
-                    template.active === true
-                  )
-                  .map(t => ({ value: t.id, label: t.identifier_action }))}
-                placeholder="Select Root Cause Analysis"
-                className="mt-1"
-                styles={{
-                  control: (provided, state) => ({
-                    ...provided,
-                    minHeight: "44px",
-                    borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
-                    boxShadow: "none",
-                    fontSize: "14px",
-                    "&:hover": { borderColor: "#C72030" },
-                  }),
-                  menu: (provided) => ({
-                    ...provided,
-                    zIndex: 9999,
-                  }),
-                }}
+              <Label className="text-sm font-medium">Preventive Action</Label>
+              <Textarea
+                className="mt-1 min-h-[90px] text-sm resize-none"
+                placeholder="Enter preventive action"
+                value={preventiveActionText}
+                onChange={(e) => setPreventiveActionText(e.target.value)}
               />
             </div>
             <div>
-              <Label htmlFor="correctiveAction" className="text-sm font-medium">
-                Corrective Action
-              </Label>
+              <Label className="text-sm font-medium">Corrective Action</Label>
+              <Textarea
+                className="mt-1 min-h-[90px] text-sm resize-none"
+                placeholder="Enter corrective action"
+                value={correctiveActionText}
+                onChange={(e) => setCorrectiveActionText(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Review Date & Responsible Person */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="edit-status-review-date" className="text-sm font-medium">Review Date</Label>
+              <input
+                id="edit-status-review-date"
+                type="date"
+                aria-label="Review Date"
+                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={reviewTracking}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setReviewTracking(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Responsible Person</Label>
               <ReactSelect
-                isMulti
-                value={communicationTemplates
-                  .filter(template =>
-                    correctiveActionTemplateIds.includes(template.id) &&
-                    template.identifier === "Corrective Action" &&
-                    template.active === true
-                  )
-                  .map(t => ({ value: t.id, label: t.identifier_action }))}
-                onChange={(selected) => {
-                  setCorrectiveActionTemplateIds(selected ? selected.map((s) => s.value as number) : []);
-                }}
-                options={communicationTemplates
-                  .filter(template =>
-                    template.identifier === "Corrective Action" &&
-                    template.active === true
-                  )
-                  .map(t => ({ value: t.id, label: t.identifier_action }))}
-                placeholder="Select Corrective Action"
+                value={responsiblePersonOption
+                  ? { value: responsiblePersonOption.id.toString(), label: responsiblePersonOption.full_name }
+                  : null
+                }
+                onChange={(selected) =>
+                  setResponsiblePersonId(selected ? (selected as { value: string }).value : '')
+                }
+                options={responsiblePersons.map(p => ({ value: p.id.toString(), label: p.full_name }))}
+                placeholder="Select Responsible Person"
+                isClearable
                 className="mt-1"
                 styles={{
                   control: (provided, state) => ({
                     ...provided,
-                    minHeight: "44px",
-                    borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
-                    boxShadow: "none",
-                    fontSize: "14px",
-                    "&:hover": { borderColor: "#C72030" },
+                    minHeight: '40px',
+                    borderColor: state.isFocused ? '#C72030' : '#e2e8f0',
+                    boxShadow: 'none',
+                    fontSize: '14px',
+                    '&:hover': { borderColor: '#C72030' },
                   }),
                   menu: (provided) => ({
                     ...provided,
@@ -338,58 +314,20 @@ export const EditStatusDialog = ({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="preventiveAction" className="text-sm font-medium">
-              Preventive Action
-            </Label>
-            <ReactSelect
-              isMulti
-              value={communicationTemplates
-                .filter(template =>
-                  preventiveActionTemplateIds.includes(template.id) &&
-                  template.identifier === "Preventive Action" &&
-                  template.active === true
-                )
-                .map(t => ({ value: t.id, label: t.identifier_action }))}
-              onChange={(selected) => {
-                setPreventiveActionTemplateIds(selected ? selected.map((s) => s.value as number) : []);
-              }}
-              options={communicationTemplates
-                .filter(template =>
-                  template.identifier === "Preventive Action" &&
-                  template.active === true
-                )
-                .map(t => ({ value: t.id, label: t.identifier_action }))}
-              placeholder="Select Preventive Action"
-              className="mt-1"
-              styles={{
-                control: (provided, state) => ({
-                  ...provided,
-                  minHeight: "44px",
-                  borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
-                  boxShadow: "none",
-                  fontSize: "14px",
-                  "&:hover": { borderColor: "#C72030" },
-                }),
-                menu: (provided) => ({
-                  ...provided,
-                  zIndex: 9999,
-                }),
-              }}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
             <Button
               onClick={handleApply}
-              className="bg-[#8B4B8C] hover:bg-[#7A427B] text-white flex-1"
+              disabled={loading}
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white flex-1"
             >
-              Apply
+              {loading ? 'Applying...' : 'Apply'}
             </Button>
             <Button
               onClick={handleReset}
               variant="outline"
               className="flex-1"
+              disabled={loading}
             >
               Reset
             </Button>

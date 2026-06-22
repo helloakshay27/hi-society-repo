@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import axios from 'axios';
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface BillingInvoice {
   id: number;
@@ -27,6 +28,7 @@ interface BillingInvoice {
 
 export default function BillingInvoices() {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [invoices, setInvoices] = useState<BillingInvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState('January');
@@ -88,6 +90,8 @@ export default function BillingInvoices() {
     switch (columnKey) {
       case 'action':
         return (
+          <div className="flex gap-1">
+          {shouldShow("Billing Invoices", "show") && (
           <Button
             variant="ghost"
             size="sm"
@@ -96,6 +100,8 @@ export default function BillingInvoices() {
           >
             <Eye className="w-4 h-4 text-gray-700" />
           </Button>
+          )}
+          </div>
         );
       default:
         return String(item[columnKey as keyof BillingInvoice] ?? "-");

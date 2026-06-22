@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { StatsCard } from '@/components/StatsCard';
@@ -39,6 +40,7 @@ interface LoyaltyTier {
 
 const LoyaltyTiersList = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [tiers, setTiers] = useState<LoyaltyTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -289,6 +291,7 @@ const LoyaltyTiersList = () => {
       case 'actions':
         return (
           <div className="flex justify-center items-center gap-2">
+            {shouldShow("Tiers", "update") && (
             <Button
               variant="ghost"
               size="sm"
@@ -297,6 +300,8 @@ const LoyaltyTiersList = () => {
             >
               <Edit className="w-4 h-4" />
             </Button>
+            )}
+            {shouldShow("Tiers", "show") && (
             <Button
               variant="ghost"
               size="sm"
@@ -305,6 +310,7 @@ const LoyaltyTiersList = () => {
             >
               <Eye className="w-4 h-4" />
             </Button>
+            )}
           </div>
         );
       default:
@@ -314,6 +320,7 @@ const LoyaltyTiersList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
+      {shouldShow("Tiers", "create") && (
       <Button
         onClick={handleAdd}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -321,6 +328,7 @@ const LoyaltyTiersList = () => {
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         New Tier
       </Button>
+      )}
     </div>
   );
 

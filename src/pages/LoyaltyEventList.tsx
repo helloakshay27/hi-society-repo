@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ interface EventPermissions {
 
 const LoyaltyEventsList = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventPermissions, setEventPermissions] = useState<EventPermissions>(
@@ -451,7 +453,7 @@ const LoyaltyEventsList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {/* {eventPermissions.show === "true" && ( */}
+            {shouldShow("Events List", "show") && (
             <Button
               variant="ghost"
               size="sm"
@@ -460,8 +462,8 @@ const LoyaltyEventsList = () => {
             >
               <Eye className="w-4 h-4" />
             </Button>
-            {/* )} */}
-            {/* {eventPermissions.update === "true" && ( */}
+            )}
+            {shouldShow("Events List", "update") && (
             <Button
               variant="ghost"
               size="sm"
@@ -470,7 +472,7 @@ const LoyaltyEventsList = () => {
             >
               <Pencil className="w-4 h-4" />
             </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case "id":
@@ -554,6 +556,7 @@ const LoyaltyEventsList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
+      {shouldShow("Events List", "create") && (
       <Button
         onClick={handleAddEvent}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -561,6 +564,7 @@ const LoyaltyEventsList = () => {
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
       </Button>
+      )}
     </div>
   );
 

@@ -8,6 +8,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import { toast } from "sonner";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface FitoutRequestItem {
   id: number;
@@ -54,6 +55,7 @@ interface FitoutCards {
 
 const FitoutRequests: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [allRequests, setAllRequests] = useState<FitoutRequestItem[]>([]);
   const [cards, setCards] = useState<FitoutCards | null>(null);
@@ -407,6 +409,7 @@ const FitoutRequests: React.FC = () => {
         case "actions":
           return (
             <div className="flex justify-center items-center gap-2 mb-2">
+              {shouldShow("Fitout Requests", "show") && (
               <button
                 onClick={() => handleRowAction("View", item.id)}
                 className="p-1 text-black-600 hover:text-black-800"
@@ -414,6 +417,8 @@ const FitoutRequests: React.FC = () => {
               >
                 <Eye className="w-4 h-4" />
               </button>
+              )}
+              {shouldShow("Fitout Requests", "update") && (
               <button
                 onClick={() => handleRowAction("Edit", item.id)}
                 className="p-1 text-black-600 hover:text-black-800"
@@ -421,6 +426,7 @@ const FitoutRequests: React.FC = () => {
               >
                 <Edit className="w-4 h-4" />
               </button>
+              )}
             </div>
           );
         case "resend_email":
@@ -670,6 +676,7 @@ const FitoutRequests: React.FC = () => {
           pagination={false}
           leftActions={
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
+              {shouldShow("Fitout Requests", "create") && (
               <Button
                 onClick={handleAddRequest}
                 className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
@@ -677,6 +684,7 @@ const FitoutRequests: React.FC = () => {
                 <Plus className="w-4 h-4" />
                 Add
               </Button>
+              )}
               {/* <Button
                 onClick={() => navigate('/fitout/categories-subcategories')}
                 className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"

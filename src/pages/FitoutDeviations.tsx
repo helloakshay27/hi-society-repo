@@ -8,6 +8,7 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Deviation {
   id: number;
@@ -45,6 +46,7 @@ interface FitoutDeviation {
 
 const FitoutDeviations: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const [deviations, setDeviations] = useState<FitoutDeviation[]>([]);
   const [allDeviations, setAllDeviations] = useState<FitoutDeviation[]>([]);
@@ -182,9 +184,11 @@ const FitoutDeviations: React.FC = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
+            {shouldShow("Fitout Deviations", "show") && (
             <Button variant="ghost" size="sm" onClick={() => handleViewDeviation(item.id)} title="View">
               <Eye className="w-4 h-4 text-gray-700" />
             </Button>
+            )}
           </div>
         );
       case 'tower':
