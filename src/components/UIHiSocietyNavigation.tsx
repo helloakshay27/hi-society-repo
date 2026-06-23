@@ -32,6 +32,12 @@ const navigationItems: NavigationItem[] = [
     path: "/maintenance/survey/mapping",
   },
   {
+    id: "bms",
+    label: "BMS",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/bms/helpdesk",
+  },
+  {
     id: "settings",
     label: "Settings",
     icon: <SettingsIcon className="w-4 h-4" />,
