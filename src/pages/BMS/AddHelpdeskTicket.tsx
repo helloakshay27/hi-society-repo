@@ -517,13 +517,13 @@ export const AddTicketDashboard = () => {
   useEffect(() => {
     fetchCurrentSocietyId().then(id => {
       loadSocietyBlocks(id);
+      loadIssueTypes(id || undefined);
     });
     loadFMUsersFromStorage();
     loadOccupantUsersFromStorage();
     loadComplaintModes();
     loadLocationData();
     loadSubcategories();
-    loadIssueTypes(); // Load issue types immediately without waiting for userAccount
     if (onBehalfOf === 'self') {
       loadUserAccountFromStorage();
     }
@@ -602,11 +602,11 @@ export const AddTicketDashboard = () => {
   };
 
   // Load issue types
-  const loadIssueTypes = async (societyId?: number) => {
+  const loadIssueTypes = async (societyId?: number | string) => {
     setLoadingIssueTypes(true);
     try {
       // Get society_id from multiple sources
-      let finalSocietyId = societyId;
+      let finalSocietyId: number | string | undefined = societyId;
       
       // Try userAccount.society.id
       if (!finalSocietyId && userAccount?.society?.id) {

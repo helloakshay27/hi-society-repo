@@ -515,9 +515,8 @@ export const ResolutionEscalationTab: React.FC = () => {
   const loadEscalationUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await ticketManagementAPI.getEscalationUsers();
-      setEscalationUsers(response.users || []);
-      console.log("Escalation users loaded:", response.users);
+      const response = await apiClient.get('/crm/admin/escalation_users');
+      setEscalationUsers(response.data.escalation_users || []);
     } catch (error) {
       console.error("Error loading escalation users:", error);
       toast.error("Failed to load escalation users!");
@@ -1153,11 +1152,11 @@ export const ResolutionEscalationTab: React.FC = () => {
       value: cat.id,
       label: cat.name,
     })) || [];
-  // Use serviceEngineerOptions (from /dropdown/service_engineers) for escalation dropdowns
+  // Use escalationUsers (from /crm/admin/escalation_users) for escalation dropdowns
   const userOptions =
-    serviceEngineerOptions?.map((eng) => ({
-      value: eng.id,
-      label: eng.full_name,
+    escalationUsers?.map((user) => ({
+      value: user.id,
+      label: user.full_name,
     })) || [];
 
   const escalationLevels = ["e1", "e2", "e3", "e4", "e5"] as const;

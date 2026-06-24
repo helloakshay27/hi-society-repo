@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Edit, Trash2, Loader2 } from 'lucide-react';
 import ReactSelect from 'react-select';
 import { apiClient } from '@/utils/apiClient';
-import { ticketManagementAPI } from '@/services/ticketManagementAPI';
 import { toast } from 'sonner';
 
 type AxiosErrorLike = { response?: { data?: { message?: string } } };
@@ -107,8 +106,8 @@ export const ExecutiveEscalationTab: React.FC = () => {
   const loadEscalationUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await ticketManagementAPI.getServiceEngineers({ 'q[staff_type_eq]': 'Escalation' });
-      setEscalationUsers(response.service_engineers || []);
+      const response = await apiClient.get('/crm/admin/escalation_users');
+      setEscalationUsers(response.data.escalation_users || []);
     } catch (error) {
       console.error('Error loading escalation users:', error);
       toast.error('Failed to load escalation users');
