@@ -264,7 +264,7 @@ export const AddUserPage = () => {
 
   // Get society_id from localStorage (set by header)
   const getSocietyId = () => {
-    return localStorage.getItem('selectedUserSociety') || '';
+    return localStorage.getItem('selectedSocietyId') || '';
   };
 
   // Fetch flats when tower changes
