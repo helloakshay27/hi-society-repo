@@ -1146,7 +1146,7 @@ export const PatrollingResponsePage = () => {
         {/* List Tab */}
         <TabsContent value="list" className="mt-0">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             {/* Total Visits Card */}
             <div 
               onClick={() => handleStatusCardClick(null)}
@@ -1211,6 +1211,42 @@ export const PatrollingResponsePage = () => {
                   )}
                 </div>
                 <div className="text-sm font-medium text-[#1A1A1A]">Missed</div>
+              </div>
+            </div>
+
+            {/* Tickets Raised Card */}
+            <div
+              className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4"
+            >
+              <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-[#C72030]" />
+              </div>
+              <div>
+                <div className="text-2xl font-semibold text-[#1A1A1A]">
+                  {summaryStats.ticket_raised}
+                  {isLoading && (
+                    <span className="ml-1 text-xs animate-pulse">...</span>
+                  )}
+                </div>
+                <div className="text-sm font-medium text-[#1A1A1A]">Tickets Raised</div>
+              </div>
+            </div>
+
+            {/* Incident Reported Card */}
+            <div
+              className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4"
+            >
+              <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
+                <Shield className="w-6 h-6 text-[#C72030]" />
+              </div>
+              <div>
+                <div className="text-2xl font-semibold text-[#1A1A1A]">
+                  {summaryStats.incident_reported}
+                  {isLoading && (
+                    <span className="ml-1 text-xs animate-pulse">...</span>
+                  )}
+                </div>
+                <div className="text-sm font-medium text-[#1A1A1A]">Incident Reported</div>
               </div>
             </div>
           </div>

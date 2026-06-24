@@ -67,6 +67,7 @@ interface Shift {
   end_min: number;
   timings: string;
   total_hour: number;
+  vendor_name?: string;
 }
 
 interface RosterFormData {
@@ -311,7 +312,8 @@ export const RosterCreatePage: React.FC = () => {
   const fetchShifts = async () => {
     setLoadingShifts(true);
     try {
-      const apiUrl = getFullUrl("/pms/admin/user_shifts.json");
+      const societyId = localStorage.getItem("selectedSocietyId") || localStorage.getItem("society_id") || "";
+      const apiUrl = getFullUrl(`/spree/manage/user_shifts.json?society_id=${societyId}`);
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -339,6 +341,7 @@ export const RosterCreatePage: React.FC = () => {
           end_min: shift.end_min,
           timings: shift.timings,
           total_hour: shift.total_hour,
+          vendor_name: shift.created_by?.name || "",
         }))
       );
     } catch (error) {
@@ -358,6 +361,24 @@ export const RosterCreatePage: React.FC = () => {
         setCurrentLocation(selectedSite.name);
         setFormData((prev) => ({ ...prev, location: selectedSite.name }));
         return;
+      }
+
+      // Try to get from hiSocietyApprovedSocieties (user_approved_societies API payload)
+      const hiSocietyApprovedSocietiesStr = localStorage.getItem("hiSocietyApprovedSocieties");
+      const selectedUserSocietyId = localStorage.getItem("selectedUserSociety");
+      
+      if (hiSocietyApprovedSocietiesStr && selectedUserSocietyId) {
+        try {
+          const societies = JSON.parse(hiSocietyApprovedSocietiesStr);
+          const selected = societies.find((s: any) => s.id.toString() === selectedUserSocietyId);
+          if (selected && selected.society?.building_name) {
+            setCurrentLocation(selected.society.building_name);
+            setFormData((prev) => ({ ...prev, location: selected.society.building_name }));
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing hiSocietyApprovedSocieties", e);
+        }
       }
 
       // Fallback to localStorage
@@ -1281,7 +1302,7 @@ export const RosterCreatePage: React.FC = () => {
                   <MenuItem value="">Select Shift</MenuItem>
                   {shifts.map((shift) => (
                     <MenuItem key={shift.id} value={shift.id}>
-                      {shift.timings} ({shift.total_hour}h)
+                      {shift.vendor_name ? shift.vendor_name : `${shift.timings} (${shift.total_hour}h)`}
                     </MenuItem>
                   ))}
                 </MuiSelect>
