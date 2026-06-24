@@ -204,7 +204,7 @@ export const ResponseEscalationTab: React.FC = () => {
     try {
       const [issueTypesResult, engineersResult] = await Promise.allSettled([
         ticketManagementAPI.getIssueTypesDropdown(),
-        ticketManagementAPI.getServiceEngineers({ 'q[staff_type_eq]': 'Escalation' }),
+        apiClient.get('/crm/admin/escalation_users'),
       ])
       if (issueTypesResult.status === 'fulfilled') {
         setIssueTypeOptions(issueTypesResult.value.issue_types || [])
@@ -213,10 +213,10 @@ export const ResponseEscalationTab: React.FC = () => {
         toast.error('Failed to load issue types!')
       }
       if (engineersResult.status === 'fulfilled') {
-        setServiceEngineerOptions(engineersResult.value.service_engineers || [])
+        setServiceEngineerOptions(engineersResult.value.data.escalation_users || [])
       } else {
-        console.error('Error loading service engineers:', engineersResult.reason)
-        toast.error('Failed to load service engineers!')
+        console.error('Error loading escalation users:', engineersResult.reason)
+        toast.error('Failed to load escalation users!')
       }
     } finally {
       setLoadingUsers(false);
