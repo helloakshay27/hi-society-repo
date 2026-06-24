@@ -38,6 +38,7 @@ import { QRCodeModal } from "@/components/QRCodeModal";
 import axios from "axios";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -103,6 +104,7 @@ const muiTheme = createTheme({
 export const BookingSetupDetailClubPage = () => {
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
+  const { shouldShow } = useDynamicPermissions()
   const { id } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -645,12 +647,15 @@ export const BookingSetupDetailClubPage = () => {
               Back to Booking List
             </Button>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleEditClick(id)}
-              >
-                Edit
-              </Button>
+              {
+                shouldShow("Facility Setup", "update") && <Button
+                  variant="outline"
+                  onClick={() => handleEditClick(id)}
+                >
+                  Edit
+                </Button>
+              }
+
               {/* <Button
                 onClick={() => setShowQr(true)}
                 className="bg-[#1e40af] hover:bg-[#1e40af]/90 text-white px-4 py-2"
