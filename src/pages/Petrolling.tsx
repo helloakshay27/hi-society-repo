@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
@@ -316,6 +317,7 @@ const resolveAttachmentUrl = (value?: string | null) => {
 };
 
 const Petrolling = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState<PatrollingItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -1985,9 +1987,7 @@ const Petrolling = () => {
         leftActions={
           <Button
             onClick={() => {
-              setSelectedPatrol(null);
-              setFormData(createDefaultPatrolForm());
-              setIsAddOpen(true);
+              navigate("/security/patrolling/create");
             }}
             className="bg-[#1C2434] hover:bg-[#2c3a52] text-white rounded-none h-10 px-6 flex items-center gap-2"
           >

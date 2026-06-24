@@ -169,6 +169,7 @@ export const HiSocietySidebar: React.FC = () => {
     if (path.startsWith("/fitout")) return "fitout";
     if (path.startsWith("/accounting")) return "accounting";
     if (path.startsWith("/smartsecure")) return "smartsecure";
+    if (path.startsWith("/security")) return "smartsecure";
     if (path.startsWith("/incidents")) return "incidents";
     if (path.startsWith("/appointmentz")) return "appointmentz";
     if (path.startsWith("/settings")) return "settings";

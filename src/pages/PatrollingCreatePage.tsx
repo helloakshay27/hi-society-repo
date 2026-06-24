@@ -26,15 +26,16 @@ import {
 import { userService, User } from '@/services/userService';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { TimeSetupStep } from '@/components/schedule/TimeSetupStep';
+import { useLayout } from '@/contexts/LayoutContext';
 
 // Section component defined outside to prevent re-creation on every render
 const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-  <section className="bg-card rounded-lg border border-border shadow-sm">
-    <div className="px-6 py-4 border-b border-border flex items-center gap-3">
-      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+  <section className="bg-white rounded-lg border border-[#E5E7EB]">
+    <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center gap-3">
+      <div className="text-[#E0523E] flex items-center justify-center">
         {icon}
       </div>
-      <h2 className="text-sm font-semibold tracking-wide uppercase">{title}</h2>
+      <h2 className="text-[13px] font-bold tracking-wider uppercase text-gray-900">{title}</h2>
     </div>
     <div className="p-6">{children}</div>
   </section>
@@ -129,52 +130,6 @@ const CheckpointLocationSelector: React.FC<{
         )}
       </FormControl>
 
-      {/* Wing */}
-      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Wing</InputLabel>
-        <MuiSelect
-          value={checkpoint.wingId || ''}
-          onChange={(e) => onLocationChange('wing', Number(e.target.value) || null)}
-          label="Wing"
-          notched
-          displayEmpty
-          disabled={disabled || !checkpoint.buildingId || loadingStates.wings}
-        >
-          <MenuItem value="">Select Wing</MenuItem>
-          {checkpoint.locationData.wings.map(wing => (
-            <MenuItem key={wing.id} value={wing.id}>{wing.name}</MenuItem>
-          ))}
-        </MuiSelect>
-        {loadingStates.wings && (
-          <div className="absolute s right-8 top-1/2 transform -translate-y-1/2">
-            <CircularProgress size={16} />
-          </div>
-        )}
-      </FormControl>
-
-      {/* Area */}
-      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Area</InputLabel>
-        <MuiSelect
-          value={checkpoint.areaId || ''}
-          onChange={(e) => onLocationChange('area', Number(e.target.value) || null)}
-          label="Area"
-          notched
-          displayEmpty
-          disabled={disabled || !checkpoint.buildingId || loadingStates.areas}
-        >
-          <MenuItem value="">Select Area</MenuItem>
-          {checkpoint.locationData.areas.map(area => (
-            <MenuItem key={area.id} value={area.id}>{area.name}</MenuItem>
-          ))}
-        </MuiSelect>
-        {loadingStates.areas && (
-          <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-            <CircularProgress size={16} />
-          </div>
-        )}
-      </FormControl>
-
       {/* Floor */}
       <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
         <InputLabel shrink>Floor</InputLabel>
@@ -226,6 +181,13 @@ const CheckpointLocationSelector: React.FC<{
 
 export const PatrollingCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const { setCurrentSection } = useLayout();
+
+  // Keep sidebar/navbar showing "Security" section
+  useEffect(() => {
+    setCurrentSection('Security');
+  }, [setCurrentSection]);
+
   useEffect(() => { document.title = 'Create Patrolling'; }, []);
 
   type Question = {
@@ -307,6 +269,38 @@ export const PatrollingCreatePage: React.FC = () => {
   const [checklistOptions, setChecklistOptions] = useState<{ id: string; name: string; raw?: any }[]>([]);
   const [selectedChecklist, setSelectedChecklist] = useState<{ id: string; name: string; raw?: any } | null>(null);
   const [isChecklistLoading, setIsChecklistLoading] = useState(false);
+
+  // Department dropdown state
+  const [departmentOptions, setDepartmentOptions] = useState<{ id: number; name: string }[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | ''>('');
+  const [isDepartmentLoading, setIsDepartmentLoading] = useState(false);
+
+  // Fetch departments on mount
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setIsDepartmentLoading(true);
+      try {
+        const url = `${API_CONFIG.BASE_URL}/business_compass/departments.json`;
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch departments');
+        const data = await response.json();
+        const depts: { id: number; name: string }[] = (data.departments || [])
+          .filter((d: any) => d.name && d.name.trim() !== '');
+        setDepartmentOptions(depts);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        setDepartmentOptions([]);
+      } finally {
+        setIsDepartmentLoading(false);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   // Fetch checklist options on mount
   useEffect(() => {
@@ -919,9 +913,9 @@ export const PatrollingCreatePage: React.FC = () => {
     // }
 
     // Checkpoints validation
-    const validCheckpoints = checkpoints.filter(c => c.name.trim() !== '');
+    const validCheckpoints = checkpoints.filter(c => c.buildingId && c.buildingId > 0);
     if (validCheckpoints.length === 0) {
-      toast.error('At least one checkpoint is required', {
+      toast.error('At least one checkpoint with a Building selected is required', {
         duration: 5000,
       });
       setIsSubmitting(false);
@@ -1020,6 +1014,7 @@ export const PatrollingCreatePage: React.FC = () => {
         "description": description,
         "validity_start_date": startDate,
         ...(selectedChecklist && { "checklist_id": selectedChecklist.id }),
+        ...(selectedDepartmentId && { "department_id": selectedDepartmentId }),
         "validity_end_date": endDate,
         "grace_period_minutes": graceType === 'hours' ? (parseInt(estimatedDuration) || 0) * 60 : (parseInt(estimatedDuration) || 0),
        
@@ -1143,14 +1138,25 @@ export const PatrollingCreatePage: React.FC = () => {
             }
           };
         }),
-        "checkpoints": checkpoints.filter(c => c.name.trim() !== '').map(c => {
+        "checkpoints": validCheckpoints.map((c, idx) => {
           const validScheduleIds = c.scheduleIds.filter(scheduleId => {
             const correspondingShift = shifts.find(s => s.scheduleId === scheduleId);
             return !!correspondingShift;
           });
+
+          // Generate name if empty
+          let generatedName = c.name;
+          if (!generatedName || generatedName.trim() === '') {
+            const bName = c.locationData.buildings.find(b => b.id === c.buildingId)?.name;
+            const fName = c.locationData.floors.find(f => f.id === c.floorId)?.name;
+            const rName = c.locationData.rooms.find(r => r.id === c.roomId)?.name;
+            const parts = [bName, fName, rName].filter(Boolean);
+            generatedName = parts.length > 0 ? parts.join(" / ") : `Checkpoint ${idx + 1}`;
+          }
+
           return {
-            "name": c.name,
-            "description": c.description,
+            "name": generatedName,
+            "description": c.description || "",
             "building_id": c.buildingId?.toString() || "",
             "wing_id": c.wingId?.toString() || "",
             "floor_id": c.floorId?.toString() || "",
@@ -1235,69 +1241,80 @@ export const PatrollingCreatePage: React.FC = () => {
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
         </div>
       )}
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-wide uppercase">Patrolling</h1>
+      <header className="flex items-center justify-between pb-2">
+        <h1 className="text-lg font-bold tracking-wider uppercase text-gray-800">Patrolling</h1>
       </header>
 
-      <Section title="Patrol Details" icon={<Type className="w-3.5 h-3.5" />}>
-        <div className="space-y-6">
-          {/* Name and Duration on first row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <TextField
-                label={
-                  <>
-                    Name
-                    {/* <span className="text-red-500">*</span> */}
-                  </>
-                }
-                placeholder="Enter Patrol Name"
-                value={patrolName}
-                onChange={(e) => handlePatrolNameChange(e.target.value)}
-                fullWidth
-                variant="outlined"
-                error={errors.patrolName}
-                // helperText={errors.patrolName ? 'Patrol Name is required' : ''}
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div>
-              <TextField
-                label="Description"
-                value={description}
-                onChange={(e) => handleDescriptionChange(e.target.value)}
-                fullWidth
-                variant="outlined"
-                error={errors.description}
-                helperText={errors.description ? 'Patrol Description is required' : ''}
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-                disabled={isSubmitting}
-              />
-            </div>
-
+      <Section title="Patrol Details" icon={<Type className="w-[18px] h-[18px]" />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <TextField
+              label="Name"
+              placeholder="Enter Patrol Name"
+              value={patrolName}
+              onChange={(e) => handlePatrolNameChange(e.target.value)}
+              fullWidth
+              variant="outlined"
+              error={errors.patrolName}
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+              }}
+              InputProps={{
+                sx: fieldStyles,
+              }}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div>
+            <TextField
+              label="Description"
+              value={description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              fullWidth
+              variant="outlined"
+              error={errors.description}
+              helperText={errors.description ? 'Patrol Description is required' : ''}
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+              }}
+              InputProps={{
+                sx: fieldStyles,
+              }}
+              disabled={isSubmitting}
+            />
           </div>
 
-          {/* Description on second row - full width */}
-
+          {/* Department Dropdown */}
+          <div>
+            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+              <InputLabel shrink>Department</InputLabel>
+              <MuiSelect
+                value={selectedDepartmentId}
+                onChange={(e) => setSelectedDepartmentId(Number(e.target.value) || '')}
+                label="Department"
+                notched
+                displayEmpty
+                disabled={isSubmitting || isDepartmentLoading}
+              >
+                <MenuItem value="">
+                  {isDepartmentLoading ? 'Loading departments...' : 'Select Department'}
+                </MenuItem>
+                {departmentOptions.map((dept) => (
+                  <MenuItem key={dept.id} value={dept.id}>
+                    {dept.name.trim()}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+          </div>
         </div>
       </Section>
 
-      <Section title="Validity" icon={<CalendarRange className="w-3.5 h-3.5" />}>
+      <Section title="Validity" icon={<CalendarRange className="w-[18px] h-[18px]" />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <TextField
@@ -1307,7 +1324,7 @@ export const PatrollingCreatePage: React.FC = () => {
                   Start Date<span className="text-red-500">*</span>
                 </>
               }
-              placeholder="Select Start Date"
+              placeholder="dd-mm-yyyy"
               value={startDate}
               onChange={(e) => handleStartDateChange(e.target.value)}
               fullWidth
@@ -1333,7 +1350,7 @@ export const PatrollingCreatePage: React.FC = () => {
                   End Date<span className="text-red-500">*</span>
                 </>
               }
-              placeholder="Select End Date"
+              placeholder="dd-mm-yyyy"
               value={endDate}
               onChange={(e) => handleEndDateChange(e.target.value)}
               fullWidth
@@ -1354,11 +1371,13 @@ export const PatrollingCreatePage: React.FC = () => {
 
           <div>
             <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-              <InputLabel shrink>Grace Type<span className="text-red-500">*</span></InputLabel>
+              <InputLabel shrink>
+                Grace Type<span className="text-red-500">*</span>
+              </InputLabel>
               <MuiSelect
                 value={graceType}
                 onChange={(e) => setGraceType(e.target.value as 'minutes' | 'hours')}
-                label="Grace Type"
+                label={<>Grace Type<span className="text-red-500">*</span></>}
                 notched
                 disabled={isSubmitting}
               >
@@ -1373,10 +1392,10 @@ export const PatrollingCreatePage: React.FC = () => {
               type="number"
               label={
                 <>
-                  Grace Period ({graceType === 'hours' ? 'hours' : 'minutes'})<span className="text-red-500">*</span>
+                  Grace Period (minutes)<span className="text-red-500">*</span>
                 </>
               }
-              placeholder={`Enter grace period in ${graceType === 'hours' ? 'hours' : 'minutes'}`}
+              placeholder="Enter grace period in minutes"
               value={estimatedDuration}
               onChange={(e) => handleEstimatedDurationChange(e.target.value)}
               fullWidth
@@ -1394,7 +1413,6 @@ export const PatrollingCreatePage: React.FC = () => {
               disabled={isSubmitting}
             />
           </div>
-
         </div>
       </Section>
 
@@ -1677,51 +1695,6 @@ export const PatrollingCreatePage: React.FC = () => {
               )}
               <p className="mb-3 text-sm font-medium text-muted-foreground">Checkpoint {idx + 1}</p>
               <div className="space-y-4">
-                {/* Checkpoint Name and Description */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <TextField
-                      label={
-                        <>
-                          Checkpoint Name<span className="text-red-500">*</span>
-                        </>
-                      }
-                      placeholder="Enter checkpoint name"
-                      value={c.name}
-                      onChange={(e) => updateCheckpoint(idx, 'name', e.target.value)}
-                      fullWidth
-                      variant="outlined"
-                      slotProps={{
-                        inputLabel: {
-                          shrink: true,
-                        },
-                      }}
-                      InputProps={{
-                        sx: fieldStyles,
-                      }}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div>
-                    <TextField
-                      label="Description"
-                      placeholder="Enter checkpoint description"
-                      value={c.description}
-                      onChange={(e) => updateCheckpoint(idx, 'description', e.target.value)}
-                      fullWidth
-                      variant="outlined"
-                      slotProps={{
-                        inputLabel: {
-                          shrink: true,
-                        },
-                      }}
-                      InputProps={{
-                        sx: fieldStyles,
-                      }}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </div>
 
                 {/* Location Selector (without Groups) */}
                 <CheckpointLocationSelector

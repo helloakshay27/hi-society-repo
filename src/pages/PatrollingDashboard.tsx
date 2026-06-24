@@ -19,6 +19,7 @@ import { EnhancedTaskTable } from '@/components/enhanced-table/EnhancedTaskTable
 import { useDebounce } from '@/hooks/useDebounce';
 import { userService, User } from '@/services/userService';
 import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
+import { useLayout } from '@/contexts/LayoutContext';
 
 // Type definitions for the API response
 interface PatrollingItem {
@@ -146,6 +147,13 @@ const columns: ColumnConfig[] = [{
 export const PatrollingDashboard = () => {
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+  const { setCurrentSection } = useLayout();
+
+  // Keep sidebar/navbar showing "Security" section
+  useEffect(() => {
+    setCurrentSection('Security');
+  }, [setCurrentSection]);
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
