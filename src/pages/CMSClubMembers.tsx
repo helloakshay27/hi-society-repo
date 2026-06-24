@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CMSClubMembersFilterModal } from '@/components/CMSClubMembersFilterModal';
 import { StatsCard } from '@/components/StatsCard';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 
 const columns: ColumnConfig[] = [
   {
@@ -92,6 +93,7 @@ interface MemberFilters {
 
 const CMSClubMembers = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
 
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
@@ -212,33 +214,43 @@ const CMSClubMembers = () => {
   const renderActions = (item: any) => {
     return (
       <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="p-1"
-          onClick={() => navigate(`view/${item.id}`)}
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="p-1"
-          onClick={() => navigate(`edit/${item.id}`)}
-        >
-          <Edit className="w-4 h-4" />
-        </Button>
+        {
+          shouldShow("Club Members", "show") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`view/${item.id}`)}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          )
+        }
+        {
+          shouldShow("Club Members", "update") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`edit/${item.id}`)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )
+        }
       </div>
     )
   };
 
   const leftActions = (
-    <Button
-      onClick={() => setShowActionPanel(true)}
-    >
-      <Plus className="w-4 h-4" />
-      Actions
-    </Button>
+    shouldShow("Club Members", "create") && (
+      <Button
+        onClick={() => setShowActionPanel(true)}
+      >
+        <Plus className="w-4 h-4" />
+        Actions
+      </Button>
+    )
   )
 
   const renderCell = (item: any, columnKey: string) => {

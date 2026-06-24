@@ -45,6 +45,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const enhancedTableColumns: ColumnConfig[] = [
   { key: "id", label: "ID", sortable: true, draggable: true },
@@ -186,6 +187,7 @@ const getStatusBadgeVariant = (status: string) => {
 const BookingListDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { shouldShow } = useDynamicPermissions()
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
@@ -923,13 +925,17 @@ const BookingListDashboard = () => {
         }
         leftActions={
           <div className="flex flex-wrap gap-2">
-            <Button
-              className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white w-[106px] h-[36px] py-[10px] px-[20px]"
-              onClick={() => setShowActionPanel(true)}
-            >
-              <Plus className="w-4 h-4" />
-              Action
-            </Button>
+            {
+              shouldShow("Facility Bookings", "create") && (
+                <Button
+                  className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white w-[106px] h-[36px] py-[10px] px-[20px]"
+                  onClick={() => setShowActionPanel(true)}
+                >
+                  <Plus className="w-4 h-4" />
+                  Action
+                </Button>
+              )
+            }
           </div>
         }
       />

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import axios from "axios";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Rule {
   id: string;
@@ -22,6 +23,8 @@ interface Rule {
 const CMSRules: React.FC = () => {
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
+
+  const { shouldShow } = useDynamicPermissions()
 
   const [rules, setRules] = useState<Rule[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -267,13 +270,17 @@ const CMSRules: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex justify-center">
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="px-8 py-2 h-auto text-sm font-semibold"
-            >
-              {isSubmitting ? <Loader size={14} className="animate-spin" /> : "Submit"}
-            </Button>
+            {
+              shouldShow("Rules", "create") && (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="px-8 py-2 h-auto text-sm font-semibold"
+                >
+                  {isSubmitting ? <Loader size={14} className="animate-spin" /> : "Submit"}
+                </Button>
+              )
+            }
           </div>
         </div>
       </div>
@@ -306,18 +313,27 @@ const CMSRules: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <button
-                      onClick={() => handleEditStart(rule)}
-                      className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 transition-colors"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(rule.id)}
-                      className="bg-[#d9534f] text-white p-1 rounded hover:bg-[#c9302c] transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    {
+                      shouldShow("Rules", "update") && (
+                        <button
+                          onClick={() => handleEditStart(rule)}
+                          className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 transition-colors"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )
+                    }
+                    {
+                      shouldShow("Rules", "destroy") && (
+                        <button
+                          onClick={() => handleDelete(rule.id)}
+                          className="bg-[#d9534f] text-white p-1 rounded hover:bg-[#c9302c] transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )
+                    }
+
                   </>
                 )}
               </div>

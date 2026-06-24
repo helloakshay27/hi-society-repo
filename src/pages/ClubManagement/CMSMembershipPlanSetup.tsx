@@ -6,6 +6,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable"
 import { Edit, Plus } from "lucide-react"
 import axios from "axios"
 import { toast } from "sonner"
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions"
 
 const columns: ColumnConfig[] = [
     {
@@ -38,6 +39,8 @@ const CMSMembershipPlanSetup = () => {
     const navigate = useNavigate()
     const baseUrl = localStorage.getItem("baseUrl")
     const token = localStorage.getItem("token")
+
+    const { shouldShow } = useDynamicPermissions()
 
     const [plans, setPlans] = useState([])
     const [loading, setLoading] = useState(false)
@@ -72,24 +75,28 @@ const CMSMembershipPlanSetup = () => {
     }
 
     const renderActions = (item: any) => (
-        <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEdit(item)}
-        >
-            <Edit className="w-4 h-4" />
-        </Button>
+        shouldShow("Membership Plan Setup", "update") && (
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit(item)}
+            >
+                <Edit className="w-4 h-4" />
+            </Button>
+        )
     )
 
     const leftActions = (
-        <Button
-            size="sm"
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-4 py-2 rounded-md flex items-center gap-2 border-0"
-            onClick={handleAddNew}
-        >
-            <Plus className="w-4 h-4" />
-            Add
-        </Button>
+        shouldShow("Membership Plan Setup", "create") && (
+            <Button
+                size="sm"
+                className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-4 py-2 rounded-md flex items-center gap-2 border-0"
+                onClick={handleAddNew}
+            >
+                <Plus className="w-4 h-4" />
+                Add
+            </Button>
+        )
     )
 
     const renderCell = (item: any, columnKey: string) => {

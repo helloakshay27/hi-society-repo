@@ -1,5 +1,6 @@
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable'
 import { Button } from '@/components/ui/button'
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions'
 import { ColumnConfig } from '@/hooks/useEnhancedTable'
 import axios from 'axios'
 import { Edit, Eye, Plus } from 'lucide-react'
@@ -32,6 +33,8 @@ const CMSPaymentPlanSetup = () => {
     const baseUrl = localStorage.getItem("baseUrl")
     const token = localStorage.getItem("token")
 
+    const { shouldShow } = useDynamicPermissions()
+
     const [paymentPlans, setPaymentPlans] = useState([])
 
     const fetchPaymentPlans = async () => {
@@ -56,9 +59,11 @@ const CMSPaymentPlanSetup = () => {
 
     const renderActions = (row: any) => {
         return (
-            <Button variant='ghost' size='sm' onClick={() => navigate(`/cms/payment-plan-setup/${row.id}`)}>
-                <Eye className='w-4 h-4' />
-            </Button>
+            shouldShow("Payment Plan Setup", "update") && (
+                <Button variant='ghost' size='sm' onClick={() => navigate(`/cms/payment-plan-setup/${row.id}`)}>
+                    <Eye className='w-4 h-4' />
+                </Button>
+            )
         )
     }
 
@@ -85,10 +90,12 @@ const CMSPaymentPlanSetup = () => {
                 columns={columns}
                 renderActions={renderActions}
                 leftActions={
-                    <Button onClick={() => navigate('/cms/payment-plan-setup/add')}>
-                        <Plus className='w-4 h-4' />
-                        Add
-                    </Button>
+                    shouldShow("Payment Plan Setup", "create") && (
+                        <Button onClick={() => navigate('/cms/payment-plan-setup/add')}>
+                            <Plus className='w-4 h-4' />
+                            Add
+                        </Button>
+                    )
                 }
                 renderCell={renderCell}
             />

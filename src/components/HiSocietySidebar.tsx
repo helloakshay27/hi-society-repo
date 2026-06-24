@@ -47,6 +47,7 @@ import {
   Wrench,
   Trash2,
   Clock,
+  MapPin,
 } from "lucide-react";
 
 interface MenuItem {
@@ -809,16 +810,23 @@ export const HiSocietySidebar: React.FC = () => {
           ],
         },
         {
-          id: "petrolling",
-          label: "Petrolling",
-          icon: History,
-          path: "/smartsecure/petrolling",
-        },
-        {
-          id: "patrolling-response",
-          label: "Patrolling Response",
-          icon: FileText,
-          path: "/smartsecure/patrolling-response",
+          id: "patrolling",
+          label: "Patrolling",
+          icon: MapPin,
+          subItems: [
+            {
+              id: "petrolling",
+              label: "Patrolling Info",
+              icon: MapPin,
+              path: "/smartsecure/petrolling",
+            },
+            {
+              id: "patrolling-response",
+              label: "Patrolling Response",
+              icon: FileText,
+              path: "/smartsecure/patrolling-response",
+            },
+          ],
         },
         {
           id: "shift",

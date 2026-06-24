@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { FormControlLabel, Radio, RadioGroup, Tooltip } from "@mui/material";
 import axios from "axios";
 import { ArrowUpDown, Bell, ChevronLeft, ChevronRight, Filter, Plus, Search, X } from "lucide-react";
@@ -11,6 +12,8 @@ const BookingCalenderView = () => {
     const navigate = useNavigate();
     const baseUrl = localStorage.getItem("baseUrl")
     const token = localStorage.getItem("token")
+
+    const { shouldShow } = useDynamicPermissions()
 
     // Initialize today's date
     const today = new Date();
@@ -288,13 +291,17 @@ const BookingCalenderView = () => {
             {/* Header Controls */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
-                    <Button
-                        className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white w-[106px] h-[36px]"
-                        onClick={handleAddBooking}
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add
-                    </Button>
+                    {
+                        shouldShow("Facility Bookings", "create") && (
+                            <Button
+                                className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white w-[106px] h-[36px]"
+                                onClick={handleAddBooking}
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add
+                            </Button>
+                        )
+                    }
 
                     <RadioGroup row value={bookingType} onChange={(e) => setBookingType(e.target.value)}>
                         <FormControlLabel

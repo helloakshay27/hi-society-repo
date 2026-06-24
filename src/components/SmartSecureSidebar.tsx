@@ -32,6 +32,7 @@ export const SmartSecureSidebar: React.FC = () => {
   const [vehiclesOpen, setVehiclesOpen] = React.useState(true);
   const [reportsOpen, setReportsOpen] = React.useState(true);
   const [setupOpen, setSetupOpen] = React.useState(true);
+  const [patrollingOpen, setPatrollingOpen] = React.useState(true);
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
@@ -77,7 +78,9 @@ export const SmartSecureSidebar: React.FC = () => {
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
             )}
             <LogIn className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-            {!isSidebarCollapsed && <span className="truncate">Visitor In</span>}
+            {!isSidebarCollapsed && (
+              <span className="truncate">Visitor In</span>
+            )}
           </button>
 
           {/* Visitor Out */}
@@ -90,7 +93,9 @@ export const SmartSecureSidebar: React.FC = () => {
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
             )}
             <LogOut className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-            {!isSidebarCollapsed && <span className="truncate">Visitor Out</span>}
+            {!isSidebarCollapsed && (
+              <span className="truncate">Visitor Out</span>
+            )}
           </button>
 
           {/* Visitor History */}
@@ -103,7 +108,9 @@ export const SmartSecureSidebar: React.FC = () => {
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
             )}
             <History className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-            {!isSidebarCollapsed && <span className="truncate">Visitor History</span>}
+            {!isSidebarCollapsed && (
+              <span className="truncate">Visitor History</span>
+            )}
           </button>
 
           {/* Staffs parent with sub-items */}
@@ -117,7 +124,11 @@ export const SmartSecureSidebar: React.FC = () => {
               {!isSidebarCollapsed && <span className="truncate">Staffs</span>}
               {!isSidebarCollapsed && (
                 <span className="ml-auto">
-                  {staffsOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {staffsOpen ? (
+                    <ChevronLeft className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </span>
               )}
             </button>
@@ -158,7 +169,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">Out</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/staffs/history")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/staffs/history")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="History"
                 >
@@ -180,10 +193,16 @@ export const SmartSecureSidebar: React.FC = () => {
               title="Vehicles"
             >
               <Car className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-              {!isSidebarCollapsed && <span className="truncate">Vehicles</span>}
+              {!isSidebarCollapsed && (
+                <span className="truncate">Vehicles</span>
+              )}
               {!isSidebarCollapsed && (
                 <span className="ml-auto">
-                  {vehiclesOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {vehiclesOpen ? (
+                    <ChevronLeft className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </span>
               )}
             </button>
@@ -202,7 +221,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">Out</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/vehicles/history")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/vehicles/history")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="History"
                 >
@@ -227,7 +248,11 @@ export const SmartSecureSidebar: React.FC = () => {
               {!isSidebarCollapsed && <span className="truncate">Reports</span>}
               {!isSidebarCollapsed && (
                 <span className="ml-auto">
-                  {reportsOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {reportsOpen ? (
+                    <ChevronLeft className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </span>
               )}
             </button>
@@ -235,7 +260,9 @@ export const SmartSecureSidebar: React.FC = () => {
             {reportsOpen && !isSidebarCollapsed && (
               <div className="space-y-1">
                 <button
-                  onClick={() => handleNavigation("/smartsecure/reports/visitors")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/reports/visitors")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Visitors"
                 >
@@ -246,7 +273,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">Visitors</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/reports/staffs")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/reports/staffs")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Staffs"
                 >
@@ -257,7 +286,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">Staffs</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/reports/member-vehicles")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/reports/member-vehicles")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Member Vehicles"
                 >
@@ -268,7 +299,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">Member Vehicles</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/reports/guest-vehicles")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/reports/guest-vehicles")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Guest Vehicles"
                 >
@@ -279,7 +312,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">Guest Vehicles</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/reports/patrolling")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/reports/patrolling")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Patrolling"
                 >
@@ -293,31 +328,57 @@ export const SmartSecureSidebar: React.FC = () => {
             )}
           </div>
 
-          {/* Patrolling */}
-          <button
-            onClick={() => handleNavigation("/smartsecure/patrolling")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Patrolling"
-          >
-            {isActive("/smartsecure/patrolling") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+          {/* Patrolling parent with sub-items */}
+          <div>
+            <button
+              onClick={() => setPatrollingOpen((v) => !v)}
+              className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+              title="Patrolling"
+            >
+              <MapPin className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+              {!isSidebarCollapsed && (
+                <span className="truncate">Patrolling</span>
+              )}
+              {!isSidebarCollapsed && (
+                <span className="ml-auto">
+                  {patrollingOpen ? (
+                    <ChevronLeft className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </span>
+              )}
+            </button>
+            {/* Sub-menu for Patrolling */}
+            {patrollingOpen && !isSidebarCollapsed && (
+              <div className="space-y-1 mt-1">
+                <button
+                  onClick={() => handleNavigation("/smartsecure/petrolling")}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
+                  title="Patrolling Info"
+                >
+                  {isActive("/smartsecure/petrolling") && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+                  <MapPin className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+                  <span className="truncate">Patrolling Info</span>
+                </button>
+                <button
+                  onClick={() =>
+                    handleNavigation("/smartsecure/patrolling-response")
+                  }
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
+                  title="Patrolling Response"
+                >
+                  {isActive("/smartsecure/patrolling-response") && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+                  <FileText className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+                  <span className="truncate">Response</span>
+                </button>
+              </div>
             )}
-            <MapPin className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-            {!isSidebarCollapsed && <span className="truncate">Patrolling</span>}
-          </button>
-
-          {/* Patrolling Response */}
-          <button
-            onClick={() => handleNavigation("/smartsecure/patrolling-response")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Patrolling Response"
-          >
-            {isActive("/smartsecure/patrolling-response") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <FileText className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-            {!isSidebarCollapsed && <span className="truncate">Patrolling Response</span>}
-          </button>
+          </div>
 
           {/* Shift */}
           <button
@@ -356,7 +417,11 @@ export const SmartSecureSidebar: React.FC = () => {
               {!isSidebarCollapsed && <span className="truncate">Setup</span>}
               {!isSidebarCollapsed && (
                 <span className="ml-auto">
-                  {setupOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {setupOpen ? (
+                    <ChevronLeft className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </span>
               )}
             </button>
@@ -375,7 +440,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">General</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/setup/visitor-parking")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/setup/visitor-parking")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Visitor Parking"
                 >
@@ -386,7 +453,9 @@ export const SmartSecureSidebar: React.FC = () => {
                   <span className="truncate">Visitor Parking</span>
                 </button>
                 <button
-                  onClick={() => handleNavigation("/smartsecure/setup/support-staff")}
+                  onClick={() =>
+                    handleNavigation("/smartsecure/setup/support-staff")
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Support Staff"
                 >

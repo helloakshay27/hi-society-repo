@@ -346,9 +346,11 @@ const Petrolling = () => {
   const columns: ColumnConfig[] = [
     { key: "actions", label: "Actions", sortable: false },
     { key: "area", label: "Area", sortable: true },
-    { key: "created_on", label: "Created On", sortable: true },
-    { key: "active_inactive", label: "Active/Inactive", sortable: true },
-    { key: "qr_code", label: "Qr Code", sortable: false },
+    { key: "checkpoints_count", label: "No. of Checkpoints", sortable: true },
+    { key: "created_on", label: "Start Date", sortable: true },
+    { key: "grace_period", label: "Grace Time", sortable: true },
+    { key: "active_inactive", label: "Status", sortable: true },
+    // { key: "qr_code", label: "Qr Code", sortable: false },
   ];
 
   const logColumns: ColumnConfig[] = [
@@ -1144,6 +1146,18 @@ const Petrolling = () => {
         );
       case "area":
         return <div className="font-medium text-gray-600">{item.area}</div>;
+      case "checkpoints_count":
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-black">
+            {item.summary?.checkpoints_count || item.checkpoints?.length || 0}
+          </span>
+        );
+      case "grace_period":
+        return (
+          <span className="text-gray-600">
+            {item.grace_period_minutes ? `${item.grace_period_minutes} min` : "N/A"}
+          </span>
+        );
       case "created_on":
         return (
           <div className="text-gray-600">

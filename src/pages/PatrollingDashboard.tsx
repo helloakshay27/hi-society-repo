@@ -389,12 +389,17 @@ export const PatrollingDashboard = () => {
     </span>,
     shift_type: <div className="text-sm text-gray-600">{getShiftType(patrol.schedules)}</div>,
     grace_time: <span className="text-sm text-gray-600">{patrol.grace_period_minutes} min</span>,
-    status: <div className="flex items-center justify-center">
-      <Switch
-        checked={patrol.active}
-        onCheckedChange={() => handleToggleStatus(patrol.id, patrol.active)}
-      />
-    </div>
+    status: (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          patrol.active
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+        }`}
+      >
+        {patrol.active ? 'Active' : 'Inactive'}
+      </span>
+    ),
   });
   const handleView = (id: number) => {
     console.log('View patrolling:', id);

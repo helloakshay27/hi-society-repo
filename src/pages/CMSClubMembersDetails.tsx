@@ -23,6 +23,7 @@ import {
     TextareaAutosize,
 } from "@mui/material";
 import axios from "axios";
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 
 interface Attachment {
     id: number;
@@ -273,6 +274,7 @@ const QUESTION_SECTIONS: { [key: string]: { title: string; questionIds: string[]
 
 export const CMSClubMembersDetails = () => {
     const { id } = useParams<{ id: string }>();
+    const { shouldShow } = useDynamicPermissions();
     const navigate = useNavigate();
 
     const [membershipData, setMembershipData] = useState<GroupMembershipDetail | null>(null);
@@ -765,14 +767,18 @@ export const CMSClubMembersDetails = () => {
                             <RefreshCw className="w-4 h-4 mr-2" />
                             Renew Membership
                         </Button>
-                        <Button
-                            onClick={handleEdit}
-                            variant="outline"
-                            className="border-[#C72030] text-[#C72030]"
-                        >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                        </Button>
+                        {
+                            shouldShow("Club Members", "update") && (
+                                <Button
+                                    onClick={handleEdit}
+                                    variant="outline"
+                                    className="border-[#C72030] text-[#C72030]"
+                                >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit
+                                </Button>
+                            )
+                        }
                     </div>
                 </div>
             </div>
