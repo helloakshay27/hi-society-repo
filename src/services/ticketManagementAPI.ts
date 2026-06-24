@@ -1098,6 +1098,15 @@ export const ticketManagementAPI = {
     try {
       const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/resolution_tat_timings.json`);
       const data = response.data;
+      // API returns a direct array: [{escalation_name, status, scheduled_minutes, escalate_to_user, fired_at}]
+      if (Array.isArray(data)) {
+        return data.map((item: any) => ({
+          ...item,
+          minutes: item.minutes ?? item.scheduled_minutes,
+          users: item.users ?? item.escalate_to_user ?? [],
+        }));
+      }
+      // Fallback: old escalation_matrix format
       const matrix = Array.isArray(data.escalation_matrix) ? data.escalation_matrix : [];
       return matrix.map((item: any) => ({
         escalation_name: item.name,

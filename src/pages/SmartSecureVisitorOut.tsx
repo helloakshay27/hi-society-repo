@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Loader2 } from "lucide-react";
+import { Plus, Eye, Pencil, Loader2 } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -30,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // ─── API Types ─────────────────────────────────────────────────────────────────
 
@@ -149,6 +151,7 @@ const markVisitorExit = async (
 // ─── Column Config ─────────────────────────────────────────────────────────────
 
 const visitorOutColumns: ColumnConfig[] = [
+  { key: "action",         label: "Action",         sortable: false, hideable: false, draggable: false },
   { key: "sr_no",          label: "Sr. No.",       sortable: false, hideable: true,  draggable: true  },
   { key: "visitor_image",  label: "Photo",        sortable: false, hideable: true,  draggable: true  },
   { key: "guest_name",     label: "Visitor Name",  sortable: true,  hideable: true,  draggable: true  },
@@ -165,6 +168,8 @@ const visitorOutColumns: ColumnConfig[] = [
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 const SmartSecureVisitorOut: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
@@ -199,6 +204,22 @@ const SmartSecureVisitorOut: React.FC = () => {
 
   const renderCell = useCallback((visitor: ApiVisitor, columnKey: string) => {
     switch (columnKey) {
+      case "action":
+        return (
+          <div className="flex gap-1">
+            {shouldShow("Visitor Out", "show") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)} title="View">
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {shouldShow("Visitor Out", "update") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)} title="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        );
+
       case "sr_no": {
         const idx = rows.indexOf(visitor);
         return (
@@ -368,7 +389,7 @@ const SmartSecureVisitorOut: React.FC = () => {
         return val ? String(val) : "--";
       }
     }
-    }, [currentPage, perPage, rows, loadingIds, queryClient, setOutModalVisitor, setSelectedGateId, setOutModalOpen]);
+    }, [currentPage, perPage, rows, loadingIds, queryClient, setOutModalVisitor, setSelectedGateId, setOutModalOpen, navigate, shouldShow]);
 
   const renderPaginationItems = () => {
     const items = [];
@@ -432,7 +453,19 @@ const SmartSecureVisitorOut: React.FC = () => {
         hideTableExport={false}
         hideColumnsButton={false}
         loading={isLoading}
-        leftActions={<div />}
+        leftActions={
+          <div className="flex gap-2">
+            {shouldShow("Visitor Out", "create") && (
+              <Button
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                onClick={() => navigate("/smartsecure/visitor-in/add")}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add
+              </Button>
+            )}
+          </div>
+        }
       />
 
       {/* OUT Gate Selection Dialog */}

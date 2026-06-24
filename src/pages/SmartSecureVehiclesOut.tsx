@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Loader2 } from "lucide-react";
+import { Plus, Eye, Pencil, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // ─── API Types ─────────────────────────────────────────────────────────────────
 
@@ -196,6 +198,8 @@ const VehicleOutModal: React.FC<VehicleOutModalProps> = ({
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const SmartSecureVehiclesOut: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [outModalOpen, setOutModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<ApiVehicleOut | null>(null);
@@ -295,18 +299,32 @@ const SmartSecureVehiclesOut: React.FC = () => {
           return <span className="text-sm text-gray-600">{row.delivery_service_provider || "--"}</span>;
 
         case "action":
-          return row.out_time ? (
-            <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">
-              Exited
-            </span>
-          ) : (
-            <Button
-              size="sm"
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white text-xs px-3 py-1 h-7"
-              onClick={() => handleOutClick(row)}
-            >
-              Out
-            </Button>
+          return (
+            <div className="flex gap-1 items-center">
+              {shouldShow("Vehicle Out", "show") && (
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="View">
+                  <Eye className="w-4 h-4 text-gray-700" />
+                </Button>
+              )}
+              {shouldShow("Vehicle Out", "update") && (
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="Edit">
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              )}
+              {row.out_time ? (
+                <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">
+                  Exited
+                </span>
+              ) : (
+                <Button
+                  size="sm"
+                  className="bg-[#C72030] hover:bg-[#C72030]/90 text-white text-xs px-3 py-1 h-7"
+                  onClick={() => handleOutClick(row)}
+                >
+                  Out
+                </Button>
+              )}
+            </div>
           );
 
         default: {
@@ -315,7 +333,7 @@ const SmartSecureVehiclesOut: React.FC = () => {
         }
       }
     },
-    [currentPage, perPage]
+    [currentPage, perPage, navigate, shouldShow]
   );
 
   // ── Pagination ─────────────────────────────────────────────────────────────
@@ -373,6 +391,19 @@ const SmartSecureVehiclesOut: React.FC = () => {
         hideTableExport={false}
         hideColumnsButton={false}
         loading={isLoading}
+        leftActions={
+          <div className="flex gap-2">
+            {shouldShow("Vehicle Out", "create") && (
+              <Button
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                onClick={() => navigate("/smartsecure/visitor-in/add")}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add
+              </Button>
+            )}
+          </div>
+        }
       />
 
       {/* Pagination */}
