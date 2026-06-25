@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Eye, Pencil, Loader2 } from "lucide-react";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, RadioGroup, FormControlLabel, Radio } from "@mui/material";
 import {
   Dialog,
@@ -30,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
@@ -137,6 +139,7 @@ const buildQueryString = (page: number, filters: FilterState): string => {
 // ─── Column Config ────────────────────────────────────────────────────────────
 
 const vehicleHistoryColumns: ColumnConfig[] = [
+  { key: "actions",       label: "Actions",        sortable: false, hideable: false, draggable: false },
   { key: "sr_no",         label: "Sr. No.",       sortable: false, hideable: true,  draggable: true },
   { key: "name",          label: "Name",          sortable: true,  hideable: true,  draggable: true },
   { key: "vehicle_number", label: "Vehicle Number", sortable: true,  hideable: true,  draggable: true },
@@ -542,6 +545,8 @@ interface FilterOptions {
 }
 
 const SmartSecureVehiclesHistory: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -653,6 +658,22 @@ const SmartSecureVehiclesHistory: React.FC = () => {
       const mobile = row.user_society?.user_mobile || row.gatekeeper?.guest_number || "--";
 
       switch (columnKey) {
+        case "actions":
+          return (
+            <div className="flex gap-1">
+              {shouldShow("Vehicle History", "show") && (
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="View">
+                  <Eye className="w-4 h-4 text-gray-700" />
+                </Button>
+              )}
+              {shouldShow("Vehicle History", "update") && (
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="Edit">
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          );
+
         case "sr_no":
           return (
             <span className="text-sm text-gray-500 font-medium">
@@ -697,7 +718,7 @@ const SmartSecureVehiclesHistory: React.FC = () => {
         }
       }
     },
-    [currentPage, perPage]
+    [currentPage, perPage, navigate, shouldShow]
   );
 
   // ── Pagination ─────────────────────────────────────────────────────────────
@@ -768,14 +789,18 @@ const SmartSecureVehiclesHistory: React.FC = () => {
         loading={isLoading}
         onFilterClick={() => setFilterOpen(true)}
         leftActions={
-          <Button
-            size="sm"
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white flex items-center gap-1.5"
-            onClick={() => setAddOpen(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Add
-          </Button>
+          <div className="flex gap-2">
+            {shouldShow("Vehicle History", "create") && (
+              <Button
+                size="sm"
+                className="bg-[#C72030] hover:bg-[#C72030]/90 text-white flex items-center gap-1.5"
+                onClick={() => setAddOpen(true)}
+              >
+                <Plus className="w-4 h-4" />
+                Add
+              </Button>
+            )}
+          </div>
         }
       />
 

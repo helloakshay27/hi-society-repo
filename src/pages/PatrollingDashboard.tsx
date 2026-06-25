@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -18,6 +19,7 @@ import { EnhancedTaskTable } from '@/components/enhanced-table/EnhancedTaskTable
 import { useDebounce } from '@/hooks/useDebounce';
 import { userService, User } from '@/services/userService';
 import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
+import { useLayout } from '@/contexts/LayoutContext';
 
 // Type definitions for the API response
 interface PatrollingItem {
@@ -143,7 +145,15 @@ const columns: ColumnConfig[] = [{
   draggable: true
 }];
 export const PatrollingDashboard = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+  const { setCurrentSection } = useLayout();
+
+  // Keep sidebar/navbar showing "Security" section
+  useEffect(() => {
+    setCurrentSection('Security');
+  }, [setCurrentSection]);
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -353,12 +363,16 @@ export const PatrollingDashboard = () => {
   // Render row function for enhanced table
   const renderRow = (patrol: PatrollingItem) => ({
     actions: <div className="flex items-center gap-2">
-      <button onClick={() => handleView(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="View">
-        <Eye className="w-4 h-4" />
-      </button>
-      <button onClick={() => handleEdit(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="Edit">
-        <Edit className="w-4 h-4" />
-      </button>
+      {shouldShow("Patrolling Info", "show") && (
+        <button onClick={() => handleView(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="View">
+          <Eye className="w-4 h-4" />
+        </button>
+      )}
+      {shouldShow("Patrolling Info", "update") && (
+        <button onClick={() => handleEdit(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="Edit">
+          <Edit className="w-4 h-4" />
+        </button>
+      )}
       {/* <button onClick={() => handleDelete(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="Delete">
         <Trash2 className="w-4 h-4" />
       </button> */}
@@ -525,12 +539,16 @@ export const PatrollingDashboard = () => {
         onFilterClick={() => setIsFilterOpen(true)}
         loading={loading}
         leftActions={(
-          <Button
-            className='bg-[#C72030] text-white hover:bg-[#C72030]/90'
-            onClick={() => setShowActionPanel((prev) => !prev)}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Action
-          </Button>
+          <div className="flex gap-2">
+            {shouldShow("Patrolling Info", "create") && (
+              <Button
+                className='bg-[#C72030] text-white hover:bg-[#C72030]/90'
+                onClick={() => setShowActionPanel((prev) => !prev)}
+              >
+                <Plus className="w-4 h-4 mr-2" /> Action
+              </Button>
+            )}
+          </div>
         )}
       />
 

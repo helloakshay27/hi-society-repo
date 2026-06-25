@@ -28,7 +28,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { toast } from "sonner";
-import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { departmentService, Department } from "@/services/departmentService";
 import { RootState } from "@/store/store";
 
@@ -547,23 +547,23 @@ export const RosterCreatePage: React.FC = () => {
 
   // Handle input changes
   const handleInputChange = (field: keyof RosterFormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-    // Clear field error when user starts typing/selecting
-    if (errors[field as keyof typeof errors]) {
-      setErrors((prev) => ({ ...prev, [field]: false }));
-    }
-
-    // If department selection changes, fetch filtered employees
     if (field === "departments") {
-      fetchFilteredFMUsers(value as number[]);
-      // Clear selected employees when departments change
+      // Atomic update: set new departments AND clear employees in one call
       setFormData((prev) => ({
         ...prev,
+        departments: value as number[],
         selectedEmployees: [],
       }));
-      // Clear employee selection error
-      setErrors((prev) => ({ ...prev, selectedEmployees: false }));
+      // Fetch employees for the newly selected departments
+      fetchFilteredFMUsers(value as number[]);
+      // Clear errors
+      setErrors((prev) => ({ ...prev, departments: false, selectedEmployees: false }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      // Clear field error when user starts typing/selecting
+      if (errors[field as keyof typeof errors]) {
+        setErrors((prev) => ({ ...prev, [field]: false }));
+      }
     }
   };
 

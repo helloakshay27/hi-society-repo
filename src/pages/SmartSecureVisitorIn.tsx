@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, KeyRound, Loader2, Eye } from "lucide-react";
+import { Plus, KeyRound, Loader2, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import {
   Pagination,
@@ -156,6 +157,7 @@ const visitorInColumns: ColumnConfig[] = [
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 const SmartSecureVisitorIn: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
@@ -221,13 +223,26 @@ const SmartSecureVisitorIn: React.FC = () => {
     switch (columnKey) {
       case "action":
         return (
-          <button
-            onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
-            className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#C72030] transition-colors"
-            title="View Details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
+          <div className="flex gap-1">
+            {shouldShow("Visitor In", "show") && (
+              <button
+                onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
+                className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#C72030] transition-colors"
+                title="View Details"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+            )}
+            {shouldShow("Visitor In", "update") && (
+              <button
+                onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
+                className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#C72030] transition-colors"
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         );
 
       case "sr_no": {
@@ -418,13 +433,15 @@ const SmartSecureVisitorIn: React.FC = () => {
 
   const leftActions = (
     <div className="flex gap-2">
-      <Button
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        onClick={() => navigate("/smartsecure/visitor-in/add")}
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add
-      </Button>
+      {shouldShow("Visitor In", "create") && (
+        <Button
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          onClick={() => navigate("/smartsecure/visitor-in/add")}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add
+        </Button>
+      )}
       <Button
         variant="outline"
         className="h-9 px-4 text-sm font-medium border-gray-300"

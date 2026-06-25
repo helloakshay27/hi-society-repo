@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, CheckCircle, AlertCircle, Activity, X, ChevronLeft, ChevronRight, Paperclip, CalendarIcon, Filter } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, Activity, X, ChevronLeft, ChevronRight, Paperclip, CalendarIcon, Filter, Eye, Pencil, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
@@ -280,6 +281,7 @@ const baseColumnDefs = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const PatrollingResponsePage = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [responseData, setResponseData] = useState<PatrollingResponse[]>([]);
   const [allQuestions, setAllQuestions] = useState<Array<{ question_id: number | null; question_text: string }>>([]);
@@ -857,7 +859,23 @@ export const PatrollingResponsePage = () => {
   const renderCell = (item: PatrollingResponse, columnKey: string) => {
     switch (columnKey) {
       case 'id':
-        return <span className="font-medium text-gray-900">#{item.id}</span>;
+        return (
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-900">#{item.id}</span>
+            <div className="flex gap-0.5">
+              {shouldShow("Patrolling Response", "show") && (
+                <Button variant="ghost" size="sm" onClick={() => handleViewDetails(item)} title="View" className="h-7 w-7 p-0">
+                  <Eye className="w-3.5 h-3.5 text-gray-700" />
+                </Button>
+              )}
+              {shouldShow("Patrolling Response", "update") && (
+                <Button variant="ghost" size="sm" onClick={() => handleViewDetails(item)} title="Edit" className="h-7 w-7 p-0">
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+        );
       case 'patrol_name':
         return <span className="font-medium">{item.patrol_name}</span>;
       case 'checkpoint_name':
@@ -1271,6 +1289,19 @@ export const PatrollingResponsePage = () => {
               hideTableExport={false}
               loading={isLoading}
               onFilterClick={() => setIsFilterOpen(true)}
+              leftActions={
+                <div className="flex gap-2">
+                  {shouldShow("Patrolling Response", "create") && (
+                    <Button
+                      className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                      onClick={() => navigate("/security/patrolling/create")}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add
+                    </Button>
+                  )}
+                </div>
+              }
               rightActions={
                 activeFilterCount > 0 ? (
                   <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-bold bg-[#C72030] text-white">

@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Loader2 } from "lucide-react";
+import { Plus, Eye, Pencil, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -143,7 +145,7 @@ const buildQueryString = (page: number, filters: FilterState): string => {
 // ─── Column Config ────────────────────────────────────────────────────────────
 
 const historyColumns: ColumnConfig[] = [
-  // { key: "actions",           label: "Actions",         sortable: false, hideable: false, draggable: false },
+  { key: "actions",           label: "Actions",         sortable: false, hideable: false, draggable: false },
   { key: "sr_no",             label: "Sr. No.",         sortable: false, hideable: true,  draggable: true  },
   { key: "visitor_image",     label: "Photo",           sortable: false, hideable: true,  draggable: true  },
   { key: "id",                label: "Id",              sortable: true,  hideable: true,  draggable: true  },
@@ -306,6 +308,8 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const SmartSecureVisitorHistory: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
@@ -354,26 +358,17 @@ const SmartSecureVisitorHistory: React.FC = () => {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="flex items-center gap-2">
-            <button
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-              title="View"
-              onClick={() => toast.info(`Viewing visitor: ${row.guest_name}`)}
-            >
-              <svg className="w-4 h-4 text-gray-600 hover:text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-            <button
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-              title="Flag"
-              onClick={() => toast.info(`Flagged: ${row.guest_name}`)}
-            >
-              <svg className="w-4 h-4 text-gray-600 hover:text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-              </svg>
-            </button>
+          <div className="flex gap-1">
+            {shouldShow("Visitor History", "show") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="View">
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {shouldShow("Visitor History", "update") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
 
@@ -510,7 +505,7 @@ const SmartSecureVisitorHistory: React.FC = () => {
         return val ? String(val) : "--";
       }
     }
-  }, [currentPage, perPage, rows]);
+  }, [currentPage, perPage, rows, navigate, shouldShow]);
 
   // ── Pagination ─────────────────────────────────────────────────────────────
 
@@ -561,6 +556,19 @@ const SmartSecureVisitorHistory: React.FC = () => {
         hideColumnsButton={false}
         loading={isLoading}
         onFilterClick={() => setFilterOpen(true)}
+        leftActions={
+          <div className="flex gap-2">
+            {shouldShow("Visitor History", "create") && (
+              <Button
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                onClick={() => navigate("/smartsecure/visitor-in/add")}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add
+              </Button>
+            )}
+          </div>
+        }
       />
 
       {/* Pagination */}

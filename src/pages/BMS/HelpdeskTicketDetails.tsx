@@ -974,7 +974,11 @@ export const TicketDetailsPage = () => {
               fired: step.fired,
               fired_at: step.fired_at,
             }))
-          : Array.isArray(resp) ? resp : [];
+          : Array.isArray(resp) ? resp.map((step: any) => ({
+              ...step,
+              minutes: step.minutes ?? step.scheduled_minutes,
+              users: step.users ?? step.escalate_to_user ?? [],
+            })) : [];
         setResponseTatTimings(tatSteps.length > 0 ? tatSteps : null);
         if (tatSteps.length > 0) {
           setResponseSequence(tatSteps);
@@ -3655,48 +3659,70 @@ export const TicketDetailsPage = () => {
         // Example: E1=5min (300s), Aging=30s → E1 should show 4min 30s (270s) remaining
         try {
           if (Array.isArray(responseTatTimings) && responseTatTimings.length > 0) {
-            let currentLevelIndex = -1;
-            let remainingSeconds = 0;
-            let consumedSeconds = 0; // Track consumed time in SECONDS
+            // Check if any step has actual scheduled_minutes configured (non-null, > 0)
+            const hasScheduledMinutes = responseTatTimings.some(step => {
+              const m = step?.scheduled_minutes ?? step?.minutes;
+              return m != null && m > 0;
+            });
 
-            // Iterate through escalation levels to find current level
-            for (let i = 0; i < responseTatTimings.length; i++) {
-              const step = responseTatTimings[i];
-              const stepMinutes = step?.scheduled_minutes ?? step?.minutes ?? 0;
-              const stepSeconds = step?.scheduled_seconds ?? 0;
-              const stepTotalSeconds = (stepMinutes * 60) + stepSeconds; // Convert to total seconds
+            if (!hasScheduledMinutes) {
+              // scheduled_minutes not configured in response escalation matrix
+              // Fall back to next_response_escalation.escalation_time countdown
+              setResponseSequenceIndex(0);
+              responseSeqIndexRef.current = 0;
+              if (ticketData.next_response_escalation?.escalation_time) {
+                const escDate = new Date(ticketData.next_response_escalation.escalation_time).getTime();
+                const diffMs = escDate - now;
+                setResponseEscalationSeconds(Math.floor(diffMs / 1000));
+                console.warn(`📍 Response TAT: using escalation_time fallback, ${Math.floor(diffMs / 1000)}s remaining`);
+              } else {
+                setResponseEscalationSeconds(0);
+              }
+            } else {
+              let currentLevelIndex = -1;
+              let remainingSeconds = 0;
+              let consumedSeconds = 0;
 
-              // Check if aging fits within this level
-              if (currentAgeingSeconds < consumedSeconds + stepTotalSeconds) {
-                // We're in this escalation level
-                currentLevelIndex = i;
-                const secondsUsedInThisLevel = currentAgeingSeconds - consumedSeconds;
-                remainingSeconds = stepTotalSeconds - secondsUsedInThisLevel;
-                console.log(`📍 Response TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s (${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s) remaining`);
-                break;
+              for (let i = 0; i < responseTatTimings.length; i++) {
+                const step = responseTatTimings[i];
+                const stepMinutes = step?.scheduled_minutes ?? step?.minutes ?? 0;
+                const stepSeconds = step?.scheduled_seconds ?? 0;
+                const stepTotalSeconds = (stepMinutes * 60) + stepSeconds;
+
+                if (currentAgeingSeconds < consumedSeconds + stepTotalSeconds) {
+                  currentLevelIndex = i;
+                  const secondsUsedInThisLevel = currentAgeingSeconds - consumedSeconds;
+                  remainingSeconds = stepTotalSeconds - secondsUsedInThisLevel;
+                  console.log(`📍 Response TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s remaining`);
+                  break;
+                }
+                consumedSeconds += stepTotalSeconds;
               }
 
-              // This level is complete, move to next
-              consumedSeconds += stepTotalSeconds;
-            }
+              if (currentLevelIndex === -1) {
+                currentLevelIndex = responseTatTimings.length - 1;
+                const lastStep = responseTatTimings[currentLevelIndex];
+                const lastStepMinutes = lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
+                const lastStepSeconds = lastStep?.scheduled_seconds ?? 0;
+                const lastStepTotalSeconds = (lastStepMinutes * 60) + lastStepSeconds;
+                const excessSeconds = currentAgeingSeconds - consumedSeconds;
+                remainingSeconds = lastStepTotalSeconds - excessSeconds;
+                console.log(`⚠️ Response TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`);
+              }
 
-            // If no active level found, we've exceeded all levels
-            if (currentLevelIndex === -1) {
-              currentLevelIndex = responseTatTimings.length - 1;
-              const lastStep = responseTatTimings[currentLevelIndex];
-              const lastStepMinutes = lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
-              const lastStepSeconds = lastStep?.scheduled_seconds ?? 0;
-              const lastStepTotalSeconds = (lastStepMinutes * 60) + lastStepSeconds;
-              const excessSeconds = currentAgeingSeconds - consumedSeconds;
-              remainingSeconds = lastStepTotalSeconds - excessSeconds; // Will be negative
-              console.log(`⚠️ Response TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`);
+              responseSeqIndexRef.current = currentLevelIndex;
+              setResponseSequenceIndex(currentLevelIndex);
+              setResponseEscalationSeconds(remainingSeconds);
             }
-
-            responseSeqIndexRef.current = currentLevelIndex;
-            setResponseSequenceIndex(currentLevelIndex);
-            setResponseEscalationSeconds(remainingSeconds);
           } else {
-            setResponseEscalationSeconds(0);
+            // No TAT sequence — use escalation_time if available
+            if (ticketData.next_response_escalation?.escalation_time) {
+              const escDate = new Date(ticketData.next_response_escalation.escalation_time).getTime();
+              const diffMs = escDate - now;
+              setResponseEscalationSeconds(Math.floor(diffMs / 1000));
+            } else {
+              setResponseEscalationSeconds(0);
+            }
           }
         } catch (e) {
           console.error('Error initializing response escalation seconds', e);
@@ -3928,10 +3954,10 @@ export const TicketDetailsPage = () => {
           const seq = responseSequence;
           if (seq && seq.length > 0 && responseSequenceIndex >= 0) {
             const step = seq[responseSequenceIndex];
-            const name = step?.escalation_name || '';
+            const name = (step?.escalation_name || '').toUpperCase();
             return name ? `Escalation - ${name}` : 'Escalation';
           }
-          const escName = ticketData.next_response_escalation?.escalation_name || '';
+          const escName = (ticketData.next_response_escalation?.escalation_name || '').toUpperCase();
           return escName ? `Escalation - ${escName}` : 'Escalation';
         })(),
         value: (() => {
@@ -3979,10 +4005,10 @@ export const TicketDetailsPage = () => {
           const seq = resolutionSequence;
           if (seq && seq.length > 0 && resolutionSequenceIndex >= 0) {
             const step = seq[resolutionSequenceIndex];
-            const name = step?.escalation_name || '';
+            const name = (step?.escalation_name || '').toUpperCase();
             return name ? `Escalation - ${name}` : 'Escalation';
           }
-          const escName = ticketData.next_resolution_escalation?.escalation_name || '';
+          const escName = (ticketData.next_resolution_escalation?.escalation_name || '').toUpperCase();
           return escName ? `Escalation - ${escName}` : 'Escalation';
         })(),
         value: (() => {
@@ -4683,7 +4709,7 @@ export const TicketDetailsPage = () => {
                               const seq = responseSequence;
                               if (seq && seq.length > 0 && responseSequenceIndex >= 0) {
                                 const step = seq[responseSequenceIndex];
-                                const escName = step?.escalation_name || '';
+                                const escName = (step?.escalation_name || '').toUpperCase();
                                 const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
                                 const users = usersArr.filter(u => !!u);
 
@@ -4717,7 +4743,7 @@ export const TicketDetailsPage = () => {
                               }
 
                               // Fallback to ticketData if sequence is not available
-                              const escName = ticketData.next_response_escalation?.escalation_name || '';
+                              const escName = (ticketData.next_response_escalation?.escalation_name || '').toUpperCase();
                               const users = Array.isArray(ticketData.next_response_escalation?.users)
                                 ? ticketData.next_response_escalation.users.filter(u => !!u)
                                 : [];
@@ -4799,7 +4825,7 @@ export const TicketDetailsPage = () => {
                               const seq = resolutionSequence;
                               if (seq && seq.length > 0 && resolutionSequenceIndex >= 0) {
                                 const step = seq[resolutionSequenceIndex];
-                                const escName = step?.escalation_name || '';
+                                const escName = (step?.escalation_name || '').toUpperCase();
                                 const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
                                 const users = usersArr.filter(u => !!u);
 
@@ -4833,7 +4859,7 @@ export const TicketDetailsPage = () => {
                               }
 
                               // Fallback to ticketData if sequence is not available
-                              const escName = ticketData.next_resolution_escalation?.escalation_name || '';
+                              const escName = (ticketData.next_resolution_escalation?.escalation_name || '').toUpperCase();
                               const users = Array.isArray(ticketData.next_resolution_escalation?.users)
                                 ? ticketData.next_resolution_escalation.users.filter(u => !!u)
                                 : [];
@@ -4943,7 +4969,7 @@ export const TicketDetailsPage = () => {
                         </div>
                         <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
                           {(() => {
-                            const escName = ticketData.next_executive_escalation?.escalation_name || '';
+                            const escName = (ticketData.next_executive_escalation?.escalation_name || '').toUpperCase();
                             return escName ? `Golden Ticket Escalation - ${escName}` : 'Golden Ticket Escalation';
                           })()}
                         </span>
