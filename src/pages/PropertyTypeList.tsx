@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface PropertyType {
   id: number;
@@ -23,6 +24,7 @@ interface Permissions {
 }
 
 const PropertyTypeList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   
@@ -152,11 +154,11 @@ const PropertyTypeList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {/* {propertyTypePermission.update === "true" && ( */}
+            {shouldShow("PropertyType", "update") && (
               <Button variant="ghost" size="sm" onClick={() => handleEditPropertyType(item.id)} title="Edit">
                 <Edit className="w-4 h-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case 'status':
@@ -185,7 +187,7 @@ const PropertyTypeList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {/* {propertyTypePermission.create === "true" && ( */}
+      {shouldShow("PropertyType", "create") && (
         <Button 
           onClick={handleAddPropertyType}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -193,7 +195,7 @@ const PropertyTypeList = () => {
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
           Add
         </Button>
-      {/* )} */}
+      )}
     </div>
   );
 

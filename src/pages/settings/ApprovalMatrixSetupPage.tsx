@@ -7,6 +7,7 @@ import { Heading } from "@/components/ui/heading";
 import { Search, Edit } from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
 import { format } from "date-fns";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 interface ApprovalData {
   id: number;
   approval_function_name: string;
@@ -15,6 +16,7 @@ interface ApprovalData {
 }
 
 const ApprovalMatrixSetupPage = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [approvalData, setApprovalData] = useState<ApprovalData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,12 +90,14 @@ const ApprovalMatrixSetupPage = () => {
 
     {/* Action Bar */}
     <div className="flex justify-between items-center mb-6">
-      <Button
-        onClick={() => navigate('/settings/approval-matrix/setup/add')}
-        className="bg-[#C72030] hover:bg-[#A61B28] text-white"
-      >
-        + Add
-      </Button>
+      {shouldShow("ApprovalMatrix", "create") && (
+        <Button
+          onClick={() => navigate('/settings/approval-matrix/setup/add')}
+          className="bg-[#C72030] hover:bg-[#A61B28] text-white"
+        >
+          + Add
+        </Button>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -136,14 +140,16 @@ const ApprovalMatrixSetupPage = () => {
             approvalData.map(item => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="p-1"
-                    onClick={() => navigate(`/settings/approval-matrix/setup/edit/${item.id}`)}
-                  >
-                    <Edit className="w-4 h-4 text-[#1a1a1a]" />
-                  </Button>
+                  {shouldShow("ApprovalMatrix", "update") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-1"
+                      onClick={() => navigate(`/settings/approval-matrix/setup/edit/${item.id}`)}
+                    >
+                      <Edit className="w-4 h-4 text-[#1a1a1a]" />
+                    </Button>
+                  )}
                 </TableCell>
                 <TableCell className="font-medium">{item.id}</TableCell>
                 <TableCell>{item.approval_function_name}</TableCell>

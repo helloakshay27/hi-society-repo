@@ -7,6 +7,7 @@ import { AddGroupModal } from '@/components/AddGroupModal';
 import axios from 'axios';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import { toast } from 'sonner';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 
 export const FMGroupDashboard = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -15,6 +16,7 @@ export const FMGroupDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const token = localStorage.getItem("access_token");
 
@@ -119,13 +121,15 @@ export const FMGroupDashboard = () => {
         </div>
 
         <div className="flex items-center gap-3 mb-6">
-          <Button 
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
-          </Button>
+          {shouldShow("Groups", "create") && (
+            <Button 
+              className="bg-[#C72030] hover:bg-[#B8252F] text-white"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </Button>
+          )}
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
@@ -153,20 +157,24 @@ export const FMGroupDashboard = () => {
                   <TableRow key={group.id} className="hover:bg-gray-50">
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleViewGroup(group.id)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleEditGroup(group.id)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        {shouldShow("Groups", "show") && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewGroup(group.id)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {shouldShow("Groups", "update") && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEditGroup(group.id)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="sm"

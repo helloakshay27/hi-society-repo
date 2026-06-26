@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const ProjectConfigurationList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const [configurations, setConfigurations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,7 @@ const ProjectConfigurationList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            {/* {projectConfigurationPermission.update === "true" && ( */}
+            {shouldShow("ProjectConfig", "update") && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -144,7 +146,7 @@ const ProjectConfigurationList = () => {
               >
                 <Edit className="h-4 w-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case "id":
@@ -198,13 +200,17 @@ const ProjectConfigurationList = () => {
   };
 
   const renderCustomActions = () => (
-    <Button
-      onClick={handleAdd}
-      className="bg-[#C72030] hover:bg-[#A01828] text-white"
-    >
-      <Plus className="h-4 w-4 mr-2" />
-      Add
-    </Button>
+    <>
+      {shouldShow("ProjectConfig", "create") && (
+        <Button
+          onClick={handleAdd}
+          className="bg-[#C72030] hover:bg-[#A01828] text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add
+        </Button>
+      )}
+    </>
   );
 
   const renderListTab = () => (

@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Plus, Edit, Pencil } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface ConnectivityType {
   id: number;
@@ -18,6 +19,7 @@ interface ConnectivityType {
 }
 
 const ConnectivityTypeList: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [connectivityTypes, setConnectivityTypes] = useState<ConnectivityType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,12 +110,14 @@ const ConnectivityTypeList: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <button
-              onClick={() => handleEdit(item.id)}
-              className="text-[#C72030] hover:text-[#A01828]"
-            >
-              <Pencil size={18} />
-            </button>
+            {shouldShow("ConnectivityType", "update") && (
+              <button
+                onClick={() => handleEdit(item.id)}
+                className="text-[#C72030] hover:text-[#A01828]"
+              >
+                <Pencil size={18} />
+              </button>
+            )}
           </div>
         );
       case "id":
@@ -148,13 +152,15 @@ const ConnectivityTypeList: React.FC = () => {
 
   const renderCustomActions = () => (
     <>
-      <Button
-        onClick={handleAdd}
-        className="bg-[#C72030] hover:bg-[#A01828] text-white"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add
-      </Button>
+      {shouldShow("ConnectivityType", "create") && (
+        <Button
+          onClick={handleAdd}
+          className="bg-[#C72030] hover:bg-[#A01828] text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add
+        </Button>
+      )}
     </>
   );
 

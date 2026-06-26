@@ -26,6 +26,7 @@ import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   Select,
   SelectContent,
@@ -111,6 +112,7 @@ const PAGE_SIZE = 10;
 // Component
 // ────────────────────────────────────────────────────────────────
 const ThresholdAlerts: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const token = API_CONFIG.TOKEN || "";
 
@@ -319,13 +321,17 @@ const ThresholdAlerts: React.FC = () => {
 
   // ── Custom actions (Add button) ────────────────────────────
   const renderCustomActions = () => (
-    <Button
-      onClick={openAdd}
-      className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium flex items-center gap-2"
-    >
-      <Plus className="w-4 h-4" />
-      Add
-    </Button>
+    <>
+      {shouldShow("ThresholdAlert", "create") && (
+        <Button
+          onClick={openAdd}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add
+        </Button>
+      )}
+    </>
   );
 
   // ── Table columns ───────────────────────────────────────────
@@ -345,24 +351,28 @@ const ThresholdAlerts: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                navigate(`/settings/threshold-alerts/${item.organization_id}`)
-              }
-              title="View"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => openEdit(item)}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
+            {shouldShow("ThresholdAlert", "show") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  navigate(`/settings/threshold-alerts/${item.organization_id}`)
+                }
+                title="View"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("ThresholdAlert", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openEdit(item)}
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "sr":

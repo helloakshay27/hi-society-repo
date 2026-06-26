@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const ConstructionStatusList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ const ConstructionStatusList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            {/* {constructionStatusPermissions.update === "true" && ( */}
+            {shouldShow("Construction", "update") && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -145,7 +147,7 @@ const ConstructionStatusList = () => {
               >
                 <Edit className="h-4 w-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case "id":
@@ -173,13 +175,17 @@ const ConstructionStatusList = () => {
   };
 
   const renderCustomActions = () => (
-    <Button
-      onClick={handleAdd}
-      className="bg-[#C72030] hover:bg-[#A01828] text-white"
-    >
-      <Plus className="h-4 w-4 mr-2" />
-      Add
-    </Button>
+    <>
+      {shouldShow("Construction", "create") && (
+        <Button
+          onClick={handleAdd}
+          className="bg-[#C72030] hover:bg-[#A01828] text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add
+        </Button>
+      )}
+    </>
   );
 
   const renderListTab = () => (

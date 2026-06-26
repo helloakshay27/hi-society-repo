@@ -9,9 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Eye, X } from "lucide-react";
+import { Plus, Eye, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface KYCDetail {
   id: string;
@@ -37,6 +38,7 @@ const sampleKYCDetails: KYCDetail[] = [
 ];
 
 export const KYCDetailsDashboard = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   
   // Sample data populated from reference image
@@ -144,16 +146,33 @@ export const KYCDetailsDashboard = () => {
     navigate(`/kyc-details/${kycDetailId}`);
   };
 
+  const handleEditKYCDetail = (kycDetailId: string) => {
+    navigate(`/kyc-details/edit/${kycDetailId}`);
+  };
+
   // Render actions for each row
   const renderActions = (item: KYCDetail) => {
     return (
-      <button
-        onClick={() => handleViewKYCDetail(item.id)}
-        className="text-black hover:text-gray-700"
-        title="View"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
+      <div className="flex gap-1">
+        {shouldShow("KYC Details", "show") && (
+          <button
+            onClick={() => handleViewKYCDetail(item.id)}
+            className="text-black hover:text-gray-700"
+            title="View"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        )}
+        {shouldShow("KYC Details", "update") && (
+          <button
+            onClick={() => handleEditKYCDetail(item.id)}
+            className="text-black hover:text-gray-700"
+            title="Edit"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     );
   };
 

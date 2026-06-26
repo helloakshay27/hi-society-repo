@@ -7,6 +7,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { getFullUrl } from '@/config/apiConfig';
 import { Switch } from '@mui/material';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Template {
   id: number;
@@ -20,6 +21,7 @@ interface Template {
 }
 
 export default function TemplateList() {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(false);
@@ -107,22 +109,26 @@ export default function TemplateList() {
       case 'actions':
         return (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/settings/template/view/${item.id}`)}
-              title="View"
-            >
-              <Eye className="w-4 h-4 text-gray-700" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/settings/template/edit/${item.id}`)}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4 text-gray-700" />
-            </Button>
+            {shouldShow("Template", "show") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/settings/template/view/${item.id}`)}
+                title="View"
+              >
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {shouldShow("Template", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/settings/template/edit/${item.id}`)}
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
           </div>
         );
       
@@ -172,13 +178,15 @@ export default function TemplateList() {
   const renderCustomActions = () => {
     return (
       <div className="flex gap-2">
-        <Button 
-          onClick={() => navigate('/settings/template/add')}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        >
-          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-          Add
-        </Button>
+        {shouldShow("Template", "create") && (
+          <Button
+            onClick={() => navigate('/settings/template/add')}
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Add
+          </Button>
+        )}
       </div>
     );
   };
