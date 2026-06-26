@@ -14,11 +14,6 @@ import { toast } from "sonner";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
-interface WaysToEarnImage {
-  id: number;
-  url: string;
-}
-
 interface WaysToEarn {
   id: number;
   title: string;
@@ -26,18 +21,8 @@ interface WaysToEarn {
   points: string;
   position: number;
   active: string | boolean;
-  image: WaysToEarnImage | string | null;
+  image_url: string | null;
 }
-
-const getImageUrl = (image: WaysToEarnImage | string | null): string | null => {
-  if (!image) return null;
-  if (typeof image === "string") return image;
-  if (image.url) {
-    const decoded = decodeURIComponent(image.url);
-    return decoded.startsWith("//") ? `https:${decoded}` : decoded;
-  }
-  return null;
-};
 
 interface FormState {
   title: string;
@@ -112,7 +97,7 @@ const WaysToEarnList: React.FC = () => {
       active: item.active === true || item.active === "true",
       image: null,
     });
-    setImagePreview(getImageUrl(item.image));
+    setImagePreview(item.image_url || null);
     setDialogOpen(true);
   };
 
@@ -287,11 +272,10 @@ const WaysToEarnList: React.FC = () => {
       case "position":
         return <span>{item.position ?? "-"}</span>;
 
-      case "image": {
-        const imgUrl = getImageUrl(item.image);
-        return imgUrl ? (
+      case "image":
+        return item.image_url ? (
           <img
-            src={imgUrl}
+            src={item.image_url}
             alt={item.title}
             className="h-10 w-10 rounded object-cover border border-[#e5e1d8]"
           />
@@ -300,7 +284,6 @@ const WaysToEarnList: React.FC = () => {
             <ImageIcon className="h-4 w-4 text-gray-400" />
           </div>
         );
-      }
 
       case "active":
         return (
