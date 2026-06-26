@@ -246,6 +246,8 @@ interface OfferFormData {
   image_3_by_2?: any[];
   image_9_by_16?: any[];
   offer_pdf?: any[];
+  couponCode: string;
+  couponCodeDescription: string;
 }
 
 export default function AddOfferPage() {
@@ -258,6 +260,7 @@ export default function AddOfferPage() {
     "Basic Info",
     "Media & Display",
     "Applicability",
+    "Coupon",
     "Validity & Status",
     "Visibility",
   ];
@@ -279,6 +282,8 @@ export default function AddOfferPage() {
     image_3_by_2: [],
     image_9_by_16: [],
     offer_pdf: [],
+    couponCode: "",
+    couponCodeDescription: "",
   });
 
   // track thumbnail/pdf images temporarily during the flow
@@ -700,6 +705,8 @@ export default function AddOfferPage() {
         image_3_by_2: [],
         image_9_by_16: [],
         offer_pdf: [],
+        couponCode: offer.coupon_code || "",
+        couponCodeDescription: offer.coupon_code_description || "",
       });
 
       // Handle existing images by ratio
@@ -801,7 +808,10 @@ export default function AddOfferPage() {
         }
         return true;
 
-      case 3: // Validity & Status
+      case 3: // Coupon
+        return true;
+
+      case 4: // Validity & Status
         if (!formData.startDate) {
           toast.error("Please select start date");
           return false;
@@ -840,7 +850,7 @@ export default function AddOfferPage() {
         }
         return true;
 
-      case 4: // Visibility
+      case 5: // Visibility
         return true;
 
       default:
@@ -1020,6 +1030,8 @@ export default function AddOfferPage() {
         "offer[status]",
         formData.featuredOffer ? "1" : "0"
       );
+      formDataPayload.append("offer[coupon_code]", formData.couponCode || "");
+      formDataPayload.append("offer[coupon_code_description]", formData.couponCodeDescription || "");
 
       // Add template ID if selected
       if (formData.legalPoliciesTemplate) {
@@ -1969,7 +1981,51 @@ export default function AddOfferPage() {
           </SectionCard>
         );
 
-      case 3: // Validity & Status
+      case 3: // Coupon
+        return (
+          <SectionCard>
+            <SectionHeader>
+              <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <IconWrapper>
+                  <RedIcon />
+                </IconWrapper>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    fontFamily: "Work Sans, sans-serif",
+                    textTransform: "uppercase",
+                    fontSize: "18px",
+                  }}
+                >
+                  Coupon
+                </Typography>
+              </Box>
+            </SectionHeader>
+            <SectionBody>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                <TextField
+                  label="Coupon Code"
+                  value={formData.couponCode}
+                  onChange={(e) => handleInputChange("couponCode", e.target.value)}
+                  placeholder="Enter Coupon Code"
+                  sx={fieldStyles}
+                  fullWidth
+                />
+                <TextField
+                  label="Coupon Code Description"
+                  value={formData.couponCodeDescription}
+                  onChange={(e) => handleInputChange("couponCodeDescription", e.target.value)}
+                  placeholder="Enter Coupon Code Description"
+                  sx={fieldStyles}
+                  fullWidth
+                />
+              </Box>
+            </SectionBody>
+          </SectionCard>
+        );
+
+      case 4: // Validity & Status
         return (
           <SectionCard>
             <SectionHeader>
@@ -2044,7 +2100,7 @@ export default function AddOfferPage() {
           </SectionCard>
         );
 
-      case 4: // Visibility
+      case 5: // Visibility
         return (
           <SectionCard>
             <SectionHeader>
@@ -2705,6 +2761,44 @@ export default function AddOfferPage() {
                 <Box
                   sx={{
                     display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#999", fontSize: "12px", fontFamily: "Work Sans, sans-serif" }}
+                    >
+                      Coupon Code
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#333", fontSize: "14px", fontFamily: "Work Sans, sans-serif", mt: 0.5 }}
+                    >
+                      {formData.couponCode || "-"}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#999", fontSize: "12px", fontFamily: "Work Sans, sans-serif" }}
+                    >
+                      Coupon Code Description
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#333", fontSize: "14px", fontFamily: "Work Sans, sans-serif", mt: 0.5 }}
+                    >
+                      {formData.couponCodeDescription || "-"}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+              {stepIndex === 4 && (
+                <Box
+                  sx={{
+                    display: "grid",
                     gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
                     gap: 2,
                   }}
@@ -2780,7 +2874,7 @@ export default function AddOfferPage() {
                   </Box>
                 </Box>
               )}
-              {stepIndex === 4 && (
+              {stepIndex === 5 && (
                 <Box
                   sx={{
                     display: "grid",

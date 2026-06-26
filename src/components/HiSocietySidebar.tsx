@@ -1102,6 +1102,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: CreditCard,
               path: "/settings/generic-categories",
             },
+            {
+              id: "ways-to-earn",
+              label: "Ways to Earn",
+              icon: CreditCard,
+              path: "/settings/ways-to-earn",
+            },
           ],
         },
         {
