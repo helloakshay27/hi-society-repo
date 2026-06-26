@@ -269,6 +269,7 @@ export const ResolutionEscalationTab: React.FC = () => {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editRuleUserLabels, setEditRuleUserLabels] = useState<Record<number, string>>({});
 
   // Sub-tab states
   const [activeResolutionTab, setActiveResolutionTab] = useState<
@@ -955,14 +956,22 @@ export const ResolutionEscalationTab: React.FC = () => {
       const escalationMatrix = rule.escalation_matrix || {};
 
       const findLevelData = (levelName: string) => {
-        const oldFormat = escalations.find(
-          (e: any) => (e.name || "").toUpperCase() === levelName.toUpperCase()
-        );
-        if (oldFormat) return oldFormat;
-        const newFormat = escalationMatrix.find(
-          (e: any) => (e.level || "").toUpperCase() === levelName.toUpperCase()
-        );
-        return newFormat || null;
+        if (Array.isArray(escalations)) {
+          const oldFormat = escalations.find(
+            (e: any) => (e.name || "").toUpperCase() === levelName.toUpperCase()
+          );
+          if (oldFormat) return oldFormat;
+        }
+        if (Array.isArray(escalationMatrix)) {
+          const newFormat = escalationMatrix.find(
+            (e: any) => (e.level || "").toUpperCase() === levelName.toUpperCase()
+          );
+          if (newFormat) return newFormat;
+        } else if (typeof escalationMatrix === "object" && escalationMatrix !== null) {
+          const key = levelName.toLowerCase();
+          if (escalationMatrix[key]) return escalationMatrix[key];
+        }
+        return null;
       };
 
       const parseTime = (timeFieldValue: any) => {
@@ -1068,6 +1077,24 @@ export const ResolutionEscalationTab: React.FC = () => {
           },
         },
       };
+
+      // Build a user label map from the API response display fields so ReactSelect
+      // can show selected users even if they aren't in the escalationUsers list.
+      const userLabels: Record<number, string> = {};
+      const matrixSource = Array.isArray(escalationMatrix)
+        ? escalationMatrix
+        : typeof escalationMatrix === "object" && escalationMatrix !== null
+          ? Object.values(escalationMatrix)
+          : [];
+      (matrixSource as any[]).forEach((lvl: any) => {
+        if (lvl.escalate_to_ids?.length === 1 && lvl.escalate_to_display?.trim()) {
+          userLabels[lvl.escalate_to_ids[0]] = lvl.escalate_to_display.trim();
+        }
+        if (lvl.copy_to_ids?.length === 1 && lvl.copy_to_display?.trim()) {
+          userLabels[lvl.copy_to_ids[0]] = lvl.copy_to_display.trim();
+        }
+      });
+      setEditRuleUserLabels(userLabels);
 
       editReset(formData);
       setEditEscalationIssueTypeId(String(rule.issue_type_id || ""));
@@ -3024,10 +3051,12 @@ export const ResolutionEscalationTab: React.FC = () => {
                         <ReactSelect
                           isMulti
                           options={userOptions}
-                          value={userOptions.filter((option) => {
-                            const currentUsers =
-                              editWatch(`escalationLevels.${level}.users`) || [];
-                            return currentUsers.includes(option.value);
+                          value={(editWatch(`escalationLevels.${level}.users`) || []).map((userId: number) => {
+                            const fromOptions = userOptions.find(o => o.value === userId);
+                            return {
+                              value: userId,
+                              label: fromOptions?.label || editRuleUserLabels[userId] || `User ${userId}`,
+                            };
                           })}
                           onChange={(selected) => {
                             const selectedIds = selected
@@ -3085,10 +3114,12 @@ export const ResolutionEscalationTab: React.FC = () => {
                         <ReactSelect
                           isMulti
                           options={userOptions}
-                          value={userOptions.filter((option) => {
-                            const currentCopyTo =
-                              editWatch(`escalationLevels.${level}.copyTo`) || [];
-                            return currentCopyTo.includes(option.value);
+                          value={(editWatch(`escalationLevels.${level}.copyTo`) || []).map((userId: number) => {
+                            const fromOptions = userOptions.find(o => o.value === userId);
+                            return {
+                              value: userId,
+                              label: fromOptions?.label || editRuleUserLabels[userId] || `User ${userId}`,
+                            };
                           })}
                           onChange={(selected) => {
                             const selectedIds = selected

@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface FaqSubCategory {
   id: number;
@@ -25,6 +26,7 @@ interface Permissions {
 }
 
 const FaqSubCategoryList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [subCategories, setSubCategories] = useState<FaqSubCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -185,14 +187,16 @@ const FaqSubCategoryList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEdit(item.id)}
-              title="Edit"
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            {shouldShow("FaqSubCategory", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit(item.id)}
+                title="Edit"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case 'active':
@@ -223,7 +227,7 @@ const FaqSubCategoryList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {/* {permissions.create === 'true' && ( */}
+      {shouldShow("FaqSubCategory", "create") && (
         <Button
           onClick={handleAdd}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -231,7 +235,7 @@ const FaqSubCategoryList = () => {
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Add
         </Button>
-      {/* )} */}
+      )}
     </div>
   );
 

@@ -6,6 +6,7 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +70,7 @@ const emptyForm: VendorForm = {
 };
 
 const VendorSetupPage: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -309,24 +311,28 @@ const VendorSetupPage: React.FC = () => {
 
   const renderActions = (item: Vendor) => (
     <div className="flex gap-1 items-center">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate(`/settings/ticket-management/vendor-setup/view/${item.id}`)}
-        className="h-8 w-8 p-0 hover:bg-gray-100"
-        title="View"
-      >
-        <Eye className="h-4 w-4 text-gray-500" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => handleEdit(item)}
-        className="h-8 w-8 p-0 hover:bg-gray-100"
-        title="Edit"
-      >
-        <Edit className="h-4 w-4 text-[#C72030]" />
-      </Button>
+      {shouldShow("Vendor", "show") && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(`/settings/ticket-management/vendor-setup/view/${item.id}`)}
+          className="h-8 w-8 p-0 hover:bg-gray-100"
+          title="View"
+        >
+          <Eye className="h-4 w-4 text-gray-500" />
+        </Button>
+      )}
+      {shouldShow("Vendor", "update") && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleEdit(item)}
+          className="h-8 w-8 p-0 hover:bg-gray-100"
+          title="Edit"
+        >
+          <Edit className="h-4 w-4 text-[#C72030]" />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="sm"
@@ -364,13 +370,15 @@ const VendorSetupPage: React.FC = () => {
         loading={loading}
         loadingMessage="Loading vendors..."
         leftActions={
-          <Button
-            onClick={handleAdd}
-            className="bg-[#C72030] hover:bg-[#a01828] text-white h-9 px-4 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add 
-          </Button>
+          <>{shouldShow("Vendor", "create") && (
+            <Button
+              onClick={handleAdd}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white h-9 px-4 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add 
+            </Button>
+          )}</>
         }
       />
 

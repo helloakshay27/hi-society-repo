@@ -7,6 +7,7 @@ import { Plus, Edit } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface FaqCategory {
   id: number;
@@ -24,6 +25,7 @@ interface Permissions {
 }
 
 const FaqCategoryList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<FaqCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,11 +177,11 @@ const FaqCategoryList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {/* {permissions.update === "true" && ( */}
+            {shouldShow("FaqCategory", "update") && (
               <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)} title="Edit">
                 <Edit className="w-4 h-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case 'id':
@@ -214,7 +216,7 @@ const FaqCategoryList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {/* {permissions.create === "true" && ( */}
+      {shouldShow("FaqCategory", "create") && (
         <Button 
           onClick={handleAdd}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -222,7 +224,7 @@ const FaqCategoryList = () => {
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
           Add
         </Button>
-      {/* )} */}
+      )}
     </div>
   );
 

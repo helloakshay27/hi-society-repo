@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface PricingRule {
   id: number;
@@ -22,6 +23,7 @@ interface PricingRule {
 }
 
 const PricingRuleList: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseUrl = localStorage.getItem('baseUrl')
   const token = localStorage.getItem('token')
   const navigate = useNavigate();
@@ -120,15 +122,17 @@ const PricingRuleList: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(item.id);
-              }}
-              className="text-gray-600 hover:text-[#C72030]"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
+            {shouldShow("PricingRule", "update") && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(item.id);
+                }}
+                className="text-gray-600 hover:text-[#C72030]"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -163,13 +167,15 @@ const PricingRuleList: React.FC = () => {
 
   const renderCustomActions = () => (
     <>
-      <Button
-        onClick={handleAdd}
-        className="bg-[#C72030] hover:bg-[#A01828] text-white"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Pricing Rule
-      </Button>
+      {shouldShow("PricingRule", "create") && (
+        <Button
+          onClick={handleAdd}
+          className="bg-[#C72030] hover:bg-[#A01828] text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Pricing Rule
+        </Button>
+      )}
     </>
   );
 

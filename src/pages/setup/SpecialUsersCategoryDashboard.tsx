@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Eye, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import {
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // Column configuration
 const columns: ColumnConfig[] = [
@@ -23,6 +24,7 @@ const columns: ColumnConfig[] = [
 ];
 
 export const SpecialUsersCategoryDashboard = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -202,26 +204,24 @@ export const SpecialUsersCategoryDashboard = () => {
       case "actions":
         return (
           <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => handleEditCategory(category.id)}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="Edit"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {shouldShow("Special Users Category", "show") && (
+              <button
+                onClick={() => navigate(`/setup/special-users-category/${category.id}`)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="View"
               >
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                <path d="m15 5 4 4" />
-              </svg>
-            </button>
+                <Eye className="w-4 h-4 text-gray-700" />
+              </button>
+            )}
+            {shouldShow("Special Users Category", "update") && (
+              <button
+                onClick={() => handleEditCategory(category.id)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => handleDeleteCategory(category.id)}
               className="p-1 hover:bg-gray-100 rounded text-red-600"
@@ -278,14 +278,16 @@ export const SpecialUsersCategoryDashboard = () => {
             searchPlaceholder="Search..."
             leftActions={
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleAddCategory}
-                  className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white border-none"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add
-                </Button>
+                {shouldShow("Special Users Category", "create") && (
+                  <Button
+                    size="sm"
+                    onClick={handleAddCategory}
+                    className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white border-none"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add
+                  </Button>
+                )}
               </div>
             }
           />

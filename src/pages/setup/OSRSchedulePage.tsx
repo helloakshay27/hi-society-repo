@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { apiClient } from '@/utils/apiClient';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ const SCHEDULE_COLUMNS: ColumnConfig[] = [
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export const OSRSchedulePage: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
@@ -542,26 +544,30 @@ export const OSRSchedulePage: React.FC = () => {
           loading={loading}
           emptyMessage="No schedules found."
           leftActions={
-            <Button
-              size="sm"
-              onClick={() => { setFormData(emptyForm()); setSubCategories([]); setSubCatFlats([]); setShowAddModal(true); }}
-              className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 h-auto px-3 py-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add
-            </Button>
+            <>{shouldShow("OSRSchedule", "create") && (
+              <Button
+                size="sm"
+                onClick={() => { setFormData(emptyForm()); setSubCategories([]); setSubCatFlats([]); setShowAddModal(true); }}
+                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 h-auto px-3 py-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add
+              </Button>
+            )}</>
           }
           renderActions={(item) => {
             const entry = item as ScheduleEntry;
             return (
               <>
-                <button
-                  className="p-1.5 rounded hover:bg-amber-50 transition-colors text-amber-500"
-                  onClick={() => openEdit(entry)}
-                  title="Edit"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
+                {shouldShow("OSRSchedule", "update") && (
+                  <button
+                    className="p-1.5 rounded hover:bg-amber-50 transition-colors text-amber-500"
+                    onClick={() => openEdit(entry)}
+                    title="Edit"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <button className="p-1.5 rounded hover:bg-red-50 transition-colors text-red-600" title="Delete">

@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const AmenitiesList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const [amenities, setAmenities] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,7 +160,7 @@ const AmenitiesList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            {/* {amenitiesPermissions.update === "true" && ( */}
+            {shouldShow("Amenities", "update") && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -167,7 +169,7 @@ const AmenitiesList = () => {
               >
                 <Edit className="h-4 w-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case "id":
@@ -241,7 +243,7 @@ const AmenitiesList = () => {
 
   const renderCustomActions = () => (
     <>
-      {/* {amenitiesPermissions.create && ( */}
+      {shouldShow("Amenities", "create") && (
         <Button
           onClick={handleAdd}
           className="bg-[#C72030] hover:bg-[#A01828] text-white"
@@ -249,7 +251,7 @@ const AmenitiesList = () => {
           <Plus className="h-4 w-4 mr-2" />
           Add
         </Button>
-      {/* )} */}
+      )}
     </>
   );
 

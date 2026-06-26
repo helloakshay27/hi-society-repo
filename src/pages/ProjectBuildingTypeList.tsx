@@ -9,6 +9,7 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import { Switch } from '@mui/material';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface BuildingType {
   id: number;
@@ -23,6 +24,7 @@ interface Permissions {
 }
 
 const ProjectBuildingTypeList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   
@@ -155,7 +157,7 @@ const ProjectBuildingTypeList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {/* {String(projectBuildingPermission.update) === "true" && ( */}
+            {shouldShow("ProjectBuilding", "update") && (
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -164,7 +166,7 @@ const ProjectBuildingTypeList = () => {
               >
                 <Edit className="w-4 h-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case 'status':
@@ -194,8 +196,7 @@ const ProjectBuildingTypeList = () => {
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
      
-     {(String(projectBuildingPermission.create) === "true" || true) && (
-
+     {shouldShow("ProjectBuilding", "create") && (
         <Button 
           onClick={handleAddBuildingType}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
