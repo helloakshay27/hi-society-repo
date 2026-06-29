@@ -1108,6 +1108,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: CreditCard,
               path: "/settings/ways-to-earn",
             },
+            {
+              id: "brand-partners-config",
+              label: "Brand Partners Config",
+              icon: CreditCard,
+              path: "/settings/brand-partners-config",
+            },
           ],
         },
         {
