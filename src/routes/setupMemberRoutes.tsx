@@ -525,6 +525,9 @@ const GenericCategories = lazy(() => import("@/pages/GenericCategories"));
 // Ways to Earn Page
 const WaysToEarnList = lazy(() => import("@/pages/WaysToEarnList"));
 
+// Brand Partners Config Page
+const BrandPartnersConfigList = lazy(() => import("@/pages/BrandPartnersConfigList"));
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -556,6 +559,7 @@ export const setupMemberRoutes = (
     <Route path="/settings/threshold-alerts/:id" Component={withSuspense(ThresholdAlertDetail)} />
     <Route path="/settings/generic-categories" Component={withSuspense(GenericCategories)} />
     <Route path="/settings/ways-to-earn" Component={withSuspense(WaysToEarnList)} />
+    <Route path="/settings/brand-partners-config" Component={withSuspense(BrandPartnersConfigList)} />
     <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
     <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
     <Route
