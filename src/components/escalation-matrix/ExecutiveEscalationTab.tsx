@@ -570,7 +570,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-gray-600 hover:text-[#C72030]"
@@ -578,7 +578,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                           title="Edit Rule"
                         >
                           <Edit className="h-4 w-4" />
-                        </Button> */}
+                        </Button>
                       </div>
                     </div>
                   </div>
