@@ -497,7 +497,7 @@ export const TicketDashboard = () => {
   const closedTickets = ticketSummary.closed_tickets || 0;
   const totalSummaryTickets = ticketSummary.total_tickets || 0;
   const pendingTickets = ticketSummary.pending_tickets || 0;
-  const completedTickets = ticketSummary.completed_tickets || ticketSummary.closed_tickets || 0;
+  const completedTickets = ticketSummary.completed_tickets || ticketSummary.completed_tickets || 0;
   const totalComplaints = ticketSummary.total_complaints || ticketSummary.complaints || 0;
   const totalSuggestions = ticketSummary.total_suggestions || ticketSummary.suggestions || 0;
   const totalRequests = ticketSummary.total_requests || ticketSummary.requests || 0;
