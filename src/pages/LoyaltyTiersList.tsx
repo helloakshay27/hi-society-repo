@@ -14,6 +14,8 @@ import { StatsCard } from '@/components/StatsCard';
 
 const validationSchema = Yup.object({
   name: Yup.string().required('Tier Name is required'),
+  title: Yup.string().required('Title is required'),
+  description: Yup.string(),
   exit_points: Yup.number()
     .required('Exit Points are required')
     .positive('Exit Points must be a positive number'),
@@ -31,6 +33,8 @@ const validationSchema = Yup.object({
 interface LoyaltyTier {
   id: number;
   name: string;
+  title?: string;
+  description?: string;
   exit_points: number;
   multipliers: number;
   welcome_bonus: number;
@@ -468,6 +472,8 @@ const LoyaltyTiersList = () => {
                   <Formik
                     initialValues={{
                       name: selectedTier.name || '',
+                      title: selectedTier.title || '',
+                      description: selectedTier.description || '',
                       exit_points: selectedTier.exit_points || 0,
                       // multipliers: selectedTier.multipliers || 0,
                       welcome_bonus: selectedTier.welcome_bonus || 0,
@@ -491,6 +497,20 @@ const LoyaltyTiersList = () => {
                               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             />
                             <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
+                          </div>
+
+                          {/* Title */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Title
+                              <span className="text-red-500 ml-1">*</span>
+                            </label>
+                            <Field
+                              type="text"
+                              name="title"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                            />
+                            <ErrorMessage name="title" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
 
                           {/* Exit Points */}
@@ -558,6 +578,21 @@ const LoyaltyTiersList = () => {
                             </select>
                             <ErrorMessage name="point_type" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
+                        </div>
+
+                        {/* Description - full width */}
+                        <div className="space-y-2 mt-6">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Description
+                          </label>
+                          <Field
+                            as="textarea"
+                            name="description"
+                            rows={3}
+                            placeholder="Enter description"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
+                          />
+                          <ErrorMessage name="description" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
 
                         {/* Action Buttons */}
