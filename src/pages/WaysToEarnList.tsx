@@ -10,6 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -32,6 +39,8 @@ interface FormState {
   active: boolean;
   image: File | null;
 }
+
+const TITLE_OPTIONS = ["Refer a friend", "Pay a milestone", "Play & earn"];
 
 const emptyForm: FormState = {
   title: "",
@@ -123,6 +132,14 @@ const WaysToEarnList: React.FC = () => {
   const handleSave = async () => {
     if (!form.title.trim()) {
       toast.error("Title is required");
+      return;
+    }
+
+    const isDuplicate = data.some(
+      (item) => item.title === form.title && item.id !== editingId
+    );
+    if (isDuplicate) {
+      toast.error("This option has already been added");
       return;
     }
 
@@ -373,13 +390,21 @@ const WaysToEarnList: React.FC = () => {
               <Label className="text-sm font-medium text-[#1A1A1A]">
                 Title <span className="text-red-500">*</span>
               </Label>
-              <input
-                type="text"
+              <Select
                 value={form.title}
-                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                placeholder="Enter title"
-                className="w-full border border-[#D9D9D9] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C72030] focus:border-[#C72030]"
-              />
+                onValueChange={(val) => setForm((p) => ({ ...p, title: val }))}
+              >
+                <SelectTrigger className="w-full border-[#D9D9D9] focus:ring-1 focus:ring-[#C72030] focus:border-[#C72030]">
+                  <SelectValue placeholder="Select title" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TITLE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Description */}
