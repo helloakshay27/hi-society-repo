@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, CheckCircle, AlertCircle, Activity, X, ChevronLeft, ChevronRight, Paperclip, CalendarIcon, Filter, Eye, Pencil, Plus } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, Activity, X, ChevronLeft, ChevronRight, Paperclip, CalendarIcon, Filter, Eye, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -1289,19 +1289,7 @@ export const PatrollingResponsePage = () => {
               hideTableExport={false}
               loading={isLoading}
               onFilterClick={() => setIsFilterOpen(true)}
-              leftActions={
-                <div className="flex gap-2">
-                  {shouldShow("Patrolling Response", "create") && (
-                    <Button
-                      className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-                      onClick={() => navigate("/security/patrolling/create")}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add
-                    </Button>
-                  )}
-                </div>
-              }
+              leftActions={<div className="flex gap-2" />}
               rightActions={
                 activeFilterCount > 0 ? (
                   <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-bold bg-[#C72030] text-white">

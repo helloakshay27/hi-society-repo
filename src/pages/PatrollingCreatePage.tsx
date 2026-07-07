@@ -107,18 +107,18 @@ const CheckpointLocationSelector: React.FC<{
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Building */}
+      {/* Tower */}
       <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Building *</InputLabel>
+        <InputLabel shrink>Tower *</InputLabel>
         <MuiSelect
           value={checkpoint.buildingId || ''}
           onChange={(e) => onLocationChange('building', Number(e.target.value) || null)}
-          label="Building *"
+          label="Tower *"
           notched
           displayEmpty
           disabled={disabled || loadingStates.buildings}
         >
-          <MenuItem value="">Select Building</MenuItem>
+          <MenuItem value="">Select Tower</MenuItem>
           {checkpoint.locationData.buildings.map(building => (
             <MenuItem key={building.id} value={building.id}>{building.name}</MenuItem>
           ))}
@@ -153,18 +153,18 @@ const CheckpointLocationSelector: React.FC<{
         )}
       </FormControl>
 
-      {/* Room */}
+      {/* Flat */}
       <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Room</InputLabel>
+        <InputLabel shrink>Flat</InputLabel>
         <MuiSelect
           value={checkpoint.roomId || ''}
           onChange={(e) => onLocationChange('room', Number(e.target.value) || null)}
-          label="Room"
+          label="Flat"
           notched
           displayEmpty
           disabled={disabled || !checkpoint.floorId || loadingStates.rooms}
         >
-          <MenuItem value="">Select Room</MenuItem>
+          <MenuItem value="">Select Flat</MenuItem>
           {checkpoint.locationData.rooms.map(room => (
             <MenuItem key={room.id} value={room.id}>{room.name}</MenuItem>
           ))}
@@ -1695,6 +1695,31 @@ export const PatrollingCreatePage: React.FC = () => {
               )}
               <p className="mb-3 text-sm font-medium text-muted-foreground">Checkpoint {idx + 1}</p>
               <div className="space-y-4">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <TextField
+                    label="Checkpoint Name*"
+                    placeholder="Enter checkpoint name"
+                    value={c.name}
+                    onChange={(e) => updateCheckpoint(idx, 'name', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    InputProps={{ sx: fieldStyles }}
+                    disabled={isSubmitting}
+                  />
+                  <TextField
+                    label="Description"
+                    placeholder="Enter checkpoint description"
+                    value={c.description}
+                    onChange={(e) => updateCheckpoint(idx, 'description', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    InputProps={{ sx: fieldStyles }}
+                    disabled={isSubmitting}
+                  />
+                </div>
 
                 {/* Location Selector (without Groups) */}
                 <CheckpointLocationSelector
