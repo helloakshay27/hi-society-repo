@@ -185,34 +185,18 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
       toast.error("Please select a tower");
       return;
     }
-    if (!formData.floor) {
-      toast.error("Please select a floor");
-      return;
-    }
-    if (!formData.flat.trim()) {
-      toast.error("Please enter a flat number");
-      return;
-    }
-    if (!formData.flatType) {
-      toast.error("Please select a flat type");
-      return;
-    }
-    if (!formData.occupied) {
-      toast.error("Please select occupancy status");
-      return;
-    }
 
     const fd = new FormData();
     fd.append("society_flat[society_block_id]", formData.tower);
     if (formData.wing) fd.append("society_flat[wing_id]", formData.wing);
-    fd.append("society_flat[society_floor_id]", formData.floor);
-    fd.append("society_flat[flat_no]", formData.flat);
-    fd.append("society_flat[build_up_area]", formData.carpetArea);
-    fd.append("society_flat[super_area]", formData.builtUpArea);
-    fd.append("society_flat[society_flat_type_id]", formData.flatType);
-    fd.append("society_flat[occupancy]", formData.occupied);
-    fd.append("society_flat[bill_to_party]", formData.nameOnBill);
-    fd.append("society_flat[date_of_possession]", formData.dateOfPossession);
+    if (formData.floor) fd.append("society_flat[society_floor_id]", formData.floor);
+    if (formData.flat.trim()) fd.append("society_flat[flat_no]", formData.flat);
+    if (formData.carpetArea) fd.append("society_flat[build_up_area]", formData.carpetArea);
+    if (formData.builtUpArea) fd.append("society_flat[super_area]", formData.builtUpArea);
+    if (formData.flatType) fd.append("society_flat[society_flat_type_id]", formData.flatType);
+    if (formData.occupied) fd.append("society_flat[occupancy]", formData.occupied);
+    if (formData.nameOnBill) fd.append("society_flat[bill_to_party]", formData.nameOnBill);
+    if (formData.dateOfPossession) fd.append("society_flat[date_of_possession]", formData.dateOfPossession);
     if (formData.rmUser) fd.append("society_flat[rm_user_id]", formData.rmUser);
     fd.append("society_flat[possession]", String(formData.possession));
     fd.append("society_flat[sold]", String(formData.sold));
@@ -363,7 +347,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
             <div className="relative">
               <Label htmlFor="floor" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
-                Floor <span className="text-red-500">*</span>
+                Floor
               </Label>
               <SearchableSelect
                 value={formData.floor}
@@ -379,7 +363,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
             <div className="relative">
               <Label htmlFor="flat" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
-                Flat <span className="text-red-500">*</span>
+                Flat
               </Label>
               <Input
                 id="flat"
@@ -414,7 +398,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
             <div className="relative">
               <Label htmlFor="flatType" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
-                Flat Type <span className="text-red-500">*</span>
+                Flat Type
               </Label>
               <SearchableSelect
                 value={formData.flatType}
@@ -430,7 +414,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
             <div className="relative">
               <Label htmlFor="occupied" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
-                Occupied <span className="text-red-500">*</span>
+                Occupied
               </Label>
               <SearchableSelect
                 value={formData.occupied}
