@@ -1707,12 +1707,33 @@ const Petrolling = () => {
                     Checkpoint {checkpointIndex + 1}
                   </div>
 
+                  <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-600">Checkpoint Name*</Label>
+                      <Input
+                        className="h-9 rounded-none border-gray-300 text-sm"
+                        placeholder="Enter checkpoint name"
+                        value={checkpoint.name}
+                        onChange={(e) => updateCheckpointField(checkpointIndex, "name", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-600">Description</Label>
+                      <Input
+                        className="h-9 rounded-none border-gray-300 text-sm"
+                        placeholder="Enter checkpoint description"
+                        value={checkpoint.description}
+                        onChange={(e) => updateCheckpointField(checkpointIndex, "description", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                       {renderCheckpointSelect(
-                        "Building",
+                        "Tower",
                         checkpoint.building_id,
-                        "Select Building",
+                        "Select Tower",
                         buildingOptions,
                         (value) => updateCheckpointLocationField(checkpointIndex, "building_id", value),
                         true,
