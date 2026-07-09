@@ -118,30 +118,30 @@ apiClient.interceptors.response.use(
     }
 
     // Network failures should surface to the current screen, not log out the user.
-    if (error.message === "Network Error" || !error.response) {
-      console.warn("Network Error - Logging out globally");
+    // if (error.message === "Network Error" || !error.response) {
+    //   console.warn("Network Error - Logging out globally");
 
-      // Save layout preferences before clearing
-      const layoutMode = localStorage.getItem('layoutMode');
-      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+    //   // Save layout preferences before clearing
+    //   const layoutMode = localStorage.getItem('layoutMode');
+    //   const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
 
-      // Clear all auth data
-      localStorage.clear();
-      sessionStorage.clear();
+    //   // Clear all auth data
+    //   localStorage.clear();
+    //   sessionStorage.clear();
 
-      // Restore layout preferences
-      if (layoutMode) localStorage.setItem('layoutMode', layoutMode);
-      if (sidebarCollapsed) localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+    //   // Restore layout preferences
+    //   if (layoutMode) localStorage.setItem('layoutMode', layoutMode);
+    //   if (sidebarCollapsed) localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
 
-      // Redirect to login page
-      window.location.href = "/login";
+    //   // Redirect to login page
+    //   window.location.href = "/login";
 
-      return Promise.reject(
-        new Error(
-          "Network error. Please check your connection and login again."
-        )
-      );
-    }
+    //   return Promise.reject(
+    //     new Error(
+    //       "Network error. Please check your connection and login again."
+    //     )
+    //   );
+    // }
 
     return Promise.reject(error);
   }
