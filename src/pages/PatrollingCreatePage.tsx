@@ -70,41 +70,6 @@ const CheckpointLocationSelector: React.FC<{
     rooms: false
   });
 
-  // Fetch buildings on mount
-  useEffect(() => {
-    const fetchBuildings = async () => {
-      const siteId = localStorage.getItem('selectedSiteId');
-      if (!siteId) return;
-
-      setLoadingStates(prev => ({ ...prev, buildings: true }));
-      try {
-        const url = `${API_CONFIG.BASE_URL}/pms/sites/${siteId}/buildings.json`;
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch buildings');
-        
-        const data = await response.json();
-        const items = Array.isArray(data) ? data : (data.buildings || []);
-        
-        // Update the checkpoint's locationData
-        onLocationChange('building', null); // This will trigger the parent to update locationData
-      } catch (error) {
-        console.error('Error fetching buildings:', error);
-      } finally {
-        setLoadingStates(prev => ({ ...prev, buildings: false }));
-      }
-    };
-
-    if (checkpoint.locationData.buildings.length === 0) {
-      fetchBuildings();
-    }
-  }, []);
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Tower */}
@@ -450,7 +415,7 @@ export const PatrollingCreatePage: React.FC = () => {
       let url = '';
       switch (field) {
         case 'buildings':
-          url = `${API_CONFIG.BASE_URL}/pms/sites/${params.siteId}/buildings.json`;
+          url = `${API_CONFIG.BASE_URL}/crm/admin/society_blocks.json`;
           break;
         case 'wings':
           url = `${API_CONFIG.BASE_URL}/pms/wings.json?q[building_id_eq]=${params.buildingId}`;
@@ -463,37 +428,36 @@ export const PatrollingCreatePage: React.FC = () => {
           break;
         }
         case 'floors': {
-          const floorParams = new URLSearchParams();
-          if (params.areaId) floorParams.append('q[area_id_eq]', params.areaId.toString());
-          if (params.buildingId) floorParams.append('q[building_id_eq]', params.buildingId.toString());
-          if (params.wingId) floorParams.append('q[wing_id_eq]', params.wingId.toString());
-          url = `${API_CONFIG.BASE_URL}/pms/floors.json?${floorParams.toString()}`;
+          url = `${API_CONFIG.BASE_URL}/society_floors.json?society_block_id=${params.buildingId}`;
           break;
         }
         case 'rooms': {
           const roomParams = new URLSearchParams();
-          if (params.floorId) roomParams.append('q[floor_id_eq]', params.floorId.toString());
-          if (params.buildingId) roomParams.append('q[building_id_eq]', params.buildingId.toString());
-          if (params.wingId) roomParams.append('q[wing_id_eq]', params.wingId.toString());
-          if (params.areaId) roomParams.append('q[area_id_eq]', params.areaId.toString());
-          url = `${API_CONFIG.BASE_URL}/pms/rooms.json?${roomParams.toString()}`;
+          if (params.buildingId) roomParams.append('q[society_block_id_eq]', params.buildingId.toString());
+          if (params.floorId) roomParams.append('q[society_floor_id_eq]', params.floorId.toString());
+          url = `${API_CONFIG.BASE_URL}/crm/admin/society_flats.json?${roomParams.toString()}`;
           break;
         }
       }
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) throw new Error(`Failed to fetch ${field}`);
-      
+
       const data = await response.json();
       // Handle both array format and object with field property
-      const items = Array.isArray(data) ? data : (data[field] || []);
-      
+      let items = Array.isArray(data) ? data : (data[field] || []);
+      if (field === 'buildings' && Array.isArray(data.society_blocks)) {
+        items = data.society_blocks;
+      } else if (field === 'rooms' && Array.isArray(data.society_flats)) {
+        items = data.society_flats.map((flat: any) => ({ id: flat.id, name: flat.flat_no }));
+      }
+
       setCheckpoints(prev => prev.map((checkpoint, i) => {
         if (i !== checkpointIndex) return checkpoint;
         return {
@@ -516,11 +480,10 @@ export const PatrollingCreatePage: React.FC = () => {
     },
   };
 
-  // Fetch buildings for the first checkpoint on mount
+  // Fetch towers (society blocks) for the first checkpoint on mount
   useEffect(() => {
-    const siteId = localStorage.getItem('selectedSiteId');
-    if (siteId && checkpoints.length > 0 && checkpoints[0].locationData.buildings.length === 0) {
-      fetchLocationDataForCheckpoint(0, 'buildings', { siteId: parseInt(siteId) });
+    if (checkpoints.length > 0 && checkpoints[0].locationData.buildings.length === 0) {
+      fetchLocationDataForCheckpoint(0, 'buildings', {});
     }
   }, []);
 
@@ -622,12 +585,9 @@ export const PatrollingCreatePage: React.FC = () => {
     // Add the new checkpoint
     setCheckpoints(prev => [...prev, newCheckpoint]);
 
-    // Fetch buildings for the new checkpoint
+    // Fetch towers (society blocks) for the new checkpoint
     const newIndex = checkpoints.length;
-    const siteId = localStorage.getItem('selectedSiteId');
-    if (siteId) {
-      await fetchLocationDataForCheckpoint(newIndex, 'buildings', { siteId: parseInt(siteId) });
-    }
+    await fetchLocationDataForCheckpoint(newIndex, 'buildings', {});
   };
 
   const removeCheckpoint = (idx: number) => setCheckpoints(prev => prev.filter((_, i) => i !== idx));
@@ -727,55 +687,15 @@ export const PatrollingCreatePage: React.FC = () => {
     switch (field) {
       case 'building':
         if (value) {
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'wings', { buildingId: value });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'areas', { buildingId: value });
           await fetchLocationDataForCheckpoint(checkpointIndex, 'floors', { buildingId: value });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { buildingId: value });
-        }
-        break;
-
-      case 'wing':
-        if (value && checkpoint.buildingId) {
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'areas', { 
-            buildingId: checkpoint.buildingId, 
-            wingId: value 
-          });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'floors', { 
-            buildingId: checkpoint.buildingId, 
-            wingId: value 
-          });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { 
-            buildingId: checkpoint.buildingId, 
-            wingId: value 
-          });
-        }
-        break;
-
-      case 'area':
-        if (value && checkpoint.buildingId) {
-          const wingId = checkpoint.wingId || undefined;
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'floors', { 
-            buildingId: checkpoint.buildingId, 
-            wingId, 
-            areaId: value 
-          });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { 
-            buildingId: checkpoint.buildingId, 
-            wingId, 
-            areaId: value 
-          });
         }
         break;
 
       case 'floor':
         if (value && checkpoint.buildingId) {
-          const wingId = checkpoint.wingId || undefined;
-          const areaId = checkpoint.areaId || undefined;
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { 
-            buildingId: checkpoint.buildingId, 
-            wingId, 
-            areaId, 
-            floorId: value 
+          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', {
+            buildingId: checkpoint.buildingId,
+            floorId: value
           });
         }
         break;
@@ -1289,7 +1209,7 @@ export const PatrollingCreatePage: React.FC = () => {
           </div>
 
           {/* Department Dropdown */}
-          <div>
+          {/* <div>
             <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
               <InputLabel shrink>Department</InputLabel>
               <MuiSelect
@@ -1310,7 +1230,7 @@ export const PatrollingCreatePage: React.FC = () => {
                 ))}
               </MuiSelect>
             </FormControl>
-          </div>
+          </div> */}
         </div>
       </Section>
 
