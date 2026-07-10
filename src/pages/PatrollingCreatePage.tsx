@@ -412,6 +412,60 @@ export const PatrollingCreatePage: React.FC = () => {
     params: { siteId?: number; buildingId?: number; wingId?: number; areaId?: number; floorId?: number }
   ) => {
     try {
+      // Flats have their own endpoint (paginated) and need client-side filtering
+      // by tower (society_block_id) and floor (society_floor_id).
+      if (field === 'rooms') {
+        const societyId = localStorage.getItem('selectedSocietyId') || '';
+        const token = API_CONFIG.TOKEN;
+        let allFlats: any[] = [];
+        let page = 1;
+        let totalPages = 1;
+
+        do {
+          const flatParams = new URLSearchParams();
+          if (token) flatParams.append('token', token);
+          if (societyId) flatParams.append('society_id', societyId);
+          if (params.buildingId) flatParams.append('block_id', params.buildingId.toString());
+          flatParams.append('page', page.toString());
+
+          const url = `${API_CONFIG.BASE_URL}/admin/society_flats.json?${flatParams.toString()}`;
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': getAuthHeader(),
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) throw new Error('Failed to fetch rooms');
+
+          const data = await response.json();
+          const flats = Array.isArray(data.society_flats) ? data.society_flats : [];
+          allFlats = allFlats.concat(flats);
+          totalPages = data.pagination?.total_pages || 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        // Only show flats that belong to the selected tower and floor
+        const items = allFlats
+          .filter(flat =>
+            (!params.buildingId || flat.society_block_id === params.buildingId) &&
+            (!params.floorId || flat.society_floor_id === params.floorId)
+          )
+          .map(flat => ({ id: flat.id, name: flat.flat_no }));
+
+        setCheckpoints(prev => prev.map((checkpoint, i) => {
+          if (i !== checkpointIndex) return checkpoint;
+          return {
+            ...checkpoint,
+            locationData: {
+              ...checkpoint.locationData,
+              rooms: items
+            }
+          };
+        }));
+        return;
+      }
+
       let url = '';
       switch (field) {
         case 'buildings':
@@ -428,14 +482,8 @@ export const PatrollingCreatePage: React.FC = () => {
           break;
         }
         case 'floors': {
+          // Floors are already scoped to the selected tower
           url = `${API_CONFIG.BASE_URL}/society_floors.json?society_block_id=${params.buildingId}`;
-          break;
-        }
-        case 'rooms': {
-          const roomParams = new URLSearchParams();
-          if (params.buildingId) roomParams.append('q[society_block_id_eq]', params.buildingId.toString());
-          if (params.floorId) roomParams.append('q[society_floor_id_eq]', params.floorId.toString());
-          url = `${API_CONFIG.BASE_URL}/crm/admin/society_flats.json?${roomParams.toString()}`;
           break;
         }
       }
@@ -454,8 +502,6 @@ export const PatrollingCreatePage: React.FC = () => {
       let items = Array.isArray(data) ? data : (data[field] || []);
       if (field === 'buildings' && Array.isArray(data.society_blocks)) {
         items = data.society_blocks;
-      } else if (field === 'rooms' && Array.isArray(data.society_flats)) {
-        items = data.society_flats.map((flat: any) => ({ id: flat.id, name: flat.flat_no }));
       }
 
       setCheckpoints(prev => prev.map((checkpoint, i) => {
