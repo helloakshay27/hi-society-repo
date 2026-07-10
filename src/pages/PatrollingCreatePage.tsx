@@ -1418,8 +1418,9 @@ export const PatrollingCreatePage: React.FC = () => {
                     type="checkbox"
                     id={`mandatory-${idx}`}
                     checked={q.mandatory}
+                    onChange={(e) => updateQuestion(idx, 'mandatory', e.target.checked)}
                     className="w-4 h-4 text-[#C72030] bg-white border-gray-300 rounded focus:ring-[#C72030] focus:ring-2 accent-[#C72030]"
-                    disabled
+                    disabled={isSubmitting}
                   />
                   <label 
                     htmlFor={`mandatory-${idx}`}
@@ -1441,6 +1442,7 @@ export const PatrollingCreatePage: React.FC = () => {
                     }
                     placeholder="Enter Task"
                     value={q.task}
+                    onChange={(e) => updateQuestion(idx, 'task', e.target.value)}
                     fullWidth
                     variant="outlined"
                     slotProps={{
@@ -1451,7 +1453,7 @@ export const PatrollingCreatePage: React.FC = () => {
                     InputProps={{
                       sx: fieldStyles,
                     }}
-                    disabled
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div>
@@ -1459,10 +1461,11 @@ export const PatrollingCreatePage: React.FC = () => {
                     <InputLabel shrink>Input Type<span className="text-red-500">*</span></InputLabel>
                     <MuiSelect
                       value={q.inputType}
+                      onChange={(e) => updateQuestion(idx, 'inputType', e.target.value)}
                       label="Input Type*"
                       notched
                       displayEmpty
-                      disabled
+                      disabled={isSubmitting}
                     >
                       <MenuItem value="">Select Input Type</MenuItem>
                       <MenuItem value="yes_no">Yes/No</MenuItem>
@@ -1488,7 +1491,13 @@ export const PatrollingCreatePage: React.FC = () => {
                         className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                         placeholder="Option 1, Option 2, Option 3"
                         value={q.optionsText || ''}
-                        disabled
+                        onChange={(e) => {
+                          const text = e.target.value;
+                          const opts = text.split(',').map(o => o.trim()).filter(o => o !== '');
+                          updateQuestion(idx, 'optionsText', text);
+                          updateQuestion(idx, 'options', opts);
+                        }}
+                        disabled={isSubmitting}
                         style={{
                           height: '45px',
                           fontSize: '14px',
