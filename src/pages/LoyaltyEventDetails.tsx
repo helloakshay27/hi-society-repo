@@ -1073,7 +1073,13 @@ const LoyaltyEventDetails = () => {
                             eventData.thumbnail_image_16_by_9,
                           ];
                           const images = groups
-                            .filter(Array.isArray)
+                            .map((g) =>
+                              Array.isArray(g)
+                                ? g
+                                : g && typeof g === "object"
+                                  ? [g]
+                                  : []
+                            )
                             .flat()
                             .filter((img) => img?.document_url);
                           return images.length > 0 ? (
