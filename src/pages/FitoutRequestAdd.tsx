@@ -569,9 +569,9 @@ const FitoutRequestAdd: React.FC = () => {
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
-                inputProps={{
-                  min: new Date().toISOString().split('T')[0]
-                }}
+                // inputProps={{
+                //   min: new Date().toISOString().split('T')[0]
+                // }}
               />
                 <TextField
               label={<>Description<span className='text-red-600'> *</span> </>}
