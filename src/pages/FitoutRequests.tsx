@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock, XCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { toast } from "sonner";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { UnifiedDateRangeFilter } from "@/components/dashboard/UnifiedDateRangeFilter";
 
 interface FitoutRequestItem {
   id: number;
@@ -42,6 +43,11 @@ interface FitoutRequestItem {
   flat_no?: string;
 }
 
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
 interface FitoutCards {
   total: number;
   pending: number;
@@ -55,24 +61,53 @@ interface FitoutCards {
 
 const FitoutRequests: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { shouldShow } = useDynamicPermissions();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q[search]") || "");
   const [allRequests, setAllRequests] = useState<FitoutRequestItem[]>([]);
   const [cards, setCards] = useState<FitoutCards | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalEntries, setTotalEntries] = useState(0);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(searchParams.get("status_filter"));
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const dateRangeParam = searchParams.get("q[date_range]");
+    if (dateRangeParam) {
+      const parts = dateRangeParam.split(" - ");
+      if (parts.length === 2) {
+        const [fromStr, toStr] = parts;
+        const [fromDay, fromMonth, fromYear] = fromStr.split("/").map(Number);
+        const [toDay, toMonth, toYear] = toStr.split("/").map(Number);
+        return {
+          from: new Date(fromYear, fromMonth - 1, fromDay),
+          to: new Date(toYear, toMonth - 1, toDay),
+        };
+      }
+    }
+    return undefined;
+  });
   const perPage = 15;
 
-  const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null) => {
+  const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null, search: string = "", dateRangeValue?: DateRange) => {
     try {
       setLoading(true);
 
       let url = `/crm/admin/fitout_requests.json?page=${page}&per_page=${perPage}`;
+      if (search) {
+        url += `&q[search]=${encodeURIComponent(search)}`;
+      }
       if (statusFilter) {
         url += `&status_filter=${encodeURIComponent(statusFilter)}`;
+      }
+      if (dateRangeValue?.from && dateRangeValue?.to) {
+        const formatDate = (date: Date) => {
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        };
+        url += `&q[date_range]=${encodeURIComponent(`${formatDate(dateRangeValue.from)} - ${formatDate(dateRangeValue.to)}`)}`;
       }
 
       const response = await axios.get(
@@ -118,11 +153,17 @@ const FitoutRequests: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchFitoutRequestsData(currentPage, activeFilter);
-  }, [fetchFitoutRequestsData, currentPage, activeFilter]);
+    fetchFitoutRequestsData(currentPage, activeFilter, searchTerm, dateRange);
+  }, [fetchFitoutRequestsData, currentPage, activeFilter, searchTerm, dateRange]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -628,6 +669,16 @@ const FitoutRequests: React.FC = () => {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+
+      {/* Date Range Filter */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex-1 max-w-md">
+          <UnifiedDateRangeFilter
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+          />
+        </div>
+      </div>
 
       {/* Fitout Request Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-6">

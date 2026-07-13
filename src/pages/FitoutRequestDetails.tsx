@@ -953,6 +953,56 @@ const FitoutRequestDetails: React.FC = () => {
     }
   };
 
+  const handleDeleteDocument = async (categoryId: number, documentId: number) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    try {
+      await apiClient.delete(`/fitout_request_categories/${categoryId}/delete_document/${documentId}.json`);
+
+      toast.success('Document deleted successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error deleting document:', error);
+      toast.error(`Failed to delete document: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+    }
+  };
+
+  const handleDeleteAnswerDocument = async (documentId: number) => {
+    if (!confirm('Are you sure you want to delete this attachment?')) return;
+
+    try {
+      await apiClient.delete(`/attachfiles/${documentId}.json`);
+
+      toast.success('Attachment deleted successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error deleting attachment:', error);
+      toast.error(`Failed to delete attachment: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+    }
+  };
+
   const handleResendApprovalMail = async (annexureCategoryId: number, invoiceApprovalHistoryId: number) => {
     setResendingMailId(invoiceApprovalHistoryId);
     try {
@@ -2856,7 +2906,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                                       <Paperclip className="w-8 h-8 text-gray-400" />
                                                                     </div>
                                                                   )}
-                                                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-1">
                                                                     <Button
                                                                       size="sm"
                                                                       variant="secondary"
@@ -2865,6 +2915,14 @@ const FitoutRequestDetails: React.FC = () => {
                                                                     >
                                                                       <Download className="w-3 h-3 mr-1" />
                                                                       View
+                                                                    </Button>
+                                                                    <Button
+                                                                      size="sm"
+                                                                      variant="secondary"
+                                                                      className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700"
+                                                                      onClick={() => handleDeleteAnswerDocument(doc.id)}
+                                                                    >
+                                                                      <Trash2 className="w-3 h-3" />
                                                                     </Button>
                                                                   </div>
                                                                 </div>
@@ -3025,7 +3083,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                                     <Paperclip className="w-8 h-8 text-gray-400" />
                                                                   </div>
                                                                 )}
-                                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-1">
                                                                   <Button
                                                                     size="sm"
                                                                     variant="secondary"
@@ -3034,6 +3092,14 @@ const FitoutRequestDetails: React.FC = () => {
                                                                   >
                                                                     <Download className="w-3 h-3 mr-1" />
                                                                     View
+                                                                  </Button>
+                                                                  <Button
+                                                                    size="sm"
+                                                                    variant="secondary"
+                                                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700"
+                                                                    onClick={() => handleDeleteAnswerDocument(doc.id)}
+                                                                  >
+                                                                    <Trash2 className="w-3 h-3" />
                                                                   </Button>
                                                                 </div>
                                                                 <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center truncate">
@@ -3188,30 +3254,28 @@ const FitoutRequestDetails: React.FC = () => {
                                     {category.documents.map((doc, docIndex) => (
                                       <div
                                         key={doc.id}
-                                        className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                        className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
                                       >
                                         <img
                                           src={decodeURIComponent(doc.document_url)}
                                           alt={`Document ${docIndex + 1}`}
-                                          className="w-full h-32 object-cover"
+                                          className="w-full h-32 object-cover cursor-pointer"
+                                          onClick={() => window.open(doc.document_url, '_blank')}
                                           onError={(e) => {
                                             const target = e.target as HTMLImageElement;
                                             target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
                                           }}
                                         />
-                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
-                                          <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => window.open(doc.document_url, '_blank')}
+                                        <div className="flex items-center justify-between px-2 py-1 bg-gray-50">
+                                          <span className="text-xs text-gray-500">Doc {docIndex + 1}</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteDocument(category.id, doc.id)}
+                                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                                            title="Delete document"
                                           >
-                                            <Eye className="w-4 h-4 mr-1" />
-                                            View
-                                          </Button>
-                                        </div>
-                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center">
-                                          Doc {docIndex + 1}
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
                                         </div>
                                       </div>
                                     ))}
