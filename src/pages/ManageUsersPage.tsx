@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit } from "lucide-react";
@@ -107,6 +107,8 @@ const ManageUsersPage = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [importId, setImportId] = useState<number | null>(null);
+  const importPollRef = useRef<number | null>(null);
   const [isDownloadingSample, setIsDownloadingSample] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -233,6 +235,70 @@ const ManageUsersPage = () => {
     fetchTowers();
   }, []);
 
+  useEffect(() => {
+    return () => clearImportStatusPolling();
+  }, []);
+
+  const clearImportStatusPolling = () => {
+    if (importPollRef.current) {
+      window.clearInterval(importPollRef.current);
+      importPollRef.current = null;
+    }
+  };
+
+  const checkImportStatus = async (id: number) => {
+    try {
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/upload_user_societies_status?import_id=${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const importData = response.data?.import || response.data;
+      const statusInfo = {
+        status: importData?.status,
+        import_id: importData?.id,
+        filename: importData?.filename,
+        total_rows: importData?.total_rows,
+        success_count: importData?.success_count,
+        error_count: importData?.error_count,
+      };
+
+      if (statusInfo.status === "completed") {
+        clearImportStatusPolling();
+        toast.success(
+          `Import completed: ${statusInfo.filename} — ${statusInfo.success_count}/${statusInfo.total_rows} succeeded, ${statusInfo.error_count} failed`
+        );
+        setIsImporting(false);
+        setImportId(null);
+        fetchUsers(1);
+        setShowImportModal(false);
+        setSelectedImportFile(null);
+      } else if (statusInfo.status === "failed") {
+        clearImportStatusPolling();
+        toast.error(`Import failed: ${statusInfo.filename || ""}`);
+        setIsImporting(false);
+        setImportId(null);
+      } else {
+        toast(
+          `Import ${statusInfo.status}: ${statusInfo.filename} — ${statusInfo.success_count}/${statusInfo.total_rows} processed`
+        );
+      }
+    } catch (error) {
+      console.error("Error checking import status:", error);
+    }
+  };
+
+  const startImportStatusPolling = (id: number) => {
+    clearImportStatusPolling();
+    importPollRef.current = window.setInterval(() => {
+      checkImportStatus(id);
+    }, 5000);
+  };
+
   const handleViewUser = (userId: string) => {
     navigate(`/settings/manage-users/${userId}`);
   };
@@ -335,6 +401,7 @@ const ManageUsersPage = () => {
 
       if (!baseUrl || !token) {
         toast.error('Missing authentication details. Please login again.');
+        setIsImporting(false);
         return;
       }
 
@@ -350,7 +417,16 @@ const ManageUsersPage = () => {
 
       if (response.data?.[0]?.error) {
         toast.error(response.data?.[0]?.error)
+        setIsImporting(false);
         return
+      }
+
+      if (response.data?.status === 'queued' && response.data?.import_id) {
+        toast.success(response.data?.message || 'Import queued. Processing...');
+        setImportId(response.data.import_id);
+        startImportStatusPolling(response.data.import_id);
+        // isImporting stays true until the polled status is completed/failed
+        return;
       }
 
       toast.success('Users imported successfully.');
@@ -359,6 +435,7 @@ const ManageUsersPage = () => {
       fetchUsers(1);
       setShowImportModal(false);
       setSelectedImportFile(null);
+      setIsImporting(false);
     } catch (error) {
       console.error('Error importing users:', error);
       const errorMessage = error?.response?.data?.message || 'Failed to import users. Please try again.';
@@ -371,7 +448,6 @@ const ManageUsersPage = () => {
           border: 'none',
         },
       });
-    } finally {
       setIsImporting(false);
     }
   };
