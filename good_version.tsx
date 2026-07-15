@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+﻿import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
@@ -158,7 +158,7 @@ export const CreatePaymentPage: React.FC = () => {
     [parseAmountValue]
   );
 
-  // PMS axios instance — uses the dynamic session base URL (fm-uat-api.lockated.com)
+  // PMS axios instance ΓÇö uses the dynamic session base URL (fm-uat-api.lockated.com)
   const pmsClient = React.useMemo(
     () =>
       axios.create({
@@ -172,7 +172,7 @@ export const CreatePaymentPage: React.FC = () => {
     [API_CONFIG.BASE_URL, authToken]
   );
 
-  // Accounting axios instance — always hits club-uat-api.lockated.com
+  // Accounting axios instance ΓÇö always hits club-uat-api.lockated.com
   const accountingClient = React.useMemo(
     () =>
       axios.create({
@@ -401,170 +401,170 @@ export const CreatePaymentPage: React.FC = () => {
       if (!accountId) return;
       setLoadingAccounts(true);
       try {
-          const res = await pmsClient.get(`/lock_accounts/${accountId}/lock_account_groups.json`);
-          const data = res.data as { lock_account_groups?: AccountGroup[]; account_groups?: AccountGroup[] } | AccountGroup[];
-          const groups = Array.isArray(data) ? data : data.lock_account_groups ?? data.account_groups ?? [];
-          setAccountGroups(groups);
-        } catch (err) {
-          console.error("Failed to fetch account groups:", err);
-          setAccountGroups([]);
-        } finally {
-          setLoadingAccounts(false);
-        }
-      };
-      fetchAccountGroups();
-    }, [authToken, ensureLockAccountId, pmsClient]);
+        const res = await pmsClient.get(
+          `/lock_accounts/${accountId}/lock_account_groups?format=flat`
+        );
+        setAccountGroups(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch account groups:", err);
+        setAccountGroups([]);
+      } finally {
+        setLoadingAccounts(false);
+      }
+    };
+    fetchAccountGroups();
+  }, [authToken, ensureLockAccountId, pmsClient]);
 
-    const fetchBills = useCallback(
-      async (vendorId: string) => {
-        if (!authToken) {
-          setBills([]);
-          setAppliedAmounts({});
-          setBillsError("Authentication token is missing. Please log in again.");
-          setBillsLoading(false);
-          return;
-        }
-
-        const accountId = await ensureLockAccountId();
-        if (!accountId) {
-          setBills([]);
-          setAppliedAmounts({});
-          setBillsError("Could not find lock account for this session. Please reselect your company/site.");
-          setBillsLoading(false);
-          return;
-        }
-
-        setBillsLoading(true);
+  const fetchBills = useCallback(
+    async (vendorId: string) => {
+      if (!authToken) {
         setBills([]);
         setAppliedAmounts({});
-        setBillsError("");
-        try {
-          const res = await accountingClient.get("/lock_account_bills.json", {
-            params: { lock_account_id: accountId },
-            timeout: 30000,
-          });
-          const raw = res.data;
-          const allBills: LockAccountBill[] = Array.isArray(raw)
-            ? raw
-            : Array.isArray(raw?.lock_account_bills)
-              ? raw.lock_account_bills
-              : Array.isArray(raw?.data)
-                ? raw.data
-                : [];
-          const vendorBills = allBills.filter(
-            (b) => String(b.pms_supplier_id) === String(vendorId)
-          );
-          setBills(vendorBills);
-        } catch (err) {
-          console.error("Failed to fetch bills:", err);
-          const message =
-            axios.isAxiosError(err) && err.code === "ERR_NETWORK_CHANGED"
-              ? "Network changed while loading bills. Please retry."
-              : "Could not load bills for this vendor.";
-          setBillsError(message);
-          sonnerToast.error(message);
-        } finally {
-          setBillsLoading(false);
-        }
-      },
-      [accountingClient, authToken, ensureLockAccountId]
-    );
+        setBillsError("Authentication token is missing. Please log in again.");
+        setBillsLoading(false);
+        return;
+      }
 
-    // Convert a File to base64 string
-    const fileToBase64 = (file: File): Promise<string> =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-    const handleSave = async (status: "DRAFT" | "PAID") => {
-      if (!selectedVendor) {
-        sonnerToast.error("Please select a vendor.");
-        return;
-      }
-      if (!amount || isNaN(parseFloat(amount))) {
-        sonnerToast.error("Please enter a valid amount.");
-        return;
-      }
-      if (!paidThrough) {
-        sonnerToast.error("Please select an account in 'Paid Through'.");
-        return;
-      }
-      if (!authToken) {
-        sonnerToast.error("API not configured. Please log in.");
-        return;
-      }
       const accountId = await ensureLockAccountId();
       if (!accountId) {
-        sonnerToast.error("Could not find lock account for this session.");
+        setBills([]);
+        setAppliedAmounts({});
+        setBillsError("Could not find lock account for this session. Please reselect your company/site.");
+        setBillsLoading(false);
         return;
       }
 
-      setIsSaving(true);
+      setBillsLoading(true);
+      setBills([]);
+      setAppliedAmounts({});
+      setBillsError("");
       try {
-        const attachments_attributes =
-          attachmentFiles.length > 0
-            ? await Promise.all(
-              attachmentFiles.map(async (file) => ({
-                document: await fileToBase64(file),
-                active: true,
+        const res = await accountingClient.get("/lock_account_bills.json", {
+          params: { lock_account_id: accountId },
+          timeout: 30000,
+        });
+        const raw = res.data;
+        const allBills: LockAccountBill[] = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.lock_account_bills)
+            ? raw.lock_account_bills
+            : Array.isArray(raw?.data)
+              ? raw.data
+              : [];
+        const vendorBills = allBills.filter(
+          (b) => String(b.pms_supplier_id) === String(vendorId)
+        );
+        setBills(vendorBills);
+      } catch (err) {
+        console.error("Failed to fetch bills:", err);
+        const message =
+          axios.isAxiosError(err) && err.code === "ERR_NETWORK_CHANGED"
+            ? "Network changed while loading bills. Please retry."
+            : "Could not load bills for this vendor.";
+        setBillsError(message);
+        sonnerToast.error(message);
+      } finally {
+        setBillsLoading(false);
+      }
+    },
+    [accountingClient, authToken, ensureLockAccountId]
+  );
+
+  // Convert a File to base64 string
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleSave = async (status: "DRAFT" | "PAID") => {
+    if (!selectedVendor) {
+      sonnerToast.error("Please select a vendor.");
+      return;
+    }
+    if (!amount || isNaN(parseFloat(amount))) {
+      sonnerToast.error("Please enter a valid amount.");
+      return;
+    }
+    if (!paidThrough) {
+      sonnerToast.error("Please select an account in 'Paid Through'.");
+      return;
+    }
+    if (!authToken) {
+      sonnerToast.error("API not configured. Please log in.");
+      return;
+    }
+    const accountId = await ensureLockAccountId();
+    if (!accountId) {
+      sonnerToast.error("Could not find lock account for this session.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const attachments_attributes =
+        attachmentFiles.length > 0
+          ? await Promise.all(
+            attachmentFiles.map(async (file) => ({
+              document: await fileToBase64(file),
+              active: true,
+            }))
+          )
+          : undefined;
+
+      const paymentDate = date
+        ? format(date, "dd/MM/yyyy")
+        : format(new Date(), "dd/MM/yyyy");
+
+      const lock_bill_payments_attributes =
+        activeTab === "bill_payment"
+          ? Object.entries(appliedAmounts)
+              .filter(([, v]) => parseFloat(v) > 0)
+              .map(([billId, v]) => ({
+                resource_id: parseInt(billId, 10),
+                resource_type: "LockAccountBill",
+                amount: parseFloat(v),
+                payment_date: paymentDate,
               }))
-            )
-            : undefined;
+          : [];
 
-        const paymentDate = date
-          ? format(date, "dd/MM/yyyy")
-          : format(new Date(), "dd/MM/yyyy");
+      const paidAmount = parseFloat(amount) || 0;
+      const paymentAmount = totalApplied;
+      const excessAmount = Math.max(0, paidAmount - totalApplied);
 
-        const lock_bill_payments_attributes =
-          activeTab === "bill_payment"
-            ? Object.entries(appliedAmounts)
-                .filter(([, v]) => parseFloat(v) > 0)
-                .map(([billId, v]) => ({
-                  resource_id: parseInt(billId, 10),
-                  resource_type: "LockAccountBill",
-                  amount: parseFloat(v),
-                  payment_date: paymentDate,
-                }))
-            : [];
+      const isPaid = status === "PAID";
 
-        const paidAmount = parseFloat(amount) || 0;
-        const paymentAmount = totalApplied;
-        const excessAmount = Math.max(0, paidAmount - totalApplied);
-
-        const isPaid = status === "PAID";
-
-        const payload = {
-          lock_payment: {
-            lock_account_id: accountId,
-            payment_of: "Pms::Supplier",
-            payment_of_id: parseInt(selectedVendor, 10),
-            paid_amount: paidAmount,
-            // Use the dynamically selected TDS id (vendor_advance tab only)
-            lock_account_tax_id: selectedTds ? parseInt(selectedTds, 10) : lockAccountTaxId,
-            tds_amount: tdsAmount > 0 ? tdsAmount : undefined,
-            tds_percentage: tdsPercentage > 0 ? tdsPercentage : undefined,
-            net_amount: tdsAmount > 0 ? paidAmount - tdsAmount : undefined,
-            payment_date: paymentDate,
-            payment_mode: paymentMode,
-            order_number: paymentNumber || "",
-            neft_reference: reference,
-            paid_from_ledger_id: parseInt(paidThrough, 10),
-            deposit_to_ledger_id: depositToLedgerId,
-            advance: activeTab === "vendor_advance",
-            reverse_charge: activeTab === "vendor_advance" ? isReverseCharge : undefined,
-            reverse_charge_tax_id:
-              activeTab === "vendor_advance" && isReverseCharge && reverseChargeTax
-                ? parseInt(reverseChargeTax, 10)
-                : undefined,
-            source_of_supply: activeTab === "vendor_advance" ? sourceOfSupply : undefined,
-            destination_of_supply: activeTab === "vendor_advance" ? destinationOfSupply : undefined,
-            description_of_supply: activeTab === "vendor_advance" ? descriptionOfSupply : undefined,
-            notes: notes,
-            payment_made: isPaid,
-            status: isPaid ? "paid" : "draft",
+      const payload = {
+        lock_payment: {
+          lock_account_id: accountId,
+          payment_of: "Pms::Supplier",
+          payment_of_id: parseInt(selectedVendor, 10),
+          paid_amount: paidAmount,
+          // Use the dynamically selected TDS id (vendor_advance tab only)
+          lock_account_tax_id: selectedTds ? parseInt(selectedTds, 10) : lockAccountTaxId,
+          tds_amount: tdsAmount > 0 ? tdsAmount : undefined,
+          tds_percentage: tdsPercentage > 0 ? tdsPercentage : undefined,
+          net_amount: tdsAmount > 0 ? paidAmount - tdsAmount : undefined,
+          payment_date: paymentDate,
+          payment_mode: paymentMode,
+          order_number: paymentNumber || "",
+          neft_reference: reference,
+          paid_from_ledger_id: parseInt(paidThrough, 10),
+          deposit_to_ledger_id: depositToLedgerId,
+          advance: activeTab === "vendor_advance",
+          reverse_charge: activeTab === "vendor_advance" ? isReverseCharge : undefined,
+          reverse_charge_tax_id:
+            activeTab === "vendor_advance" && isReverseCharge && reverseChargeTax
+              ? parseInt(reverseChargeTax, 10)
+              : undefined,
+          source_of_supply: activeTab === "vendor_advance" ? sourceOfSupply : undefined,
+          destination_of_supply: activeTab === "vendor_advance" ? destinationOfSupply : undefined,
+          description_of_supply: activeTab === "vendor_advance" ? descriptionOfSupply : undefined,
+          notes: notes,
+          payment_made: isPaid,
+          status: isPaid ? "paid" : "draft",
           payment_amount: paymentAmount,
           excess_amount: excessAmount,
           lock_bill_payments_attributes,
@@ -708,7 +708,7 @@ export const CreatePaymentPage: React.FC = () => {
     }
   }, [bills, getBillAmountDue, payFullAmount, vendorAmountDue]);
 
-  // TDS deduction: amount × (selectedTds percentage / 100)
+  // TDS deduction: amount ├ù (selectedTds percentage / 100)
   const selectedTdsOption = tdsOptions.find((opt) => String(opt.id) === selectedTds);
   const tdsPercentage = selectedTdsOption?.percentage ?? 0;
   const tdsAmount = tdsPercentage > 0 && parseFloat(amount) > 0
@@ -720,7 +720,7 @@ export const CreatePaymentPage: React.FC = () => {
       <div className="min-h-screen bg-white">
         <div className="w-full">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            {/* ══ HEADER SECTION (Gray Background) ══ */}
+            {/* ΓòÉΓòÉ HEADER SECTION (Gray Background) ΓòÉΓòÉ */}
             <div className="bg-[#f9f9fa] border-b border-gray-200 px-6 pb-6 pt-6 relative">
               <Button
                 variant="ghost"
@@ -749,7 +749,7 @@ export const CreatePaymentPage: React.FC = () => {
                 </TabsList>
               </div>
 
-            {/* ── Vendor Name – MUI Select (same as BillsAdd style) ── */}
+            {/* ΓöÇΓöÇ Vendor Name ΓÇô MUI Select (same as BillsAdd style) ΓöÇΓöÇ */}
             <div className="mt-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Vendor Name<span className="text-red-500">*</span>
@@ -915,16 +915,16 @@ export const CreatePaymentPage: React.FC = () => {
                             onChange={(e) => applyFullPaymentAmount(e.target.checked)}
                           />
                           <span>
-                            Pay full amount (₹{vendorAmountDue.toFixed(2)})
+                            Pay full amount (Γé╣{vendorAmountDue.toFixed(2)})
                           </span>
                         </label>
                       )}
-                      {/* Net amount after TDS — shown only in vendor_advance */}
+                      {/* Net amount after TDS ΓÇö shown only in vendor_advance */}
                       {activeTab === "vendor_advance" && tdsAmount > 0 && (
                         <p className="mt-1.5 text-xs text-gray-500">
                           Amount paid after deducting TDS:{" "}
                           <span className="font-semibold text-gray-800">
-                            ₹{(parseFloat(amount) - tdsAmount).toFixed(2)}
+                            Γé╣{(parseFloat(amount) - tdsAmount).toFixed(2)}
                           </span>
                         </p>
                       )}
@@ -1032,12 +1032,12 @@ export const CreatePaymentPage: React.FC = () => {
                             className="flex-1 w-full outline-none text-sm bg-transparent"
                           />
                         </div>
-                        {/* Net amount after TDS — shown only in vendor_advance */}
+                        {/* Net amount after TDS ΓÇö shown only in vendor_advance */}
                         {activeTab === "vendor_advance" && tdsAmount > 0 && (
                           <p className="mt-1.5 text-xs text-gray-500">
                             Amount paid after deducting TDS:{" "}
                             <span className="font-semibold text-gray-800">
-                              ₹{(parseFloat(amount) - tdsAmount).toFixed(2)}
+                              Γé╣{(parseFloat(amount) - tdsAmount).toFixed(2)}
                             </span>
                           </p>
                         )}
@@ -1139,11 +1139,11 @@ export const CreatePaymentPage: React.FC = () => {
                               ))}
                             </MuiSelect>
                           </FormControl>
-                          {/* TDS deduction breakdown — shown below TDS dropdown */}
+                          {/* TDS deduction breakdown ΓÇö shown below TDS dropdown */}
                           {tdsAmount > 0 && (
                             <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1">
-                              <span>−</span>
-                              <span>TDS ({tdsPercentage}%): ₹{tdsAmount.toFixed(2)}</span>
+                              <span>ΓêÆ</span>
+                              <span>TDS ({tdsPercentage}%): Γé╣{tdsAmount.toFixed(2)}</span>
                             </p>
                           )}
                         </div>
@@ -1181,7 +1181,7 @@ export const CreatePaymentPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* ── PAYMENT METHOD ── */}
+                {/* ΓöÇΓöÇ PAYMENT METHOD ΓöÇΓöÇ */}
                 <div className="border border-gray-200 mt-6 bg-white">
                   <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-200">
                     <CreditCard
@@ -1310,7 +1310,7 @@ export const CreatePaymentPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* ── BILLS TABLE (Bill Payment Only) ── */}
+                {/* ΓöÇΓöÇ BILLS TABLE (Bill Payment Only) ΓöÇΓöÇ */}
                 {activeTab === "bill_payment" && (
                   <div className="border border-gray-200 mt-6 bg-white">
                     <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-200">
@@ -1390,10 +1390,10 @@ export const CreatePaymentPage: React.FC = () => {
                               {bill.order_number || "-"}
                             </div>
                             <div className="col-span-2 text-right text-gray-800 text-xs font-medium">
-                              ₹{bill.total_amount.toFixed(2)}
+                              Γé╣{bill.total_amount.toFixed(2)}
                             </div>
                             <div className="col-span-2 text-right text-gray-800 text-xs">
-                              ₹{bill.total_amount.toFixed(2)}
+                              Γé╣{bill.total_amount.toFixed(2)}
                             </div>
                             <div className="col-span-2 flex justify-end">
                               <input
@@ -1419,7 +1419,7 @@ export const CreatePaymentPage: React.FC = () => {
                       <div className="flex justify-between items-center py-4">
                         <div className="text-sm font-medium">Total :</div>
                         <div className="text-sm text-gray-700 font-medium">
-                          ₹{totalApplied.toFixed(2)}
+                          Γé╣{totalApplied.toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -1433,7 +1433,7 @@ export const CreatePaymentPage: React.FC = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Amount Paid:</span>
                         <span className="font-medium text-gray-800">
-                          ₹
+                          Γé╣
                           {parseFloat(amount)
                             ? parseFloat(amount).toFixed(2)
                             : "0.00"}
@@ -1444,12 +1444,12 @@ export const CreatePaymentPage: React.FC = () => {
                           Amount used for Payments:
                         </span>
                         <span className="text-gray-800">
-                          ₹{totalApplied.toFixed(2)}
+                          Γé╣{totalApplied.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Amount Refunded:</span>
-                        <span className="text-gray-800">₹0.00</span>
+                        <span className="text-gray-800">Γé╣0.00</span>
                       </div>
                       <div className="flex justify-between text-sm pt-2">
                         <span className="text-gray-600 flex items-center gap-1">
@@ -1457,14 +1457,14 @@ export const CreatePaymentPage: React.FC = () => {
                           Amount in Excess:
                         </span>
                         <span className="font-medium text-gray-800">
-                          ₹{amountInExcess.toFixed(2)}
+                          Γé╣{amountInExcess.toFixed(2)}
                         </span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* ── CUSTOMER NOTES ── */}
+                {/* ΓöÇΓöÇ CUSTOMER NOTES ΓöÇΓöÇ */}
                 <div className="border border-gray-200 mt-6 bg-white">
                   <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-200">
                     <FileText
@@ -1561,10 +1561,10 @@ export const CreatePaymentPage: React.FC = () => {
                             {bill.order_number || "-"}
                           </div>
                           <div className="col-span-2 text-right text-gray-800 text-xs font-medium">
-                            ₹{formatAmountValue(bill.total_amount)}
+                            Γé╣{formatAmountValue(bill.total_amount)}
                           </div>
                           <div className="col-span-2 text-right text-gray-800 text-xs">
-                            ₹{getBillAmountDue(bill).toFixed(2)}
+                            Γé╣{getBillAmountDue(bill).toFixed(2)}
                           </div>
                           <div className="col-span-2 flex justify-end">
                             <input
@@ -1632,7 +1632,7 @@ export const CreatePaymentPage: React.FC = () => {
                     Additional Fields: Start adding custom fields for your
                     payments made by going to{" "}
                     <span className="text-gray-700 text-xs italic">
-                      Settings ➜ Purchases ➜ Payments Made.
+                      Settings Γ₧£ Purchases Γ₧£ Payments Made.
                     </span>
                   </p>
                 </div>
@@ -1743,7 +1743,7 @@ export const CreatePaymentPage: React.FC = () => {
                             Outstanding Payables
                           </div>
                           <div className="text-lg font-semibold text-gray-900">
-                            ₹0.00
+                            Γé╣0.00
                           </div>
                         </div>
                         <div className="border border-gray-100 rounded-lg p-4 flex flex-col items-center justify-center gap-2 shadow-sm bg-white">
@@ -1752,7 +1752,7 @@ export const CreatePaymentPage: React.FC = () => {
                             Unused Credits
                           </div>
                           <div className="text-lg font-semibold text-gray-900">
-                            ₹0.00
+                            Γé╣0.00
                           </div>
                         </div>
                       </div>
@@ -1820,11 +1820,11 @@ export const CreatePaymentPage: React.FC = () => {
                                 ajay.pihulkar
                               </span>{" "}
                               <span className="text-gray-500">
-                                • 12/02/2026 12:47 AM
+                                ΓÇó 12/02/2026 12:47 AM
                               </span>
                             </div>
                             <div className="bg-white border border-gray-100 rounded-lg p-3 text-sm text-gray-800 shadow-sm">
-                              Expense of amount ₹122.00 created
+                              Expense of amount Γé╣122.00 created
                             </div>
                           </div>
                         </div>
@@ -1839,11 +1839,11 @@ export const CreatePaymentPage: React.FC = () => {
                                 ajay.pihulkar
                               </span>{" "}
                               <span className="text-gray-500">
-                                • 12/02/2026 12:06 AM
+                                ΓÇó 12/02/2026 12:06 AM
                               </span>
                             </div>
                             <div className="bg-white border border-gray-100 rounded-lg p-3 text-sm text-gray-800 shadow-sm">
-                              Payment of amount ₹250.00 made and applied for 123
+                              Payment of amount Γé╣250.00 made and applied for 123
                             </div>
                           </div>
                         </div>
@@ -1858,11 +1858,11 @@ export const CreatePaymentPage: React.FC = () => {
                                 ajay.pihulkar
                               </span>{" "}
                               <span className="text-gray-500">
-                                • 12/02/2026 12:00 AM
+                                ΓÇó 12/02/2026 12:00 AM
                               </span>
                             </div>
                             <div className="bg-white border border-gray-100 rounded-lg p-3 text-sm text-gray-800 shadow-sm">
-                              Purchase Order of amount ₹250.00 converted as bill
+                              Purchase Order of amount Γé╣250.00 converted as bill
                               123
                             </div>
                           </div>
@@ -1878,7 +1878,7 @@ export const CreatePaymentPage: React.FC = () => {
                                 ajay.pihulkar
                               </span>{" "}
                               <span className="text-gray-500">
-                                • 11/02/2026 11:56 PM
+                                ΓÇó 11/02/2026 11:56 PM
                               </span>
                             </div>
                             <div className="bg-white border border-gray-100 rounded-lg p-3 text-sm text-gray-800 shadow-sm">
