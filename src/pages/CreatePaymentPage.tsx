@@ -798,57 +798,6 @@ export const CreatePaymentPage: React.FC = () => {
                         : option.name || "Unknown Vendor"}
                     </MuiMenuItem>
                   ))}
-                  <MuiMenuItem
-                    sx={{
-                      p: 0,
-                      position: "sticky",
-                      bottom: 0,
-                      background: "white",
-                      zIndex: 10,
-                      mt: 1,
-                    }}
-                    displayEmpty
-                    sx={{
-                      height: { xs: 28, sm: 36, md: 45 },
-                      "& .MuiInputBase-input, & .MuiSelect-select": {
-                        padding: { xs: "8px", sm: "10px", md: "12px" },
-                      },
-                      backgroundColor: "#fff",
-                      borderRadius: "6px",
-                    }}
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 350,
-                        },
-                      },
-                    }}
-                  >
-                    <MuiMenuItem value="" disabled>
-                      Select a vendor
-                    </MuiMenuItem>
-                    {suppliers.map((option) => (
-                      <MuiMenuItem key={option.id} value={option.id}>
-                        {option.company_name
-                          ? option.name
-                            ? `${option.name} (${option.company_name})`
-                            : option.company_name
-                          : option.name || "Unknown Vendor"}
-                      </MuiMenuItem>
-                    ))}
-                    <MuiMenuItem
-                      sx={{
-                        p: 0,
-                        position: "sticky",
-                        bottom: 0,
-                        background: "white",
-                        zIndex: 10,
-                        mt: 1,
-                      }}
-                      disableRipple
-                      onKeyDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
-                    ></MuiMenuItem>
                   </MuiSelect>
                 </FormControl>
 
@@ -1038,6 +987,7 @@ export const CreatePaymentPage: React.FC = () => {
 
                     {/* TDS (Vendor Advance Only) */}
                     {activeTab === "vendor_advance" && (
+                      <>
                       <div>
                         <label className="block text-sm font-medium mb-2 text-gray-700">
                           Payment #<span className="text-red-500">*</span>
@@ -1146,7 +1096,8 @@ export const CreatePaymentPage: React.FC = () => {
                             )}
                           </div>
                         </div>
-                      )}
+                      </>
+                    )}
 
                       {/* TDS (Vendor Advance Only) */}
                       {activeTab === "vendor_advance" && (
