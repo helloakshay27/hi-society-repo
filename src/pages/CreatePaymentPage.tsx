@@ -1177,9 +1177,8 @@ export const CreatePaymentPage: React.FC = () => {
                           </PopoverContent>
                         </Popover>
                       </div>
-                    </div>
-                  </div>
-                </div>
+                    </>
+                  )}
 
                 {/* ── PAYMENT METHOD ── */}
                 <div className="border border-gray-200 mt-6 bg-white">
