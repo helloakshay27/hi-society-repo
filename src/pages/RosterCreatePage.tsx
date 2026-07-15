@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,45 @@ const Section: React.FC<{
 );
 
 const formatDateForApi = (date: Date) => date.toISOString().split("T")[0];
+
+const resolveCurrentLocation = (selectedSiteName?: string): string => {
+  if (selectedSiteName) {
+    return selectedSiteName;
+  }
+
+  try {
+    const hiSocietyApprovedSocietiesStr = localStorage.getItem("hiSocietyApprovedSocieties");
+    const selectedUserSocietyId = localStorage.getItem("selectedUserSociety");
+
+    if (hiSocietyApprovedSocietiesStr && selectedUserSocietyId) {
+      const societies = JSON.parse(hiSocietyApprovedSocietiesStr) as Array<{ id: number | string; society?: { building_name?: string } }>;
+      const selected = societies.find((s) => s.id.toString() === selectedUserSocietyId);
+      if (selected?.society?.building_name) {
+        return selected.society.building_name;
+      }
+    }
+
+    const siteName = localStorage.getItem("selectedSiteName");
+    const companyName = localStorage.getItem("selectedCompanyName");
+
+    if (siteName && siteName !== "null" && siteName !== "") {
+      return siteName;
+    }
+
+    if (companyName && companyName !== "null" && companyName !== "") {
+      return companyName;
+    }
+
+    const headerSiteElement = document.querySelector("[data-site-name]");
+    if (headerSiteElement) {
+      return headerSiteElement.textContent?.trim() || "Current Site";
+    }
+  } catch (error) {
+    console.error("Error resolving current location:", error);
+  }
+
+  return "Current Site";
+};
 
 // Types
 interface FMUser {
@@ -121,6 +160,8 @@ export const RosterCreatePage: React.FC = () => {
     endDate: null as Date | null,
   });
 
+  const initialLocation = resolveCurrentLocation(selectedSite?.name);
+
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingFMUsers, setLoadingFMUsers] = useState(false);
@@ -129,7 +170,7 @@ export const RosterCreatePage: React.FC = () => {
   // Data states
   const [fmUsers, setFMUsers] = useState<FMUser[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<string>("");
+  const [currentLocation, setCurrentLocation] = useState<string>(initialLocation);
 
   // Error states
   const [errors, setErrors] = useState({
@@ -176,7 +217,6 @@ export const RosterCreatePage: React.FC = () => {
   useEffect(() => {
     fetchFMUsers();
     fetchShifts();
-    fetchCurrentLocation();
   }, []);
 
   // Update location when selectedSite changes
@@ -184,7 +224,12 @@ export const RosterCreatePage: React.FC = () => {
     if (selectedSite?.name) {
       setCurrentLocation(selectedSite.name);
       setFormData((prev) => ({ ...prev, location: selectedSite.name }));
+      return;
     }
+
+    const resolvedLocation = resolveCurrentLocation();
+    setCurrentLocation(resolvedLocation);
+    setFormData((prev) => ({ ...prev, location: resolvedLocation }));
   }, [selectedSite]);
 
   // Fetch Security Users for employee selection
@@ -250,12 +295,11 @@ export const RosterCreatePage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log("Shifts API Response:", data);
 
       // Adapt the response to our expected format
       const shiftsData = data.user_shifts || data.shifts || data || [];
       setShifts(
-        shiftsData.map((shift: any) => ({
+        shiftsData.map((shift: { id: number; start_hour: number; start_min: number; end_hour: number; end_min: number; timings: string; total_hour: number; created_by?: { name?: string } }) => ({
           id: shift.id,
           start_hour: shift.start_hour,
           start_min: shift.start_min,
@@ -272,65 +316,6 @@ export const RosterCreatePage: React.FC = () => {
       setShifts([]);
     } finally {
       setLoadingShifts(false);
-    }
-  };
-
-  // Fetch Current Location (from site context)
-  const fetchCurrentLocation = async () => {
-    try {
-      // First try to get from Redux state
-      if (selectedSite?.name) {
-        setCurrentLocation(selectedSite.name);
-        setFormData((prev) => ({ ...prev, location: selectedSite.name }));
-        return;
-      }
-
-      // Try to get from hiSocietyApprovedSocieties (user_approved_societies API payload)
-      const hiSocietyApprovedSocietiesStr = localStorage.getItem("hiSocietyApprovedSocieties");
-      const selectedUserSocietyId = localStorage.getItem("selectedUserSociety");
-      
-      if (hiSocietyApprovedSocietiesStr && selectedUserSocietyId) {
-        try {
-          const societies = JSON.parse(hiSocietyApprovedSocietiesStr);
-          const selected = societies.find((s: any) => s.id.toString() === selectedUserSocietyId);
-          if (selected && selected.society?.building_name) {
-            setCurrentLocation(selected.society.building_name);
-            setFormData((prev) => ({ ...prev, location: selected.society.building_name }));
-            return;
-          }
-        } catch (e) {
-          console.error("Error parsing hiSocietyApprovedSocieties", e);
-        }
-      }
-
-      // Fallback to localStorage
-      const siteId = localStorage.getItem("selectedSiteId");
-      const siteName = localStorage.getItem("selectedSiteName");
-      const companyName = localStorage.getItem("selectedCompanyName");
-
-      let locationName = "Current Site";
-
-      if (siteName && siteName !== "null" && siteName !== "") {
-        locationName = siteName;
-      } else if (companyName && companyName !== "null" && companyName !== "") {
-        locationName = companyName;
-      }
-
-      // Try to get from DOM if localStorage doesn't have it
-      if (locationName === "Current Site") {
-        const headerSiteElement = document.querySelector("[data-site-name]");
-        if (headerSiteElement) {
-          locationName =
-            headerSiteElement.textContent?.trim() || "Current Site";
-        }
-      }
-
-      setCurrentLocation(locationName);
-      setFormData((prev) => ({ ...prev, location: locationName }));
-    } catch (error) {
-      console.error("Error fetching current location:", error);
-      setCurrentLocation("Current Site");
-      setFormData((prev) => ({ ...prev, location: "Current Site" }));
     }
   };
 
@@ -468,13 +453,69 @@ export const RosterCreatePage: React.FC = () => {
   };
 
   // Handle input changes
-  const handleInputChange = (field: keyof RosterFormData, value: any) => {
+  const handleInputChange = (field: keyof RosterFormData, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear field error when user starts typing/selecting
     if (errors[field as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [field]: false }));
     }
   };
+
+  const fmUsersById = useMemo(() => {
+    return new Map(fmUsers.map((user) => [user.id, user]));
+  }, [fmUsers]);
+
+  const selectedEmployeeSet = useMemo(() => {
+    return new Set(formData.selectedEmployees);
+  }, [formData.selectedEmployees]);
+
+  const shiftMenuItems = useMemo(() => {
+    if (shifts.length === 0) {
+      return (
+        <MenuItem disabled>
+          <span className="italic text-gray-500">No shifts found</span>
+        </MenuItem>
+      );
+    }
+
+    return shifts.map((shift) => (
+      <MenuItem key={shift.id} value={shift.id}>
+        {shift.vendor_name ? shift.vendor_name : `${shift.timings} (${shift.total_hour}h)`}
+      </MenuItem>
+    ));
+  }, [shifts]);
+
+  const employeeMenuItems = useMemo(() => {
+    if (loadingFMUsers) {
+      return null;
+    }
+
+    if (fmUsers.length === 0) {
+      return (
+        <MenuItem disabled>
+          <ListItemText
+            primary="No employees found"
+            sx={{ fontStyle: "italic", color: "#9ca3af" }}
+          />
+        </MenuItem>
+      );
+    }
+
+    return fmUsers.map((user) => (
+      <MenuItem key={user.id} value={user.id}>
+        <Checkbox
+          checked={selectedEmployeeSet.has(user.id)}
+          sx={{
+            color: "#D5DbDB",
+            "&.Mui-checked": {
+              color: "#C72030",
+            },
+          }}
+        />
+        <ListItemText primary={user.name || "No name available"} secondary={user.email} />
+      </MenuItem>
+    ));
+  }, [fmUsers, loadingFMUsers, selectedEmployeeSet]);
 
   // Validation
   const validateForm = (): boolean => {
@@ -634,9 +675,6 @@ export const RosterCreatePage: React.FC = () => {
           payload = basePayload;
         }
       }
-
-      // Log payload to console
-      console.log("🎯 API Payload:", JSON.stringify(payload, null, 2));
 
       const apiUrl = getFullUrl(
         isSmartSecureRoster
@@ -1135,11 +1173,7 @@ export const RosterCreatePage: React.FC = () => {
                   error={errors.shift}
                 >
                   <MenuItem value="">Select Shift</MenuItem>
-                  {shifts.map((shift) => (
-                    <MenuItem key={shift.id} value={shift.id}>
-                      {shift.vendor_name ? shift.vendor_name : `${shift.timings} (${shift.total_hour}h)`}
-                    </MenuItem>
-                  ))}
+                  {shiftMenuItems}
                 </MuiSelect>
                 {loadingShifts && (
                   <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
@@ -1182,17 +1216,13 @@ export const RosterCreatePage: React.FC = () => {
                     const selectedArray = selected as number[];
                     if (selectedArray.length === 0) return "";
                     if (selectedArray.length === 1) {
-                      const user = fmUsers.find(
-                        (u) => u.id === selectedArray[0]
-                      );
+                      const user = fmUsersById.get(selectedArray[0]);
                       return user?.name || `User ${selectedArray[0]}`;
                     }
                     if (selectedArray.length <= 3) {
                       return selectedArray
                         .map((value) => {
-                          const user = fmUsers.find(
-                            (u) => u.id === value
-                          );
+                          const user = fmUsersById.get(value);
                           return user?.name || `User ${value}`;
                         })
                         .join(", ");
@@ -1211,34 +1241,7 @@ export const RosterCreatePage: React.FC = () => {
                     },
                   }}
                 >
-                  {fmUsers.length > 0 ? (
-                    fmUsers.map((user) => (
-                      <MenuItem key={user.id} value={user.id}>
-                        <Checkbox
-                          checked={
-                            formData.selectedEmployees.indexOf(user.id) > -1
-                          }
-                          sx={{
-                            color: "#D5DbDB",
-                            "&.Mui-checked": {
-                              color: "#C72030",
-                            },
-                          }}
-                        />
-                        <ListItemText
-                          primary={user.name || "No name available"}
-                          secondary={user.email}
-                        />
-                      </MenuItem>
-                    ))
-                  ) : (
-                    <MenuItem disabled>
-                      <ListItemText
-                        primary="No employees found"
-                        sx={{ fontStyle: "italic", color: "#9ca3af" }}
-                      />
-                    </MenuItem>
-                  )}
+                  {employeeMenuItems}
                 </MuiSelect>
                 {loadingFMUsers && (
                   <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
