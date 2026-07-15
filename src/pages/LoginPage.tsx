@@ -448,6 +448,19 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       sessionStorage.setItem("userType", "admin"); // Force admin view only
       sessionStorage.setItem("userId", response.id.toString());
 
+      // RM (Relationship Manager) / CS (Customer Service) users only have
+      // access to the site visit scheduling module — send them straight there.
+      if (response.user_type === "rm_user" || response.user_type === "cs_user") {
+        await fetchHiSocietyData(response.spree_api_key);
+
+        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
+
+        setTimeout(() => {
+          navigate("/appointmentz/site-scheduling", { replace: true });
+        }, 500);
+        return;
+      }
+
       if (isHiSocietySite || isUIHiSocietySite) {
         const from =
           (location.state as { from?: Location })?.from?.pathname +

@@ -53,6 +53,13 @@ export interface HiSocietySociety {
   };
 }
 
+export interface RMSociety {
+  rm_user_id: number;
+  society_id: number;
+  building_name: string;
+  admin?: boolean;
+}
+
 export const HiSocietyHeader = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
@@ -71,6 +78,18 @@ export const HiSocietyHeader = () => {
   const [selectedFlat, setSelectedFlat] = useState<HiSocietySociety | null>(null);
   const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
   console.log(selectedSociety)
+
+  // RM/CS specific state — account API returns `rm_societies` (assigned societies)
+  // and `society` (currently selected one) instead of the member-style
+  // `hiSocietyApprovedSocieties` list used above.
+  const [accountUserType, setAccountUserType] = useState<string | null>(null);
+  const [rmSocieties, setRmSocieties] = useState<RMSociety[]>([]);
+  const [rmSelectedSociety, setRmSelectedSociety] = useState<{
+    id?: number;
+    building_name?: string;
+  } | null>(null);
+  const isRMUser = accountUserType === "rm_user";
+  const isCSUser = accountUserType === "cs_user";
   // Layout mode
   const { layoutMode, toggleLayoutMode, isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
 
@@ -192,6 +211,15 @@ export const HiSocietyHeader = () => {
         localStorage.setItem("selectedUserSociety", accountData?.selected_user_society?.toString() || "");
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         sessionStorage.setItem("selectedUserSociety", accountData?.selected_user_society?.toString() || "");
+
+        // RM/CS users: pull their assigned societies + currently selected
+        // society straight off the account response (no separate approved-
+        // societies call for them).
+        setAccountUserType(accountData?.user_type || null);
+        if (accountData?.user_type === "rm_user" || accountData?.user_type === "cs_user") {
+          setRmSocieties(accountData?.rm_societies || []);
+          setRmSelectedSociety(accountData?.society || null);
+        }
       }
 
       // Fetch user approved societies
@@ -256,6 +284,21 @@ export const HiSocietyHeader = () => {
             }
           }
         }
+      }
+
+      // Cached account data (for RM/CS society info) — immediate display
+      try {
+        const cachedAccountRaw = localStorage.getItem("hiSocietyAccount");
+        if (cachedAccountRaw) {
+          const cachedAccount = JSON.parse(cachedAccountRaw);
+          setAccountUserType(cachedAccount?.user_type || null);
+          if (cachedAccount?.user_type === "rm_user" || cachedAccount?.user_type === "cs_user") {
+            setRmSocieties(cachedAccount?.rm_societies || []);
+            setRmSelectedSociety(cachedAccount?.society || null);
+          }
+        }
+      } catch {
+        /* no-op */
       }
 
       // Then fetch fresh data from API
@@ -579,7 +622,7 @@ export const HiSocietyHeader = () => {
             </Button>
           )}
 
-          {/* Society + Flat Dropdown */}
+          {/* Society + Flat Dropdown (member view) / Assigned Societies (RM/CS view) */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1 sm:gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
               <Building2 className="w-4 h-4 flex-shrink-0" />
@@ -587,17 +630,36 @@ export const HiSocietyHeader = () => {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <span className="hidden sm:inline text-sm font-medium">
-                  {selectedSociety?.society?.building_name
-                    ? selectedFlat?.user_flat?.flat
-                      ? `${selectedSociety.society.building_name} - ${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + ' - ' : ''}${selectedFlat.user_flat.flat}`
-                      : selectedSociety.society.building_name
-                    : "Select Society"}
+                  {isRMUser || isCSUser
+                    ? rmSelectedSociety?.building_name || "Select Society"
+                    : selectedSociety?.society?.building_name
+                      ? selectedFlat?.user_flat?.flat
+                        ? `${selectedSociety.society.building_name} - ${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + ' - ' : ''}${selectedFlat.user_flat.flat}`
+                        : selectedSociety.society.building_name
+                      : "Select Society"}
                 </span>
               )}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-              {hiSocietySocieties.length === 0 ? (
+              {isRMUser || isCSUser ? (
+                rmSocieties.length === 0 ? (
+                  <DropdownMenuItem disabled>No societies assigned</DropdownMenuItem>
+                ) : (
+                  rmSocieties.map((item) => (
+                    <DropdownMenuItem
+                      key={item.society_id}
+                      className={
+                        rmSelectedSociety?.id === item.society_id
+                          ? "bg-[#f6f4ee] text-[#C72030]"
+                          : ""
+                      }
+                    >
+                      {item.building_name}
+                    </DropdownMenuItem>
+                  ))
+                )
+              ) : hiSocietySocieties.length === 0 ? (
                 <DropdownMenuItem disabled>No societies available</DropdownMenuItem>
               ) : (
                 hiSocietySocieties.map((item) => (

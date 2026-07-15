@@ -19,6 +19,8 @@ import { ProtectionLayer } from "./ProtectionLayer";
 import { HiSocietyHeader } from "./HiSocietyHeader";
 import { HiSocietyNavigation } from "./HiSocietyNavigation";
 import HiSocietySidebar from "./HiSocietySidebar";
+import RMSidebar from "./RMSidebar";
+import CSSidebar from "./CSSidebar";
 
 import { EmployeeSidebar } from "./EmployeeSidebar";
 import { EmployeeSidebarStatic } from "./EmployeeSidebarStatic";
@@ -55,6 +57,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const userEmail = currentUser?.email || "No email";
   const org_id = localStorage.getItem("org_id");
   const hostname = window.location.hostname;
+
+  // Account API (fetched globally on login / app load) tells us the
+  // logged-in user's type — RM/CS users get a restricted sidebar and no
+  // dynamic header, regardless of which Hi-Society domain they're on.
+  let hiSocietyAccountUserType: string | undefined;
+  try {
+    const hiSocietyAccountRaw = localStorage.getItem("hiSocietyAccount");
+    hiSocietyAccountUserType = hiSocietyAccountRaw
+      ? JSON.parse(hiSocietyAccountRaw)?.user_type
+      : undefined;
+  } catch {
+    hiSocietyAccountUserType = undefined;
+  }
+  const isCSUser = hiSocietyAccountUserType === "cs_user";
+  const isRMUser = hiSocietyAccountUserType === "rm_user";
 
   // Detect Club Management routes
   const isClubManagementRoute =
@@ -152,14 +169,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <ActionSidebar />;
     }
 
-    if (layoutMode === "hi-society" && isDevHiSocietySite) {
-      return <HiSocietySidebar />;
-    }
-
-    if (layoutMode === "hi-society" && isUIHiSocietySite) {
-      return <UIHiSocietySidebar />;
-    }
     if (layoutMode === "hi-society") {
+      if (isCSUser) {
+        return <CSSidebar />;
+      }
+      if (isRMUser) {
+        return <RMSidebar />;
+      }
+
+      if (isDevHiSocietySite) {
+        return <HiSocietySidebar />;
+      }
+      if (isUIHiSocietySite) {
+        return <UIHiSocietySidebar />;
+      }
       return <HiSocietySidebar />;
     }
 
@@ -235,6 +258,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       userEmail === "dineshshinde6666@gmail.com"
     ) {
       return <ActionHeader />;
+    }
+
+    // RM/CS users get a restricted sidebar-only experience — no dynamic header
+    if (layoutMode === "hi-society" && (isCSUser || isRMUser)) {
+      return null;
     }
 
     if (layoutMode === "hi-society" && isCPSite) {
@@ -386,7 +414,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           } ${
           // Top padding based on mode
           layoutMode === "hi-society"
-            ? "pt-28"
+            ? // RM/CS users have no HiSocietyNavigation bar (renderDynamicHeader
+              // returns null for them), so they only need space for the header
+              isCSUser || isRMUser
+              ? "pt-16"
+              : "pt-28"
             : isActionSidebarVisible
               ? ""
               : "pt-28"
