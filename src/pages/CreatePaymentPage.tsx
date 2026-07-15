@@ -402,169 +402,168 @@ export const CreatePaymentPage: React.FC = () => {
       setLoadingAccounts(true);
       try {
         const res = await pmsClient.get(
-          `/lock_accounts/${accountId}/lock_account_groups?format=flat`
-        );
-        setAccountGroups(res.data.data || []);
-      } catch (err) {
-        console.error("Failed to fetch account groups:", err);
-        setAccountGroups([]);
-      } finally {
-        setLoadingAccounts(false);
-      }
-    };
-    fetchAccountGroups();
-  }, [authToken, ensureLockAccountId, pmsClient]);
+                    {/* TDS (Vendor Advance Only) */}
+                    {activeTab === "vendor_advance" && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-700">
+                            Payment #<span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative font-sans">
+                            <Input
+                              value={paymentNumber}
+                              onChange={(e) => setPaymentNumber(e.target.value)}
+                              readOnly={paymentConfig.autoGenerate}
+                              className={cn(
+                                "pr-10 h-[38px] w-full text-sm border-gray-300 focus-visible:ring-1 shadow-sm",
+                                paymentConfig.autoGenerate ? "bg-gray-50 cursor-not-allowed focus-visible:ring-0" : "bg-white cursor-text"
+                              )}
+                              placeholder="Payment number"
+                            />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Settings
+                                  className="absolute right-3 top-2.5 h-4 w-4 text-blue-500 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
+                                  onClick={() => setIsConfigModalOpen(true)}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-[#1e293b] text-white border-none text-[12px] py-1.5 px-3">
+                                <p>Click here to configure auto-generation of payment numbers.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
 
-  const fetchBills = useCallback(
-    async (vendorId: string) => {
-      if (!authToken) {
-        setBills([]);
-        setAppliedAmounts({});
-        setBillsError("Authentication token is missing. Please log in again.");
-        setBillsLoading(false);
-        return;
-      }
+                        {/* Payment Made */}
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-700">
+                            Payment Made<span className="text-red-500">*</span>
+                          </label>
+                          <div className="flex items-center h-[38px] border border-gray-300 rounded-md px-3 bg-white focus-within:ring-1 focus-within:ring-gray-950 focus-within:border-gray-950 transition-colors shadow-sm">
+                            <span className="text-gray-500 text-sm font-medium mr-2">
+                              INR
+                            </span>
+                            <input
+                              value={amount}
+                              onChange={(e) => setAmount(e.target.value)}
+                              className="flex-1 w-full outline-none text-sm bg-transparent"
+                            />
+                          </div>
+                          {/* Net amount after TDS — shown only in vendor_advance */}
+                          {tdsAmount > 0 && (
+                            <p className="mt-1.5 text-xs text-gray-500">
+                              Amount paid after deducting TDS: {" "}
+                              <span className="font-semibold text-gray-800">
+                                ₹{(parseFloat(amount) - tdsAmount).toFixed(2)}
+                              </span>
+                            </p>
+                          )}
+                        </div>
 
-      const accountId = await ensureLockAccountId();
-      if (!accountId) {
-        setBills([]);
-        setAppliedAmounts({});
-        setBillsError("Could not find lock account for this session. Please reselect your company/site.");
-        setBillsLoading(false);
-        return;
-      }
+                        {/* Reverse Charge (Vendor Advance Only) */}
+                        <div className="md:col-span-2 flex items-start border-b border-transparent pb-2">
+                          <label className="text-sm font-medium text-gray-700 min-w-[200px] pt-[2px]">
+                            Reverse Charge
+                          </label>
+                          <div className="flex flex-col flex-1">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id="reverseCharge"
+                                className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                                checked={isReverseCharge}
+                                onChange={(e) => setIsReverseCharge(e.target.checked)}
+                              />
+                              <label htmlFor="reverseCharge" className="text-[13px] text-gray-700 cursor-pointer hover:text-gray-900 transition-colors">
+                                This transaction is applicable for reverse charge
+                              </label>
+                            </div>
 
-      setBillsLoading(true);
-      setBills([]);
-      setAppliedAmounts({});
-      setBillsError("");
-      try {
-        const res = await accountingClient.get("/lock_account_bills.json", {
-          params: { lock_account_id: accountId },
-          timeout: 30000,
-        });
-        const raw = res.data;
-        const allBills: LockAccountBill[] = Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.lock_account_bills)
-            ? raw.lock_account_bills
-            : Array.isArray(raw?.data)
-              ? raw.data
-              : [];
-        const vendorBills = allBills.filter(
-          (b) => String(b.pms_supplier_id) === String(vendorId)
-        );
-        setBills(vendorBills);
-      } catch (err) {
-        console.error("Failed to fetch bills:", err);
-        const message =
-          axios.isAxiosError(err) && err.code === "ERR_NETWORK_CHANGED"
-            ? "Network changed while loading bills. Please retry."
-            : "Could not load bills for this vendor.";
-        setBillsError(message);
-        sonnerToast.error(message);
-      } finally {
-        setBillsLoading(false);
-      }
-    },
-    [accountingClient, authToken, ensureLockAccountId]
-  );
+                            {isReverseCharge && (
+                              <div className="w-full md:w-[50%] lg:w-[40%] mt-4">
+                                <label className="block text-sm font-medium mb-1.5 text-gray-700">Tax</label>
+                                <FormControl fullWidth size="small">
+                                  <MuiSelect
+                                    value={reverseChargeTax}
+                                    onChange={(e) => setReverseChargeTax(e.target.value as string)}
+                                    displayEmpty
+                                    sx={{
+                                      height: { xs: 28, sm: 36, md: 38 },
+                                      "& .MuiInputBase-input, & .MuiSelect-select": {
+                                        padding: { xs: "8px", sm: "10px", md: "8px" },
+                                        fontSize: "14px",
+                                      },
+                                      backgroundColor: "#fff",
+                                      borderRadius: "6px",
+                                    }}
+                                  >
+                                    <MuiMenuItem value="" disabled>
+                                      {loadingRcTaxes ? "Loading Tax options..." : "Select Tax Group"}
+                                    </MuiMenuItem>
+                                    {!loadingRcTaxes && rcTaxOptions.map((opt) => (
+                                      <MuiMenuItem key={opt.id} value={String(opt.id)}>
+                                        {opt.name}
+                                        {typeof opt.percentage === "number" ? ` [${opt.percentage}%]` : ""}
+                                      </MuiMenuItem>
+                                    ))}
+                                  </MuiSelect>
+                                </FormControl>
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
-  // Convert a File to base64 string
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-  const handleSave = async (status: "DRAFT" | "PAID") => {
-    if (!selectedVendor) {
-      sonnerToast.error("Please select a vendor.");
-      return;
-    }
-    if (!amount || isNaN(parseFloat(amount))) {
-      sonnerToast.error("Please enter a valid amount.");
-      return;
-    }
-    if (!paidThrough) {
-      sonnerToast.error("Please select an account in 'Paid Through'.");
-      return;
-    }
-    if (!authToken) {
-      sonnerToast.error("API not configured. Please log in.");
-      return;
-    }
-    const accountId = await ensureLockAccountId();
-    if (!accountId) {
-      sonnerToast.error("Could not find lock account for this session.");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const attachments_attributes =
-        attachmentFiles.length > 0
-          ? await Promise.all(
-            attachmentFiles.map(async (file) => ({
-              document: await fileToBase64(file),
-              active: true,
-            }))
-          )
-          : undefined;
-
-      const paymentDate = date
-        ? format(date, "dd/MM/yyyy")
-        : format(new Date(), "dd/MM/yyyy");
-
-      const lock_bill_payments_attributes =
-        activeTab === "bill_payment"
-          ? Object.entries(appliedAmounts)
-              .filter(([, v]) => parseFloat(v) > 0)
-              .map(([billId, v]) => ({
-                resource_id: parseInt(billId, 10),
-                resource_type: "LockAccountBill",
-                amount: parseFloat(v),
-                payment_date: paymentDate,
-              }))
-          : [];
-
-      const paidAmount = parseFloat(amount) || 0;
-      const paymentAmount = totalApplied;
-      const excessAmount = Math.max(0, paidAmount - totalApplied);
-
-      const isPaid = status === "PAID";
-
-      const payload = {
-        lock_payment: {
-          lock_account_id: accountId,
-          payment_of: "Pms::Supplier",
-          payment_of_id: parseInt(selectedVendor, 10),
-          paid_amount: paidAmount,
-          // Use the dynamically selected TDS id (vendor_advance tab only)
-          lock_account_tax_id: selectedTds ? parseInt(selectedTds, 10) : lockAccountTaxId,
-          tds_amount: tdsAmount > 0 ? tdsAmount : undefined,
-          tds_percentage: tdsPercentage > 0 ? tdsPercentage : undefined,
-          net_amount: tdsAmount > 0 ? paidAmount - tdsAmount : undefined,
-          payment_date: paymentDate,
-          payment_mode: paymentMode,
-          order_number: paymentNumber || "",
-          neft_reference: reference,
-          paid_from_ledger_id: parseInt(paidThrough, 10),
-          deposit_to_ledger_id: depositToLedgerId,
-          advance: activeTab === "vendor_advance",
-          reverse_charge: activeTab === "vendor_advance" ? isReverseCharge : undefined,
-          reverse_charge_tax_id:
-            activeTab === "vendor_advance" && isReverseCharge && reverseChargeTax
-              ? parseInt(reverseChargeTax, 10)
-              : undefined,
-          source_of_supply: activeTab === "vendor_advance" ? sourceOfSupply : undefined,
-          destination_of_supply: activeTab === "vendor_advance" ? destinationOfSupply : undefined,
-          description_of_supply: activeTab === "vendor_advance" ? descriptionOfSupply : undefined,
-          notes: notes,
-          payment_made: isPaid,
-          status: isPaid ? "paid" : "draft",
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-700">
+                            TDS
+                          </label>
+                          <FormControl fullWidth>
+                            <MuiSelect
+                              value={selectedTds || ""}
+                              onChange={(e) => setSelectedTds(e.target.value as string)}
+                              displayEmpty
+                              sx={{
+                                height: { xs: 28, sm: 36, md: 45 },
+                                "& .MuiInputBase-input, & .MuiSelect-select": {
+                                  padding: { xs: "8px", sm: "10px", md: "12px" },
+                                },
+                                backgroundColor: "#fff",
+                                borderRadius: "6px",
+                              }}
+                              MenuProps={{
+                                PaperProps: {
+                                  style: {
+                                    maxHeight: 350,
+                                  },
+                                },
+                              }}
+                            >
+                              <MuiMenuItem value="" disabled>
+                                {loadingTds ? "Loading TDS options..." : "Select a Tax"}
+                              </MuiMenuItem>
+                              {!loadingTds && tdsOptions.length === 0 && (
+                                <MuiMenuItem value="" disabled>
+                                  No TDS options available
+                                </MuiMenuItem>
+                              )}
+                              {tdsOptions.map((opt) => (
+                                <MuiMenuItem key={opt.id} value={String(opt.id)}>
+                                  {opt.name}
+                                  {typeof opt.percentage === "number" ? ` [${opt.percentage}%]` : ""}
+                                </MuiMenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+                          {/* TDS deduction breakdown — shown below TDS dropdown */}
+                          {tdsAmount > 0 && (
+                            <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1">
+                              <span>−</span>
+                              <span>TDS ({tdsPercentage}%): ₹{tdsAmount.toFixed(2)}</span>
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
           payment_amount: paymentAmount,
           excess_amount: excessAmount,
           lock_bill_payments_attributes,
