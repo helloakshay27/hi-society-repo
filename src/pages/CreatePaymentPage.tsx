@@ -1354,8 +1354,9 @@ export const CreatePaymentPage: React.FC = () => {
                               onChange={(e) => setReference(e.target.value)}
                               className="border-gray-300 bg-white h-[38px] text-sm shadow-sm"
                             />
-                          </div>
-                        </>
+                        </div>
+                      )}
+                      </>
                       )}
                     </div>
                   </div>
