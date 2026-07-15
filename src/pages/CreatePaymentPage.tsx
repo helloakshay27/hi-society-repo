@@ -1044,8 +1044,7 @@ export const CreatePaymentPage: React.FC = () => {
                       </div>
 
                       {/* Reverse Charge (Vendor Advance Only) */}
-                      {activeTab === "vendor_advance" && (
-                        <div className="md:col-span-2 flex items-start border-b border-transparent pb-2">
+                      <div className="md:col-span-2 flex items-start border-b border-transparent pb-2">
                           <label className="text-sm font-medium text-gray-700 min-w-[200px] pt-[2px]">
                             Reverse Charge
                           </label>
@@ -1095,9 +1094,7 @@ export const CreatePaymentPage: React.FC = () => {
                               </div>
                             )}
                           </div>
-                        </div>
-                      </>
-                    )}
+                      </div>
 
                       {/* TDS (Vendor Advance Only) */}
                       {activeTab === "vendor_advance" && (
@@ -1456,7 +1453,7 @@ export const CreatePaymentPage: React.FC = () => {
                       </div>
                       <div className="flex justify-between text-sm pt-2">
                         <span className="text-gray-600 flex items-center gap-1">
-                          <AlertTriangle className="h-4 w-4 text-orange-400 fill-orange-400 text-white" />
+                          <AlertTriangle className="h-4 w-4 text-orange-400 fill-orange-400" />
                           Amount in Excess:
                         </span>
                         <span className="font-medium text-gray-800">
@@ -1959,7 +1956,7 @@ export const CreatePaymentPage: React.FC = () => {
                     {!modalAutoGenerate && (
                       <div className="grid grid-cols-2 gap-4 pl-7">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-400">Prefix</Label>
+                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Prefix</Label>
                           <Input
                             value={modalPrefix}
                             onChange={(e) => setModalPrefix(e.target.value)}
@@ -1968,7 +1965,7 @@ export const CreatePaymentPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-400">Payment Number</Label>
+                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Number</Label>
                           <Input
                             value={modalNextNumber}
                             onChange={(e) => setModalNextNumber(e.target.value)}
