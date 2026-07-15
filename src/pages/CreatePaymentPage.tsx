@@ -1016,85 +1016,8 @@ export const CreatePaymentPage: React.FC = () => {
                           </Tooltip>
                         </div>
                       </div>
-
-                      {/* Payment Made */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-700">
-                          Payment Made<span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex items-center h-[38px] border border-gray-300 rounded-md px-3 bg-white focus-within:ring-1 focus-within:ring-gray-950 focus-within:border-gray-950 transition-colors shadow-sm">
-                          <span className="text-gray-500 text-sm font-medium mr-2">
-                            INR
-                          </span>
-                          <input
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            className="flex-1 w-full outline-none text-sm bg-transparent"
-                          />
-                        </div>
-                        {/* Net amount after TDS — shown only in vendor_advance */}
-                        {activeTab === "vendor_advance" && tdsAmount > 0 && (
-                          <p className="mt-1.5 text-xs text-gray-500">
-                            Amount paid after deducting TDS:{" "}
-                            <span className="font-semibold text-gray-800">
-                              ₹{(parseFloat(amount) - tdsAmount).toFixed(2)}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Reverse Charge (Vendor Advance Only) */}
-                      <div className="md:col-span-2 flex items-start border-b border-transparent pb-2">
-                          <label className="text-sm font-medium text-gray-700 min-w-[200px] pt-[2px]">
-                            Reverse Charge
-                          </label>
-                          <div className="flex flex-col flex-1">
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id="reverseCharge"
-                                className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
-                                checked={isReverseCharge}
-                                onChange={(e) => setIsReverseCharge(e.target.checked)}
-                              />
-                              <label htmlFor="reverseCharge" className="text-[13px] text-gray-700 cursor-pointer hover:text-gray-900 transition-colors">
-                                This transaction is applicable for reverse charge
-                              </label>
-                            </div>
-
-                            {isReverseCharge && (
-                              <div className="w-full md:w-[50%] lg:w-[40%] mt-4">
-                                <label className="block text-sm font-medium mb-1.5 text-gray-700">Tax</label>
-                                <FormControl fullWidth size="small">
-                                  <MuiSelect
-                                    value={reverseChargeTax}
-                                    onChange={(e) => setReverseChargeTax(e.target.value as string)}
-                                    displayEmpty
-                                    sx={{
-                                      height: { xs: 28, sm: 36, md: 38 },
-                                      "& .MuiInputBase-input, & .MuiSelect-select": {
-                                        padding: { xs: "8px", sm: "10px", md: "8px" },
-                                        fontSize: "14px",
-                                      },
-                                      backgroundColor: "#fff",
-                                      borderRadius: "6px",
-                                    }}
-                                  >
-                                    <MuiMenuItem value="" disabled>
-                                      {loadingRcTaxes ? "Loading Tax options..." : "Select Tax Group"}
-                                    </MuiMenuItem>
-                                    {!loadingRcTaxes && rcTaxOptions.map((opt) => (
-                                      <MuiMenuItem key={opt.id} value={String(opt.id)}>
-                                        {opt.name}
-                                        {typeof opt.percentage === "number" ? ` [${opt.percentage}%]` : ""}
-                                      </MuiMenuItem>
-                                    ))}
-                                  </MuiSelect>
-                                </FormControl>
-                              </div>
-                            )}
-                          </div>
-                      </div>
+                      </>
+                    )}
 
                       {/* TDS (Vendor Advance Only) */}
                       {activeTab === "vendor_advance" && (
@@ -1177,9 +1100,6 @@ export const CreatePaymentPage: React.FC = () => {
                           </PopoverContent>
                         </Popover>
                       </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* ── PAYMENT METHOD ── */}
                 <div className="border border-gray-200 mt-6 bg-white">
@@ -1303,7 +1223,6 @@ export const CreatePaymentPage: React.FC = () => {
                               className="border-gray-300 bg-white h-[38px] text-sm shadow-sm"
                             />
                         </div>
-                      )}
                       </>
                       )}
                     </div>
@@ -1663,8 +1582,7 @@ export const CreatePaymentPage: React.FC = () => {
                     Cancel
                   </Button>
                 </div>
-              </div>
-            </div>
+
           </Tabs>
 
           {/* Vendor Details Sidebar / Sheet */}
