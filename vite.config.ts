@@ -1,13 +1,25 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
+
+// Pre-bundle every runtime dependency at startup. With lazy-loaded routes,
+// Vite would otherwise discover deps mid-session as pages load, forcing
+// re-optimization passes and full page reloads.
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf-8"));
+const runtimeDeps = Object.keys(pkg.dependencies).filter(
+  (d) => !d.startsWith("@types/")
+);
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 5173,
+  },
+  optimizeDeps: {
+    include: runtimeDeps,
   },
   plugins: [
     react(),

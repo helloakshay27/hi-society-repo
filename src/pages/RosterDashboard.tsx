@@ -17,7 +17,6 @@ interface RosterItem {
   id: number;
   template: string;
   location: string;
-  department: string;
   shift: string;
   rosterType: string;
   createdOn: string;
@@ -57,13 +56,6 @@ const columns: ColumnConfig[] = [
   {
     key: 'location',
     label: 'Location',
-    sortable: true,
-    hideable: true,
-    draggable: true
-  },
-  {
-    key: 'department',
-    label: 'Department',
     sortable: true,
     hideable: true,
     draggable: true
@@ -187,25 +179,6 @@ export const RosterDashboard = ({
 
       // Transform API data to match our interface
       const transformedData: RosterItem[] = rosterItems.map((item: any) => {
-        // Handle department mapping - could be string, array, or object
-        let departmentName = 'Not assigned';
-        if (item.departments) {
-          if (typeof item.departments === 'string') {
-            departmentName = item.departments;
-          } else if (Array.isArray(item.departments)) {
-            departmentName = item.departments
-              .map((department: any) =>
-                typeof department === 'string'
-                  ? department
-                  : department?.name || department?.department_name
-              )
-              .filter(Boolean)
-              .join(', ') || 'Not assigned';
-          }
-        } else if (item.department) {
-          departmentName = item.department;
-        }
-
         // Handle shift information
         let shiftInfo = 'Not specified';
         if (item.shift) {
@@ -244,7 +217,6 @@ export const RosterDashboard = ({
           id: item.id,
           template: item.name || item.template || 'Unnamed Template',
           location: locationInfo,
-          department: departmentName,
           shift: shiftInfo,
           rosterType: item.roaster_type || item.allocation_type || 'Permanent',
           createdOn: createdDate,
@@ -294,7 +266,6 @@ export const RosterDashboard = ({
       return (
         item.template.toLowerCase().includes(searchLower) ||
         item.location.toLowerCase().includes(searchLower) ||
-        item.department.toLowerCase().includes(searchLower) ||
         item.shift.toLowerCase().includes(searchLower) ||
         item.createdBy.toLowerCase().includes(searchLower) ||
         item.createdOn.includes(debouncedSearchQuery)
@@ -362,11 +333,6 @@ export const RosterDashboard = ({
     ),
     location: (
       <span className="text-sm text-gray-600">{roster.location}</span>
-    ),
-    department: (
-      <div className="text-sm text-gray-600 max-w-xs truncate" title={roster.department}>
-        {roster.department}
-      </div>
     ),
     shift: (
       <span className="text-sm text-gray-600 whitespace-nowrap">{roster.shift}</span>

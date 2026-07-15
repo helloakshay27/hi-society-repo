@@ -3,10 +3,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, MapPin, Building2, Clock, Users, Edit, Download, Trash2, Eye } from 'lucide-react';
-import { Chip, Box } from '@mui/material';
 import { toast } from 'sonner';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { departmentService, Department } from '@/services/departmentService';
 import { RootState } from '@/store/store';
 
 // Section component for consistent layout matching TaskDetailsPage
@@ -88,7 +86,6 @@ export const RosterDetailPage: React.FC = () => {
   // Data states
   const [rosterTemplate, setRosterTemplate] = useState<RosterTemplate | null>(null);
   const [fmUsers, setFMUsers] = useState<FMUser[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [currentLocation, setCurrentLocation] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -98,7 +95,6 @@ export const RosterDetailPage: React.FC = () => {
     if (id) {
       fetchRosterTemplate();
       fetchFMUsers();
-      fetchDepartments();
       fetchShifts();
       fetchCurrentLocation();
     }
@@ -170,17 +166,6 @@ export const RosterDetailPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching FM Users:', error);
       setFMUsers([]);
-    }
-  };
-
-  // Fetch Departments
-  const fetchDepartments = async () => {
-    try {
-      const departmentData = await departmentService.fetchDepartments();
-      setDepartments(departmentData);
-    } catch (error) {
-      console.error('Error fetching departments:', error);
-      setDepartments([]);
     }
   };
 
@@ -302,25 +287,6 @@ export const RosterDetailPage: React.FC = () => {
   };
 
   // Helper functions
-  const getSelectedDepartments = () => {
-    if (!rosterTemplate) return [];
-    
-    // First try to get from new API response structure
-    if (rosterTemplate.departments && Array.isArray(rosterTemplate.departments)) {
-      return rosterTemplate.departments.map(dept => ({
-        id: dept.id,
-        department_name: dept.name
-      }));
-    }
-    
-    // Fallback to old structure
-    if (!rosterTemplate.department_id) return [];
-    const deptIds = Array.isArray(rosterTemplate.department_id) 
-      ? rosterTemplate.department_id 
-      : [rosterTemplate.department_id];
-    return departments.filter(dept => deptIds.includes(dept.id!));
-  };
-
   const getSelectedEmployees = () => {
     if (!rosterTemplate) return [];
     
@@ -552,27 +518,14 @@ export const RosterDetailPage: React.FC = () => {
           </div>
         </Section>
 
-        {/* Location & Department */}
-        <Section title="Location & Department" icon={MapPin}>
+        {/* Location */}
+        <Section title="Location" icon={MapPin}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-2">Location</label>
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-900">{rosterTemplate.location || currentLocation}</span>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Departments</label>
-              <div className="flex flex-wrap gap-2">
-                {getSelectedDepartments().map((dept) => (
-                  <Chip 
-                    key={dept.id}
-                    label={dept.department_name}
-                    size="small"
-                    sx={{ backgroundColor: '#C72030', color: 'white' }}
-                  />
-                ))}
               </div>
             </div>
           </div>
@@ -614,11 +567,6 @@ export const RosterDetailPage: React.FC = () => {
                         <div className="font-medium text-gray-900">{employee.name || 'No name available'}</div>
                         <div className="text-sm text-gray-600">{employee.email}</div>
                       </div>
-                      {employee.department && (
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                          {employee.department}
-                        </span>
-                      )}
                     </div>
                   ))}
                 </div>

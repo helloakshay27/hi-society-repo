@@ -404,6 +404,12 @@ export const HiSocietySidebar: React.FC = () => {
               path: "/loyalty/dashboard",
             },
             {
+              id: "loyalty-dashboard-new",
+              label: "Dashboard New",
+              icon: LayoutDashboard,
+              path: "/loyalty/dashboard-new",
+            },
+            {
               id: "wallet-management",
               label: "Wallet Management",
               icon: Database,

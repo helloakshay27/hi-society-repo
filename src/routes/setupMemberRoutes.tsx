@@ -9,6 +9,7 @@ import { BookingSetupDetailClubPage } from "@/pages/ClubManagement/AmenityBookin
 import { EditBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubEdit";
 
 import { LoyaltyDashboard } from "@/pages/LoyaltyDashboard";
+import { LoyaltyDashboardNew } from "@/pages/LoyaltyDashboardNew";
 import WalletManagement from "@/pages/WalletManagement";
 import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
 import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
@@ -553,6 +554,7 @@ export const setupMemberRoutes = (
 
     {/* Amenities Routes */}
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
+    <Route path="/loyalty/dashboard-new" element={<LoyaltyDashboardNew />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route path="/settings/wallet-topup" element={<WalletTopup />} />
     <Route path="/settings/threshold-alerts" Component={withSuspense(ThresholdAlerts)} />
