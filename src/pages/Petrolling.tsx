@@ -326,13 +326,10 @@ const Petrolling = () => {
     pageSize: 10,
   });
 
-  const [isViewOpen, setIsViewOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [selectedPatrol, setSelectedPatrol] = useState<PatrollingItem | null>(null);
-  const [logs, setLogs] = useState<PatrollingLog[]>([]);
-  const [logsLoading, setLogsLoading] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState<PatrolFormData>(() => createDefaultPatrolForm());
@@ -353,15 +350,6 @@ const Petrolling = () => {
     { key: "grace_period", label: "Grace Time", sortable: true },
     { key: "active_inactive", label: "Status", sortable: true },
     // { key: "qr_code", label: "Qr Code", sortable: false },
-  ];
-
-  const logColumns: ColumnConfig[] = [
-    { key: "id", label: "ID", sortable: true },
-    { key: "patrolling_date", label: "Patrolling Date", sortable: true },
-    { key: "patrolling_time", label: "Patrolling Time", sortable: true },
-    { key: "comments", label: "Comments", sortable: true },
-    { key: "submitted_by", label: "Submitted By", sortable: true },
-    { key: "attachments", label: "Attachments", sortable: false },
   ];
 
   const fetchPatrollingData = async (page = 1, searchTerm: string = "") => {
@@ -407,49 +395,6 @@ const Petrolling = () => {
       toast.error("Failed to load patrolling data");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchPatrollingLogs = async (item: PatrollingItem) => {
-    setLogsLoading(true);
-    try {
-      const apiUrl = getFullUrl(`/patrolling/setup/${item.id}.json?page=1&per_page=10`);
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      const result = await response.json();
-      const detail = result.data || {};
-      const recentSessions = Array.isArray(detail.recent_sessions) ? detail.recent_sessions : [];
-
-      setSelectedPatrol({
-        ...item,
-        ...detail,
-        area: detail.name || item.area,
-        qr_code: {
-          url:
-            detail.checkpoints?.[0]?.qr_code_url ||
-            detail.checkpoints?.[0]?.location_qr_code_url ||
-            item.qr_code?.url ||
-            null,
-        },
-        schedules: Array.isArray(detail.schedules) ? detail.schedules : item.schedules || [],
-        checkpoints: Array.isArray(detail.checkpoints) ? detail.checkpoints : item.checkpoints || [],
-        recent_sessions: recentSessions,
-      });
-      setLogs(recentSessions);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-      toast.error("Failed to load patrolling logs");
-    } finally {
-      setLogsLoading(false);
     }
   };
 
@@ -567,10 +512,7 @@ const Petrolling = () => {
   }, []);
 
   const handleView = (item: PatrollingItem) => {
-    setSelectedPatrol(item);
-    setLogs([]);
-    setIsViewOpen(true);
-    fetchPatrollingLogs(item);
+    navigate(`/security/patrolling/details/${item.id}`);
   };
 
   const handleEdit = async (item: PatrollingItem) => {
@@ -1803,154 +1745,6 @@ const Petrolling = () => {
     </>
   );
 
-  const renderDetailField = (label: string, value: React.ReactNode) => (
-    <div className="space-y-1">
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className="text-sm font-medium text-gray-800">{value || "N/A"}</div>
-    </div>
-  );
-
-  const renderViewContent = () => {
-    const checkpoints = selectedPatrol?.checkpoints || [];
-    const schedules = selectedPatrol?.schedules || [];
-
-    return (
-      <div className="p-6 flex-1 overflow-auto bg-gray-50 space-y-5">
-        {logsLoading && (
-          <div className="border border-gray-200 bg-white p-3 text-sm text-gray-600">
-            Loading patrolling details...
-          </div>
-        )}
-
-        <section className="border border-gray-200 bg-white p-4 space-y-4">
-          <h3 className="text-sm font-bold text-gray-700">Route Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {renderDetailField("Name", selectedPatrol?.name || selectedPatrol?.area)}
-            {renderDetailField("Estimated Duration", selectedPatrol?.estimated_duration_minutes ? `${selectedPatrol.estimated_duration_minutes} mins` : "N/A")}
-            {renderDetailField("Grace Period", selectedPatrol?.grace_period_minutes !== undefined ? `${selectedPatrol.grace_period_minutes} mins` : "N/A")}
-            {renderDetailField("Validity Start", formatDisplayDate(selectedPatrol?.validity_start_date))}
-            {renderDetailField("Validity End", formatDisplayDate(selectedPatrol?.validity_end_date))}
-            {renderDetailField("Status", selectedPatrol?.active ? "Active" : "Inactive")}
-            <div className="md:col-span-3">
-              {renderDetailField("Description", selectedPatrol?.description || "N/A")}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="border border-gray-200 bg-white p-4">
-            <div className="text-xs text-gray-500">Schedules</div>
-            <div className="text-xl font-bold text-gray-800">{selectedPatrol?.summary?.schedules_count ?? schedules.length}</div>
-          </div>
-          <div className="border border-gray-200 bg-white p-4">
-            <div className="text-xs text-gray-500">Checkpoints</div>
-            <div className="text-xl font-bold text-gray-800">{selectedPatrol?.summary?.checkpoints_count ?? checkpoints.length}</div>
-          </div>
-          <div className="border border-gray-200 bg-white p-4">
-            <div className="text-xs text-gray-500">Recent Sessions</div>
-            <div className="text-xl font-bold text-gray-800">{selectedPatrol?.summary?.recent_sessions_count ?? logs.length}</div>
-          </div>
-        </section>
-
-        <section className="border border-gray-200 bg-white p-4 space-y-3">
-          <h3 className="text-sm font-bold text-gray-700">Schedules</h3>
-          {schedules.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-700">
-                  <tr>
-                    <th className="p-2 text-left font-semibold">Name</th>
-                    <th className="p-2 text-left font-semibold">Frequency</th>
-                    <th className="p-2 text-left font-semibold">Start</th>
-                    <th className="p-2 text-left font-semibold">End</th>
-                    <th className="p-2 text-left font-semibold">Guard</th>
-                    <th className="p-2 text-left font-semibold">Supervisor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {schedules.map((schedule) => (
-                    <tr key={schedule.id} className="border-t border-gray-100">
-                      <td className="p-2">{schedule.name || "N/A"}</td>
-                      <td className="p-2 capitalize">{schedule.frequency_type || "N/A"}</td>
-                      <td className="p-2">{schedule.start_date || "N/A"} {schedule.start_time || ""}</td>
-                      <td className="p-2">{schedule.end_date || "N/A"} {schedule.end_time || ""}</td>
-                      <td className="p-2">{schedule.assigned_guard_id ?? "N/A"}</td>
-                      <td className="p-2">{schedule.supervisor_id ?? "N/A"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="border border-dashed border-gray-200 p-4 text-sm text-gray-500">No schedules found</div>
-          )}
-        </section>
-
-        <section className="border border-gray-200 bg-white p-4 space-y-3">
-          <h3 className="text-sm font-bold text-gray-700">Checkpoints</h3>
-          {checkpoints.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-700">
-                  <tr>
-                    <th className="p-2 text-left font-semibold">Seq.</th>
-                    <th className="p-2 text-left font-semibold">Name</th>
-                    <th className="p-2 text-left font-semibold">Area</th>
-                    <th className="p-2 text-left font-semibold">Duration</th>
-                    <th className="p-2 text-left font-semibold">Checklist</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {checkpoints.map((checkpoint, index) => (
-                    <tr key={checkpoint.id ?? index} className="border-t border-gray-100">
-                      <td className="p-2">{checkpoint.order_sequence ?? index + 1}</td>
-                      <td className="p-2">{checkpoint.name || "N/A"}</td>
-                      <td className="p-2">{checkpoint.area_name || checkpoint.area_id || "N/A"}</td>
-                      <td className="p-2">{checkpoint.estimated_time_minutes ? `${checkpoint.estimated_time_minutes} mins` : "N/A"}</td>
-                      <td className="p-2">{checkpoint.snag_checklist_id ?? selectedPatrol?.checklist?.name ?? "N/A"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="border border-dashed border-gray-200 p-4 text-sm text-gray-500">No checkpoints found</div>
-          )}
-        </section>
-
-        <section className="border border-gray-200 bg-white p-4 space-y-3">
-          <h3 className="text-sm font-bold text-gray-700">Recent Sessions</h3>
-          {logs.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-700">
-                  <tr>
-                    {logColumns.map((column) => (
-                      <th key={column.key} className="p-2 text-left font-semibold">{column.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log, index) => (
-                    <tr key={log.id ?? index} className="border-t border-gray-100">
-                      {logColumns.map((column) => (
-                        <td key={column.key} className="p-2 align-top">
-                          {renderLogCell(log, column.key)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="border border-dashed border-gray-200 p-4 text-sm text-gray-500">No logs found</div>
-          )}
-        </section>
-      </div>
-    );
-  };
-
   const handleExportQrCodes = () => {
     const checkpointIds = data
       .flatMap((item) => item.checkpoints || [])
@@ -2022,21 +1816,6 @@ const Petrolling = () => {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-4xl bg-white rounded-none p-0 flex flex-col border border-gray-300">
           {renderPatrolForm("Edit", true)}
-        </DialogContent>
-      </Dialog>
-
-      {/* View Modal */}
-      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-none p-0 flex flex-col border border-gray-300">
-          <DialogHeader className="p-6 border-b">
-            <DialogTitle className="text-xl font-bold text-gray-800">
-              Patrolling Details - <span className="text-blue-600">{selectedPatrol?.area}</span>
-            </DialogTitle>
-          </DialogHeader>
-          {renderViewContent()}
-          <div className="p-4 border-t bg-white flex justify-end">
-            <Button onClick={() => setIsViewOpen(false)} variant="outline">Close</Button>
-          </div>
         </DialogContent>
       </Dialog>
 

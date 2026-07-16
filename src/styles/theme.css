@@ -2169,11 +2169,11 @@ circle[fill="#e5e9e9"] {
 :root {
   /* 6 Unified Chart Colors — updated per design guide April 2026 */
   --analytics-color-1: #6b9bcc; /* Info Blue          */
-  --analytics-color-2: #d3d1c6; /* Warm Light Grey    */
+  --analytics-color-2: #9ec8ba; /* Warm Light Grey    */
   --analytics-color-3: #f4c37e; /* Amber/Yellow       */
   --analytics-color-4: #e9704d; /* Orange-Red         */
   --analytics-color-5: #f28c8f; /* Salmon Pink        */
-  --analytics-color-6: #d4dbdb; /* Cool Grey          */
+  --analytics-color-6: #e39090; /* Cool Grey          */
 
   /* Light variants for backgrounds */
   --analytics-color-1-light: rgba(107, 155, 204, 0.15);

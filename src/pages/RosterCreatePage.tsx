@@ -480,7 +480,7 @@ export const RosterCreatePage: React.FC = () => {
 
     return shifts.map((shift) => (
       <MenuItem key={shift.id} value={shift.id}>
-        {shift.vendor_name ? shift.vendor_name : `${shift.timings} (${shift.total_hour}h)`}
+        {shift.timings}
       </MenuItem>
     ));
   }, [shifts]);
