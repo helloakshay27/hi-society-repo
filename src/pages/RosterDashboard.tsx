@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Loader2, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { ExportModal } from '@/components/ExportModal';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { TicketPagination } from '@/components/TicketPagination';
-import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -35,6 +35,32 @@ interface ApiResponse {
     has_next_page: boolean;
     has_prev_page: boolean;
   };
+}
+
+interface RosterApiItem {
+  id: number;
+  name?: string;
+  template?: string;
+  location?: string | null;
+  shift?: string | null;
+  timings?: string | null;
+  user_shift?: {
+    timings?: string | null;
+    shift?: string | null;
+  };
+  roaster_type?: string | null;
+  allocation_type?: string | null;
+  created_on?: string | null;
+  created_at?: string | null;
+  createdAt?: string | null;
+  created_by?: string | null;
+  created_by_name?: string | null;
+  creator_name?: string | null;
+  user_name?: string | null;
+  site_name?: string | null;
+  resource_name?: string | null;
+  building_name?: string | null;
+  active?: boolean;
 }
 
 // Column configuration for the enhanced table
@@ -108,20 +134,47 @@ const getSmartSecureSocietyId = () => {
   );
 };
 
-const getRosterItems = (data: any) => {
+const getRosterItems = (data: unknown): RosterApiItem[] => {
   if (Array.isArray(data)) return data;
 
+  if (!data || typeof data !== 'object') return [];
+
+  const rosterData = data as {
+    user_roasters?: RosterApiItem[];
+    roasters?: RosterApiItem[];
+    rosters?: RosterApiItem[];
+    data?: {
+      user_roasters?: RosterApiItem[];
+      roasters?: RosterApiItem[];
+      rosters?: RosterApiItem[];
+    } | RosterApiItem[];
+  };
+
   const candidates = [
-    data?.user_roasters,
-    data?.roasters,
-    data?.rosters,
-    data?.data,
-    data?.data?.user_roasters,
-    data?.data?.roasters,
-    data?.data?.rosters,
+    rosterData.user_roasters,
+    rosterData.roasters,
+    rosterData.rosters,
+    rosterData.data,
+    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.user_roasters,
+    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.roasters,
+    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.rosters,
   ];
 
-  return candidates.find(Array.isArray) || [];
+  const firstMatch = candidates.find((candidate): candidate is RosterApiItem[] => Array.isArray(candidate));
+  return firstMatch || [];
+};
+
+const formatRosterDate = (value: unknown) => {
+  if (typeof value !== 'string' || !value.trim()) {
+    return 'Not available';
+  }
+
+  const parsedDate = new Date(value);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return parsedDate.toLocaleDateString('en-GB');
+  }
+
+  return value;
 };
 
 export const RosterDashboard = ({
@@ -150,16 +203,17 @@ export const RosterDashboard = ({
   const [loading, setLoading] = useState(true);
 
   // API call to fetch roster data
-  const fetchRosterData = async () => {
+  const fetchRosterData = useCallback(async () => {
     setLoading(true);
     try {
+      const societyId = encodeURIComponent(getSmartSecureSocietyId());
       const apiUrl = isSmartSecureRoster
         ? getFullUrl(
-            `/spree/manage/user_roasters/load_roasters.json?society_id=${encodeURIComponent(
-              getSmartSecureSocietyId()
-            )}`
+            `/spree/manage/user_roasters.json?page=1&per_page=${itemsPerPage}&society_id=${societyId}`
           )
-        : getFullUrl('/pms/admin/user_roasters.json');
+        : getFullUrl(
+            `/pms/admin/user_roasters.json?page=1&per_page=${itemsPerPage}`
+          );
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -174,51 +228,41 @@ export const RosterDashboard = ({
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
       const rosterItems = getRosterItems(data);
 
       // Transform API data to match our interface
-      const transformedData: RosterItem[] = rosterItems.map((item: any) => {
-        // Handle shift information
-        let shiftInfo = 'Not specified';
-        if (item.shift) {
-          shiftInfo = item.shift;
-        } else if (item.user_shift && item.user_shift.timings) {
-          shiftInfo = item.user_shift.timings;
-        }
+      const transformedData: RosterItem[] = rosterItems.map((item) => {
+        const shiftInfo =
+          item.shift ||
+          item.timings ||
+          item.user_shift?.timings ||
+          item.user_shift?.shift ||
+          'Not specified';
 
-        // Handle location
-        let locationInfo = 'Not specified';
-        if (item.location) {
-          locationInfo = item.location;
-        }
+        const locationInfo =
+          item.location ||
+          item.site_name ||
+          item.resource_name ||
+          item.building_name ||
+          'Not specified';
 
-        // Handle created date
-        let createdDate = 'Not available';
-        if (item.created_at) {
-          try {
-            createdDate = new Date(item.created_at).toLocaleDateString('en-GB');
-          } catch (e) {
-            createdDate = item.created_at;
-          }
-        } else if (item.created_on) {
-          createdDate = item.created_on;
-        }
+        const createdDate = formatRosterDate(
+          item.created_on || item.created_at || item.createdAt
+        );
 
-        // Handle created by
-        let createdByInfo = 'System';
-        if (item.created_by) {
-          createdByInfo = item.created_by;
-        } else if (item.created_by_name) {
-          createdByInfo = item.created_by_name;
-        }
+        const createdByInfo =
+          item.created_by ||
+          item.created_by_name ||
+          item.creator_name ||
+          item.user_name ||
+          'System';
 
         return {
           id: item.id,
           template: item.name || item.template || 'Unnamed Template',
           location: locationInfo,
           shift: shiftInfo,
-          rosterType: item.roaster_type || item.allocation_type || 'Permanent',
+          rosterType: item.roaster_type || item.allocation_type || 'User',
           createdOn: createdDate,
           createdBy: createdByInfo,
           active: item.active !== undefined ? item.active : true
@@ -226,11 +270,10 @@ export const RosterDashboard = ({
       });
 
       setAllRosterData(transformedData);
-      console.log('Transformed Data Count:', transformedData.length);
-      console.log('First Item:', transformedData[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error fetching roster data:', error);
-      toast.error(`Failed to load roster data: ${error.message}`, {
+      toast.error(`Failed to load roster data: ${message}`, {
         duration: 5000,
       });
       
@@ -238,12 +281,12 @@ export const RosterDashboard = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSmartSecureRoster, itemsPerPage]);
 
   // Load data on component mount
   useEffect(() => {
     fetchRosterData();
-  }, []);
+  }, [fetchRosterData]);
 
   // Reset pagination when roster data changes
   useEffect(() => {
@@ -351,12 +394,10 @@ export const RosterDashboard = ({
   });
 
   const handleView = (id: number) => {
-    console.log('View roster:', id);
     navigate(`${rosterBasePath}/detail/${id}`);
   };
 
   const handleEdit = (id: number) => {
-    console.log('Edit roster:', id);
     navigate(`${rosterBasePath}/edit/${id}`);
   };
 
