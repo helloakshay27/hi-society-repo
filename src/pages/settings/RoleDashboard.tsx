@@ -156,6 +156,8 @@ export const RoleDashboard = () => {
       }))
     : [];
 
+  console.log(currentRole)
+
   // Get current module from the selected role's modules (this contains the actual enabled status)
   const currentRoleModule =
     currentRole?.modules.find((m) => {
@@ -410,7 +412,7 @@ export const RoleDashboard = () => {
 
   const handleAddRole = () => {
     console.log("Navigating to Add Role page...");
-    navigate("/settings/roles/role/add");
+    navigate("/ops-console/settings/roles/role/add");
   };
 
   // Handle sub-function permission change
@@ -618,8 +620,8 @@ export const RoleDashboard = () => {
                     key={`${role.role_name}-${index}`}
                     onClick={() => handleRoleClick(role)}
                     className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-between group ${currentRole?.role_name === role.role_name
-                        ? "bg-[#C72030] text-white shadow-md"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "bg-[#C72030] text-white shadow-md"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                   >
                     <span>{role.role_name}</span>
@@ -655,15 +657,18 @@ export const RoleDashboard = () => {
               </div>
               <div className="flex gap-2">
                 {!isEditMode ? (
-                  <Button
-                    onClick={() => setIsEditMode(true)}
-                    variant="outline"
-                    className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-                    disabled={!currentRole}
-                  >
-                    <Edit2 className="w-4 h-4 mr-2" />
-                    Edit Permissions
-                  </Button>
+                  currentRole?.resource_id && currentRole?.resource_type && (
+                    <Button
+                      onClick={() => setIsEditMode(true)}
+                      variant="outline"
+                      className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+                      disabled={!currentRole}
+                    >
+
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edit Permissions
+                    </Button>
+                  )
                 ) : (
                   <>
                     <Button
@@ -710,8 +715,8 @@ export const RoleDashboard = () => {
                       setFunctionSearchTerm(""); // Reset search when switching tabs
                     }}
                     className={`px-4 py-3 border-b-2 text-sm font-medium transition-colors whitespace-nowrap ${activeModuleTab === tab.id
-                        ? "border-[#C72030] text-[#C72030] bg-red-50/30"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      ? "border-[#C72030] text-[#C72030] bg-red-50/30"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                       }`}
                   >
                     {tab.name}
