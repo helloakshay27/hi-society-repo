@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Paper, Box, Avatar, Typography, Grid, Divider, Tabs, Tab } from "@mui/material";
-import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X } from "lucide-react";
+import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X, Plus } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import SelectBox from "@/components/ui/select-box";
 import axios from "axios";
 import { toast } from "sonner";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 // Helper component for displaying info fields
 const InfoField = ({ label, value }: { label: string; value: any }) => (
@@ -90,6 +92,13 @@ export const ViewUserPage = () => {
     accessCardChecked: false,
     accessCardId: "",
   });
+
+  // Credit Wallet Dialog State
+  const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditRemarks, setCreditRemarks] = useState("");
+  const [creditPaymentMode, setCreditPaymentMode] = useState("cash");
+  const [creditLoading, setCreditLoading] = useState(false);
 
   useEffect(() => {
     if (!userId || !baseUrl || !token) return;
@@ -180,6 +189,55 @@ export const ViewUserPage = () => {
 
   const handleClubFormChange = (field: string, value: any) => {
     setClubFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreditWallet = async () => {
+    if (!creditAmount || parseFloat(creditAmount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    if (!creditRemarks.trim()) {
+      toast.error("Please enter remarks");
+      return;
+    }
+
+    setCreditLoading(true);
+    try {
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/loyalty/members/credit_wallet.json?token=${token}`);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customer_code: user?.customer_code,
+          amount: parseFloat(creditAmount),
+          remarks: creditRemarks.trim(),
+          payment_mode: creditPaymentMode,
+          topup_by: "admin",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Wallet credited successfully");
+        setCreditDialogOpen(false);
+        setCreditAmount("");
+        setCreditRemarks("");
+        setCreditPaymentMode("cash");
+        window.location.reload();
+      } else {
+        toast.error(result.message || "Failed to credit wallet");
+      }
+    } catch (error) {
+      console.error("Error crediting wallet:", error);
+      toast.error("Failed to credit wallet. Please try again.");
+    } finally {
+      setCreditLoading(false);
+    }
   };
 
   // Helper function to format date from API response
@@ -391,13 +449,21 @@ export const ViewUserPage = () => {
           </Box>
 
           {/* Add to Another Flat Button */}
-          <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3, gap: 2 }}>
             <Button
               className="bg-white hover:bg-gray-50 font-semibold shadow-md"
               style={{ color: "#C72030", borderColor: "#C72030" }}
               onClick={() => setIsAddToAnotherFlatModalOpen(true)}
             >
               + Add to Another Flat
+            </Button>
+            <Button
+              className="bg-white hover:bg-gray-50 font-semibold shadow-md"
+              style={{ color: "#00A651", borderColor: "#00A651" }}
+              onClick={() => setCreditDialogOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Credit Wallet
             </Button>
           </Box>
         </Box>
@@ -849,6 +915,98 @@ export const ViewUserPage = () => {
               className="px-8 h-9 bg-[#00A65A] hover:bg-[#008D4C] text-white font-semibold text-sm rounded shadow-sm"
             >
               Submit
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credit Wallet Dialog */}
+      <Dialog open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
+        <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
+          <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between">
+            <DialogTitle className="text-base font-bold text-gray-800">Credit Wallet</DialogTitle>
+            <button
+              onClick={() => setCreditDialogOpen(false)}
+              className="text-red-500 hover:text-red-700 transition-colors"
+            >
+              <X className="h-5 w-5 fill-current" />
+            </button>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-600">Customer Code</Label>
+              <Input
+                type="text"
+                value={user?.customer_code || ""}
+                disabled
+                className="h-9 mt-1.5 bg-gray-100 text-gray-600 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-600">
+                Amount <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="number"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+                placeholder="Enter amount"
+                min="1"
+                className="h-9 mt-1.5"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-600">
+                Payment Mode <span className="text-red-500">*</span>
+              </Label>
+              <SelectBox
+                options={[
+                  { value: "cash", label: "Cash" },
+                  { value: "online", label: "Online" },
+                  { value: "bank_transfer", label: "Bank Transfer" },
+                  { value: "upi", label: "UPI" },
+                ]}
+                defaultValue={creditPaymentMode}
+                onChange={(value: string) => setCreditPaymentMode(value)}
+                className="mt-1.5"
+                menuPortalTarget={undefined}
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-600">
+                Remarks <span className="text-red-500">*</span>
+              </Label>
+              <textarea
+                value={creditRemarks}
+                onChange={(e) => setCreditRemarks(e.target.value)}
+                placeholder="Enter remarks"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1.5 focus:outline-none focus:ring-2 focus:ring-[#00A651] focus:border-transparent resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-4 p-4 border-t bg-white">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCreditDialogOpen(false);
+                setCreditAmount("");
+                setCreditRemarks("");
+                setCreditPaymentMode("cash");
+              }}
+              disabled={creditLoading}
+              className="px-8 h-9 border-[#00A651] text-[#00A651] hover:bg-[#00A651]/10 font-semibold text-sm rounded shadow-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreditWallet}
+              disabled={creditLoading}
+              className="px-8 h-9 bg-[#00A651] hover:bg-[#008D4C] text-white font-semibold text-sm rounded shadow-sm"
+            >
+              {creditLoading ? "Crediting..." : "Credit Points"}
             </Button>
           </div>
         </DialogContent>
