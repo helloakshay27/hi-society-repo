@@ -9,6 +9,7 @@ export default function SelectBox({
   style = {},
   className = "",
   isDisableFirstOption = false,
+  menuPortalTarget = undefined,
 }) {
   const [selectedOption, setSelectedOption] = useState(null);
 
@@ -97,7 +98,7 @@ export default function SelectBox({
         onChange={handleChange}
         isOptionDisabled={(option) => option.isDisabled}
         styles={customStyles}
-        menuPortalTarget={document.body}
+        menuPortalTarget={menuPortalTarget}
       />
     </div>
   );
