@@ -589,9 +589,9 @@ export const AddFitoutChecklistPage = () => {
                               )
                             }
                             sx={{
-                              color: "#C72030",
+                              color: "#E67E22",
                               "&.Mui-checked": {
-                                color: "#C72030",
+                                color: "#E67E22",
                               },
                             }}
                           />
@@ -610,9 +610,9 @@ export const AddFitoutChecklistPage = () => {
                               )
                             }
                             sx={{
-                              color: "#C72030",
+                              color: "#E67E22",
                               "&.Mui-checked": {
-                                color: "#C72030",
+                                color: "#E67E22",
                               },
                             }}
                           />
