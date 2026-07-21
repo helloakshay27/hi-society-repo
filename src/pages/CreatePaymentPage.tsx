@@ -199,9 +199,7 @@ export const CreatePaymentPage: React.FC = () => {
         timeout: 30000,
       });
       const id =
-        res.data?.lock_account?.id ??
-        res.data?.lock_account_id ??
-        res.data?.id;
+        res.data?.lock_account?.id ?? res.data?.lock_account_id ?? res.data?.id;
 
       if (id) {
         const nextId = String(id);
@@ -260,12 +258,16 @@ export const CreatePaymentPage: React.FC = () => {
   const [lockAccountTaxId] = useState(1);
 
   // TDS state
-  const [tdsOptions, setTdsOptions] = useState<{ id: string | number; name: string; percentage?: number }[]>([]);
+  const [tdsOptions, setTdsOptions] = useState<
+    { id: string | number; name: string; percentage?: number }[]
+  >([]);
   const [selectedTds, setSelectedTds] = useState("");
   const [loadingTds, setLoadingTds] = useState(false);
 
   // Reverse Charge state
-  const [rcTaxOptions, setRcTaxOptions] = useState<{ id: string | number; name: string; percentage?: number }[]>([]);
+  const [rcTaxOptions, setRcTaxOptions] = useState<
+    { id: string | number; name: string; percentage?: number }[]
+  >([]);
   const [loadingRcTaxes, setLoadingRcTaxes] = useState(false);
   const [isReverseCharge, setIsReverseCharge] = useState(false);
   const [reverseChargeTax, setReverseChargeTax] = useState("");
@@ -273,13 +275,42 @@ export const CreatePaymentPage: React.FC = () => {
   const [destinationOfSupply, setDestinationOfSupply] = useState("");
   const [descriptionOfSupply, setDescriptionOfSupply] = useState("");
   const indianStates = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
-    "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
-    "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
-    "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
-    "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-    "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
-    "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Lakshadweep",
+    "Puducherry",
   ];
   // Attachments
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
@@ -325,9 +356,9 @@ export const CreatePaymentPage: React.FC = () => {
   // Fetch TDS taxes from API (only TDS, not TCS)
   useEffect(() => {
     const fetchTdsOptions = async () => {
-      const baseUrl = localStorage.getItem('baseUrl');
-      const token = localStorage.getItem('token');
-      const lock_account_id = localStorage.getItem('lock_account_id');
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
+      const lock_account_id = localStorage.getItem("lock_account_id");
       if (!baseUrl || !token || !lock_account_id) return;
       setLoadingTds(true);
       try {
@@ -335,13 +366,13 @@ export const CreatePaymentPage: React.FC = () => {
         const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
         const data = await response.json();
         setTdsOptions(Array.isArray(data) ? data : data?.tax_sections || []);
       } catch (error) {
-        console.error('Failed to fetch TDS options:', error);
+        console.error("Failed to fetch TDS options:", error);
         setTdsOptions([]);
       } finally {
         setLoadingTds(false);
@@ -353,9 +384,9 @@ export const CreatePaymentPage: React.FC = () => {
   // Fetch Reverse Charge (Tax Group) options from API
   useEffect(() => {
     const fetchRcTaxOptions = async () => {
-      const baseUrl = localStorage.getItem('baseUrl');
-      const token = localStorage.getItem('token');
-      const lock_account_id = localStorage.getItem('lock_account_id');
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
+      const lock_account_id = localStorage.getItem("lock_account_id");
       if (!baseUrl || !token || !lock_account_id) return;
       setLoadingRcTaxes(true);
       try {
@@ -363,28 +394,31 @@ export const CreatePaymentPage: React.FC = () => {
         const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
         const data = await response.json();
         // data is expected to be an array of TaxGroups
-        const formattedGroups = (Array.isArray(data) ? (data as TaxGroup[]) : []).map((group) => {
+        const formattedGroups = (
+          Array.isArray(data) ? (data as TaxGroup[]) : []
+        ).map((group) => {
           // If the group has a rate aggregate, use it; otherwise sum the rates from tax_rates
-          const totalRate = typeof group.rate === 'number'
-            ? group.rate
-            : Array.isArray(group.tax_rates)
-              ? group.tax_rates.reduce((sum, r) => sum + (r.rate || 0), 0)
-              : 0;
+          const totalRate =
+            typeof group.rate === "number"
+              ? group.rate
+              : Array.isArray(group.tax_rates)
+                ? group.tax_rates.reduce((sum, r) => sum + (r.rate || 0), 0)
+                : 0;
 
           return {
             id: group.id,
             name: group.name,
-            percentage: totalRate
+            percentage: totalRate,
           };
         });
         setRcTaxOptions(formattedGroups);
       } catch (error) {
-        console.error('Failed to fetch RC Tax options:', error);
+        console.error("Failed to fetch RC Tax options:", error);
         setRcTaxOptions([]);
       } finally {
         setLoadingRcTaxes(false);
@@ -393,7 +427,6 @@ export const CreatePaymentPage: React.FC = () => {
     fetchRcTaxOptions();
   }, []);
 
-
   useEffect(() => {
     const fetchAccountGroups = async () => {
       if (!authToken) return;
@@ -401,9 +434,18 @@ export const CreatePaymentPage: React.FC = () => {
       if (!accountId) return;
       setLoadingAccounts(true);
       try {
-        const res = await pmsClient.get(`/lock_accounts/${accountId}/lock_account_groups.json`);
-        const data = res.data as { lock_account_groups?: AccountGroup[]; account_groups?: AccountGroup[] } | AccountGroup[];
-        const groups = Array.isArray(data) ? data : data.lock_account_groups ?? data.account_groups ?? [];
+        const res = await pmsClient.get(
+          `/lock_accounts/${accountId}/lock_account_groups.json`
+        );
+        const data = res.data as
+          | {
+              lock_account_groups?: AccountGroup[];
+              account_groups?: AccountGroup[];
+            }
+          | AccountGroup[];
+        const groups = Array.isArray(data)
+          ? data
+          : (data.lock_account_groups ?? data.account_groups ?? []);
         setAccountGroups(groups);
       } catch (err) {
         console.error("Failed to fetch account groups:", err);
@@ -429,7 +471,9 @@ export const CreatePaymentPage: React.FC = () => {
       if (!accountId) {
         setBills([]);
         setAppliedAmounts({});
-        setBillsError("Could not find lock account for this session. Please reselect your company/site.");
+        setBillsError(
+          "Could not find lock account for this session. Please reselect your company/site."
+        );
         setBillsLoading(false);
         return;
       }
@@ -507,11 +551,11 @@ export const CreatePaymentPage: React.FC = () => {
       const attachments_attributes =
         attachmentFiles.length > 0
           ? await Promise.all(
-            attachmentFiles.map(async (file) => ({
-              document: await fileToBase64(file),
-              active: true,
-            }))
-          )
+              attachmentFiles.map(async (file) => ({
+                document: await fileToBase64(file),
+                active: true,
+              }))
+            )
           : undefined;
 
       const paymentDate = date
@@ -521,13 +565,13 @@ export const CreatePaymentPage: React.FC = () => {
       const lock_bill_payments_attributes =
         activeTab === "bill_payment"
           ? Object.entries(appliedAmounts)
-            .filter(([, v]) => parseFloat(v) > 0)
-            .map(([billId, v]) => ({
-              resource_id: parseInt(billId, 10),
-              resource_type: "LockAccountBill",
-              amount: parseFloat(v),
-              payment_date: paymentDate,
-            }))
+              .filter(([, v]) => parseFloat(v) > 0)
+              .map(([billId, v]) => ({
+                resource_id: parseInt(billId, 10),
+                resource_type: "LockAccountBill",
+                amount: parseFloat(v),
+                payment_date: paymentDate,
+              }))
           : [];
 
       const paidAmount = parseFloat(amount) || 0;
@@ -543,7 +587,9 @@ export const CreatePaymentPage: React.FC = () => {
           payment_of_id: parseInt(selectedVendor, 10),
           paid_amount: paidAmount,
           // Use the dynamically selected TDS id (vendor_advance tab only)
-          lock_account_tax_id: selectedTds ? parseInt(selectedTds, 10) : lockAccountTaxId,
+          lock_account_tax_id: selectedTds
+            ? parseInt(selectedTds, 10)
+            : lockAccountTaxId,
           tds_amount: tdsAmount > 0 ? tdsAmount : undefined,
           tds_percentage: tdsPercentage > 0 ? tdsPercentage : undefined,
           net_amount: tdsAmount > 0 ? paidAmount - tdsAmount : undefined,
@@ -554,14 +600,20 @@ export const CreatePaymentPage: React.FC = () => {
           paid_from_ledger_id: parseInt(paidThrough, 10),
           deposit_to_ledger_id: depositToLedgerId,
           advance: activeTab === "vendor_advance",
-          reverse_charge: activeTab === "vendor_advance" ? isReverseCharge : undefined,
+          reverse_charge:
+            activeTab === "vendor_advance" ? isReverseCharge : undefined,
           reverse_charge_tax_id:
-            activeTab === "vendor_advance" && isReverseCharge && reverseChargeTax
+            activeTab === "vendor_advance" &&
+            isReverseCharge &&
+            reverseChargeTax
               ? parseInt(reverseChargeTax, 10)
               : undefined,
-          source_of_supply: activeTab === "vendor_advance" ? sourceOfSupply : undefined,
-          destination_of_supply: activeTab === "vendor_advance" ? destinationOfSupply : undefined,
-          description_of_supply: activeTab === "vendor_advance" ? descriptionOfSupply : undefined,
+          source_of_supply:
+            activeTab === "vendor_advance" ? sourceOfSupply : undefined,
+          destination_of_supply:
+            activeTab === "vendor_advance" ? destinationOfSupply : undefined,
+          description_of_supply:
+            activeTab === "vendor_advance" ? descriptionOfSupply : undefined,
           notes: notes,
           payment_made: isPaid,
           status: isPaid ? "paid" : "draft",
@@ -665,7 +717,10 @@ export const CreatePaymentPage: React.FC = () => {
   const getBillAmountDue = useCallback(
     (bill: LockAccountBill) =>
       parseAmountValue(
-        bill.balance_due ?? bill.amount_due ?? bill.due_amount ?? bill.total_amount
+        bill.balance_due ??
+          bill.amount_due ??
+          bill.due_amount ??
+          bill.total_amount
       ),
     [parseAmountValue]
   );
@@ -709,17 +764,24 @@ export const CreatePaymentPage: React.FC = () => {
   }, [bills, getBillAmountDue, payFullAmount, vendorAmountDue]);
 
   // TDS deduction: amount × (selectedTds percentage / 100)
-  const selectedTdsOption = tdsOptions.find((opt) => String(opt.id) === selectedTds);
+  const selectedTdsOption = tdsOptions.find(
+    (opt) => String(opt.id) === selectedTds
+  );
   const tdsPercentage = selectedTdsOption?.percentage ?? 0;
-  const tdsAmount = tdsPercentage > 0 && parseFloat(amount) > 0
-    ? (parseFloat(amount) * tdsPercentage) / 100
-    : 0;
+  const tdsAmount =
+    tdsPercentage > 0 && parseFloat(amount) > 0
+      ? (parseFloat(amount) * tdsPercentage) / 100
+      : 0;
 
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-white">
         <div className="w-full">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             {/* ══ HEADER SECTION (Gray Background) ══ */}
             <div className="bg-[#f9f9fa] border-b border-gray-200 px-6 pb-6 pt-6 relative">
               <Button
@@ -806,11 +868,15 @@ export const CreatePaymentPage: React.FC = () => {
                   <div className="mt-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1.5 text-gray-700">Source of Supply</label>
+                        <label className="block text-sm font-medium mb-1.5 text-gray-700">
+                          Source of Supply
+                        </label>
                         <FormControl fullWidth size="small">
                           <MuiSelect
                             value={sourceOfSupply}
-                            onChange={(e) => setSourceOfSupply(e.target.value as string)}
+                            onChange={(e) =>
+                              setSourceOfSupply(e.target.value as string)
+                            }
                             displayEmpty
                             sx={{
                               height: { xs: 28, sm: 36, md: 38 },
@@ -822,7 +888,9 @@ export const CreatePaymentPage: React.FC = () => {
                               borderRadius: "6px",
                             }}
                           >
-                            <MuiMenuItem value="" disabled>Select State</MuiMenuItem>
+                            <MuiMenuItem value="" disabled>
+                              Select State
+                            </MuiMenuItem>
                             {indianStates.map((state) => (
                               <MuiMenuItem key={state} value={state}>
                                 {state}
@@ -832,11 +900,15 @@ export const CreatePaymentPage: React.FC = () => {
                         </FormControl>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1.5 text-gray-700">Destination of Supply</label>
+                        <label className="block text-sm font-medium mb-1.5 text-gray-700">
+                          Destination of Supply
+                        </label>
                         <FormControl fullWidth size="small">
                           <MuiSelect
                             value={destinationOfSupply}
-                            onChange={(e) => setDestinationOfSupply(e.target.value as string)}
+                            onChange={(e) =>
+                              setDestinationOfSupply(e.target.value as string)
+                            }
                             displayEmpty
                             sx={{
                               height: { xs: 28, sm: 36, md: 38 },
@@ -848,7 +920,9 @@ export const CreatePaymentPage: React.FC = () => {
                               borderRadius: "6px",
                             }}
                           >
-                            <MuiMenuItem value="" disabled>Select State</MuiMenuItem>
+                            <MuiMenuItem value="" disabled>
+                              Select State
+                            </MuiMenuItem>
                             {indianStates.map((state) => (
                               <MuiMenuItem key={state} value={state}>
                                 {state}
@@ -867,8 +941,14 @@ export const CreatePaymentPage: React.FC = () => {
                               Description of Supply
                             </label>
                           </TooltipTrigger>
-                          <TooltipContent side="right" className="bg-[#1e293b] text-white border-none text-[12px] py-1.5 px-3 max-w-[250px]">
-                            <p>provide description for goods or services that you are going to supply</p>
+                          <TooltipContent
+                            side="right"
+                            className="bg-[#1e293b] text-white border-none text-[12px] py-1.5 px-3 max-w-[250px]"
+                          >
+                            <p>
+                              provide description for goods or services that you
+                              are going to supply
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -910,12 +990,12 @@ export const CreatePaymentPage: React.FC = () => {
                       type="checkbox"
                       className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                       checked={payFullAmount}
-                      disabled={!selectedVendor || billsLoading || vendorAmountDue <= 0}
+                      disabled={
+                        !selectedVendor || billsLoading || vendorAmountDue <= 0
+                      }
                       onChange={(e) => applyFullPaymentAmount(e.target.checked)}
                     />
-                    <span>
-                      Pay full amount (₹{vendorAmountDue.toFixed(2)})
-                    </span>
+                    <span>Pay full amount (₹{vendorAmountDue.toFixed(2)})</span>
                   </label>
                 )}
                 {/* Net amount after TDS — shown only in vendor_advance */}
@@ -944,18 +1024,25 @@ export const CreatePaymentPage: React.FC = () => {
                         checked={isReverseCharge}
                         onChange={(e) => setIsReverseCharge(e.target.checked)}
                       />
-                      <label htmlFor="reverseCharge" className="text-[13px] text-gray-700 cursor-pointer hover:text-gray-900 transition-colors">
+                      <label
+                        htmlFor="reverseCharge"
+                        className="text-[13px] text-gray-700 cursor-pointer hover:text-gray-900 transition-colors"
+                      >
                         This transaction is applicable for reverse charge
                       </label>
                     </div>
 
                     {isReverseCharge && (
                       <div className="w-full md:w-[50%] lg:w-[40%] mt-4">
-                        <label className="block text-sm font-medium mb-1.5 text-gray-700">Tax</label>
+                        <label className="block text-sm font-medium mb-1.5 text-gray-700">
+                          Tax
+                        </label>
                         <FormControl fullWidth size="small">
                           <MuiSelect
                             value={reverseChargeTax}
-                            onChange={(e) => setReverseChargeTax(e.target.value as string)}
+                            onChange={(e) =>
+                              setReverseChargeTax(e.target.value as string)
+                            }
                             displayEmpty
                             sx={{
                               height: { xs: 28, sm: 36, md: 38 },
@@ -968,14 +1055,22 @@ export const CreatePaymentPage: React.FC = () => {
                             }}
                           >
                             <MuiMenuItem value="" disabled>
-                              {loadingRcTaxes ? "Loading Tax options..." : "Select Tax Group"}
+                              {loadingRcTaxes
+                                ? "Loading Tax options..."
+                                : "Select Tax Group"}
                             </MuiMenuItem>
-                            {!loadingRcTaxes && rcTaxOptions.map((opt) => (
-                              <MuiMenuItem key={opt.id} value={String(opt.id)}>
-                                {opt.name}
-                                {typeof opt.percentage === "number" ? ` [${opt.percentage}%]` : ""}
-                              </MuiMenuItem>
-                            ))}
+                            {!loadingRcTaxes &&
+                              rcTaxOptions.map((opt) => (
+                                <MuiMenuItem
+                                  key={opt.id}
+                                  value={String(opt.id)}
+                                >
+                                  {opt.name}
+                                  {typeof opt.percentage === "number"
+                                    ? ` [${opt.percentage}%]`
+                                    : ""}
+                                </MuiMenuItem>
+                              ))}
                           </MuiSelect>
                         </FormControl>
                       </div>
@@ -998,7 +1093,9 @@ export const CreatePaymentPage: React.FC = () => {
                         readOnly={paymentConfig.autoGenerate}
                         className={cn(
                           "pr-10 h-[38px] w-full text-sm border-gray-300 focus-visible:ring-1 shadow-sm",
-                          paymentConfig.autoGenerate ? "bg-gray-50 cursor-not-allowed focus-visible:ring-0" : "bg-white cursor-text"
+                          paymentConfig.autoGenerate
+                            ? "bg-gray-50 cursor-not-allowed focus-visible:ring-0"
+                            : "bg-white cursor-text"
                         )}
                         placeholder="Payment number"
                       />
@@ -1009,8 +1106,14 @@ export const CreatePaymentPage: React.FC = () => {
                             onClick={() => setIsConfigModalOpen(true)}
                           />
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="bg-[#1e293b] text-white border-none text-[12px] py-1.5 px-3">
-                          <p>Click here to configure auto-generation of payment numbers.</p>
+                        <TooltipContent
+                          side="top"
+                          className="bg-[#1e293b] text-white border-none text-[12px] py-1.5 px-3"
+                        >
+                          <p>
+                            Click here to configure auto-generation of payment
+                            numbers.
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -1056,18 +1159,25 @@ export const CreatePaymentPage: React.FC = () => {
                           checked={isReverseCharge}
                           onChange={(e) => setIsReverseCharge(e.target.checked)}
                         />
-                        <label htmlFor="reverseCharge" className="text-[13px] text-gray-700 cursor-pointer hover:text-gray-900 transition-colors">
+                        <label
+                          htmlFor="reverseCharge"
+                          className="text-[13px] text-gray-700 cursor-pointer hover:text-gray-900 transition-colors"
+                        >
                           This transaction is applicable for reverse charge
                         </label>
                       </div>
 
                       {isReverseCharge && (
                         <div className="w-full md:w-[50%] lg:w-[40%] mt-4">
-                          <label className="block text-sm font-medium mb-1.5 text-gray-700">Tax</label>
+                          <label className="block text-sm font-medium mb-1.5 text-gray-700">
+                            Tax
+                          </label>
                           <FormControl fullWidth size="small">
                             <MuiSelect
                               value={reverseChargeTax}
-                              onChange={(e) => setReverseChargeTax(e.target.value as string)}
+                              onChange={(e) =>
+                                setReverseChargeTax(e.target.value as string)
+                              }
                               displayEmpty
                               sx={{
                                 height: { xs: 28, sm: 36, md: 38 },
@@ -1080,14 +1190,22 @@ export const CreatePaymentPage: React.FC = () => {
                               }}
                             >
                               <MuiMenuItem value="" disabled>
-                                {loadingRcTaxes ? "Loading Tax options..." : "Select Tax Group"}
+                                {loadingRcTaxes
+                                  ? "Loading Tax options..."
+                                  : "Select Tax Group"}
                               </MuiMenuItem>
-                              {!loadingRcTaxes && rcTaxOptions.map((opt) => (
-                                <MuiMenuItem key={opt.id} value={String(opt.id)}>
-                                  {opt.name}
-                                  {typeof opt.percentage === "number" ? ` [${opt.percentage}%]` : ""}
-                                </MuiMenuItem>
-                              ))}
+                              {!loadingRcTaxes &&
+                                rcTaxOptions.map((opt) => (
+                                  <MuiMenuItem
+                                    key={opt.id}
+                                    value={String(opt.id)}
+                                  >
+                                    {opt.name}
+                                    {typeof opt.percentage === "number"
+                                      ? ` [${opt.percentage}%]`
+                                      : ""}
+                                  </MuiMenuItem>
+                                ))}
                             </MuiSelect>
                           </FormControl>
                         </div>
@@ -1104,7 +1222,9 @@ export const CreatePaymentPage: React.FC = () => {
                       <FormControl fullWidth>
                         <MuiSelect
                           value={selectedTds || ""}
-                          onChange={(e) => setSelectedTds(e.target.value as string)}
+                          onChange={(e) =>
+                            setSelectedTds(e.target.value as string)
+                          }
                           displayEmpty
                           sx={{
                             height: { xs: 28, sm: 36, md: 45 },
@@ -1123,7 +1243,9 @@ export const CreatePaymentPage: React.FC = () => {
                           }}
                         >
                           <MuiMenuItem value="" disabled>
-                            {loadingTds ? "Loading TDS options..." : "Select a Tax"}
+                            {loadingTds
+                              ? "Loading TDS options..."
+                              : "Select a Tax"}
                           </MuiMenuItem>
                           {!loadingTds && tdsOptions.length === 0 && (
                             <MuiMenuItem value="" disabled>
@@ -1133,7 +1255,9 @@ export const CreatePaymentPage: React.FC = () => {
                           {tdsOptions.map((opt) => (
                             <MuiMenuItem key={opt.id} value={String(opt.id)}>
                               {opt.name}
-                              {typeof opt.percentage === "number" ? ` [${opt.percentage}%]` : ""}
+                              {typeof opt.percentage === "number"
+                                ? ` [${opt.percentage}%]`
+                                : ""}
                             </MuiMenuItem>
                           ))}
                         </MuiSelect>
@@ -1142,7 +1266,9 @@ export const CreatePaymentPage: React.FC = () => {
                       {tdsAmount > 0 && (
                         <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1">
                           <span>−</span>
-                          <span>TDS ({tdsPercentage}%): ₹{tdsAmount.toFixed(2)}</span>
+                          <span>
+                            TDS ({tdsPercentage}%): ₹{tdsAmount.toFixed(2)}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -1225,7 +1351,9 @@ export const CreatePaymentPage: React.FC = () => {
                       <FormControl fullWidth size="small">
                         <MuiSelect
                           value={paidThrough || ""}
-                          onChange={(e) => setPaidThrough(e.target.value as string)}
+                          onChange={(e) =>
+                            setPaidThrough(e.target.value as string)
+                          }
                           displayEmpty
                           sx={{
                             height: { xs: 28, sm: 36, md: 45 },
@@ -1257,15 +1385,22 @@ export const CreatePaymentPage: React.FC = () => {
                           {accountGroups.map((group) =>
                             group.ledgers && group.ledgers.length > 0
                               ? [
-                                <ListSubheader key={`group-${group.id}`} className="bg-gray-50 font-bold text-gray-900 leading-8">
-                                  {group.group_name}
-                                </ListSubheader>,
-                                ...group.ledgers.map((ledger: Ledger) => (
-                                  <MuiMenuItem key={ledger.id} value={ledger.id} className="pl-6">
-                                    {ledger.name}
-                                  </MuiMenuItem>
-                                )),
-                              ]
+                                  <ListSubheader
+                                    key={`group-${group.id}`}
+                                    className="bg-gray-50 font-bold text-gray-900 leading-8"
+                                  >
+                                    {group.group_name}
+                                  </ListSubheader>,
+                                  ...group.ledgers.map((ledger: Ledger) => (
+                                    <MuiMenuItem
+                                      key={ledger.id}
+                                      value={ledger.id}
+                                      className="pl-6"
+                                    >
+                                      {ledger.name}
+                                    </MuiMenuItem>
+                                  )),
+                                ]
                               : null
                           )}
                         </MuiSelect>
@@ -1369,8 +1504,8 @@ export const CreatePaymentPage: React.FC = () => {
                           <div className="col-span-2 text-gray-600 text-xs">
                             {bill.bill_date
                               ? new Date(bill.bill_date).toLocaleDateString(
-                                "en-GB"
-                              )
+                                  "en-GB"
+                                )
                               : "-"}
                           </div>
                           <div className="col-span-2">
@@ -1540,8 +1675,8 @@ export const CreatePaymentPage: React.FC = () => {
                         <div className="col-span-2 text-gray-600 text-xs">
                           {bill.bill_date
                             ? new Date(bill.bill_date).toLocaleDateString(
-                              "en-GB"
-                            )
+                                "en-GB"
+                              )
                             : "-"}
                         </div>
                         <div className="col-span-2">
@@ -1902,7 +2037,8 @@ export const CreatePaymentPage: React.FC = () => {
               </DialogHeader>
               <div className="p-6 space-y-6">
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Choose how your payment numbers should be generated. You can automate the sequence or enter them manually for each payment.
+                  Choose how your payment numbers should be generated. You can
+                  automate the sequence or enter them manually for each payment.
                 </p>
 
                 <RadioGroup
@@ -1912,8 +2048,15 @@ export const CreatePaymentPage: React.FC = () => {
                 >
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="auto" id="auto" className="text-blue-600 border-gray-300" />
-                      <Label htmlFor="auto" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      <RadioGroupItem
+                        value="auto"
+                        id="auto"
+                        className="text-blue-600 border-gray-300"
+                      />
+                      <Label
+                        htmlFor="auto"
+                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                      >
                         Auto-generate payment number
                       </Label>
                     </div>
@@ -1921,7 +2064,9 @@ export const CreatePaymentPage: React.FC = () => {
                     {modalAutoGenerate && (
                       <div className="grid grid-cols-2 gap-4 pl-7">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Prefix</Label>
+                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Prefix
+                          </Label>
                           <Input
                             value={modalPrefix}
                             onChange={(e) => setModalPrefix(e.target.value)}
@@ -1929,7 +2074,9 @@ export const CreatePaymentPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Next Number</Label>
+                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Next Number
+                          </Label>
                           <Input
                             type="number"
                             value={modalNextNumber}
@@ -1943,8 +2090,15 @@ export const CreatePaymentPage: React.FC = () => {
 
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="manual" id="manual" className="text-blue-600 border-gray-300" />
-                      <Label htmlFor="manual" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      <RadioGroupItem
+                        value="manual"
+                        id="manual"
+                        className="text-blue-600 border-gray-300"
+                      />
+                      <Label
+                        htmlFor="manual"
+                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                      >
                         Add payment number manually for this payment
                       </Label>
                     </div>
@@ -1952,7 +2106,9 @@ export const CreatePaymentPage: React.FC = () => {
                     {!modalAutoGenerate && (
                       <div className="grid grid-cols-2 gap-4 pl-7">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Prefix</Label>
+                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Prefix
+                          </Label>
                           <Input
                             value={modalPrefix}
                             onChange={(e) => setModalPrefix(e.target.value)}
@@ -1961,7 +2117,9 @@ export const CreatePaymentPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Number</Label>
+                          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Payment Number
+                          </Label>
                           <Input
                             value={modalNextNumber}
                             onChange={(e) => setModalNextNumber(e.target.value)}
