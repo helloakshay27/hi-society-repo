@@ -60,10 +60,10 @@ const StepPill = styled(Box)<{ $active?: boolean; $completed?: boolean }>(({ $ac
     fontFamily: 'Work Sans, sans-serif',
     whiteSpace: 'nowrap',
     cursor: 'pointer',
-    backgroundColor: $active || $completed ? '#C72030' : '#FFFFFF',
+    backgroundColor: $active || $completed ? 'var(--color-primary, #da7756)' : '#FFFFFF',
     color: $active ? '#FFFFFF' : ($completed ? '#fff' : '#333'),
     border: $active || $completed
-        ? '2px solid #C72030'
+        ? '2px solid var(--color-primary, #da7756)'
         : '2px solid #E6E6E6',
 }));
 
@@ -100,30 +100,32 @@ const CustomStep = styled(Step)(() => ({
 
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-    backgroundColor: '#C72030',
-    color: 'white',
+    backgroundColor: 'var(--color-primary, #da7756)',
+    color: 'white !important',
     borderRadius: 0,
     textTransform: 'none',
     padding: '8px 16px',
     fontFamily: 'Work Sans, sans-serif',
     fontWeight: 500,
-    boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
+    boxShadow: '0 2px 4px rgba(218, 119, 86, 0.2)',
     '&:hover': {
-        backgroundColor: '#B8252F',
-        boxShadow: '0 4px 8px rgba(199, 32, 48, 0.3)',
+        backgroundColor: 'var(--color-primary-hover, rgba(218, 119, 86, 0.85))',
+        color: 'white !important',
+        boxShadow: '0 4px 8px rgba(218, 119, 86, 0.3)',
     },
 }));
 
 const DraftButton = styled(MuiButton)(({ theme }) => ({
-    backgroundColor: '#e7e3d9',
-    color: '#C72030',
+    backgroundColor: 'var(--color-primary, #da7756)',
+    color: 'white !important',
     borderRadius: 0,
     textTransform: 'none',
     padding: '8px 16px',
     fontFamily: 'Work Sans, sans-serif',
     fontWeight: 500,
     '&:hover': {
-        backgroundColor: '#d9d5c9',
+        backgroundColor: 'var(--color-primary-hover, rgba(218, 119, 86, 0.85))',
+        color: 'white !important',
     },
 }));
 
@@ -162,7 +164,7 @@ const IconWrapper = styled(Box)(({ theme }) => ({
 }));
 
 const RedIcon = styled(Settings)(({ theme }) => ({
-    color: '#C72030',
+    color: 'var(--color-primary, #da7756)',
     fontSize: '24px',
 }));
 

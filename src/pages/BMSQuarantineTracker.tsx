@@ -561,7 +561,7 @@ const BMSQuarantineTracker: React.FC = () => {
     shouldShow("Quarantine Tracker","create")&&(
     <Button
       onClick={handleAddRecord}
-      className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
+      className="bg-[#C72030] hover:bg-[#A01828] !text-white h-9 px-4 text-sm font-medium"
     >
       <Plus className="w-4 h-4 mr-2" />
       Add Record

@@ -81,8 +81,8 @@ const CancelButton = styled(MuiButton)(({ theme }) => ({
 }));
 
 const AddButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C4B89D59",
-  color: "#C72030",
+  backgroundColor: "#C72030",
+  color: "#fff",
   borderRadius: "4px",
   textTransform: "none",
   padding: "8px 16px",
@@ -91,7 +91,7 @@ const AddButton = styled(MuiButton)(({ theme }) => ({
   fontSize: "14px",
   boxShadow: "none",
   "&:hover": {
-    backgroundColor: "#C4B89D80",
+    backgroundColor: "#A01828",
     boxShadow: "none",
   },
 }));
@@ -527,16 +527,15 @@ const AddMISPage: React.FC = () => {
     type="submit"
     disabled={isSubmitting}
     onClick={handleSubmit}
-    className="bg-red-600 hover:bg-red-700 text-white px-8 py-2"
+    className="bg-[#C72030] hover:bg-[#A01828] !text-white px-8 py-2"
   >
     {isSubmitting ? "Submitting..." : "Submit"}
   </Button>
 
   <Button
     type="button"
-    variant="outline"
     onClick={handleCancel}
-    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+    className="bg-[#C72030] hover:bg-[#A01828] !text-white px-8 py-2"
   >
     Cancel
   </Button>

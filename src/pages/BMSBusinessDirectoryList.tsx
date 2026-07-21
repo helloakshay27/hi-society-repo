@@ -167,7 +167,7 @@ const BMSBusinessDirectoryList: React.FC = () => {
     <div className="flex gap-2">
       <Button
         onClick={handleAdd}
-        className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
+        className="bg-[#C72030] hover:bg-[#A01828] !text-white"
       >
         <Plus className="w-4 h-4 mr-2" />
         Add

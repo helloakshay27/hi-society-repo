@@ -91,7 +91,10 @@ const CMSPaymentPlanSetup = () => {
                 renderActions={renderActions}
                 leftActions={
                     shouldShow("Payment Plan Setup", "create") && (
-                        <Button onClick={() => navigate('/cms/payment-plan-setup/add')}>
+                        <Button
+                            onClick={() => navigate('/cms/payment-plan-setup/add')}
+                            className="bg-[#C72030] hover:bg-[#A01828] !text-white"
+                        >
                             <Plus className='w-4 h-4' />
                             Add
                         </Button>

@@ -2274,7 +2274,7 @@ export const EditSurveyMapping = () => {
       <div className="flex flex-col sm:flex-row items-center gap-3 justify-center pt-2">
         <Button
           variant="destructive"
-          className="px-6 sm:px-8 w-full sm:w-auto"
+          className="bg-[#C72030] hover:bg-[#A01828] !text-white px-6 sm:px-8 w-full sm:w-auto"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
@@ -2289,7 +2289,7 @@ export const EditSurveyMapping = () => {
         </Button>
         <Button
           variant="outline"
-          className="px-6 sm:px-8 w-full sm:w-auto"
+          className="bg-[#C72030] hover:bg-[#A01828] !text-white px-6 sm:px-8 w-full sm:w-auto"
           onClick={() => navigate("/maintenance/survey/mapping")}
           disabled={isSubmitting}
         >

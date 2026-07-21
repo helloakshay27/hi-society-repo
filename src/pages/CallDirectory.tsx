@@ -381,7 +381,7 @@ const CallDirectory: React.FC = () => {
         }
         setIsAddOpen(true);
       }}
-      className="hidden sm:inline-flex"
+      className="hidden sm:inline-flex bg-[#C72030] hover:bg-[#A01828] !text-white"
     >
       + Add
     </Button>

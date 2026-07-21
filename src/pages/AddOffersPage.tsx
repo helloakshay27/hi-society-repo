@@ -33,7 +33,7 @@ const SectionHeader = styled(Box)(() => ({
 
 const RedIcon = styled(Box)(() => ({
   color: "white",
-  backgroundColor: "#C72030",
+  backgroundColor: "var(--color-primary, #da7756)",
   borderRadius: "50%",
   display: "flex",
   alignItems: "center",
@@ -484,10 +484,20 @@ const AddOffersPage: React.FC = () => {
                   gap: 2,
                 }}
               >
-                <Button variant="outline" type="button" onClick={() => navigate(-1)} disabled={isSubmitting}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  disabled={isSubmitting}
+                  className="bg-[#C72030] hover:bg-[#A01828] !text-white border-0"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-[#C72030] hover:bg-[#A01828] !text-white border-0"
+                >
                   {isSubmitting ? (
                     <CircularProgress size={16} sx={{ color: "white" }} />
                   ) : (

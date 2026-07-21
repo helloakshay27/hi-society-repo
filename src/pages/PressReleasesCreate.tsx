@@ -379,7 +379,7 @@ const PressReleasesCreate = () => {
                   </h5>
 
                   <button
-                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                    className="bg-[#C72030] text-white hover:bg-[#A01828] h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -502,14 +502,14 @@ const PressReleasesCreate = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
               {loading ? 'Submit' : 'Submit'}
             </button>
             <button
               type="button"
               onClick={() => navigate("/maintenance/press-releases-list")}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
               Cancel
             </button>

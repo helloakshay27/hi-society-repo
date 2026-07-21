@@ -430,7 +430,7 @@ const CampaignsReferralCreate: React.FC = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-             className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-2"
+             className="bg-[#C72030] hover:bg-[#A01828] !text-white px-10 py-2"
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>

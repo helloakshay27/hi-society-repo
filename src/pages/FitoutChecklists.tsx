@@ -420,7 +420,7 @@ const FitoutChecklists: React.FC = () => {
               {shouldShow("Fitout Checklists", "create") && (
               <Button
                 onClick={handleAddChecklist}
-                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
+                className="flex items-center gap-2 bg-[#C72030] hover:bg-[#A01828] !text-white border-0"
               >
                 <Plus className="w-4 h-4" />
                 Add

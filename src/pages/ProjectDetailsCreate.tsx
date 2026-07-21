@@ -3205,17 +3205,16 @@ const ProjectDetailsCreate = () => {
                             <button
                               type="button"
                               onClick={() => document.getElementById("qr-code-file-upload-0")?.click()}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                              style={{ backgroundColor: "#c4b89d59" }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
                             >
-                              <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                              <span className="font-medium text-sm text-white">Upload Files</span>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="16"
                                 height="16"
                                 viewBox="0 0 24 24"
                                 fill="none"
-                                stroke="#C72030"
+                                stroke="#FFFFFF"
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -3400,17 +3399,16 @@ const ProjectDetailsCreate = () => {
                                   <button
                                     type="button"
                                     onClick={() => document.getElementById(`qr-code-file-upload-${entryIndex}`)?.click()}
-                                    className="inline-flex  gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                                    style={{ backgroundColor: "#c4b89d59" }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
                                   >
-                                    <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                                    <span className="font-medium text-sm text-white">Upload Files</span>
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
                                       width="16"
                                       height="16"
                                       viewBox="0 0 24 24"
                                       fill="none"
-                                      stroke="#C72030"
+                                      stroke="#FFFFFF"
                                       strokeWidth="2"
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
@@ -3431,10 +3429,9 @@ const ProjectDetailsCreate = () => {
                       <div className="flex justify-end mt-4">
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors bg-[#C72030] hover:bg-[#A01828]"
                           style={{
                             height: "45px",
-                            backgroundColor: "#C4B89D59",
                           }}
                           onClick={() => {
                             // Add empty section - data will be saved when typing in the fields
@@ -3884,12 +3881,7 @@ const ProjectDetailsCreate = () => {
               <button
                 type="button"
                 onClick={handleAddConnectivity}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md"
-                style={{
-                  backgroundColor: '#EDEAE3',
-                  border: '1px solid #C72030',
-                  color: '#C72030',
-                }}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition-colors"
               >
                 <span>Add</span>
               </button>
@@ -4244,7 +4236,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowBannerModal(true)}
                   >
@@ -4379,7 +4371,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -4550,7 +4542,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowGalleryModal(true)}
                   >
@@ -4757,7 +4749,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
@@ -4881,7 +4873,7 @@ const ProjectDetailsCreate = () => {
 
                   <button
                     type="button"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -4957,7 +4949,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_ppt").click()}
                         >
                          
@@ -5025,7 +5017,7 @@ const ProjectDetailsCreate = () => {
 
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_layout").click()}
                         >
                          
@@ -5101,7 +5093,7 @@ const ProjectDetailsCreate = () => {
 
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_creatives").click()}
                         >
                          
@@ -5177,7 +5169,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_creative_generics").click()}
                         >
                         
@@ -5251,7 +5243,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -5330,7 +5322,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_interiors").click()}
                         >
                          
@@ -5403,7 +5395,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_exteriors").click()}
                         >
                           
@@ -5476,7 +5468,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_emailer_templetes").click()}
                         >
                          
@@ -5540,7 +5532,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("KnwYrApt_Technical").click()}
                         >
                         
@@ -5605,7 +5597,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -5705,7 +5697,7 @@ const ProjectDetailsCreate = () => {
             </h2>
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -6043,7 +6035,7 @@ const ProjectDetailsCreate = () => {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit"}
@@ -6051,7 +6043,7 @@ const ProjectDetailsCreate = () => {
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
               Cancel
             </button>

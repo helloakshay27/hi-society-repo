@@ -309,7 +309,7 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                   type="button"
                   variant="outline"
                   onClick={handleBrowseClick}
-                  className="flex items-center gap-2"
+                  className="bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                 >
                   <Upload className="w-4 h-4" />
                   Browse
@@ -326,7 +326,7 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                 type="submit"
                 disabled={isSubmitting}
                 variant="outline"
-                className="px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#C72030] hover:bg-[#A01828] !text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Submitting..." : "Submit"}
               </Button>

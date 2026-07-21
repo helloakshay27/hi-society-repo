@@ -1160,7 +1160,7 @@ export const SurveyMappingDashboard = () => {
                 {shouldShow("Survey Mapping", "create") && (
                   <Button
                     onClick={() => setShowActionPanel(!showActionPanel)}
-                    className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 text-sm px-2 sm:px-3 py-2 h-auto"
+                    className="flex items-center gap-2 bg-[#C72030] text-white border-0 hover:bg-[#A01828] text-sm px-2 sm:px-3 py-2 h-auto"
                     size="sm"
                   >
                     <Plus className="w-4 h-4" />
