@@ -246,7 +246,7 @@ export const FnBRestaurantDashboard = () => {
   const leftActions = (
     <Button
       onClick={() => setShowActionPanel(true)}
-      className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-4 py-2 rounded-md flex items-center gap-2 border-0"
+      className="px-4 py-2 rounded-md flex items-center gap-2 border-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
     >
       <Plus className="w-4 h-4" />
       Action

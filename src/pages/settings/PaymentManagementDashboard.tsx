@@ -353,7 +353,7 @@ export const PaymentManagementDashboard = () => {
   const renderCustomActions = () => (
     <div className="flex gap-3">
       <Button
-        className="bg-[#C72030] hover:bg-[#A01020] text-white"
+        className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
         onClick={() => navigate('/settings/payment-management/add')}
       >
         <Plus className="w-4 h-4 mr-2" />

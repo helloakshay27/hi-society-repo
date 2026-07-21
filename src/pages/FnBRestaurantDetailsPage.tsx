@@ -1382,7 +1382,7 @@ export const FnBRestaurantDetailsPage = () => {
                   <Button
                     variant="outline"
                     onClick={addBlockedDay}
-                    className="border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white"
+                    className="border-[#C72030] bg-[#C72030] text-white hover:bg-[#C72030]/90"
                   >
                     Add Blocked Day
                   </Button>
@@ -1635,7 +1635,7 @@ export const FnBRestaurantDetailsPage = () => {
                     Upload menu images for the restaurant
                   </p>
                   <Button
-                    className="mt-4 bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+                    className="mt-4 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     onClick={() => menuInputRef.current?.click()}
                   >
                     Add Menu Images
@@ -1686,7 +1686,7 @@ export const FnBRestaurantDetailsPage = () => {
                     Upload gallery images for the restaurant
                   </p>
                   <Button
-                    className="mt-4 bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+                    className="mt-4 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     onClick={() => galleryInputRef.current?.click()}
                   >
                     Add Gallery Images
@@ -1727,7 +1727,7 @@ export const FnBRestaurantDetailsPage = () => {
             <div className="flex justify-center gap-4">
               <Button
                 onClick={handleSave}
-                className="bg-[#C72030] hover:bg-[#C72030]/90 text-white flex items-center gap-2"
+                className="flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

@@ -694,14 +694,14 @@ export const AddRolePageVi = () => {
                     <Button
                         variant="outline"
                         onClick={handleBack}
-                        className="w-full sm:w-auto"
+                        className="w-full sm:w-auto border-[1px]"
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleSaveRole}
                         disabled={loading}
-                        className="bg-[#C72030] hover:bg-[#A11D2A] text-white w-full sm:w-auto"
+                        className="w-full sm:w-auto bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     >
                         <Save className="w-4 h-4 mr-2" />
                         {loading ? "Creating..." : "Create Role"}

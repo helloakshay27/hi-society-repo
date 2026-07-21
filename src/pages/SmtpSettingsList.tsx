@@ -118,7 +118,7 @@ const SMTPSettingsList = () => {
       case 'actions':
         return (
           <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)} title="Edit">
-            <Edit className="w-4 h-4" />
+            <Edit className="w-4 h-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
           </Button>
         );
       case 'address':
@@ -141,7 +141,7 @@ const SMTPSettingsList = () => {
       {/* {totalCount === 0 && (
         <Button 
           onClick={handleCreate}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          className="h-9 px-4 text-sm font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
         >
           Create SMTP Settings
         </Button>

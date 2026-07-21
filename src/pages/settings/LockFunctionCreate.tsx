@@ -239,7 +239,7 @@ export const LockFunctionCreate: React.FC = () => {
               <Button 
                 onClick={handleCreate}
                 disabled={isSubmitting}
-                className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-8 rounded-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 rounded-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 {isSubmitting ? (
                   <>

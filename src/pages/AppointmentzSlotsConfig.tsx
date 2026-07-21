@@ -385,7 +385,7 @@ const AppointmentzSlotsConfig = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-500 hover:text-blue-600"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             onClick={() => handleOpenEditModal(item)}
           >
             <Edit className="w-4 h-4" />
@@ -431,7 +431,7 @@ const AppointmentzSlotsConfig = () => {
           shouldShow("Slots Configuration","create")&&(
           <Button
             onClick={handleOpenAddModal}
-            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add
@@ -752,7 +752,7 @@ const AppointmentzSlotsConfig = () => {
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-[#00B4D8] hover:bg-[#009bb8] text-white min-w-[100px]"
+              className="min-w-[100px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isSubmitting ? "Submitting..." : "Submit"}

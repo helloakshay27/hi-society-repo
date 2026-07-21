@@ -428,7 +428,7 @@ export const EmployeeFnb = ({ needPadding }: { needPadding?: boolean }) => {
 
     const leftActions = (
         <Button
-            className="bg-[#C72030] hover:bg-[#A01020] text-white"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             onClick={() => navigate("/employee/fnb/add")}
         >
             <Plus className="w-4 h-4 mr-2" />

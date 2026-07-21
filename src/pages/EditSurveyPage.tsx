@@ -1546,7 +1546,7 @@ export const EditSurveyPage = () => {
                       onClick={() => setSurveyImage(null)}
                       variant="ghost"
                       size="sm"
-                      className="text-gray-400 hover:text-red-500 p-2"
+                      className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                       disabled={isSubmitting}
                     >
                       <X className="w-4 h-4" />
@@ -1622,7 +1622,7 @@ export const EditSurveyPage = () => {
                       size="sm"
                       variant="ghost"
                       onClick={handleAddQuestion}
-                      className="p-1 h-6 w-6"
+                      className="p-1 h-6 w-6 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -1867,7 +1867,7 @@ export const EditSurveyPage = () => {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleAddAnswerOption(question.id!)}
-                            className="p-0 h-auto font-medium text-red-600 hover:text-red-700 flex items-center"
+                            className="p-0 h-auto font-medium flex items-center bg-[#C72030] text-white hover:bg-[#C72030]/90"
                           >
                             <Plus className="w-4 h-4 mr-1" />
                             Add Option
@@ -2052,7 +2052,7 @@ export const EditSurveyPage = () => {
                                               fieldIndex
                                             )
                                           }
-                                          className="p-2 text-red-500 hover:text-red-700"
+                                          className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                                         >
                                           <X className="w-4 h-4" />
                                         </Button>
@@ -2224,7 +2224,7 @@ export const EditSurveyPage = () => {
                                 onClick={() =>
                                   handleAddAdditionalField(question.id!)
                                 }
-                                className="p-0 h-auto font-medium text-red-600 hover:text-red-700 flex items-center"
+                                className="p-0 h-auto font-medium flex items-center bg-[#C72030] text-white hover:bg-[#C72030]/90"
                               >
                                 <Plus className="w-4 h-4 mr-1" /> Add Additional
                                 Field
@@ -2241,7 +2241,7 @@ export const EditSurveyPage = () => {
                 <Button
                   onClick={handleAddQuestion}
                   variant="outline"
-                  className="border-dashed border-red-400 text-red-600 hover:bg-red-50"
+                  className="border-dashed border-red-400 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add More Questions
@@ -2252,7 +2252,7 @@ export const EditSurveyPage = () => {
                 <Button
                   onClick={handleUpdateQuestion}
                   disabled={loading || isSubmitting}
-                  className="bg-red-600 hover:bg-red-700 text-white px-8"
+                  className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   {loading || isSubmitting ? "Updating..." : "Update Question"}
                 </Button>

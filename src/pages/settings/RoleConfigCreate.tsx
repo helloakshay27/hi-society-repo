@@ -353,7 +353,7 @@ export const RoleConfigCreate: React.FC = () => {
           <button
             onClick={handleCancel}
             disabled={isSubmitting}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors border-[1px]"
             title="Back to Role Configuration List"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -705,7 +705,7 @@ export const RoleConfigCreate: React.FC = () => {
               <Button 
                 onClick={handleCreate}
                 disabled={isSubmitting}
-                className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-8 rounded-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 rounded-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 {isSubmitting ? (
                   <>

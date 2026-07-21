@@ -146,7 +146,7 @@ export const DepartmentDashboard = () => {
       <Button
         size="sm"
         variant="ghost"
-        className="p-1"
+        className="p-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
         onClick={(e) => {
           e.stopPropagation();
           openEditDialog(item);
@@ -205,7 +205,7 @@ export const DepartmentDashboard = () => {
                     <div className="flex justify-end">
                       <Button
                         onClick={handleSubmit}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 w-full sm:w-auto"
+                        className="px-6 w-full sm:w-auto bg-[#C72030] text-white hover:bg-[#C72030]/90"
                       >
                         Submit
                       </Button>
@@ -233,7 +233,7 @@ export const DepartmentDashboard = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-[#C72030] hover:text-[#A11D2A] hover:bg-[#C72030]/10 p-2"
+                        className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                         onClick={() => openEditDialog(department)}
                       >
                         <Edit className="w-4 h-4" />
@@ -294,7 +294,7 @@ export const DepartmentDashboard = () => {
                   <div className="flex justify-end">
                     <Button
                       onClick={handleEditSubmit}
-                      className="bg-[#C72030] hover:bg-[#A11D2A] text-white px-6 w-full sm:w-auto"
+                      className="px-6 w-full sm:w-auto bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     >
                       Submit
                     </Button>

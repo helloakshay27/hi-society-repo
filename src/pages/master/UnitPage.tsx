@@ -597,7 +597,7 @@ export const UnitPage = () => {
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleAddUnit} className="bg-[#C72030] hover:bg-[#B01E2E] text-white">
+                  <Button onClick={handleAddUnit} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
                     Submit
                   </Button>
                 </div>
@@ -661,7 +661,7 @@ export const UnitPage = () => {
                     <TableRow key={unit.id}>
                        <TableCell>
                          <Button variant="ghost" size="sm" onClick={() => handleEditUnit(unit)}>
-                           <Edit className="w-4 h-4 text-[#C72030]" />
+                           <Edit className="w-4 h-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
                          </Button>
                        </TableCell>
                       <TableCell>
@@ -760,7 +760,7 @@ export const UnitPage = () => {
                   disabled={currentPage === totalPages}
                 >
                   Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
                 </Button>
               </div>
             </div>
@@ -925,7 +925,7 @@ export const UnitPage = () => {
             <div className="flex justify-end pt-4">
               <Button 
                 onClick={handleUpdateUnit} 
-                className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 disabled={!editUnit.unitName.trim() || !editUnit.building}
               >
                 Submit

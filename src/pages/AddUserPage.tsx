@@ -56,14 +56,18 @@ const RedIcon = styled(Box)(({ theme }) => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: '#E7E3D9',
-  color: '#C72030',
+  backgroundColor: '#C72030',
+  color: 'white',
   borderRadius: 0,
   textTransform: 'none',
   padding: '8px 16px',
   fontFamily: 'Work Sans, sans-serif',
   fontWeight: 500,
   boxShadow: 'none',
+  '&:hover': {
+    backgroundColor: '#C72030',
+    opacity: 0.9,
+  },
 }));
 
 const DraftButton = styled(MuiButton)(({ theme }) => ({

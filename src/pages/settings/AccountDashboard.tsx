@@ -414,7 +414,7 @@ export const AccountDashboard = () => {
               <div className="flex justify-center">
                 <Button
                   onClick={handleSubmitCompany}
-                  className="bg-[#C72030] hover:bg-[#A01020] text-white px-8"
+                  className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   Submit
                 </Button>
@@ -427,7 +427,7 @@ export const AccountDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <Button
               onClick={() => setIsAddCountryOpen(true)}
-              className="bg-[#C72030] hover:bg-[#A01020] text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Countries
@@ -488,7 +488,7 @@ export const AccountDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <Button
               onClick={() => setIsAddRegionOpen(true)}
-              className="bg-[#C72030] hover:bg-[#A01020] text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               Add Region
             </Button>
@@ -551,13 +551,13 @@ export const AccountDashboard = () => {
             <div className="flex gap-2">
               <Button
                 onClick={() => setIsAddZoneOpen(true)}
-                className="bg-[#C72030] hover:bg-[#A01020] text-white"
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 Add Zone
               </Button>
               <Button
                 onClick={() => setIsEditZoneOpen(true)}
-                className="bg-[#C72030] hover:bg-[#A01020] text-white"
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 Edit Zone
               </Button>
@@ -677,7 +677,7 @@ export const AccountDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <Button
               onClick={() => setIsAddEntityOpen(true)}
-              className="bg-[#C72030] hover:bg-[#A01020] text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Entity
@@ -696,7 +696,7 @@ export const AccountDashboard = () => {
                 />
                 <Button
                   onClick={handleSubmitEntity}
-                  className="bg-[#C72030] hover:bg-[#A01020] text-white"
+                  className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   Submit
                 </Button>
@@ -734,7 +734,7 @@ export const AccountDashboard = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-[#C72030] hover:bg-[#C72030] hover:text-white p-1"
+                          className="p-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>

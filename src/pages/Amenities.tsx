@@ -332,8 +332,9 @@ const Amenities = () => {
           <Button
             type="button"
             // variant="outline"
+            variant="outline"
             onClick={handleGoBack}
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            className="px-8 py-2"
             disabled={loading}
           >
             Cancel

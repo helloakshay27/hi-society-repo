@@ -439,14 +439,14 @@ export const AddRolePage = () => {
             <Button 
               variant="outline" 
               onClick={handleBack}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto border-[1px]"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#A11D2A] text-white w-full sm:w-auto"
+              className="w-full sm:w-auto bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {isSubmitting ? (
                 <>

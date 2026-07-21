@@ -260,7 +260,7 @@ const FaqCategoryForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2"
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-8 py-2"
           >
             {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Submit')}
           </button>

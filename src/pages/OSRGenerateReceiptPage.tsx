@@ -126,7 +126,7 @@ export const OSRGenerateReceiptPage = () => {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <Button 
               onClick={handleAddReceipt}
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-4 py-2 rounded-none flex items-center gap-2"
+              className="px-4 py-2 rounded-none flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <Plus className="w-4 h-4" />
               Add

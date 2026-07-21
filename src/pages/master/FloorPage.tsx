@@ -366,7 +366,7 @@ export function FloorPage() {
 
               <Button 
                 onClick={() => setShowAddDialog(true)} 
-                className="bg-[#C72030] hover:bg-[#B01E2E] text-white flex items-center gap-2"
+                className="flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 <Plus className="h-4 w-4" />
                 Add Floor
@@ -419,7 +419,7 @@ export function FloorPage() {
                     <TableRow key={floor.id}>
                       <TableCell>
                         <Button variant="ghost" size="sm" onClick={() => handleEditFloor(floor)}>
-                          <Edit className="w-4 h-4 text-[#C72030]" />
+                          <Edit className="w-4 h-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
                         </Button>
                       </TableCell>
                       <TableCell>{floor.building?.name || 'N/A'}</TableCell>
@@ -534,7 +534,7 @@ export function FloorPage() {
                   disabled={currentPage === totalPages}
                 >
                   Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
                 </Button>
               </div>
             </div>
@@ -633,7 +633,7 @@ export function FloorPage() {
               <Button 
                 onClick={handleAddFloor} 
                 disabled={!newFloorName.trim() || !newFloorBuilding}
-                className="bg-[#C72030] hover:bg-[#B01E2E] text-white"
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 Submit
               </Button>
@@ -756,7 +756,7 @@ export function FloorPage() {
               <Button 
                 onClick={handleUpdateFloor} 
                 disabled={!editFloorName.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 Update Floor
               </Button>
@@ -794,7 +794,7 @@ export function FloorPage() {
                     document.body.removeChild(link);
                     toast.success('QR Code downloaded successfully');
                   }}
-                  className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+                  className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Download QR Code

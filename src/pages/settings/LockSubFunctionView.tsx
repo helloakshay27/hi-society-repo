@@ -97,7 +97,7 @@ export const LockSubFunctionView = () => {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={handleEdit}>
-            <Edit className="w-4 h-4 mr-2" />
+            <Edit className="w-4 h-4 mr-2 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
             Edit
           </Button>
           <Button variant="destructive" onClick={handleDelete}>

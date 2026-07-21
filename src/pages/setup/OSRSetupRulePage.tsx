@@ -532,7 +532,7 @@ export const OSRSetupRulePage: React.FC = () => {
                         {form.cancellationRows.length > 1 && (
                           <button
                             onClick={() => removeCancellationRow(idx)}
-                            className="text-red-400 hover:text-red-600 text-lg leading-none font-bold transition-colors"
+                            className="text-red-400 hover:text-red-600 text-lg leading-none font-bold transition-colors border-[1px]"
                             title="Remove row"
                           >
                             ×
@@ -548,7 +548,7 @@ export const OSRSetupRulePage: React.FC = () => {
             {/* Add row */}
             <button
               onClick={addCancellationRow}
-              className="text-sm text-[#C72030] hover:text-[#A01B28] font-medium flex items-center gap-1 transition-colors"
+              className="text-sm text-[#C72030] hover:text-[#A01B28] font-medium flex items-center gap-1 transition-colors border-[1px]"
             >
               <span className="text-lg leading-none">+</span> Add Row
             </button>
@@ -604,7 +604,7 @@ export const OSRSetupRulePage: React.FC = () => {
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="bg-[#C72030] hover:bg-[#A61C28] text-white px-12 py-2.5 font-medium shadow-sm flex items-center gap-2"
+            className="px-12 py-2.5 font-medium shadow-sm flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Saving...' : 'Save'}

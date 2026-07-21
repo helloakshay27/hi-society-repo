@@ -239,7 +239,7 @@ export const FMUsersDashboard = () => {
 
       <div className="flex items-center gap-3 mb-6">
         <Button 
-          className="bg-[#C72030] hover:bg-[#A01020] text-white"
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           onClick={() => setIsAddModalOpen(true)}
         >
           <Plus className="w-4 h-4 mr-2" />

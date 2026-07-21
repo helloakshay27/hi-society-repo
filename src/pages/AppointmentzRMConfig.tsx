@@ -527,7 +527,7 @@ const AppointmentzRMConfig = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-500 hover:text-blue-600"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             disabled={!!editingRowId || isSubmitting}
             onClick={() => handleOpenEdit(item)}
           >
@@ -576,7 +576,7 @@ const AppointmentzRMConfig = () => {
           shouldShow("RM/CS Configuration","create") &&(
           <Button
             onClick={handleOpenAdd}
-            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add
@@ -740,7 +740,7 @@ const AppointmentzRMConfig = () => {
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white px-8"
+              className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isSubmitting ? "Submitting..." : "Submit"}

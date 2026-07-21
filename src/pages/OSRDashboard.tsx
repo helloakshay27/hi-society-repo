@@ -238,7 +238,7 @@ export const OSRDashboard = () => {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <Button 
               onClick={handleGenerateReceipt}
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-4 py-2 rounded-none flex items-center gap-2"
+              className="px-4 py-2 rounded-none flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <FileText className="w-4 h-4" />
               Generate Receipt
@@ -246,7 +246,7 @@ export const OSRDashboard = () => {
             
             <Button 
               onClick={() => setShowCreateModal(true)}
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-4 py-2 rounded-none flex items-center gap-2"
+              className="px-4 py-2 rounded-none flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <Plus className="w-4 h-4" />
               Add
@@ -280,7 +280,7 @@ export const OSRDashboard = () => {
                 columns={columns}
                 onColumnToggle={handleColumnToggle}
               />
-              <Button variant="ghost" size="sm" className="p-2" onClick={handleMoreActions}>
+              <Button variant="ghost" size="sm" className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={handleMoreActions}>
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </div>

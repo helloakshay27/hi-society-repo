@@ -51,14 +51,21 @@ const IconWrapper = styled(Box)(() => ({
 }));
 
 const RedButton = styled(MuiButton)(() => ({
-    backgroundColor: '#e7e3d9',
-    color: '#B8252F',
+    backgroundColor: '#C72030 !important',
+    color: 'white !important',
     borderRadius: 0,
     textTransform: 'none',
     padding: '8px 16px',
     fontFamily: 'Work Sans, sans-serif',
     fontWeight: 500,
-    boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
+    '&:hover': {
+        backgroundColor: '#a01828 !important',
+        opacity: 1,
+    },
+    '&.Mui-disabled': {
+        backgroundColor: '#e0a0a5 !important',
+        color: 'white !important',
+    },
 }));
 
 const CancelButton = styled(MuiButton)(() => ({

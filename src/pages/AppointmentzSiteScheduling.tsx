@@ -140,7 +140,7 @@ const AppointmentzSiteScheduling = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             disabled={isEditSubmitting}
             onClick={() => handleEditClick(item)}
           >

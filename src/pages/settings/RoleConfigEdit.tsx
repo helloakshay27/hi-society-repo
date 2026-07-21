@@ -168,7 +168,7 @@ export const RoleConfigEdit = () => {
           <Button 
             onClick={handleSave} 
             disabled={saving}
-            className="bg-[#C72030] hover:bg-[#C72030]/90"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

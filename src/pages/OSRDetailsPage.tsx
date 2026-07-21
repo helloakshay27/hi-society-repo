@@ -93,13 +93,13 @@ export const OSRDetailsPage = () => {
           </Button>
           <Button 
             onClick={() => setShowCancelDialog(true)}
-            className="bg-orange-500 hover:bg-orange-600"
+            className="bg-orange-500 hover:bg-orange-600 border-[1px]"
           >
             Cancel
           </Button>
           <Button 
             onClick={() => setShowEditDialog(true)}
-            className="bg-orange-500 hover:bg-orange-600 ml-auto"
+            className="ml-auto bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             Edit
           </Button>

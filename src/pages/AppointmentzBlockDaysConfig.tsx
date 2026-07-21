@@ -286,7 +286,7 @@ const AppointmentzBlockDaysConfig = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-500 hover:text-blue-600"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             onClick={() => handleOpenEdit(item)}
           >
             <Edit className="w-4 h-4" />
@@ -337,7 +337,7 @@ const AppointmentzBlockDaysConfig = () => {
           shouldShow("Block Days Configuration","create")&&(
           <Button
             onClick={handleOpenAdd}
-            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add
@@ -453,7 +453,7 @@ const AppointmentzBlockDaysConfig = () => {
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
+            className="min-w-[100px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             {isSubmitting ? "Submitting..." : "Submit"}

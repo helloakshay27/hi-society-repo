@@ -370,7 +370,7 @@ export const PaymentDetailPage = () => {
             <Button
               variant="outline"
               onClick={() => fetchPaymentDetails(id!)}
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white"
+              className="border-[#C72030] bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh

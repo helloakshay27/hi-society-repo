@@ -2163,7 +2163,7 @@ export const IncidentSetupDashboard = () => {
                   </div>
 
                   <div className="flex gap-3 pt-2">
-                    <Button onClick={handleEditEsclation} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2">
+                    <Button onClick={handleEditEsclation} className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                       Submit
                     </Button>
                     <Button onClick={handleEditBack} variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2">
@@ -2191,7 +2191,7 @@ export const IncidentSetupDashboard = () => {
                   <div className="flex gap-3">
                     <Button
                       onClick={handleEditSubmit}
-                      className="bg-[#C72030] hover:bg-[#A01020] text-white px-6"
+                      className="px-6 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     >
                       Submit
                     </Button>
@@ -2409,7 +2409,7 @@ export const IncidentSetupDashboard = () => {
                   )}
 
                   <div className="flex gap-3 pt-2">
-                    <Button onClick={handleEditSubmit} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2">
+                    <Button onClick={handleEditSubmit} className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                       Submit
                     </Button>
                     <Button onClick={handleEditBack} variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2">
@@ -2896,7 +2896,7 @@ export const IncidentSetupDashboard = () => {
                       />
                     </div>
                   )}
-                  <Button onClick={handleSubmit} className="bg-purple-600 hover:bg-purple-700 text-white px-8">
+                  <Button onClick={handleSubmit} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                     {selectedCategory === 'Approval Setup' && existingApprovalSetupId ? 'Update' : 'Submit'}
                   </Button>
                 </div>
@@ -3008,7 +3008,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{secondarySub.secondarySubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(secondarySub, 'Secondary Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(secondarySub, 'Secondary Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(secondarySub, 'Secondary Sub Category')}>
@@ -3024,7 +3024,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.secondarySubSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Secondary Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Secondary Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Secondary Sub Sub Category')}>
@@ -3041,7 +3041,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.secondarySubSubSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Secondary Sub Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Secondary Sub Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Secondary Sub Sub Sub Category')}>
@@ -3055,7 +3055,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Who got injured')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Who got injured')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Who got injured')}>
@@ -3069,7 +3069,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Property Damage Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Property Damage Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Property Damage Category')}>
@@ -3083,7 +3083,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'RCA Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'RCA Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'RCA Category')}>
@@ -3097,7 +3097,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Substandard Act')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Substandard Act')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Substandard Act')}>
@@ -3111,7 +3111,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Substandard Condition')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Substandard Condition')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Substandard Condition')}>
@@ -3125,10 +3125,10 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Preventive Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Preventive Action')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Preventive Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleDelete(item, 'Preventive Action')}>
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
@@ -3139,10 +3139,10 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Corrective Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Corrective Action')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Corrective Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleDelete(item, 'Corrective Action')}>
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
@@ -3155,7 +3155,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{approval.users}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(approval, 'Approval Setup')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(approval, 'Approval Setup')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(approval, 'Approval Setup')}>
@@ -3181,7 +3181,7 @@ export const IncidentSetupDashboard = () => {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(escalation, 'Escalations')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(escalation, 'Escalations')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDeleteEscalation(escalation)}>
@@ -3195,7 +3195,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{secondary.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(secondary, 'Secondary Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(secondary, 'Secondary Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(secondary, 'Secondary Category')}>
@@ -3218,7 +3218,7 @@ export const IncidentSetupDashboard = () => {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(level, 'Incidence level')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(level, 'Incidence level')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(level, 'Incidence level')}>
@@ -3232,7 +3232,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{status.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(status, 'Incidence status')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(status, 'Incidence status')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(status, 'Incidence status')}>
@@ -3249,7 +3249,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.subSubSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Sub Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Sub Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Sub Sub Sub Category')}>
@@ -3267,7 +3267,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.subSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Sub Sub Category')}>
@@ -3282,7 +3282,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.subCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Sub Category')}>
@@ -3296,7 +3296,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{category.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(category, 'Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(category, 'Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(category, 'Category')}>

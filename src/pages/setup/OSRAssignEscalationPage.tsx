@@ -570,7 +570,7 @@ export const OSRAssignEscalationPage: React.FC = () => {
             <Button
               onClick={handleCreate}
               disabled={submitting}
-              className="bg-[#16A34A] hover:bg-[#15803D] text-white px-10 py-2 font-medium"
+              className="px-10 py-2 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </Button>
@@ -693,7 +693,7 @@ export const OSRAssignEscalationPage: React.FC = () => {
             <Button
               onClick={handleUpdate}
               disabled={editSubmitting}
-              className="bg-[#16A34A] hover:bg-[#15803D] text-white px-10 font-medium"
+              className="px-10 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {editSubmitting ? 'Updating...' : 'Update'}
             </Button>

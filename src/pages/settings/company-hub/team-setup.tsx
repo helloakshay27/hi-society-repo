@@ -591,7 +591,7 @@ const TeamSetup: React.FC = () => {
             </div>
             {selectedUsers.length > 0 && (
               <Button
-                className="bg-purple-600 text-white hover:bg-purple-700 flex items-center gap-2 h-9 px-4 text-sm"
+                className="flex items-center gap-2 h-9 px-4 text-sm bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 onClick={() => setIsBulkEditOpen(true)}
               >
                 <Check className="h-4 w-4" />
@@ -773,7 +773,7 @@ const TeamSetup: React.FC = () => {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="h-8 flex items-center gap-2 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100"
+                            className="h-8 flex items-center gap-2 border-blue-200 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                             onClick={() => handleResendInvitation(user.id)}
                           >
                             <Send className="h-3 w-3" />
@@ -791,7 +791,7 @@ const TeamSetup: React.FC = () => {
                             Withdraw
                           </Button>
                         )}
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <DropdownMenu>
@@ -933,7 +933,7 @@ const TeamSetup: React.FC = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsBulkEditOpen(false)}>Cancel</Button>
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsBulkEditOpen(false)}>
+            <Button className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => setIsBulkEditOpen(false)}>
               Apply Changes
             </Button>
           </DialogFooter>
@@ -1026,7 +1026,7 @@ const TeamSetup: React.FC = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsInviteOpen(false)} disabled={isInviting}>Cancel</Button>
             <Button 
-              className="bg-blue-600 hover:bg-blue-700" 
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90" 
               onClick={handleInviteSubmit}
               disabled={isInviting}
             >
@@ -1068,7 +1068,7 @@ const TeamSetup: React.FC = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsBulkInviteOpen(false)} disabled={isInviting}>Cancel</Button>
             <Button 
-              className="bg-purple-600 hover:bg-purple-700 text-white" 
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90" 
               onClick={handleBulkInviteSubmit}
               disabled={isInviting}
             >

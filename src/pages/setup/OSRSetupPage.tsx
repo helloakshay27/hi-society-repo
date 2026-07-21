@@ -157,7 +157,7 @@ const CategoryTab: React.FC = () => {
 
   const renderCatActions = (item: Category) => (
     <div className="flex gap-1">
-      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-amber-50">
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
         <Edit className="h-4 w-4 text-amber-500" />
       </Button>
       <AlertDialog>
@@ -200,7 +200,7 @@ const CategoryTab: React.FC = () => {
           leftActions={
             <Button
               onClick={() => setAddOpen(true)}
-              className="flex items-center gap-1 bg-[#C72030] hover:bg-[#A61C28] text-white"
+              className="flex items-center gap-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <Plus className="w-4 h-4" /> Add
             </Button>
@@ -225,7 +225,7 @@ const CategoryTab: React.FC = () => {
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => { setAddOpen(false); setInputVal(''); }}>Cancel</Button>
-              <Button onClick={handleAdd} disabled={submitting} className="bg-[#C72030] hover:bg-[#A61C28] text-white px-8">
+              <Button onClick={handleAdd} disabled={submitting} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                 {submitting ? 'Submitting...' : 'Submit'}
               </Button>
             </div>
@@ -253,7 +253,7 @@ const CategoryTab: React.FC = () => {
               <Button
                 onClick={handleUpdate}
                 disabled={editSubmitting}
-                className="bg-[#16A34A] hover:bg-[#15803D] text-white px-8"
+                className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 {editSubmitting ? 'Updating...' : 'Update'}
               </Button>
@@ -462,7 +462,7 @@ const SubCategoryTab: React.FC = () => {
 
   const renderScActions = (item: SubCategory) => (
     <div className="flex gap-1">
-      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-amber-50">
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
         <Edit className="h-4 w-4 text-amber-500" />
       </Button>
       <AlertDialog>
@@ -508,7 +508,7 @@ const SubCategoryTab: React.FC = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <Button
                 onClick={openAdd}
-                className="flex items-center gap-1 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 h-auto px-3 py-2 text-sm font-medium shrink-0"
+                className="flex items-center gap-1 border-0 h-auto px-3 py-2 text-sm font-medium shrink-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 <Plus className="w-4 h-4" /> Add
               </Button>
@@ -613,7 +613,7 @@ const SubCategoryTab: React.FC = () => {
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-              <Button onClick={handleAdd} disabled={submitting} className="bg-[#C72030] hover:bg-[#A61C28] text-white px-8">
+              <Button onClick={handleAdd} disabled={submitting} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                 {submitting ? 'Submitting...' : 'Submit'}
               </Button>
             </div>
@@ -684,7 +684,7 @@ const SubCategoryTab: React.FC = () => {
               <Button
                 onClick={handleUpdate}
                 disabled={editSubmitting}
-                className="bg-[#16A34A] hover:bg-[#15803D] text-white px-8"
+                className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 {editSubmitting ? 'Updating...' : 'Update'}
               </Button>
@@ -831,7 +831,7 @@ const StatusTab: React.FC = () => {
 
   const renderStActions = (item: StatusItem) => (
     <div className="flex gap-1">
-      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-amber-50">
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
         <Edit className="h-4 w-4 text-amber-500" />
       </Button>
       <AlertDialog>
@@ -874,7 +874,7 @@ const StatusTab: React.FC = () => {
           leftActions={
             <Button
               onClick={() => setAddOpen(true)}
-              className="flex items-center gap-1 bg-[#C72030] hover:bg-[#A61C28] text-white"
+              className="flex items-center gap-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <Plus className="w-4 h-4" /> Add
             </Button>
@@ -933,7 +933,7 @@ const StatusTab: React.FC = () => {
             </div> */}
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => { setAddOpen(false); setInputVal(''); setColorVal('#C72030'); setOrderVal(''); setCanCancel(false); setSecondVisit(false); }}>Cancel</Button>
-              <Button onClick={handleAdd} disabled={submitting} className="bg-[#C72030] hover:bg-[#A61C28] text-white px-8">
+              <Button onClick={handleAdd} disabled={submitting} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                 {submitting ? 'Submitting...' : 'Submit'}
               </Button>
             </div>
@@ -991,7 +991,7 @@ const StatusTab: React.FC = () => {
               <Button
                 onClick={handleUpdate}
                 disabled={editSubmitting}
-                className="bg-[#16A34A] hover:bg-[#15803D] text-white px-8"
+                className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 {editSubmitting ? 'Updating...' : 'Update'}
               </Button>

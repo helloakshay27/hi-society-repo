@@ -816,7 +816,7 @@ export const HolidayCalendarPage = () => {
                   variant="ghost"
                   size="sm"
                   onClick={handleCancel}
-                  className="h-6 w-6 p-0 hover:bg-gray-100"
+                  className="h-6 w-6 p-0 hover:bg-gray-100 border-[1px]"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -955,7 +955,7 @@ export const HolidayCalendarPage = () => {
                       <Button
                         type="button"
                         onClick={handleAddRow}
-                        className="bg-[#C72030] hover:bg-[#A61B29] text-white font-semibold px-6 h-10"
+                        className="font-semibold px-6 h-10 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add
                       </Button>
@@ -1003,7 +1003,7 @@ export const HolidayCalendarPage = () => {
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Button
                     type="button"
-                    className="bg-[#C72030] hover:bg-[#A61B29] text-white font-semibold flex-1 h-11"
+                    className="font-semibold flex-1 h-11 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     disabled={isSubmitting || pendingHolidays.length === 0}
                     onClick={handleSubmit}
                   >
@@ -1011,7 +1011,7 @@ export const HolidayCalendarPage = () => {
                       ? 'Saving...'
                       : `Save ${pendingHolidays.length > 0 ? `(${pendingHolidays.length}) ` : ''}Holiday${pendingHolidays.length !== 1 ? 's' : ''}`}
                   </Button>
-                  <Button variant="outline" onClick={handleCancel} className="flex-1 h-11">
+                  <Button variant="outline" onClick={handleCancel} className="flex-1 h-11 border-[1px]">
                     Cancel
                   </Button>
                 </div>
@@ -1099,7 +1099,7 @@ export const HolidayCalendarPage = () => {
               />
             </div>
             <div className="flex gap-3 pt-2">
-              <Button onClick={handleApplyFilters} className="flex-1 bg-primary text-primary-foreground">
+              <Button onClick={handleApplyFilters} className="flex-1 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                 Apply Filters
               </Button>
               <Button variant="outline" onClick={handleClearFilters} className="flex-1">
@@ -1131,7 +1131,7 @@ export const HolidayCalendarPage = () => {
               variant="ghost"
               size="sm"
               onClick={handleEditCancel}
-              className="h-6 w-6 p-0 hover:bg-gray-100"
+              className="h-6 w-6 p-0 hover:bg-gray-100 border-[1px]"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -1407,7 +1407,7 @@ export const HolidayCalendarPage = () => {
                 <Button 
                   variant="secondary" 
                   onClick={handleUpdate} 
-                  className="flex-1 h-11"
+                  className="flex-1 h-11 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                   disabled={isSubmitting || loadingEditData}
                 >
                   {isSubmitting ? 'Updating Holiday...' : 'Update Holiday'}
@@ -1415,7 +1415,7 @@ export const HolidayCalendarPage = () => {
                 <Button 
                   variant="outline" 
                   onClick={handleEditCancel} 
-                  className="flex-1 h-11"
+                  className="flex-1 h-11 border-[1px]"
                 >
                   Cancel
                 </Button>

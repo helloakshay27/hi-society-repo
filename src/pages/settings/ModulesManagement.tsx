@@ -144,7 +144,7 @@ const ModulesManagement = () => {
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="bg-[#C72030] hover:bg-[#a81c29] text-white"
+                        className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     >
                         <Save className={`w-4 h-4 mr-2`} />
                         Save Changes

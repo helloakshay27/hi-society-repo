@@ -342,7 +342,7 @@ export const AddPaymentPlan = () => {
             Cancel
           </Button>
           <Button
-            className="bg-[#C72030] hover:bg-[#A01828] !text-white disabled:opacity-60"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             onClick={handleSubmit}
             disabled={loading}
           >

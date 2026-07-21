@@ -129,7 +129,7 @@ export const CreateLockFunctionDialog = ({ open, onOpenChange, onLockFunctionCre
             variant="ghost"
             size="sm"
             onClick={handleCancel}
-            className="h-6 w-6 p-0"
+            className="h-6 w-6 p-0 border-[1px]"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -202,7 +202,7 @@ export const CreateLockFunctionDialog = ({ open, onOpenChange, onLockFunctionCre
             type="button"
             onClick={handleCreate}
             disabled={isSubmitting}
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             {isSubmitting ? (
               <>

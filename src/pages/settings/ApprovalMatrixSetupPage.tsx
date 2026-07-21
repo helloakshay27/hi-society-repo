@@ -93,7 +93,7 @@ const ApprovalMatrixSetupPage = () => {
       {shouldShow("ApprovalMatrix", "create") && (
         <Button
           onClick={() => navigate('/settings/approval-matrix/setup/add')}
-          className="bg-[#C72030] hover:bg-[#A61B28] text-white"
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
         >
           + Add
         </Button>
@@ -144,7 +144,7 @@ const ApprovalMatrixSetupPage = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="p-1"
+                      className="p-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                       onClick={() => navigate(`/settings/approval-matrix/setup/edit/${item.id}`)}
                     >
                       <Edit className="w-4 h-4 text-[#1a1a1a]" />

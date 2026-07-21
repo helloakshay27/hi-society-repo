@@ -156,7 +156,7 @@ export const AddApprovalMatrixDashboard = () => {
             <Button
               variant="outline"
               onClick={addApprovalLevel}
-              className="bg-[#C72030] text-white hover:bg-[#A01020] border-[#C72030] h-10 w-10"
+              className="border-[#C72030] h-10 w-10 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               size="icon"
             >
               <Plus className="h-4 w-4" />
@@ -166,14 +166,14 @@ export const AddApprovalMatrixDashboard = () => {
           <div className="flex justify-center gap-4 pt-6">
             <Button
               onClick={handleCreate}
-              className="bg-[#C72030] hover:bg-[#A01020] text-white px-8 h-10"
+              className="px-8 h-10 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               Create
             </Button>
             <Button
               variant="outline"
               onClick={handleSaveAndCreateNew}
-              className="px-8 h-10 border-gray-300"
+              className="px-8 h-10 border-gray-300 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               Save And Create New
             </Button>

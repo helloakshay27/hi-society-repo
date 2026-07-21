@@ -224,7 +224,7 @@ const OSRManageBookings: React.FC = () => {
               <Button
                 onClick={() => setShowCreateModal(true)}
                 size="sm"
-                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 h-auto px-3 py-2"
+                className="flex items-center gap-2 border-0 h-auto px-3 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 <Plus className="w-4 h-4" />
                 Add
@@ -233,7 +233,7 @@ const OSRManageBookings: React.FC = () => {
               <Button
                 onClick={() => toast.info("Generate Receipt")}
                 size="sm"
-                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 h-auto px-3 py-2"
+                className="flex items-center gap-2 border-0 h-auto px-3 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 <FileText className="w-4 h-4" />
                 Generate Receipt
@@ -270,7 +270,7 @@ const OSRManageBookings: React.FC = () => {
                 size="sm"
                 title="Export"
                 aria-label="Export"
-                className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+                className="border-[#C72030] bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 onClick={handleMoreActions}
               >
                 <Download className="w-4 h-4" />

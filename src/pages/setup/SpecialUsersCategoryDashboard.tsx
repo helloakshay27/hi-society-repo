@@ -282,7 +282,7 @@ export const SpecialUsersCategoryDashboard = () => {
                   <Button
                     size="sm"
                     onClick={handleAddCategory}
-                    className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white border-none"
+                    className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add
@@ -332,7 +332,7 @@ export const SpecialUsersCategoryDashboard = () => {
                 <Button
                   onClick={handleSubmitCategory}
                   disabled={isLoading}
-                  className="px-6 py-2 bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
+                  className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   {isLoading ? "Adding..." : "Add"}
                 </Button>
@@ -389,7 +389,7 @@ export const SpecialUsersCategoryDashboard = () => {
                 <Button
                   onClick={handleSubmitEdit}
                   disabled={isLoading}
-                  className="px-6 py-2 bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
+                  className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   {isLoading ? "Updating..." : "Update"}
                 </Button>

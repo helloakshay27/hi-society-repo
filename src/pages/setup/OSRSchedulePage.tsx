@@ -548,7 +548,7 @@ export const OSRSchedulePage: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() => { setFormData(emptyForm()); setSubCategories([]); setSubCatFlats([]); setShowAddModal(true); }}
-                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80 h-auto px-3 py-2"
+                className="flex items-center gap-2 border-0 h-auto px-3 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 <Plus className="w-4 h-4" />
                 Add
@@ -649,7 +649,7 @@ export const OSRSchedulePage: React.FC = () => {
             <Button
               onClick={handleAdd}
               disabled={submitting}
-              className="bg-[#16A34A] hover:bg-[#15803D] text-white px-10 font-medium"
+              className="px-10 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </Button>
@@ -671,7 +671,7 @@ export const OSRSchedulePage: React.FC = () => {
             <Button
               onClick={handleUpdate}
               disabled={submitting}
-              className="bg-[#16A34A] hover:bg-[#15803D] text-white px-10 font-medium"
+              className="px-10 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {submitting ? 'Updating...' : 'Update'}
             </Button>

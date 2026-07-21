@@ -580,7 +580,7 @@ export const RoleDashboardVi = () => {
                 </div>
                 <Button
                     onClick={handleAddRole}
-                    className="bg-[#C72030] hover:bg-[#A11D2A] text-white shadow-sm"
+                    className="shadow-sm bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Role
@@ -656,7 +656,7 @@ export const RoleDashboardVi = () => {
                                     <Button
                                         onClick={() => setIsEditMode(true)}
                                         variant="outline"
-                                        className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+                                        className="border-[#C72030] bg-[#C72030] text-white hover:bg-[#C72030]/90"
                                         disabled={!currentRole}
                                     >
                                         <Edit2 className="w-4 h-4 mr-2" />
@@ -676,7 +676,7 @@ export const RoleDashboardVi = () => {
                                                 await handleUpdatePermissions();
                                                 setIsEditMode(false);
                                             }}
-                                            className="bg-[#C72030] hover:bg-[#A11D2A] text-white min-w-[140px]"
+                                            className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
                                             disabled={updating || !currentRole}
                                         >
                                             {updating ? (

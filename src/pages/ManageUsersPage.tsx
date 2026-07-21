@@ -1133,7 +1133,7 @@ const ManageUsersPage = () => {
                 </Button>
                 <Button
                   onClick={handleApplyFilters}
-                  className="px-8 h-9 bg-[#00A65A] hover:bg-[#008D4C] text-white font-semibold text-sm rounded shadow-sm"
+                  className="px-8 h-9 font-semibold text-sm rounded shadow-sm bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   Apply
                 </Button>
@@ -1175,7 +1175,7 @@ const ManageUsersPage = () => {
             leftActions={
               <Button
                 size="sm"
-                className="mr-2"
+                className="mr-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 onClick={handleActionClick}
               >
                 <Plus className="w-4 h-4 mr-2" />

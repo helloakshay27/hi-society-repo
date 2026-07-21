@@ -649,7 +649,7 @@ export const ManageFlatsPage = () => {
                 <Button
                   size="sm"
                   onClick={() => setShowActionDropdown(true)}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Action
@@ -659,7 +659,7 @@ export const ManageFlatsPage = () => {
                 <Button
                   size="sm"
                   onClick={handleAddUnit}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Unit Type
@@ -667,7 +667,7 @@ export const ManageFlatsPage = () => {
                 <Button
                   size="sm"
                   onClick={handleAddTower}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Tower
@@ -675,7 +675,7 @@ export const ManageFlatsPage = () => {
                 {/* <Button
                   size="sm"
                   onClick={handleAddWing}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Wing
@@ -683,7 +683,7 @@ export const ManageFlatsPage = () => {
                 <Button
                   size="sm"
                   onClick={handleAddFloor}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Floor

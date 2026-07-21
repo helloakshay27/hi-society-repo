@@ -216,7 +216,7 @@ export const KYCDetailsDashboard = () => {
           leftActions={
             <Button
               onClick={handleAddKYCDetail}
-              className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add
@@ -301,7 +301,7 @@ export const KYCDetailsDashboard = () => {
             </Button>
             <Button
               onClick={handleSubmitKYCDetail}
-              className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               Add
             </Button>

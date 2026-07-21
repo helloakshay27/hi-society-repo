@@ -189,7 +189,7 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
             <Button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {loading ? "Submitting..." : "Submit"}
             </Button>

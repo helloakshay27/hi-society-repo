@@ -88,7 +88,7 @@ export const LockModuleList = () => {
     <div className="space-y-6 p-4 lg:p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-xl lg:text-2xl font-bold text-[#1a1a1a]">Lock Modules</h1>
-        <Button onClick={handleCreateModule} className="bg-[#C72030] hover:bg-[#A11D2A] text-white">
+        <Button onClick={handleCreateModule} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
           <Plus className="w-4 h-4 mr-2" />
           Add Module
         </Button>
@@ -145,7 +145,7 @@ export const LockModuleList = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditModule(module)}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>

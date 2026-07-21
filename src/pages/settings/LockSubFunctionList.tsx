@@ -404,7 +404,7 @@ export const LockSubFunctionList = () => {
             leftActions={
               <Button 
                 onClick={handleAdd} 
-                className="flex items-center gap-2 bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+                className="flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 <Plus className="w-4 h-4" />
                 Add
@@ -486,7 +486,7 @@ export const LockSubFunctionList = () => {
                   disabled={currentPage === totalPages}
                 >
                   Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
                 </Button>
               </div>
             </div>

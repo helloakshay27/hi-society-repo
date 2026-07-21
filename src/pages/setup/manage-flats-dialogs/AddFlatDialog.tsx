@@ -512,7 +512,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             <Button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-8"
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-8"
             >
               {loading ? "Submitting..." : "Submit"}
             </Button>
