@@ -337,7 +337,7 @@ export const AddPaymentPlan = () => {
           <Button
             onClick={() => navigate('/settings/payment-plan/setup')}
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#A01828] !text-white border-0 disabled:opacity-60"
+            className="disabled:opacity-60 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </Button>

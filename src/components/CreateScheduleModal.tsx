@@ -135,7 +135,7 @@ export const CreateScheduleModal = ({ isOpen, onClose, onSubmit }: CreateSchedul
           <div className="flex justify-center pt-2">
             <Button
               onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-2"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               Pay {localStorage.getItem('currency')}
             </Button>

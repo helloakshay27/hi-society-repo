@@ -132,7 +132,7 @@ export const CreateRoleConfigDialog = ({ open, onOpenChange, onRoleConfigCreated
             variant="ghost"
             size="sm"
             onClick={handleCancel}
-            className="h-6 w-6 p-0 border-[1px]"
+            className="h-6 w-6 p-0 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             <X className="h-4 w-4" />
           </Button>

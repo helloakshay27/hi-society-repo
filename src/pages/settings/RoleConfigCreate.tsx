@@ -353,7 +353,7 @@ export const RoleConfigCreate: React.FC = () => {
           <button
             onClick={handleCancel}
             disabled={isSubmitting}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors border-[1px]"
+            className="p-2 rounded-full transition-colors !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
             title="Back to Role Configuration List"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />

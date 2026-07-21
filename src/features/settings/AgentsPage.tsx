@@ -106,7 +106,7 @@ const NewAgentModal = ({ onClose }: { onClose: () => void }) => {
           </select>
         </div>
         <div className="flex justify-end gap-3 pt-1">
-          <button type="button" onClick={onClose} className="btn-ghost">
+          <button type="button" onClick={onClose} className="btn-ghost !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50">
             Cancel
           </button>
           <button type="submit" disabled={mutation.isPending} className="btn">
@@ -164,7 +164,7 @@ const EditRoleModal = ({
           </select>
         </div>
         <div className="flex justify-end gap-3 pt-1">
-          <button type="button" onClick={onClose} className="btn-ghost">
+          <button type="button" onClick={onClose} className="btn-ghost !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50">
             Cancel
           </button>
           <button

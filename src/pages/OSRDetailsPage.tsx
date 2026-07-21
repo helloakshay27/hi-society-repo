@@ -93,7 +93,7 @@ export const OSRDetailsPage = () => {
           </Button>
           <Button 
             onClick={() => setShowCancelDialog(true)}
-            className="bg-orange-500 hover:bg-orange-600 border-[1px]"
+            className="!border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </Button>

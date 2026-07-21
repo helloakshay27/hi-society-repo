@@ -532,7 +532,7 @@ export const OSRSetupRulePage: React.FC = () => {
                         {form.cancellationRows.length > 1 && (
                           <button
                             onClick={() => removeCancellationRow(idx)}
-                            className="text-red-400 hover:text-red-600 text-lg leading-none font-bold transition-colors border-[1px]"
+                            className="text-lg leading-none font-bold transition-colors !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
                             title="Remove row"
                           >
                             ×
@@ -548,7 +548,7 @@ export const OSRSetupRulePage: React.FC = () => {
             {/* Add row */}
             <button
               onClick={addCancellationRow}
-              className="text-sm text-[#C72030] hover:text-[#A01B28] font-medium flex items-center gap-1 transition-colors border-[1px]"
+              className="text-sm font-medium flex items-center gap-1 transition-colors !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
             >
               <span className="text-lg leading-none">+</span> Add Row
             </button>

@@ -418,7 +418,7 @@ const MeetingConfigModal = ({
         <div className="p-5 border-t border-[#F0EBE8] bg-[#FCFAFA] flex justify-end gap-3 rounded-b-[32px]">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-white border border-[#F0EBE8] text-[#8C8580] rounded-[16px] text-sm font-bold hover:bg-gray-50 hover:text-[#1A1A1A] transition-colors"
+            className="px-5 py-2.5 rounded-[16px] text-sm font-bold transition-colors !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </button>
@@ -473,7 +473,7 @@ const DeleteConfirmModal = ({ configName, onConfirm, onCancel, isDeleting }) =>
           <button
             onClick={onCancel}
             disabled={isDeleting}
-            className="px-5 py-2.5 bg-white border border-[#E0E0E0] text-[#555] rounded-[12px] text-sm font-bold hover:bg-gray-50 transition-colors"
+            className="px-5 py-2.5 rounded-[12px] text-sm font-bold transition-colors !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </button>

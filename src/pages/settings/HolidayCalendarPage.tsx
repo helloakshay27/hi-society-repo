@@ -816,7 +816,7 @@ export const HolidayCalendarPage = () => {
                   variant="ghost"
                   size="sm"
                   onClick={handleCancel}
-                  className="h-6 w-6 p-0 hover:bg-gray-100 border-[1px]"
+                  className="h-6 w-6 p-0 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -1011,7 +1011,7 @@ export const HolidayCalendarPage = () => {
                       ? 'Saving...'
                       : `Save ${pendingHolidays.length > 0 ? `(${pendingHolidays.length}) ` : ''}Holiday${pendingHolidays.length !== 1 ? 's' : ''}`}
                   </Button>
-                  <Button variant="outline" onClick={handleCancel} className="flex-1 h-11 border-[1px]">
+                  <Button variant="outline" onClick={handleCancel} className="flex-1 h-11 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50">
                     Cancel
                   </Button>
                 </div>
@@ -1131,7 +1131,7 @@ export const HolidayCalendarPage = () => {
               variant="ghost"
               size="sm"
               onClick={handleEditCancel}
-              className="h-6 w-6 p-0 hover:bg-gray-100 border-[1px]"
+              className="h-6 w-6 p-0 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -1415,7 +1415,7 @@ export const HolidayCalendarPage = () => {
                 <Button 
                   variant="outline" 
                   onClick={handleEditCancel} 
-                  className="flex-1 h-11 border-[1px]"
+                  className="flex-1 h-11 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
                 >
                   Cancel
                 </Button>

@@ -296,6 +296,7 @@ export const KYCDetailsDashboard = () => {
                 setShowAddDialog(false);
                 setFormData({ userName: "", userEmail: "", userMobile: "" });
               }}
+              variant="outline"
             >
               Cancel
             </Button>

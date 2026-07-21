@@ -51,7 +51,7 @@ const IconWrapper = styled(Box)(() => ({
 }));
 
 const RedButton = styled(MuiButton)(() => ({
-    backgroundColor: '#C72030 !important',
+    backgroundColor: '#DA7756 !important',
     color: 'white !important',
     borderRadius: 0,
     textTransform: 'none',
@@ -353,7 +353,10 @@ export default function AddTemplatePage() {
                 <RedButton onClick={handleSubmit} disabled={submitting}>
                     {submitting ? 'Submitting...' : 'Submit'}
                 </RedButton>
-                <CancelButton onClick={handleCancel} disabled={submitting}>
+                <CancelButton 
+                variant="outlined"
+                 className="px-8"
+                onClick={handleCancel} disabled={submitting}>
                     Cancel
                 </CancelButton>
             </Box>

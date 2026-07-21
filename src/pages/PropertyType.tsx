@@ -141,7 +141,7 @@ const PropertyType = () => {
             <Button
               type="button"
               onClick={() => navigate("/settings/property-type-list")}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="!border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50 px-8 py-2"
               disabled={loading}
             >
               Cancel
