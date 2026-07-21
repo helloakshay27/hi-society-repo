@@ -515,20 +515,22 @@ const CallDirectory: React.FC = () => {
           </div>
 
           <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
-            <Button
+            <button
+              type="button"
               onClick={onSubmit}
-              className="!bg-[#F2EEE9] !text-[#BF213E] hover:!bg-[#e8e1d9] px-10"
+              className="bg-[#C72030] hover:bg-[#A01828] text-white px-10 h-9 rounded-md border-0"
               disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
               title={!form.quick_call_icon_id ? "Please select an icon" : ""}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={closeAdd}
-              className="!bg-[#F2EEE9] !text-[#BF213E] hover:!bg-[#e8e1d9] px-10"
+              className="bg-[#C72030] hover:bg-[#A01828] text-white px-10 h-9 rounded-md border-0"
             >
               Cancel
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

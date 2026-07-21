@@ -328,7 +328,7 @@ export const CategoryTab: React.FC = () => {
         leftActions={
           <Button
             onClick={handleOpenAddDialog}
-            className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
+            className="bg-[#C72030] hover:bg-[#A01828] !text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add
@@ -383,7 +383,7 @@ export const CategoryTab: React.FC = () => {
               type="submit"
               onClick={editingId ? handleUpdate : handleAdd}
               disabled={isSubmitting}
-              className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
+              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
             >
               {isSubmitting ? 'Saving...' : editingId ? 'Update' : 'Add'}
             </Button>

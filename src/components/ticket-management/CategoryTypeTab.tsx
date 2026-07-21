@@ -967,7 +967,7 @@ export const CategoryTypeTab: React.FC = () => {
             <Button
               onClick={handleCreateSubmit}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+              className="!bg-[#C72030] hover:!bg-[#A01828] !text-white"
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>
@@ -986,13 +986,14 @@ export const CategoryTypeTab: React.FC = () => {
           enableSearch={true}
           searchPlaceholder="Search categories..."
           leftActions={
-            <Button
+            <button
+              type="button"
               onClick={() => setAddDialogOpen(true)}
-              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+              className="bg-[#C72030] hover:bg-[#A01828] text-white px-8 rounded-md flex items-center gap-2 border-0 h-9"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add
-            </Button>
+            </button>
           }
         />
 
