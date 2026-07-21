@@ -2258,8 +2258,7 @@ export const EditSurveyPage = () => {
                 </Button>
                 <Button
                   onClick={() => navigate("/settings/survey/list")}
-                  variant="outline"
-                  className="border-red-600 text-red-600 hover:bg-red-50 px-8"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </Button>

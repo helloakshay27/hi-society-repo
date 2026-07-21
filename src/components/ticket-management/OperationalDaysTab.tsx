@@ -343,7 +343,7 @@ export const OperationalDaysTab: React.FC = () => {
           )}
 
           <div className="flex justify-end mt-6">
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
               {isSubmitting ? 'Saving...' : 'Save All Changes'}
             </Button>
           </div>

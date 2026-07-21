@@ -1256,14 +1256,13 @@ export const ResolutionEscalationTab: React.FC = () => {
             {isAutomatic && <div className="flex gap-2">
               <Button
                 onClick={() => setIsAddAssignRuleOpen(true)}
-                className="bg-[#1a1a2e] hover:bg-[#16213e] text-white flex items-center gap-1 h-9 px-4 text-sm"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="h-4 w-4" />
                 Add
               </Button>
               <Button
-                variant="outline"
-                className="flex items-center gap-1 h-9 px-4 text-sm border-gray-300"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {
                   setPendingFilterIssueTypeId(filterIssueTypeId);
                   setPendingFilterCategoryId(filterCategoryId);

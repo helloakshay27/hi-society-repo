@@ -291,7 +291,7 @@ export const KYCDetailsDashboard = () => {
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
-              
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 setShowAddDialog(false);
                 setFormData({ userName: "", userEmail: "", userMobile: "" });

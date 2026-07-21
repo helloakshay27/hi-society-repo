@@ -1685,8 +1685,7 @@ export const AddSurveyPage = () => {
             <div className="flex justify-center mt-8">
               <Button
                 onClick={handleAddQuestion}
-                variant="outline"
-                className="border-dashed border-gray-300 hover:border-red-400 hover:text-red-600"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4 mr-2" /> Add More Questions
               </Button>
@@ -1699,16 +1698,15 @@ export const AddSurveyPage = () => {
           <Button
             onClick={handleCreateSurvey}
             disabled={loading || isSubmitting}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-2 h-auto disabled:opacity-50"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading || isSubmitting ? "Creating..." : "Create"}
           </Button>
           <Button
             type="button"
-            variant="outline"
             onClick={() => navigate(-1)}
             disabled={loading || isSubmitting}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 h-auto disabled:opacity-50"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </Button>

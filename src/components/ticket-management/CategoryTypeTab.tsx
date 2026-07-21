@@ -959,15 +959,15 @@ export const CategoryTypeTab: React.FC = () => {
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
               onClick={() => setAddDialogOpen(false)}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreateSubmit}
               disabled={isSubmitting}
-              className="!bg-[#C72030] hover:!bg-[#A01828] !text-white"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>
@@ -989,9 +989,9 @@ export const CategoryTypeTab: React.FC = () => {
             <button
               type="button"
               onClick={() => setAddDialogOpen(true)}
-              className="bg-[#C72030] hover:bg-[#A01828] text-white px-8 rounded-md flex items-center gap-2 border-0 h-9"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 text-base"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Add
             </button>
           }
@@ -1376,15 +1376,14 @@ export const CategoryTypeTab: React.FC = () => {
                     setIsEditModalOpen(false);
                     setEditingCategory(null);
                   }}
-                  variant="outline"
-                  className="px-8"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={() => handleEditSubmit()}
                   disabled={isSubmitting}
-                  className="bg-[#C72030] hover:bg-[#a01828] text-white px-8"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Updating...' : 'Submit'}
                 </Button>

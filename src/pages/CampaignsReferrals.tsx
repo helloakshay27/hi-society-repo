@@ -220,7 +220,7 @@ const CampaignsReferrals: React.FC = () => {
               <div className="flex items-center gap-2">
                 {shouldShow("Referrals","create")&&(
                 <Button
-                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => navigate("/campaigns/referrals/create")}
                 >
                   <Plus className="w-4 h-4" />
@@ -341,14 +341,13 @@ const CampaignsReferrals: React.FC = () => {
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button
-                    className="flex-1"
-                    variant="outline"
+                    className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleResetFilters}
                   >
                     Reset
                   </Button>
                   <Button
-                    className="flex-1 bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white"
+                    className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleApplyFilters}
                   >
                     Apply

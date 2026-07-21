@@ -445,10 +445,10 @@ export const LocationTab: React.FC = () => {
             <Button
               key={level.level}
               onClick={() => handleLevelChange(level.level)}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              className={`bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                 activeLevel === level.level
-                  ? 'bg-[#4A90E2] text-white hover:bg-[#357ABD]'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  ? ''
+                  : 'opacity-50'
               }`}
             >
               {level.label}
