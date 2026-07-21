@@ -147,13 +147,13 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
           <div className="flex justify-center gap-4 pt-4">
             <Button
               onClick={onReset}
-              className="px-8 py-2 bg-[#00A65A] hover:bg-[#008d4c] text-white"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reset
             </Button>
             <Button
               onClick={onApply}
-              className="px-8 py-2 bg-[#00A65A] hover:bg-[#008d4c] text-white"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Apply
             </Button>

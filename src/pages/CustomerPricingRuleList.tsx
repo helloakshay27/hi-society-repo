@@ -302,7 +302,7 @@ export const CustomerPricingRuleList = () => {
                 step={0.01}
               />
             </div>
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center gap-4 pt-4">
               <Button
                 onClick={handleEditSubmit}
                 className="bg-[#C72030] hover:bg-[#A01828] text-white px-12"
@@ -312,7 +312,7 @@ export const CustomerPricingRuleList = () => {
               </Button>
               <Button
                 onClick={handleEditClose}
-                className="bg-[#e7e3d9] text-[#C72030] px-6 ml-4"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={editLoading}
               >
                 Cancel
