@@ -56,8 +56,8 @@ const RedIcon = styled(Box)(({ theme }) => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: '#C72030',
-  color: 'white',
+  backgroundColor: '#DA7756 !important',
+  color: 'white !important',
   borderRadius: 0,
   textTransform: 'none',
   padding: '8px 16px',
@@ -65,9 +65,13 @@ const RedButton = styled(MuiButton)(({ theme }) => ({
   fontWeight: 500,
   boxShadow: 'none',
   '&:hover': {
-    backgroundColor: '#C72030',
-    opacity: 0.9,
+    backgroundColor: '#b36146 !important',
+    opacity: 1,
   },
+  '&.Mui-disabled': {
+    backgroundColor: '#e3ae9f !important',
+    color: 'white !important',
+  }
 }));
 
 const DraftButton = styled(MuiButton)(({ theme }) => ({
@@ -1564,7 +1568,11 @@ export const AddUserPage = () => {
             <RedButton onClick={handleSubmit} disabled={loading}>
               {loading ? (isEdit ? "Saving..." : "Submitting...") : (isEdit ? "Save" : "Submit")}
             </RedButton>
-            <DraftButton onClick={handleCancel} disabled={loading}>Cancel</DraftButton>
+            <DraftButton
+             onClick={handleCancel}
+             variant="outlined"
+             className="px-8"
+             disabled={loading}>Cancel</DraftButton>
           </Box>
         </SectionCard>
       </Box>

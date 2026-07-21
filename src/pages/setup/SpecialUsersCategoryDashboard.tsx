@@ -325,7 +325,8 @@ export const SpecialUsersCategoryDashboard = () => {
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button
                   onClick={() => setShowAddDialog(false)}
-                  className="px-6 py-2 bg-[#F2EEE9] hover:bg-[#F2EEE9] text-white"
+                  variant="outline"
+                  className="px-8"
                 >
                   Cancel
                 </Button>

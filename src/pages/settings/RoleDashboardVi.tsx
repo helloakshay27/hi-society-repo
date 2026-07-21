@@ -667,7 +667,7 @@ export const RoleDashboardVi = () => {
                                         <Button
                                             onClick={() => setIsEditMode(false)}
                                             variant="outline"
-                                            className="border-gray-300 text-gray-600 hover:bg-gray-100"
+                                            className="!border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
                                         >
                                             Cancel
                                         </Button>

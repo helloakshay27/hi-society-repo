@@ -202,6 +202,7 @@ const ConnectivityTypeCreate: React.FC = () => {
           <Button
             type="button"
             onClick={handleGoBack}
+            variant="outline"
             className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
             disabled={loading}
           >

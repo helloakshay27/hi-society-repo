@@ -114,7 +114,7 @@ const NewUserModal = ({ onClose }: { onClose: () => void }) => {
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="btn-ghost">
+          <button type="button" onClick={onClose} className="btn-ghost !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50">
             Cancel
           </button>
           <button
@@ -229,7 +229,7 @@ const EditUserModal = ({
           )}
         </div>
         <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="btn-ghost">
+          <button type="button" onClick={onClose} className="btn-ghost !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50">
             Cancel
           </button>
           <button

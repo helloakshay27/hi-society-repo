@@ -195,8 +195,9 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
           <div className="flex justify-start">
             <Button
               onClick={handleSubmitFlatType}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
+          
               Submit
             </Button>
           </div>

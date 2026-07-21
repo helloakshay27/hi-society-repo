@@ -501,7 +501,7 @@ const EditApprovalMatrixPage = () => {
           <Button
             variant="outline"
             onClick={() => navigate('/settings/approval-matrix/setup')}
-            className="border-[#6B2C91] text-[#6B2C91] hover:bg-[#6B2C91] hover:text-white px-8"
+            className="px-8 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </Button>

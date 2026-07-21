@@ -694,7 +694,7 @@ export const AddRolePageVi = () => {
                     <Button
                         variant="outline"
                         onClick={handleBack}
-                        className="w-full sm:w-auto border-[1px]"
+                        className="w-full sm:w-auto !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
                     >
                         Cancel
                     </Button>
