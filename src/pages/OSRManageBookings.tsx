@@ -254,6 +254,8 @@ const OSRManageBookings: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
+                title="Filter"
+                aria-label="Filter"
                 className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
                 onClick={() => setShowFilterModal(true)}
               >
@@ -266,6 +268,8 @@ const OSRManageBookings: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
+                title="Export"
+                aria-label="Export"
                 className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
                 onClick={handleMoreActions}
               >

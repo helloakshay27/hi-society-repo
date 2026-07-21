@@ -325,7 +325,8 @@ const CampaignsReferralSetupEdit: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-[#10b981] hover:bg-[#059669] text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outline"
+                className="px-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Submitting..." : "Submit"}
               </Button>

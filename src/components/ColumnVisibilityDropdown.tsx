@@ -18,13 +18,15 @@ interface ColumnVisibilityMenuProps {
   columnVisibility: Record<string, boolean>;
   onToggleVisibility: (columnKey: string) => void;
   onResetToDefaults: () => void;
+  triggerLabel?: string;
 }
 
 export const ColumnVisibilityMenu: React.FC<ColumnVisibilityMenuProps> = ({
   columns,
   columnVisibility,
   onToggleVisibility,
-  onResetToDefaults
+  onResetToDefaults,
+  triggerLabel
 }) => {
   const visibleCount = Object.values(columnVisibility).filter(Boolean).length;
   const hideableColumns = columns.filter(col => col.hideable !== false);
@@ -35,10 +37,11 @@ export const ColumnVisibilityMenu: React.FC<ColumnVisibilityMenuProps> = ({
         <Button 
           variant="outline" 
           size="sm"
+          title={triggerLabel ?? "Columns"}
           className="h-8 flex items-center gap-2"
         >
           <Grid3x3 className="w-4 h-4" />
-          
+          {triggerLabel ? <span>{triggerLabel}</span> : null}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 max-h-80 overflow-y-auto">
@@ -105,6 +108,7 @@ interface LegacyColumnVisibilityProps {
   onColumnChange?: (columns: any) => void;
   columns?: Array<{ key: string; label: string; visible: boolean }>;
   onColumnToggle?: (columnKey: string, visible: boolean) => void;
+  triggerLabel?: string;
 }
 
 // Wrapper component for backward compatibility
@@ -112,7 +116,8 @@ export const ColumnVisibilityDropdown: React.FC<LegacyColumnVisibilityProps> = (
   visibleColumns,
   onColumnChange,
   columns,
-  onColumnToggle
+  onColumnToggle,
+  triggerLabel
 }) => {
   // Transform legacy props to new format
   const transformedColumns: ColumnConfig[] = columns 
@@ -167,6 +172,7 @@ export const ColumnVisibilityDropdown: React.FC<LegacyColumnVisibilityProps> = (
       columnVisibility={columnVisibility}
       onToggleVisibility={handleToggleVisibility}
       onResetToDefaults={handleResetToDefaults}
+      triggerLabel={triggerLabel}
     />
   );
 };
