@@ -933,19 +933,14 @@ export const PatrollingDetailPage: React.FC = () => {
           <div className="flex gap-2">
             <Button
               onClick={handleEdit}
-              variant="outline"
-              size="sm"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
             <Button
               onClick={handleDelete}
-              variant="outline"
-              size="sm"
-              style={{ borderColor: "#C72030", color: "#C72030" }}
-              className="hover:bg-red-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete

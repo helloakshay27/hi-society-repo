@@ -1356,7 +1356,7 @@ export const PatrollingResponsePage = () => {
                   <div className="flex gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn('flex-1 justify-start text-left font-normal h-10', !fScheduleDateFrom && 'text-muted-foreground')}>
+                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {fScheduleDateFrom ? format(fScheduleDateFrom, 'dd MMM yyyy') : 'From'}
                         </Button>
@@ -1367,7 +1367,7 @@ export const PatrollingResponsePage = () => {
                     </Popover>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn('flex-1 justify-start text-left font-normal h-10', !fScheduleDateTo && 'text-muted-foreground')}>
+                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {fScheduleDateTo ? format(fScheduleDateTo, 'dd MMM yyyy') : 'To'}
                         </Button>
@@ -1385,7 +1385,7 @@ export const PatrollingResponsePage = () => {
                   <div className="flex gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn('flex-1 justify-start text-left font-normal h-10', !fPatrolDateFrom && 'text-muted-foreground')}>
+                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {fPatrolDateFrom ? format(fPatrolDateFrom, 'dd MMM yyyy') : 'From'}
                         </Button>
@@ -1396,7 +1396,7 @@ export const PatrollingResponsePage = () => {
                     </Popover>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn('flex-1 justify-start text-left font-normal h-10', !fPatrolDateTo && 'text-muted-foreground')}>
+                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {fPatrolDateTo ? format(fPatrolDateTo, 'dd MMM yyyy') : 'To'}
                         </Button>

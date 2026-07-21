@@ -180,10 +180,8 @@ const FitoutReport: React.FC = () => {
         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
-              variant="outline"
               className={cn(
-                "w-full md:w-[400px] justify-start text-left font-normal h-11",
-                !dateRange.from && !dateRange.to && "text-muted-foreground"
+                "bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -314,7 +312,7 @@ const FitoutReport: React.FC = () => {
           <div className="mt-6 flex justify-start">
             <Button
               onClick={handleExport}
-              className="bg-[#4A5568] hover:bg-[#4A5568]/90 text-white h-10 px-6"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4 mr-2" />
               Export

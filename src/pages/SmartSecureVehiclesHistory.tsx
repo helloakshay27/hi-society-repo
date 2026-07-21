@@ -792,8 +792,7 @@ const SmartSecureVehiclesHistory: React.FC = () => {
           <div className="flex gap-2">
             {shouldShow("Vehicle History", "create") && (
               <Button
-                size="sm"
-                className="bg-[#C72030] hover:bg-[#C72030]/90 text-white flex items-center gap-1.5"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setAddOpen(true)}
               >
                 <Plus className="w-4 h-4" />

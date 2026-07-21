@@ -495,7 +495,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
                   resetForm();
                   setIsAddModalOpen(true);
                 }}
-                className="bg-cyan-400 hover:bg-cyan-500 text-white"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create
               </Button>
@@ -519,7 +519,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
                   resetForm();
                   setIsAddModalOpen(true);
                 }}
-                className="bg-cyan-400 hover:bg-cyan-500 text-white"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create
               </Button>
@@ -679,7 +679,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             <Button
               onClick={handleAddCategory}
               disabled={submitting}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? "Submitting..." : "Submit"}
             </Button>
@@ -864,7 +864,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             <Button
               onClick={handleUpdateCategory}
               disabled={submitting}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? "Updating..." : "Update"}
             </Button>

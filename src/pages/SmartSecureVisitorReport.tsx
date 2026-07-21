@@ -89,11 +89,7 @@ const SmartSecureVisitorReport: React.FC = () => {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-[45px]",
-                        !fromDate && "text-muted-foreground"
-                      )}
+                      className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {fromDate ? format(fromDate, "dd/MM/yyyy") : <span>Select From Date</span>}
@@ -118,11 +114,7 @@ const SmartSecureVisitorReport: React.FC = () => {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-[45px]",
-                        !toDate && "text-muted-foreground"
-                      )}
+                      className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {toDate ? format(toDate, "dd/MM/yyyy") : <span>Select To Date</span>}

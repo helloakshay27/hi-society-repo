@@ -572,7 +572,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
             <Button
               onClick={handleAddPurpose}
               disabled={submitting}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? "Submitting..." : "Submit"}
             </Button>
@@ -666,7 +666,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
             <Button
               onClick={handleUpdatePurpose}
               disabled={submitting}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? "Updating..." : "Update"}
             </Button>

@@ -1489,8 +1489,7 @@ const Petrolling = () => {
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-bold text-gray-700">Schedules</h3>
             <Button
-              variant="outline"
-              className="h-8 rounded-none text-xs"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={addSchedule}
               type="button"
             >
@@ -1713,8 +1712,7 @@ const Petrolling = () => {
 
             <div className="flex justify-end pt-1">
               <Button
-                variant="outline"
-                className="h-8 rounded-none border-[#f05a28] px-5 text-xs text-[#f05a28] hover:bg-[#fff5ef] hover:text-[#f05a28]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={addCheckpoint}
                 type="button"
               >
@@ -1735,7 +1733,7 @@ const Petrolling = () => {
           Cancel
         </Button>
         <Button 
-          className="bg-[#00A65A] hover:bg-[#008d4c] text-white h-9 px-6 rounded-none text-sm"
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleSubmit(isEdit)}
           disabled={loading}
         >
@@ -1804,7 +1802,7 @@ const Petrolling = () => {
             onClick={() => {
               navigate("/security/patrolling/create");
             }}
-            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white rounded-none h-10 px-6 flex items-center gap-2"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" />
             Add

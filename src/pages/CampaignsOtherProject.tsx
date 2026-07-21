@@ -698,7 +698,7 @@ const CampaignsOtherProject: React.FC = () => {
             <p className="text-red-600 text-sm">{error}</p>
             <Button
               onClick={() => window.location.reload()}
-              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
+              className="mt-2 bg-[#C72030] hover:bg-[#B01C29] !text-white"
               size="sm"
             >
               Retry

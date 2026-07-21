@@ -625,7 +625,7 @@ export const StaffsDashboard = () => {
           <div className="text-red-600 text-sm mt-1">{error}</div>
           <Button 
             onClick={() => window.location.reload()} 
-            className="mt-2 bg-red-600 hover:bg-red-700 text-white"
+            className="mt-2 bg-[#C72030] hover:bg-[#B01C29] !text-white disabled:opacity-50 disabled:cursor-not-allowed"
             size="sm"
           >
             Retry
@@ -737,11 +737,9 @@ export const StaffsDashboard = () => {
             leftActions={
               <Button
                 onClick={() => setShowActionMenu(!showActionMenu)}
-                // style={{ backgroundColor: '#C72030' }}
-                className="hover:bg-[#C72030]/90 text-white px-6 py-2 h-10 text-sm font-medium border-0 flex items-center gap-2"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus className="w-5 h-5 text-white" />
-
+                <Plus className="w-5 h-5" />
                 Action
               </Button>
             }
