@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -134,6 +135,7 @@ const BurnTooltip = ({ active, payload, label }: any) => {
 };
 
 export const LoyaltyDashboardNew = () => {
+  const navigate = useNavigate();
   /* ── UI state ── */
   const [drillKey, setDrillKey] = useState<string | null>(null);
   const [drillOpen, setDrillOpen] = useState(false);
@@ -941,7 +943,7 @@ export const LoyaltyDashboardNew = () => {
           <button
             className="flex items-center gap-[5px] rounded-full border-0 bg-[#DA7756] px-2.5 py-1 transition-opacity hover:opacity-[.85]"
             style={FONT}
-            onClick={() => showToast("Opening Programme Detail…")}
+            onClick={() => navigate("/loyalty/dashboard-new")}
           >
             <span className="text-[11px]">📊</span>
             <span className="whitespace-nowrap text-[10px] font-semibold text-white">

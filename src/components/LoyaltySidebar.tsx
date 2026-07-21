@@ -40,12 +40,12 @@ export const LoyaltySidebar: React.FC = () => {
       icon: BarChart3,
       path: "/loyalty/dashboard",
     },
-    {
-      id: "loyalty-dashboard-new",
-      label: "Dashboard New",
-      icon: BarChart3,
-      path: "/loyalty/dashboard-new",
-    },
+    // {
+    //   id: "loyalty-dashboard-new",
+    //   label: "Dashboard New",
+    //   icon: BarChart3,
+    //   path: "/loyalty/dashboard-new",
+    // },
     {
       id: "wallet-management",
       label: "Wallet Management",
