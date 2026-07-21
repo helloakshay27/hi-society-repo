@@ -3,7 +3,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Edit, RefreshCw, Settings2, Download } from "lucide-react";
+import { Edit, RefreshCw, Settings2, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { getReferralSetups, updateReferralSetup, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
@@ -326,9 +326,10 @@ const CampaignsReferralSetup: React.FC = () => {
               <div className="flex items-center gap-2">
                 {shouldShow("Referral Setup","create")&&(
                 <Button
-                  className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8"
+                  className="bg-[#DE7008] hover:bg-[#C56000] text-white px-8 rounded-md flex items-center gap-2"
                   onClick={() => navigate("/campaigns/referral-setup/create")}
                 >
+                  <Plus className="w-4 h-4" />
                   Add
                 </Button>)}
               </div>

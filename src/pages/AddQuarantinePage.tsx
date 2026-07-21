@@ -36,9 +36,9 @@ const SectionHeader = styled(Box)({
   borderBottom: "1px solid #e5e7eb",
 });
 
-const RedIcon = styled(Box)({
+const SectionIcon = styled(Box)({
   color: "white",
-  backgroundColor: "#C72030",
+  backgroundColor: "var(--color-primary, #da7756)",
   borderRadius: "50%",
   padding: "8px",
   display: "flex",
@@ -157,9 +157,9 @@ const AddQuarantinePage: React.FC = () => {
         {/* Quarantine Details Section */}
         <SectionCard>
           <SectionHeader>
-            <RedIcon>
+            <SectionIcon>
               <Info size={16} />
-            </RedIcon>
+            </SectionIcon>
             <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600, color: "#1A1A1A" }}>
               Quarantine Details
             </Typography>

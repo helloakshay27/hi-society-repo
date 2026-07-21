@@ -403,12 +403,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: LayoutDashboard,
               path: "/loyalty/dashboard",
             },
-            {
-              id: "loyalty-dashboard-new",
-              label: "Dashboard New",
-              icon: LayoutDashboard,
-              path: "/loyalty/dashboard-new",
-            },
+            // {
+            //   id: "loyalty-dashboard-new",
+            //   label: "Dashboard New",
+            //   icon: LayoutDashboard,
+            //   path: "/loyalty/dashboard-new",
+            // },
             {
               id: "wallet-management",
               label: "Wallet Management",

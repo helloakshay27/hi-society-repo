@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   getCampaignReferrals,
@@ -220,9 +220,10 @@ const CampaignsReferrals: React.FC = () => {
               <div className="flex items-center gap-2">
                 {shouldShow("Referrals","create")&&(
                 <Button
-                  className="bg-[#F2EEE9] hover:bg-[#E5DDD6] text-[#BF213E] px-8"
+                  className="px-8 border-0 bg-[#DE7008] hover:bg-[#C56000] text-white rounded-md flex items-center gap-2"
                   onClick={() => navigate("/campaigns/referrals/create")}
                 >
+                  <Plus className="w-4 h-4" />
                   Add
                 </Button>)}
               </div>
