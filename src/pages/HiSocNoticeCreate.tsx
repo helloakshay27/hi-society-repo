@@ -1025,7 +1025,7 @@ const HiSocNoticeCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="bg-[#C72030] hover:bg-[#A01828] text-white h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
                   onClick={() => document.getElementById('coverImageInput')?.click()}
                 >
@@ -1146,7 +1146,7 @@ const HiSocNoticeCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="bg-[#C72030] hover:bg-[#A01828] text-white h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
                   onClick={() => document.getElementById('broadcastAttachmentInput')?.click()}
                 >
@@ -1221,11 +1221,11 @@ const HiSocNoticeCreate = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] flex items-center justify-center gap-2"
+            className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium rounded-md min-w-[120px] flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
-                <svg className="animate-spin h-4 w-4 text-[#C72030]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
@@ -1236,7 +1236,7 @@ const HiSocNoticeCreate = () => {
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+            className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
           >
             Cancel
           </button>

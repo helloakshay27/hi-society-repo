@@ -304,9 +304,13 @@ const BMSCommunicationTemplate: React.FC = () => {
 
   // Render custom actions (Add button) for EnhancedTable leftActions
   const renderCustomActions = () => (
-    <Button onClick={handleAddTemplate} className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium">
+    <button
+      type="button"
+      onClick={handleAddTemplate}
+      className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium rounded-md flex items-center"
+    >
       <Plus className="w-4 h-4 mr-2" /> Add
-    </Button>
+    </button>
   );
 
   // Add Template Form
@@ -382,10 +386,9 @@ const BMSCommunicationTemplate: React.FC = () => {
       <div className="flex justify-center space-x-4 mt-6">
         <Button
           type="button"
-          variant="outline"
           onClick={handleCancel}
           disabled={isSubmitting}
-          className="px-6"
+          className="bg-[#C72030] hover:bg-[#A01828] text-white px-6"
         >
           Cancel
         </Button>
@@ -393,7 +396,7 @@ const BMSCommunicationTemplate: React.FC = () => {
           type="button" 
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="bg-[#2e7d32] hover:bg-[#1b5e20] px-6"
+          className="bg-[#C72030] hover:bg-[#A01828] text-white px-6"
         >
           {isSubmitting ? (
             <>
