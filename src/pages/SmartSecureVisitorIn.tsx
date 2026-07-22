@@ -236,7 +236,7 @@ const SmartSecureVisitorIn: React.FC = () => {
             {shouldShow("Visitor In", "update") && (
               <button
                 onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
-                className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#C72030] transition-colors"
+                className="p-1.5 rounded hover:bg-gray-100 text-gray-900 transition-colors"
                 title="Edit"
               >
                 <Pencil className="w-4 h-4" />
