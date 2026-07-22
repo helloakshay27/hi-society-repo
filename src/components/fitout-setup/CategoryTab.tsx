@@ -383,7 +383,7 @@ export const CategoryTab: React.FC = () => {
               type="submit"
               onClick={editingId ? handleUpdate : handleAdd}
               disabled={isSubmitting}
-              className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Saving...' : editingId ? 'Update' : 'Add'}
             </Button>

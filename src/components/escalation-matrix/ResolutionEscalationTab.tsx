@@ -1692,7 +1692,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           <div className="flex justify-end gap-2 pt-4 border-t mt-2">
             <Button
               variant="outline"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/5"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 setPendingFilterIssueTypeId("");
                 setPendingFilterCategoryId("");
@@ -2702,7 +2702,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           <div className="flex justify-end gap-2 pt-4 border-t mt-2">
             <Button
               variant="outline"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/5"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 setPendingEscalationFilterIssueTypeId("");
                 setPendingEscalationFilterCategoryId("");
@@ -2817,7 +2817,7 @@ export const ResolutionEscalationTab: React.FC = () => {
             </div>
             <div className="flex justify-end pt-2">
               <Button
-                className="bg-[#1a1a2e] hover:bg-[#16213e] text-white px-8"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={assignRuleSubmitting}
                 onClick={handleCreateAssignRule}
               >

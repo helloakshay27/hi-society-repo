@@ -67,7 +67,7 @@ export const ScheduleSecondVisitDialog = ({ open, onOpenChange, onSubmit }: Sche
         <div className="flex justify-center pt-4">
           <Button 
             onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-700 text-white px-8"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit
           </Button>
