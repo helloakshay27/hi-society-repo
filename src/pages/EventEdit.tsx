@@ -1701,7 +1701,7 @@ const EventEdit = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
               </Avatar>
               Event Details
             </h2>
@@ -2057,7 +2057,7 @@ const EventEdit = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Visibility
               </h2>
@@ -2159,7 +2159,7 @@ const EventEdit = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Invite CPs
               </h2>
@@ -2468,7 +2468,7 @@ const EventEdit = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
               </Avatar>
               Event Related Images
             </h2>
@@ -2874,7 +2874,7 @@ const EventEdit = () => {
                               mr: 1.5
                             }}
                           >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                           </Avatar>
                           Event Details
                         </h2>
@@ -3007,7 +3007,7 @@ const EventEdit = () => {
                               mr: 1.5
                             }}
                           >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                           </Avatar>
                           Visibility
                         </h2>
@@ -3113,7 +3113,7 @@ const EventEdit = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Event Related Images
                       </h2>
@@ -3252,7 +3252,7 @@ const EventEdit = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Invite CPs
                       </h2>
@@ -3368,7 +3368,7 @@ const EventEdit = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Event Details
                     </h2>
@@ -3504,7 +3504,7 @@ const EventEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Visibility
                   </h2>
@@ -3617,7 +3617,7 @@ const EventEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Event Related Images
                   </h2>
@@ -3755,7 +3755,7 @@ const EventEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Invite CPs
                   </h2>

@@ -2409,7 +2409,7 @@ const EventCreate = () => {
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Share
               </h2>
@@ -4784,7 +4784,7 @@ const EventCreate = () => {
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Share
                     </h2>
@@ -4842,7 +4842,7 @@ const EventCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Invite CPs
                     </h2>
@@ -5261,7 +5261,7 @@ const EventCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       QR Code Generation
                     </h2>
