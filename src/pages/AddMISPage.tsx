@@ -32,7 +32,7 @@ const SectionHeader = styled(Box)(({ theme }) => ({
 }));
 
 const IconWrapper = styled(Box)(({ theme }) => ({
-  color: "#C72030",
+  color: "var(--color-primary, #da7756)",
   backgroundColor: "#E5E0D3",
   borderRadius: "50%",
   padding: "8px",
