@@ -270,7 +270,7 @@ const OSRManageBookings: React.FC = () => {
                 size="sm"
                 title="Export"
                 aria-label="Export"
-                className="border-[#C72030] bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
                 onClick={handleMoreActions}
               >
                 <Download className="w-4 h-4" />
