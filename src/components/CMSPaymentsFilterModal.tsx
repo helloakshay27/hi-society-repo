@@ -183,7 +183,7 @@ export const CMSPaymentsFilterModal: React.FC<CMSPaymentsFilterModalProps> = ({
                                     Reset
                                 </Button>
                                 <Button
-                                    className="flex-1 bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white"
+                                    className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     onClick={handleApply}
                                 >
                                     Apply

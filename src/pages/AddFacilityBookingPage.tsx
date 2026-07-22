@@ -1351,7 +1351,7 @@ const AddFacilityBookingPage = () => {
           </div>
         </div>
         <div className="flex justify-center pt-4">
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
             {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Submit"}
           </Button>
         </div>

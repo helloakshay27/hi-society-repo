@@ -3855,7 +3855,7 @@ export const AddBookingSetupClubPage = () => {
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-purple-600 hover:bg-purple-700 text-white w-full"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
               style={{ maxWidth: "90px" }}
             >
