@@ -781,7 +781,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                   onChange={handleLogoChange}
                   accept="image/*"
                   disabled={isSubmitting}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                 />
                 {logoPreviewUrls.length > 0 && (
                   <div className="flex items-center gap-3 flex-wrap">
@@ -800,7 +800,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                           <button
                             type="button"
                             onClick={() => removeLogoPreview(idx)}
-                            className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                            className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                             aria-label="Remove image"
                           >
                             ×
@@ -820,7 +820,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                   onChange={handlePoweredByLogoChange}
                   accept="image/*"
                   disabled={isSubmitting}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                 />
                 {poweredByPreviewUrls.length > 0 && (
                   <div className="flex items-center gap-3 flex-wrap">
@@ -839,7 +839,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                           <button
                             type="button"
                             onClick={() => removePoweredByPreview(idx)}
-                            className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                            className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                             aria-label="Remove image"
                           >
                             ×
@@ -852,7 +852,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
               </div>
             </div>
 
-            <div className="bg-[#BD2828] border border-transparent rounded-lg p-4 mt-4 text-white">
+            <div className="bg-[#DA7756] border border-transparent rounded-lg p-4 mt-4 text-white">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <Image className="w-4 h-4 text-white" />
@@ -1229,7 +1229,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 accept="image/*"
                 onChange={handleCeoPhotoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
               {ceoInfo.photoPreviewUrl && (
                 <img
@@ -1247,7 +1247,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 accept="image/*"
                 onChange={handleCeoPhotoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
 
               {ceoInfo.photoPreviewUrl && (
@@ -1260,7 +1260,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                   <button
                     type="button"
                     onClick={removeCeoPhoto}
-                    className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                    className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                     aria-label="Remove photo"
                   >
                     ×
@@ -1277,7 +1277,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 accept="image/*"
                 onChange={handleCeoPhotoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
 
               {ceoInfo.photoPreviewUrl && (
@@ -1296,7 +1296,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                     <button
                       type="button"
                       onClick={removeCeoPhoto}
-                      className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                      className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                       aria-label="Remove photo"
                     >
                       ×
@@ -1317,7 +1317,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 accept="video/*"
                 onChange={handleCeoVideoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               /> */}
             {/* {ceoInfo.videoUrl && (
                 <video
@@ -1337,7 +1337,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 accept="video/*"
                 onChange={handleCeoVideoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
 
               {(ceoInfo.videoUrl || ceoInfo.video) && (
@@ -1355,7 +1355,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                     <button
                       type="button"
                       onClick={removeCeoVideo}
-                      className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                      className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                       aria-label="Remove video"
                     >
                       ×

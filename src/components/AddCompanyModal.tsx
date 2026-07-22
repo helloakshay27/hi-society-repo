@@ -8,6 +8,7 @@ import {
   Select as MuiSelect,
   MenuItem,
 } from "@mui/material";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Upload, X, Building, Globe, Flag, Image } from "lucide-react";
@@ -617,7 +618,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 onChange={handleLogoChange}
                 accept="image/*"
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
               {(logoPreviewUrls.length > 0 || formData.logo) && (
                 <div className="flex items-center gap-3 flex-wrap">
@@ -654,7 +655,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                               return prev;
                             });
                           }}
-                          className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                          className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                           aria-label="Remove image"
                         >
                           ×
@@ -675,7 +676,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 onChange={handleBannerChange}
                 accept="image/*"
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
               {(bannerPreviewUrls.length > 0 || formData.company_banner) && (
                 <div className="flex items-center gap-3 flex-wrap">
@@ -710,7 +711,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                               return prev;
                             });
                           }}
-                          className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                          className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                           aria-label="Remove image"
                         >
                           ×
@@ -722,7 +723,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
               )}
             </div>
 
-            <div className="bg-[#BD2828] border border-transparent rounded-lg p-4 mt-4 text-white">
+            <div className="bg-[#DA7756] border border-transparent rounded-lg p-4 mt-4 text-white">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <Image className="w-4 h-4 text-white" />
@@ -1028,38 +1029,20 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
         </div>
       </MuiDialogContent>
       <MuiDialogActions sx={{ justifyContent: "center", borderTop: "1px solid #e5e7eb", gap: 2, py: 2 }}>
-        <MuiButton
+        <Button
           onClick={handleClose}
           disabled={isSubmitting}
-          variant="outlined"
-          sx={{
-            color: "#BD2828",
-            borderColor: "#BD2828",
-            px: 3,
-            py: 1,
-            textTransform: "none",
-            fontWeight: 500,
-            '&:hover': { borderColor: '#a52121', color: '#a52121' }
-          }}
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
-        </MuiButton>
-        <MuiButton
+        </Button>
+        <Button
           onClick={handleSubmit}
           disabled={isSubmitting || !canEdit}
-          sx={{
-            backgroundColor: "#ede9e4", // light neutral background like screenshot
-            color: "#BD2828",
-            px: 3,
-            py: 1,
-            textTransform: "none",
-            fontWeight: 500,
-            boxShadow: "none",
-            '&:hover': { backgroundColor: '#e6e1db' }
-          }}
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? "Creating..." : "Create Company"}
-        </MuiButton>
+        </Button>
       </MuiDialogActions>
     </MuiDialog>
   );

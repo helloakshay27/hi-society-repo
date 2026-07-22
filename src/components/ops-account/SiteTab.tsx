@@ -598,7 +598,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
         </button>
         <button
           onClick={() => site?.id && handleEdit(site.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-gray-900 hover:bg-gray-50 rounded"
           title="Edit"
           disabled={!canEditSite || !site?.id}
         >
@@ -854,7 +854,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
             onFilterClick={() => setIsFilterOpen(true)}
             leftActions={
               <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={!canEditSite}
               >

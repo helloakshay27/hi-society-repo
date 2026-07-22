@@ -501,10 +501,10 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
                     console.log("🔵 Add Society button clicked", { canEditSociety });
                     setIsAddModalOpen(true);
                   }}
-                  className="bg-[#c72030] hover:bg-[#A01828]"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!canEditSociety}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 mr-2 text-white" />
                   Add Society
                 </Button>
               }
@@ -528,8 +528,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
                       toast.info("Export feature coming soon");
                     }}
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
+                    <Download className="w-4 h-4 text-[#DA7756] !text-[#DA7756]" />
                   </Button>
                 </div>
               }

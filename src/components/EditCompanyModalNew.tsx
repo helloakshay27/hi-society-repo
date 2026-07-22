@@ -679,7 +679,7 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
                   onChange={handleLogoChange}
                   accept="image/*"
                   disabled={isSubmitting}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                 />
                 {(formData.logoUrl || formData.logo) && (
                   <div className="flex items-center gap-2 mt-2">
@@ -720,7 +720,7 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
                   onChange={handleBannerChange}
                   accept="image/*"
                   disabled={isSubmitting}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                 />
                 {(formData.bannerUrl || formData.company_banner) && (
                   <div className="flex items-center gap-2 mt-2">
@@ -753,10 +753,10 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
                 )}
               </div>
 
-              <div className="bg-[#BD2828] border border-transparent rounded-lg p-4 mt-4 text-white">
+              <div className="bg-[#DA7756] border border-transparent rounded-lg p-4 mt-4 text-white">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Image className="w-4 h-4 text-blue-600" />
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                    <Image className="w-4 h-4 text-[#DA7756]" />
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-white">

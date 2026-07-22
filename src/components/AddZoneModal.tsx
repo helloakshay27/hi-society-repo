@@ -290,7 +290,7 @@ export const AddZoneModal: React.FC<AddZoneModalProps> = ({
                   onCheckedChange={(checked) => handleChange("active", checked)}
                   disabled={isSubmitting}
                 />
-                <span className={`text-sm font-medium ${formData.active ? "text-green-600" : "text-red-600"}`}>
+                <span className={`text-sm font-medium ${formData.active ? "text-[#DA7756]" : "text-red-600"}`}>
                   {formData.active ? "Active" : "Inactive"}
                 </span>
               </div>

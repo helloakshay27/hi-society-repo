@@ -427,7 +427,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                   disabled={isSubmitting}
                 />
                 <span
-                  className={`text-sm font-medium ${formData.active ? "text-green-600" : "text-red-600"}`}
+                  className={`text-sm font-medium ${formData.active ? "text-[#DA7756]" : "text-red-600"}`}
                 >
                   {formData.active ? "Active" : "Inactive"}
                 </span>

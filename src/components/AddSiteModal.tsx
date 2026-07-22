@@ -859,7 +859,7 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
                       }
                     }}
                     disabled={isLoading}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                   />
 
                   {(siteImagePreviewUrl || formData.attachfile) && (
@@ -1173,13 +1173,14 @@ export const AddSiteModal: React.FC<AddSiteModalProps> = ({
                 variant="outline"
                 onClick={handleClose}
                 disabled={isLoading}
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading || !formData.name || !formData.company_id}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingSite ? "Update Site" : "Create Site"}

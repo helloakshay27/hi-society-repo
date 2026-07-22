@@ -639,7 +639,7 @@ if (ceoInfo) {
                   variant="outlined"
                   InputLabelProps={{
                     shrink: true,
-                    sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } },
+                    sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } },
                   }}
                   InputProps={{ sx: fieldStyles }}
                   required
@@ -651,7 +651,7 @@ if (ceoInfo) {
                 <FormControl fullWidth variant="outlined">
                   <InputLabel
                     shrink
-                    sx={{ "& .MuiFormLabel-asterisk": { color: "#BD2828" } }}
+                    sx={{ "& .MuiFormLabel-asterisk": { color: "#DA7756" } }}
                   >
                     Country
                   </InputLabel>
@@ -758,7 +758,7 @@ if (ceoInfo) {
                         )}
                       </div>
                       <FormControl fullWidth variant="outlined">
-                        <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#BD2828" } }}>Product</InputLabel>
+                        <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#DA7756" } }}>Product</InputLabel>
                         <MuiSelect
                           value={product.product_name}
                           onChange={(e) => updateProduct(realIndex, "product_name", e.target.value)}
@@ -784,7 +784,7 @@ if (ceoInfo) {
                           }}
                           fullWidth
                           variant="outlined"
-                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } } }}
+                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } } }}
                           InputProps={{ sx: fieldStyles }}
                           disabled={isSubmitting}
                           required
@@ -801,7 +801,7 @@ if (ceoInfo) {
                           }}
                           fullWidth
                           variant="outlined"
-                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } } }}
+                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } } }}
                           InputProps={{ sx: fieldStyles }}
                           disabled={isSubmitting}
                           required
@@ -860,7 +860,7 @@ if (ceoInfo) {
                     onChange={handleLogoChange}
                     accept="image/*"
                     disabled={isSubmitting}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                   />
                   {(formData.logoUrl || formData.logo) && (
                     <div className="flex items-center gap-2 mt-2">
@@ -900,7 +900,7 @@ if (ceoInfo) {
                     onChange={handlePoweredByLogoChange}
                     accept="image/*"
                     disabled={isSubmitting}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                   />
                   {(formData.poweredByLogoUrl || formData.powered_by_logo) && (
                     <div className="flex items-center gap-2 mt-2">
@@ -934,7 +934,7 @@ if (ceoInfo) {
                 </div>
               </div>
 
-              <div className="bg-[#BD2828] border border-transparent rounded-lg p-4 mt-4 text-white">
+              <div className="bg-[#DA7756] border border-transparent rounded-lg p-4 mt-4 text-white">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                     <Image className="w-4 h-4 text-white" />
@@ -1309,7 +1309,7 @@ if (ceoInfo) {
                     accept="image/*"
                     onChange={handleCeoPhotoChange}
                     disabled={isSubmitting}
-                    className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                    className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                   />
                   {ceoInfo.photoPreviewUrl && (
                     <img
@@ -1328,7 +1328,7 @@ if (ceoInfo) {
                 accept="image/*"
                 onChange={handleCeoPhotoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
 
               {ceoInfo.photoPreviewUrl && (
@@ -1347,7 +1347,7 @@ if (ceoInfo) {
                     <button
                       type="button"
                       onClick={removeCeoPhoto}
-                      className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                      className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                       aria-label="Remove photo"
                     >
                       ×
@@ -1367,7 +1367,7 @@ if (ceoInfo) {
                 accept="video/*"
                 onChange={handleCeoVideoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
 
               {(ceoInfo.videoUrl || ceoInfo.video) && (
@@ -1385,7 +1385,7 @@ if (ceoInfo) {
                     <button
                       type="button"
                       onClick={removeCeoVideo}
-                      className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                      className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                       aria-label="Remove video"
                     >
                       ×
