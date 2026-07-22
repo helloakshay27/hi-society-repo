@@ -409,14 +409,14 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="h-9"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button
             onClick={handleUpload}
-            className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Document
@@ -453,7 +453,7 @@ const BMSDocumentsFlatRelated: React.FC = () => {
               <p className="text-sm text-gray-500 mt-1">
                 {(error as Error)?.message || "Please try again"}
               </p>
-              <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
+              <Button onClick={() => refetch()} size="sm" className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Retry
               </Button>
