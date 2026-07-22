@@ -194,11 +194,9 @@ interface SortableCheckpointRowProps {
     name: string;
     description: string;
     building_name: string;
-    wing_name: string;
-    area_name: string;
     floor_name: string;
     room_name: string;
-    location_qr_code_url: string | null;
+    qr_code_url: string | null;
     created_at: string;
   };
   isSelected: boolean;
@@ -668,11 +666,9 @@ export const PatrollingDetailPage: React.FC = () => {
     name: string;
     description: string;
     building_name: string;
-    wing_name: string;
-    area_name: string;
     floor_name: string;
     room_name: string;
-    location_qr_code_url: string | null;
+    qr_code_url: string | null;
     created_at: string;
   }
 
@@ -680,12 +676,10 @@ export const PatrollingDetailPage: React.FC = () => {
     { key: "order_sequence", label: "Order", sortable: true, draggable: false, defaultVisible: true },
     { key: "name", label: "Name", sortable: true, draggable: false, defaultVisible: true },
     { key: "description", label: "Description", sortable: false, draggable: false, defaultVisible: true },
-    { key: "building_name", label: "Building", sortable: true, draggable: false, defaultVisible: true },
-    { key: "wing_name", label: "Wing", sortable: false, draggable: false, defaultVisible: true },
-    { key: "area_name", label: "Area", sortable: false, draggable: false, defaultVisible: true },
+    { key: "building_name", label: "Tower", sortable: true, draggable: false, defaultVisible: true },
     { key: "floor_name", label: "Floor", sortable: false, draggable: false, defaultVisible: true },
-    { key: "room_name", label: "Room", sortable: false, draggable: false, defaultVisible: true },
-    { key: "location_qr_code_url", label: "QR Code", sortable: false, draggable: false, defaultVisible: true },
+    { key: "room_name", label: "Flat", sortable: false, draggable: false, defaultVisible: true },
+    { key: "qr_code_url", label: "QR Code", sortable: false, draggable: false, defaultVisible: true },
     { key: "created_at", label: "Created On", sortable: true, draggable: false, defaultVisible: true },
   ];
 
@@ -696,19 +690,15 @@ export const PatrollingDetailPage: React.FC = () => {
       name: cp.name,
       description: cp.description || "—",
       building_name: cp.building_name || "—",
-      wing_name: cp.wing_name || "—",
-      area_name: cp.area_name || "—",
       floor_name: cp.floor_name || "—",
       room_name: cp.room_name || "—",
-      location_qr_code_url: cp.location_qr_code_url || null,
+      qr_code_url: cp.qr_code_available ? cp.qr_code_url || null : null,
       created_at: cp.created_at,
     }));
   }, [localCheckpoints]);
 
   const activeCpFilterCount = [
     cpFilters.buildingName,
-    cpFilters.wingName,
-    cpFilters.areaName,
     cpFilters.floorName,
     cpFilters.roomName,
   ].filter(Boolean).length;
@@ -724,8 +714,6 @@ export const PatrollingDetailPage: React.FC = () => {
             r.name.toLowerCase().includes(q) ||
             r.description.toLowerCase().includes(q) ||
             r.building_name.toLowerCase().includes(q) ||
-            r.wing_name.toLowerCase().includes(q) ||
-            r.area_name.toLowerCase().includes(q) ||
             r.floor_name.toLowerCase().includes(q) ||
             r.room_name.toLowerCase().includes(q)
         )
@@ -733,8 +721,6 @@ export const PatrollingDetailPage: React.FC = () => {
 
     // Apply location filters (name-based matching from dialog)
     if (cpFilters.buildingName) rows = rows.filter((r) => r.building_name === cpFilters.buildingName);
-    if (cpFilters.wingName) rows = rows.filter((r) => r.wing_name === cpFilters.wingName);
-    if (cpFilters.areaName) rows = rows.filter((r) => r.area_name === cpFilters.areaName);
     if (cpFilters.floorName) rows = rows.filter((r) => r.floor_name === cpFilters.floorName);
     if (cpFilters.roomName) rows = rows.filter((r) => r.room_name === cpFilters.roomName);
 
@@ -821,17 +807,17 @@ export const PatrollingDetailPage: React.FC = () => {
     switch (columnKey) {
       case "order_sequence":
         return <Badge variant="outline">#{item.order_sequence}</Badge>;
-      case "location_qr_code_url":
-        return item.location_qr_code_url ? (
+      case "qr_code_url":
+        return item.qr_code_url ? (
           <div className="flex items-center gap-1.5">
             {/* QR preview — click opens full size */}
             <button
-              onClick={() => window.open(item.location_qr_code_url!, "_blank")}
+              onClick={() => window.open(item.qr_code_url!, "_blank")}
               className="group flex items-center justify-center flex-shrink-0"
               title="Click to view QR code"
             >
               <img
-                src={item.location_qr_code_url}
+                src={item.qr_code_url}
                 alt={`QR Code – ${item.name}`}
                 className="w-12 h-12 object-contain border border-gray-200 rounded group-hover:opacity-80 group-hover:border-[#C72030] transition-all cursor-pointer"
               />
@@ -1834,20 +1820,8 @@ export const PatrollingDetailPage: React.FC = () => {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {cpFilters.buildingName && (
                           <Badge variant="secondary" className="text-xs px-2 py-0.5 gap-1">
-                            Building: {cpFilters.buildingName}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => setCpFilters((prev) => ({ ...prev, buildingId: "", buildingName: "", wingId: "", wingName: "", areaId: "", areaName: "", floorId: "", floorName: "", roomId: "", roomName: "" }))} />
-                          </Badge>
-                        )}
-                        {cpFilters.wingName && (
-                          <Badge variant="secondary" className="text-xs px-2 py-0.5 gap-1">
-                            Wing: {cpFilters.wingName}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => setCpFilters((prev) => ({ ...prev, wingId: "", wingName: "", areaId: "", areaName: "", floorId: "", floorName: "", roomId: "", roomName: "" }))} />
-                          </Badge>
-                        )}
-                        {cpFilters.areaName && (
-                          <Badge variant="secondary" className="text-xs px-2 py-0.5 gap-1">
-                            Area: {cpFilters.areaName}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => setCpFilters((prev) => ({ ...prev, areaId: "", areaName: "", floorId: "", floorName: "", roomId: "", roomName: "" }))} />
+                            Tower: {cpFilters.buildingName}
+                            <X className="w-3 h-3 cursor-pointer" onClick={() => setCpFilters((prev) => ({ ...prev, buildingId: "", buildingName: "", floorId: "", floorName: "", roomId: "", roomName: "" }))} />
                           </Badge>
                         )}
                         {cpFilters.floorName && (
@@ -1858,7 +1832,7 @@ export const PatrollingDetailPage: React.FC = () => {
                         )}
                         {cpFilters.roomName && (
                           <Badge variant="secondary" className="text-xs px-2 py-0.5 gap-1">
-                            Room: {cpFilters.roomName}
+                            Flat: {cpFilters.roomName}
                             <X className="w-3 h-3 cursor-pointer" onClick={() => setCpFilters((prev) => ({ ...prev, roomId: "", roomName: "" }))} />
                           </Badge>
                         )}
@@ -1914,7 +1888,7 @@ export const PatrollingDetailPage: React.FC = () => {
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="bg-white rounded-lg border border-[#D5DbDB] overflow-auto">
-                      <Table className="w-full min-w-max">
+                      <Table className="w-full min-w-full table-fixed">
                         <TableHeader>
                           <TableRow>
                             <TableHead className="bg-[#f6f4ee] w-10 min-w-10" />
@@ -1945,16 +1919,14 @@ export const PatrollingDetailPage: React.FC = () => {
                             </TableHead>
                             {/* Sortable column headers */}
                             {([
-                              { key: "order_sequence", label: "Order", sortable: true, minW: "min-w-24" },
-                              { key: "name", label: "Name", sortable: true, minW: "min-w-36" },
-                              { key: "description", label: "Description", sortable: false, minW: "min-w-40" },
-                              { key: "building_name", label: "Building", sortable: true, minW: "min-w-32" },
-                              { key: "wing_name", label: "Wing", sortable: false, minW: "min-w-28" },
-                              { key: "area_name", label: "Area", sortable: false, minW: "min-w-28" },
-                              { key: "floor_name", label: "Floor", sortable: false, minW: "min-w-28" },
-                              { key: "room_name", label: "Room", sortable: false, minW: "min-w-28" },
-                              { key: "location_qr_code_url", label: "QR Code", sortable: false, minW: "min-w-28" },
-                              { key: "created_at", label: "Created On", sortable: true, minW: "min-w-36" },
+                              { key: "order_sequence", label: "Order", sortable: true, minW: "w-[7%] min-w-[72px]" },
+                              { key: "name", label: "Name", sortable: true, minW: "w-[16%] min-w-[140px]" },
+                              { key: "description", label: "Description", sortable: false, minW: "w-[22%] min-w-[180px]" },
+                              { key: "building_name", label: "Tower", sortable: true, minW: "w-[12%] min-w-[120px]" },
+                              { key: "floor_name", label: "Floor", sortable: false, minW: "w-[10%] min-w-[100px]" },
+                              { key: "room_name", label: "Flat", sortable: false, minW: "w-[10%] min-w-[100px]" },
+                              { key: "location_qr_code_url", label: "QR Code", sortable: false, minW: "w-[10%] min-w-[92px]" },
+                              { key: "created_at", label: "Created On", sortable: true, minW: "w-[13%] min-w-[130px]" },
                             ] as { key: string; label: string; sortable: boolean; minW: string }[]).map((col) => (
                               <TableHead
                                 key={col.key}
@@ -1996,16 +1968,14 @@ export const PatrollingDetailPage: React.FC = () => {
                                 isSelected={selectedCheckpointIds.includes(item.id)}
                                 onSelect={(checked) => handleCheckpointSelect(String(item.id), checked)}
                               >
-                                <TableCell className="p-3">{renderCheckpointCell(item, "order_sequence")}</TableCell>
-                                <TableCell className="p-3">{renderCheckpointCell(item, "name")}</TableCell>
-                                <TableCell className="p-3 text-sm text-gray-600">{renderCheckpointCell(item, "description")}</TableCell>
-                                <TableCell className="p-3 text-sm text-gray-600">{renderCheckpointCell(item, "building_name")}</TableCell>
-                                <TableCell className="p-3 text-sm text-gray-600">{renderCheckpointCell(item, "wing_name")}</TableCell>
-                                <TableCell className="p-3 text-sm text-gray-600">{renderCheckpointCell(item, "area_name")}</TableCell>
-                                <TableCell className="p-3 text-sm text-gray-600">{renderCheckpointCell(item, "floor_name")}</TableCell>
-                                <TableCell className="p-3 text-sm text-gray-600">{renderCheckpointCell(item, "room_name")}</TableCell>
-                                <TableCell className="p-3">{renderCheckpointCell(item, "location_qr_code_url")}</TableCell>
-                                <TableCell className="p-3">{renderCheckpointCell(item, "created_at")}</TableCell>
+                                <TableCell className="p-3 align-top">{renderCheckpointCell(item, "order_sequence")}</TableCell>
+                                <TableCell className="p-3 align-top">{renderCheckpointCell(item, "name")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600 break-words">{renderCheckpointCell(item, "description")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600">{renderCheckpointCell(item, "building_name")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600">{renderCheckpointCell(item, "floor_name")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600">{renderCheckpointCell(item, "room_name")}</TableCell>
+                                <TableCell className="p-3 align-top">{renderCheckpointCell(item, "qr_code_url")}</TableCell>
+                                <TableCell className="p-3 align-top">{renderCheckpointCell(item, "created_at")}</TableCell>
                               </SortableCheckpointRow>
                             ))
                           )}

@@ -64,24 +64,18 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
   // Form IDs
   const [siteId, setSiteId] = useState("");
   const [buildingId, setBuildingId] = useState("");
-  const [wingId, setWingId] = useState("");
-  const [areaId, setAreaId] = useState("");
   const [floorId, setFloorId] = useState("");
   const [roomId, setRoomId] = useState("");
 
   // Dropdown data
   const [sites, setSites] = useState<LocationOption[]>([]);
   const [buildings, setBuildings] = useState<LocationOption[]>([]);
-  const [wings, setWings] = useState<LocationOption[]>([]);
-  const [areas, setAreas] = useState<LocationOption[]>([]);
   const [floors, setFloors] = useState<LocationOption[]>([]);
   const [rooms, setRooms] = useState<LocationOption[]>([]);
 
   // Loading flags
   const [loadingSites, setLoadingSites] = useState(false);
   const [loadingBuildings, setLoadingBuildings] = useState(false);
-  const [loadingWings, setLoadingWings] = useState(false);
-  const [loadingAreas, setLoadingAreas] = useState(false);
   const [loadingFloors, setLoadingFloors] = useState(false);
   const [loadingRooms, setLoadingRooms] = useState(false);
 
@@ -92,8 +86,6 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
     if (isOpen) {
       setSiteId(currentFilters.siteId);
       setBuildingId(currentFilters.buildingId);
-      setWingId(currentFilters.wingId);
-      setAreaId(currentFilters.areaId);
       setFloorId(currentFilters.floorId);
       setRoomId(currentFilters.roomId);
     }
@@ -125,43 +117,12 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
     [BASE]
   );
 
-  // Wings: filtered by buildingId if available
-  const refetchWings = useCallback(
-    (bid: string) => {
-      setLoadingWings(true);
-      const params = new URLSearchParams();
-      if (bid) params.set("q[building_id_eq]", bid);
-      fetchJson(`${BASE}/pms/wings.json?${params.toString()}`)
-        .then((d) => setWings(extractList(d, "wings")))
-        .catch(() => setWings([]))
-        .finally(() => setLoadingWings(false));
-    },
-    [BASE]
-  );
-
-  // Areas: filtered by wingId and/or buildingId if available
-  const refetchAreas = useCallback(
-    (wid: string, bid: string) => {
-      setLoadingAreas(true);
-      const params = new URLSearchParams();
-      if (wid) params.set("q[wing_id_eq]", wid);
-      if (bid) params.set("q[building_id_eq]", bid);
-      fetchJson(`${BASE}/pms/areas.json?${params.toString()}`)
-        .then((d) => setAreas(extractList(d, "areas")))
-        .catch(() => setAreas([]))
-        .finally(() => setLoadingAreas(false));
-    },
-    [BASE]
-  );
-
-  // Floors: filtered by areaId, buildingId, wingId if available
+  // Floors: filtered by buildingId if available
   const refetchFloors = useCallback(
-    (aid: string, bid: string, wid: string) => {
+    (bid: string) => {
       setLoadingFloors(true);
       const params = new URLSearchParams();
-      if (aid) params.set("q[area_id_eq]", aid);
       if (bid) params.set("q[building_id_eq]", bid);
-      if (wid) params.set("q[wing_id_eq]", wid);
       fetchJson(`${BASE}/pms/floors.json?${params.toString()}`)
         .then((d) => setFloors(extractList(d, "floors")))
         .catch(() => setFloors([]))
@@ -170,15 +131,13 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
     [BASE]
   );
 
-  // Rooms: filtered by floorId, buildingId, wingId, areaId if available
+  // Rooms: filtered by floorId and buildingId if available
   const refetchRooms = useCallback(
-    (fid: string, bid: string, wid: string, aid: string) => {
+    (fid: string, bid: string) => {
       setLoadingRooms(true);
       const params = new URLSearchParams();
       if (fid) params.set("q[floor_id_eq]", fid);
       if (bid) params.set("q[building_id_eq]", bid);
-      if (wid) params.set("q[wing_id_eq]", wid);
-      if (aid) params.set("q[area_id_eq]", aid);
       fetchJson(`${BASE}/pms/rooms.json?${params.toString()}`)
         .then((d) => setRooms(extractList(d, "rooms")))
         .catch(() => setRooms([]))
@@ -187,16 +146,13 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
     [BASE]
   );
 
-  // Pre-load all dropdowns when dialog opens (with whatever current filter IDs exist)
+  // Pre-load dropdowns when dialog opens (with whatever current filter IDs exist)
   useEffect(() => {
     if (!isOpen) return;
     refetchBuildings(currentFilters.siteId);
-    refetchWings(currentFilters.buildingId);
-    refetchAreas(currentFilters.wingId, currentFilters.buildingId);
-    refetchFloors(currentFilters.areaId, currentFilters.buildingId, currentFilters.wingId);
-    refetchRooms(currentFilters.floorId, currentFilters.buildingId, currentFilters.wingId, currentFilters.areaId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+    refetchFloors(currentFilters.buildingId);
+    refetchRooms(currentFilters.floorId, currentFilters.buildingId);
+  }, [isOpen, currentFilters.siteId, currentFilters.buildingId, currentFilters.floorId, refetchBuildings, refetchFloors, refetchRooms]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const findName = (list: LocationOption[], id: string) =>
@@ -215,32 +171,14 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
   const handleBuildingChange = (val: string) => {
     const id = clean(val);
     setBuildingId(id);
-    // Re-fetch wings/areas/floors/rooms scoped to the new building
-    refetchWings(id);
-    refetchAreas(wingId, id);
-    refetchFloors(areaId, id, wingId);
-    refetchRooms(floorId, id, wingId, areaId);
-  };
-
-  const handleWingChange = (val: string) => {
-    const id = clean(val);
-    setWingId(id);
-    refetchAreas(id, buildingId);
-    refetchFloors(areaId, buildingId, id);
-    refetchRooms(floorId, buildingId, id, areaId);
-  };
-
-  const handleAreaChange = (val: string) => {
-    const id = clean(val);
-    setAreaId(id);
-    refetchFloors(id, buildingId, wingId);
-    refetchRooms(floorId, buildingId, wingId, id);
+    refetchFloors(id);
+    refetchRooms(floorId, id);
   };
 
   const handleFloorChange = (val: string) => {
     const id = clean(val);
     setFloorId(id);
-    refetchRooms(id, buildingId, wingId, areaId);
+    refetchRooms(id, buildingId);
   };
 
   // ── Apply ─────────────────────────────────────────────────────────────────
@@ -248,14 +186,10 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
     onApply({
       siteId,
       buildingId,
-      wingId,
-      areaId,
       floorId,
       roomId,
       siteName: findName(sites, siteId),
       buildingName: findName(buildings, buildingId),
-      wingName: findName(wings, wingId),
-      areaName: findName(areas, areaId),
       floorName: findName(floors, floorId),
       roomName: findName(rooms, roomId),
     });
@@ -266,15 +200,13 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
   const handleReset = () => {
     setSiteId("");
     setBuildingId("");
-    setWingId("");
-    setAreaId("");
     setFloorId("");
     setRoomId("");
     onApply(EMPTY_CP_FILTERS);
     onClose();
   };
 
-  const hasAnyFilter = !!(siteId || buildingId || wingId || areaId || floorId || roomId);
+  const hasAnyFilter = !!(siteId || buildingId || floorId || roomId);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -325,66 +257,22 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
                 </Select>
               </div>
 
-              {/* Building */}
+              {/* Tower */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">Building</Label>
+                <Label className="text-xs font-medium text-gray-600">Tower</Label>
                 <Select
                   value={buildingId}
                   onValueChange={handleBuildingChange}
                   disabled={loadingBuildings}
                 >
                   <SelectTrigger className="h-10">
-                    <SelectValue placeholder={loadingBuildings ? "Loading..." : "Select Building"} />
+                    <SelectValue placeholder={loadingBuildings ? "Loading..." : "Select Tower"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__clear__">All Buildings</SelectItem>
+                    <SelectItem value="__clear__">All Towers</SelectItem>
                     {buildings.map((b) => (
                       <SelectItem key={b.id} value={b.id.toString()}>
                         {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Wing */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">Wing</Label>
-                <Select
-                  value={wingId}
-                  onValueChange={handleWingChange}
-                  disabled={loadingWings}
-                >
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder={loadingWings ? "Loading..." : "Select Wing"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__clear__">All Wings</SelectItem>
-                    {wings.map((w) => (
-                      <SelectItem key={w.id} value={w.id.toString()}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Area */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">Area</Label>
-                <Select
-                  value={areaId}
-                  onValueChange={handleAreaChange}
-                  disabled={loadingAreas}
-                >
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder={loadingAreas ? "Loading..." : "Select Area"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__clear__">All Areas</SelectItem>
-                    {areas.map((a) => (
-                      <SelectItem key={a.id} value={a.id.toString()}>
-                        {a.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -413,19 +301,19 @@ export const CheckpointFilterDialog: React.FC<CheckpointFilterDialogProps> = ({
                 </Select>
               </div>
 
-              {/* Room */}
+              {/* Flat */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">Room</Label>
+                <Label className="text-xs font-medium text-gray-600">Flat</Label>
                 <Select
                   value={roomId}
                   onValueChange={(val) => setRoomId(clean(val))}
                   disabled={loadingRooms}
                 >
                   <SelectTrigger className="h-10">
-                    <SelectValue placeholder={loadingRooms ? "Loading..." : "Select Room"} />
+                    <SelectValue placeholder={loadingRooms ? "Loading..." : "Select Flat"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__clear__">All Rooms</SelectItem>
+                    <SelectItem value="__clear__">All Flats</SelectItem>
                     {rooms.map((r) => (
                       <SelectItem key={r.id} value={r.id.toString()}>
                         {r.name}

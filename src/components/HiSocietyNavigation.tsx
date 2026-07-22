@@ -205,7 +205,7 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("fitout");
     } else if (path.startsWith("/accounting")) {
       setActiveNav("accounting");
-    } else if (path.startsWith("/smartsecure")) {
+    } else if (path.startsWith("/smartsecure") || path.startsWith("/security")) {
       setActiveNav("smartsecure");
     } else if (path.startsWith("/incidents")) {
       setActiveNav("incidents");
