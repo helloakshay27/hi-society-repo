@@ -697,7 +697,7 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
             </Button>
             <Button 
               onClick={handleSubmit}
-              className="bg-[hsl(var(--analytics-primary))] hover:bg-[hsl(var(--analytics-primary))]/90 text-white"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Apply Filters
             </Button>

@@ -249,7 +249,7 @@ const BMSFeedbacks: React.FC = () => {
         disabled={isLoading}
         className="h-9"
       >
-        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+        <RefreshCw className={`w-4 h-4 mr-2 text-[#C72030] ${isLoading ? "animate-spin" : ""}`} />
         Refresh
       </Button>
       <Button
@@ -258,7 +258,7 @@ const BMSFeedbacks: React.FC = () => {
         onClick={handleExport}
         className="h-9"
       >
-        <Download className="w-4 h-4 mr-2" />
+        <Download className="w-4 h-4 mr-2 text-[#C72030]" />
         Export
       </Button>
     </div>
@@ -330,7 +330,7 @@ const BMSFeedbacks: React.FC = () => {
             <p className="text-red-600 font-medium">Error loading feedbacks</p>
             <p className="text-sm text-gray-500 mt-1">{error?.message || "Please try again"}</p>
             <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-4 h-4 mr-2 text-[#C72030]" />
               Retry
             </Button>
           </div>

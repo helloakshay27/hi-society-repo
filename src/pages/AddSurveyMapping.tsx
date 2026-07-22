@@ -1187,8 +1187,7 @@ export const AddSurveyMapping = () => {
 
       <div className="flex flex-col sm:flex-row items-center gap-3 justify-center pt-2">
         <Button
-          variant="destructive"
-          className="px-6 sm:px-8 w-full sm:w-auto"
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >

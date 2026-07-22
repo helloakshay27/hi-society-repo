@@ -69,15 +69,19 @@ const RedButton = styled(MuiButton)({
 });
 
 const DraftButton = styled(MuiButton)({
-  backgroundColor: "#e7e3d9",
-  color: "#C72030",
+  backgroundColor: "#C72030",
+  color: "#ffffff",
   borderRadius: 0,
   textTransform: "none",
-  padding: "8px 16px",
+  padding: "8px 40px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
   "&:hover": {
-    backgroundColor: "#d9d5c9",
+    backgroundColor: "#B01C29",
+  },
+  "&.Mui-disabled": {
+    opacity: 0.5,
+    cursor: "not-allowed",
   },
 });
 

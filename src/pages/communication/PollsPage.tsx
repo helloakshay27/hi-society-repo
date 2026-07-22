@@ -277,9 +277,8 @@ const PollsPage = () => {
             <Button
               variant="outlined"
               startIcon={<Filter size={18} />}
-              sx={{ textTransform: 'none' }}
+              sx={{ textTransform: 'none', minWidth: 'unset', p: 1 }}
             >
-              Filter
             </Button>
           </Stack>
         </Box>
