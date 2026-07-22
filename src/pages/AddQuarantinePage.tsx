@@ -49,11 +49,8 @@ const SectionIcon = styled(Box)({
 });
 
 const RedButton = styled(MuiButton)({
-  backgroundColor: "#C72030",
-  color: "white",
-  "&:hover": {
-    backgroundColor: "#a61a2a",
-  },
+  backgroundColor: "var(--color-primary, #da7756)",
+  color: "#ffffff !important",
   textTransform: "none",
   padding: "8px 16px",
   borderRadius: 0,
@@ -62,22 +59,30 @@ const RedButton = styled(MuiButton)({
   fontSize: "0.875rem",
   lineHeight: "1.5",
   boxShadow: "none",
+  "& .MuiButton-startIcon, & .MuiButton-startIcon svg": {
+    color: "#ffffff !important",
+    stroke: "#ffffff !important",
+  },
   "&:hover": {
-    backgroundColor: "#B8252F",
-    boxShadow: "0 4px 8px rgba(199, 32, 48, 0.3)",
+    backgroundColor: "var(--color-primary-hover, rgba(218,119,86,0.85))",
+    boxShadow: "0 4px 8px rgba(218, 119, 86, 0.3)",
   },
 });
 
 const DraftButton = styled(MuiButton)({
-  backgroundColor: "#C72030",
-  color: "#ffffff",
+  backgroundColor: "var(--color-primary, #da7756)",
+  color: "#ffffff !important",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 40px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
+  "& .MuiButton-startIcon, & .MuiButton-startIcon svg": {
+    color: "#ffffff !important",
+    stroke: "#ffffff !important",
+  },
   "&:hover": {
-    backgroundColor: "#B01C29",
+    backgroundColor: "var(--color-primary-hover, rgba(218,119,86,0.85))",
   },
   "&.Mui-disabled": {
     opacity: 0.5,

@@ -385,7 +385,8 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             {shouldShow("Setup","create")&&(
             <Button
               onClick={handleAddCategory}
-              className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
+              variant="ghost"
+              className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add
@@ -439,7 +440,8 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             </div>
             <Button
               onClick={handleAddSubCategory}
-              className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
+              variant="ghost"
+              className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add
