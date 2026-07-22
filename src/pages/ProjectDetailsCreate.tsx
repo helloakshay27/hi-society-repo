@@ -2275,7 +2275,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Basic Information
             </h2>
@@ -3050,7 +3050,7 @@ const ProjectDetailsCreate = () => {
                       className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                       style={{ backgroundColor: "#E5E0D3" }}
                     >
-                      <FileText size={16} color="#C72030" />
+                      <FileText size={16} color="var(--color-primary,#da7756)" />
                     </span>
                     RERA Number
                   </h2>
@@ -3475,7 +3475,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Amenities
             </h2>
@@ -3524,7 +3524,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Connectivity
             </h2>
@@ -4206,7 +4206,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <FileUpload sx={{ fontSize: 16, color: "#C72030" }} />
+                <FileUpload sx={{ fontSize: 16, color: "var(--color-primary,#da7756)" }} />
               </span>
               File Uploads
             </h2>
@@ -5836,7 +5836,7 @@ const ProjectDetailsCreate = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary,#da7756)' }} />
               </Avatar>
               Visibility
             </h2>

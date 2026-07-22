@@ -489,7 +489,7 @@ const AggregatorInventorySection = () => {
                         <TabsTrigger
                             key={category.value}
                             value={category.value}
-                            className="data-[state=active]:bg-[#C72030] data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-700 border border-gray-300 rounded-md px-4 py-2"
+                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent rounded-md px-4 py-2"
                         >
                             {category.label}
                         </TabsTrigger>
@@ -504,7 +504,7 @@ const AggregatorInventorySection = () => {
                             {shouldShow("Aggregator Inventory", "create") && (
                             <Button
                                 onClick={handleAddToStore}
-                                className="bg-[#C72030] hover:bg-[#A01828] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white disabled:!opacity-100 disabled:!text-white disabled:!bg-[var(--color-primary,#da7756)] disabled:!cursor-not-allowed"
                                 disabled={loading || getSelectedProductsStatus().notAddedToStore.length === 0}
                             >
                                 <Plus className="mr-2 h-4 w-4" />
@@ -514,7 +514,7 @@ const AggregatorInventorySection = () => {
                             {shouldShow("Aggregator Inventory", "update") && (
                             <Button
                                 onClick={handleRemoveFromStore}
-                                className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white disabled:!opacity-100 disabled:!text-white disabled:!bg-[var(--color-primary,#da7756)] disabled:!cursor-not-allowed"
                                 disabled={loading || getSelectedProductsStatus().addedToStore.length === 0}
                             >
                                 <Plus className="mr-2 h-4 w-4" />
@@ -536,7 +536,7 @@ const AggregatorInventorySection = () => {
                                         {shouldShow("Aggregator Inventory", "update") && (
                                         <Button
                                             onClick={handleSyncInventory}
-                                            className="bg-[#F6F4EE] text-[#C72030] border border-[#E5E1D8] rounded-none px-6 py-2 font-medium text-base hover:bg-[#f3e9e9]"
+                                            className="!bg-[var(--color-primary-light,rgba(218,119,86,0.15))] !text-[var(--color-primary,#da7756)] !border !border-[var(--color-primary,#da7756)] rounded-none px-6 py-2 font-medium text-base hover:!bg-[var(--color-primary-selected,rgba(218,119,86,0.08))]"
                                             disabled={loading}
                                         >
                                             <RefreshCwIcon className="mr-2 h-4 w-4" />

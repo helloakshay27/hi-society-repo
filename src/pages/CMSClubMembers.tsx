@@ -246,6 +246,8 @@ const CMSClubMembers = () => {
     shouldShow("Club Members", "create") && (
       <Button
         onClick={() => setShowActionPanel(true)}
+        variant="ghost"
+        className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white h-[36px] py-[10px] px-[20px]"
       >
         <Plus className="w-4 h-4" />
         Actions

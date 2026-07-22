@@ -29,13 +29,13 @@ const CMSFacilityBookings = () => {
         <TabsList className="w-full bg-white border border-gray-200">
           <TabsTrigger
             value="list"
-            className="w-full font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
+            className="w-full font-semibold data-[state=active]:bg-[var(--color-primary-light,rgba(218,119,86,0.15))] data-[state=active]:text-[var(--color-primary,#da7756)]"
           >
             List
           </TabsTrigger>
           <TabsTrigger
             value="calender"
-            className="w-full font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
+            className="w-full font-semibold data-[state=active]:bg-[var(--color-primary-light,rgba(218,119,86,0.15))] data-[state=active]:text-[var(--color-primary,#da7756)]"
           >
             Calendar View
           </TabsTrigger>

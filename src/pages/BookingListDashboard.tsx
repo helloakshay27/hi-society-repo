@@ -896,7 +896,7 @@ const BookingListDashboard = () => {
             }
             variant="outline"
             size="sm"
-            className="mt-2"
+            className="mt-2 border-[var(--color-primary,#da7756)] text-[var(--color-primary,#da7756)] hover:bg-[var(--color-primary-light,rgba(218,119,86,0.15))]"
             disabled={loading}
           >
             {loading ? "Retrying..." : "Retry"}
@@ -928,7 +928,8 @@ const BookingListDashboard = () => {
             {
               shouldShow("Facility Bookings", "create") && (
                 <Button
-                  className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white w-[106px] h-[36px] py-[10px] px-[20px]"
+                  variant="ghost"
+                  className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white w-[106px] h-[36px] py-[10px] px-[20px]"
                   onClick={() => setShowActionPanel(true)}
                 >
                   <Plus className="w-4 h-4" />

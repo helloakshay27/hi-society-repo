@@ -275,9 +275,17 @@ const CMSRules: React.FC = () => {
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="px-8 py-2 h-auto text-sm font-semibold"
+                  variant="ghost"
+                  style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
+                  className="px-8 py-2 h-auto text-sm font-semibold !bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white"
                 >
-                  {isSubmitting ? <Loader size={14} className="animate-spin" /> : "Submit"}
+                  {isSubmitting ? (
+                    <Loader size={14} className="animate-spin !text-white" />
+                  ) : (
+                    <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }} className="!text-white">
+                      Submit
+                    </span>
+                  )}
                 </Button>
               )
             }

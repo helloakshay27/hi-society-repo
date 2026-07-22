@@ -877,7 +877,7 @@ export const LoyaltyInventorySection = () => {
                         <TabsTrigger
                             key={category.value}
                             value={category.value}
-                            className="data-[state=active]:bg-[#C72030] data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-700 border border-gray-300 rounded-md px-4 py-2"
+                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent rounded-md px-4 py-2"
                         >
                             {category.label}
                         </TabsTrigger>
