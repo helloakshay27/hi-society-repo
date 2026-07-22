@@ -29,13 +29,13 @@ export const CloseOSRDialog = ({ isOpen, onClose, onConfirm }: CloseOSRDialogPro
         <AlertDialogFooter className="flex justify-end gap-3">
           <AlertDialogAction 
             onClick={handleConfirm}
-            className="px-6 bg-orange-600 hover:bg-orange-700 text-white border-0 rounded-full"
+            className="!bg-[#C72030] !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             OK
           </AlertDialogAction>
           <AlertDialogCancel 
             onClick={onClose}
-            className="px-6 bg-orange-200 text-orange-800 hover:bg-orange-300 border-0 rounded-full"
+            className="!bg-[#C72030] !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </AlertDialogCancel>
