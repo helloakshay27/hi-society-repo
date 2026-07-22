@@ -2008,10 +2008,9 @@ export const SurveyResponsePage = () => {
           <DialogFooter className="flex justify-center items-center gap-3 pt-2 sm:justify-center">
             <Button
               type="button"
-              variant="outline"
               onClick={handleResetExportFilters}
               disabled={isExporting}
-              className="text-[#C72030] border-[#C72030] hover:bg-[#C72030] hover:text-white px-8"
+              className="bg-[#C72030] text-white hover:bg-[#A01828] px-8"
             >
               Reset
             </Button>
