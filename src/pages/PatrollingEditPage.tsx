@@ -2077,6 +2077,7 @@ export const PatrollingEditPage: React.FC = () => {
               variant="outline"
               onClick={addShift}
               disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4 mr-2" /> Add Schedule
             </Button>
@@ -2163,6 +2164,7 @@ export const PatrollingEditPage: React.FC = () => {
               variant="outline"
               onClick={addCheckpoint}
               disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4 mr-2" /> Add Checkpoint
             </Button>
@@ -2173,7 +2175,7 @@ export const PatrollingEditPage: React.FC = () => {
       <div className="flex items-center gap-3 justify-center pt-2">
         <Button
           variant="destructive"
-          className="px-8"
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >

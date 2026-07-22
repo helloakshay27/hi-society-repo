@@ -281,7 +281,7 @@ const FaqSubCategory = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Submit')}
           </button>
@@ -289,7 +289,7 @@ const FaqSubCategory = () => {
             type="button"
             onClick={() => navigate("/settings/faq-subcategory-list")}
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

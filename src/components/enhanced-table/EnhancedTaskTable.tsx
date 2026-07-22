@@ -482,7 +482,7 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
             <Button
               variant="outline"
               size="sm"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2"
+              className="bg-white border-[#C72030] text-[#C72030] flex items-center gap-2"
               onClick={onFilterClick}
             >
               <Filter className="w-4 h-4" />

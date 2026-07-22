@@ -143,7 +143,7 @@ const ConstructionStatusList = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleEdit(item.id)}
-                className="h-8 w-8 text-black hover:text-[#C72030] hover:bg-gray-100"
+                className="h-8 w-8 text-black hover:text-black hover:bg-gray-100"
               >
                 <Edit className="h-4 w-4" />
               </Button>

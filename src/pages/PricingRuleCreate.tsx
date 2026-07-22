@@ -388,11 +388,11 @@ const PricingRuleCreate: React.FC = () => {
       {/* Action Buttons */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
         <RedButton onClick={handleSubmit} disabled={submitting}
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
           {submitting ? "Submitting..." : "Submit"}
         </RedButton>
         <CancelButton onClick={handleCancel} disabled={submitting}
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
           Cancel
         </CancelButton>
       </Box>
