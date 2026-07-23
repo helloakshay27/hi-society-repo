@@ -387,6 +387,12 @@ export const API_CONFIG = {
     ATTACHMENT_COMMON: "/crm/admin/attachment_common.json",
     ATTACHMENTS: "/crm/admin/attachments.json",
     SHARE_MULTIPLE_DOCUMENTS: "/crm/admin/share_multiple_documents.json",
+    LOYALTY_DASHBOARD_HOME: "/loyalty/dashboard/home",
+    LOYALTY_DASHBOARD_MEMBERS: "/loyalty/dashboard/members",
+    LOYALTY_DASHBOARD_WALLET: "/loyalty/dashboard/wallet",
+    LOYALTY_DASHBOARD_ORDERS: "/loyalty/dashboard/orders",
+    LOYALTY_DASHBOARD_STORE: "/loyalty/dashboard/store",
+    LOYALTY_DASHBOARD_REDEMPTION: "/loyalty/dashboard/redemption",
   },
 } as const;
 

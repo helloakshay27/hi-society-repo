@@ -556,7 +556,7 @@ export const setupMemberRoutes = (
 
     {/* Amenities Routes */}
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboardNew />} />
-    <Route path="/loyalty/dashboard-new" element={<LoyaltyDashboardHtml />} />
+    <Route path="/loyalty/dashboard-new" element={<LoyaltyDashboard />} />
     <Route path="/loyalty/rule-engine" element={<LoyaltyRuleEngine />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route path="/settings/wallet-topup" element={<WalletTopup />} />

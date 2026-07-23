@@ -340,7 +340,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["attachment-common"] }),
         queryClient.invalidateQueries({ queryKey: ["common-files"] }),
-        queryClient.refetchQueries({ queryKey: ["flat-related-documents"] }),
+        queryClient.invalidateQueries({ queryKey: ["flat-related-documents"] }),
       ]);
 
       resetForm();
@@ -348,10 +348,20 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
         onUploadSuccess();
       }
 
-      if (cameFromFlat) {
+      if (shareAccess === "true" && shareOption === "Flats") {
+        navigate("/bms/documents/flat-related", {
+          replace: true,
+          state: { expandFlatIds: selectedFlats, fromUpload: true },
+        });
+      } else if (cameFromFlat) {
         navigate(finalReturnPath, {
           replace: true,
           state: { expandFlatIds: selectedFlats, fromUpload: true },
+        });
+      } else {
+        navigate("/bms/documents/common-files", {
+          replace: true,
+          state: { fromUpload: true },
         });
       }
     } catch (err: unknown) {
