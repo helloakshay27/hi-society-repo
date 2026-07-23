@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
-Chart.register(...registerables);
 import { CD } from './LoyaltyDashboardData';
+
+Chart.register(...registerables);
 
 export const Briefing = ({ label, text, icon = "✦" }: { label: string, text: React.ReactNode, icon?: string }) => (
   <div className="bg-gradient-to-br from-[#2C2C2C] to-[#3d3530] rounded-[10px] p-3 px-4 mb-3 flex gap-3 items-start relative overflow-hidden">
