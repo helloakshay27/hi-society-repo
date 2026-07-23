@@ -987,7 +987,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                   onClick={() =>
                     setAmenities([...amenities, { name: "", description: "" }])
                   }
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add More
                 </Button>
@@ -999,7 +999,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                       newAm.pop();
                       setAmenities(newAm);
                     }}
-                    className="bg-red-500 hover:bg-red-600 text-white"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Delete
                   </Button>
@@ -1059,7 +1059,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                       { name: "", description: "" },
                     ])
                   }
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add More
                 </Button>
@@ -1071,7 +1071,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                       newConf.pop();
                       setConfigurations(newConf);
                     }}
-                    className="bg-red-500 hover:bg-red-600 text-white"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Delete
                   </Button>
@@ -1131,7 +1131,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                       { name: "", description: "" },
                     ])
                   }
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add More
                 </Button>
@@ -1143,7 +1143,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                       newHL.pop();
                       setHighlights(newHL);
                     }}
-                    className="bg-red-500 hover:bg-red-600 text-white"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Delete
                   </Button>
@@ -1180,7 +1180,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                 <Button
                   type="button"
                   onClick={() => setPlans([...plans, { name: "" }])}
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add More
                 </Button>
@@ -1192,7 +1192,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                       newPlans.pop();
                       setPlans(newPlans);
                     }}
-                    className="bg-red-500 hover:bg-red-600 text-white"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Delete
                   </Button>
@@ -1205,7 +1205,7 @@ const CampaignsOtherProjectEdit: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isLoading || isLoadingProject}
-                className="bg-[#10b981] hover:bg-[#059669] text-white px-8"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Updating..." : "Update"}
               </Button>

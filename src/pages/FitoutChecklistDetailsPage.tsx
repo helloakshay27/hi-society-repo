@@ -89,7 +89,7 @@ export const FitoutChecklistDetailsPage = () => {
         {!loading && checklistData && (
           <Button
             onClick={() => navigate(`/fitout/checklists/edit/${id}`)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit className="w-4 h-4" />
             Edit Checklist

@@ -2198,8 +2198,7 @@ const FitoutRequestDetails: React.FC = () => {
               <Button
                 onClick={handleCapturePayment}
                 size="sm"
-                style={{ backgroundColor: '#C72030', color: 'white' }}
-                className="hover:opacity-90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Capture Payment
@@ -2210,7 +2209,7 @@ const FitoutRequestDetails: React.FC = () => {
               onClick={handleEdit}
               // variant="outline"
               size="sm"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -2218,7 +2217,7 @@ const FitoutRequestDetails: React.FC = () => {
               <Button
               onClick={handleLogsOpen}
               size="sm"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Logs className="w-4 h-4 mr-2" />
               Logs
@@ -2226,8 +2225,7 @@ const FitoutRequestDetails: React.FC = () => {
              <Button
               onClick={handleChecklistOpen}
               size="sm"
-              style={{ backgroundColor: '#C72030', color: 'white' }}
-              className="hover:opacity-90"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Checklist
@@ -3735,8 +3733,9 @@ const FitoutRequestDetails: React.FC = () => {
                   type="button"
                   variant="outline"
                   onClick={() => document.getElementById('payment-image-input')?.click()}
-                  className="border-gray-300"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  <Plus className="w-4 h-4 mr-2" />
                   Choose file
                 </Button>
                 <span className="text-sm text-gray-500">
@@ -3765,8 +3764,7 @@ const FitoutRequestDetails: React.FC = () => {
             <div className="flex justify-center pt-4">
               <Button
                 onClick={handlePaymentSubmit}
-                style={{ backgroundColor: '#C72030', color: 'white' }}
-                className="px-8 hover:opacity-90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Submit
               </Button>
@@ -3901,11 +3899,11 @@ const FitoutRequestDetails: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => document.getElementById(`attachment-file-${question.id}`)?.click()}
-                            className="border-gray-300 text-sm"
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Choose File
-                          </Button>
+className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Choose File
+                    </Button>
                           <span className="text-xs text-gray-500">
                             {question.attachment ? question.attachment.name : 'No file chosen'}
                           </span>
@@ -3946,7 +3944,7 @@ const FitoutRequestDetails: React.FC = () => {
                       };
                       setChecklistQuestions([...checklistQuestions, newQuestion]);
                     }}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Question
@@ -3972,8 +3970,7 @@ const FitoutRequestDetails: React.FC = () => {
                 <div className="flex justify-center pt-4">
                   <Button
                     onClick={handleChecklistSubmit}
-                    style={{ backgroundColor: '#C72030', color: 'white' }}
-                    className="px-8 hover:opacity-90"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Submit
                   </Button>

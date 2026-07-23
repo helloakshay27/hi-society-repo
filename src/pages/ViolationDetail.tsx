@@ -350,9 +350,8 @@ const ViolationDetail: React.FC = () => {
           <div className="flex gap-2">
             <Button
               onClick={handleEditStatus}
-              variant="outline"
               size="sm"
-              className="border-orange-500 text-orange-500 hover:bg-orange-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit Status
@@ -360,8 +359,7 @@ const ViolationDetail: React.FC = () => {
             <Button
               onClick={handleSendViolation}
               size="sm"
-              style={{ backgroundColor: "#00B8D9", color: "white" }}
-              className="hover:opacity-90"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Send Violation
             </Button>
@@ -791,7 +789,7 @@ const ViolationDetail: React.FC = () => {
               type="submit"
               onClick={handleSubmitStatusEdit}
               disabled={isSubmittingStatus}
-              className="bg-orange-500 text-white hover:bg-orange-600"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingStatus ? 'Submitting...' : 'Submit'}
             </Button>
@@ -835,9 +833,8 @@ const ViolationDetail: React.FC = () => {
                 />
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={() => document.getElementById('attachments')?.click()}
-                  className="w-full"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Files
@@ -884,7 +881,7 @@ const ViolationDetail: React.FC = () => {
               type="submit"
               onClick={handleSubmitViolation}
               disabled={isSubmittingViolation}
-              className="bg-[#00B8D9] text-white hover:bg-[#00B8D9]/90"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingViolation ? 'Sending...' : 'Submit'}
             </Button>

@@ -777,9 +777,9 @@ export const EditFitoutChecklistPage = () => {
                                 )
                               }
                               sx={{
-                                color: "#C72030",
+                                color: "#f97316",
                                 "&.Mui-checked": {
-                                  color: "#C72030",
+                                  color: "#f97316",
                                 },
                               }}
                             />
@@ -798,9 +798,9 @@ export const EditFitoutChecklistPage = () => {
                                 )
                               }
                               sx={{
-                                color: "#C72030",
+                                color: "#f97316",
                                 "&.Mui-checked": {
-                                  color: "#C72030",
+                                  color: "#f97316",
                                 },
                               }}
                             />
@@ -819,10 +819,9 @@ export const EditFitoutChecklistPage = () => {
                           <Button
                             type="button"
                             onClick={() => handleAddAnswerOption(question.id!)}
-                            variant="outline"
-                            size="sm"
+                            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <Plus className="w-3 h-3 mr-1" />
+                            <Plus className="w-4 h-4 mr-2" />
                             Add Option
                           </Button>
                         </div>

@@ -592,7 +592,7 @@ const FitoutDeviationDetails: React.FC = () => {
               type="submit"
               onClick={handleSubmitStatusEdit}
               disabled={isSubmittingStatus}
-              className="bg-orange-500 text-white hover:bg-orange-600"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingStatus ? 'Submitting...' : 'Submit'}
             </Button>
