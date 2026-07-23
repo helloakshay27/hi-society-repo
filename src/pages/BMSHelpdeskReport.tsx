@@ -396,10 +396,14 @@ const BMSHelpdeskReport: React.FC = () => {
             </Popover>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleApply} className="bg-teal-500 hover:bg-teal-600 text-white">
+            <Button onClick={handleApply} className="bg-[#C72030] hover:bg-[#A01828] !text-white">
               Apply
             </Button>
-            <Button onClick={handleReset} className="bg-cyan-400 hover:bg-cyan-500 text-white">
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="border-[#C72030] text-[#C72030] hover:bg-[#FDEFF1]"
+            >
               Reset
             </Button>
           </div>
@@ -408,7 +412,7 @@ const BMSHelpdeskReport: React.FC = () => {
         <div className="mt-6 pt-6 border-t border-gray-200">
           <Button
             onClick={() => setExportOpen(true)}
-            className="bg-cyan-400 hover:bg-cyan-500 text-white"
+            className="bg-[#C72030] hover:bg-[#A01828] !text-white"
           >
             <Download className="w-4 h-4 mr-2" />
             Export
