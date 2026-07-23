@@ -1883,3 +1883,37 @@ body {
   -webkit-backdrop-filter: none !important;
   opacity: 1 !important;
 }
+
+
+
+/* Sonner Toast Styling */
+/* [data-sonner-toast] {
+  border-radius: 10px !important;
+  padding: 10px 16px !important; 
+  min-height: 44px !important;   
+  max-width: 420px !important;
+  width: fit-content !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+} */
+ [data-sonner-toast] {
+  width: 440px !important;
+  min-width: 350px !important;
+  max-width: 350px !important;
+
+  padding: 10px 16px !important;
+  min-height: 44px !important;
+
+  border-radius: 10px !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-sonner-toast] [data-content] {
+  display: flex;
+  align-items: right;
+}
+
+[data-sonner-toast] [data-title] {
+  font-size: 13px !important;    
+  font-weight: 300;
+  line-height: 1.3;
+}

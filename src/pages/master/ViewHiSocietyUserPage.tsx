@@ -381,15 +381,15 @@ export const ViewHiSocietyUserPage = () => {
           Back
         </button>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={openAssocSocietyModal} className="flex items-center gap-2">
+          <Button size="sm" onClick={openAssocSocietyModal} className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
             <Building className="w-4 h-4" />
             Associate Society
           </Button>
-          <Button size="sm" variant="outline" onClick={openAssocCompanyModal} className="flex items-center gap-2">
+          <Button size="sm" onClick={openAssocCompanyModal} className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
             <Briefcase className="w-4 h-4" />
             Associate Company
           </Button>
-          <Button size="sm" variant="outline" onClick={openAssocSnagModal} className="flex items-center gap-2">
+          <Button size="sm" onClick={openAssocSnagModal} className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
             <Layers className="w-4 h-4" />
             Associate Snag
           </Button>
@@ -400,7 +400,7 @@ export const ViewHiSocietyUserPage = () => {
       <Card className="border-0 shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#C72030] to-[#a01828] rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#f97316] to-[#d9660f] rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-2xl font-bold text-white">
                 {user.firstname?.charAt(0) || user.email.charAt(0).toUpperCase()}
                 {user.lastname?.charAt(0) || ""}
@@ -725,12 +725,12 @@ export const ViewHiSocietyUserPage = () => {
         <Divider />
         <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
           <Box component="button" onClick={() => setAssocSocietyModal(false)}
-            sx={{ ...btnCancel.sx, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", borderRadius: "8px", height: 44, flex: 1 }}
+            sx={{ ...btnCancel.sx, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", borderRadius: "8px", height: 44, flex: 1, "&:hover": { borderColor: "#f97316", color: "#f97316" } }}
           >
             Cancel
           </Box>
           <Box component="button" onClick={handleAssocSocietySubmit} disabled={assocSocietyLoading}
-            sx={{ ...btnSubmit.sx, border: "none", cursor: "pointer", color: "white", height: 44, flex: 1 }}
+            className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 h-11 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {assocSocietyLoading ? "Associating..." : "Associate"}
           </Box>
@@ -758,12 +758,12 @@ export const ViewHiSocietyUserPage = () => {
         <Divider />
         <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
           <Box component="button" onClick={() => setAssocCompanyModal(false)}
-            sx={{ ...btnCancel.sx, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", borderRadius: "8px", height: 44, flex: 1 }}
+            sx={{ ...btnCancel.sx, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", borderRadius: "8px", height: 44, flex: 1, "&:hover": { borderColor: "#f97316", color: "#f97316" } }}
           >
             Cancel
           </Box>
           <Box component="button" onClick={handleAssocCompanySubmit} disabled={assocCompanyLoading}
-            sx={{ ...btnSubmit.sx, border: "none", cursor: "pointer", color: "white", height: 44, flex: 1 }}
+            className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 h-11 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {assocCompanyLoading ? "Associating..." : "Associate"}
           </Box>
@@ -830,12 +830,12 @@ export const ViewHiSocietyUserPage = () => {
         <Divider />
         <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
           <Box component="button" onClick={() => setAssocSnagModal(false)}
-            sx={{ ...btnCancel.sx, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", borderRadius: "8px", height: 44, flex: 1 }}
+            sx={{ ...btnCancel.sx, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", borderRadius: "8px", height: 44, flex: 1, "&:hover": { borderColor: "#f97316", color: "#f97316" } }}
           >
             Cancel
           </Box>
           <Box component="button" onClick={handleAssocSnagSubmit} disabled={assocSnagLoading}
-            sx={{ ...btnSubmit.sx, border: "none", cursor: "pointer", color: "white", height: 44, flex: 1 }}
+            className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 h-11 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {assocSnagLoading ? "Associating..." : "Associate"}
           </Box>
