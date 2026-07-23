@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Chart from 'chart.js/auto';
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
 import { CD } from './LoyaltyDashboardData';
 
 export const Briefing = ({ label, text, icon = "✦" }: { label: string, text: React.ReactNode, icon?: string }) => (
