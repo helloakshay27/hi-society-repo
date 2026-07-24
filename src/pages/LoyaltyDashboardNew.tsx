@@ -10,6 +10,31 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+
+/* ── Types for API ────────────────────────────────────────────── */
+type TierDistribution = {
+  id: number | null;
+  name: string;
+  exit_points: number | null;
+  member_count: number;
+};
+
+type Orders = {
+  total_orders: number;
+  stuck_orders: number;
+  oldest_stuck_days: number | null;
+  status_breakdown: any[];
+};
+
+type DashboardData = {
+  company_id: number;
+  organization_id: number;
+  active_members: number;
+  points_outstanding: number;
+  tier_distribution: TierDistribution[];
+  orders: Orders;
+};
 
 /* ── Palette (from HTML :root tokens) ─────────────────────────────
    terra:#DA7756 · terra-dk:#B8694A · bg:#F6F4EE · dark:#2C2C2C
@@ -19,13 +44,7 @@ import {
 const FONT = { fontFamily: "'Poppins', sans-serif" };
 
 /* ── Claims Backlog chart data ── */
-const burnData = [
-  { label: "0-15d", value: 0, color: "#108C72" },
-  { label: "16-30d", value: 5, color: "#EDC488" },
-  { label: "31-45d", value: 8, color: "#EDC488" },
-  { label: "46-60d", value: 4, color: "#E7848E" },
-  { label: "60d+", value: 1, color: "#E7848E" },
-];
+const burnData: any[] = [];
 
 /* ── Small drill-panel building blocks ── */
 const Dk = ({ val, lbl, color }: { val: React.ReactNode; lbl: string; color?: string }) => (
@@ -142,6 +161,39 @@ export const LoyaltyDashboardNew = () => {
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [liveDate, setLiveDate] = useState("");
+  
+  /* ── API state ── */
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOYALTY_DASHBOARD_HOME}?token=0d93e348a9262bc36c2eb86612f119abe803f368ad503eb9`;
+        
+        const response = await fetch(url, {
+          headers: {
+             'Authorization': getAuthHeader(),
+             'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setDashboardData(data);
+        } else {
+          console.error("Failed to fetch dashboard data");
+        }
+      } catch (error) {
+         console.error("Error fetching dashboard data:", error);
+      } finally {
+         setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   /* date filter state */
   const [filterOpen, setFilterOpen] = useState(false);
@@ -968,7 +1020,9 @@ export const LoyaltyDashboardNew = () => {
             <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]">
               Active Members
             </div>
-            <div className="text-[22px] font-bold leading-none text-[#2C2C2C]">3</div>
+            <div className="text-[22px] font-bold leading-none text-[#2C2C2C]">
+              {dashboardData?.active_members ?? 3}
+            </div>
             <div className="mt-[3px] text-[10px] text-[#798C5E]">All Silver tier</div>
             <div className="mt-1.5 h-[3px] overflow-hidden rounded-sm bg-[#F0D9B0]">
               <div className="h-[3px] rounded-sm bg-[#DA7756]" style={{ width: "100%" }} />
@@ -981,7 +1035,9 @@ export const LoyaltyDashboardNew = () => {
             <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]">
               Points Outstanding
             </div>
-            <div className="text-[22px] font-bold leading-none text-[#EDC488]">12,400</div>
+            <div className="text-[22px] font-bold leading-none text-[#EDC488]">
+              {dashboardData?.points_outstanding?.toLocaleString() ?? "12,400"}
+            </div>
             <div className="mt-[3px] text-[10px] text-[#E7848E]">
               0% redeemed · unmoved 27 days
             </div>
@@ -996,8 +1052,8 @@ export const LoyaltyDashboardNew = () => {
             <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]">
               Claims
             </div>
-            <div className="text-[22px] font-bold leading-none text-[#2C2C2C]">52</div>
-            <div className="mt-[3px] text-[10px] text-[#EDC488]">18 Granted · oldest 66d</div>
+            <div className="text-[22px] font-bold leading-none text-[#2C2C2C]">0</div>
+            <div className="mt-[3px] text-[10px] text-[#EDC488]">0 Granted · oldest 0d</div>
             <div className="mt-1.5 h-[3px] overflow-hidden rounded-sm bg-[#F0D9B0]">
               <div className="h-[3px] rounded-sm bg-[#EDC488]" style={{ width: "80%" }} />
             </div>
@@ -1010,7 +1066,7 @@ export const LoyaltyDashboardNew = () => {
           onClick={() => openDrill("d-points")}
         >
           <div className="min-w-[110px] border-l-[3px] border-[#108C72] px-3.5 py-1 text-center">
-            <div className="text-[20px] font-bold leading-none text-[#2C2C2C]">3,235</div>
+            <div className="text-[20px] font-bold leading-none text-[#2C2C2C]">0</div>
             <div className="mt-[3px] whitespace-nowrap text-[9px] text-[#798C5E]">
               Items available in aggregator
             </div>
@@ -1046,7 +1102,7 @@ export const LoyaltyDashboardNew = () => {
                 Redemption store is empty
               </div>
               <div className="mt-px overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-[#798C5E]">
-                3,235 items in aggregator · 12,400 pts at expiry risk
+                {dashboardData?.points_outstanding?.toLocaleString() ?? 0} pts at expiry risk
               </div>
             </div>
             <div className="shrink-0 whitespace-nowrap text-[9px] font-bold text-[#DA7756]">
@@ -1063,7 +1119,7 @@ export const LoyaltyDashboardNew = () => {
                 18 claims awaiting fulfilment
               </div>
               <div className="mt-px overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-[#798C5E]">
-                Oldest pending 66 days (Pravin Deshmukh)
+                Oldest pending claim
               </div>
             </div>
             <div className="shrink-0 whitespace-nowrap text-[9px] font-bold text-[#DA7756]">
@@ -1077,10 +1133,10 @@ export const LoyaltyDashboardNew = () => {
             <div className="shrink-0 text-[17px]">🧾</div>
             <div className="min-w-0 flex-1">
               <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-semibold text-[#2C2C2C]">
-                7 orders stuck — Paid, not fulfilled
+                {dashboardData?.orders?.stuck_orders ?? 7} orders stuck — Paid, not fulfilled
               </div>
               <div className="mt-px overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-[#798C5E]">
-                Oldest 107 days · Roshan Shetty
+                Oldest {dashboardData?.orders?.oldest_stuck_days ?? 0} days
               </div>
             </div>
             <div className="shrink-0 whitespace-nowrap text-[9px] font-bold text-[#DA7756]">
@@ -1097,7 +1153,7 @@ export const LoyaltyDashboardNew = () => {
                 Active offer expires in 3 days
               </div>
               <div className="mt-px overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-[#798C5E]">
-                OFF-0044 · Runwal Demo · 30 Jun 2026
+                Review active offers
               </div>
             </div>
             <div className="shrink-0 whitespace-nowrap text-[9px] font-bold text-[#DA7756]">
@@ -1155,16 +1211,51 @@ export const LoyaltyDashboardNew = () => {
                   Member Tier Distribution
                 </div>
                 <div className="mt-0.5 text-[9px] text-[#798C5E]">
-                  3 active members across 5 tiers
+                  {dashboardData?.active_members ?? 3} active members across {dashboardData?.tier_distribution?.length ?? 5} tiers
                 </div>
               </div>
             </div>
             <div className="pt-1">
-              {tierRow("d-tier-diamond", "Diamond", "2%", "#B0B0B0", "", "0", "text-[#888]")}
-              {tierRow("d-tier-titanium", "Titanium", "2%", "#9BA8B5", "", "0", "text-[#888]")}
-              {tierRow("d-tier-gold", "Gold", "2%", "#EDC488", "", "0", "text-[#EDC488]")}
-              {tierRow("d-tier-silver", "Silver", "100%", "#798C5E", "3 members", "3", "text-[#798C5E]")}
-              {tierRow("d-tier-bronze", "Bronze", "2%", "#C4B89D", "", "0", "text-[#888]")}
+              {(() => {
+                if (dashboardData?.tier_distribution) {
+                  return dashboardData.tier_distribution.map((tier) => {
+                    let color = "#888";
+                    let fillWidth = "2%";
+                    let textColor = "text-[#888]";
+                    const tierNameLower = tier.name.toLowerCase();
+                    if (tierNameLower.includes("diamond")) { color = "#B0B0B0"; }
+                    else if (tierNameLower.includes("titanium")) { color = "#9BA8B5"; }
+                    else if (tierNameLower.includes("gold")) { color = "#EDC488"; if (tier.member_count > 0) textColor = "text-[#EDC488]"; }
+                    else if (tierNameLower.includes("silver")) { color = "#798C5E"; if (tier.member_count > 0) textColor = "text-[#798C5E]"; }
+                    else if (tierNameLower.includes("bronze")) { color = "#C4B89D"; }
+                    else { color = "#C4B89D"; }
+                    
+                    if (tier.member_count > 0) {
+                       const maxMem = Math.max(...dashboardData.tier_distribution.map(t => t.member_count));
+                       fillWidth = `${Math.max(2, (tier.member_count / maxMem) * 100)}%`;
+                    }
+                    
+                    return tierRow(
+                      `d-tier-${tier.id ?? "none"}`,
+                      tier.name,
+                      fillWidth,
+                      color,
+                      tier.member_count > 0 ? `${tier.member_count} members` : "",
+                      String(tier.member_count),
+                      tier.member_count > 0 ? textColor : "text-[#888]"
+                    );
+                  });
+                }
+                return (
+                  <>
+                    {tierRow("d-tier-diamond", "Diamond", "2%", "#B0B0B0", "", "0", "text-[#888]")}
+                    {tierRow("d-tier-titanium", "Titanium", "2%", "#9BA8B5", "", "0", "text-[#888]")}
+                    {tierRow("d-tier-gold", "Gold", "2%", "#EDC488", "", "0", "text-[#EDC488]")}
+                    {tierRow("d-tier-silver", "Silver", "100%", "#798C5E", "3 members", "3", "text-[#798C5E]")}
+                    {tierRow("d-tier-bronze", "Bronze", "2%", "#C4B89D", "", "0", "text-[#888]")}
+                  </>
+                );
+              })()}
             </div>
             <div className="mt-2.5 rounded-md bg-[#F6F4EE] p-2 text-[10px] text-[#798C5E]">
               Exit points: Diamond 4,00,000 · Titanium 3,00,000 · Gold 2,00,000 · Silver 1,00,000
@@ -1174,7 +1265,7 @@ export const LoyaltyDashboardNew = () => {
               <span className="text-[10px] font-semibold text-[#E7848E]">
                 🎯 Active Contests: 0
               </span>
-              <span className="text-[9px] text-[#798C5E]">Last ran: March Madness Spin 2026</span>
+              <span className="text-[9px] text-[#798C5E]"></span>
             </div>
           </div>
         </div>
@@ -1187,39 +1278,14 @@ export const LoyaltyDashboardNew = () => {
               <div>
                 <div className="text-[11px] font-semibold text-[#2C2C2C]">Members</div>
                 <div className="mt-0.5 text-[9px] text-[#798C5E]">
-                  3 active · all Silver tier · pending customer-sync fix
+                  {dashboardData?.active_members ?? 3} active · all Silver tier · pending customer-sync fix
                 </div>
               </div>
               <span className="rounded-[20px] border border-[#798C5E25] bg-[#798C5E15] px-2 py-0.5 text-[9px] font-semibold text-[#798C5E]">
                 Silver
               </span>
             </div>
-            {[
-              {
-                key: "d-member-1",
-                init: "SP",
-                avBg: "#798C5E",
-                name: "Satish Poojary",
-                meta: "Silver · joined programme · last: Spring Carnival claim",
-                pts: "4,200",
-              },
-              {
-                key: "d-member-2",
-                init: "SM",
-                avBg: "#798C5E",
-                name: "Shivaji Mali",
-                meta: "Silver · joined programme · last: Spring Carnival claim",
-                pts: "4,100",
-              },
-              {
-                key: "d-member-3",
-                init: "SY",
-                avBg: "#DA7756",
-                name: "Sanjay Yadav",
-                meta: "Silver · joined programme · last: March Madness claim",
-                pts: "4,100",
-              },
-            ].map((m) => (
+            {([].map((m: any) => (
               <div
                 key={m.key}
                 className="group flex cursor-pointer items-center gap-2.5 border-b border-[#E0D8CC] py-[7px] last:border-b-0"
@@ -1242,7 +1308,10 @@ export const LoyaltyDashboardNew = () => {
                   <div className="text-right text-[8px] text-[#798C5E]">pts balance</div>
                 </div>
               </div>
-            ))}
+            )))}
+            {dashboardData?.active_members === 0 && (
+              <div className="py-4 text-center text-[11px] text-[#798C5E]">No active members</div>
+            )}
             <div className="mt-2 rounded-md border border-[#EDC48830] bg-[#FFFAF0] px-[9px] py-[7px] text-[9.5px] text-[#798C5E]">
               ⚠️ Customers page shows 0 — data sync gap. Confirm with dev team before relying on
               member records.
@@ -1255,19 +1324,10 @@ export const LoyaltyDashboardNew = () => {
               <div>
                 <div className="text-[11px] font-semibold text-[#2C2C2C]">Recent Claims</div>
                 <div className="mt-0.5 text-[9px] text-[#798C5E]">
-                  52 total · 18 Granted, awaiting fulfilment
                 </div>
               </div>
             </div>
-            <div className="mb-2 flex gap-3.5 rounded-md bg-[#F6F4EE] px-[9px] py-[7px] text-[9.5px] text-[#798C5E]">
-              <span>From 2 contests:</span>
-              <span className="font-semibold text-[#2C2C2C]">
-                Spring Carnival Scratch · 34 claims
-              </span>
-              <span className="font-semibold text-[#2C2C2C]">
-                March Madness Spin 2026 · 18 claims
-              </span>
-            </div>
+              <span></span>
             <table className="w-full border-collapse text-[10.5px]">
               <thead>
                 <tr>
@@ -1282,43 +1342,7 @@ export const LoyaltyDashboardNew = () => {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  {
-                    key: "d-claim-1",
-                    member: "Satish Poojary",
-                    contest: "Spring Carnival Scratch",
-                    prize: "XOXO Gift Box",
-                    status: "Claimed",
-                  },
-                  {
-                    key: "d-claim-2",
-                    member: "Shivaji Mali",
-                    contest: "Spring Carnival Scratch",
-                    prize: "XOXO Gift Box",
-                    status: "Claimed",
-                  },
-                  {
-                    key: "d-claim-3",
-                    member: "ASHOK YADAV",
-                    contest: "March Madness Spin",
-                    prize: "Lounge Access",
-                    status: "Granted",
-                  },
-                  {
-                    key: "d-claim-4",
-                    member: "Roshan Shetty",
-                    contest: "Spring Carnival Scratch",
-                    prize: "XOXO Gift Box",
-                    status: "Granted",
-                  },
-                  {
-                    key: "d-claim-5",
-                    member: "Sanjay Yadav",
-                    contest: "March Madness Spin",
-                    prize: "Lounge Access",
-                    status: "Granted",
-                  },
-                ].map((c, i, arr) => (
+                {([].map((c: any, i, arr: any[]) => (
                   <tr
                     key={c.key}
                     className="cursor-pointer transition-colors hover:bg-[#DA775608]"
@@ -1357,14 +1381,21 @@ export const LoyaltyDashboardNew = () => {
                       )}
                     </td>
                   </tr>
-                ))}
+                )))}
+                {dashboardData?.orders?.total_orders === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-[11px] text-[#798C5E]">
+                      No recent claims
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
             <div
               className="mt-2 cursor-pointer text-right text-[10px] text-[#DA7756]"
               onClick={() => openDrill("d-claims")}
             >
-              View all 52 claims →
+              View all claims →
             </div>
           </div>
         </div>
