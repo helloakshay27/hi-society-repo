@@ -125,7 +125,7 @@ const TrainingUserDetailPage: React.FC = () => {
         {/* (Optional future actions) */}
       </div>
 
-      {error && <div className="mb-4 p-3 border border-red-300 text-red-600 rounded bg-red-50 text-sm">{error}</div>}
+      {!loading && error && <div className="mb-4 p-3 border border-red-300 text-red-600 rounded bg-red-50 text-sm">{error}</div>}
 
       {/* PERSONAL DETAILS */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">

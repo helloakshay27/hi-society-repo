@@ -576,7 +576,7 @@ export const AddFMUserPage = () => {
                         >
                           <MenuItem value="">Select Entity</MenuItem>
                           {loading && <MenuItem disabled>Loading...</MenuItem>}
-                          {error && <MenuItem disabled>Error: {error}</MenuItem>}
+                          {!loading && error && <MenuItem disabled>Error: {error}</MenuItem>}
                           {entitiesData?.entities?.map((entity: Entity) => (
                             <MenuItem key={entity.id} value={entity.id}>
                               {entity.name}

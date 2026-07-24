@@ -314,7 +314,7 @@ const GenericCategories: React.FC = () => {
                     <AlertDescription className="text-green-800">{success}</AlertDescription>
                   </Alert>
                 )}
-                {error && (
+                {!loadingCategories && error && (
                   <Alert className="bg-red-50 border-red-200">
                     <AlertCircle className="h-4 w-4 text-red-600" />
                     <AlertDescription className="text-red-800">{error}</AlertDescription>

@@ -655,7 +655,7 @@ const BMSQuarantineTracker: React.FC = () => {
       )}
 
       {/* Error state */}
-      {isError && (
+      {!isLoading && isError && (
         <div className="flex justify-center items-center py-8">
           <div className="text-center">
             <p className="text-red-600 font-medium">Error loading quarantine data</p>

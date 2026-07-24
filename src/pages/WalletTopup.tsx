@@ -501,7 +501,7 @@ const WalletTopup: React.FC = () => {
                 <AlertDescription className="text-green-800">{success}</AlertDescription>
               </Alert>
             )}
-            {error && (
+            {!loading && error && (
               <Alert className="bg-red-50 border-red-200 my-2">
                 <AlertDescription className="text-red-800">{error}</AlertDescription>
               </Alert>

@@ -251,7 +251,7 @@ const MeetingConfigModal = ({
 
         {/* Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6 bg-white">
-          {error && (
+          {!isLoading && error && (
             <div className="bg-[#EB4A4A]/10 text-[#EB4A4A] text-sm font-bold p-4 rounded-[16px] flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 shrink-0" /> {error}
             </div>

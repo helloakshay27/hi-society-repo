@@ -351,7 +351,12 @@ const InventoryConsumptionViewPage = () => {
         </h2>
       </div>
 
-      {error ? (
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#da7756]"></div>
+          <span className="ml-2 text-gray-600">Loading consumption data...</span>
+        </div>
+      ) : error ? (
         <div className="text-center py-8 text-red-500">Error loading data: {error}</div>
       ) : (
         <EnhancedTable

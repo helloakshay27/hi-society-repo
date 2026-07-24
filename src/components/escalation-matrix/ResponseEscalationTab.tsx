@@ -300,7 +300,7 @@ export const ResponseEscalationTab: React.FC = () => {
       dispatch(clearState())
       loadEscalationRules(1, '', '')
     }
-    if (error) {
+    if (!submissionLoading && error) {
       // Ensure error is a string for toast display
       const errorMessage =
         typeof error === "string"
@@ -309,7 +309,7 @@ export const ResponseEscalationTab: React.FC = () => {
       toast.error(errorMessage + "!");
       dispatch(clearState());
     }
-  }, [success, error, form, dispatch, editingRule]);
+  }, [success, error, form, dispatch, editingRule, submissionLoading]);
 
   // Helper functions
   const getIssueTypeName = (id: number) => {
