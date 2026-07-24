@@ -810,7 +810,7 @@ export const PatrollingDetailPage: React.FC = () => {
       case "qr_code_url":
         return item.qr_code_url ? (
           <div className="flex items-center gap-1.5">
-            {/* QR preview — click opens full size */}
+            {/* QR preview — click opens full size in new tab */}
             <button
               onClick={() => window.open(item.qr_code_url!, "_blank")}
               className="group flex items-center justify-center flex-shrink-0"
@@ -822,15 +822,33 @@ export const PatrollingDetailPage: React.FC = () => {
                 className="w-12 h-12 object-contain border border-gray-200 rounded group-hover:opacity-80 group-hover:border-[#C72030] transition-all cursor-pointer"
               />
             </button>
-            {/* Download button — calls print_qr_codes API for this single checkpoint */}
+            {/* Download button — fetches the QR image and triggers browser download */}
             <button
               title="Download QR code"
               className="flex-shrink-0 p-1 rounded hover:bg-gray-100 transition-colors text-gray-500 hover:text-[#C72030]"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                const apiUrl = `${API_CONFIG.BASE_URL}/patrolling/print_qr_codes?checkpoint_ids=${item.id}&access_token=${API_CONFIG.TOKEN}`;
-                window.open(apiUrl, "_blank");
-                toast.success(`Opening QR code for "${item.name}"...`);
+                const qrUrl = item.qr_code_url!;
+                try {
+                  const response = await fetch(qrUrl);
+                  if (!response.ok) throw new Error("Failed to fetch QR image");
+                  const blob = await response.blob();
+                  const objectUrl = URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  // derive a safe filename from the checkpoint name
+                  const safeName = item.name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+                  link.href = objectUrl;
+                  link.download = `qr_${safeName}.png`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(objectUrl);
+                  toast.success(`QR code for "${item.name}" downloaded!`);
+                } catch {
+                  // Fallback: open the QR image in a new tab if fetch fails (e.g. CORS)
+                  window.open(qrUrl, "_blank");
+                  toast.info(`Opening QR code for "${item.name}" in a new tab.`);
+                }
               }}
             >
               <Download className="w-4 h-4" />
