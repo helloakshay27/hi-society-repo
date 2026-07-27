@@ -839,7 +839,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                   onClick={() =>
                     setAmenities([...amenities, { name: "", description: "" }])
                   }
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="!bg-[#C72030] hover:!bg-[#A01828] !text-white rounded-md px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -911,7 +911,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       { name: "", description: "" },
                     ])
                   }
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="!bg-[#C72030] hover:!bg-[#A01828] !text-white rounded-md px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -983,7 +983,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       { name: "", description: "" },
                     ])
                   }
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="!bg-[#C72030] hover:!bg-[#A01828] !text-white rounded-md px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -1032,7 +1032,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                 <Button
                   type="button"
                   onClick={() => setPlans([...plans, { name: "" }])}
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="!bg-[#C72030] hover:!bg-[#A01828] !text-white rounded-md px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -1057,7 +1057,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-[#10b981] hover:bg-[#059669] text-white px-8"
+                className="!bg-[#C72030] hover:!bg-[#A01828] !text-white rounded-md px-8 border-0 flex items-center gap-2"
               >
                 {isLoading ? "Submitting..." : "Submit"}
               </Button>

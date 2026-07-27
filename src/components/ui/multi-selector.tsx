@@ -45,7 +45,7 @@ export default function MultiSelectBox({
       backgroundColor: state.isSelected
         ? "#D3D3D3"
         : state.isFocused
-          ? "#dc2626"
+          ? "#ED820E"
           : "transparent",
       color: state.isSelected ? "#333" : state.isFocused ? "white" : "black",
       cursor: "pointer",
@@ -59,20 +59,20 @@ export default function MultiSelectBox({
     }),
     multiValue: (base) => ({
       ...base,
-      backgroundColor: "#dc2626",
-      color: "white",
+      backgroundColor: "#e5e7eb",
+      color: "#374151",
     }),
     multiValueLabel: (base) => ({
       ...base,
-      color: "white",
+      color: "#374151",
     }),
     multiValueRemove: (base) => ({
       ...base,
-      color: "white",
+      color: "#6b7280",
       cursor: "pointer",
       ":hover": {
-        backgroundColor: "#b91c1c", // Darker red on hover
-        color: "white",
+        backgroundColor: "#d1d5db",
+        color: "#374151",
       },
     }),
     dropdownIndicator: (base) => ({

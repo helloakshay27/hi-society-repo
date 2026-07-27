@@ -8,7 +8,6 @@ import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
-import { Switch } from "@mui/material";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Faq {
@@ -23,7 +22,7 @@ interface Faq {
 const FaqList = () => {
   const { shouldShow } = useDynamicPermissions();
   const [faqs, setFaqs] = useState<Faq[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
@@ -203,19 +202,20 @@ const FaqList = () => {
         );
       case "status":
         return (
-          <Switch
-            checked={item.active}
-            onChange={() => !toggleLoading[item.id] && handleToggleActive(item.id, item.active)}
-            disabled={toggleLoading[item.id]}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => !toggleLoading[item.id] && handleToggleActive(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       default:
         return null;

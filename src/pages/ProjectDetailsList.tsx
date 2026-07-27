@@ -8,7 +8,6 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { Switch } from '@mui/material';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Project {
@@ -246,33 +245,37 @@ const ProjectDetailsList = () => {
         );
       case 'published':
         return (
-          <Switch
-            checked={item.published || false}
-            onChange={() => handleTogglePublished(item.id, item.published)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleTogglePublished(item.id, item.published)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.published ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.published ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case 'show_on_home':
         return (
-          <Switch
-            checked={item.show_on_home || false}
-            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.show_on_home ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.show_on_home ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case 'configurations':
         const configs = item.configurations;

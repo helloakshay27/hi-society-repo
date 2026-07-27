@@ -4770,14 +4770,14 @@ export const SurveyResponseDetailPage = () => {
             <Button
               variant="secondary"
               onClick={handleApplyFilters}
-              className="flex-1 h-11"
+              className="flex-1 px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
             >
               Apply
             </Button>
             <Button
               variant="outline"
               onClick={handleClearFilters}
-              className="flex-1 h-11"
+              className="flex-1 px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
             >
               Reset
             </Button>
@@ -4935,7 +4935,7 @@ export const SurveyResponseDetailPage = () => {
                   setSummaryFormFilters(summaryCurrentFilters);
                   setShowFilterModal(true);
                 }}
-                className="flex items-center gap-1 relative"
+                className="flex items-center gap-1 relative !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]"
               >
                 <Filter className="w-4 h-4" />
                 {Object.keys(summaryCurrentFilters).length > 0 && (

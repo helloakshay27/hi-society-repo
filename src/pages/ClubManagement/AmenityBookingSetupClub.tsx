@@ -255,16 +255,18 @@ export const BookingSetupClubDashboard = () => {
       case 'status':
         return (
           <div className="flex items-center justify-center">
-            <div
-              className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${item.status ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+            <button
               onClick={() => handleStatusToggle(item.id)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.status ? 'bg-[#C72030]' : 'bg-gray-300'
+              }`}
             >
-              <span
-                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${item.status ? 'translate-x-6' : 'translate-x-1'
-                  }`}
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.status ? 'translate-x-6' : 'translate-x-1'
+                }`}
               />
-            </div>
+            </button>
           </div>
         );
       default:
@@ -478,7 +480,8 @@ export const BookingSetupClubDashboard = () => {
           renderActions={renderActions}
           storageKey="booking-setup-table"
           className="min-w-full"
-          emptyMessage={loading ? "Loading booking data..." : "No booking data found"}
+          emptyMessage="No booking data found"
+          loading={loading}
           leftActions={leftActions}
           enableSearch={true}
           onFilterClick={() => setIsFilterOpen(true)}

@@ -8,7 +8,6 @@ import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
-import { Switch } from "@mui/material";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const AmenitiesList = () => {
@@ -208,33 +207,37 @@ const AmenitiesList = () => {
         );
       case "status":
         return (
-          <Switch
-            checked={item.active}
-            onChange={(e) => handleToggle(item.id, item.active)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case "night_mode":
         return (
-          <Switch
-            checked={item.night_mode}
-            onChange={(e) => handleNightModeToggle(item.id, item.night_mode)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleNightModeToggle(item.id, item.night_mode)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.night_mode ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.night_mode ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       default:
         return null;

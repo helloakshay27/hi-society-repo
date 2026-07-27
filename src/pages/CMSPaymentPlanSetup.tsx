@@ -36,8 +36,10 @@ const CMSPaymentPlanSetup = () => {
     const { shouldShow } = useDynamicPermissions()
 
     const [paymentPlans, setPaymentPlans] = useState([])
+    const [loading, setLoading] = useState(true)
 
     const fetchPaymentPlans = async () => {
+        setLoading(true)
         try {
             const response = await axios.get(
                 `https://${baseUrl}/payment_plans.json`,
@@ -50,6 +52,8 @@ const CMSPaymentPlanSetup = () => {
             setPaymentPlans(response.data.plans)
         } catch (error) {
             console.log(error)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -101,6 +105,7 @@ const CMSPaymentPlanSetup = () => {
                     )
                 }
                 renderCell={renderCell}
+                loading={loading}
             />
         </div>
     )

@@ -521,12 +521,12 @@ const OrdersList = () => {
     control: (provided: any, state: any) => ({
       ...provided,
       minHeight: "44px",
-      borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+      borderColor: state.isFocused ? "#ED820E" : "#dcdcdc",
       boxShadow: "none",
       fontSize: "14px",
       paddingTop: "6px",
       backgroundColor: "transparent",
-      "&:hover": { borderColor: "#C72030" },
+      "&:hover": { borderColor: "#ED820E" },
     }),
     valueContainer: (provided: any) => ({
       ...provided,
@@ -537,8 +537,8 @@ const OrdersList = () => {
     dropdownIndicator: (provided: any, state: any) => ({
       ...provided,
       padding: "4px 8px",
-      color: state.isFocused ? "#C72030" : "#666",
-      "&:hover": { color: "#C72030" },
+      color: state.isFocused ? "#ED820E" : "#666",
+      "&:hover": { color: "#ED820E" },
     }),
     indicatorSeparator: () => ({ display: "none" }),
     placeholder: (provided: any) => ({

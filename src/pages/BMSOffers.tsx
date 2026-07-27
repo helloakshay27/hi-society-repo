@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, RefreshCw, Loader2, Link, Calendar } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, RefreshCw, Link, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
@@ -347,19 +347,12 @@ const BMSOffers: React.FC = () => {
         </div>
       )}
 
-      {isLoading && (
-        <div className="flex justify-center items-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500">Loading offers...</span>
-        </div>
-      )}
-
-      {!isLoading && isError && (
+      {isError && (
         <div className="flex justify-center items-center py-8">
           <div className="text-center">
             <p className="text-red-600 font-medium">Error loading offers</p>
             <p className="text-sm text-gray-500 mt-1">{error?.message || "Please try again"}</p>
-            <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
+            <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4 !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]">
               <RefreshCw className="w-4 h-4 mr-2" />
               Retry
             </Button>

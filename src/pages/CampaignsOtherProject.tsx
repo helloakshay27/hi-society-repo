@@ -19,7 +19,6 @@ import {
   InputLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
@@ -619,12 +618,19 @@ const CampaignsOtherProject: React.FC = () => {
       case "active":
         return (
           <div className="flex items-center gap-2">
-            <Switch
-              checked={item.active}
-              onCheckedChange={() => handleToggleActive(item)}
+            <button
+              onClick={() => !updatingStatus[item.id] && handleToggleActive(item)}
               disabled={!!updatingStatus[item.id]}
-              className="data-[state=checked]:!bg-green-500 data-[state=unchecked]:!bg-gray-300"
-            />
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              } ${updatingStatus[item.id] ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
             {updatingStatus[item.id] && (
               <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
             )}
@@ -685,13 +691,6 @@ const CampaignsOtherProject: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       <div>
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#14b8a6]"></div>
-          </div>
-        )}
-
         {/* Error State */}
         {error && !loading && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
@@ -707,7 +706,7 @@ const CampaignsOtherProject: React.FC = () => {
         )}
 
         {/* Table */}
-        {!loading && !error && (
+        {!error && (
           <div>
             <EnhancedTable
               data={filteredData}
@@ -718,6 +717,7 @@ const CampaignsOtherProject: React.FC = () => {
               hideTableSearch={false}
               hideTableExport={false}
               hideColumnsButton={false}
+              loading={loading}
               emptyMessage="No Matching Records Found"
               searchPlaceholder="Search"
               enableExport={true}

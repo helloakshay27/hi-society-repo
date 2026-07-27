@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ export const KYCDetailsDashboard = () => {
   const [kycDetails, setKycDetails] = useState<KYCDetail[]>(sampleKYCDetails);
   
   const [selectedKYCDetails, setSelectedKYCDetails] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   
@@ -76,6 +77,20 @@ export const KYCDetailsDashboard = () => {
       draggable: true,
     },
   ];
+
+  // Simulate initial fetch
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Data is already set from sampleKYCDetails via useState initializer
+        // Replace this with an actual API call as needed
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Handlers
   const handleAddKYCDetail = () => {
@@ -206,6 +221,7 @@ export const KYCDetailsDashboard = () => {
         <EnhancedTable
           data={kycDetails}
           columns={columns}
+          loading={loading}
           selectedItems={selectedKYCDetails}
           onSelectAll={handleSelectAll}
           onSelectItem={handleSelectKYCDetail}

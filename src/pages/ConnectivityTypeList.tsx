@@ -7,7 +7,6 @@ import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
-import { Switch } from "@mui/material";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface ConnectivityType {
@@ -126,24 +125,20 @@ const ConnectivityTypeList: React.FC = () => {
         return <span>{item.name || "-"}</span>;
       case "status":
         return (
-          <Switch
-            checked={item.active}
-            onChange={() => handleStatusToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#4CAF50",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#4CAF50",
-              },
-              "& .MuiSwitch-switchBase": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleStatusToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       default:
         return null;

@@ -45,7 +45,7 @@ const SectionHeader = styled(Box)(({ theme }) => ({
 
 const RedIcon = styled(Box)(({ theme }) => ({
   color: 'white',
-  backgroundColor: '#C72030',
+  backgroundColor: '#ED820E',
   borderRadius: '50%',
   padding: '8px',
   display: 'flex',
@@ -112,10 +112,10 @@ const fieldStyles = {
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   width: 128,
   height: 128,
-  backgroundColor: '#fff', // white background
+  backgroundColor: '#fff',
   fontSize: '48px',
-  color: '#C72030', // icon color matches SVG color
-  border: '2px solid #C72030',
+  color: '#ED820E',
+  border: '2px solid #ED820E',
 }));
 
 const CameraButton = styled(IconButton)(({ theme }) => ({
@@ -719,11 +719,11 @@ export const AddUserPage = () => {
                     title="Capture from camera"
                     onClick={handleOpenCamera}
                     sx={{
-                      backgroundColor: '#C72030',
+                      backgroundColor: '#ED820E',
                       color: 'white',
                       width: '36px',
                       height: '36px',
-                      '&:hover': { backgroundColor: '#a01828' },
+                      '&:hover': { backgroundColor: '#d67600' },
                     }}
                   >
                     <Video size={18} />
@@ -736,11 +736,11 @@ export const AddUserPage = () => {
                       input?.click();
                     }}
                     sx={{
-                      backgroundColor: '#C72030',
+                      backgroundColor: '#ED820E',
                       color: 'white',
                       width: '36px',
                       height: '36px',
-                      '&:hover': { backgroundColor: '#a01828' },
+                      '&:hover': { backgroundColor: '#d67600' },
                     }}
                   >
                     <Upload size={18} />

@@ -18,7 +18,6 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
-import { Switch } from "@mui/material";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Event {
@@ -398,48 +397,54 @@ const HiSocEventList = () => {
         return formatTimeOnly(item.from_time);
       case "show_on_home":
         return (
-          <Switch
-            checked={!!item.show_on_home}
-            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.show_on_home ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.show_on_home ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case "publish":
         return (
-          <Switch
-            checked={item.publish === 1}
-            onChange={() => handleTogglePublish(item.id, item.publish)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleTogglePublish(item.id, item.publish)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.publish === 1 ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.publish === 1 ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case "active":
         return (
-          <Switch
-            checked={!!item.active}
-            onChange={() => handleToggle(item.id, item.active)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       default:
         return (item[columnKey as keyof Event] as React.ReactNode) ?? "-";

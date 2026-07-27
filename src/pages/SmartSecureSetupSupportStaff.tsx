@@ -466,7 +466,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
         <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
           <TabsTrigger
             value="society-staff"
-            className="group flex items-center justify-center gap-2 data-[state=active]:bg-[#eeeae3] data-[state=active]:text-[#c81e1e] data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 border-none font-semibold py-3"
+            className="group flex items-center justify-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 border-none font-semibold py-3"
           >
             <Briefcase className="w-4 h-4" />
             Society Staff Category
@@ -474,7 +474,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
 
           <TabsTrigger
             value="delivery-service"
-            className="group flex items-center justify-center gap-2 data-[state=active]:bg-[#eeeae3] data-[state=active]:text-[#c81e1e] data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 border-none font-semibold py-3"
+            className="group flex items-center justify-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 border-none font-semibold py-3"
           >
             <Truck className="w-4 h-4" />
             Cab & Delivery Service Provider

@@ -303,17 +303,22 @@ const WaysToEarnList: React.FC = () => {
         );
 
       case "active":
+        const isActive = item.active === true || item.active === "true";
         return (
-          <Switch
-            checked={item.active === true || item.active === "true"}
-            onChange={() => handleToggleActive(item)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": { color: "#04a231" },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: "#7fce95" },
-              "& .MuiSwitch-track": { backgroundColor: "#d2d2d2" },
-              "& .MuiSwitch-switchBase": { color: "#c72030" },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleActive(item)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isActive ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isActive ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
 
       default:

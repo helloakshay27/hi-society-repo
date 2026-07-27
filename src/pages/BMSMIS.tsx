@@ -18,7 +18,7 @@ const BMSMIS: React.FC = () => {
   const navigate = useNavigate();
   const { shouldShow } = useDynamicPermissions();
 
-  const { data: misData } = useQuery({
+  const { data: misData, isLoading } = useQuery({
     queryKey: ["mis-records"],
     queryFn: async () => {
       // TODO: Replace with actual API endpoint
@@ -106,6 +106,7 @@ const BMSMIS: React.FC = () => {
         emptyMessage="No Matching Records Found"
         pagination={false}
         storageKey="mis-table"
+        loading={isLoading}
       />
     </div>
   );

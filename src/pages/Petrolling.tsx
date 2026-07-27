@@ -1110,17 +1110,19 @@ const Petrolling = () => {
         );
       case "active_inactive":
         return (
-          <div className="flex items-center">
-            <div 
+          <div className="flex items-center justify-center">
+            <button
               onClick={() => handleToggleStatus(item)}
-              className={`w-11 h-6 rounded-full relative cursor-pointer transition-all duration-200 shadow-inner ${
-                item.active ? 'bg-green-600' : 'bg-red-600'
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
               }`}
             >
-              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${
-                item.active ? 'translate-x-5' : 'translate-x-0'
-              }`} />
-            </div>
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       case "qr_code":

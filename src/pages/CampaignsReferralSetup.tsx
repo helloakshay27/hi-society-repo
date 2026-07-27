@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Edit, RefreshCw, Settings2, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -259,29 +258,35 @@ const CampaignsReferralSetup: React.FC = () => {
       case "active":
         return (
           <div className="flex items-center justify-center">
-            <Switch
-              checked={!!item.is_referral}
-              onCheckedChange={() => handleToggleReferralProgram(item.id, !!item.is_referral)}
-              className={
-                item.is_referral
-                  ? "data-[state=checked]:bg-green-500"
-                  : "data-[state=unchecked]:bg-red-500"
-              }
-            />
+            <button
+              onClick={() => handleToggleReferralProgram(item.id, !!item.is_referral)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.is_referral ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.is_referral ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       case "bannerStatus":
         return (
           <div className="flex items-center justify-center">
-            <Switch
-              checked={item.active === 1}
-              onCheckedChange={() => handleToggleBannerStatus(item.id, item.active === 1)}
-              className={
-                item.active === 1
-                  ? "data-[state=checked]:bg-green-500"
-                  : "data-[state=unchecked]:bg-red-500"
-              }
-            />
+            <button
+              onClick={() => handleToggleBannerStatus(item.id, item.active === 1)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active === 1 ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active === 1 ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       default:
@@ -314,6 +319,7 @@ const CampaignsReferralSetup: React.FC = () => {
             renderCell={renderCell}
             pagination={true}
             pageSize={10}
+            loading={isLoading}
             hideTableSearch={false}
             hideTableExport={false}
             hideColumnsButton={false}

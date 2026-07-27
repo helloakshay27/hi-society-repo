@@ -29,7 +29,7 @@ const AccountingDashboard = () => {
   
   // State management
   const [accountingRecords, setAccountingRecords] = useState<AccountingData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Eye, Pencil } from "lucide-react";
-import { Switch } from "@mui/material";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -265,23 +264,18 @@ const NoticeboardList = () => {
       case "active":
         return noticeboardPermission.destroy === "true" ? (
           <div className="flex items-center justify-center min-h-[32px]">
-            <Switch
-              checked={item.active ?? false}
-              onChange={() => handleToggleNoticeboard(item.id, item.active)}
-              size="small"
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: '#C72030',
-                },
-                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: '#C72030 !important',
-                },
-                '& .MuiSwitch-track': {
-                  backgroundColor: '#cbd5e1 !important',
-                  opacity: 1,
-                },
-              }}
-            />
+            <button
+              onClick={() => handleToggleNoticeboard(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         ) : (
           <span className="text-sm text-gray-600 font-medium">

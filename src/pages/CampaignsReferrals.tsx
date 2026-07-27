@@ -206,6 +206,7 @@ const CampaignsReferrals: React.FC = () => {
             data={filteredData}
             columns={columns}
             renderCell={renderCell}
+            loading={isLoading}
             pagination={true}
             pageSize={10}
             hideTableSearch={false}

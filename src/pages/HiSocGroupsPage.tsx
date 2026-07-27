@@ -62,9 +62,11 @@ export const HiSocGroupsPage = () => {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false)
   const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(true);
   const [deletingGroups, setDeletingGroups] = useState<{ [key: string]: boolean }>({});
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const response = await dispatch(
         fetchCrmUserGroups({ baseUrl, token })
@@ -74,6 +76,8 @@ export const HiSocGroupsPage = () => {
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch groups");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,6 +180,7 @@ export const HiSocGroupsPage = () => {
         renderActions={renderActions}
         storageKey="crm-groups-table"
         className="bg-white rounded-lg border border-gray-200"
+        loading={loading}
         emptyMessage="No groups available"
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}

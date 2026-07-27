@@ -504,7 +504,7 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={exportFileName === 'schedules' ? handleSchedulesExport : (() => (handleExport ? handleExport(columnVisibility) : exportToExcel(filteredData, visibleColumns, exportFileName)))}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]"
             >
               <Download className="w-4 h-4" />
             </Button>

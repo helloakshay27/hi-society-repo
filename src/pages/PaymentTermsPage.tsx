@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,7 +20,7 @@ interface PaymentTerm {
 
 const PaymentTermsPage: React.FC = () => {
   const [paymentTerms, setPaymentTerms] = useState<PaymentTerm[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -146,8 +146,11 @@ const PaymentTermsPage: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-500">
-                  Loading...
+                <td colSpan={4} className="text-center py-8">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span className="ml-2">Loading...</span>
+                  </div>
                 </td>
               </tr>
             ) : paymentTerms.length === 0 ? (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Loader2, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BulkUploadModal } from '@/components/BulkUploadModal';
@@ -431,14 +431,7 @@ export const RosterDashboard = ({
         </div>
       </header>
 
-      {loading && (
-        <div className="flex items-center justify-center py-6">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-        </div>
-      )}
-
-      {!loading && (
-        <div className=" ">
+      <div className=" ">
           <EnhancedTable
             data={currentRosterData}
             columns={columns}
@@ -547,7 +540,6 @@ export const RosterDashboard = ({
             </div>
           )}
           </div>
-        )}
 
         {/* Modals */}
         {isBulkUploadOpen && (

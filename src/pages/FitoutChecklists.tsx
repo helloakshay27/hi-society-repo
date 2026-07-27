@@ -7,7 +7,6 @@ import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/utils/apiClient";
-import { Switch } from "@mui/material";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Question {
@@ -324,18 +323,20 @@ const FitoutChecklists: React.FC = () => {
           );
         case "active":
           return (
-            <Switch
-              checked={item.active === 1}
-              onChange={() => handleToggle(item.id, item.active)}
-              sx={{
-                "& .MuiSwitch-switchBase.Mui-checked": {
-                  color: "#C72030",
-                },
-                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                  backgroundColor: "#C72030",
-                },
-              }}
-            />
+            <div className="flex items-center justify-center">
+              <button
+                onClick={() => handleToggle(item.id, item.active)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  item.active === 1 ? "bg-[#C72030]" : "bg-gray-300"
+                }`}
+              >
+                <div
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    item.active === 1 ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
           );
         default:
           const value = item[columnKey as keyof FitoutChecklistItem];
@@ -382,14 +383,6 @@ const FitoutChecklists: React.FC = () => {
     
     return filtered;
   }, [allChecklists, searchTerm, currentPage, itemsPerPage, totalPages]);
-
-  if (loading) {
-    return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="text-center py-8">Loading fitout checklists...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

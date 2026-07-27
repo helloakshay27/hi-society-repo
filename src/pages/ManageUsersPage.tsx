@@ -951,8 +951,8 @@ const ManageUsersPage = () => {
 
         <Dialog open={showFiltersDialog} onOpenChange={setShowFiltersDialog}>
           <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between shrink-0">
-              <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">Advance Filter</DialogTitle>
+            <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between shrink-0">
+              <DialogTitle className="text-base font-bold text-white text-center w-full">Advance Filter</DialogTitle>
               <button
                 onClick={() => setShowFiltersDialog(false)}
                 className="text-red-500 hover:text-red-700 transition-colors absolute right-4"
@@ -1126,13 +1126,13 @@ const ManageUsersPage = () => {
               <div className="flex justify-center gap-4 pt-2">
                 <Button
                   onClick={handleResetFilters}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="!bg-[#C72030] hover:!bg-[#B01C29] !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Reset
                 </Button>
                 <Button
                   onClick={handleApplyFilters}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="!bg-[#C72030] hover:!bg-[#B01C29] !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Apply
                 </Button>

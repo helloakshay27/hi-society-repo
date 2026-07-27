@@ -22,7 +22,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ticketManagementAPI } from "@/services/ticketManagementAPI";
 import { useSelector } from "react-redux";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 
 export const AddVisitorPage = () => {
@@ -614,24 +613,34 @@ export const AddVisitorPage = () => {
                                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                                     Visitor Type <span className="text-red-500">*</span>
                                 </label>
-                                <RadioGroup
-                                    value={formData.visitorType}
-                                    onValueChange={(v) => handleInputChange("visitorType", v)}
-                                    className="flex gap-6"
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="Guest" id="guest" />
-                                        <label htmlFor="guest" className="cursor-pointer">
-                                            Guest
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="Support Staff" id="support" />
-                                        <label htmlFor="support" className="cursor-pointer">
-                                            Support Staff
-                                        </label>
-                                    </div>
-                                </RadioGroup>
+                                <div className="flex items-center gap-6">
+                                  <div className="flex items-center space-x-2">
+                                    <input
+                                      type="radio"
+                                      id="guest"
+                                      name="visitorType"
+                                      value="Guest"
+                                      checked={formData.visitorType === "Guest"}
+                                      onChange={(e) => handleInputChange("visitorType", e.target.value)}
+                                      className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
+                                      style={{ accentColor: '#C72030' }}
+                                    />
+                                    <label htmlFor="guest" className="cursor-pointer text-sm font-medium">Guest</label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <input
+                                      type="radio"
+                                      id="support"
+                                      name="visitorType"
+                                      value="Support Staff"
+                                      checked={formData.visitorType === "Support Staff"}
+                                      onChange={(e) => handleInputChange("visitorType", e.target.value)}
+                                      className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
+                                      style={{ accentColor: '#C72030' }}
+                                    />
+                                    <label htmlFor="support" className="cursor-pointer text-sm font-medium">Support Staff</label>
+                                  </div>
+                                </div>
                             </div>
 
                             {/* Support Category - Show only for Support Staff */}

@@ -1038,7 +1038,7 @@ export const SurveyMappingDashboard = () => {
             <button
               onClick={() => handleStatusToggle(item)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isActive ? "bg-green-400" : "bg-gray-300"
+                isActive ? "bg-[#C72030]" : "bg-gray-300"
               }`}
             >
               <div

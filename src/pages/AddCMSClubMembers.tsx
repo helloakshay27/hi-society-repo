@@ -1119,7 +1119,7 @@ const AddCMSClubMembers = () => {
                     <div className="flex justify-center gap-4 pt-4">
                         <Button
                             variant="outline"
-                            className="border-green-600 text-green-600 hover:bg-green-50 min-w-[120px]"
+                            className="!bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E] hover:bg-orange-50 min-w-[120px]"
                             onClick={addMember}
                             disabled={members.length === 8}
                         >
@@ -1127,7 +1127,7 @@ const AddCMSClubMembers = () => {
                         </Button>
                         <Button
                             variant="default"
-                            className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
+                            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >

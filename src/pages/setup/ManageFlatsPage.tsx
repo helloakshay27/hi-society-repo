@@ -25,7 +25,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Switch } from "@mui/material";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -444,26 +443,18 @@ export const ManageFlatsPage = () => {
 
         return (
           <div className="flex items-center justify-center">
-            <Switch
-              checked={isActive}
-              onChange={() => handleToggleStatus(flat.id, isActive)}
-              color="success"
-              size="small"
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: '#04A231',
-                },
-                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: '#04A231',
-                },
-                '& .MuiSwitch-switchBase:not(.Mui-checked)': {
-                  color: '#C72030',
-                },
-                '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
-                  backgroundColor: 'rgba(199, 32, 48, 0.5)',
-                },
-              }}
-            />
+            <button
+              onClick={() => handleToggleStatus(flat.id, isActive)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isActive ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isActive ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       case "site_visits":

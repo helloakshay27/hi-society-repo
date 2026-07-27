@@ -160,6 +160,7 @@ interface EnhancedTableProps<T> {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   loading?: boolean;
+  isLoading?: boolean;
   enableSearch?: boolean;
   enableSelection?: boolean;
   hideTableExport?: boolean;
@@ -227,6 +228,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   totalPages: externalTotalPages,
   onPageChange: externalOnPageChange,
   loading = false,
+  isLoading = false,
   enableSearch = false,
   enableSelection = false,
   hideTableExport = false,
@@ -255,6 +257,28 @@ export function EnhancedTable<T extends Record<string, any>>({
   getChildrenKey,
   renderChildrenRows,
 }: EnhancedTableProps<T>) {
+  const loadingStartTimeRef = useRef<number | null>(null);
+  const [minLoadingElapsed, setMinLoadingElapsed] = useState(true);
+  const rawLoading = loading || isLoading;
+
+  useEffect(() => {
+    if (rawLoading) {
+      loadingStartTimeRef.current = Date.now();
+      setMinLoadingElapsed(false);
+    } else if (loadingStartTimeRef.current) {
+      const elapsed = Date.now() - loadingStartTimeRef.current;
+      const remaining = 1200 - elapsed;
+      if (remaining > 0) {
+        const timer = setTimeout(() => setMinLoadingElapsed(true), remaining);
+        return () => clearTimeout(timer);
+      } else {
+        setMinLoadingElapsed(true);
+      }
+      loadingStartTimeRef.current = null;
+    }
+  }, [rawLoading]);
+
+  const effectiveLoading = rawLoading || !minLoadingElapsed;
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [internalCurrentPage, setInternalCurrentPage] = useState(1);
@@ -337,11 +361,11 @@ export function EnhancedTable<T extends Record<string, any>>({
 
   // Add effect to reset loading state when search completes
   useEffect(() => {
-    if (enableGlobalSearch && !loading) {
+    if (enableGlobalSearch && !effectiveLoading) {
       setIsSearching(false);
       setSearchAbortController(null);
     }
-  }, [loading, enableGlobalSearch]);
+  }, [effectiveLoading, enableGlobalSearch]);
 
   // Reset search state when data changes (search completes)
   useEffect(() => {
@@ -845,7 +869,6 @@ export function EnhancedTable<T extends Record<string, any>>({
         </div>
 
         <div className="flex items-center gap-2">
-          {rightActions}
           {!hideTableSearch &&
             (onSearchChange || !externalSearchTerm || enableGlobalSearch) &&
             (customSearchInput ? (
@@ -876,6 +899,8 @@ export function EnhancedTable<T extends Record<string, any>>({
             ) : (
               renderCustomSearchInput()
             ))}
+
+          {rightActions}
 
           {onFilterClick && (
             <Button
@@ -1101,7 +1126,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                   </TableRow>
                 )}
 
-                {loading && (
+                {effectiveLoading && (
                   <TableRow>
                     <TableCell
                       colSpan={
@@ -1119,7 +1144,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                     </TableCell>
                   </TableRow>
                 )}
-                {!loading && sortedData.length === 0 && (
+                {!effectiveLoading && sortedData.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={
@@ -1149,7 +1174,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                     </TableCell>
                   </TableRow>
                 )}
-                {!loading &&
+                {!effectiveLoading &&
                   sortedData.map((item, index) => {
                     const itemId = getItemId(item);
                     const isSelected = selectedItems.includes(itemId);
@@ -1270,7 +1295,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                 {/* Add Row Placeholder at the bottom when canAddRow is true but not currently adding */}
                 {canAddRow &&
                   !isAddingRow &&
-                  !loading &&
+                  !effectiveLoading &&
                   sortedData.length > 0 && (
                     <TableRow
                       className="cursor-pointer hover:bg-gray-50 border-2 border-dashed border-gray-200"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import {
   Filter,
   Search,
   Download,
+  Loader2,
 } from "lucide-react";
 import { CreateScheduleModal } from "@/components/CreateScheduleModal";
 import { OSRDashboardFilterModal } from "@/components/OSRDashboardFilterModal";
@@ -25,9 +26,17 @@ import { toast } from "sonner";
 
 const OSRManageBookings: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const loadingStartRef = useRef<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+
+  useEffect(() => {
+    loadingStartRef.current = Date.now();
+    const timer = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   const [columns, setColumns] = useState([
     { key: "actions", label: "Actions", visible: true },
@@ -326,7 +335,29 @@ const OSRManageBookings: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((entry) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.filter((c) => c.visible).length}
+                    className="text-center py-8"
+                  >
+                    <div className="flex items-center justify-center gap-2 text-black">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Loading bookings...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.filter((c) => c.visible).length}
+                    className="text-center py-8 text-gray-500"
+                  >
+                    No bookings found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredData.map((entry) => (
                 <TableRow key={entry.id} className="hover:bg-gray-50">
                   {isColumnVisible("actions") && (
                     <TableCell>
@@ -396,7 +427,7 @@ const OSRManageBookings: React.FC = () => {
                     <TableCell>{entry.createdOn}</TableCell>
                   )}
                 </TableRow>
-              ))}
+              )))}
             </TableBody>
           </Table>
         </div>

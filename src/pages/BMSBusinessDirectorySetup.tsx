@@ -65,6 +65,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
+  const [loading, setLoading] = useState(true)
 
   // Category Edit/Delete State
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
@@ -82,34 +83,29 @@ const BMSBusinessDirectorySetup: React.FC = () => {
   const [deletingSubCategory, setDeletingSubCategory] = useState<SubCategory | null>(null);
 
   const fetchCategories = async () => {
-    try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/bd_categories.json`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      setCategories(response.data.bd_categories)
-    } catch (error) {
-      console.log(error)
-    }
+    const response = await axios.get(`https://${baseUrl}/crm/admin/bd_categories.json`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    setCategories(response.data.bd_categories)
   }
 
   const fetchSubCategories = async () => {
-    try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/bd_sub_categories.json`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      setSubCategories(response.data.bd_sub_categories)
-    } catch (error) {
-      console.log(error)
-    }
+    const response = await axios.get(`https://${baseUrl}/crm/admin/bd_sub_categories.json`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    setSubCategories(response.data.bd_sub_categories)
   }
 
   useEffect(() => {
-    fetchCategories()
-    fetchSubCategories()
+    setLoading(true)
+    Promise.all([
+      fetchCategories().catch(() => {}),
+      fetchSubCategories().catch(() => {})
+    ]).finally(() => setLoading(false))
   }, [])
 
   const handleAddCategory = async () => {
@@ -397,6 +393,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             data={categories}
             columns={categoryColumns}
             renderCell={renderCategoryCell}
+            loading={loading}
             emptyMessage="No categories found"
             pagination={true}
             pageSize={10}
@@ -452,6 +449,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             data={[...subCategories].reverse()}
             columns={subCategoryColumns}
             renderCell={renderSubCategoryCell}
+            loading={loading}
             emptyMessage="No sub categories found"
             pagination={true}
             pageSize={10}

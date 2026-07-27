@@ -438,7 +438,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                   mr: 1.5,
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "#C72030" }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "#ED820E" }} />
               </Avatar>
               Upload Information
             </h2>
@@ -964,7 +964,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-6 text-sm font-medium rounded-md min-w-[120px]"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
           >
             Cancel
           </button>

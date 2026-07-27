@@ -325,7 +325,7 @@ const CMSRules: React.FC = () => {
                       shouldShow("Rules", "update") && (
                         <button
                           onClick={() => handleEditStart(rule)}
-                          className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 transition-colors"
+                          className="bg-[#C72030] text-white p-1 rounded hover:bg-[#A01828] transition-colors"
                         >
                           <Pencil size={14} />
                         </button>
@@ -335,7 +335,7 @@ const CMSRules: React.FC = () => {
                       shouldShow("Rules", "destroy") && (
                         <button
                           onClick={() => handleDelete(rule.id)}
-                          className="bg-[#da7756] text-white p-1 rounded hover:bg-[#c9302c] transition-colors"
+                          className="bg-[#C72030] text-white p-1 rounded hover:bg-[#A01828] transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>

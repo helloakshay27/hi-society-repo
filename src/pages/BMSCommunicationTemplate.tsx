@@ -436,11 +436,8 @@ const BMSCommunicationTemplate: React.FC = () => {
           searchPlaceholder="Search templates"
           leftActions={renderCustomActions()}
           emptyMessage="No Communication Templates Found"
-          isLoading={isLoading}
-          currentPage={currentPage}
-          totalPages={Math.ceil(totalCount / pageSize)}
-          onPageChange={handlePageChange}
-          totalCount={totalCount}
+          loading={isLoading}
+          pagination={false}
         />
       )}
     </div>

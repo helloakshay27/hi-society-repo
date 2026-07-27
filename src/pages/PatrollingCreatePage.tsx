@@ -32,7 +32,7 @@ import { useLayout } from '@/contexts/LayoutContext';
 const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
   <section className="bg-white rounded-lg border border-[#E5E7EB]">
     <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center gap-3">
-      <div className="text-[#E0523E] flex items-center justify-center">
+      <div className="text-[#ED820E] flex items-center justify-center">
         {icon}
       </div>
       <h2 className="text-[13px] font-bold tracking-wider uppercase text-gray-900">{title}</h2>

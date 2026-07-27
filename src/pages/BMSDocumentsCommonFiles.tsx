@@ -341,7 +341,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="h-9"
+            className="h-9 !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]"
           >
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
@@ -350,7 +350,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           </Button>
           <Button
             onClick={handleUpload}
-            className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Document
@@ -366,7 +366,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           </div>
         ) : isError ? (
           <div className="pt-2 text-[12px] text-[#555]">
-            <p className="text-[#b42318]">Error loading folder contents</p>
+            <p className="text-[#ED820E]">Error loading folder contents</p>
             <p className="mt-1">
               {error instanceof Error ? error.message : "Please try again"}
             </p>

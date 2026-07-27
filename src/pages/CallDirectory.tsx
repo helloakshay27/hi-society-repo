@@ -111,12 +111,14 @@ const CallDirectory: React.FC = () => {
   const navigate = useNavigate();
   const [isAddOpen, setIsAddOpen] = React.useState(false);
 
+  const [loading, setLoading] = React.useState(true);
   const [quickCalls, setQuickCalls] = React.useState<QuickCall[]>([]);
 
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
   const fetchQuickCalls = React.useCallback(async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `https://${baseUrl}/public_directories.json`,
@@ -140,6 +142,8 @@ const CallDirectory: React.FC = () => {
     } catch (error) {
       console.error("Error fetching quick calls", error);
       toast.error("Failed to load directories. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }, [baseUrl, token]);
 
@@ -365,7 +369,7 @@ const CallDirectory: React.FC = () => {
   const renderActions = (item: QuickCall) => (
     <div className="flex items-center gap-2">
       <Button size="sm" variant="ghost" onClick={() => handleEditClick(item)}>
-        <Pencil className="w-4 h-4 text-gray-500 hover:text-[#BF213E]" />
+        <Pencil className="w-4 h-4 text-black" />
       </Button>
     </div>
   );
@@ -401,6 +405,7 @@ const CallDirectory: React.FC = () => {
           columns={columns}
           renderCell={renderCell}
           renderActions={renderActions}
+          loading={loading}
           storageKey="call-directory-table"
           className="min-w-full"
           emptyMessage="No quick calls found. Add one to get started."

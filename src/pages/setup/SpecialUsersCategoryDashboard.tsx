@@ -276,6 +276,7 @@ export const SpecialUsersCategoryDashboard = () => {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             searchPlaceholder="Search..."
+            loading={isLoading}
             leftActions={
               <div className="flex gap-2">
                 {shouldShow("Special Users Category", "create") && (
