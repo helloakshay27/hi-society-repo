@@ -40,6 +40,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { LocationSelectionPanel } from "@/components/LocationSelectionPanel";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -795,12 +796,64 @@ export const PatrollingDetailPage: React.FC = () => {
     setSelectedCheckpointObjects([]);
   };
 
-  const handlePrintCheckpointQR = () => {
+  const handlePrintCheckpointQR = async () => {
     if (selectedCheckpointIds.length === 0) return;
-    const ids = selectedCheckpointIds.join(",");
-    const apiUrl = `${API_CONFIG.BASE_URL}/patrolling/print_qr_codes?checkpoint_ids=${ids}&access_token=${API_CONFIG.TOKEN}`;
-    window.open(apiUrl, "_blank");
-    toast.success(`Opening QR codes for ${selectedCheckpointIds.length} checkpoint(s)...`);
+    
+    try {
+      const ids = selectedCheckpointIds.join(",");
+      const apiUrl = getFullUrl(`/patrolling/print_qr_codes.json?checkpoint_ids=${ids}`);
+      
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Authorization: getAuthHeader(),
+          Accept: "text/html, application/xhtml+xml, application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = new Blob([await response.arrayBuffer()], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
+      iframe.style.opacity = '0';
+      iframe.style.border = 'none';
+      iframe.src = blobUrl;
+
+      iframe.onload = () => {
+        setTimeout(() => {
+          try {
+            if (iframe.contentWindow) {
+              iframe.contentWindow.focus();
+              iframe.contentWindow.print();
+            }
+          } catch (e) {
+            console.warn("Iframe print blocked, opening in new tab:", e);
+            window.open(blobUrl, '_blank');
+          }
+          
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+              URL.revokeObjectURL(blobUrl);
+            }
+          }, 30000);
+        }, 800);
+      };
+
+      document.body.appendChild(iframe);
+    } catch (error: any) {
+      console.error('Error fetching QR Codes:', error);
+      toast.error(`Failed to fetch QR codes: ${error.message}`);
+    }
   };
 
   const renderCheckpointCell = (item: CheckpointTableItem, columnKey: string): React.ReactNode => {
@@ -1171,8 +1224,10 @@ export const PatrollingDetailPage: React.FC = () => {
                               return;
                             }
 
-                            const checkpointIds = qrCodeCheckpoints.map(cp => cp.id).join(',');
-                            const apiUrl = getFullUrl(`/patrolling_setups/patrolling_qr_codes.pdf?checkpoint_ids=[${checkpointIds}]`);
+                            const queryString = qrCodeCheckpoints
+                              .map(cp => `checkpoint_ids[]=${encodeURIComponent(cp.id)}`)
+                              .join('&');
+                            const apiUrl = getFullUrl(`/patrolling_setups/patrolling_qr_codes.pdf?${queryString}`);
 
                             const response = await fetch(apiUrl, {
                               method: "GET",
@@ -1287,14 +1342,13 @@ export const PatrollingDetailPage: React.FC = () => {
                                           }
 
                                           // Use the new API endpoint for downloading QR codes
-                                          const apiUrl = getFullUrl(`/patrolling_setups/patrolling_qr_codes.pdf?checkpoint_ids=[${checkpoint.id}]`);
+                                          const apiUrl = getFullUrl(`/patrolling_setups/patrolling_qr_codes.pdf?checkpoint_ids[]=${encodeURIComponent(checkpoint.id)}`);
 
                                           const response = await fetch(apiUrl, {
                                             method: "GET",
                                             headers: {
-                                              "Content-Type": "application/json",
-                                              Accept: "application/json",
                                               Authorization: getAuthHeader(),
+                                              Accept: "application/pdf",
                                             },
                                           });
 
@@ -1436,8 +1490,7 @@ export const PatrollingDetailPage: React.FC = () => {
                               <TableCell>
                                 {question.mandatory ? (
                                   <Badge
-                                    variant="destructive"
-                                    className="text-xs"
+                                    className="text-xs bg-[#C72030] hover:bg-[#B01C29] text-white border-transparent"
                                   >
                                     Required
                                   </Badge>
@@ -1527,8 +1580,7 @@ export const PatrollingDetailPage: React.FC = () => {
                               <TableCell>
                                 {question.mandatory ? (
                                   <Badge
-                                    variant="destructive"
-                                    className="text-xs"
+                                    className="text-xs bg-[#C72030] hover:bg-[#B01C29] text-white border-transparent"
                                   >
                                     Required
                                   </Badge>

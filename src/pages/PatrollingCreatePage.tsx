@@ -127,7 +127,7 @@ const CheckpointLocationSelector: React.FC<{
           label="Flat"
           notched
           displayEmpty
-          disabled={disabled || !checkpoint.floorId || loadingStates.rooms}
+          disabled={disabled || !checkpoint.buildingId || loadingStates.rooms}
         >
           <MenuItem value="">Select Flat</MenuItem>
           {checkpoint.locationData.rooms.map(room => (
@@ -743,6 +743,7 @@ export const PatrollingCreatePage: React.FC = () => {
       case 'building':
         if (value) {
           await fetchLocationDataForCheckpoint(checkpointIndex, 'floors', { buildingId: value });
+          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { buildingId: value });
         }
         break;
 
@@ -751,6 +752,11 @@ export const PatrollingCreatePage: React.FC = () => {
           await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', {
             buildingId: checkpoint.buildingId,
             floorId: value
+          });
+        } else if (!value && checkpoint.buildingId) {
+          // Fetch all flats for the building if the floor is deselected
+          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', {
+            buildingId: checkpoint.buildingId
           });
         }
         break;

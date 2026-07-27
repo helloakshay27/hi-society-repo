@@ -78,6 +78,7 @@ const CheckpointLocationSelector: React.FC<{
   fieldStyles,
   checkpointIndex,
   checkpoint,
+  disabled,
 }) => {
   const [loadingStates, setLoadingStates] = React.useState({
     buildings: false,
@@ -190,7 +191,7 @@ const CheckpointLocationSelector: React.FC<{
           label="Room"
           notched
           displayEmpty
-          disabled={disabled || !checkpoint.floorId || loadingStates.rooms}
+          disabled={disabled || !checkpoint.buildingId || loadingStates.rooms}
         >
           <MenuItem value="">Select Room</MenuItem>
           {checkpoint.locationData.rooms.map(room => (

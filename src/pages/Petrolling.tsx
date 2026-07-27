@@ -1743,7 +1743,7 @@ const Petrolling = () => {
     </>
   );
 
-  const handleExportQrCodes = () => {
+  const handleExportQrCodes = async () => {
     const checkpointIds = data
       .flatMap((item) => item.checkpoints || [])
       .map((checkpoint) => checkpoint.id)
@@ -1754,12 +1754,38 @@ const Petrolling = () => {
       return;
     }
 
-    const queryString = checkpointIds
-      .map((id) => `checkpoint_ids[]=${encodeURIComponent(id)}`)
-      .join("&");
-    const apiUrl = getFullUrl(`/patrolling_setups/patrolling_qr_codes?${queryString}`);
+    try {
+      const queryString = checkpointIds
+        .map((id) => `checkpoint_ids[]=${encodeURIComponent(id)}`)
+        .join("&");
+      const apiUrl = getFullUrl(`/patrolling_setups/patrolling_qr_codes.pdf?${queryString}`);
 
-    window.open(apiUrl, "_blank");
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Authorization: getAuthHeader(),
+          Accept: "application/pdf",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `patrolling_all_qr_codes.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success(`Exported ${checkpointIds.length} QR codes successfully!`);
+    } catch (error: any) {
+      console.error("Error exporting QR Codes:", error);
+      toast.error(`Failed to export QR codes: ${error.message}`);
+    }
   };
 
   if (isAddOpen) {
