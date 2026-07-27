@@ -160,6 +160,8 @@ export const HiSocietyNavigation: React.FC = () => {
       "faq",
     ];
 
+    const bmsRoutePrefixes = ["/bms", "/communication", "/quarantine-tracker"];
+
     // Extract first segment from path
     const segments = path.split('/').filter(Boolean);
     const firstSegment = segments[0];
@@ -216,8 +218,7 @@ export const HiSocietyNavigation: React.FC = () => {
     } else if (path.startsWith("/loyalty") || loyaltyChildRoutes.includes(firstSegment)) {
       setActiveNav("loyalty");
     } else if (
-      path.startsWith("/bms") ||
-      path.startsWith("/communication")
+      bmsRoutePrefixes.some((route) => path === route || path.startsWith(`${route}/`))
     ) {
       setActiveNav("bms");
     } else if (

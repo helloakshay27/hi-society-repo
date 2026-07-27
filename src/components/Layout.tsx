@@ -363,6 +363,34 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [activeNavMenu, setActiveNavMenu] = useState<string | null>(null);
   const isNewEmpHubRoute = location.pathname === "/employee/company-hub-new";
 
+  // Effect to set the current section based on the route
+  useEffect(() => {
+    const path = location.pathname;
+
+    if (path.startsWith('/setup')) { // Covers KYC details and other setup routes
+      setCurrentSection('settings');
+    } else if (path.startsWith('/dashboard')) {
+      setCurrentSection('dashboard');
+    } else if (path.startsWith('/tickets')) {
+      setCurrentSection('tickets');
+    } else if (path.startsWith('/maintenance')) {
+      setCurrentSection('maintenance');
+    } else if (path.startsWith('/incidents')) {
+      setCurrentSection('incidents');
+    } else if (path.startsWith('/inventory')) {
+      setCurrentSection('inventory');
+    } else if (path.startsWith('/fitout')) {
+      setCurrentSection('fitout');
+    } else if (path.startsWith('/snagging')) {
+      setCurrentSection('snagging');
+    } else if (path.startsWith('/club-management')) {
+      setCurrentSection('club-management');
+    } else if (path.startsWith('/events')) {
+      setCurrentSection('events');
+    }
+    // Add more routes here if needed to ensure correct section highlighting
+  }, [location.pathname, setCurrentSection]);
+
   return (
     <div
       className="min-h-screen bg-[#fafafa]"

@@ -1779,7 +1779,7 @@ const Petrolling = () => {
   return (
     <div className="p-6 bg-white min-h-screen">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">Petrolling</h1>
+        <h1 className="text-2xl font-bold mb-4">Patrolling</h1>
       </div>
 
       <EnhancedTable

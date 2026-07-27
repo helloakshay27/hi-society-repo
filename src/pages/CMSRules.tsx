@@ -335,7 +335,7 @@ const CMSRules: React.FC = () => {
                       shouldShow("Rules", "destroy") && (
                         <button
                           onClick={() => handleDelete(rule.id)}
-                          className="bg-[#d9534f] text-white p-1 rounded hover:bg-[#c9302c] transition-colors"
+                          className="bg-[#da7756] text-white p-1 rounded hover:bg-[#c9302c] transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>

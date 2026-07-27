@@ -128,6 +128,8 @@ export const HiSocietySidebar: React.FC = () => {
       "faq",
     ];
 
+    const bmsRoutePrefixes = ["/bms", "/communication", "/quarantine-tracker"];
+
     // Extract first segment from path
     const segments = path.split("/").filter(Boolean);
     const firstSegment = segments[0];
@@ -178,7 +180,7 @@ export const HiSocietySidebar: React.FC = () => {
       loyaltyChildRoutes.includes(firstSegment)
     )
       return "loyalty";
-    if (path.startsWith("/bms") || path.startsWith("/communication"))
+    if (bmsRoutePrefixes.some((route) => path === route || path.startsWith(`${route}/`)))
       return "bms";
     if (
       path.startsWith("/maintenance") ||
