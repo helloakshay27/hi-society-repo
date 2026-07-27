@@ -262,11 +262,9 @@ const baseColumnDefs = [
   { key: 'id', label: 'Response ID', visible: true },
   { key: 'patrol_name', label: 'Patrol Name', visible: true },
   { key: 'checkpoint_name', label: 'Checkpoint Name', visible: true },
-  { key: 'building', label: 'Building', visible: true },
-  { key: 'wing', label: 'Wing', visible: true },
-  { key: 'area', label: 'Area', visible: true },
+  { key: 'building', label: 'Tower', visible: true },
   { key: 'floor', label: 'Floor', visible: true },
-  { key: 'room', label: 'Room', visible: true },
+  { key: 'room', label: 'Flat', visible: true },
   { key: 'schedule_date_time', label: 'Schedule Date/Time', visible: true },
   { key: 'grace_time', label: 'Grace Time (Hours)', visible: true },
   { key: 'status', label: 'Status', visible: true },
@@ -796,11 +794,9 @@ export const PatrollingResponsePage = () => {
       { key: 'id', label: 'Response ID', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('id'), hideable: true },
       { key: 'patrol_name', label: 'Patrol Name', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('patrol_name'), hideable: true },
       { key: 'checkpoint_name', label: 'Checkpoint Name', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('checkpoint_name'), hideable: true },
-      { key: 'building', label: 'Building', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('building'), hideable: true },
-      { key: 'wing', label: 'Wing', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('wing'), hideable: true },
-      { key: 'area', label: 'Area', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('area'), hideable: true },
+      { key: 'building', label: 'Tower', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('building'), hideable: true },
       { key: 'floor', label: 'Floor', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('floor'), hideable: true },
-      { key: 'room', label: 'Room', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('room'), hideable: true },
+      { key: 'room', label: 'Flat', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('room'), hideable: true },
       { key: 'schedule_date_time', label: 'Schedule Date/Time', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('schedule_date_time'), hideable: true },
       { key: 'grace_time', label: 'Grace Time (Hours)', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('grace_time'), hideable: true },
       { key: 'status', label: 'Status', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('status'), hideable: true },
@@ -882,10 +878,6 @@ export const PatrollingResponsePage = () => {
         return <span>{item.checkpoint_name}</span>;
       case 'building':
         return <span>{item.building}</span>;
-      case 'wing':
-        return <span>{item.wing}</span>;
-      case 'area':
-        return <span>{item.area}</span>;
       case 'floor':
         return <span>{item.floor}</span>;
       case 'room':
