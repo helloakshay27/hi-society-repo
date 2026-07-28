@@ -11,7 +11,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AddCountryModal } from "@/components/AddCountryModal";
@@ -589,12 +588,7 @@ export const CountryTab: React.FC<CountryTabProps> = ({
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Headquarters</h1>
       </header>
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-        </div>
-      ) : (
-        <>
+      <>
           <EnhancedTaskTable
             data={displayedData}
             columns={columns}
@@ -721,7 +715,6 @@ export const CountryTab: React.FC<CountryTabProps> = ({
             onPerPageChange={handlePerPageChange}
           />
         </>
-      )}
 
       {/* Modals */}
       <AddCountryModal

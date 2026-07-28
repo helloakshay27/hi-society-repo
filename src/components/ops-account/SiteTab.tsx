@@ -8,7 +8,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Loader2,
   MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -832,15 +831,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
         <h1 className="text-2xl font-bold">Sites</h1>
       </header>
 
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">Loading sites...</span>
-        </div>
-      )}
-
-      {!loading && (
-        <>
+      <>
           <EnhancedTaskTable
             data={displayedData}
             columns={columns}
@@ -852,6 +843,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
             searchTerm={searchTerm}
             onSearchChange={handleSearch}
             onFilterClick={() => setIsFilterOpen(true)}
+            loading={loading}
             leftActions={
               <Button
                 className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -894,7 +886,6 @@ export const SiteTab: React.FC<SiteTabProps> = ({
             onPerPageChange={handlePerPageChange}
           />
         </>
-      )}
 
       {/* Modals */}
       <AddSiteModal

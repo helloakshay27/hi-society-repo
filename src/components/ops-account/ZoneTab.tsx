@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Loader2 } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TicketPagination } from "@/components/TicketPagination";
@@ -226,13 +226,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
         <h1 className="text-2xl font-bold">Zones</h1>
       </header>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">Loading zones...</span>
-        </div>
-      ) : (
-        <>
+      <>
           <EnhancedTaskTable
             data={displayedData}
             columns={columns}
@@ -244,6 +238,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
             searchTerm={searchTerm}
             onSearchChange={handleSearch}
             pagination={true}
+            loading={loading}
             leftActions={
               <Button
                 className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -265,7 +260,6 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
             onPerPageChange={(newPerPage) => { setPerPage(newPerPage); setCurrentPage(1); }}
           /> */}
         </>
-      )}
 
       <AddZoneModal
         isOpen={isAddModalOpen}

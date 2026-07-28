@@ -477,12 +477,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Society</h1>
         </header>
-        {loading && societies.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-[#c72030]" />
-          </div>
-        ) : (
-          <>
+        <>
             <EnhancedTaskTable
               columns={columns}
               data={displayedData}
@@ -493,6 +488,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
               enableSearch={true}
               searchTerm={searchQuery}
               onSearchChange={setSearchQuery}
+              loading={loading}
               leftActions={
                 <Button
                   variant="default"
@@ -544,7 +540,6 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
               onPerPageChange={handlePerPageChange}
             />
           </>
-        )}
 
         {/* Modals */}
         <AddSocietyModal

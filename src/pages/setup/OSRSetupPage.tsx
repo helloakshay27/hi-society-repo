@@ -157,13 +157,13 @@ const CategoryTab: React.FC = () => {
 
   const renderCatActions = (item: Category) => (
     <div className="flex gap-1">
-      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
-        <Edit className="h-4 w-4 text-amber-500" />
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-gray-100">
+        <Edit className="h-4 w-4 text-black" />
       </Button>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="hover:bg-red-50">
-            <Trash2 className="h-4 w-4 text-red-600" />
+          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+            <Trash2 className="h-4 w-4 text-black" />
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -462,13 +462,13 @@ const SubCategoryTab: React.FC = () => {
 
   const renderScActions = (item: SubCategory) => (
     <div className="flex gap-1">
-      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
-        <Edit className="h-4 w-4 text-amber-500" />
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-gray-100">
+        <Edit className="h-4 w-4 text-black" />
       </Button>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="hover:bg-red-50">
-            <Trash2 className="h-4 w-4 text-red-600" />
+          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+            <Trash2 className="h-4 w-4 text-black" />
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -831,13 +831,13 @@ const StatusTab: React.FC = () => {
 
   const renderStActions = (item: StatusItem) => (
     <div className="flex gap-1">
-      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="bg-[#C72030] text-white hover:bg-[#C72030]/90">
-        <Edit className="h-4 w-4 text-amber-500" />
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-gray-100">
+        <Edit className="h-4 w-4 text-black" />
       </Button>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="hover:bg-red-50">
-            <Trash2 className="h-4 w-4 text-red-600" />
+          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+            <Trash2 className="h-4 w-4 text-black" />
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
