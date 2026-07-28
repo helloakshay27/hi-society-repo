@@ -906,7 +906,7 @@ export function EnhancedTable<T extends Record<string, any>>({
             <Button
               variant="outline"
               size="sm"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2"
+              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2 rounded-lg"
               onClick={onFilterClick}
               title="Filter"
             >
@@ -928,7 +928,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={handleExportClick}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 rounded-lg"
               title="Export"
             >
               <Download className="w-4 h-4" />

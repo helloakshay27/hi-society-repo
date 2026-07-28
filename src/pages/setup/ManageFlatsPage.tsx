@@ -13,7 +13,7 @@ import { ConfigureWingDialog } from "./manage-flats-dialogs/ConfigureWingDialog"
 import { ConfigureFloorDialog } from "./manage-flats-dialogs/ConfigureFloorDialog";
 import { ConfigureFlatTypeDialog } from "./manage-flats-dialogs/ConfigureFlatTypeDialog";
 import { FiltersDialog } from "./manage-flats-dialogs/FiltersDialog";
-import { ActionsModal } from "./manage-flats-dialogs/ActionsModal";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { toast } from "sonner";
 import { getFullUrl } from "@/config/apiConfig";
 import {
@@ -777,13 +777,16 @@ export const ManageFlatsPage = () => {
           flatOptions={flatOptions}
         />
 
-        {/* Actions Modal */}
-        <ActionsModal
-          show={showActionDropdown}
-          onClose={() => setShowActionDropdown(false)}
-          onAdd={handleAddFlat}
-          onImport={handleImport}
-        />
+        {/* Actions Panel */}
+        {showActionDropdown && (
+          <SelectionPanel
+            className="selection-panel--center"
+            onAdd={handleAddFlat}
+            onImport={handleImport}
+            onClearSelection={() => setShowActionDropdown(false)}
+            addLabel="Add Flat"
+          />
+        )}
 
         <CommonImportModal
           open={showImportModal}

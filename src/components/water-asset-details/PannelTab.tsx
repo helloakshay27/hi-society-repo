@@ -67,10 +67,11 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
         className={`selection-panel hidden sm:flex ${className}`}
       >
         {/* Colored initial strip */}
-        <div className="w-11 flex-shrink-0 bg-[#C4B89D] flex items-center justify-center self-stretch">
-          <span className="text-[#C72030] text-xs font-bold">
-            {addLabel?.trim()?.[0]?.toUpperCase() || "A"}
-          </span>
+        <div
+          className="w-11 flex-shrink-0 flex items-center justify-center self-stretch"
+          style={{ backgroundColor: "#C4B89D" }}
+        >
+          <span className="text-[#C72030] text-xs font-bold">A</span>
         </div>
 
         {/* Content row */}

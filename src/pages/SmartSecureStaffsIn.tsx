@@ -293,15 +293,15 @@ const SmartSecureStaffsIn: React.FC = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        leftActions={
-          <Button
-            onClick={() => fetchStaffIn(currentPage, searchQuery)}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
-          </Button>
-        }
+        // leftActions={
+        //   <Button
+        //     onClick={() => fetchStaffIn(currentPage, searchQuery)}
+        //     className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        //     disabled={isLoading}
+        //   >
+        //     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
+        //   </Button>
+        // }
       />
 
       {/* Image Preview Dialog */}

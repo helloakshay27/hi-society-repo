@@ -476,14 +476,14 @@ const SmartSecureStaffsHistory: React.FC = () => {
         onSelectItem={handleStaffSelection}
         onSelectAll={handleSelectAll}
         getItemId={(record) => record.id.toString()}
-        leftActions={
-          <Button
-            onClick={() => refetch()}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Refresh
-          </Button>
-        }
+        // leftActions={
+        //   <Button
+        //     onClick={() => refetch()}
+        //     className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        //   >
+        //     Refresh
+        //   </Button>
+        // }
         onFilterClick={() => setIsFilterOpen(true)}
         rightActions={null}
         searchPlaceholder="Search by name or mobile number"

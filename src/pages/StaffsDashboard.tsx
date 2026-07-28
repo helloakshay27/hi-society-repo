@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/pagination';
 import { StaffsFilterModal } from '@/components/StaffsFilterModal';
 import { StaffSelectionPanel } from '@/components/StaffSelectionPanel';
-import { StaffActionsPanel } from '@/components/StaffActionsPanel';
+import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { BulkUploadDialog } from '@/components/BulkUploadDialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
@@ -533,7 +533,7 @@ export const StaffsDashboard = () => {
     id: <span className="font-medium">{staff.id}</span>,
     name: staff.name,
     associatedFlats: staff.associatedFlats,
-    email: staff.email !== '--' ? <span className="text-blue-600">{staff.email}</span> : '--',
+    email: staff.email !== '--' ? <span className="text-black-600">{staff.email}</span> : '--',
     mobile: staff.mobile,
     staffId: staff.staffId,
     workType: staff.workType,
@@ -637,10 +637,12 @@ export const StaffsDashboard = () => {
       <>
         {/* Staff Actions Panel */}
         {showActionMenu && (
-          <StaffActionsPanel
+          <SelectionPanel
+            className="selection-panel--center"
             onAdd={handleAddStaff}
             onImport={handleImportStaffs}
             onClearSelection={() => setShowActionMenu(false)}
+            addLabel="Add Staff"
           />
         )}
 

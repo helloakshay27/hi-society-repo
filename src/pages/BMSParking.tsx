@@ -4,7 +4,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Plus, Eye, Edit, Trash2, RefreshCw, Loader2, Car, MapPin, ChevronDown, Upload, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { StaffActionsPanel } from "@/components/StaffActionsPanel";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { ParkingFilterDialog, ParkingFilters } from "@/components/ParkingFilterDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
@@ -759,7 +759,8 @@ const BMSParking: React.FC = () => {
 
       {/* Action Panel */}
       {showActionPanel && (
-        <StaffActionsPanel
+        <SelectionPanel
+          className="selection-panel--center"
           onAdd={() => { setShowActionPanel(false); handleAddParking(); }}
           onImport={() => { setShowActionPanel(false); setIsImportOpen(true); }}
           onClearSelection={() => setShowActionPanel(false)}
