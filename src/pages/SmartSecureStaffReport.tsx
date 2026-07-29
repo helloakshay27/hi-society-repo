@@ -4,15 +4,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Download } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+  TextField,
+} from "@mui/material";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 
 interface FilterOption {
@@ -27,6 +26,27 @@ interface StaffFilters {
   staff_names: FilterOption[];
   company_names: FilterOption[];
 }
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": { borderColor: "#ddd" },
+    "&:hover fieldset": { borderColor: "#4d494aff" },
+    "&.Mui-focused fieldset": { borderColor: "#C72030" },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": { color: "#201f20ff" },
+    "& .MuiInputLabel-asterisk": {
+      color: "#C72030 !important",
+    },
+  },
+  "& .MuiFormLabel-asterisk": {
+    color: "#C72030 !important",
+  },
+};
 
 const SmartSecureStaffReport: React.FC = () => {
   const [staffType, setStaffType] = useState("");
@@ -181,155 +201,175 @@ const SmartSecureStaffReport: React.FC = () => {
             {/* Filters Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Staff Type */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Staff Type
-                </label>
-                <Select value={staffType} onValueChange={setStaffType} disabled={loadingFilters}>
-                  <SelectTrigger className="h-[45px]">
-                    <SelectValue placeholder={loadingFilters ? "Loading..." : "Select Staff Type"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filters.staff_types.map((item) => (
-                      <SelectItem key={String(item.value)} value={String(item.value)}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                <InputLabel shrink>Staff Type</InputLabel>
+                <MuiSelect
+                  value={staffType}
+                  onChange={(e) => setStaffType(e.target.value)}
+                  label="Staff Type"
+                  notched
+                  disabled={loadingFilters}
+                  displayEmpty
+                >
+                  <MenuItem value="">
+                    {loadingFilters ? "Loading..." : "Select Staff Type"}
+                  </MenuItem>
+                  {filters.staff_types.map((item) => (
+                    <MenuItem key={String(item.value)} value={String(item.value)}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Work Type */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Work Type
-                </label>
-                <Select value={workType} onValueChange={setWorkType} disabled={loadingFilters}>
-                  <SelectTrigger className="h-[45px]">
-                    <SelectValue placeholder={loadingFilters ? "Loading..." : "Work Type"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filters.work_types.map((item) => (
-                      <SelectItem key={String(item.value)} value={String(item.value)}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                <InputLabel shrink>Work Type</InputLabel>
+                <MuiSelect
+                  value={workType}
+                  onChange={(e) => setWorkType(e.target.value)}
+                  label="Work Type"
+                  notched
+                  disabled={loadingFilters}
+                  displayEmpty
+                >
+                  <MenuItem value="">
+                    {loadingFilters ? "Loading..." : "Select Work Type"}
+                  </MenuItem>
+                  {filters.work_types.map((item) => (
+                    <MenuItem key={String(item.value)} value={String(item.value)}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Status */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Status
-                </label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="h-[45px]">
-                    <SelectValue placeholder="Select Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value=" ">All</SelectItem>
-                    <SelectItem value="1">Active</SelectItem>
-                    <SelectItem value="0">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                <InputLabel shrink>Status</InputLabel>
+                <MuiSelect
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  label="Status"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Status</MenuItem>
+                  <MenuItem value=" ">All</MenuItem>
+                  <MenuItem value="1">Active</MenuItem>
+                  <MenuItem value="0">Inactive</MenuItem>
+                </MuiSelect>
+              </FormControl>
 
               {/* Staff Name */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Staff Name
-                </label>
-                <Select value={staffName} onValueChange={setStaffName} disabled={loadingFilters}>
-                  <SelectTrigger className="h-[45px]">
-                    <SelectValue placeholder={loadingFilters ? "Loading..." : "Select Staff Name"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filters.staff_names.map((item) => {
-                      const val = String(item.value);
-                      if (val === "") return null;
-                      return (
-                        <SelectItem key={val} value={val}>
-                          {item.label}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                <InputLabel shrink>Staff Name</InputLabel>
+                <MuiSelect
+                  value={staffName}
+                  onChange={(e) => setStaffName(e.target.value)}
+                  label="Staff Name"
+                  notched
+                  disabled={loadingFilters}
+                  displayEmpty
+                >
+                  <MenuItem value="">
+                    {loadingFilters ? "Loading..." : "Select Staff Name"}
+                  </MenuItem>
+                  {filters.staff_names.map((item) => {
+                    const val = String(item.value);
+                    if (val === "") return null;
+                    return (
+                      <MenuItem key={val} value={val}>
+                        {item.label}
+                      </MenuItem>
+                    );
+                  })}
+                </MuiSelect>
+              </FormControl>
 
               {/* Company Name */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Company Name
-                </label>
-                <Select value={companyName} onValueChange={setCompanyName} disabled={loadingFilters}>
-                  <SelectTrigger className="h-[45px]">
-                    <SelectValue placeholder={loadingFilters ? "Loading..." : "Select Company"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filters.company_names.map((item) => {
-                      const val = String(item.value);
-                      if (val === "") return null;
-                      return (
-                        <SelectItem key={val} value={val}>
-                          {item.label}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                <InputLabel shrink>Company Name</InputLabel>
+                <MuiSelect
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  label="Company Name"
+                  notched
+                  disabled={loadingFilters}
+                  displayEmpty
+                >
+                  <MenuItem value="">
+                    {loadingFilters ? "Loading..." : "Select Company"}
+                  </MenuItem>
+                  {filters.company_names.map((item) => {
+                    const val = String(item.value);
+                    if (val === "") return null;
+                    return (
+                      <MenuItem key={val} value={val}>
+                        {item.label}
+                      </MenuItem>
+                    );
+                  })}
+                </MuiSelect>
+              </FormControl>
 
               {/* From Date */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  From
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {fromDate ? format(fromDate, "dd/MM/yyyy") : <span>Select From Date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={fromDate}
-                      onSelect={setFromDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <TextField
+                    label="From"
+                    placeholder="Select From Date"
+                    value={fromDate ? format(fromDate, "dd/MM/yyyy") : ""}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={fieldStyles}
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: (
+                        <CalendarIcon className="h-4 w-4 text-gray-400 shrink-0" />
+                      ),
+                    }}
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={setFromDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
 
               {/* To Date */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  To
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {toDate ? format(toDate, "dd/MM/yyyy") : <span>Select To Date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={toDate}
-                      onSelect={setToDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <TextField
+                    label="To"
+                    placeholder="Select To Date"
+                    value={toDate ? format(toDate, "dd/MM/yyyy") : ""}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={fieldStyles}
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: (
+                        <CalendarIcon className="h-4 w-4 text-gray-400 shrink-0" />
+                      ),
+                    }}
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={setToDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Download Button */}

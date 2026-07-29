@@ -97,16 +97,18 @@ const SmartSecureSetupGeneral: React.FC = () => {
   });
 
   const columns = [
+      { key: "action", label: "Action", sortable: false },
     { key: "purpose", label: "Purpose", sortable: true },
     { key: "status", label: "Status", sortable: false },
-    { key: "action", label: "Action", sortable: false },
+  
   ];
 
   const staffColumns = [
+     { key: "action", label: "Action", sortable: false },
     { key: "purpose", label: "Staff Type", sortable: true },
     { key: "status", label: "Status", sortable: false },
     { key: "workType", label: "Work Type", sortable: true },
-    { key: "action", label: "Action", sortable: false },
+   
   ];
 
   // Fetch societies for dropdown
@@ -404,7 +406,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
             pagination={true}
             enableGlobalSearch={true}
             searchPlaceholder="Search"
-            rightActions={
+            leftActions={
               <Button
                 onClick={() => setIsAddModalOpen(true)}
                 className="bg-[#C72030] hover:bg-[#C72030] text-white"
@@ -428,7 +430,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
             pagination={true}
             enableGlobalSearch={true}
             searchPlaceholder="Search"
-            rightActions={
+            leftActions={
               <Button
                 onClick={() => setIsAddModalOpen(true)}
                 className="bg-[#C72030] hover:bg-[#C72030] text-white"
@@ -452,7 +454,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
             pagination={true}
             enableGlobalSearch={true}
             searchPlaceholder="Search"
-            rightActions={
+            leftActions={
               <Button
                 onClick={() => setIsAddModalOpen(true)}
                 className="bg-[#C72030] hover:bg-[#C72030] text-white"

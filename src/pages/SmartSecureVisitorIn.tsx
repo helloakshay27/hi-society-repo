@@ -233,7 +233,7 @@ const SmartSecureVisitorIn: React.FC = () => {
                 <Eye className="w-4 h-4" />
               </button>
             )}
-            {shouldShow("Visitor In", "update") && (
+            {/* {shouldShow("Visitor In", "update") && (
               <button
                 onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
                 className="p-1.5 rounded hover:bg-gray-100 text-gray-900 transition-colors"
@@ -241,7 +241,7 @@ const SmartSecureVisitorIn: React.FC = () => {
               >
                 <Pencil className="w-4 h-4" />
               </button>
-            )}
+            )} */}
           </div>
         );
 

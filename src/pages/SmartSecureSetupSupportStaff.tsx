@@ -76,16 +76,18 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
   const resetForm = () => setFormData({ ...INITIAL_FORM });
 
   const columns = [
+     { key: "action", label: "Action", sortable: false },
     { key: "sno", label: "S.No.", sortable: false },
     { key: "name", label: "Name", sortable: true },
     { key: "estimatedTime", label: "Estimated Time", sortable: true },
     { key: "icon", label: "Icon", sortable: false },
     { key: "createdOn", label: "Created On", sortable: true },
     { key: "createdBy", label: "Created By", sortable: true },
-    { key: "action", label: "", sortable: false },
+   
   ];
 
   const deliveryServiceColumns = [
+     { key: "action", label: "Action", sortable: false },
     { key: "sno", label: "S.No.", sortable: false },
     { key: "name", label: "Name", sortable: true },
     { key: "type", label: "Type", sortable: true },
@@ -93,7 +95,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
     { key: "icon", label: "Icon", sortable: false },
     { key: "createdOn", label: "Created On", sortable: true },
     { key: "createdBy", label: "Created By", sortable: true },
-    { key: "action", label: "", sortable: false },
+   
   ];
 
   // ---- Data loading ----

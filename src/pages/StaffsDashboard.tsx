@@ -488,7 +488,7 @@ export const StaffsDashboard = () => {
           className="p-2 h-8 w-8 hover:bg-accent"
           title="View staff"
         >
-          <Eye className="w-4 h-4 text-gray-600 hover:text-[#C72030]" />
+          <Eye className="w-4 h-4 text-gray-600" />
         </Button>
         )}
         {shouldShow("Staff All", "update") && (
@@ -502,7 +502,7 @@ export const StaffsDashboard = () => {
           className="p-2 h-8 w-8 hover:bg-accent"
           title="Edit staff"
         >
-          <Edit className="w-4 h-4 text-gray-600 hover:text-[#C72030]" />
+          <Edit className="w-4 h-4 text-gray-600 " />
         </Button>
         )}
       </div>
@@ -638,7 +638,7 @@ export const StaffsDashboard = () => {
         {/* Staff Actions Panel */}
         {showActionMenu && (
           <SelectionPanel
-            className="selection-panel--center"
+            className="selection-panel--end"
             onAdd={handleAddStaff}
             onImport={handleImportStaffs}
             onClearSelection={() => setShowActionMenu(false)}

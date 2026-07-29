@@ -595,7 +595,7 @@ export const VisitorDetailsPage = () => {
               Resend OTP
             </Button> */}
 
-            <Button
+            {/* <Button
               onClick={() => {
                 if (visitorData.encrypted_gatekeeper_id) {
                   setIsGatePassModalOpen(true);
@@ -619,7 +619,7 @@ export const VisitorDetailsPage = () => {
                 />
               </svg>
               View Pass
-            </Button>
+            </Button> */}
 
             {/* <Button
               onClick={handleUpdate}
