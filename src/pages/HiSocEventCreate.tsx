@@ -2703,14 +2703,14 @@ const HiSocEventCreate = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Proceed to save
               </button>
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Save to draft
               </button>
@@ -4267,14 +4267,14 @@ const HiSocEventCreate = () => {
                       <button
                         type="button"
                         onClick={handleDownloadAllQRCodes}
-                        className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                      >
-                        Download All QR Codes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSendAllQRCodesEmail}
-                        className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+              >
+                Download All QR Codes
+              </button>
+              <button
+                type="button"
+                onClick={handleSendAllQRCodesEmail}
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
                       >
                         Send QR Codes via Email
                       </button>
@@ -4436,14 +4436,14 @@ const HiSocEventCreate = () => {
               <button
                 type="button"
                 onClick={() => setIsPreviewMode(false)}
-                className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Back to Edit
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Submitting...' : 'Submit Event'}
               </button>

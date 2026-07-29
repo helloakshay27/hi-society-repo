@@ -212,11 +212,11 @@ const SmartSecureVisitorOut: React.FC = () => {
                 <Eye className="w-4 h-4 text-gray-700" />
               </Button>
             )}
-            {shouldShow("Visitor Out", "update") && (
+            {/* {shouldShow("Visitor Out", "update") && (
               <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)} title="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
-            )}
+            )} */}
           </div>
         );
 
@@ -453,19 +453,19 @@ const SmartSecureVisitorOut: React.FC = () => {
         hideTableExport={false}
         hideColumnsButton={false}
         loading={isLoading}
-        leftActions={
-          <div className="flex gap-2">
-            {shouldShow("Visitor Out", "create") && (
-              <Button
-                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-                onClick={() => navigate("/smartsecure/visitor-in/add")}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add
-              </Button>
-            )}
-          </div>
-        }
+        // leftActions={
+        //   <div className="flex gap-2">
+        //     {shouldShow("Visitor Out", "create") && (
+        //       <Button
+        //         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        //         onClick={() => navigate("/smartsecure/visitor-in/add")}
+        //       >
+        //         <Plus className="w-4 h-4 mr-2" />
+        //         Add
+        //       </Button>
+        //     )}
+        //   </div>
+        // }
       />
 
       {/* OUT Gate Selection Dialog */}

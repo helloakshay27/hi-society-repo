@@ -108,8 +108,11 @@ export const FitoutChecklistDetailsPage = () => {
         </CardHeader>
         <CardContent className="p-6">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-gray-500">Loading checklist data...</div>
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading checklist data...</p>
+              </div>
             </div>
           ) : !checklistData ? (
             <div className="flex items-center justify-center py-8">

@@ -301,16 +301,16 @@ const SmartSecureVehiclesOut: React.FC = () => {
         case "action":
           return (
             <div className="flex gap-1 items-center">
-              {shouldShow("Vehicle Out", "show") && (
+              {/* {shouldShow("Vehicle Out", "show") && (
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="View">
                   <Eye className="w-4 h-4 text-gray-700" />
                 </Button>
-              )}
-              {shouldShow("Vehicle Out", "update") && (
+              )} */}
+              {/* {shouldShow("Vehicle Out", "update") && (
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="Edit">
                   <Pencil className="w-4 h-4" />
                 </Button>
-              )}
+              )} */}
               {row.out_time ? (
                 <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">
                   Exited
@@ -391,19 +391,19 @@ const SmartSecureVehiclesOut: React.FC = () => {
         hideTableExport={false}
         hideColumnsButton={false}
         loading={isLoading}
-        leftActions={
-          <div className="flex gap-2">
-            {shouldShow("Vehicle Out", "create") && (
-              <Button
-                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-                onClick={() => navigate("/smartsecure/visitor-in/add")}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add
-              </Button>
-            )}
-          </div>
-        }
+        // leftActions={
+        //   <div className="flex gap-2">
+        //     {shouldShow("Vehicle Out", "create") && (
+        //       <Button
+        //         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        //         onClick={() => navigate("/smartsecure/visitor-in/add")}
+        //       >
+        //         <Plus className="w-4 h-4 mr-2" />
+        //         Add
+        //       </Button>
+        //     )}
+        //   </div>
+        // }
       />
 
       {/* Pagination */}

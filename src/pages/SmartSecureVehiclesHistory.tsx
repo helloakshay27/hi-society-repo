@@ -139,7 +139,7 @@ const buildQueryString = (page: number, filters: FilterState): string => {
 // ─── Column Config ────────────────────────────────────────────────────────────
 
 const vehicleHistoryColumns: ColumnConfig[] = [
-  { key: "actions",       label: "Actions",        sortable: false, hideable: false, draggable: false },
+  // { key: "actions",       label: "Actions",        sortable: false, hideable: false, draggable: false },
   { key: "sr_no",         label: "Sr. No.",       sortable: false, hideable: true,  draggable: true },
   { key: "name",          label: "Name",          sortable: true,  hideable: true,  draggable: true },
   { key: "vehicle_number", label: "Vehicle Number", sortable: true,  hideable: true,  draggable: true },

@@ -1,11 +1,26 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Upload, X, FileImage } from "lucide-react";
 import { createReferralSetup } from "@/services/referralService";
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+};
 
 const CampaignsReferralSetupCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -132,28 +147,28 @@ const CampaignsReferralSetupCreate: React.FC = () => {
             {/* Toggle Switches Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Banner */}
-              <div className="space-y-2">
-                <Label htmlFor="banner" className="text-gray-600 text-sm">
-                  Banner
-                </Label>
-                <div className="flex items-center space-x-3">
-                  <Switch
-                    id="banner"
-                    checked={formData.bannerEnabled}
-                    onCheckedChange={(checked) =>
-                      handleToggleChange("bannerEnabled", checked)
-                    }
-                    className={
-                      formData.bannerEnabled
-                        ? "data-[state=checked]:bg-green-500"
-                        : "data-[state=unchecked]:bg-red-500"
-                    }
-                  />
-                  <span className="text-sm text-gray-600">
-                    {formData.bannerEnabled ? "Enabled" : "Disabled"}
-                  </span>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="banner" className="text-gray-600 text-sm">
+                Banner
+              </Label>
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="banner"
+                  checked={formData.bannerEnabled}
+                  onCheckedChange={(checked) =>
+                    handleToggleChange("bannerEnabled", checked)
+                  }
+                  className={
+                    formData.bannerEnabled
+                      ? "data-[state=checked]:bg-brand-green"
+                      : "data-[state=unchecked]:bg-gray-300"
+                  }
+                />
+                <span className="text-sm text-gray-600">
+                  {formData.bannerEnabled ? "Enabled" : "Disabled"}
+                </span>
               </div>
+            </div>
 
               {/* Referral Banner */}
               <div className="space-y-2">
@@ -172,8 +187,8 @@ const CampaignsReferralSetupCreate: React.FC = () => {
                     }
                     className={
                       formData.referralBannerEnabled
-                        ? "data-[state=checked]:bg-green-500"
-                        : "data-[state=unchecked]:bg-red-500"
+                        ? "data-[state=checked]:bg-brand-green"
+                        : "data-[state=unchecked]:bg-gray-300"
                     }
                   />
                   <span className="text-sm text-gray-600">
@@ -186,129 +201,112 @@ const CampaignsReferralSetupCreate: React.FC = () => {
             {/* Text Inputs Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Project Name */}
-              <div className="space-y-2">
-                <Label htmlFor="projectName" className="text-gray-600 text-sm">
-                  Project Name
-                </Label>
-                <Input
-                  id="projectName"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.projectName}
-                  onChange={(e) =>
-                    handleInputChange("projectName", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Project Name"
+                placeholder="Enter project name"
+                value={formData.projectName}
+                onChange={(e) => handleInputChange("projectName", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Project Reference Id */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="projectReferenceId"
-                  className="text-gray-600 text-sm"
-                >
-                  Project Reference Id
-                </Label>
-                <Input
-                  id="projectReferenceId"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.projectReferenceId}
-                  onChange={(e) =>
-                    handleInputChange("projectReferenceId", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Project Reference Id"
+                placeholder="Enter project reference id"
+                value={formData.projectReferenceId}
+                onChange={(e) =>
+                  handleInputChange("projectReferenceId", e.target.value)
+                }
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
 
             {/* Additional Text Inputs Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-gray-600 text-sm">
-                  Title
-                </Label>
-                <Input
-                  id="title"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.title}
-                  onChange={(e) =>
-                    handleInputChange("title", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Title"
+                placeholder="Enter title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-gray-600 text-sm">
-                  Description
-                </Label>
-                <Input
+              <div className="relative w-full md:col-span-2">
+                <textarea
                   id="description"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
                   value={formData.description}
                   onChange={(e) =>
                     handleInputChange("description", e.target.value)
                   }
+                  name="description"
+                  rows={3}
+                  placeholder=" "
+                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+      focus:outline-none
+      focus:border-[2px]
+      focus:border-[rgb(25,118,210)]
+      resize-vertical"
                 />
+                <label
+                  htmlFor="description"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+      peer-placeholder-shown:top-4
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-focus:-top-[10px]
+      peer-focus:text-sm
+      peer-focus:text-[rgb(25,118,210)]"
+                >
+                  Description
+                </label>
               </div>
 
               {/* Geo Link */}
-              <div className="space-y-2">
-                <Label htmlFor="geoLink" className="text-gray-600 text-sm">
-                  Geo Link
-                </Label>
-                <Input
-                  id="geoLink"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.geoLink}
-                  onChange={(e) =>
-                    handleInputChange("geoLink", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Geo Link"
+                placeholder="Enter geo link"
+                value={formData.geoLink}
+                onChange={(e) => handleInputChange("geoLink", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Details */}
-              <div className="space-y-2">
-                <Label htmlFor="details" className="text-gray-600 text-sm">
-                  Details
-                </Label>
-                <Input
-                  id="details"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.details}
-                  onChange={(e) =>
-                    handleInputChange("details", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Details"
+                placeholder="Enter details"
+                value={formData.details}
+                onChange={(e) => handleInputChange("details", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Mobile No */}
-              <div className="space-y-2">
-                <Label htmlFor="mobileNo" className="text-gray-600 text-sm">
-                  Mobile No
-                </Label>
-                <Input
-                  id="mobileNo"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.mobileNo}
-                  onChange={(e) =>
-                    handleInputChange("mobileNo", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Mobile No"
+                placeholder="Enter mobile no"
+                value={formData.mobileNo}
+                onChange={(e) => handleInputChange("mobileNo", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
 
             {/* Banner Upload */}
@@ -340,12 +338,9 @@ const CampaignsReferralSetupCreate: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    <Input
-                      type="text"
-                      placeholder="No file selected"
-                      readOnly
-                      className="bg-gray-50 cursor-default"
-                    />
+                    <div className="h-[45px] flex items-center px-3 bg-white border border-[#ddd] rounded text-sm text-gray-400">
+                      No file selected
+                    </div>
                   )}
                 </div>
                 <Button
@@ -376,12 +371,9 @@ const CampaignsReferralSetupCreate: React.FC = () => {
                 />
                 <div className="flex-1">
                   {formData.horizontalBanners.length === 0 && (
-                    <Input
-                      type="text"
-                      placeholder="No file selected"
-                      readOnly
-                      className="bg-gray-50 cursor-default"
-                    />
+                    <div className="h-[45px] flex items-center px-3 bg-white border border-[#ddd] rounded text-sm text-gray-400">
+                      No file selected
+                    </div>
                   )}
                 </div>
                 <Button

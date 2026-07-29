@@ -2127,12 +2127,10 @@ const FitoutRequestDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">
-            Loading fitout request details...
-          </span>
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading fitout request details...</p>
         </div>
       </div>
     );
@@ -2198,7 +2196,7 @@ const FitoutRequestDetails: React.FC = () => {
               <Button
                 onClick={handleCapturePayment}
                 size="sm"
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#C72030] hover:bg-[#C72030] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Capture Payment
@@ -2479,9 +2477,8 @@ const FitoutRequestDetails: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Button
                           onClick={handleDownloadAnnexuresPDF}
-                          variant="outline"
                           size="sm"
-                          className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                          className="h-8 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
                           disabled={isDownloadingAnnexurePDF || annexureSaveLoading}
                         >
                           {isDownloadingAnnexurePDF ? (
@@ -2493,9 +2490,8 @@ const FitoutRequestDetails: React.FC = () => {
                         </Button>
                         <Button
                           onClick={handleAnnexureResponsesEditButtonClick}
-                          variant="outline"
                           size="sm"
-                          className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                          className="h-8 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
                           disabled={annexureSaveLoading}
                         >
                           {annexureSaveLoading ? (
@@ -2565,9 +2561,8 @@ const FitoutRequestDetails: React.FC = () => {
                                   </Button> */}
                                   <Button
                                     onClick={() => category && handleStatusChangeOpen(category)}
-                                    variant="outline"
                                     size="sm"
-                                    className="h-7 text-xs border-gray-300 hover:bg-gray-50"
+                                    className="h-7 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
                                   >
                                     <Edit className="w-3 h-3 mr-1" />
                                     Change Status
@@ -2576,8 +2571,7 @@ const FitoutRequestDetails: React.FC = () => {
                                     <Button
                                       onClick={() => category && handleFileUploadOpen(category)}
                                       size="sm"
-                                      style={{ backgroundColor: '#C72030', color: 'white' }}
-                                      className="h-7 text-xs hover:opacity-90"
+                                      className="h-7 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030] [&_svg]:text-white"
                                     >
                                       <Upload className="w-3 h-3 mr-1" />
                                       Upload
@@ -3346,12 +3340,11 @@ const FitoutRequestDetails: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <Button
                                     onClick={() => handleDeviationEdit(deviation)}
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-gray-300"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="hover:bg-transparent [&_svg]:text-black"
                                   >
-                                    <Edit className="w-4 h-4 mr-1" />
-                                    Edit
+                                    <Edit className="w-4 h-4" />
                                   </Button>
                                 </td>
                                 <td className="px-6 py-4">
@@ -3621,8 +3614,7 @@ const FitoutRequestDetails: React.FC = () => {
                       </p>
                       <Button
                         onClick={handleCapturePayment}
-                        style={{ backgroundColor: '#C72030', color: 'white' }}
-                        className="hover:opacity-90"
+                        className="bg-[#C72030] text-white border-0 hover:bg-[#C72030] [&_svg]:text-white"
                       >
                         <DollarSign className="w-4 h-4 mr-2" />
                         Capture Payment

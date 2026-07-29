@@ -340,9 +340,10 @@ export const EditMembershipPlanPage = () => {
 
   if (loading) {
     return (
-      <div className="p-6 bg-white">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+      <div className="bg-gray-50 h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading membership plan...</p>
         </div>
       </div>
     );
@@ -366,7 +367,7 @@ export const EditMembershipPlanPage = () => {
           {/* Basic Info */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <User className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -463,7 +464,7 @@ export const EditMembershipPlanPage = () => {
           {/* Amenities */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <DollarSign className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">

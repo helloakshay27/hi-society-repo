@@ -307,7 +307,7 @@ const BMSCommunicationTemplate: React.FC = () => {
     <button
       type="button"
       onClick={handleAddTemplate}
-      className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium rounded-md flex items-center"
+      className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium flex items-center"
     >
       <Plus className="w-4 h-4 mr-2" /> Add
     </button>

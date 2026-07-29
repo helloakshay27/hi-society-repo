@@ -145,7 +145,7 @@ const buildQueryString = (page: number, filters: FilterState): string => {
 // ─── Column Config ────────────────────────────────────────────────────────────
 
 const historyColumns: ColumnConfig[] = [
-  { key: "actions",           label: "Actions",         sortable: false, hideable: false, draggable: false },
+  // { key: "actions",           label: "Actions",         sortable: false, hideable: false, draggable: false },
   { key: "sr_no",             label: "Sr. No.",         sortable: false, hideable: true,  draggable: true  },
   { key: "visitor_image",     label: "Photo",           sortable: false, hideable: true,  draggable: true  },
   { key: "id",                label: "Id",              sortable: true,  hideable: true,  draggable: true  },
@@ -364,11 +364,11 @@ const SmartSecureVisitorHistory: React.FC = () => {
                 <Eye className="w-4 h-4 text-gray-700" />
               </Button>
             )}
-            {shouldShow("Visitor History", "update") && (
+            {/* {shouldShow("Visitor History", "update") && (
               <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
-            )}
+            )} */}
           </div>
         );
 
@@ -556,19 +556,19 @@ const SmartSecureVisitorHistory: React.FC = () => {
         hideColumnsButton={false}
         loading={isLoading}
         onFilterClick={() => setFilterOpen(true)}
-        leftActions={
-          <div className="flex gap-2">
-            {shouldShow("Visitor History", "create") && (
-              <Button
-                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-                onClick={() => navigate("/smartsecure/visitor-in/add")}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add
-              </Button>
-            )}
-          </div>
-        }
+        // leftActions={
+        //   <div className="flex gap-2">
+        //     {shouldShow("Visitor History", "create") && (
+        //       <Button
+        //         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        //         onClick={() => navigate("/smartsecure/visitor-in/add")}
+        //       >
+        //         <Plus className="w-4 h-4 mr-2" />
+        //         Add
+        //       </Button>
+        //     )}
+        //   </div>
+        // }
       />
 
       {/* Pagination */}

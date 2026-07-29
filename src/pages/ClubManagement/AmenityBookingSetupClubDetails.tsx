@@ -649,8 +649,8 @@ export const BookingSetupDetailClubPage = () => {
             <div className="flex items-center gap-2">
               {
                 shouldShow("Facility Setup", "update") && <Button
-                  variant="outline"
                   onClick={() => handleEditClick(id)}
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                 >
                   Edit
                 </Button>
@@ -680,7 +680,7 @@ export const BookingSetupDetailClubPage = () => {
         <div className="space-y-6">
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <User className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -745,7 +745,7 @@ export const BookingSetupDetailClubPage = () => {
           {formData.facilityBookings && formData.facilityBookings.length > 0 && (
             <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <Settings className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -786,7 +786,7 @@ export const BookingSetupDetailClubPage = () => {
           {formData.addSubFacility && formData.subFacilities && formData.subFacilities.length > 0 && (
             <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <FileCog className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">SUB-FACILITIES</h3>
@@ -908,7 +908,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Charge Setup Card */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <DollarSign className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -1018,7 +1018,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Configure Slot */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE SLOT</h3>
@@ -1156,7 +1156,7 @@ export const BookingSetupDetailClubPage = () => {
 
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3 -mb-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">SLOTS CONFIGURED</h3>
@@ -1291,7 +1291,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Block Days Section */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Block Days</h3>
@@ -1392,7 +1392,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Configure Payment */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CreditCard className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -1492,7 +1492,7 @@ export const BookingSetupDetailClubPage = () => {
           <div className="flex items-start justify-between gap-4">
             <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
               <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <FileImage className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">COVER IMAGE</h3>
@@ -1515,7 +1515,7 @@ export const BookingSetupDetailClubPage = () => {
             </div>
             <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
               <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <Image className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Booking Summary Image</h3>
@@ -1544,7 +1544,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Description */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <NotepadText className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">DESCRIPTION</h3>
@@ -1562,7 +1562,7 @@ export const BookingSetupDetailClubPage = () => {
           <div className="grid  gap-6">
             <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <ReceiptText className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">TERMS & CONDITIONS*</h3>
@@ -1580,7 +1580,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Rule Setup */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <Settings className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">RULE SETUP</h3>

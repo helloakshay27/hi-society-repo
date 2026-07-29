@@ -214,7 +214,7 @@ const CMSRules: React.FC = () => {
   return (
     <div className="p-6 bg-[#fafafa] min-h-screen">
       {/* Configure Rule Section */}
-      <div className="max-w-md bg-white rounded shadow-sm border border-gray-100 overflow-hidden mb-8">
+      <div className="w-full bg-white rounded shadow-sm border border-gray-100 overflow-hidden mb-8">
         <div className="bg-[#efefef] p-3 border-l-4 border-[#f7941d] flex items-center">
           <Typography variant="subtitle1" fontWeight="600" color="#333">
             Configure Rule
@@ -259,13 +259,15 @@ const CMSRules: React.FC = () => {
                     <MenuItem value="months">Months</MenuItem>
                   </Select>
                 </FormControl>
-                <TextField
-                  fullWidth
-                  size="small"
-                  value={formData.periodValue}
-                  onChange={(e) => handleInputChange("periodValue", e.target.value)}
-                  sx={textFieldStyles}
-                />
+                <FormControl sx={{ flex: 1 }} size="small">
+                  <TextField
+                    fullWidth
+                    size="small"
+                    value={formData.periodValue}
+                    onChange={(e) => handleInputChange("periodValue", e.target.value)}
+                    sx={textFieldStyles}
+                  />
+                </FormControl>
               </div>
             </div>
           </div>
@@ -296,7 +298,7 @@ const CMSRules: React.FC = () => {
       <hr className="border-gray-200 border-dashed mb-8" />
 
       {/* Configured Rules Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="w-full flex flex-col gap-6">
         {rules.map((rule, idx) => {
           const isEditing = editingId === rule.id;
           return (
@@ -399,20 +401,22 @@ const CMSRules: React.FC = () => {
                           <MenuItem value="months">Months</MenuItem>
                         </Select>
                       </FormControl>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        value={isEditing ? editFormData.periodValue : rule.periodValue}
-                        onChange={(e) => handleEditInputChange("periodValue", e.target.value)}
-                        disabled={!isEditing}
-                        sx={{
-                          ...textFieldStyles,
-                          backgroundColor: isEditing ? "#fff" : "#f9f9f9",
-                          "& .MuiOutlinedInput-input.Mui-disabled": {
-                            WebkitTextFillColor: "#333",
-                          },
-                        }}
-                      />
+                      <FormControl sx={{ flex: 1 }} size="small">
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={isEditing ? editFormData.periodValue : rule.periodValue}
+                          onChange={(e) => handleEditInputChange("periodValue", e.target.value)}
+                          disabled={!isEditing}
+                          sx={{
+                            ...textFieldStyles,
+                            backgroundColor: isEditing ? "#fff" : "#f9f9f9",
+                            "& .MuiOutlinedInput-input.Mui-disabled": {
+                              WebkitTextFillColor: "#333",
+                            },
+                          }}
+                        />
+                      </FormControl>
                     </div>
                   </div>
                 </div>

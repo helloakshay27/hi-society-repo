@@ -7390,14 +7390,14 @@ const ProjectDetailsEdit = () => {
             <button
               type="submit"
               disabled={isSubmitting || loading}
-              className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
             >
               {isSubmitting ? "Updating..." : "Update"}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
             >
               Cancel
             </button>

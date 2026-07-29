@@ -202,7 +202,7 @@ const CampaignsReferralSetup: React.FC = () => {
                 navigate(`/campaigns/referral-setup/edit/${item.id}`)
               }
             >
-              <Edit className="w-4 h-4 text-gray-600" />
+              <Edit className="w-4 h-4 text-gray-900" />
             </button>
             {/* <button
               className="p-1 hover:bg-gray-100 rounded"

@@ -406,8 +406,11 @@ const EditCMSClubMembers = () => {
 
     if (loading) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="bg-gray-50 h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading club members...</p>
+                </div>
             </div>
         );
     }
@@ -940,10 +943,9 @@ const EditCMSClubMembers = () => {
                         Add Member
                     </Button>
                     <Button
-                        variant="default"
-                        className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
                         onClick={handleSubmit}
                         disabled={submitting}
+                        className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                     >
                         {submitting ? "Updating..." : "Update"}
                     </Button>

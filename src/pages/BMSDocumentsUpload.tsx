@@ -111,7 +111,7 @@ const getFlatOptionsFromAttachmentTree = (
 };
 
 const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
-  pageTitle = "Upload Folder & Files",
+  pageTitle = "",
   onUploadSuccess,
   returnPath = "/bms/documents/common-files",
 }) => {
@@ -438,7 +438,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                   mr: 1.5,
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "#ED820E" }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "#da7756" }} />
               </Avatar>
               Upload Information
             </h2>
@@ -966,13 +966,13 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
           <button
             type="button"
             onClick={handleCancel}
-            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-[#C72030] text-white hover:bg-[#B8252F] h-9 px-6 text-sm font-medium rounded-md min-w-[120px]"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
           >
             Submit
           </button>

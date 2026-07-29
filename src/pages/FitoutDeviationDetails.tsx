@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { SearchableSelect } from '@/components/ui/enhanced-select';
 
 interface Deviation {
   id: number;
@@ -551,19 +552,16 @@ const FitoutDeviationDetails: React.FC = () => {
           <div className="grid gap-4 py-4">
             {/* Status Dropdown */}
             <div className="grid gap-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status.id} value={String(status.id)}>
-                      {status.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                label="Status *"
+                value={selectedStatus}
+                onChange={(value) => setSelectedStatus(String(value))}
+                options={statusOptions.map((status) => ({
+                  value: String(status.id),
+                  label: status.name,
+                }))}
+                placeholder="Select status"
+              />
             </div>
 
             {/* Comments */}

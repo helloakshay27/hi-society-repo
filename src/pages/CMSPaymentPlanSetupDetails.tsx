@@ -69,7 +69,14 @@ const CMSPaymentPlanSetupDetails = () => {
     };
 
     if (loading) {
-        return <div className="p-10 text-gray-600">Loading payment plan details...</div>;
+        return (
+            <div className="bg-gray-50 h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading payment plan details...</p>
+                </div>
+            </div>
+        );
     }
 
     if (!plan) {
@@ -107,7 +114,7 @@ const CMSPaymentPlanSetupDetails = () => {
             {/* Plan Information */}
             <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
@@ -163,7 +170,7 @@ const CMSPaymentPlanSetupDetails = () => {
             <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6 mt-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
