@@ -286,7 +286,7 @@ const AppointmentzBlockDaysConfig = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            className="bg-transparent text-[#C72030] hover:bg-transparent"
             onClick={() => handleOpenEdit(item)}
           >
             <Edit className="w-4 h-4" />

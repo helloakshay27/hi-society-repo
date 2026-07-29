@@ -527,7 +527,7 @@ const AppointmentzRMConfig = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            className="bg-transparent text-[#C72030] hover:bg-transparent"
             disabled={!!editingRowId || isSubmitting}
             onClick={() => handleOpenEdit(item)}
           >
@@ -587,18 +587,18 @@ const AppointmentzRMConfig = () => {
       />
 
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-[#F6F4EE]">
+        <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white">
           <DialogHeader className="bg-white p-4 border-b flex flex-row items-center justify-between">
             <DialogTitle className="text-center w-full font-bold text-lg">
               {isEditMode ? `Edit - ${editingUserName}` : "Add New User"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="p-8 grid grid-cols-2 gap-x-6 gap-y-12 bg-[#F6F4EE]">
+          <div className="p-8 grid grid-cols-2 gap-x-6 gap-y-12 bg-white">
             <div className="relative">
               <label
                 htmlFor="firstName"
-                className="absolute -top-2 left-2 bg-[#F6F4EE] px-1 text-xs font-semibold text-gray-600 z-10"
+                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
               >
                 First Name <span className="text-[#C72030]">*</span>
               </label>
@@ -608,7 +608,7 @@ const AppointmentzRMConfig = () => {
                 placeholder="Enter First Name"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
                   formErrors.firstName ? "border-red-500" : ""
                 }`}
               />
@@ -620,7 +620,7 @@ const AppointmentzRMConfig = () => {
             <div className="relative">
               <label
                 htmlFor="lastName"
-                className="absolute -top-2 left-2 bg-[#F6F4EE] px-1 text-xs font-semibold text-gray-600 z-10"
+                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
               >
                 Last Name <span className="text-[#C72030]">*</span>
               </label>
@@ -630,7 +630,7 @@ const AppointmentzRMConfig = () => {
                 placeholder="Last Name"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
                   formErrors.lastName ? "border-red-500" : ""
                 }`}
               />
@@ -642,7 +642,7 @@ const AppointmentzRMConfig = () => {
             <div className="relative">
               <label
                 htmlFor="email"
-                className="absolute -top-2 left-2 bg-[#F6F4EE] px-1 text-xs font-semibold text-gray-600 z-10"
+                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
               >
                 Email <span className="text-[#C72030]">*</span>
               </label>
@@ -654,7 +654,7 @@ const AppointmentzRMConfig = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 disabled={isEditMode}
-                className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
                   isEditMode ? "opacity-60 cursor-not-allowed" : ""
                 } ${formErrors.email ? "border-red-500" : ""}`}
               />
@@ -666,7 +666,7 @@ const AppointmentzRMConfig = () => {
             <div className="relative">
               <label
                 htmlFor="mobile"
-                className="absolute -top-2 left-2 bg-[#F6F4EE] px-1 text-xs font-semibold text-gray-600 z-10"
+                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
               >
                 Mobile <span className="text-[#C72030]">*</span>
               </label>
@@ -676,7 +676,7 @@ const AppointmentzRMConfig = () => {
                 placeholder="Mobile Number"
                 value={formData.mobile}
                 onChange={handleInputChange}
-                className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
                   formErrors.mobile ? "border-red-500" : ""
                 }`}
               />
@@ -689,7 +689,7 @@ const AppointmentzRMConfig = () => {
               <div className="relative">
                 <label
                   htmlFor="password"
-                  className="absolute -top-2 left-2 bg-[#F6F4EE] px-1 text-xs font-semibold text-gray-600 z-10"
+                  className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
                 >
                   Password <span className="text-[#C72030]">*</span>
                 </label>
@@ -700,7 +700,7 @@ const AppointmentzRMConfig = () => {
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                  className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
                     formErrors.password ? "border-red-500" : ""
                   }`}
                 />
@@ -711,14 +711,14 @@ const AppointmentzRMConfig = () => {
             )}
 
             <div className="relative">
-              <label className="absolute -top-2 left-2 bg-[#F6F4EE] px-1 text-xs font-semibold text-gray-600 z-10">
+              <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
                 User Type <span className="text-[#C72030]">*</span>
               </label>
               <Select
                 onValueChange={handleSelectChange}
                 value={formData.userType}
               >
-                <SelectTrigger className={`bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 ${
+                <SelectTrigger className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
                   formErrors.userType ? "border-red-500" : ""
                 }`}>
                   <SelectValue placeholder="Select User Type" />

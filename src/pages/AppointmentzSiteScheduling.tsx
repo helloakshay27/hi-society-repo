@@ -203,7 +203,7 @@ const AppointmentzSiteScheduling = () => {
               size="sm"
               onClick={handleExportCSV}
               disabled={isExporting}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 !rounded-md"
               title="Export"
             >
               {isExporting ? (

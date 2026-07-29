@@ -385,7 +385,7 @@ const AppointmentzSlotsConfig = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            className="bg-transparent text-[#C72030] hover:bg-transparent"
             onClick={() => handleOpenEditModal(item)}
           >
             <Edit className="w-4 h-4" />
@@ -593,7 +593,7 @@ const AppointmentzSlotsConfig = () => {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="bg-white border-gray-300 px-2 focus:border-[#C72030] focus:ring-0 h-8 text-gray-500 text-sm"
+                    className="bg-white border-black px-2 hover:border-brand focus:border-brand focus:ring-0 h-8 text-gray-500 text-sm"
                   />
                 </div>
               </div>
@@ -610,7 +610,7 @@ const AppointmentzSlotsConfig = () => {
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleInputChange}
-                  className="bg-white border-gray-300 px-2 focus:border-[#C72030] focus:ring-0 h-8 text-gray-500 text-sm"
+                  className="bg-white border-black px-2 hover:border-brand focus:border-brand focus:ring-0 h-8 text-gray-500 text-sm"
                 />
               </div>
 
@@ -626,7 +626,7 @@ const AppointmentzSlotsConfig = () => {
                     defaultValue={formData.startHour}
                     value={formData.startHour}
                   >
-                                      <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
+                                      <SelectTrigger className="w-full bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
@@ -649,7 +649,7 @@ const AppointmentzSlotsConfig = () => {
                     defaultValue={formData.startMinute}
                     value={formData.startMinute}
                   >
-                                      <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
+                                      <SelectTrigger className="w-full bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
@@ -675,7 +675,7 @@ const AppointmentzSlotsConfig = () => {
                     defaultValue={formData.endHour}
                     value={formData.endHour}
                   >
-                    <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
+                    <SelectTrigger className="w-full bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
@@ -698,7 +698,7 @@ const AppointmentzSlotsConfig = () => {
                     defaultValue={formData.endMinute}
                     value={formData.endMinute}
                   >
-                                        <SelectTrigger className="w-full bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-8 py-0 px-2 text-sm">
+                                        <SelectTrigger className="w-full bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-8 py-0 px-2 text-sm">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
