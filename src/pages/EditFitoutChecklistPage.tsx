@@ -595,7 +595,10 @@ export const EditFitoutChecklistPage = () => {
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7', position: 'relative' }}>
       {initialLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
-          <div className="text-center py-8 text-lg font-medium text-gray-700">Loading checklist data...</div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading checklist data...</p>
+          </div>
         </div>
       )}
       {/* Header */}

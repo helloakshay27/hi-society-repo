@@ -760,7 +760,7 @@ const BMSParking: React.FC = () => {
       {/* Action Panel */}
       {showActionPanel && (
         <SelectionPanel
-          className="selection-panel--center"
+          className="selection-panel--end"
           onAdd={() => { setShowActionPanel(false); handleAddParking(); }}
           onImport={() => { setShowActionPanel(false); setIsImportOpen(true); }}
           onClearSelection={() => setShowActionPanel(false)}

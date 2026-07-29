@@ -1221,7 +1221,7 @@ const HiSocNoticeCreate = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium rounded-md min-w-[120px] flex items-center justify-center gap-2"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
           >
             {loading ? (
               <>
@@ -1236,7 +1236,7 @@ const HiSocNoticeCreate = () => {
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+            className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"
           >
             Cancel
           </button>

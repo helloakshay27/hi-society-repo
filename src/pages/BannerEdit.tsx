@@ -1102,14 +1102,14 @@ const BannerEdit = () => {
           type="submit"
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-[#C72030] hover:bg-[#A01828] !text-white h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+          className="bg-[#C72030] hover:bg-[#B01C29] !text-white px-10 py-2"
         >
           {loading ? 'Submitting...' : 'Submit'}
         </button>
         <button
           type="button"
           onClick={handleCancel}
-          className="bg-[#C72030] hover:bg-[#A01828] !text-white h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+          className="bg-[#C72030] hover:bg-[#B01C29] !text-white px-10 py-2"
         >
           Cancel
         </button>

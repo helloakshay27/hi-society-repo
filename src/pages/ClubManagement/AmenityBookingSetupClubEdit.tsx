@@ -1545,7 +1545,7 @@ export const EditBookingSetupClubPage = () => {
                 <div className="space-y-6">
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <User className="w-4 h-4" />
                             </div>
                             <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -1759,7 +1759,7 @@ export const EditBookingSetupClubPage = () => {
                                             // disabled={updatingStatus}
                                             sx={{
                                                 "& .MuiSwitch-switchBase": {
-                                                    color: "#ef4444",
+                                                    color: "#9ca3af",
                                                     "&.Mui-checked": {
                                                         color: "#22c55e",
                                                     },
@@ -1768,7 +1768,7 @@ export const EditBookingSetupClubPage = () => {
                                                     },
                                                 },
                                                 "& .MuiSwitch-track": {
-                                                    backgroundColor: "#ef4444",
+                                                    backgroundColor: "#d1d5db",
                                                 },
                                             }}
                                         />
@@ -1785,7 +1785,7 @@ export const EditBookingSetupClubPage = () => {
                         <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                         <DollarSign className="w-4 h-4" />
                                     </div>
                                     <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -2452,7 +2452,7 @@ export const EditBookingSetupClubPage = () => {
                     ) : (
                         <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <DollarSign className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -3046,7 +3046,7 @@ export const EditBookingSetupClubPage = () => {
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <CalendarDays className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -3069,7 +3069,7 @@ export const EditBookingSetupClubPage = () => {
                                             ],
                                         });
                                     }}
-                                    className="bg-purple-600 hover:bg-purple-700 mb-4"
+                                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 mb-4"
                                 >
                                     Add
                                 </Button>
@@ -3388,7 +3388,7 @@ export const EditBookingSetupClubPage = () => {
                                             }}
                                             sx={{
                                                 "& .MuiSwitch-switchBase": {
-                                                    color: "#ef4444",
+                                                    color: "#9ca3af",
                                                     "&.Mui-checked": {
                                                         color: "#22c55e",
                                                     },
@@ -3397,7 +3397,7 @@ export const EditBookingSetupClubPage = () => {
                                                     },
                                                 },
                                                 "& .MuiSwitch-track": {
-                                                    backgroundColor: "#ef4444",
+                                                    backgroundColor: "#d1d5db",
                                                 },
                                             }}
                                         />
@@ -3807,7 +3807,7 @@ export const EditBookingSetupClubPage = () => {
                                         </Select>
                                         <Button
                                             onClick={() => deleteFacilityBooking(booking.id)}
-                                            size="sm"
+                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                                         >
                                             Remove
                                         </Button>
@@ -3816,7 +3816,7 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="mt-4">
                                     <Button
                                         onClick={addFacilityBooking}
-                                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                                        className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                                     >
                                         Add
                                     </Button>
@@ -3829,7 +3829,7 @@ export const EditBookingSetupClubPage = () => {
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <CalendarDays className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -3838,8 +3838,7 @@ export const EditBookingSetupClubPage = () => {
                             </div>
                             <Button
                                 onClick={addBlockDay}
-                                className="bg-purple-600 hover:bg-purple-700 text-white"
-                                size="sm"
+                                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                             >
                                 Add
                             </Button>
@@ -4072,7 +4071,7 @@ export const EditBookingSetupClubPage = () => {
 
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <CreditCard className="w-4 h-4" />
                             </div>
                             <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -4165,7 +4164,7 @@ export const EditBookingSetupClubPage = () => {
                     <div className="flex items-start justify-between gap-4">
                         <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
                             <div className="flex items-center gap-3">
-                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <FileImage className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -4249,7 +4248,7 @@ export const EditBookingSetupClubPage = () => {
 
                         <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
                             <div className="flex items-center gap-3">
-                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <Image className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -4342,7 +4341,7 @@ export const EditBookingSetupClubPage = () => {
                     {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <Image className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -4431,7 +4430,7 @@ export const EditBookingSetupClubPage = () => {
 
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <NotepadText className="w-4 h-4" />
                             </div>
                             <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -4455,7 +4454,7 @@ export const EditBookingSetupClubPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                         <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                             <div className="flex items-center gap-3">
-                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <ReceiptText className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -4481,7 +4480,7 @@ export const EditBookingSetupClubPage = () => {
 
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <Settings className="w-4 h-4" />
                             </div>
                             <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -4616,9 +4615,8 @@ export const EditBookingSetupClubPage = () => {
                         </Button>
                         <Button
                             onClick={handleSave}
-                            className="bg-purple-600 hover:bg-purple-700 text-white w-full"
                             disabled={isSubmitting}
-                            style={{ maxWidth: "90px" }}
+                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                         >
                             {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Update"}
                         </Button>

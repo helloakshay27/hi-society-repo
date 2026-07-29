@@ -3620,7 +3620,7 @@ const EventEdit = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Proceed to save
               </button>
@@ -3634,7 +3634,7 @@ const EventEdit = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Cancel
               </button>
@@ -5000,14 +5000,14 @@ const EventEdit = () => {
                     type="submit"
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Submitting..." : "Submit Event"}
                   </button>
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
                   >
                     Cancel
                   </button>

@@ -949,8 +949,7 @@ export const CMSClubMembersDetails = () => {
                                     membershipData.allocation_payment_detail.payment_status.toLowerCase() === 'pending') && (
                                         <Button
                                             onClick={() => setIsCaptureDialogOpen(true)}
-                                            className="bg-[#16B364] hover:bg-[#129a55] text-white text-xs font-semibold px-3 py-1 h-auto ml-2"
-                                            size="sm"
+                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                                         >
                                             Capture Payment
                                         </Button>
@@ -1154,11 +1153,9 @@ export const CMSClubMembersDetails = () => {
                                                     onClick={() => {
                                                         window.open(bill.invoice_file!, '_blank');
                                                     }}
-                                                    variant="outline"
-                                                    className="w-full border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white"
-                                                    size="sm"
+                                                    className="w-full px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center justify-center gap-2"
                                                 >
-                                                    <Download className="w-3 h-3 mr-2" />
+                                                    <Download className="w-3 h-3" />
                                                     Download Invoice
                                                 </Button>
                                             )}

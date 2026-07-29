@@ -811,12 +811,10 @@ const AddCMSClubMembers = () => {
                                 {index > 0 && (
                                     <div className="flex justify-end mb-2">
                                         <Button
-                                            variant="ghost"
-                                            size="sm"
                                             onClick={() => removeMember(member.id)}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                                         >
-                                            <X className="w-4 h-4 mr-1" /> Remove Member
+                                            Remove Member
                                         </Button>
                                     </div>
                                 )}

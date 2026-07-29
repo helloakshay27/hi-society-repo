@@ -20,7 +20,7 @@ export function LogsTimeline({ logs }: LogsTimelineProps) {
                         )}
 
                         <div className="relative z-10 flex-shrink-0">
-                            <div className="w-6 h-6 rounded-full bg-primary border-4 border-background" />
+                            <div />
                         </div>
 
                         <div className="ml-6 flex-1 flex justify-between items-start gap-4">

@@ -1072,14 +1072,14 @@ const NoticeboardEdit = () => {
           <button
             type="submit"
             disabled={loading}
-            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
-          >
-            {loading ? 'Updating...' : 'Update'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 h-10"
+            >
+              Update
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 h-10"
           >
             Cancel
           </button>

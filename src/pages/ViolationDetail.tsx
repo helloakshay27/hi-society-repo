@@ -310,10 +310,11 @@ const ViolationDetail: React.FC = () => {
 
   if (!deviation) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <Toaster position="top-right" richColors closeButton />
-        <div className="flex items-center justify-center py-8">
-          <div className="text-gray-500">Loading violation details...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading violation details...</p>
         </div>
       </div>
     );
@@ -541,10 +542,10 @@ const ViolationDetail: React.FC = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="w-full text-xs h-7"
+                                className="w-full text-xs h-7 [&_svg]:text-[#C72030]"
                                 onClick={() => window.open(attachment.document_file_name, '_blank')}
                               >
-                                <Download className="w-3 h-3 mr-1" />
+                                <Download className="w-3 h-3 mr-1 text-[#C72030]" />
                                 Download
                               </Button>
                             </div>

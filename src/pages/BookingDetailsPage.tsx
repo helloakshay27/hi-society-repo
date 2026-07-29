@@ -390,14 +390,14 @@ const BookingDetailsPage = () => {
               {(bookings?.pg_state === "Pending" || bookings?.pg_state === "NA") && (
                 <Button
                   onClick={() => setIsCaptureDialogOpen(true)}
-                  className="bg-[#16B364] hover:bg-[#129a55] text-white text-xs font-semibold px-4 py-2 h-auto"
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                 >
                   Capture Payment
                 </Button>
               )}
               {bookings?.current_status === "Confirmed" &&
                 bookings?.pg_state === "Pending" && (
-                  <Button onClick={sendPaymentRequest} className="bg-[#F7941D] hover:bg-[#e0861a] text-white text-xs font-semibold px-4 py-2 h-auto">
+                  <Button onClick={sendPaymentRequest} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2">
                     Payment Request
                   </Button>
                 )}
@@ -885,7 +885,7 @@ const BookingDetailsPage = () => {
       content: (
         <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
               <Logs className="w-4 h-4" />
             </div>
             <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -924,7 +924,14 @@ const BookingDetailsPage = () => {
   }
 
   if (!bookings) {
-    return <div className="p-10 text-gray-600">Loading booking details...</div>;
+    return (
+      <div className="bg-gray-50 h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading booking details...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1095,7 +1102,7 @@ const BookingDetailsPage = () => {
           <Button
             onClick={handleCaptureSubmit}
             disabled={isSubmitting}
-            className="bg-[#00A65A] hover:bg-[#008d4c] text-white px-8 py-2 font-semibold"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
