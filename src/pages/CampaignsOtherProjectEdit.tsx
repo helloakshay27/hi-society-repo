@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, X } from "lucide-react";
 import {
   TextField,
   MenuItem,
@@ -70,6 +70,62 @@ const selectMenuProps = {
   },
 };
 
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
+    },
+  },
+};
+
+const multilineFieldStyles = {
+  "& .MuiOutlinedInput-root": {
+    height: "auto !important",
+    padding: "2px !important",
+    display: "flex",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
+    },
+  },
+  "& .MuiInputBase-input[aria-hidden='true']": {
+    flex: 0,
+    width: 0,
+    height: 0,
+    padding: "0 !important",
+    margin: 0,
+    display: "none",
+  },
+  "& .MuiInputBase-input": {
+    resize: "none !important",
+  },
+};
+
 const CampaignsOtherProjectEdit: React.FC = () => {
   const navigate = useNavigate();
   const { id: projectId } = useParams<{ id: string }>();
@@ -77,6 +133,20 @@ const CampaignsOtherProjectEdit: React.FC = () => {
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [estateBuilders, setEstateBuilders] = useState<EstateBuilder[]>([]);
   const [isLoadingBuilders, setIsLoadingBuilders] = useState(false);
+
+  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedGalleryFiles((prev) => [...prev, ...filesArray]);
+    }
+  };
+
+  const handleRemoveSelectedFile = (index: number) => {
+    setSelectedGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const [configForm, setConfigForm] = useState({
     name: "",
@@ -348,6 +418,11 @@ const CampaignsOtherProjectEdit: React.FC = () => {
         formData.append("builder_project[builder_id]", configForm.builder_id);
       }
 
+      selectedGalleryFiles.forEach((file) => {
+        formData.append("builder_project[gallery][]", file);
+        formData.append("builder_project[gallery_images][]", file);
+      });
+
       amenities.forEach((item, i) => {
         if (item.name) {
           if (item.id) {
@@ -522,24 +597,21 @@ const CampaignsOtherProjectEdit: React.FC = () => {
             {/* Row 1: Name and Cover Image */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Name"
                   value={configForm.name}
                   onChange={(e) =>
                     setConfigForm({ ...configForm, name: e.target.value })
                   }
                   placeholder="Enter project name"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Real Estate Client
-                </label>
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                  <InputLabel shrink>Real Estate Client</InputLabel>
                   <MuiSelect
                     value={configForm.builder_id}
                     onChange={(e) =>
@@ -548,6 +620,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                         builder_id: e.target.value as string,
                       })
                     }
+                    label="Real Estate Client"
+                    notched
                     displayEmpty
                     MenuProps={selectMenuProps}
                   >
@@ -567,12 +641,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
             {/* Row 2: Address and About */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Address"
                   multiline
                   minRows={3}
                   maxRows={6}
@@ -581,34 +652,15 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                     setConfigForm({ ...configForm, address: e.target.value })
                   }
                   placeholder="Enter address"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      height: "auto !important",
-                      padding: "2px !important",
-                      display: "flex",
-                    },
-                    "& .MuiInputBase-input[aria-hidden='true']": {
-                      flex: 0,
-                      width: 0,
-                      height: 0,
-                      padding: "0 !important",
-                      margin: 0,
-                      display: "none",
-                    },
-                    "& .MuiInputBase-input": {
-                      resize: "none !important",
-                    },
-                  }}
+                  InputLabelProps={{ shrink: true }}
+                  sx={multilineFieldStyles}
                 />
               </div>
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    About
-                  </label>
                   <TextField
                     fullWidth
-                    size="small"
+                    label="About"
                     multiline
                     minRows={3}
                     maxRows={6}
@@ -617,35 +669,17 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                       setConfigForm({ ...configForm, about: e.target.value })
                     }
                     placeholder="Enter description"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        height: "auto !important",
-                        padding: "2px !important",
-                        display: "flex",
-                      },
-                      "& .MuiInputBase-input[aria-hidden='true']": {
-                        flex: 0,
-                        width: 0,
-                        height: 0,
-                        padding: "0 !important",
-                        margin: 0,
-                        display: "none",
-                      },
-                      "& .MuiInputBase-input": {
-                        resize: "none !important",
-                      },
-                    }}
+                    InputLabelProps={{ shrink: true }}
+                    sx={multilineFieldStyles}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cover Image
-                  </label>
                   <TextField
                     fullWidth
-                    size="small"
+                    label="Cover Image"
                     type="file"
                     InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setConfigForm({
                         ...configForm,
@@ -678,14 +712,12 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                 </Label>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Logo
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Project Logo"
                   type="file"
                   InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setConfigForm({
                       ...configForm,
@@ -699,12 +731,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
             {/* Row 4: Project Reference Id and Geo Location URL */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Reference Id
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Project Reference Id"
                   value={configForm.projectReferenceId}
                   onChange={(e) =>
                     setConfigForm({
@@ -713,15 +742,14 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                     })
                   }
                   placeholder="Enter reference ID"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Geo Location URL
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Geo Location URL"
                   value={configForm.geoLocationURL}
                   onChange={(e) =>
                     setConfigForm({
@@ -730,6 +758,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                     })
                   }
                   placeholder="Enter geo location URL"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
             </div>
@@ -737,12 +767,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
             {/* Row 5: Reception Mobiles */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reception Mobile - 1
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Reception Mobile - 1"
                   value={configForm.receptionMobile1}
                   onChange={(e) =>
                     setConfigForm({
@@ -751,15 +778,14 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                     })
                   }
                   placeholder="Enter mobile number"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reception Mobile - 2
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Reception Mobile - 2"
                   value={configForm.receptionMobile2}
                   onChange={(e) => {
                     const value = e.target.value
@@ -771,6 +797,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                     });
                   }}
                   placeholder="Enter mobile number"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
             </div>
@@ -778,31 +806,29 @@ const CampaignsOtherProjectEdit: React.FC = () => {
             {/* Row 6: Latitude and Longitude */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Latitude
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Latitude"
                   value={configForm.latitude}
                   onChange={(e) =>
                     setConfigForm({ ...configForm, latitude: e.target.value })
                   }
                   placeholder="Enter latitude"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Longitude
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Longitude"
                   value={configForm.longitude}
                   onChange={(e) =>
                     setConfigForm({ ...configForm, longitude: e.target.value })
                   }
                   placeholder="Enter longitude"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
             </div>
@@ -810,24 +836,21 @@ const CampaignsOtherProjectEdit: React.FC = () => {
             {/* Row 7: Video Link and Project Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Video Link
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Video Link"
                   value={configForm.videoLink}
                   onChange={(e) =>
                     setConfigForm({ ...configForm, videoLink: e.target.value })
                   }
                   placeholder="Enter video URL"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Status
-                </label>
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                  <InputLabel shrink>Project Status</InputLabel>
                   <MuiSelect
                     value={configForm.projectStatus}
                     onChange={(e) =>
@@ -836,6 +859,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                         projectStatus: e.target.value as string,
                       })
                     }
+                    label="Project Status"
+                    notched
                     displayEmpty
                     MenuProps={selectMenuProps}
                   >
@@ -853,12 +878,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
 
             {/* Row 8: Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
               <TextField
                 fullWidth
-                size="small"
+                label="Description"
                 multiline
                 minRows={3}
                 maxRows={6}
@@ -867,50 +889,30 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                   setConfigForm({ ...configForm, description: e.target.value })
                 }
                 placeholder="Enter project description"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    height: "auto !important",
-                    padding: "2px !important",
-                    display: "flex",
-                  },
-                  "& .MuiInputBase-input[aria-hidden='true']": {
-                    flex: 0,
-                    width: 0,
-                    height: 0,
-                    padding: "0 !important",
-                    margin: 0,
-                    display: "none",
-                  },
-                  "& .MuiInputBase-input": {
-                    resize: "none !important",
-                  },
-                }}
+                InputLabelProps={{ shrink: true }}
+                sx={multilineFieldStyles}
               />
             </div>
 
             {/* Row 9: Project Area and External Project ID */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Area
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="Project Area"
                   value={configForm.projectArea}
                   onChange={(e) =>
                     setConfigForm({ ...configForm, projectArea: e.target.value })
                   }
                   placeholder="e.g., 2.5 Acres"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  External Project ID
-                </label>
                 <TextField
                   fullWidth
-                  size="small"
+                  label="External Project ID"
                   value={configForm.externalProjectId}
                   onChange={(e) =>
                     setConfigForm({
@@ -919,6 +921,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                     })
                   }
                   placeholder="Enter external project ID"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
             </div>
@@ -928,14 +932,44 @@ const CampaignsOtherProjectEdit: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Gallery images
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
-                <button
-                  type="button"
-                  className="text-gray-500 hover:text-gray-700"
-                >
+              <input
+                type="file"
+                ref={galleryInputRef}
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleGalleryChange}
+              />
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:border-orange-400 transition-colors"
+                onClick={() => galleryInputRef.current?.click()}
+              >
+                <div className="flex flex-col items-center gap-1 text-gray-500">
                   <Plus className="w-6 h-6" />
-                </button>
+                  <span className="text-xs">Click to add images</span>
+                </div>
               </div>
+              {selectedGalleryFiles.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-3">
+                  {selectedGalleryFiles.map((file, idx) => (
+                    <div key={idx} className="relative group">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        className="w-full h-24 object-cover rounded-md border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSelectedFile(idx)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      <p className="text-[10px] text-gray-500 truncate mt-1">{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Amenities */}
@@ -947,12 +981,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                 {amenities.map((amenity, index) => (
                   <div key={index} className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
                       <TextField
                         fullWidth
-                        size="small"
+                        label="Name"
                         placeholder="e.g., Club House"
                         value={amenity.name}
                         onChange={(e) => {
@@ -960,15 +991,14 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                           newAm[index].name = e.target.value;
                           setAmenities(newAm);
                         }}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
                       <TextField
                         fullWidth
-                        size="small"
+                        label="Description"
                         placeholder="Description (Optional)"
                         value={amenity.description}
                         onChange={(e) => {
@@ -976,6 +1006,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                           newAm[index].description = e.target.value;
                           setAmenities(newAm);
                         }}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
                       />
                     </div>
                   </div>
@@ -1016,12 +1048,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                 {configurations.map((conf, index) => (
                   <div key={index} className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
                       <TextField
                         fullWidth
-                        size="small"
+                        label="Name"
                         placeholder="e.g., 2 BHK"
                         value={conf.name}
                         onChange={(e) => {
@@ -1029,15 +1058,14 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                           newConf[index].name = e.target.value;
                           setConfigurations(newConf);
                         }}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
                       <TextField
                         fullWidth
-                        size="small"
+                        label="Description"
                         placeholder="e.g., 850 sq ft"
                         value={conf.description}
                         onChange={(e) => {
@@ -1045,6 +1073,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                           newConf[index].description = e.target.value;
                           setConfigurations(newConf);
                         }}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
                       />
                     </div>
                   </div>
@@ -1088,12 +1118,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                 {highlights.map((highlight, index) => (
                   <div key={index} className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
                       <TextField
                         fullWidth
-                        size="small"
+                        label="Name"
                         placeholder="e.g., Swimming Pool"
                         value={highlight.name}
                         onChange={(e) => {
@@ -1101,15 +1128,14 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                           newHL[index].name = e.target.value;
                           setHighlights(newHL);
                         }}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
                       <TextField
                         fullWidth
-                        size="small"
+                        label="Description"
                         placeholder="e.g., Olympic size pool"
                         value={highlight.description}
                         onChange={(e) => {
@@ -1117,6 +1143,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                           newHL[index].description = e.target.value;
                           setHighlights(newHL);
                         }}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
                       />
                     </div>
                   </div>
@@ -1159,12 +1187,9 @@ const CampaignsOtherProjectEdit: React.FC = () => {
               <div className="space-y-4">
                 {plans.map((plan, index) => (
                   <div key={index}>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Name
-                    </label>
                     <TextField
                       fullWidth
-                      size="small"
+                      label="Name"
                       placeholder="e.g., Master Plan"
                       value={plan.name}
                       onChange={(e) => {
@@ -1172,6 +1197,8 @@ const CampaignsOtherProjectEdit: React.FC = () => {
                         newPlans[index].name = e.target.value;
                         setPlans(newPlans);
                       }}
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                   </div>
                 ))}
