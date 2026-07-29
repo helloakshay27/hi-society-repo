@@ -370,6 +370,9 @@ const AccountingCostCenter = lazy(() => import("@/pages/AccountingCostCenter"));
 const AccountingTransactions = lazy(
   () => import("@/pages/AccountingTransactions")
 );
+const AccountingTransactionForm = lazy(
+  () => import("@/pages/AccountingTransactionForm")
+);
 const AccountingInvoices = lazy(() => import("@/pages/AccountingInvoices"));
 const AccountingReceipts = lazy(() => import("@/pages/AccountingReceipts"));
 const AccountingCharges = lazy(() => import("@/pages/AccountingCharges"));
@@ -1471,6 +1474,10 @@ export const setupMemberRoutes = (
     <Route
       path="/accounting/transactions"
       Component={withSuspense(AccountingTransactions)}
+    />
+    <Route
+      path="/accounting/transactions/add"
+      Component={withSuspense(AccountingTransactionForm)}
     />
     <Route
       path="/accounting/invoices"
