@@ -621,25 +621,32 @@ export const HiSocietySidebar: React.FC = () => {
               path: "/accounting/chart-of-accounts",
             },
             {
-              id: "ledger",
-              label: "Ledger",
+              id: "subgroup-setup",
+              label: "SubGroup Setup",
               icon: FileText,
-              path: "/accounting/ledger",
+              path: "/accounting/subgroup-setup",
             },
             {
-              id: "journal",
-              label: "Journal",
+              id: "opening-balances",
+              label: "Opening Balances",
               icon: FileText,
-              path: "/accounting/journal",
+              path: "/accounting/opening-balances",
             },
             {
-              id: "trial-balance",
-              label: "Trial Balance",
+              id: "tax-setup",
+              label: "Tax Setup",
               icon: Calculator,
-              path: "/accounting/trial-balance",
+              path: "/accounting/tax-setup",
+            },
+            {
+              id: "cost-center",
+              label: "Cost Center",
+              icon: Calculator,
+              path: "/accounting/cost-center",
             },
           ],
         },
+        
         {
           id: "transactions",
           label: "Transactions",
@@ -658,6 +665,38 @@ export const HiSocietySidebar: React.FC = () => {
           icon: Receipt,
           path: "/accounting/receipts",
         },
+         {
+                  id: "configuration",
+                  label: "Configuration",
+                  icon: BarChart3,
+                  subItems: [
+                    {
+                      id: "charges",
+                      label: "Charges",
+                      icon: PieChart,
+                      path: "/accounting/charges",
+                    },
+                    {
+                      id: "bill-cycles",
+                      label: "Bill Cycles",
+                      icon: FileText,
+                      path: "/accounting/bill-cycles",
+                    },
+                    {
+                      id: "units-bill-cycle-mapping",
+                      label: "Units & Bill Cycle Mapping",
+                      icon: Database,
+                      path: "/accounting/units-bill-cycle-mapping",
+                    },
+                    {
+                      id: "charge-calculations",
+                      label: "Charge Calculations",
+                      icon: Database,
+                      path: "/accounting/charge-calculations",
+                    },
+                  ],
+                },
+        
         {
           id: "reports",
           label: "Reports",

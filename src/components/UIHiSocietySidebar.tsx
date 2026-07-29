@@ -653,6 +653,37 @@ export const UIHiSocietySidebar: React.FC = () => {
           path: "/accounting/receipts",
         },
         {
+          id: "configuration",
+          label: "Configuration",
+          icon: BarChart3,
+          subItems: [
+            {
+              id: "charges",
+              label: "Charges",
+              icon: PieChart,
+              path: "/accounting/charges",
+            },
+            {
+              id: "bill-cycles",
+              label: "Bill Cycles",
+              icon: FileText,
+              path: "/accounting/bill-cycles",
+            },
+            {
+              id: "units-bill-cycle-mapping",
+              label: "Units & Bill Cycle Mapping",
+              icon: Database,
+              path: "/accounting/units-bill-cycle-mapping",
+            },
+            {
+              id: "charge-calculations",
+              label: "Charge Calculations",
+              icon: Database,
+              path: "/accounting/charge-calculations",
+            },
+          ],
+        },
+        {
           id: "reports",
           label: "Reports",
           icon: BarChart3,

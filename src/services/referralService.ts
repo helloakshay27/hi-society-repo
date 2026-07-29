@@ -13,11 +13,15 @@ export interface ReferralSetup {
   project_name: string;
   banner: string | null;
   banner_url?: string | null;
+  attachments: string | null;
   society_id: number;
   society_name?: string | null;
   project_reference_id: string | null;
   title: string | null;
   description: string | null;
+  geo_link: string | null;
+  details: string | null;
+  mobile_no: string | null;
   active: number;
   is_referral: boolean;
   created_at: string;
@@ -29,12 +33,28 @@ export interface ReferralSetupsResponse {
   referral_setups: ReferralSetup[];
 }
 
+export interface ReferralDocument {
+  id: number;
+  document?: string | null;
+  document_url?: string | null;
+  url?: string | null;
+  document_file_name?: string | null;
+}
+
 export interface ReferralSetupDetailResponse {
   id: number;
   project_name: string;
   banner: string | null;
+  banner_url?: string | null;
+  attachments: string | null;
+  documents?: ReferralDocument[];
   society_id: number;
   project_reference_id: string | null;
+  title: string | null;
+  description: string | null;
+  geo_link: string | null;
+  details: string | null;
+  mobile_no: string | null;
   active: number;
   created_at: string;
   updated_at: string;
@@ -46,8 +66,14 @@ export interface CreateReferralSetupPayload {
     project_reference_id: number;
     active: string;
     is_referral: string;
+    title?: string;
+    description?: string;
+    geo_link?: string;
+    details?: string;
+    mobile_no?: string;
     banner?: File | null;
   };
+  attachments?: File[];
 }
 
 export interface UpdateReferralSetupPayload {
@@ -56,8 +82,14 @@ export interface UpdateReferralSetupPayload {
     project_reference_id: number;
     active: string;
     is_referral: string;
+    title?: string;
+    description?: string;
+    geo_link?: string;
+    details?: string;
+    mobile_no?: string;
     banner?: File | null;
   };
+  attachments?: File[];
 }
 
 /**
@@ -117,8 +149,28 @@ export const createReferralSetup = async (
   formData.append("society_banner[active]", payload.society_banner.active);
   formData.append("society_banner[is_referral]", payload.society_banner.is_referral);
   
+  if (payload.society_banner.title) {
+    formData.append("society_banner[title]", payload.society_banner.title);
+  }
+  if (payload.society_banner.description) {
+    formData.append("society_banner[description]", payload.society_banner.description);
+  }
+  if (payload.society_banner.geo_link) {
+    formData.append("society_banner[geo_link]", payload.society_banner.geo_link);
+  }
+  if (payload.society_banner.details) {
+    formData.append("society_banner[details]", payload.society_banner.details);
+  }
+  if (payload.society_banner.mobile_no) {
+    formData.append("society_banner[mobile_no]", payload.society_banner.mobile_no);
+  }
   if (payload.society_banner.banner) {
     formData.append("society_banner[banner]", payload.society_banner.banner);
+  }
+  if (payload.attachments) {
+    payload.attachments.forEach((file) => {
+      formData.append("attachments[]", file);
+    });
   }
 
   const response = await axios.post(
@@ -151,8 +203,28 @@ export const updateReferralSetup = async (
   formData.append("society_banner[active]", payload.society_banner.active);
   formData.append("society_banner[is_referral]", payload.society_banner.is_referral);
   
+  if (payload.society_banner.title) {
+    formData.append("society_banner[title]", payload.society_banner.title);
+  }
+  if (payload.society_banner.description) {
+    formData.append("society_banner[description]", payload.society_banner.description);
+  }
+  if (payload.society_banner.geo_link) {
+    formData.append("society_banner[geo_link]", payload.society_banner.geo_link);
+  }
+  if (payload.society_banner.details) {
+    formData.append("society_banner[details]", payload.society_banner.details);
+  }
+  if (payload.society_banner.mobile_no) {
+    formData.append("society_banner[mobile_no]", payload.society_banner.mobile_no);
+  }
   if (payload.society_banner.banner) {
     formData.append("society_banner[banner]", payload.society_banner.banner);
+  }
+  if (payload.attachments) {
+    payload.attachments.forEach((file) => {
+      formData.append("attachments[]", file);
+    });
   }
 
   const response = await axios.put(
