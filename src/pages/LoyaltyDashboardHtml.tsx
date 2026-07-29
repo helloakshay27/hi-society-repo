@@ -1,3 +1,4 @@
+import { InfoIcon } from '@/components/ui/info-icon';
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -613,7 +614,7 @@ window.addEventListener('load',()=>{
   <div className="tn" onClick={(event) => { switchTab('redemption',event.currentTarget) }}><span className="tn-ico">🎁</span> Redemption</div>
   <div className="tn" onClick={(event) => { switchTab('wallet',event.currentTarget) }}><span className="tn-ico">💰</span> Wallet</div>
   <div className="tn" onClick={(event) => { switchTab('orders',event.currentTarget) }}><span className="tn-ico">🧾</span> Orders</div>
-  <div className="tn" onClick={(event) => { switchTab('storeinv',event.currentTarget) }}><span className="tn-ico">🏪</span> Store & Inventory</div>
+  <div className="tn" onClick={(event) => { switchTab('storeinv',event.currentTarget) }}><span className="tn-ico">🏪</span> Store & Inventory<InfoIcon details="Manage rewards catalogue availability." /></div>
 </div>
 
 
@@ -742,7 +743,7 @@ window.addEventListener('load',()=>{
 
     <div className="chart-card">
       <div className="cc-hd">
-        <div><div className="cc-title">Member Tier Distribution</div></div>
+        <div><div className="cc-title">Member Tier Distribution<InfoIcon details="Distribution of members across different tiers." /></div></div>
         <div className="cc-acts">
           <button className="ct-btn active" onClick={(event) => { switchChart('tiers','doughnut',event.currentTarget) }}>Donut</button>
           <button className="ct-btn" onClick={(event) => { switchChart('tiers','bar',event.currentTarget) }}>Bar</button>
@@ -852,7 +853,7 @@ window.addEventListener('load',()=>{
   
   <div className="card">
     <div className="card-hd">
-      <div><div className="card-title">All Active Rules</div><div className="card-sub">34 rules · click any row to inspect</div></div>
+      <div><div className="card-title">All Active Rules<InfoIcon details="List of all currently active rules." /></div><div className="card-sub">34 rules · click any row to inspect</div></div>
     </div>
     <div className="tbl-wrap">
       <table className="tbl">
@@ -995,7 +996,7 @@ window.addEventListener('load',()=>{
   <div className="g g2" style={{ marginBottom: "14px" }}>
     <div className="chart-card">
       <div className="cc-hd">
-        <div><div className="cc-title">Tier Distribution</div></div>
+        <div><div className="cc-title">Tier Distribution<InfoIcon details="Breakdown of members by tier." /></div></div>
         <div className="cc-acts">
           <button className="ct-btn active" onClick={(event) => { switchChart('tierdist','doughnut',event.currentTarget) }}>Donut</button>
           <button className="ct-btn" onClick={(event) => { switchChart('tierdist','bar',event.currentTarget) }}>Bar</button>
@@ -1163,7 +1164,7 @@ window.addEventListener('load',()=>{
 
   
   <div className="card">
-    <div className="card-hd"><div><div className="card-title">Pending Encashments</div><div className="card-sub">42 requests · ₹2.1L total · click to process</div></div></div>
+    <div className="card-hd"><div><div className="card-title">Pending Encashments<InfoIcon details="List of pending encashment requests." /></div><div className="card-sub">42 requests · ₹2.1L total · click to process</div></div></div>
     <div className="tbl-wrap">
       <table className="tbl">
         <thead><tr><th>Member</th><th>Points</th><th>₹ Value</th><th>Requested</th><th>Bank</th><th>Status</th></tr></thead>
@@ -1206,7 +1207,7 @@ window.addEventListener('load',()=>{
 
     
     <div className="card">
-      <div className="card-hd"><div><div className="card-title">Wallet Split</div><div className="card-sub">Points in cold vs active wallet</div></div></div>
+      <div className="card-hd"><div><div className="card-title">Wallet Split<InfoIcon details="Points distributed in cold vs active wallet." /></div><div className="card-sub">Points in cold vs active wallet</div></div></div>
       <div className="stat-line" onClick={(event) => { openDrill('cold-wallet',{title:'Cold Wallet'}) }}>
         <span style={{ fontWeight: "600" }}>Cold Wallet (locked)</span>
         <span style={{ fontWeight: "700", color: "var(--violet)" }}>3,22,550</span>
@@ -1231,7 +1232,7 @@ window.addEventListener('load',()=>{
 
     
     <div className="card">
-      <div className="card-hd"><div><div className="card-title">Liability Health</div><div className="card-sub">Points cost · ₹1 per point</div></div></div>
+      <div className="card-hd"><div><div className="card-title">Liability Health<InfoIcon details="Financial overview of outstanding point liabilities." /></div><div className="card-sub">Points cost · ₹1 per point</div></div></div>
       <div className="stat-line" onClick={(event) => { openDrill('liability-total',{title:'Total Loyalty Liability'}) }}>
         <span style={{ fontWeight: "600" }}>Total Liability</span>
         <span style={{ fontWeight: "700", color: "var(--crimson)" }}>₹6,45,100</span>
@@ -1362,7 +1363,7 @@ window.addEventListener('load',()=>{
   <div className="g g2" style={{ marginBottom: "14px" }}>
     <div className="chart-card">
       <div className="cc-hd">
-        <div><div className="cc-title">Order Age Distribution</div></div>
+        <div><div className="cc-title">Order Age Distribution<InfoIcon details="Distribution of orders by their age." /></div></div>
       </div>
       <div style={{ height: "190px", position: "relative" }}><canvas id="c-orderage"></canvas></div>
       <div className="insight-wrap">
@@ -1375,7 +1376,7 @@ window.addEventListener('load',()=>{
     </div>
     <div className="chart-card">
       <div className="cc-hd">
-        <div><div className="cc-title">Fulfilled vs Stuck</div></div>
+        <div><div className="cc-title">Fulfilled vs Stuck<InfoIcon details="Comparison of fulfilled and stuck orders." /></div></div>
       </div>
       <div style={{ height: "190px", position: "relative" }}><canvas id="c-orderstatus"></canvas></div>
       <div className="insight-wrap">
@@ -1465,7 +1466,7 @@ window.addEventListener('load',()=>{
     </div>
     <div className="chart-card">
       <div className="cc-hd">
-        <div><div className="cc-title">Category Composition</div></div>
+        <div><div className="cc-title">Category Composition<InfoIcon details="Composition of categories." /></div></div>
       </div>
       <div style={{ height: "190px", position: "relative" }}><canvas id="c-catmix"></canvas></div>
       <div className="insight-wrap">
@@ -1479,7 +1480,7 @@ window.addEventListener('load',()=>{
   </div>
 
   <div className="card">
-    <div className="card-hd"><div><div className="card-title">How to Fix</div></div></div>
+    <div className="card-hd"><div><div className="card-title">How to Fix<InfoIcon details="Suggested actions to resolve issues." /></div></div></div>
     <div className="tbl-wrap">
       <table className="tbl">
         <thead><tr><th>Step</th><th>Action</th><th>Owner</th></tr></thead>

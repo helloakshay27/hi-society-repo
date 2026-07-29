@@ -1,3 +1,4 @@
+import { InfoIcon } from '@/components/ui/info-icon';
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -452,13 +453,13 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="3" lbl="Silver Tier" color="#798C5E" />
               <Dk val="0" lbl="Other Tiers" color="#888" />
             </DkStrip>
-            <DSec>Tier Breakdown</DSec>
+            <DSec>Tier Breakdown <InfoIcon details="Information about Tier Breakdown" /></DSec>
             <DSl l="Diamond (4,00,000 pts)" r="0 members" />
             <DSl l="Titanium (3,00,000 pts)" r="0 members" />
             <DSl l="Gold (2,00,000 pts)" r="0 members" />
             <DSl l="Silver (1,00,000 pts)" r={<span className="font-bold text-[#798C5E]">3 members</span>} />
             <DSl l="Bronze (1,000 pts)" r="0 members" />
-            <DSec>Programme Context</DSec>
+            <DSec>Programme Context <InfoIcon details="Information about Programme Context" /></DSec>
             {infoBox(
               <>
                 Welcome bonus: Diamond &amp; Titanium = 1,000 pts · Gold, Silver, Bronze = 100 pts.
@@ -475,11 +476,11 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="0%" lbl="Redeemed" color="#E7848E" />
               <Dk val="27d" lbl="Unmoved" color="#EDC488" />
             </DkStrip>
-            <DSec>The Chain That's Broken</DSec>
+            <DSec>The Chain That's Broken <InfoIcon details="Information about The Chain That's Broken" /></DSec>
             <DSl l="1. Items in aggregator" r={<span className="font-bold text-[#108C72]">3,235</span>} />
             <DSl l="2. Items added to store" r={<span className="font-bold text-[#E7848E]">0 ← breaks here</span>} />
             <DSl l="3. Points redeemed" r={<span className="font-bold text-[#E7848E]">0</span>} />
-            <DSec>Expiry Risk</DSec>
+            <DSec>Expiry Risk <InfoIcon details="Information about Expiry Risk" /></DSec>
             {infoBox(
               <>
                 Expiry window needs confirmation from the dev team — if configured, all 12,400
@@ -487,7 +488,7 @@ export const LoyaltyDashboardNew = () => {
               </>,
               "warn"
             )}
-            <DSec>Member Breakdown</DSec>
+            <DSec>Member Breakdown <InfoIcon details="Information about Member Breakdown" /></DSec>
             <DSl l="Satish Poojary" r={<span className="font-bold">4,200 pts</span>} />
             <DSl l="Shivaji Mali" r={<span className="font-bold">4,100 pts</span>} />
             <DSl l="Sanjay Yadav" r={<span className="font-bold">4,100 pts</span>} />
@@ -501,7 +502,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="Silver" lbl="Tier" color="#798C5E" />
               <Dk val="4,200" lbl="Pts Balance" />
             </DkStrip>
-            <DSec>Satish Poojary</DSec>
+            <DSec>Satish Poojary <InfoIcon details="Information about Satish Poojary" /></DSec>
             <DSl l="Claim ID" r="#52" />
             <DSl l="Contest" r="Spring Carnival Scratch" />
             <DSl l="Prize" r="XOXO Gift Box" />
@@ -516,7 +517,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="Silver" lbl="Tier" color="#798C5E" />
               <Dk val="4,100" lbl="Pts Balance" />
             </DkStrip>
-            <DSec>Shivaji Mali</DSec>
+            <DSec>Shivaji Mali <InfoIcon details="Information about Shivaji Mali" /></DSec>
             <DSl l="Claim ID" r="#50" />
             <DSl l="Contest" r="Spring Carnival Scratch" />
             <DSl l="Prize" r="XOXO Gift Box" />
@@ -531,7 +532,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="Silver" lbl="Tier" color="#798C5E" />
               <Dk val="4,100" lbl="Pts Balance" />
             </DkStrip>
-            <DSec>Sanjay Yadav</DSec>
+            <DSec>Sanjay Yadav <InfoIcon details="Information about Sanjay Yadav" /></DSec>
             <DSl l="Claim ID" r="#36" />
             <DSl l="Contest" r="March Madness Spin 2026" />
             <DSl l="Prize" r="Lounge Access" />
@@ -551,7 +552,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="7" lbl="Stuck — Paid" color="#E7848E" />
               <Dk val="45" lbl="Fulfilled/Closed" />
             </DkStrip>
-            <DSec>Why 7 are flagged</DSec>
+            <DSec>Why 7 are flagged <InfoIcon details="Information about Why 7 are flagged" /></DSec>
             {infoBox(
               <>
                 7 orders are marked <strong>Paid</strong> but their fulfilment status has stayed{" "}
@@ -575,13 +576,13 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="107" lbl="Days — Oldest" />
               <Dk val="100%" lbl="Already Paid" color="#108C72" />
             </DkStrip>
-            <DSec>Stuck Orders (sample)</DSec>
+            <DSec>Stuck Orders (sample) <InfoIcon details="Information about Stuck Orders (sample)" /></DSec>
             <DSl l="ORD20260312...8032B" r="₹660 · Pending" />
             <DSl l="ORD20260312...3DB" r="₹6,203 · Pending" />
             <DSl l="ORD20260312...0C51" r="₹1,771 · Pending" />
             <DSl l="ORD20260312...C093" r="₹6,203 · Pending" />
             <DSl l="+3 more, same customer" r="" />
-            <DSec>Root Cause</DSec>
+            <DSec>Root Cause <InfoIcon details="Information about Root Cause" /></DSec>
             {infoBox(
               "All 7 belong to customer Roshan Shetty, created 12–13 Mar 2026. Payment cleared and points were deducted, but order status was never advanced past Pending — likely a fulfilment-team follow-up gap rather than a payment issue."
             )}
@@ -598,7 +599,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="18" lbl="Granted" color="#EDC488" />
               <Dk val="34" lbl="Claimed" color="#108C72" />
             </DkStrip>
-            <DSec>What does Granted mean?</DSec>
+            <DSec>What does Granted mean? <InfoIcon details="Information about What does Granted mean?" /></DSec>
             {infoBox(
               <>
                 <strong>Claimed</strong> = member has received their prize.{" "}
@@ -608,7 +609,7 @@ export const LoyaltyDashboardNew = () => {
               </>,
               "warn"
             )}
-            <DSec>Contests</DSec>
+            <DSec>Contests <InfoIcon details="Information about Contests" /></DSec>
             <DSl l="Spring Carnival Scratch" r={<span className="font-semibold">34 claims</span>} />
             <DSl l="March Madness Spin 2026" r={<span className="font-semibold">18 claims</span>} />
           </>
@@ -620,12 +621,12 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="0" lbl="Live in Store" color="#E7848E" />
               <Dk val="3,235" lbl="In Aggregator" color="#108C72" />
             </DkStrip>
-            <DSec>Available to Add</DSec>
+            <DSec>Available to Add <InfoIcon details="Information about Available to Add" /></DSec>
             <DSl l="🛍️ Merchandise" r={<span className="font-semibold text-[#108C72]">3,165 items</span>} />
             <DSl l="✈️ Lounge Access" r={<span className="font-semibold text-[#108C72]">62 items</span>} />
             <DSl l="🎫 Airline Miles" r={<span className="font-semibold text-[#108C72]">8 items</span>} />
             <DSl l="🎁 Gift Cards" r={<span className="text-[#798C5E]">0 items</span>} />
-            <DSec>How to Fix</DSec>
+            <DSec>How to Fix <InfoIcon details="Information about How to Fix" /></DSec>
             {infoBox(
               <>
                 1. Go to Aggregator Inventory in the Loyalty menu.
@@ -649,7 +650,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="18" lbl="Granted" color="#EDC488" />
               <Dk val="66" lbl="Oldest (days)" color="#E7848E" />
             </DkStrip>
-            <DSec>Granted Claims — Oldest First</DSec>
+            <DSec>Granted Claims — Oldest First <InfoIcon details="Information about Granted Claims — Oldest First" /></DSec>
             <DSl l="Pravin Deshmukh" r={<span><BadgeWarn>Granted</BadgeWarn> 66d</span>} />
             <DSl l="Yogesh Kene" r={<span><BadgeWarn>Granted</BadgeWarn> 33d</span>} />
             <DSl l="Sanjay Yadav" r={<span><BadgeWarn>Granted</BadgeWarn> 32d</span>} />
@@ -666,7 +667,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="1" lbl="Active" color="#108C72" />
               <Dk val="1" lbl="Expired" color="#798C5E" />
             </DkStrip>
-            <DSec>Active Offer</DSec>
+            <DSec>Active Offer <InfoIcon details="Information about Active Offer" /></DSec>
             <DSl l="Offer ID" r={<span className="font-semibold">OFF-0044</span>} />
             <DSl l="Title" r={<span className="font-semibold">azsdcftv</span>} />
             <DSl l="Site" r="Runwal Demo" />
@@ -690,7 +691,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="1,00,000" lbl="Exit Points" />
               <Dk val="100" lbl="Welcome Bonus" />
             </DkStrip>
-            <DSec>Silver Tier Details</DSec>
+            <DSec>Silver Tier Details <InfoIcon details="Information about Silver Tier Details" /></DSec>
             <DSl l="Current members" r={<span className="font-bold text-[#798C5E]">3</span>} />
             <DSl l="Points to next tier (Gold)" r="2,00,000" />
             <DSl l="Tier type" r="Life Time" />
@@ -704,7 +705,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="4,00,000" lbl="Exit Points" />
               <Dk val="1,000" lbl="Welcome Bonus" />
             </DkStrip>
-            <DSec>Diamond Tier</DSec>
+            <DSec>Diamond Tier <InfoIcon details="Information about Diamond Tier" /></DSec>
             <DSl l="Members" r="0" />
             <DSl l="Tier type" r="Life Time" />
           </>
@@ -739,7 +740,7 @@ export const LoyaltyDashboardNew = () => {
             <DkStrip>
               <Dk val="Claimed" lbl="Status" color="#108C72" />
             </DkStrip>
-            <DSec>Claim #52</DSec>
+            <DSec>Claim #52 <InfoIcon details="Information about Claim #52" /></DSec>
             <DSl l="Member" r={<span className="font-semibold">Satish Poojary</span>} />
             <DSl l="Mobile" r="9819408921" />
             <DSl l="Contest" r="Spring Carnival Scratch" />
@@ -754,7 +755,7 @@ export const LoyaltyDashboardNew = () => {
             <DkStrip>
               <Dk val="Claimed" lbl="Status" color="#108C72" />
             </DkStrip>
-            <DSec>Claim #50</DSec>
+            <DSec>Claim #50 <InfoIcon details="Information about Claim #50" /></DSec>
             <DSl l="Member" r={<span className="font-semibold">Shivaji Mali</span>} />
             <DSl l="Mobile" r="9428299927" />
             <DSl l="Contest" r="Spring Carnival Scratch" />
@@ -768,7 +769,7 @@ export const LoyaltyDashboardNew = () => {
             <DkStrip>
               <Dk val="Granted" lbl="Status" color="#EDC488" />
             </DkStrip>
-            <DSec>Claim #42 — Action Required</DSec>
+            <DSec>Claim #42 — Action Required <InfoIcon details="Information about Claim #42 — Action Required" /></DSec>
             <DSl l="Member" r={<span className="font-semibold">ASHOK YADAV</span>} />
             <DSl l="Mobile" r="9821933673" />
             <DSl l="Contest" r="March Madness Spin 2026" />
@@ -789,7 +790,7 @@ export const LoyaltyDashboardNew = () => {
             <DkStrip>
               <Dk val="Granted" lbl="Status" color="#EDC488" />
             </DkStrip>
-            <DSec>Claim #39 — Action Required</DSec>
+            <DSec>Claim #39 — Action Required <InfoIcon details="Information about Claim #39 — Action Required" /></DSec>
             <DSl l="Member" r={<span className="font-semibold">Roshan Shetty</span>} />
             <DSl l="Contest" r="Spring Carnival Scratch" />
             <DSl l="Prize" r="XOXO Gift Box" />
@@ -802,7 +803,7 @@ export const LoyaltyDashboardNew = () => {
             <DkStrip>
               <Dk val="Granted" lbl="Status" color="#EDC488" />
             </DkStrip>
-            <DSec>Claim #36 — Action Required</DSec>
+            <DSec>Claim #36 — Action Required <InfoIcon details="Information about Claim #36 — Action Required" /></DSec>
             <DSl l="Member" r={<span className="font-semibold">Sanjay Yadav</span>} />
             <DSl l="Mobile" r="7597842080" />
             <DSl l="Contest" r="March Madness Spin 2026" />
@@ -1017,9 +1018,7 @@ export const LoyaltyDashboardNew = () => {
             className="cursor-pointer rounded-[10px] border border-[#F0D9B0] bg-[#FFF7EB] px-3.5 py-[11px] transition-shadow hover:shadow-[0_3px_10px_rgba(218,119,86,0.18)]"
             onClick={() => openDrill("d-members")}
           >
-            <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]">
-              Active Members
-            </div>
+            <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]"> Active Members <InfoIcon details="Total number of currently active members." /> </div>
             <div className="text-[22px] font-bold leading-none text-[#2C2C2C]">
               {dashboardData?.active_members ?? 3}
             </div>
@@ -1032,9 +1031,7 @@ export const LoyaltyDashboardNew = () => {
             className="cursor-pointer rounded-[10px] border border-[#F0D9B0] bg-[#FFF7EB] px-3.5 py-[11px] transition-shadow hover:shadow-[0_3px_10px_rgba(218,119,86,0.18)]"
             onClick={() => openDrill("d-points")}
           >
-            <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]">
-              Points Outstanding
-            </div>
+            <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]"> Points Outstanding <InfoIcon details="Total points currently held by members." /> </div>
             <div className="text-[22px] font-bold leading-none text-[#EDC488]">
               {dashboardData?.points_outstanding?.toLocaleString() ?? "12,400"}
             </div>
@@ -1049,9 +1046,7 @@ export const LoyaltyDashboardNew = () => {
             className="cursor-pointer rounded-[10px] border border-[#F0D9B0] bg-[#FFF7EB] px-3.5 py-[11px] transition-shadow hover:shadow-[0_3px_10px_rgba(218,119,86,0.18)]"
             onClick={() => openDrill("d-claims")}
           >
-            <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]">
-              Claims
-            </div>
+            <div className="mb-[3px] text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]"> Claims <InfoIcon details="Total claims submitted by members." /> </div>
             <div className="text-[22px] font-bold leading-none text-[#2C2C2C]">0</div>
             <div className="mt-[3px] text-[10px] text-[#EDC488]">0 Granted · oldest 0d</div>
             <div className="mt-1.5 h-[3px] overflow-hidden rounded-sm bg-[#F0D9B0]">
@@ -1168,9 +1163,7 @@ export const LoyaltyDashboardNew = () => {
           <div className="rounded-[10px] border border-[#E0D8CC] bg-white p-3">
             <div className="mb-2 flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-semibold text-[#2C2C2C]">
-                  Claims Backlog — Is It Getting Worse?
-                </div>
+                <div className="text-[11px] font-semibold text-[#2C2C2C]">Claims Backlog — Is It Getting Worse? <InfoIcon details="Trend of unresolved claims over time." /></div>
                 <div className="mt-0.5 text-[9px] text-[#798C5E]">
                   18 stuck claims by age · none fulfilled in 30+ days
                 </div>
@@ -1207,9 +1200,7 @@ export const LoyaltyDashboardNew = () => {
           <div className="rounded-[10px] border border-[#E0D8CC] bg-white p-3">
             <div className="mb-2 flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-semibold text-[#2C2C2C]">
-                  Member Tier Distribution
-                </div>
+                <div className="text-[11px] font-semibold text-[#2C2C2C]">Member Tier Distribution <InfoIcon details="Breakdown of members across different tiers." /></div>
                 <div className="mt-0.5 text-[9px] text-[#798C5E]">
                   {dashboardData?.active_members ?? 3} active members across {dashboardData?.tier_distribution?.length ?? 5} tiers
                 </div>
@@ -1276,7 +1267,7 @@ export const LoyaltyDashboardNew = () => {
           <div className="rounded-[10px] border border-[#E0D8CC] bg-white p-3">
             <div className="mb-2 flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-semibold text-[#2C2C2C]">Members</div>
+                <div className="text-[11px] font-semibold text-[#2C2C2C]">Members <InfoIcon details="Member directory and summary." /></div>
                 <div className="mt-0.5 text-[9px] text-[#798C5E]">
                   {dashboardData?.active_members ?? 3} active · all Silver tier · pending customer-sync fix
                 </div>
@@ -1322,7 +1313,7 @@ export const LoyaltyDashboardNew = () => {
           <div className="rounded-[10px] border border-[#E0D8CC] bg-white p-3">
             <div className="mb-2 flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-semibold text-[#2C2C2C]">Recent Claims</div>
+                <div className="text-[11px] font-semibold text-[#2C2C2C]">Recent Claims <InfoIcon details="List of recently submitted claims." /></div>
                 <div className="mt-0.5 text-[9px] text-[#798C5E]">
                 </div>
               </div>

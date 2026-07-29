@@ -1,3 +1,4 @@
+import { InfoIcon } from '@/components/ui/info-icon';
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, ChevronDown, Download, Search, X, MessageSquare, Menu, FileText, Activity, ArrowLeft, Calendar, Building2, User, Sparkles, Settings } from 'lucide-react';
@@ -1249,7 +1250,16 @@ export function LoyaltyDashboard() {
       <div className="flex gap-0 px-5 bg-white border-b border-[#C4B89D] sticky top-[60px] z-[299] overflow-x-auto">
         {tabs.map(tab => (
           <div 
-            key={tab}
+            key=<span className="flex items-center">
+              {tab}
+              {tab === 'Overview' && <InfoIcon details="High-level dashboard overview of loyalty metrics." />}
+              {tab === 'Rules Engine' && <InfoIcon details="Manage and configure points earning rules." />}
+              {tab === 'Members' && <InfoIcon details="Member directory and tier distributions." />}
+              {tab === 'Redemption' && <InfoIcon details="Manage points redemption activities and backlog." />}
+              {tab === 'Wallet' && <InfoIcon details="Financial flow of issued, redeemed, and expired points." />}
+              {tab === 'Orders' && <InfoIcon details="Track fulfillment of physical and digital rewards." />}
+              {tab === 'Store & Inventory' && <InfoIcon details="Manage rewards catalog and stock levels." />}
+            </span>
             className={`flex items-center gap-[5px] px-[14px] py-[10px] border-b-2 text-[10.5px] cursor-pointer whitespace-nowrap transition-all duration-150 mb-[-1px] ${activeTab === tab ? 'text-[#DA7756] border-[#DA7756] font-semibold' : 'border-transparent font-medium text-[#798C5E] hover:text-[#DA7756]'}`}
             onClick={() => setActiveTab(tab)}
           >
