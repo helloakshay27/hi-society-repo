@@ -1079,8 +1079,7 @@ const NoticeboardEdit = () => {
             <button
               type="button"
               onClick={handleCancel}
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 h-10"
-          >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"          >
             Cancel
           </button>
         </div>

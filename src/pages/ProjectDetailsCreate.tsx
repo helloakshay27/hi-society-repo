@@ -6046,8 +6046,7 @@ const ProjectDetailsCreate = () => {
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-[#C72030] text-white hover:bg-[#A01828] h-9 px-4 text-sm font-medium  min-w-[120px]"
-            >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"            >
               Cancel
             </button>
           </div>

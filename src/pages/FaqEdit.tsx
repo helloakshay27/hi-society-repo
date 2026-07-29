@@ -629,8 +629,7 @@ const FaqEdit = () => {
               type="button"
               onClick={() => navigate("/maintenance/faq-list")}
               disabled={loading}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"            >
               Cancel
             </button>
           </div>
