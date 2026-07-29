@@ -640,19 +640,21 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
 
               <div className="flex flex-wrap gap-4 items-start">
                 {/* Always-visible small upload button box */}
-                <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-[#D9D9D9] rounded-lg w-[130px] h-[40px] bg-gray-50/50 hover:bg-gray-100 transition-colors shrink-0">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Upload className="w-6 h-6 text-[#C72030] mb-2" />
-                  <span className="text-xs font-semibold text-[#C72030]">
-                    Choose File
-                  </span>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition shrink-0"
+                >
+                  <span className="font-medium text-sm text-white">Upload Files</span>
+                  <Upload className="w-4 h-4 text-white" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
 
                 {/* Display uploaded files */}
                 {selectedFiles.length > 0 &&

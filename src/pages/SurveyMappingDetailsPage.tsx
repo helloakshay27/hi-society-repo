@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, CheckCircle, XCircle, Edit, Trash2, List, MapPin, QrCode, Shield, Clock, Users, Calendar, Eye, Info, Download, Star, ChevronDown, FileText, LogsIcon, File, FileIcon, Radio } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Edit, Trash2, List, MapPin, QrCode, Shield, Clock, Users, Calendar, Eye, Info, Download, Star, ChevronDown, FileText, LogsIcon, File, FileIcon, Radio } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { apiClient } from '@/utils/apiClient';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
@@ -537,7 +537,7 @@ export const SurveyMappingDetailsPage = () => {
           <div className="flex items-center justify-center">
             <button
               onClick={() => handleQuestionStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-400" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-[#C72030]" : "bg-gray-300"
                 }`}
             >
               <div
@@ -750,7 +750,7 @@ export const SurveyMappingDetailsPage = () => {
           <div className="flex items-center justify-center">
             <button
               onClick={() => handleStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-400" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-[#C72030]" : "bg-gray-300"
                 }`}
             >
               <div
@@ -1043,12 +1043,10 @@ export const SurveyMappingDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">
-            Loading survey configuration details...
-          </span>
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading survey configuration details...</p>
         </div>
       </div>
     );
@@ -1089,23 +1087,22 @@ export const SurveyMappingDetailsPage = () => {
             {mapping.name}
           </h1>
           <div className="flex gap-2">
-            <Badge
-  variant={mapping.active ? "default" : "secondary"}
-  className="mr-2 rounded-none inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-200 text-black"
->
-  {mapping.active ? (
-    <>
-      <CheckCircle className="w-3 h-3 mr-1" />
-      Active
-    </>
-  ) : (
-    <>
-      <XCircle className="w-3 h-3 mr-1" />
-      Inactive
-    </>
-  )}
-  <ChevronDown className="w-3 h-3 ml-1" />
-</Badge>
+            <button
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+            >
+              {mapping.active ? (
+                <>
+                  <CheckCircle className="w-3 h-3" />
+                  Active
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-3 h-3" />
+                  Inactive
+                </>
+              )}
+              <ChevronDown className="w-3 h-3" />
+            </button>
 
             <Button
               onClick={handleEdit}

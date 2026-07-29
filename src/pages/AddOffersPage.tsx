@@ -72,12 +72,12 @@ const fieldStyles = {
     fontSize: "14px",
     backgroundColor: "#fff",
     "& fieldset": { borderColor: "#ddd" },
-    "&:hover fieldset": { borderColor: "#C72030" },
-    "&.Mui-focused fieldset": { borderColor: "#C72030" },
+    "&:hover fieldset": { borderColor: "#da7756" },
+    "&.Mui-focused fieldset": { borderColor: "#da7756" },
   },
   "& .MuiInputLabel-root": {
     fontSize: "14px",
-    "&.Mui-focused": { color: "#C72030" },
+    "&.Mui-focused": { color: "#da7756" },
   },
 };
 
@@ -192,7 +192,7 @@ const AddOffersPage: React.FC = () => {
             <IconButton
               onClick={() => navigate(-1)}
               size="small"
-              sx={{ color: "#C72030", "&:hover": { backgroundColor: "#f6eaea" } }}
+              sx={{ color: "#da7756", "&:hover": { backgroundColor: "#f6eaea" } }}
             >
               <ArrowLeft size={20} />
             </IconButton>
@@ -276,6 +276,8 @@ const AddOffersPage: React.FC = () => {
                         height: "auto !important",
                         padding: "2px !important",
                         display: "flex",
+                        "&:hover fieldset": { borderColor: "#da7756" },
+                        "&.Mui-focused fieldset": { borderColor: "#da7756" },
                       },
                       "& .MuiInputBase-input[aria-hidden='true']": {
                         flex: 0,
@@ -287,6 +289,11 @@ const AddOffersPage: React.FC = () => {
                       },
                       "& .MuiInputBase-input": {
                         resize: "none !important",
+                      },
+                      "& .MuiInputLabel-root:hover": { color: "#da7756" },
+                      "&:hover .MuiInputLabel-root": { color: "#da7756" },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#da7756",
                       },
                     }}
                     size="small"
@@ -350,18 +357,18 @@ const AddOffersPage: React.FC = () => {
                     onDragLeave={() => setIsDragOver(false)}
                     onDrop={handleDrop}
                     sx={{
-                      border: `2px dashed ${isDragOver ? "#C72030" : "#ddd"}`,
+                      border: `2px dashed ${isDragOver ? "#da7756" : "#ddd"}`,
                       borderRadius: "6px",
                       padding: "28px 24px",
                       textAlign: "center",
                       cursor: "pointer",
-                      backgroundColor: isDragOver ? "#fff5f5" : "#fafafa",
+                      backgroundColor: isDragOver ? "#fef8f3" : "#fafafa",
                       transition: "border-color 0.2s, background-color 0.2s",
                       minHeight: "160px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      "&:hover": { borderColor: "#C72030", backgroundColor: "#fff5f5" },
+                      "&:hover": { borderColor: "#da7756", backgroundColor: "#fef8f3" },
                     }}
                   >
                     {imagePreview ? (

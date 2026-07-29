@@ -66,10 +66,10 @@ export function TicketSelector({ onSelectionChange, customOptions, title }: Tick
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="bg-white border-[hsl(var(--analytics-border))] text-[hsl(var(--analytics-text))] hover:bg-[hsl(var(--analytics-background))]"
+          className="bg-white border-[hsl(var(--analytics-border))] text-[hsl(var(--analytics-text))] hover:bg-[hsl(var(--analytics-background))] [&_svg]:text-[#C72030]"
         >
           {displayTitle} ({selectedCount})
-          <ChevronDown className="ml-2 h-4 w-4" />
+          <ChevronDown className="ml-2 h-4 w-4 text-[hsl(var(--analytics-text))]" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="end">
@@ -84,8 +84,8 @@ export function TicketSelector({ onSelectionChange, customOptions, title }: Tick
                 className="flex items-center p-3 hover:bg-[hsl(var(--analytics-background))] cursor-pointer"
                 onClick={() => toggleOption(option.id)}
               >
-                <div className="flex items-center justify-center w-4 h-4 mr-3 border border-[hsl(var(--analytics-border))] bg-white">
-                  {option.checked && <Check className="h-3 w-3 text-[hsl(var(--analytics-text))]" />}
+                <div className={`flex items-center justify-center w-4 h-4 mr-3 border ${option.checked ? 'bg-[#C72030] border-[#C72030]' : 'border-[hsl(var(--analytics-border))] bg-white'}`}>
+                  {option.checked && <Check className="h-3 w-3 text-white" />}
                 </div>
                 <span className="text-sm text-[hsl(var(--analytics-text))]">{option.label}</span>
               </div>

@@ -715,6 +715,20 @@ export const AddSurveyMapping = () => {
                     notched
                     displayEmpty
                     disabled={loadingSurveys}
+                    MenuProps={{
+                      anchorOrigin: { vertical: "bottom", horizontal: "left" },
+                      transformOrigin: { vertical: "top", horizontal: "left" },
+                      PaperProps: {
+                        sx: {
+                          mt: 1,
+                          maxHeight: 300,
+                          "& .MuiList-root": {
+                            display: "flex",
+                            flexDirection: "column",
+                          },
+                        },
+                      },
+                    }}
                   >
                     {selectedSurveyId === null && (
                       <MenuItem disabled value="">

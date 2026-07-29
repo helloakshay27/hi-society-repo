@@ -84,6 +84,7 @@ const HiSocEventEdit = () => {
   const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
   const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(true);
 
   const [reminderValue, setReminderValue] = useState("");
   const [reminderUnit, setReminderUnit] = useState("");
@@ -548,6 +549,7 @@ const HiSocEventEdit = () => {
 
   useEffect(() => {
     const fetchEvent = async () => {
+      setFetchingData(true);
       try {
         const response = await axios.get(`${baseURL}/crm/admin/events/${id}.json`, {
           headers: {
@@ -802,9 +804,11 @@ const HiSocEventEdit = () => {
 
         console.log("Fetched event data:", data);
         toast.success("Event details loaded successfully");
+        setFetchingData(false);
       } catch (error) {
         console.error("Error fetching event:", error);
         toast.error("Failed to load event details");
+        setFetchingData(false);
       }
     };
 
@@ -1660,20 +1664,20 @@ const HiSocEventEdit = () => {
                          cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
                          width: '100%',
                          height: '40px',
-                         backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
-                         color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                         border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
-                         padding: '12px 20px',
-                         fontSize: '13px',
-                         fontWeight: 500,
-                         textAlign: 'center',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
+backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#da7756' :
+                            (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
+                          color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
+                            (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
+                          border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #da7756' :
+                            (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
+                          padding: '12px 20px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          textAlign: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: index === currentStep ? '0 2px 4px rgba(218, 119, 86, 0.3)' : 'none',
                          transition: 'all 0.2s ease',
                          fontFamily: 'Work Sans, sans-serif',
                          position: 'relative',
@@ -1728,6 +1732,17 @@ const HiSocEventEdit = () => {
            </Box>
     );
   };
+
+  if (fetchingData) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading event data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
@@ -3004,14 +3019,14 @@ const HiSocEventEdit = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-11"
               >
                 Proceed to save
               </button>
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-11"
               >
                 Save to draft
               </button>

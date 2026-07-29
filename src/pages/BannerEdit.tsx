@@ -822,6 +822,17 @@ const BannerEdit = () => {
     "3x2": formData.banner_video_3_by_2
   });
   
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading banner data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -853,11 +864,6 @@ const BannerEdit = () => {
             </h2>
           </div>
           <div className="p-6 space-y-6">
-            {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading banner data...</p>
-              </div>
-            ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Title Input */}
@@ -1086,7 +1092,6 @@ const BannerEdit = () => {
                   )}
                 </div>
               </>
-            )}
           </div>
         </div>
       </form>

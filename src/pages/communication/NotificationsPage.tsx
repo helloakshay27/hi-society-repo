@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
@@ -342,35 +341,41 @@ const NotificationsPage = () => {
                 <span className="text-sm font-semibold text-gray-900 tracking-wide">SHARE WITH</span>
               </div>
               
-              <RadioGroup
-                value={formData.shareWith}
-                onValueChange={(value) => setFormData({ 
-                  ...formData, 
-                  shareWith: value,
-                  user_id: value !== 'individuals' ? [] : formData.user_id,
-                  group_id: value !== 'groups' ? [] : formData.group_id,
-                })}
-                className="flex gap-8"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="all" className="border-gray-400" />
-                  <Label htmlFor="all" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    All
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="individuals" id="individuals" className="border-gray-400" />
-                  <Label htmlFor="individuals" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Individuals
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="groups" id="groups" className="border-gray-400" />
-                  <Label htmlFor="groups" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Groups
-                  </Label>
-                </div>
-              </RadioGroup>
+              <div className="flex gap-8">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="shareWith"
+                    checked={formData.shareWith === 'all'}
+                    onChange={() => setFormData({ ...formData, shareWith: 'all', user_id: [], group_id: [] })}
+                    className="w-4 h-4"
+                    style={{ accentColor: "#C72030" }}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">All</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="shareWith"
+                    checked={formData.shareWith === 'individuals'}
+                    onChange={() => setFormData({ ...formData, shareWith: 'individuals', group_id: [] })}
+                    className="w-4 h-4"
+                    style={{ accentColor: "#C72030" }}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="shareWith"
+                    checked={formData.shareWith === 'groups'}
+                    onChange={() => setFormData({ ...formData, shareWith: 'groups', user_id: [] })}
+                    className="w-4 h-4"
+                    style={{ accentColor: "#C72030" }}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Groups</span>
+                </label>
+              </div>
 
               {/* Individual Users Dropdown */}
               {formData.shareWith === "individuals" && (

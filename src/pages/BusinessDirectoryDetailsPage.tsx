@@ -7,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface BusinessDirectoryDetails {
     id: string;
@@ -74,34 +73,10 @@ const BusinessDirectoryDetailsPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50/50 p-6 font-sans">
-                <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                        <Skeleton className="h-9 w-9 rounded-full" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-6 w-48" />
-                            <Skeleton className="h-4 w-32" />
-                        </div>
-                    </div>
-                    <Card className="border-0 shadow-sm ring-1 ring-gray-200 bg-white">
-                        <CardContent className="p-6">
-                            <div className="space-y-8">
-                                <Skeleton className="h-32 w-32 rounded-full mx-auto" />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-4">
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-4 w-full" />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-4 w-full" />
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+            <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+                    <p>Loading business details...</p>
                 </div>
             </div>
         );
@@ -166,9 +141,6 @@ const BusinessDirectoryDetailsPage: React.FC = () => {
                     <Card className="lg:col-span-2 border-0 shadow-sm ring-1 ring-gray-200 bg-white overflow-hidden">
                         <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
                             <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-full bg-[#C72030]/10 flex items-center justify-center">
-                                    <Building2 className="h-4 w-4 text-[#C72030]" />
-                                </div>
                                 <CardTitle className="text-lg font-semibold text-gray-900">
                                     Company Information
                                 </CardTitle>

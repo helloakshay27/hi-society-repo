@@ -3014,10 +3014,7 @@ svg.lucide-eye {
   color: var(--color-text) !important;
 }
 
-button[title*="View"]:hover svg,
-button[title*="view"]:hover svg {
-  color: var(--color-primary) !important;
-}
+/* View button icon: no hover color change */
 
 /* ===========================================
    ENHANCED TABLE — Toolbar action buttons: Filter · Columns · Export

@@ -1552,9 +1552,11 @@ export const EditSurveyMapping = () => {
 
   if (pageLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-        <span className="ml-2">Loading survey mapping...</span>
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading survey mapping...</p>
+        </div>
       </div>
     );
   }

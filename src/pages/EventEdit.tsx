@@ -78,7 +78,7 @@ const EventEdit = () => {
   const [eventType, setEventType] = useState([]);
   const [eventUserID, setEventUserID] = useState([]);
   const [groups, setGroups] = useState([]); // State to store groups
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [reminderValue, setReminderValue] = useState("");
   const [reminderUnit, setReminderUnit] = useState("");
@@ -791,14 +791,18 @@ const EventEdit = () => {
         }));
 
         console.log("Fetched event data:", data);
-        toast.success("Event details loaded successfully");
       } catch (error) {
         console.error("Error fetching event:", error);
-        toast.error("Failed to load event details");
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (id) fetchEvent();
+    if (id) {
+      fetchEvent();
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
   const [projects, setProjects] = useState([]); // State to store projects
@@ -1601,20 +1605,20 @@ const EventEdit = () => {
                          cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
                          width: '100%',
                          height: '40px',
-                         backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
+                          backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#da7756' :
                            (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
                          color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
                            (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                         border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
-                         padding: '12px 20px',
-                         fontSize: '13px',
-                         fontWeight: 500,
-                         textAlign: 'center',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
+                          border: (index === currentStep || completedSteps.includes(index)) ? '0' :
+                            (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
+                          padding: '12px 20px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          textAlign: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: 'none',
                          transition: 'all 0.2s ease',
                          fontFamily: 'Work Sans, sans-serif',
                          position: 'relative',
@@ -1669,6 +1673,17 @@ const EventEdit = () => {
            </Box>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
@@ -2825,21 +2840,21 @@ const EventEdit = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
               >
                 Proceed to save
               </button>
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
               >
                 Save to draft
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
               >
                 Cancel
               </button>

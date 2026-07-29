@@ -19,6 +19,10 @@ import {
   MenuItem,
   Avatar,
   Switch,
+  Checkbox,
+  ListItemText,
+  Chip,
+  OutlinedInput,
 } from "@mui/material";
 import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon, Info } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
@@ -2372,66 +2376,56 @@ const ProjectDetailsCreate = () => {
                 </MUISelect>
               </FormControl>
 
-              <div className="w-full">
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                    Configuration Type
-                  </label>
-                  <Select
-                    isMulti
-                    value={
-                      Array.isArray(formData.Configuration_Type)
-                        ? formData.Configuration_Type.map((c) => ({
-                            value: typeof c?.id === 'string' ? parseInt(c.id, 10) : c?.id || c,
-                            label: c?.name || configurations.find(config => config.id === c)?.name || '',
-                          })).filter((opt) => opt.value && opt.label)
-                        : []
-                    }
-                    onChange={(selected, actionMeta) => {
-                      // Handle adding new configurations
-                      if (actionMeta.action === 'select-option') {
-                        const newConfig = actionMeta.option;
-                        const config = configurations.find((c) => c.id === newConfig.value);
-                        if (config) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            Configuration_Type: [...prev.Configuration_Type, { id: config.id, name: config.name }],
-                          }));
-                        }
-                        return;
-                      }
-                      
-                      // Handle removal
-                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
-                        setFormData((prev) => ({
-                          ...prev,
-                          Configuration_Type: prev.Configuration_Type.filter(
-                            (c) => (c.id || c) !== actionMeta.removedValue.value
-                          ),
-                        }));
-                        return;
-                      }
-
-                      // Handle clear all
-                      if (actionMeta.action === 'clear') {
-                        setFormData((prev) => ({
-                          ...prev,
-                          Configuration_Type: [],
-                        }));
-                      }
-                    }}
-                    options={configurations.map((c) => ({ value: c.id, label: c.name }))}
-                    styles={customStyles}
-                    components={{
-                      MultiValue: CustomMultiValue,
-                    }}
-                    closeMenuOnSelect={false}
-                    placeholder="Select Configuration..."
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                </div>
-              </div>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
+              >
+                <InputLabel shrink>Configuration Type</InputLabel>
+                <MUISelect
+                  multiple
+                  value={
+                    Array.isArray(formData.Configuration_Type)
+                      ? formData.Configuration_Type.map((c) =>
+                          typeof c?.id === "string" ? parseInt(c.id, 10) : c?.id ?? c
+                        )
+                      : []
+                  }
+                  onChange={(e) => {
+                    const newIds = e.target.value as (string | number)[];
+                    const prevIds = Array.isArray(formData.Configuration_Type)
+                      ? formData.Configuration_Type.map((c) =>
+                          typeof c?.id === "string" ? parseInt(c.id, 10) : c?.id ?? c
+                        )
+                      : [];
+                    const added = newIds.filter((id) => !prevIds.includes(id));
+                    const finalIds = added.length > 0 ? [added[added.length - 1]] : newIds;
+                    const selectedConfigs = configurations
+                      .filter((c) => finalIds.includes(c.id))
+                      .map((c) => ({ id: c.id, name: c.name }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      Configuration_Type: selectedConfigs,
+                    }));
+                  }}
+                  input={<OutlinedInput label="Configuration Type" notched />}
+                  renderValue={(selected) =>
+                    (selected as (string | number)[])
+                      .map((id) => configurations.find((c) => c.id === id)?.name)
+                      .filter(Boolean)
+                      .join(", ")
+                  }
+                  label="Configuration Type"
+                  notched
+                  displayEmpty
+                >
+                  {configurations.map((option) => (
+                    <MenuItem key={option.id} value={option.id}>
+                      <ListItemText primary={option.name} />
+                    </MenuItem>
+                  ))}
+                </MUISelect>
+              </FormControl>
 
                 <TextField
                 label="Project Name"
@@ -3483,34 +3477,43 @@ const ProjectDetailsCreate = () => {
           <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                    Amenities
-                  </label>
-                  <Select
-                    isMulti
-                    value={amenities
-                      .filter((a) => formData.Amenities.includes(a.id))
-                      .map((a) => ({ value: a.id, label: a.name }))}
-                    onChange={(selected) => {
-                      const selectedIds = selected ? selected.map((s) => s.value) : [];
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ "& .MuiInputBase-root": fieldStyles }}
+                >
+                  <InputLabel shrink>Amenities</InputLabel>
+                  <MUISelect
+                    multiple
+                    value={formData.Amenities}
+                    onChange={(e) => {
+                      const newIds = e.target.value as (string | number)[];
+                      const prevIds = Array.isArray(formData.Amenities) ? formData.Amenities : [];
+                      const added = newIds.filter((id) => !prevIds.includes(id));
+                      const finalIds = added.length > 0 ? [added[added.length - 1]] : newIds;
                       setFormData((prev) => ({
                         ...prev,
-                        Amenities: selectedIds,
+                        Amenities: finalIds,
                       }));
                     }}
-                    options={amenities.map((a) => ({ value: a.id, label: a.name }))}
-                    styles={customStyles}
-                    components={{
-                      MultiValue: CustomMultiValue,
-                      MultiValueRemove: () => null,
-                    }}
-                    closeMenuOnSelect={false}
-                    placeholder="Select Amenities..."
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                </div>
+                    input={<OutlinedInput label="Amenities" notched />}
+                    renderValue={(selected) =>
+                      (selected as (string | number)[])
+                        .map((id) => amenities.find((a) => a.id === id)?.name)
+                        .filter(Boolean)
+                        .join(", ")
+                    }
+                    label="Amenities"
+                    notched
+                    displayEmpty
+                  >
+                    {amenities.map((option) => (
+                      <MenuItem key={option.id} value={option.id}>
+                        <ListItemText primary={option.name} />
+                      </MenuItem>
+                    ))}
+                  </MUISelect>
+                </FormControl>
               </div>
             </div>
           </div>

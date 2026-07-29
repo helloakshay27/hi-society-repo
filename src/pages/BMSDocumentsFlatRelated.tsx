@@ -9,7 +9,6 @@ import {
   FileText,
   Upload,
   RefreshCw,
-  Loader2,
   Download,
   Search,
   FileVideo,
@@ -398,6 +397,17 @@ const BMSDocumentsFlatRelated: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading documents...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -409,14 +419,14 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button
             onClick={handleUpload}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Document
@@ -442,12 +452,7 @@ const BMSDocumentsFlatRelated: React.FC = () => {
 
         {/* Content */}
         <div className="p-4 max-h-[600px] overflow-y-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
-            </div>
-          ) : isError ? (
+          {isError ? (
             <div className="text-center py-12">
               <p className="text-red-600 font-medium">Error loading documents</p>
               <p className="text-sm text-gray-500 mt-1">

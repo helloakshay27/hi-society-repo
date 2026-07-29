@@ -267,6 +267,7 @@ export default function AddOfferPage() {
     const [hasSavedDraft, setHasSavedDraft] = useState(false);
     const [showBannerModal, setShowBannerModal] = useState(false);
     const [showTooltipBanner, setShowTooltipBanner] = useState(false);
+    const [loading, setLoading] = useState(!!offerId);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // LocalStorage keys for draft persistence
@@ -534,6 +535,7 @@ export default function AddOfferPage() {
     };
 
     const fetchOfferDetails = async (id: string) => {
+        setLoading(true);
         try {
             const response = await axios.get(
                 getFullUrl(`/crm/offers/${id}.json`),
@@ -623,6 +625,8 @@ export default function AddOfferPage() {
         } catch (error) {
             console.error('Error fetching offer details:', error);
             toast.error('Failed to fetch offer details');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -1446,6 +1450,17 @@ export default function AddOfferPage() {
         }
 
     };
+
+    if (loading) {
+        return (
+            <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading offer details...</p>
+                </div>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', maxHeight: '90vh', overflowY: 'auto' }}>

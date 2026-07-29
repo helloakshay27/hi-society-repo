@@ -38,7 +38,7 @@ const FaqEdit = () => {
   const [selectedSiteId, setSelectedSiteId] = useState("");
   const [faqTag, setFaqTag] = useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
   const [sitesLoading, setSitesLoading] = useState(false);
@@ -260,6 +260,8 @@ const FaqEdit = () => {
       }
     }
     fetchFaqData();
+  } else {
+    setLoading(false);
   }
 }, [faqId, hasFetched]);
 
@@ -467,6 +469,17 @@ const FaqEdit = () => {
     setLoading(false);
   }
 };
+
+  if (loading) {
+    return (
+      <div className="h-full bg-gray-50 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading FAQ details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-gray-50">

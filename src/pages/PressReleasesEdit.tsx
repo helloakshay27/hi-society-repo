@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft, FileText, Info } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText, Info, Trash2 } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import { TextField } from "@mui/material";
 import {
@@ -14,10 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { DeleteForeverRounded } from "@mui/icons-material";
 
 const PressReleasesEdit = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { id } = useParams();
   const navigate = useNavigate();
   const [showTooltip, setShowTooltip] = useState(false);
@@ -107,6 +106,8 @@ const PressReleasesEdit = () => {
       };
 
       fetchPressRelease();
+    } else {
+      setLoading(false);
     }
   }, [id]);
 
@@ -355,6 +356,17 @@ const PressReleasesEdit = () => {
     })),
   ];
 
+  if (loading) {
+    return (
+      <div className="h-full bg-gray-50 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading press release details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full bg-gray-50">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
@@ -518,7 +530,7 @@ const PressReleasesEdit = () => {
                   </h5>
 
                   <button
-                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -600,10 +612,10 @@ const PressReleasesEdit = () => {
                               <TableCell className="py-3 px-4">
                                 <button
                                   type="button"
-                                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(file.type, file)}
+                                  className="h-8 w-8 p-0 text-gray-900 rounded-md flex items-center justify-center"
                                 >
-                                  <DeleteForeverRounded fontSize="small" />
+                                  <Trash2 className="h-4 w-4" />
                                 </button>
                               </TableCell>
                             </TableRow>
@@ -641,14 +653,14 @@ const PressReleasesEdit = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
             >
               {loading ? 'Update' : 'Update'}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
             >
               Cancel
             </button>

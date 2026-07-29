@@ -365,7 +365,7 @@ const BMSHelpdeskReport: React.FC = () => {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]",
+                    "w-full justify-start text-left font-normal !bg-white !text-[#C72030] !border !border-[#C72030] [&_svg]:text-[#C72030]",
                     !date && "text-muted-foreground"
                   )}
                 >

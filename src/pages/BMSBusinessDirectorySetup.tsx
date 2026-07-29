@@ -5,13 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import axios from "axios";
 import {
   Dialog,
@@ -31,8 +24,48 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { SearchableSelect } from "@/components/SearchSelect";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
+
+const selectMenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: 224,
+      backgroundColor: "white",
+      border: "1px solid #e2e8f0",
+      borderRadius: "8px",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      zIndex: 9999,
+    },
+  },
+  disablePortal: false,
+  disableAutoFocus: true,
+  disableEnforceFocus: true,
+};
 interface Category {
   id: string;
   name: string;
@@ -67,14 +100,19 @@ const BMSBusinessDirectorySetup: React.FC = () => {
   const [subCategories, setSubCategories] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Category Edit/Delete State
+  // Category Add/Edit/Delete State
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [addCategoryName, setAddCategoryName] = useState("");
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editCategoryName, setEditCategoryName] = useState("");
   const [isDeleteCategoryOpen, setIsDeleteCategoryOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
-  // SubCategory Edit/Delete State
+  // SubCategory Add/Edit/Delete State
+  const [isAddSubCategoryOpen, setIsAddSubCategoryOpen] = useState(false);
+  const [addSubCategoryName, setAddSubCategoryName] = useState("");
+  const [addSubCategoryCategoryId, setAddSubCategoryCategoryId] = useState("");
   const [isEditSubCategoryOpen, setIsEditSubCategoryOpen] = useState(false);
   const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
   const [editSubCategoryName, setEditSubCategoryName] = useState("");
@@ -108,16 +146,21 @@ const BMSBusinessDirectorySetup: React.FC = () => {
     ]).finally(() => setLoading(false))
   }, [])
 
+  const handleOpenAddCategory = () => {
+    setAddCategoryName("");
+    setIsAddCategoryOpen(true);
+  };
+
   const handleAddCategory = async () => {
     try {
-      if (!categoryInput.trim()) {
+      if (!addCategoryName.trim()) {
         toast.error("Please enter a category name");
         return;
       }
 
       const payload = {
         bd_category: {
-          name: categoryInput,
+          name: addCategoryName,
         }
       }
 
@@ -127,28 +170,35 @@ const BMSBusinessDirectorySetup: React.FC = () => {
         }
       })
       toast.success(`Category added successfully`);
-      setCategoryInput("");
+      setIsAddCategoryOpen(false);
+      setAddCategoryName("");
       fetchCategories()
     } catch (error) {
       console.log(error)
     }
   };
 
+  const handleOpenAddSubCategory = () => {
+    setAddSubCategoryName("");
+    setAddSubCategoryCategoryId("");
+    setIsAddSubCategoryOpen(true);
+  };
+
   const handleAddSubCategory = async () => {
     try {
-      if (!selectedCategory) {
+      if (!addSubCategoryCategoryId) {
         toast.error("Please select a category");
         return;
       }
-      if (!subCategoryInput.trim()) {
+      if (!addSubCategoryName.trim()) {
         toast.error("Please enter a sub category name");
         return;
       }
 
       const payload = {
         bd_sub_category: {
-          name: subCategoryInput,
-          bd_category_id: selectedCategory,
+          name: addSubCategoryName,
+          bd_category_id: addSubCategoryCategoryId,
           active: true
         }
       }
@@ -159,8 +209,9 @@ const BMSBusinessDirectorySetup: React.FC = () => {
         }
       })
       toast.success(`Sub Category added successfully`);
-      setSelectedCategory("")
-      setSubCategoryInput("");
+      setIsAddSubCategoryOpen(false);
+      setAddSubCategoryCategoryId("")
+      setAddSubCategoryName("");
       fetchSubCategories()
     } catch (error) {
       console.log(error)
@@ -312,7 +363,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             size="sm"
             variant="ghost"
             onClick={() => handleEditCategory(item)}
-            className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
+            className="h-8 w-8 p-0"
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -320,7 +371,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             size="sm"
             variant="ghost"
             onClick={() => handleDeleteCategory(item)}
-            className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+            className="h-8 w-8 p-0 text-red-600"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -339,7 +390,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             size="sm"
             variant="ghost"
             onClick={() => handleEditSubCategory(item)}
-            className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
+            className="h-8 w-8 p-0"
           >
             <Edit className="h-4 w-4" />
           </Button>)}
@@ -348,7 +399,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             size="sm"
             variant="ghost"
             onClick={() => handleDeleteSubCategory(item)}
-            className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+            className="h-8 w-8 p-0 text-red-600"
           >
             <Trash2 className="h-4 w-4" />
           </Button>)}
@@ -367,20 +418,10 @@ const BMSBusinessDirectorySetup: React.FC = () => {
         </TabsList>
 
         <TabsContent value="category" className="space-y-6">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-
-              <Input
-                type="text"
-                placeholder="Enter Category"
-                value={categoryInput}
-                onChange={(e) => setCategoryInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddCategory()}
-              />
-            </div>
+          <div className="flex justify-start">
             {shouldShow("Setup","create")&&(
             <Button
-              onClick={handleAddCategory}
+              onClick={handleOpenAddCategory}
               variant="ghost"
               className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white"
             >
@@ -401,42 +442,9 @@ const BMSBusinessDirectorySetup: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="subcategory" className="space-y-6">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              {/* <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select> */}
-
-              <SearchableSelect
-                value={selectedCategory}
-                onChange={setSelectedCategory}
-                options={categories.map((cat) => ({
-                  value: cat.id,
-                  label: cat.name,
-                }))}
-                placeholder="Select Category"
-              />
-            </div>
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder="Enter Sub Category"
-                value={subCategoryInput}
-                onChange={(e) => setSubCategoryInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddSubCategory()}
-              />
-            </div>
+          <div className="flex justify-start">
             <Button
-              onClick={handleAddSubCategory}
+              onClick={handleOpenAddSubCategory}
               variant="ghost"
               className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white"
             >
@@ -458,6 +466,34 @@ const BMSBusinessDirectorySetup: React.FC = () => {
       </Tabs>
 
 
+      {/* Add Category Dialog */}
+      <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Category Name</Label>
+              <Input
+                value={addCategoryName}
+                onChange={(e) => setAddCategoryName(e.target.value)}
+                placeholder="Enter Category Name"
+                onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2">
+              Add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Category Dialog */}
       <Dialog open={isEditCategoryOpen} onOpenChange={setIsEditCategoryOpen}>
         <DialogContent>
@@ -478,8 +514,59 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             <Button variant="outline" onClick={() => setIsEditCategoryOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateCategory} className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90">
+            <Button onClick={handleUpdateCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2">
               Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Sub Category Dialog */}
+      <Dialog open={isAddSubCategoryOpen} onOpenChange={setIsAddSubCategoryOpen} modal={false}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Sub Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <FormControl
+              fullWidth
+              variant="outlined"
+              required
+              sx={{ '& .MuiInputBase-root': fieldStyles }}
+            >
+              <InputLabel shrink>Category</InputLabel>
+              <MuiSelect
+                value={addSubCategoryCategoryId}
+                onChange={(e) => setAddSubCategoryCategoryId(e.target.value)}
+                label="Category"
+                notched
+                displayEmpty
+                MenuProps={selectMenuProps}
+              >
+                <MenuItem value="">Select Category*</MenuItem>
+                {categories.map((cat: any) => (
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <div className="space-y-2">
+              <Label>Sub Category Name</Label>
+              <Input
+                value={addSubCategoryName}
+                onChange={(e) => setAddSubCategoryName(e.target.value)}
+                placeholder="Enter Sub Category Name"
+                onKeyDown={(e) => e.key === "Enter" && handleAddSubCategory()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddSubCategoryOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddSubCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2">
+              Add
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -505,27 +592,35 @@ const BMSBusinessDirectorySetup: React.FC = () => {
       </AlertDialog>
 
       {/* Edit SubCategory Dialog */}
-      <Dialog open={isEditSubCategoryOpen} onOpenChange={setIsEditSubCategoryOpen}>
+      <Dialog open={isEditSubCategoryOpen} onOpenChange={setIsEditSubCategoryOpen} modal={false}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Sub Category</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={editSubCategoryCategoryId} onValueChange={setEditSubCategoryCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat: any) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              required
+              sx={{ '& .MuiInputBase-root': fieldStyles }}
+            >
+              <InputLabel shrink>Category</InputLabel>
+              <MuiSelect
+                value={editSubCategoryCategoryId}
+                onChange={(e) => setEditSubCategoryCategoryId(e.target.value)}
+                label="Category"
+                notched
+                displayEmpty
+                MenuProps={selectMenuProps}
+              >
+                <MenuItem value="">Select Category*</MenuItem>
+                {categories.map((cat: any) => (
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
             <div className="space-y-2">
               <Label>Sub Category Name</Label>
               <Input
@@ -539,7 +634,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             <Button variant="outline" onClick={() => setIsEditSubCategoryOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateSubCategory} className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90">
+            <Button onClick={handleUpdateSubCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2">
               Update
             </Button>
           </DialogFooter>

@@ -266,7 +266,7 @@ const BMSCommunicationTemplate: React.FC = () => {
           {/* <Button size="sm" variant="ghost" onClick={() => handleViewTemplate(item)} className="h-8 w-8 p-0 hover:bg-[#DBC2A9]">
             <Eye className="h-4 w-4" />
           </Button> */}
-          <Button size="sm" variant="ghost" onClick={() => handleEditTemplate(item)} className="h-8 w-8 p-0 hover:bg-[#DBC2A9]">
+          <Button size="sm" variant="ghost" onClick={() => handleEditTemplate(item)} className="h-8 w-8 p-0">
             <Edit className="h-4 w-4" />
           </Button>
           {/* <Button size="sm" variant="ghost" onClick={() => handleDeleteTemplate(item)} className="h-8 w-8 p-0 hover:bg-red-100 text-red-600">

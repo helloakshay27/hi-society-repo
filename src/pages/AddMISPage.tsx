@@ -114,15 +114,15 @@ const fieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#da7756',
     },
   },
 };
@@ -135,15 +135,15 @@ const multilineFieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#da7756',
     },
   },
 };

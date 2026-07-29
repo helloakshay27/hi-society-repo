@@ -9,7 +9,6 @@ import {
   Folder,
   FolderOpen,
   Image as ImageIcon,
-  Loader2,
   RefreshCw,
   Upload,
 } from "lucide-react";
@@ -330,6 +329,17 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading files...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-7rem)] bg-white font-[Arial] text-[#333]">
       {/* Header */}
@@ -341,7 +351,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="h-9 !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
           >
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
@@ -359,12 +369,7 @@ const BMSDocumentsCommonFiles: React.FC = () => {
       </div>
 
       <div className="relative min-h-[520px] overflow-auto bg-white pl-[16px] pr-[28px] pt-[7px]">
-        {isLoading ? (
-          <div className="flex h-[40px] items-center gap-2 text-[12px] text-[#666]">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading files...
-          </div>
-        ) : isError ? (
+        {isError ? (
           <div className="pt-2 text-[12px] text-[#555]">
             <p className="text-[#ED820E]">Error loading folder contents</p>
             <p className="mt-1">

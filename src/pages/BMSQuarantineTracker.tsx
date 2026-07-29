@@ -256,7 +256,7 @@ const BMSQuarantineTracker: React.FC = () => {
               size="sm"
               variant="ghost"
               onClick={() => handleViewRecord(item)}
-              className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
+              className="h-8 w-8 p-0"
             >
               <Eye className="h-4 w-4" />
             </Button>)}
@@ -265,7 +265,7 @@ const BMSQuarantineTracker: React.FC = () => {
               size="sm"
               variant="ghost"
               onClick={() => handleEditRecord(item)}
-              className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
+              className="h-8 w-8 p-0"
             >
               <Edit className="h-4 w-4" />
             </Button>)}
@@ -274,7 +274,7 @@ const BMSQuarantineTracker: React.FC = () => {
               size="sm"
               variant="ghost"
               onClick={() => handleDeleteRecord(item)}
-              className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+              className="h-8 w-8 p-0 text-red-600"
             >
               <Trash2 className="h-4 w-4" />
             </Button>)}

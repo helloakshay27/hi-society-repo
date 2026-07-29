@@ -219,9 +219,6 @@ const AddBusinessDirectoryPage: React.FC = () => {
         <Card className="border-0 shadow-sm ring-1 ring-gray-200 bg-white overflow-hidden">
           <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-[#C72030]/10 flex items-center justify-center">
-                <ImageIcon className="h-4 w-4 text-[#C72030]" />
-              </div>
               <CardTitle className="text-lg font-semibold text-gray-900">
                 Business Details
               </CardTitle>
@@ -521,7 +518,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                   <label htmlFor="gallery-upload">
                     <Button
                       variant="outline"
-                      className="cursor-pointer border-dashed border-gray-300 hover:border-[#C72030] hover:text-[#C72030] transition-colors"
+                      className="cursor-pointer border-dashed border-gray-300 hover:border-[#da7756] hover:text-[#da7756] [&_svg]:text-[#da7756] transition-colors"
                       asChild
                     >
                       <span className="flex items-center gap-2">

@@ -161,7 +161,7 @@ const PollsPage = () => {
         return "success";   // green
       case "close":
       case "closed":
-        return "error";     // red
+        return "primary";     // red
       default:
         return "default";
     }

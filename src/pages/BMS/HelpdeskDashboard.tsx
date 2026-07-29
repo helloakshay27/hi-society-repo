@@ -1311,7 +1311,7 @@ export const TicketDashboard = () => {
           <div title="View ticket" className="p-1 hover:bg-gray-100 rounded transition-colors">
             {shouldShow("tickets", "view") && (
               <Eye
-                className="w-4 h-4 text-gray-600 cursor-pointer hover:text-[#C72030]"
+                className="w-4 h-4 text-gray-600 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleViewDetails(item.id);
@@ -1321,7 +1321,7 @@ export const TicketDashboard = () => {
           </div>
           {/* <div title="Update ticket" className="p-1 hover:bg-gray-100 rounded transition-colors">
             <Edit
-              className="w-4 h-4 text-gray-600 cursor-pointer hover:text-[#C72030]"
+              className="w-4 h-4 text-gray-600 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/maintenance/ticket/update/${item.id}`);
@@ -1494,11 +1494,11 @@ export const TicketDashboard = () => {
                 onClick={() => setIsAnalyticsFilterOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border-gray-300"
               >
-                <Calendar className="w-4 h-4 text-gray-600" />
+                <Calendar className="w-4 h-4 text-[#C72030]" />
                 <span className="text-sm font-medium text-gray-700">
                   {analyticsDateRange.startDate} - {analyticsDateRange.endDate}
                 </span>
-                <Filter className="w-4 h-4 text-gray-600" />
+                <Filter className="w-4 h-4 text-[#C72030]" />
               </Button>
 
               <TicketSelector onSelectionChange={handleSelectionChange} />
