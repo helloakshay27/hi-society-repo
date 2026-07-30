@@ -3019,14 +3019,14 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-11"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2 h-11"
               >
                 Proceed to save
               </button>
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-11"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2 h-11"
               >
                 Save to draft
               </button>

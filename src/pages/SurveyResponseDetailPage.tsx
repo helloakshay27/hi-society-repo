@@ -4770,15 +4770,15 @@ export const SurveyResponseDetailPage = () => {
             <Button
               variant="secondary"
               onClick={handleApplyFilters}
-              className="flex-1 px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+              className="flex-1 px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
             >
               Apply
             </Button>
             <Button
               variant="outline"
               onClick={handleClearFilters}
-              className="flex-1 px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
-            >
+              className="flex-1 px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
+    >
               Reset
             </Button>
           </div>

@@ -582,7 +582,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
             onClick={handleSubmit}
             className="px-6 bg-[#C72030] hover:bg-[#a31b28] text-white shadow-sm"
           >
-            Submit Listing
+            Submit 
           </Button>
         </div>
       </div>

@@ -496,17 +496,15 @@ const AddOffersPage: React.FC = () => {
                   type="button"
                   onClick={() => navigate(-1)}
                   disabled={isSubmitting}
-                  className="bg-[#C72030] hover:bg-[#A01828] !text-white border-0"
-                >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"                >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-[#C72030] hover:bg-[#A01828] !text-white border-0"
-                >
+ className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"                >
                   {isSubmitting ? (
-                    <CircularProgress size={16} sx={{ color: "white" }} />
+                    <CircularProgress size={18} sx={{ color: "white" }} />
                   ) : (
                     "Save"
                   )}

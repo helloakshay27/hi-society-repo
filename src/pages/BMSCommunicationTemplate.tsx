@@ -386,10 +386,10 @@ const BMSCommunicationTemplate: React.FC = () => {
       <div className="flex justify-center space-x-4 mt-6">
         <Button
           type="button"
+          variant="outline"
           onClick={handleCancel}
           disabled={isSubmitting}
-          className="bg-[#C72030] hover:bg-[#A01828] text-white px-6"
-        >
+   className="px-6 sm:px-8 w-full sm:w-auto !bg-white !border-[#da7756] !text-[#da7756]   h-10"        >
           Cancel
         </Button>
         <Button 

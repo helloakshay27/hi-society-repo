@@ -514,7 +514,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             <Button variant="outline" onClick={() => setIsEditCategoryOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2">
+            <Button onClick={handleUpdateCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2">
               Update
             </Button>
           </DialogFooter>
@@ -565,7 +565,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             <Button variant="outline" onClick={() => setIsAddSubCategoryOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddSubCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2">
+            <Button onClick={handleAddSubCategory} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2">
               Add
             </Button>
           </DialogFooter>

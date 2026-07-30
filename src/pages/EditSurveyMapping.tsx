@@ -2291,8 +2291,7 @@ export const EditSurveyMapping = () => {
         </Button>
         <Button
           variant="outline"
-          className="bg-[#C72030] hover:bg-[#A01828] !text-white px-6 sm:px-8 w-full sm:w-auto"
-          onClick={() => navigate("/maintenance/survey/mapping")}
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"          onClick={() => navigate("/maintenance/survey/mapping")}
           disabled={isSubmitting}
         >
           Cancel
