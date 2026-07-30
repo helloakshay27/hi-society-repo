@@ -452,9 +452,43 @@ const ManageUsersPage = () => {
     }
   };
 
+  const buildFilterParams = () => {
+    const filterParams: any = {};
+    if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
+    if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
+    if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
+    if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
+    if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
+    if (filters.flat && filters.flat.length > 0) {
+      filterParams["q[user_society_user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
+    }
+    if (filters.status && filters.status.length > 0) {
+      filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
+    }
+    if (filters.residentType && filters.residentType.length > 0) {
+      filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
+    }
+    if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
+    if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
+    if (filters.startDate && filters.endDate) {
+      filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
+    }
+    if (searchTerm) filterParams.search = searchTerm;
+    return filterParams;
+  };
+
   const handleExport = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.xlsx`, {
+      const queryParams = new URLSearchParams();
+      Object.entries(buildFilterParams()).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => queryParams.append(key, v));
+        } else if (value !== undefined && value !== null) {
+          queryParams.append(key, value as string);
+        }
+      });
+
+      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.xlsx?${queryParams}`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -482,28 +516,7 @@ const ManageUsersPage = () => {
   const handleApplyFilters = () => {
     console.log("Applying filters:", filters);
     setPagination((prev) => ({ ...prev, current_page: 1 }));
-    const filterParams: any = {};
-    if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
-    if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
-    if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
-    if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
-    if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
-    if (filters.flat && filters.flat.length > 0) {
-      filterParams["q[user_society_user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
-    }
-    if (filters.status && filters.status.length > 0) {
-      filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
-    }
-    if (filters.residentType && filters.residentType.length > 0) {
-      filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
-    }
-    if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
-    if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
-    if (filters.startDate && filters.endDate) {
-      filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
-    }
-
-    fetchUsers(1, filterParams);
+    fetchUsers(1, buildFilterParams());
     setShowFiltersDialog(false);
   };
 
@@ -533,30 +546,8 @@ const ManageUsersPage = () => {
     }
 
     try {
-      const filterParams: any = {};
-      if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
-      if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
-      if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
-      if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
-      if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
-      if (filters.flat && filters.flat.length > 0) {
-        filterParams["q[user_society_user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
-      }
-      if (filters.status && filters.status.length > 0) {
-        filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
-      }
-      if (filters.residentType && filters.residentType.length > 0) {
-        filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
-      }
-      if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
-      if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
-      if (filters.startDate && filters.endDate) {
-        filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
-      }
-      if (searchTerm) filterParams.search = searchTerm;
-
       setPagination((prev) => ({ ...prev, current_page: page }));
-      await fetchUsers(page, filterParams);
+      await fetchUsers(page, buildFilterParams());
     } catch (error) {
       console.error("Error changing page:", error);
       toast.error("Failed to load page data. Please try again.");

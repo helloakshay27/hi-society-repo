@@ -11,6 +11,7 @@ import {
     Gift,
     Banknote,
     Plus,
+    Download,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
@@ -42,6 +43,7 @@ const LoyaltyCustomerDetails = () => {
     const [creditRemarks, setCreditRemarks] = useState("");
     const [creditPaymentMode, setCreditPaymentMode] = useState("cash");
     const [creditLoading, setCreditLoading] = useState(false);
+    const [exportLoading, setExportLoading] = useState(false);
 
     // Mock data for Vouchers
     const vouchers = [
@@ -169,6 +171,7 @@ const LoyaltyCustomerDetails = () => {
                             resource_type: t.resource_type || "-",
                             created_at: t.created_at || "-",
                             amount: t.amount ?? "-",
+                            remaining_points: t.remaining_points ?? "-",
                             remarks: t.remarks || "-",
                         }))
                         : []
@@ -250,6 +253,41 @@ const LoyaltyCustomerDetails = () => {
         }
     };
 
+    const handleExportTransactions = async () => {
+        if (!id) {
+            toast.error("Member ID not available");
+            return;
+        }
+
+        setExportLoading(true);
+        try {
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/loyalty/members/${id}/export_transactions.xlsx?token=${token}`);
+            const response = await fetch(url, {
+                headers: { Authorization: getAuthHeader() },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to export transactions");
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.setAttribute("download", `wallet_transactions_${id}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error("Error exporting wallet transactions:", error);
+            toast.error("Failed to export transactions. Please try again.");
+        } finally {
+            setExportLoading(false);
+        }
+    };
+
     const toggleFieldExpansion = (fieldKey: string) => {
         setExpandedFields((prev) => {
             const next = new Set(prev);
@@ -294,6 +332,7 @@ const LoyaltyCustomerDetails = () => {
         { key: "transactionType", label: "Type", sortable: true },
         { key: "resourceType", label: "Resource Type", sortable: false },
         { key: "amount", label: "Points", sortable: true },
+        { key: "remaining_points", label: "Available Points", sortable: true },
         { key: "createdAt", label: "Date", sortable: true },
         { key: "remarks", label: "Remarks", sortable: false },
     ];
@@ -348,6 +387,8 @@ const LoyaltyCustomerDetails = () => {
                 return <span>{isNaN(d.getTime()) ? item.created_at : d.toLocaleString()}</span>;
             case "amount":
                 return <span>{item.amount}</span>;
+            case "remaining_points":
+                return <span>{item.remaining_points}</span>;
             case "remarks":
                 return <span>{item.remarks}</span>;
             default:
@@ -539,7 +580,7 @@ const LoyaltyCustomerDetails = () => {
                     onClick={() => setCreditDialogOpen(true)}
                     className="flex items-center gap-2 bg-[#00A651] hover:bg-[#008C44] text-white"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4 text-[#C72030]" />
                     Credit Wallet
                 </Button>
             </div>
@@ -715,6 +756,16 @@ const LoyaltyCustomerDetails = () => {
                                     Wallet Transactions
                                 </h3>
                             </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleExportTransactions}
+                                disabled={exportLoading}
+                                className="gap-2"
+                            >
+                                <Download className="w-4 h-4" />
+                                {exportLoading ? "Exporting..." : "Export"}
+                            </Button>
                         </div>
                         <div className="bg-[#FBFBFA]">
                             <EnhancedTable
