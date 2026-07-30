@@ -1,26 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import ReactSelect from "react-select";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
-
-const reactSelectStyles = {
-  control: (base: object) => ({
-    ...base,
-    minHeight: "40px",
-    border: "1px solid #d1d5db",
-    boxShadow: "none",
-    borderRadius: "4px",
-    "&:hover": { border: "1px solid #cbd5e1" },
-  }),
-  option: (base: object, state: { isSelected: boolean; isFocused: boolean }) => ({
-    ...base,
-    backgroundColor: state.isSelected ? "#dbeafe" : state.isFocused ? "#f0f9ff" : "white",
-    color: state.isSelected ? "#1e40af" : "#374151",
-  }),
-};
 
 export interface ParkingFilters {
   society_flat_society_block_id_eq?: string;
@@ -148,18 +131,11 @@ export const ParkingFilterDialog: React.FC<Props> = ({
     onClose();
   };
 
-  const selectedBlock = blocks.find(
-    (b) => b.id.toString() === localFilters.society_flat_society_block_id_eq
-  );
-  const selectedFlat = flats.find(
-    (f) => f.id.toString() === localFilters.society_flat_id_eq
-  );
-
   const flatLabel = (f: SocietyFlat) =>
     f.flat_str || (f.block_name && f.flat_no ? `${f.block_name} - ${f.flat_no}` : f.flat_no);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">Filter Parking Slots</DialogTitle>
@@ -167,94 +143,107 @@ export const ParkingFilterDialog: React.FC<Props> = ({
 
         <div className="space-y-4 py-2">
           {/* Tower / Block */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Tower / Block</Label>
-            <ReactSelect
-              options={blocks.map((b) => ({ value: b.id.toString(), label: b.name }))}
-              value={selectedBlock ? { value: selectedBlock.id.toString(), label: selectedBlock.name } : null}
-              onChange={(sel) => handleTowerChange(sel ? sel.value : "")}
-              placeholder={loadingBlocks ? "Loading..." : "Select Tower / Block"}
-              isLoading={loadingBlocks}
-              isClearable
-              styles={reactSelectStyles}
-            />
-          </div>
+          <FormControl fullWidth variant="outlined" disabled={loadingBlocks}>
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower / Block</InputLabel>
+            <MuiSelect
+              value={localFilters.society_flat_society_block_id_eq || ""}
+              onChange={(e) => handleTowerChange(e.target.value)}
+              displayEmpty
+              label="Tower / Block"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value=""><em>{loadingBlocks ? "Loading..." : "Select Tower / Block"}</em></MenuItem>
+              {blocks.map((b) => (
+                <MenuItem key={b.id} value={b.id.toString()}>
+                  {b.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Flat */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Flat</Label>
-            <ReactSelect
-              options={flats.map((f) => ({ value: f.id.toString(), label: flatLabel(f) }))}
-              value={
-                selectedFlat
-                  ? { value: selectedFlat.id.toString(), label: flatLabel(selectedFlat) }
-                  : null
-              }
-              onChange={(sel) =>
+          <FormControl
+            fullWidth
+            variant="outlined"
+            disabled={!localFilters.society_flat_society_block_id_eq || loadingFlats}
+          >
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat</InputLabel>
+            <MuiSelect
+              value={localFilters.society_flat_id_eq || ""}
+              onChange={(e) =>
                 setLocalFilters((prev) => ({
                   ...prev,
-                  society_flat_id_eq: sel ? sel.value : undefined,
+                  society_flat_id_eq: e.target.value || undefined,
                 }))
               }
-              placeholder={
-                loadingFlats
-                  ? "Loading..."
-                  : !localFilters.society_flat_society_block_id_eq
-                  ? "Select tower first"
-                  : "Select Flat"
-              }
-              isLoading={loadingFlats}
-              isDisabled={!localFilters.society_flat_society_block_id_eq || loadingFlats}
-              isClearable
-              styles={reactSelectStyles}
-            />
-          </div>
+              displayEmpty
+              label="Flat"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value="">
+                <em>
+                  {loadingFlats
+                    ? "Loading..."
+                    : !localFilters.society_flat_society_block_id_eq
+                    ? "Select tower first"
+                    : "Select Flat"}
+                </em>
+              </MenuItem>
+              {flats.map((f) => (
+                <MenuItem key={f.id} value={f.id.toString()}>
+                  {flatLabel(f)}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Slot Name */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Slot Name</Label>
-            <Input
-              placeholder="Search by slot name..."
-              value={localFilters.parking_slot_slot_name_cont || ""}
-              onChange={(e) =>
-                setLocalFilters((prev) => ({
-                  ...prev,
-                  parking_slot_slot_name_cont: e.target.value || undefined,
-                }))
-              }
-              className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
-              style={{ borderRadius: "4px" }}
-            />
-          </div>
+          <TextField
+            label="Slot Name"
+            placeholder="Search by slot name..."
+            value={localFilters.parking_slot_slot_name_cont || ""}
+            onChange={(e) =>
+              setLocalFilters((prev) => ({
+                ...prev,
+                parking_slot_slot_name_cont: e.target.value || undefined,
+              }))
+            }
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
           {/* Sticker Number */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Sticker Number</Label>
-            <Input
-              placeholder="Search by sticker number..."
-              value={localFilters.parking_slot_sticker_number_cont || ""}
-              onChange={(e) =>
-                setLocalFilters((prev) => ({
-                  ...prev,
-                  parking_slot_sticker_number_cont: e.target.value || undefined,
-                }))
-              }
-              className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
-              style={{ borderRadius: "4px" }}
-            />
-          </div>
+          <TextField
+            label="Sticker Number"
+            placeholder="Search by sticker number..."
+            value={localFilters.parking_slot_sticker_number_cont || ""}
+            onChange={(e) =>
+              setLocalFilters((prev) => ({
+                ...prev,
+                parking_slot_sticker_number_cont: e.target.value || undefined,
+              }))
+            }
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
           {/* Vehicle Number */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Vehicle Number</Label>
-            <Input
-              placeholder="Enter vehicle number..."
-              value={vehicleNumberInput}
-              onChange={(e) => setVehicleNumberInput(e.target.value)}
-              className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
-              style={{ borderRadius: "4px" }}
-            />
-          </div>
+          <TextField
+            label="Vehicle Number"
+            placeholder="Enter vehicle number..."
+            value={vehicleNumberInput}
+            onChange={(e) => setVehicleNumberInput(e.target.value)}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
         </div>
 
         <div className="flex justify-between pt-4 border-t">

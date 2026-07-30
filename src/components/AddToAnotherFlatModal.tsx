@@ -493,6 +493,7 @@ export const AddToAnotherFlatModal: React.FC<AddToAnotherFlatModalProps> = ({
                             <Button
                                 onClick={handleSubmit}
                                 disabled={loading}
+                                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                             >
                                 {loading ? 'Submitting...' : 'Submit'}
                             </Button>

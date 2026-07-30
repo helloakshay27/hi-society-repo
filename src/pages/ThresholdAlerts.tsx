@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -27,13 +25,8 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField, InputAdornment } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 // ────────────────────────────────────────────────────────────────
 // Types
@@ -579,7 +572,7 @@ const ThresholdAlerts: React.FC = () => {
       )}
 
       {/* ───── Edit Modal ───── */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+      <Dialog modal={false} open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-[#1a1a1a]">
@@ -605,13 +598,12 @@ const ThresholdAlerts: React.FC = () => {
 
             {/* Organization dropdown — shown only in Add mode */}
             {modalMode === "add" && (
-              <div className="space-y-1.5">
-                <Label className="text-[#1a1a1a]">
-                  Organization <span className="text-red-500">*</span>
-                </Label>
-                <Select
+              <MuiFormControl fullWidth variant="outlined" disabled={loadingOrgs}>
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Organization <span style={{ color: 'red' }}>*</span></InputLabel>
+                <MuiSelect
                   value={editForm.organization_id ? editForm.organization_id.toString() : ""}
-                  onValueChange={(v) => {
+                  onChange={(e) => {
+                    const v = e.target.value;
                     const org = organizations.find((o) => o.id === parseInt(v));
                     setEditForm((prev) => ({
                       ...prev,
@@ -620,28 +612,25 @@ const ThresholdAlerts: React.FC = () => {
                     }));
                     setFormError(null);
                   }}
-                  disabled={loadingOrgs}
+                  displayEmpty
+                  label="Organization *"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  <SelectTrigger className="border-[#e5e1d8] focus:border-[#C72030] focus:ring-[#C72030]">
-                    <SelectValue
-                      placeholder={loadingOrgs ? "Loading organizations…" : "Select organization"}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loadingOrgs ? (
-                      <SelectItem value="__loading" disabled>Loading…</SelectItem>
-                    ) : organizations.length === 0 ? (
-                      <SelectItem value="__empty" disabled>No organizations found</SelectItem>
-                    ) : (
-                      organizations.map((org) => (
-                        <SelectItem key={org.id} value={org.id.toString()}>
-                          {org.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <MenuItem value="" disabled>
+                    <em>{loadingOrgs ? "Loading organizations…" : "Select organization"}</em>
+                  </MenuItem>
+                  {organizations.length === 0 && !loadingOrgs ? (
+                    <MenuItem value="__empty" disabled>No organizations found</MenuItem>
+                  ) : (
+                    organizations.map((org) => (
+                      <MenuItem key={org.id} value={org.id.toString()}>
+                        {org.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </MuiSelect>
+              </MuiFormControl>
             )}
 
             {/* Alert toggle */}
@@ -691,54 +680,48 @@ const ThresholdAlerts: React.FC = () => {
 
             {/* Thresholds */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[#1a1a1a]">
-                  Org Admin Threshold (₹) <span className="text-red-500">*</span>
-                </Label>
-                <div className="flex items-center border border-[#e5e1d8] rounded bg-white focus-within:border-[#C72030]">
-                  <span className="px-3 text-gray-500 font-medium">₹</span>
-                  <input
-                    type="number"
-                    min={1}
-                    title="Org Admin Threshold"
-                    placeholder="e.g. 50000"
-                    className="flex-1 py-2 px-2 outline-none bg-transparent border-0 text-sm"
-                    value={editForm.org_admin_threshold || ""}
-                    onChange={(e) =>
-                      handleFormChange(
-                        "org_admin_threshold",
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
-                  />
-                </div>
-                <p className="text-xs text-gray-400">
+              <div>
+                <TextField
+                  label={<>Org Admin Threshold (₹) <span style={{ color: 'red' }}>*</span></>}
+                  type="number"
+                  placeholder="e.g. 50000"
+                  value={editForm.org_admin_threshold || ""}
+                  onChange={(e) =>
+                    handleFormChange(
+                      "org_admin_threshold",
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                  inputProps={{ min: 1 }}
+                  InputProps={{ sx: fieldStyles, startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                />
+                <p className="text-xs text-gray-400 mt-1">
                   Alert org admins when balance falls below this amount
                 </p>
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-[#1a1a1a]">
-                  Super Admin Threshold (₹) <span className="text-red-500">*</span>
-                </Label>
-                <div className="flex items-center border border-[#e5e1d8] rounded bg-white focus-within:border-[#C72030]">
-                  <span className="px-3 text-gray-500 font-medium">₹</span>
-                  <input
-                    type="number"
-                    min={1}
-                    title="Super Admin Threshold"
-                    placeholder="e.g. 20000"
-                    className="flex-1 py-2 px-2 outline-none bg-transparent border-0 text-sm"
-                    value={editForm.super_admin_threshold || ""}
-                    onChange={(e) =>
-                      handleFormChange(
-                        "super_admin_threshold",
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
-                  />
-                </div>
-                <p className="text-xs text-gray-400">
+              <div>
+                <TextField
+                  label={<>Super Admin Threshold (₹) <span style={{ color: 'red' }}>*</span></>}
+                  type="number"
+                  placeholder="e.g. 20000"
+                  value={editForm.super_admin_threshold || ""}
+                  onChange={(e) =>
+                    handleFormChange(
+                      "super_admin_threshold",
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                  inputProps={{ min: 1 }}
+                  InputProps={{ sx: fieldStyles, startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                />
+                <p className="text-xs text-gray-400 mt-1">
                   Alert super admins when balance falls below this amount
                 </p>
               </div>
@@ -746,34 +729,36 @@ const ThresholdAlerts: React.FC = () => {
 
             {/* Emails */}
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-[#1a1a1a]">
-                  Org Admin Email(s) <span className="text-red-500">*</span>
-                </Label>
-                <Input
+              <div>
+                <TextField
+                  label={<>Org Admin Email(s) <span style={{ color: 'red' }}>*</span></>}
                   placeholder="admin@org.com, accounts@org.com"
                   value={editForm.org_admin_emails}
                   onChange={(e) =>
                     handleFormChange("org_admin_emails", e.target.value)
                   }
-                  className="border-[#e5e1d8] focus:border-[#C72030] focus:ring-[#C72030]"
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
-                <p className="text-xs text-gray-400">Separate multiple emails with commas</p>
+                <p className="text-xs text-gray-400 mt-1">Separate multiple emails with commas</p>
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-[#1a1a1a]">
-                  Super Admin Email(s) <span className="text-red-500">*</span>
-                </Label>
-                <Input
+              <div>
+                <TextField
+                  label={<>Super Admin Email(s) <span style={{ color: 'red' }}>*</span></>}
                   placeholder="ops@system.com, finance@system.com"
                   value={editForm.super_admin_emails}
                   onChange={(e) =>
                     handleFormChange("super_admin_emails", e.target.value)
                   }
-                  className="border-[#e5e1d8] focus:border-[#C72030] focus:ring-[#C72030]"
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
-                <p className="text-xs text-gray-400">Separate multiple emails with commas</p>
+                <p className="text-xs text-gray-400 mt-1">Separate multiple emails with commas</p>
               </div>
             </div>
 

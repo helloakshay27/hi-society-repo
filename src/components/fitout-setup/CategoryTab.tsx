@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Switch } from '@mui/material';
+import { StatusToggle } from './StatusToggle';
 import {
   Dialog,
   DialogContent,
@@ -12,16 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '../ticket-management/fieldStyles';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
+
+const CATEGORY_TYPE_OPTIONS = ['Move In', 'Move Out', 'Fitout', 'Refund Initiate'];
 
 interface Category {
   id: number;
@@ -281,17 +276,9 @@ export const CategoryTab: React.FC = () => {
         );
       case 'active':
         return (
-          <Switch
+          <StatusToggle
             checked={item.active || false}
             onChange={() => handleToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
           />
         );
       case 'created_at':
@@ -337,7 +324,7 @@ export const CategoryTab: React.FC = () => {
       />
 
       {/* Add/Edit Category Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog modal={false} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Category' : 'Add Category'}</DialogTitle>
@@ -345,30 +332,36 @@ export const CategoryTab: React.FC = () => {
               {editingId ? 'Update the category details below.' : 'Enter the category details below.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="category-name">Category Name <span className="text-red-600">*</span></Label>
-              <Input
-                id="category-name"
-                placeholder="Enter category name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="category-type">Type</Label>
-              <Select value={categoryType} onValueChange={setCategoryType}>
-                <SelectTrigger id="category-type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Move In">Move In</SelectItem>
-                  <SelectItem value="Move Out">Move Out</SelectItem>
-                  <SelectItem value="Fitout">Fitout</SelectItem>
-                  <SelectItem value="Refund Initiate">Refund Initiate</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
+                value={categoryType}
+                onChange={(e) => setCategoryType(e.target.value)}
+                displayEmpty
+                label="Select Issue Type *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                {CATEGORY_TYPE_OPTIONS.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+
+            <TextField
+              label={<>Enter category <span style={{ color: 'red' }}>*</span></>}
+              placeholder="Enter category"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
           <DialogFooter>
             <Button

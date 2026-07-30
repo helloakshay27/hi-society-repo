@@ -471,7 +471,7 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
           </Button>
           <Button
             onClick={handleClose}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756]   h-10"         
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]   h-10"         
    disabled={loading}
           >
             Cancel

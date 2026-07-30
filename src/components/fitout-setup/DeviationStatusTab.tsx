@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -15,14 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '../ticket-management/fieldStyles';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 
 // Correct shadcn/ui AlertDialog imports
@@ -437,7 +430,7 @@ export const DeviationStatusTab: React.FC = () => {
       </AlertDialog>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog modal={false} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Deviation Status' : 'Add Deviation Status'}</DialogTitle>
@@ -448,65 +441,79 @@ export const DeviationStatusTab: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="status-name">Status Name <span className='text-red-600'>*</span></Label>
-              <Input
-                id="status-name"
-                placeholder="Enter status name"
-                value={statusName}
-                onChange={(e) => setStatusName(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="fixed-state">Fixed State 
-                {/* <span className='text-red-600'>*</span> */}
-                </Label>
-              <Select value={fixedState} onValueChange={setFixedState}>
-                <SelectTrigger id="fixed-state">
-                  <SelectValue placeholder="Select Fixed State" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FIXED_STATES.map((state) => (
-                    <SelectItem key={state.value} value={state.value}>
-                      {state.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <TextField
+              label={<>Status Name <span style={{ color: 'red' }}>*</span></>}
+              placeholder="Enter status name"
+              value={statusName}
+              onChange={(e) => setStatusName(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Fixed State</InputLabel>
+              <MuiSelect
+                value={fixedState}
+                onChange={(e) => setFixedState(e.target.value)}
+                displayEmpty
+                label="Fixed State"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Fixed State</em></MenuItem>
+                {FIXED_STATES.map((state) => (
+                  <MenuItem key={state.value} value={state.value}>
+                    {state.label}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="color">Color <span className='text-red-600'>*</span></Label>
-                <Select value={selectedColor} onValueChange={setSelectedColor}>
-                  <SelectTrigger id="color">
-                    <SelectValue placeholder="Select Color" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COLORS.map((color) => (
-                      <SelectItem key={color.value} value={color.value}>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-4 h-4 rounded border border-gray-300"
-                            style={{ backgroundColor: color.value }}
-                          />
-                          {color.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="position">Position <span className='text-red-600'>*</span></Label>
-                <Input
-                  id="position"
-                  type="number"
-                  placeholder="Position"
-                  value={statusPosition}
-                  onChange={(e) => setStatusPosition(e.target.value)}
-                  min="1"
-                />
-              </div>
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Color <span style={{ color: 'red' }}>*</span></InputLabel>
+                <MuiSelect
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  displayEmpty
+                  label="Color *"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                  renderValue={(value) => {
+                    const color = COLORS.find((c) => c.value === value);
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: value as string }} />
+                        {color?.label}
+                      </div>
+                    );
+                  }}
+                >
+                  {COLORS.map((color) => (
+                    <MenuItem key={color.value} value={color.value}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: color.value }} />
+                        {color.label}
+                      </div>
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
+
+              <TextField
+                label={<>Position <span style={{ color: 'red' }}>*</span></>}
+                type="number"
+                placeholder="Position"
+                value={statusPosition}
+                onChange={(e) => setStatusPosition(e.target.value)}
+                inputProps={{ min: 1 }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
           </div>
           <DialogFooter>

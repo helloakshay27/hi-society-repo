@@ -194,7 +194,9 @@ const VendorSetupDetailsPage: React.FC = () => {
       </button>
 
       {loading ? (
-        <div className="flex justify-center py-16 text-gray-500 text-sm">Loading...</div>
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+        </div>
       ) : !vendor ? (
         <div className="flex justify-center py-16 text-gray-500 text-sm">Vendor not found.</div>
       ) : (

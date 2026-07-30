@@ -8,11 +8,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SearchableSelect } from "@/components/SearchSelect";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { toast } from "sonner";
 import axios from "axios";
+
+const APARTMENT_TYPE_OPTIONS = ["Apartment", "Penthouse", "Duplex", "Villa", "Row House", "Compact", "Compact Duplex", "Studio"];
 
 interface FlatType {
   id: number;
@@ -131,7 +134,7 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-white">
         <DialogHeader className="border-b pb-4">
           <div className="flex items-center justify-between">
@@ -150,63 +153,50 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
         <div className="flex-1 overflow-y-auto py-6 space-y-6 px-6">
           {/* Add New Flat Type Form */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <Label
-                htmlFor="flat-type"
-                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
-              >
-                Flat/Unit Type <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="flat-type"
-                placeholder="Enter Flat Type"
-                value={newFlatType}
-                onChange={(e) => setNewFlatType(e.target.value)}
-                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
-              />
-            </div>
-            <div className="relative">
-              <Label
-                htmlFor="configuration"
-                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
-              >
-                Configuration
-              </Label>
-              <SearchableSelect
+            <TextField
+              label={<>Flat/Unit Type <span style={{ color: 'red' }}>*</span></>}
+              placeholder="Enter Flat Type"
+              value={newFlatType}
+              onChange={(e) => setNewFlatType(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Configuration</InputLabel>
+              <MuiSelect
                 value={newConfiguration}
-                onChange={setNewConfiguration}
-                options={[
-                  { label: "RK", value: "RK" },
-                  { label: "BHK", value: "BHK" },
-                ]}
-                placeholder="Select any"
-              />
-            </div>
+                onChange={(e) => setNewConfiguration(e.target.value)}
+                displayEmpty
+                label="Configuration"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select any</em></MenuItem>
+                <MenuItem value="RK">RK</MenuItem>
+                <MenuItem value="BHK">BHK</MenuItem>
+              </MuiSelect>
+            </MuiFormControl>
           </div>
 
-          <div className="relative">
-            <Label
-              htmlFor="apartment-type"
-              className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
-            >
-              Apartment Type <span className="text-red-500">*</span>
-            </Label>
-            <SearchableSelect
+          <MuiFormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Apartment Type <span style={{ color: 'red' }}>*</span></InputLabel>
+            <MuiSelect
               value={newApartmentType}
-              onChange={setNewApartmentType}
-              options={[
-                { label: "Apartment", value: "Apartment" },
-                { label: "Penthouse", value: "Penthouse" },
-                { label: "Duplex", value: "Duplex" },
-                { label: "Villa", value: "Villa" },
-                { label: "Row House", value: "Row House" },
-                { label: "Compact", value: "Compact" },
-                { label: "Compact Duplex", value: "Compact Duplex" },
-                { label: "Studio", value: "Studio" },
-              ]}
-              placeholder="Select Type"
-            />
-          </div>
+              onChange={(e) => setNewApartmentType(e.target.value)}
+              displayEmpty
+              label="Apartment Type *"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value="" disabled><em>Select Type</em></MenuItem>
+              {APARTMENT_TYPE_OPTIONS.map((type) => (
+                <MenuItem key={type} value={type}>{type}</MenuItem>
+              ))}
+            </MuiSelect>
+          </MuiFormControl>
 
           <div className="flex justify-start">
             <Button

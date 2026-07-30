@@ -7,9 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SearchableSelect } from "@/components/SearchSelect";
-import { Label } from "@/components/ui/label";
-import MultiSelectBox from "@/components/ui/multi-selector";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, ListItemText } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface FiltersDialogProps {
   open: boolean;
@@ -40,16 +39,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
   flatTypeOptions,
   flatOptions,
 }) => {
-  // Remove yellow hover from MultiSelectBox dropdown options
-  const noHoverStyles = {
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isSelected ? "#D3D3D3" : "transparent",
-      color: state.isSelected ? "#333" : "black",
-    }),
-  };
-
-  // Map options to MultiSelectBox format { label, value }
+  // Map options to { label, value }
   const towerSelectOptions = towerOptions.map(t => ({ label: t.name, value: t.id.toString() }));
   const flatTypeSelectOptions = flatTypeOptions.map(ft => ({ label: ft.name, value: ft.id.toString() }));
 
@@ -59,7 +49,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white">
         <DialogHeader className="p-4 flex flex-row items-center justify-between">
           <DialogTitle className="text-lg font-bold">Advance Filter</DialogTitle>
@@ -74,77 +64,121 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {/* Select Tower */}
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
-                Select Tower
-              </Label>
-              <MultiSelectBox
-                options={towerSelectOptions}
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Tower</InputLabel>
+              <MuiSelect
+                multiple
                 value={filters.tower}
-                onChange={(value) => onFilterChange("tower", value)}
-                placeholder="Select Tower"
-                styles={noHoverStyles}
-              />
-            </div>
+                onChange={(e) => onFilterChange("tower", e.target.value)}
+                displayEmpty
+                label="Select Tower"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+                renderValue={(selected: string[]) =>
+                  selected.length
+                    ? towerSelectOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
+                    : <em>Select Tower</em>
+                }
+              >
+                {towerSelectOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <ListItemText primary={opt.label} />
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
             {/* Select Flat */}
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
-                Select Flat
-              </Label>
-              <MultiSelectBox
-                options={flatOptions}
+            <MuiFormControl fullWidth variant="outlined" disabled={filters.tower.length === 0}>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Flat</InputLabel>
+              <MuiSelect
+                multiple
                 value={filters.flat}
-                onChange={(value) => onFilterChange("flat", value)}
-                placeholder="Select Flat"
-                disabled={filters.tower.length === 0}
-                styles={noHoverStyles}
-              />
-            </div>
+                onChange={(e) => onFilterChange("flat", e.target.value)}
+                displayEmpty
+                label="Select Flat"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+                renderValue={(selected: string[]) =>
+                  selected.length
+                    ? flatOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
+                    : <em>Select Flat</em>
+                }
+              >
+                {flatOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <ListItemText primary={opt.label} />
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
             {/* Select Flat Type */}
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
-                Select Flat Type
-              </Label>
-              <MultiSelectBox
-                options={flatTypeSelectOptions}
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Flat Type</InputLabel>
+              <MuiSelect
+                multiple
                 value={filters.flatType}
-                onChange={(value) => onFilterChange("flatType", value)}
-                placeholder="Select Flat Type"
-                styles={noHoverStyles}
-              />
-            </div>
+                onChange={(e) => onFilterChange("flatType", e.target.value)}
+                displayEmpty
+                label="Select Flat Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+                renderValue={(selected: string[]) =>
+                  selected.length
+                    ? flatTypeSelectOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
+                    : <em>Select Flat Type</em>
+                }
+              >
+                {flatTypeSelectOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <ListItemText primary={opt.label} />
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
             {/* Select Status */}
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
-                Select Status
-              </Label>
-              <MultiSelectBox
-                options={statusOptions}
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Status</InputLabel>
+              <MuiSelect
+                multiple
                 value={filters.status}
-                onChange={(value) => onFilterChange("status", value)}
-                placeholder="Select Status"
-                styles={noHoverStyles}
-              />
-            </div>
+                onChange={(e) => onFilterChange("status", e.target.value)}
+                displayEmpty
+                label="Select Status"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+                renderValue={(selected: string[]) =>
+                  selected.length
+                    ? statusOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
+                    : <em>Select Status</em>
+                }
+              >
+                {statusOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <ListItemText primary={opt.label} />
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
             {/* Select Occupancy */}
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
-                Select Occupancy
-              </Label>
-              <SearchableSelect
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Occupancy</InputLabel>
+              <MuiSelect
                 value={filters.occupancy}
-                onChange={(value) => onFilterChange("occupancy", value)}
-                options={[
-                  { label: "Yes", value: "Yes" },
-                  { label: "No", value: "No" },
-                ]}
-                placeholder="Select Occupancy"
-              />
-            </div>
+                onChange={(e) => onFilterChange("occupancy", e.target.value)}
+                displayEmpty
+                label="Select Occupancy"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Occupancy</em></MenuItem>
+                <MenuItem value="Yes">Yes</MenuItem>
+                <MenuItem value="No">No</MenuItem>
+              </MuiSelect>
+            </MuiFormControl>
           </div>
 
           {/* Action Buttons */}

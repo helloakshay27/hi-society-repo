@@ -7,10 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SearchableSelect } from "@/components/SearchSelect";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -227,7 +227,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader className="border-b pb-4">
           <div className="flex items-center justify-between">
@@ -282,155 +282,133 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative">
-                <Label
-                  htmlFor="tower"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
-                >
-                  Tower <span className="text-red-500">*</span>
-                </Label>
-                <SearchableSelect
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower <span style={{ color: 'red' }}>*</span></InputLabel>
+                <MuiSelect
                   value={formData.tower}
-                  onChange={(value) => onChange("tower", value)}
-                  options={towerOptions.map((tower) => ({
-                    value: tower.id.toString(),
-                    label: tower.name,
-                  }))}
-                  placeholder="Select Tower"
-                />
-              </div>
+                  onChange={(e) => onChange("tower", e.target.value)}
+                  displayEmpty
+                  label="Tower *"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="" disabled><em>Select Tower</em></MenuItem>
+                  {towerOptions.map((tower: any) => (
+                    <MenuItem key={tower.id} value={tower.id.toString()}>
+                      {tower.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
 
-              <div className="relative">
-                <Label htmlFor="floor" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
-                  Floor <span className="text-red-500">*</span>
-                </Label>
-                <SearchableSelect
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Floor <span style={{ color: 'red' }}>*</span></InputLabel>
+                <MuiSelect
                   value={formData.floor}
-                  onChange={(value) => onChange('floor', value)}
-                  options={floorOptions.map((floor) => ({
-                    value: floor.id.toString(),
-                    label: floor.name,
-                  }))}
-                  placeholder="Select Floor"
-                />
-              </div>
-
-              <div className="relative">
-                <Label
-                  htmlFor="flat"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
+                  onChange={(e) => onChange('floor', e.target.value)}
+                  displayEmpty
+                  label="Floor *"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  Flat <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="flat"
-                  placeholder=" "
-                  value={formData.flat}
-                  onChange={(e) => onChange("flat", e.target.value)}
-                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
-                />
-              </div>
+                  <MenuItem value="" disabled><em>Select Floor</em></MenuItem>
+                  {floorOptions.map((floor: any) => (
+                    <MenuItem key={floor.id} value={floor.id.toString()}>
+                      {floor.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
 
-              <div className="relative">
-                <Label
-                  htmlFor="carpetArea"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
-                >
-                  Carpet Area
-                </Label>
-                <Input
-                  id="carpetArea"
-                  placeholder=" "
-                  value={formData.carpetArea}
-                  onChange={(e) => onChange("carpetArea", e.target.value)}
-                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
-                />
-              </div>
+              <TextField
+                label={<>Flat <span style={{ color: 'red' }}>*</span></>}
+                placeholder="Enter flat"
+                value={formData.flat}
+                onChange={(e) => onChange("flat", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
-              <div className="relative">
-                <Label
-                  htmlFor="builtUpArea"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
-                >
-                  Built up Area
-                </Label>
-                <Input
-                  id="builtUpArea"
-                  placeholder=" "
-                  value={formData.builtUpArea}
-                  onChange={(e) => onChange("builtUpArea", e.target.value)}
-                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
-                />
-              </div>
+              <TextField
+                label="Carpet Area"
+                placeholder="Enter carpet area"
+                value={formData.carpetArea}
+                onChange={(e) => onChange("carpetArea", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
-              <div className="relative">
-                <Label
-                  htmlFor="flatType"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
-                >
-                  Flat Type
-                </Label>
-                <SearchableSelect
+              <TextField
+                label="Built up Area"
+                placeholder="Enter built up area"
+                value={formData.builtUpArea}
+                onChange={(e) => onChange("builtUpArea", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat Type</InputLabel>
+                <MuiSelect
                   value={formData.flatType}
-                  onChange={(value) => onChange("flatType", value)}
-                  options={flatTypeOptions.map((flatType) => ({
-                    value: flatType.id.toString(),
-                    label: flatType.society_flat_type,
-                  }))}
-                  placeholder="Select Flat Type"
-                />
-              </div>
-
-              <div className="relative">
-                <Label
-                  htmlFor="occupied"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
+                  onChange={(e) => onChange("flatType", e.target.value)}
+                  displayEmpty
+                  label="Flat Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  Occupied
-                </Label>
-                <SearchableSelect
+                  <MenuItem value=""><em>Select Flat Type</em></MenuItem>
+                  {flatTypeOptions.map((flatType: any) => (
+                    <MenuItem key={flatType.id} value={flatType.id.toString()}>
+                      {flatType.society_flat_type}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
+
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Occupied</InputLabel>
+                <MuiSelect
                   value={formData.occupied}
-                  onChange={(value) => onChange("occupied", value)}
-                  options={[
-                    { label: "Yes", value: "Yes" },
-                    { label: "No", value: "No" },
-                  ]}
-                  placeholder="Please Select"
-                />
-              </div>
-
-              <div className="relative">
-                <Label
-                  htmlFor="nameOnBill"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
+                  onChange={(e) => onChange("occupied", e.target.value)}
+                  displayEmpty
+                  label="Occupied"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  Name on Bill
-                </Label>
-                <Input
-                  id="nameOnBill"
-                  placeholder=" "
-                  value={formData.nameOnBill}
-                  onChange={(e) => onChange("nameOnBill", e.target.value)}
-                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
-                />
-              </div>
+                  <MenuItem value=""><em>Please Select</em></MenuItem>
+                  <MenuItem value="Yes">Yes</MenuItem>
+                  <MenuItem value="No">No</MenuItem>
+                </MuiSelect>
+              </MuiFormControl>
 
-              <div className="relative">
-                <Label
-                  htmlFor="dateOfPossession"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
-                >
-                  Date of possession
-                </Label>
-                <Input
-                  id="dateOfPossession"
-                  type="date"
-                  placeholder=" "
-                  value={formData.dateOfPossession}
-                  onChange={(e) => onChange("dateOfPossession", e.target.value)}
-                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
-                />
-              </div>
+              <TextField
+                label="Name on Bill"
+                placeholder="Enter name on bill"
+                value={formData.nameOnBill}
+                onChange={(e) => onChange("nameOnBill", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+
+              <TextField
+                label="Date of possession"
+                type="date"
+                value={formData.dateOfPossession}
+                onChange={(e) => onChange("dateOfPossession", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* <div className="relative">
                 <Label

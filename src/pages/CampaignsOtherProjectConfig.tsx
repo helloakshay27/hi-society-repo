@@ -847,7 +847,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       newAm.pop();
                       setAmenities(newAm);
                     }}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
                   >
                     Delete
                   </Button>
@@ -919,7 +919,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       newConf.pop();
                       setConfigurations(newConf);
                     }}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
                   >
                     Delete
                   </Button>
@@ -991,7 +991,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       newHL.pop();
                       setHighlights(newHL);
                     }}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   >
                     Delete
                   </Button>
@@ -1040,7 +1040,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       newPlans.pop();
                       setPlans(newPlans);
                     }}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white fix  flex items-center gap-2"
                   >
                     Delete
                   </Button>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Edit, Trash2 } from 'lucide-react';
@@ -183,60 +184,58 @@ const SelectorRow: React.FC<{
   statuses: OsrStatus[];
 }> = ({ data, setData, subCats, subCatsLoading, onCategoryChange, categories, statuses }) => (
   <div className="grid grid-cols-4 gap-4">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Category <span className="text-red-500">*</span>
-      </label>
-      <Select value={data.osr_category_id} onValueChange={onCategoryChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select Category" />
-        </SelectTrigger>
-        <SelectContent>
-          {categories.map(c => (
-            <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <MuiFormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category <span style={{ color: 'red' }}>*</span></InputLabel>
+      <MuiSelect
+        value={data.osr_category_id}
+        onChange={e => onCategoryChange(e.target.value)}
+        displayEmpty
+        label="Category *"
+        sx={fieldStyles}
+        MenuProps={menuProps}
+      >
+        <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+        {categories.map(c => (
+          <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>
+        ))}
+      </MuiSelect>
+    </MuiFormControl>
 
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category</label>
-      <Select
+    <MuiFormControl fullWidth variant="outlined" disabled={!data.osr_category_id || subCatsLoading}>
+      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Sub Category</InputLabel>
+      <MuiSelect
         value={data.osr_sub_category_id}
-        onValueChange={val => setData(prev => ({ ...prev, osr_sub_category_id: val }))}
-        disabled={!data.osr_category_id || subCatsLoading}
+        onChange={e => setData(prev => ({ ...prev, osr_sub_category_id: e.target.value }))}
+        displayEmpty
+        label="Sub Category"
+        sx={fieldStyles}
+        MenuProps={menuProps}
       >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={
-            !data.osr_category_id ? 'Select Category first'
-            : subCatsLoading ? 'Loading...'
-            : 'Select Sub Category'
-          } />
-        </SelectTrigger>
-        <SelectContent>
-          {subCats.map(sc => (
-            <SelectItem key={sc.id} value={String(sc.id)}>{sc.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+        <MenuItem value="" disabled>
+          <em>{!data.osr_category_id ? 'Select Category first' : subCatsLoading ? 'Loading...' : 'Select Sub Category'}</em>
+        </MenuItem>
+        {subCats.map(sc => (
+          <MenuItem key={sc.id} value={String(sc.id)}>{sc.name}</MenuItem>
+        ))}
+      </MuiSelect>
+    </MuiFormControl>
 
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-      <Select
+    <MuiFormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+      <MuiSelect
         value={data.osr_status_id}
-        onValueChange={val => setData(prev => ({ ...prev, osr_status_id: val }))}
+        onChange={e => setData(prev => ({ ...prev, osr_status_id: e.target.value }))}
+        displayEmpty
+        label="Status"
+        sx={fieldStyles}
+        MenuProps={menuProps}
       >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select Status" />
-        </SelectTrigger>
-        <SelectContent>
-          {statuses.map(s => (
-            <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+        <MenuItem value="" disabled><em>Select Status</em></MenuItem>
+        {statuses.map(s => (
+          <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>
+        ))}
+      </MuiSelect>
+    </MuiFormControl>
   </div>
 );
 
@@ -666,7 +665,7 @@ export const OSRAssignEscalationPage: React.FC = () => {
       </div>
 
       {/* ── Edit Dialog ──────────────────────────────────────── */}
-      <Dialog open={isEditOpen} onOpenChange={open => { setIsEditOpen(open); if (!open) { setEditSubCategories([]); } }}>
+      <Dialog modal={false} open={isEditOpen} onOpenChange={open => { setIsEditOpen(open); if (!open) { setEditSubCategories([]); } }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-900">Edit Assign &amp; Escalation Rule</DialogTitle>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Heading } from "@/components/ui/heading";
 import { Search, Edit } from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
@@ -55,6 +55,7 @@ const ApprovalMatrixSetupPage = () => {
       return dateString;
     }
   };
+
   return <div className="p-8 min-h-screen bg-transparent">
     {/* Breadcrumbs */}
     <Breadcrumb className="mb-6">
@@ -100,69 +101,49 @@ const ApprovalMatrixSetupPage = () => {
       )}
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
+        {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /> */}
+        {/* <input
           type="text"
           placeholder="Search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-white text-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#C72030] w-64"
-        />
+        /> */}
       </div>
     </div>
 
     {/* Table */}
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-20">Edit</TableHead>
-            <TableHead className="w-20">Id</TableHead>
-            <TableHead>Function</TableHead>
-            <TableHead className="w-32">Created On</TableHead>
-            <TableHead className="w-32">Created by</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : approvalData.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
-                No approval matrix data found
-              </TableCell>
-            </TableRow>
-          ) : (
-            approvalData.map(item => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  {shouldShow("ApprovalMatrix", "update") && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="p-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-                      onClick={() => navigate(`/settings/approval-matrix/setup/edit/${item.id}`)}
-                    >
-                      <Edit className="w-4 h-4 text-[#1a1a1a]" />
-                    </Button>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium">{item.id}</TableCell>
-                <TableCell>{item.approval_function_name}</TableCell>
-                <TableCell>{formatDate(item.created_at)}</TableCell>
-                <TableCell>{item.created_by}</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <EnhancedTable
+      data={approvalData}
+      columns={[
+        { key: 'edit', label: 'Edit' },
+        { key: 'id', label: 'Id' },
+        { key: 'approval_function_name', label: 'Function' },
+        { key: 'created_at', label: 'Created On' },
+        { key: 'created_by', label: 'Created by' },
+      ]}
+      renderCell={(item, column) => {
+        if (column.key === 'edit') {
+          return shouldShow("ApprovalMatrix", "update") ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              onClick={() => navigate(`/settings/approval-matrix/setup/edit/${item.id}`)}
+            >
+              <Edit className="w-4 h-4 text-[#1a1a1a]" />
+            </Button>
+          ) : null;
+        }
+        if (column.key === 'created_at') {
+          return formatDate(item.created_at);
+        }
+        return item[column.key];
+      }}
+      loading={loading}
+      pagination={false}
+      emptyMessage="No approval matrix data found"
+    />
   </div>;
 };
 export default ApprovalMatrixSetupPage;

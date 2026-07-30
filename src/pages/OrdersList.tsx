@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import Select from "react-select";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem, Chip, Box } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -441,149 +442,6 @@ const OrdersList = () => {
     }
   }
 
-  const CustomMultiValue = (props: any) => (
-    <div
-      style={{
-        position: "relative",
-        backgroundColor: "#E5E0D3",
-        borderRadius: "2px",
-        margin: "3px",
-        marginTop: "10px",
-        padding: "4px 10px 6px 10px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        paddingRight: "28px",
-      }}
-    >
-      <span
-        style={{
-          color: "#1a1a1a8a",
-          fontSize: "13px",
-          fontWeight: "500",
-        }}
-      >
-        {props.data.label}
-      </span>
-      <button
-        onClick={e => {
-          e.stopPropagation();
-          props.removeProps.onClick(e);
-        }}
-        onMouseDown={e => {
-          e.stopPropagation();
-          props.removeProps.onMouseDown(e);
-        }}
-        onTouchEnd={e => {
-          e.stopPropagation();
-          props.removeProps.onTouchEnd(e);
-        }}
-        style={{
-          position: "absolute",
-          right: "-10px",
-          top: "-5px",
-          transform: "translateY(-50%), translateX(-50%)",
-          background: "transparent",
-          border: "1px solid #ccc",
-          borderRadius: "50%",
-          cursor: "pointer",
-          padding: "0",
-          display: "flex",
-          alignItems: "start",
-          justifyContent: "center",
-          color: "#666",
-          fontSize: "12px",
-          lineHeight: "1",
-          width: "16px",
-          height: "16px",
-          transition: "background 0.2s, color 0.2s, border-color 0.2s",
-        }}
-        type="button"
-        onMouseOver={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
-          (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
-        }}
-        onMouseOut={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-          (e.currentTarget as HTMLButtonElement).style.color = "#666";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
-        }}
-      >
-        ×
-      </button>
-    </div>
-  );
-
-  const CustomMultiValueRemove = (props: any) => null;
-
-  const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      minHeight: "44px",
-      borderColor: state.isFocused ? "#ED820E" : "#dcdcdc",
-      boxShadow: "none",
-      fontSize: "14px",
-      paddingTop: "6px",
-      backgroundColor: "transparent",
-      "&:hover": { borderColor: "#ED820E" },
-    }),
-    valueContainer: (provided: any) => ({
-      ...provided,
-      padding: "4px 6px",
-      flexWrap: "wrap",
-      backgroundColor: "transparent",
-    }),
-    dropdownIndicator: (provided: any, state: any) => ({
-      ...provided,
-      padding: "4px 8px",
-      color: state.isFocused ? "#ED820E" : "#666",
-      "&:hover": { color: "#ED820E" },
-    }),
-    indicatorSeparator: () => ({ display: "none" }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "#999",
-      fontSize: "14px",
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      zIndex: 9999,
-      fontSize: "14px",
-      backgroundColor: "#fff",
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "#C72030"
-        : state.isFocused
-          ? "#F6F4EE"
-          : "#fff",
-      color: state.isSelected ? "#fff" : "#1A1A1A",
-      fontSize: "14px",
-      padding: "8px 12px",
-      cursor: "pointer",
-      "&:hover": {
-        backgroundColor: "#F6F4EE",
-        color: "#1A1A1A",
-      },
-      "&:active": {
-        backgroundColor: "#C72030",
-        color: "#fff",
-      },
-    }),
-    multiValue: (provided: any) => ({
-      ...provided,
-      backgroundColor: "transparent",
-    }),
-    multiValueLabel: (provided: any) => ({
-      ...provided,
-      color: "#1a1a1a8a",
-      fontSize: "13px",
-      fontWeight: "500",
-    }),
-  };
-
   const renderListTab = () => (
     <div className="space-y-4">
       {renderCustomFilters()}
@@ -733,75 +591,96 @@ const OrdersList = () => {
           Clear Filter
         </button>
       </div>
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Status Filter</label>
-        <Select
-          isMulti
-          value={statusOptions.filter(opt => Array.isArray(statusFilter) && statusFilter.includes(opt.value))}
-          onChange={selected => {
-            const values = selected ? selected.map(s => s.value) : [];
+      <FormControl fullWidth variant="outlined">
+        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status Filter</InputLabel>
+        <MuiSelect
+          multiple
+          value={statusFilter}
+          onChange={(e) => {
+            const values = e.target.value as string[];
             setStatusFilter(values);
             setPagination((prev) => ({ ...prev, current_page: 1 }));
           }}
-          options={statusOptions.filter(opt => opt.value !== "")}
-          styles={customStyles}
-          components={{
-            MultiValue: CustomMultiValue,
-            MultiValueRemove: CustomMultiValueRemove,
-          }}
-          closeMenuOnSelect={false}
-          placeholder="Select Status..."
-          isClearable
-          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
-          menuPosition="fixed"
-        />
-      </div>
+          displayEmpty
+          label="Status Filter"
+          sx={fieldStyles}
+          MenuProps={menuProps}
+          renderValue={(selected: string[]) =>
+            selected.length ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => (
+                  <Chip key={value} label={statusOptions.find((o) => o.value === value)?.label || value} size="small" />
+                ))}
+              </Box>
+            ) : (
+              <em>Select Status...</em>
+            )
+          }
+        >
+          {statusOptions.filter((opt) => opt.value !== "").map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          ))}
+        </MuiSelect>
+      </FormControl>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Payment Status</label>
-        <Select
-          isMulti
-          value={paymentStatusOptions.filter(opt => Array.isArray(paymentStatusFilter) && paymentStatusFilter.includes(opt.value))}
-          onChange={selected => {
-            const values = selected ? selected.map(s => s.value) : [];
+      <FormControl fullWidth variant="outlined">
+        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Payment Status</InputLabel>
+        <MuiSelect
+          multiple
+          value={paymentStatusFilter}
+          onChange={(e) => {
+            const values = e.target.value as string[];
             setPaymentStatusFilter(values);
             setPagination((prev) => ({ ...prev, current_page: 1 }));
           }}
-          options={paymentStatusOptions.filter(opt => opt.value !== "")}
-          styles={customStyles}
-          components={{
-            MultiValue: CustomMultiValue,
-            MultiValueRemove: CustomMultiValueRemove,
-          }}
-          closeMenuOnSelect={false}
-          placeholder="Select Payment Status..."
-          isClearable
-          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
-          menuPosition="fixed"
-        />
-      </div>
+          displayEmpty
+          label="Payment Status"
+          sx={fieldStyles}
+          MenuProps={menuProps}
+          renderValue={(selected: string[]) =>
+            selected.length ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => (
+                  <Chip key={value} label={paymentStatusOptions.find((o) => o.value === value)?.label || value} size="small" />
+                ))}
+              </Box>
+            ) : (
+              <em>Select Payment Status...</em>
+            )
+          }
+        >
+          {paymentStatusOptions.filter((opt) => opt.value !== "").map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          ))}
+        </MuiSelect>
+      </FormControl>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Order Date
-        </label>
-        <Select
-          value={orderDateOptions.find((opt) => opt.value === orderDateFilter)}
-          onChange={(opt) => {
-            setOrderDateFilter(opt?.value || "last_30_days");
+      <FormControl fullWidth variant="outlined">
+        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Order Date</InputLabel>
+        <MuiSelect
+          value={orderDateFilter}
+          onChange={(e) => {
+            setOrderDateFilter(e.target.value || "last_30_days");
             setPagination((prev) => ({ ...prev, current_page: 1 }));
           }}
-          options={orderDateOptions}
-          isSearchable={false}
-          styles={customStyles}
-          placeholder="Select Date Range..."
-          isClearable
-          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
-          menuPosition="fixed"
-        />
-      </div>
+          displayEmpty
+          label="Order Date"
+          sx={fieldStyles}
+          MenuProps={menuProps}
+        >
+          <MenuItem value=""><em>Select Date Range...</em></MenuItem>
+          {orderDateOptions.map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          ))}
+        </MuiSelect>
+      </FormControl>
     </div>)
-  // --- CustomMultiValue and customStyles for filter dropdowns (copied from AddOfferPage) ---
 
 
   return (

@@ -6,15 +6,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { X, RotateCcw, Search } from "lucide-react";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
@@ -189,12 +182,8 @@ export const NoticeFilterDialog: React.FC<Props> = ({
   const hasFilters =
     selectedTower || selectedFlat || selectedNoticeType || selectedStatus || dateFrom || dateTo;
 
-  // ── Styles ────────────────────────────────────────────────────────────────
-  const fieldCls =
-    "h-10 w-full rounded border border-gray-300 bg-white text-sm focus:ring-0 focus:border-gray-400";
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-lg bg-white rounded-xl shadow-xl p-0 overflow-hidden">
         {/* Header */}
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -214,131 +203,128 @@ export const NoticeFilterDialog: React.FC<Props> = ({
         {/* Body */}
         <div className="px-6 py-5 space-y-5">
           {/* Tower */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">
-              Select Tower / Block
-            </Label>
-            <Select
+          <FormControl fullWidth variant="outlined" disabled={loadingTowers}>
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Tower / Block</InputLabel>
+            <MuiSelect
               value={selectedTower}
-              onValueChange={handleTowerChange}
-              disabled={loadingTowers}
+              onChange={(e) => handleTowerChange(e.target.value)}
+              displayEmpty
+              label="Select Tower / Block"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger className={fieldCls}>
-                <SelectValue
-                  placeholder={
-                    loadingTowers ? "Loading towers…" : "Select Tower"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent className="bg-white max-h-56">
-                <SelectItem value="__all__">All Towers</SelectItem>
-                {towers.map((t) => (
-                  <SelectItem key={t.id} value={t.id.toString()}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <MenuItem value=""><em>{loadingTowers ? "Loading towers…" : "Select Tower"}</em></MenuItem>
+              <MenuItem value="__all__">All Towers</MenuItem>
+              {towers.map((t) => (
+                <MenuItem key={t.id} value={t.id.toString()}>
+                  {t.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Flat */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">
-              Select Flat
-            </Label>
-            <Select
+          <FormControl
+            fullWidth
+            variant="outlined"
+            disabled={!selectedTower || selectedTower === "__all__" || loadingFlats}
+          >
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Flat</InputLabel>
+            <MuiSelect
               value={selectedFlat}
-              onValueChange={setSelectedFlat}
-              disabled={!selectedTower || selectedTower === "__all__" || loadingFlats}
+              onChange={(e) => setSelectedFlat(e.target.value)}
+              displayEmpty
+              label="Select Flat"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger className={fieldCls}>
-                <SelectValue
-                  placeholder={
-                    loadingFlats
-                      ? "Loading flats…"
-                      : !selectedTower || selectedTower === "__all__"
-                      ? "Select tower first"
-                      : "Select Flat"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent className="bg-white max-h-56">
-                <SelectItem value="__all__">All Flats</SelectItem>
-                {flats.map((f) => (
-                  <SelectItem key={f.id} value={f.id.toString()}>
-                    {f.flat_str || f.flat_no}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <MenuItem value="">
+                <em>
+                  {loadingFlats
+                    ? "Loading flats…"
+                    : !selectedTower || selectedTower === "__all__"
+                    ? "Select tower first"
+                    : "Select Flat"}
+                </em>
+              </MenuItem>
+              <MenuItem value="__all__">All Flats</MenuItem>
+              {flats.map((f) => (
+                <MenuItem key={f.id} value={f.id.toString()}>
+                  {f.flat_str || f.flat_no}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Notice Type */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">
-              Notice Type
-            </Label>
-            <Select value={selectedNoticeType} onValueChange={setSelectedNoticeType}>
-              <SelectTrigger className={fieldCls}>
-                <SelectValue placeholder="Select Notice Type" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                <SelectItem value="__all__">All Types</SelectItem>
-                {NOTICE_TYPE_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Notice Type</InputLabel>
+            <MuiSelect
+              value={selectedNoticeType}
+              onChange={(e) => setSelectedNoticeType(e.target.value)}
+              displayEmpty
+              label="Notice Type"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value=""><em>Select Notice Type</em></MenuItem>
+              <MenuItem value="__all__">All Types</MenuItem>
+              {NOTICE_TYPE_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Date Range */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">
-              Date Range
-            </Label>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <span className="text-xs text-gray-500">From</span>
-                <Input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  max={dateTo || undefined}
-                  className={fieldCls}
-                />
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs text-gray-500">To</span>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  min={dateFrom || undefined}
-                  className={fieldCls}
-                />
-              </div>
+              <TextField
+                label="From"
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                inputProps={{ max: dateTo || undefined }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="To"
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                inputProps={{ min: dateFrom || undefined }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
           </div>
 
           {/* Status */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">Status</Label>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className={fieldCls}>
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                <SelectItem value="__all__">All Statuses</SelectItem>
-                {STATUS_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+            <MuiSelect
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              displayEmpty
+              label="Status"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value=""><em>Select Status</em></MenuItem>
+              <MenuItem value="__all__">All Statuses</MenuItem>
+              {STATUS_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
         </div>
 
         {/* Footer */}

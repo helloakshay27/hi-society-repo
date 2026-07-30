@@ -10,6 +10,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 export interface OffersFilterParams {
     offerType?: string;
@@ -147,16 +148,17 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                     </div> */}
 
                     {/* Status */}
-                    <FormControl fullWidth size="small" margin="dense">
-                        <InputLabel id="status-label">Status</InputLabel>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
                         <Select
-                            labelId="status-label"
-                            id="status-select"
                             value={filters.status || ''}
-                            label="Status"
                             onChange={(e) => handleFilterChange('status', e.target.value)}
+                            displayEmpty
+                            label="Status"
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
                         >
-                            <MenuItem value="">Select</MenuItem>
+                            <MenuItem value=""><em>Select</em></MenuItem>
                             <MenuItem value="Active">Active</MenuItem>
                             <MenuItem value="Inactive">Inactive</MenuItem>
                             <MenuItem value="Expired">Expired</MenuItem>
@@ -164,16 +166,17 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                     </FormControl>
 
                     {/* Show on Home */}
-                    <FormControl fullWidth size="small" margin="dense">
-                        <InputLabel id="show-on-home-label">Show on Home</InputLabel>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Show on Home</InputLabel>
                         <Select
-                            labelId="show-on-home-label"
-                            id="show-on-home-select"
                             value={filters.showOnHome || ''}
-                            label="Show on Home"
                             onChange={(e) => handleFilterChange('showOnHome', e.target.value)}
+                            displayEmpty
+                            label="Show on Home"
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
                         >
-                            <MenuItem value="">Select</MenuItem>
+                            <MenuItem value=""><em>Select</em></MenuItem>
                             <MenuItem value="true">Yes</MenuItem>
                             <MenuItem value="false">No</MenuItem>
                         </Select>
@@ -187,9 +190,9 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                             value={filters.createdAtFrom || ''}
                             onChange={(e) => handleFilterChange('createdAtFrom', e.target.value)}
                             fullWidth
-                            size="small"
-                            margin="dense"
+                            variant="outlined"
                             InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
                         />
                         {/* <TextField
                             label="Created To"

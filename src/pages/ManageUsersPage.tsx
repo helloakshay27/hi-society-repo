@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit } from "lucide-react";
-import { FormControl, MenuItem, Select as MuiSelect } from "@mui/material";
+import { FormControl, MenuItem, Select as MuiSelect, InputLabel, TextField, ListItemText, InputAdornment } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -14,17 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import MultiSelectBox from "@/components/ui/multi-selector";
-import { SearchableSelect } from "@/components/SearchSelect";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
@@ -778,7 +768,7 @@ const ManageUsersPage = () => {
               className="p-1 hover:bg-gray-100 rounded"
               title="Edit"
             >
-              <Edit className="w-4 h-4 !text-[#C72030]" />
+              <Edit className="w-4 h-4 !text-[#1A1A1A]" />
             </button>
           </div>
         );
@@ -940,7 +930,7 @@ const ManageUsersPage = () => {
           />
         )}
 
-        <Dialog open={showFiltersDialog} onOpenChange={setShowFiltersDialog}>
+        <Dialog modal={false} open={showFiltersDialog} onOpenChange={setShowFiltersDialog}>
           <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between shrink-0">
               <DialogTitle className="text-base font-bold text-white text-center w-full">Advance Filter</DialogTitle>
@@ -955,162 +945,236 @@ const ManageUsersPage = () => {
             <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
               <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                 {/* First Name */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">First Name</Label>
-                  <Input
-                    placeholder="Enter First Name"
-                    value={filters.firstName}
-                    onChange={(e) => setFilters({ ...filters, firstName: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="First Name"
+                  placeholder="Enter First Name"
+                  value={filters.firstName}
+                  onChange={(e) => setFilters({ ...filters, firstName: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Last Name */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Last Name</Label>
-                  <Input
-                    placeholder="Enter Last Name"
-                    value={filters.lastName}
-                    onChange={(e) => setFilters({ ...filters, lastName: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="Last Name"
+                  placeholder="Enter Last Name"
+                  value={filters.lastName}
+                  onChange={(e) => setFilters({ ...filters, lastName: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Email ID */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Email ID</Label>
-                  <Input
-                    placeholder="Enter Email ID"
-                    value={filters.email}
-                    onChange={(e) => setFilters({ ...filters, email: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="Email ID"
+                  placeholder="Enter Email ID"
+                  value={filters.email}
+                  onChange={(e) => setFilters({ ...filters, email: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Mobile */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Mobile</Label>
-                  <Input
-                    placeholder="Enter Mobile"
-                    value={filters.mobile}
-                    onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="Mobile"
+                  placeholder="Enter Mobile"
+                  value={filters.mobile}
+                  onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Resident Type */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Resident Type</Label>
-                  <MultiSelectBox
-                    options={[
-                      { label: "Owner", value: "Owner" },
-                      { label: "Tenant", value: "Tenant" },
-                    ]}
-                    value={filters.residentType}
-                    onChange={(selected: any) => setFilters({ ...filters, residentType: selected || [] })}
-                    placeholder="Select Resident Type"
-                  />
-                </div>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Resident Type</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={filters.residentType.map((r: any) => r.value)}
+                    onChange={(e) => {
+                      const values = e.target.value as string[];
+                      const options = [{ label: "Owner", value: "Owner" }, { label: "Tenant", value: "Tenant" }];
+                      setFilters({ ...filters, residentType: options.filter((o) => values.includes(o.value)) });
+                    }}
+                    displayEmpty
+                    label="Resident Type"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                    renderValue={(selected: string[]) =>
+                      selected.length ? selected.join(', ') : <em>Select Resident Type</em>
+                    }
+                  >
+                    {[{ label: "Owner", value: "Owner" }, { label: "Tenant", value: "Tenant" }].map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <ListItemText primary={opt.label} />
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Tower */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Tower</Label>
-                  <SearchableSelect
-                    options={towerOptions.map((tower) => ({ label: tower.name, value: tower.id.toString() }))}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower</InputLabel>
+                  <MuiSelect
                     value={filters.tower}
-                    onChange={(value) => {
+                    onChange={(e) => {
+                      const value = e.target.value;
                       setFilters({ ...filters, tower: value, flat: [] });
                       fetchFlats(parseInt(value));
                     }}
-                    placeholder="Select Tower"
-                  />
-                </div>
+                    displayEmpty
+                    label="Tower"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Tower</em></MenuItem>
+                    {towerOptions.map((tower) => (
+                      <MenuItem key={tower.id} value={tower.id.toString()}>{tower.name}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Flat Number */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Flat Number</Label>
-                  <MultiSelectBox
-                    options={flatOptions}
-                    value={filters.flat}
-                    onChange={(selected: any) => setFilters({ ...filters, flat: selected || [] })}
-                    placeholder="Select Flat Number"
-                  />
-                </div>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat Number</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={filters.flat.map((f: any) => f.value)}
+                    onChange={(e) => {
+                      const values = e.target.value as string[];
+                      setFilters({ ...filters, flat: flatOptions.filter((o) => values.includes(o.value)) });
+                    }}
+                    displayEmpty
+                    label="Flat Number"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                    renderValue={(selected: string[]) =>
+                      selected.length
+                        ? flatOptions.filter((o) => selected.includes(o.value)).map((o) => o.label).join(', ')
+                        : <em>Select Flat Number</em>
+                    }
+                  >
+                    {flatOptions.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <ListItemText primary={opt.label} />
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Lives Here */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Lives Here</Label>
-                  <SearchableSelect
-                    options={[
-                      { label: "Yes", value: "Yes" },
-                      { label: "No", value: "No" },
-                    ]}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Lives Here</InputLabel>
+                  <MuiSelect
                     value={filters.livesHere}
-                    onChange={(value) => setFilters({ ...filters, livesHere: value })}
-                    placeholder="Select Lives Here"
-                  />
-                </div>
+                    onChange={(e) => setFilters({ ...filters, livesHere: e.target.value })}
+                    displayEmpty
+                    label="Lives Here"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value=""><em>Select Lives Here</em></MenuItem>
+                    <MenuItem value="Yes">Yes</MenuItem>
+                    <MenuItem value="No">No</MenuItem>
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Status */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Status</Label>
-                  <MultiSelectBox
-                    options={[
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={filters.status.map((s: any) => s.value)}
+                    onChange={(e) => {
+                      const values = e.target.value as string[];
+                      const options = [
+                        { label: "Approved", value: "1" },
+                        { label: "Rejected", value: "0" },
+                        { label: "Pending", value: "null" },
+                      ];
+                      setFilters({ ...filters, status: options.filter((o) => values.includes(o.value)) });
+                    }}
+                    displayEmpty
+                    label="Status"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                    renderValue={(selected: string[]) =>
+                      selected.length ? selected.join(', ') : <em>Select Status</em>
+                    }
+                  >
+                    {[
                       { label: "Approved", value: "1" },
                       { label: "Rejected", value: "0" },
                       { label: "Pending", value: "null" },
-                    ]}
-                    value={filters.status}
-                    onChange={(selected: any) => setFilters({ ...filters, status: selected || [] })}
-                    placeholder="Select Status"
-                  />
-                </div>
+                    ].map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <ListItemText primary={opt.label} />
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Membership Type */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Membership Type</Label>
-                  <SearchableSelect
-                    options={[
-                      { label: "Primary", value: "1" },
-                      { label: "Secondary", value: "0" },
-                    ]}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Membership Type</InputLabel>
+                  <MuiSelect
                     value={filters.membershipType}
-                    onChange={(value) => setFilters({ ...filters, membershipType: value })}
-                    placeholder="Select Membership"
-                  />
-                </div>
+                    onChange={(e) => setFilters({ ...filters, membershipType: e.target.value })}
+                    displayEmpty
+                    label="Membership Type"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value=""><em>Select Membership</em></MenuItem>
+                    <MenuItem value="1">Primary</MenuItem>
+                    <MenuItem value="0">Secondary</MenuItem>
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Start Date */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Start Date</Label>
-                  <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden">
-                    <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
-                      <Calendar className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <Input
-                      type="date"
-                      value={filters.startDate}
-                      onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                      className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
-                    />
-                  </div>
-                </div>
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    sx: fieldStyles,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
                 {/* End Date */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">End Date</Label>
-                  <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden">
-                    <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
-                      <Calendar className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <Input
-                      type="date"
-                      value={filters.endDate}
-                      onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                      className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
-                    />
-                  </div>
-                </div>
+                <TextField
+                  label="End Date"
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    sx: fieldStyles,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </div>
 
               {/* Action Buttons */}

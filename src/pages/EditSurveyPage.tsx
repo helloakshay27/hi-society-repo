@@ -1318,9 +1318,10 @@ export const EditSurveyPage = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="flex items-center justify-center h-96">
-          <div>Loading Question Bank data...</div>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading survey data...</p>
         </div>
       </div>
     );

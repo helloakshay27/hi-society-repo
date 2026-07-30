@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Edit, Trash2, Plus } from 'lucide-react';
@@ -385,97 +385,87 @@ export const OSRSchedulePage: React.FC = () => {
     <div className="space-y-5">
       {/* Row 1: Category + Sub Category */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category <span className="text-red-500">*</span>
-          </label>
-          <Select
+        <MuiFormControl fullWidth variant="outlined">
+          <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category <span style={{ color: 'red' }}>*</span></InputLabel>
+          <MuiSelect
             value={data.osr_category_id}
-            onValueChange={val => handleCategoryChange(val, data, setData)}
+            onChange={e => handleCategoryChange(e.target.value, data, setData)}
+            displayEmpty
+            label="Category *"
+            sx={fieldStyles}
+            MenuProps={menuProps}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map(c => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+            {categories.map(c => (
+              <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>
+            ))}
+          </MuiSelect>
+        </MuiFormControl>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sub Category <span className="text-red-500">*</span>
-          </label>
-          <Select
+        <MuiFormControl fullWidth variant="outlined" disabled={!data.osr_category_id || subCatsLoading}>
+          <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Sub Category <span style={{ color: 'red' }}>*</span></InputLabel>
+          <MuiSelect
             value={data.osr_sub_category_id}
-            onValueChange={val => handleSubCategoryChange(val, data, setData)}
-            disabled={!data.osr_category_id || subCatsLoading}
+            onChange={e => handleSubCategoryChange(e.target.value, data, setData)}
+            displayEmpty
+            label="Sub Category *"
+            sx={fieldStyles}
+            MenuProps={menuProps}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={
-                !data.osr_category_id ? 'Select Category first'
-                : subCatsLoading ? 'Loading...'
-                : 'Select Sub Category'
-              } />
-            </SelectTrigger>
-            <SelectContent>
-              {subCategories.map(sc => (
-                <SelectItem key={sc.id} value={String(sc.id)}>{sc.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <MenuItem value="" disabled>
+              <em>{!data.osr_category_id ? 'Select Category first' : subCatsLoading ? 'Loading...' : 'Select Sub Category'}</em>
+            </MenuItem>
+            {subCategories.map(sc => (
+              <MenuItem key={sc.id} value={String(sc.id)}>{sc.name}</MenuItem>
+            ))}
+          </MuiSelect>
+        </MuiFormControl>
       </div>
 
       {/* Flat Type */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Flat Type</label>
-        <Select
+      <MuiFormControl fullWidth variant="outlined" disabled={!data.osr_sub_category_id || flatsLoading}>
+        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat Type</InputLabel>
+        <MuiSelect
           value={data.flat_type_id}
-          onValueChange={val => setData(prev => ({ ...prev, flat_type_id: val }))}
-          disabled={!data.osr_sub_category_id || flatsLoading}
+          onChange={e => setData(prev => ({ ...prev, flat_type_id: e.target.value }))}
+          displayEmpty
+          label="Flat Type"
+          sx={fieldStyles}
+          MenuProps={menuProps}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={
-              !data.osr_sub_category_id ? 'Select Sub Category first'
-              : flatsLoading ? 'Loading...'
-              : 'Select Flat Type'
-            } />
-          </SelectTrigger>
-          <SelectContent>
-            {subCatFlats.map(f => (
-              <SelectItem key={f.flat_type_id} value={String(f.flat_type_id)}>
-                {f.flat_type_name} (₹{f.price})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <MenuItem value="" disabled>
+            <em>{!data.osr_sub_category_id ? 'Select Sub Category first' : flatsLoading ? 'Loading...' : 'Select Flat Type'}</em>
+          </MenuItem>
+          {subCatFlats.map(f => (
+            <MenuItem key={f.flat_type_id} value={String(f.flat_type_id)}>
+              {f.flat_type_name} (₹{f.price})
+            </MenuItem>
+          ))}
+        </MuiSelect>
+      </MuiFormControl>
 
       {/* Row 2: Start Time + End Time */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Start Time <span className="text-red-500">*</span>
-          </label>
-          <Input
-            type="time"
-            value={data.startTime}
-            onChange={e => setData(prev => ({ ...prev, startTime: e.target.value }))}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            End Time <span className="text-red-500">*</span>
-          </label>
-          <Input
-            type="time"
-            value={data.endTime}
-            onChange={e => setData(prev => ({ ...prev, endTime: e.target.value }))}
-          />
-        </div>
+        <TextField
+          label={<>Start Time <span style={{ color: 'red' }}>*</span></>}
+          type="time"
+          value={data.startTime}
+          onChange={e => setData(prev => ({ ...prev, startTime: e.target.value }))}
+          fullWidth
+          variant="outlined"
+          InputLabelProps={{ shrink: true }}
+          InputProps={{ sx: fieldStyles }}
+        />
+        <TextField
+          label={<>End Time <span style={{ color: 'red' }}>*</span></>}
+          type="time"
+          value={data.endTime}
+          onChange={e => setData(prev => ({ ...prev, endTime: e.target.value }))}
+          fullWidth
+          variant="outlined"
+          InputLabelProps={{ shrink: true }}
+          InputProps={{ sx: fieldStyles }}
+        />
       </div>
 
       {/* Days — Number inputs */}
@@ -485,38 +475,37 @@ export const OSRSchedulePage: React.FC = () => {
           {DAY_LABELS.map((label, i) => {
             const key = DAY_KEYS[i];
             return (
-              <div key={label} className="flex flex-col items-center gap-1">
-                <label className="text-xs text-gray-500 font-medium">{label}</label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={2}
-                  value={data[key]}
-                  onChange={e => handleDayChange(key, e.target.value, setData)}
-                  className="w-full text-center"
-                />
-              </div>
+              <TextField
+                key={label}
+                label={label}
+                type="number"
+                value={data[key]}
+                onChange={e => handleDayChange(key, e.target.value, setData)}
+                inputProps={{ min: 0, max: 2, style: { textAlign: 'center' } }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             );
           })}
         </div>
       </div>
 
       {/* Status */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-        <Select
+      <MuiFormControl fullWidth variant="outlined">
+        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+        <MuiSelect
           value={data.active}
-          onValueChange={val => setData(prev => ({ ...prev, active: val }))}
+          onChange={e => setData(prev => ({ ...prev, active: e.target.value }))}
+          label="Status"
+          sx={fieldStyles}
+          MenuProps={menuProps}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          <MenuItem value="Active">Active</MenuItem>
+          <MenuItem value="Inactive">Inactive</MenuItem>
+        </MuiSelect>
+      </MuiFormControl>
     </div>
   );
 
@@ -636,7 +625,7 @@ export const OSRSchedulePage: React.FC = () => {
       </div>
 
       {/* ── Add Modal ─────────────────────────────────────────────────────── */}
-      <Dialog open={showAddModal} onOpenChange={open => { setShowAddModal(open); if (!open) { setSubCategories([]); setSubCatFlats([]); } }}>
+      <Dialog modal={false} open={showAddModal} onOpenChange={open => { setShowAddModal(open); if (!open) { setSubCategories([]); setSubCatFlats([]); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-900">Add Schedule</DialogTitle>
@@ -658,7 +647,7 @@ export const OSRSchedulePage: React.FC = () => {
       </Dialog>
 
       {/* ── Edit Modal ────────────────────────────────────────────────────── */}
-      <Dialog open={showEditModal} onOpenChange={open => { setShowEditModal(open); if (!open) { setSubCategories([]); setSubCatFlats([]); } }}>
+      <Dialog modal={false} open={showEditModal} onOpenChange={open => { setShowEditModal(open); if (!open) { setSubCategories([]); setSubCatFlats([]); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-900">Edit Schedule</DialogTitle>

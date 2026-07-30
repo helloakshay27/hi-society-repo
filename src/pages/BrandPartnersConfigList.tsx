@@ -218,11 +218,11 @@ const BrandPartnersConfigList: React.FC = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
+                className="h-8 w-8 text-black hover:text-black hover:bg-gray-100"
                 onClick={() => openEditDialog(item)}
                 title="Edit"
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-4 w-4" style={{ color: '#000000' }} />
               </Button>
             )}
             {/* {shouldShow("BrandPartnerConfig", "destroy") && (

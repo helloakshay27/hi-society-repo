@@ -6,9 +6,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import SelectBox from "@/components/ui/select-box";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import axios from "axios";
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
@@ -131,10 +130,12 @@ export const ViewUserPage = () => {
 
   if (loading) {
     return (
-      <Box sx={{ p: 6, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <Typography sx={{ ml: 2 }}>Loading user details...</Typography>
-      </Box>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading user details...</p>
+        </div>
+      </div>
     );
   }
 
@@ -357,12 +358,12 @@ export const ViewUserPage = () => {
       {/* Main Container Paper */}
       <Paper sx={{ borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
         {/* Header Section with Avatar and User Info */}
-        <Box sx={{ background: "linear-gradient(135deg, #C72030 0%, #A01A24 100%)", p: 4, position: "relative" }}>
+        <Box sx={{ background: "linear-gradient(135deg, #da7756 0%, #da7756 100%)", p: 4, position: "relative" }}>
           {/* Edit Button */}
           <Box sx={{ position: "absolute", top: 16, right: 16 }}>
             <Button
               size="sm"
-              className="bg-orange-500 hover:bg-orange-600 text-white shadow-md"
+              className="px-8 border-0 bg-[#da7756] hover:bg-[#c06548] !text-white [&_svg]:!text-[#da7756] flex items-center gap-2"
               onClick={() => navigate(`/settings/manage-users/edit/${userId}`)}
             >
               <Edit className="w-4 h-4 mr-1" />
@@ -451,15 +452,13 @@ export const ViewUserPage = () => {
           {/* Add to Another Flat Button */}
           <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3, gap: 2 }}>
             <Button
-              className="bg-white hover:bg-gray-50 font-semibold shadow-md"
-              style={{ color: "#C72030", borderColor: "#C72030" }}
+              className="px-8 border-0 bg-[#da7756] hover:bg-[#c06548] !text-white flex items-center gap-2"
               onClick={() => setIsAddToAnotherFlatModalOpen(true)}
             >
               + Add to Another Flat
             </Button>
             <Button
-              className="bg-white hover:bg-gray-50 font-semibold shadow-md"
-              style={{ color: "#00A651", borderColor: "#00A651" }}
+              className="px-8 border-0 bg-[#da7756] hover:bg-[#c06548] !text-white [&_svg]:!text-[#da7756] flex items-center gap-2"
               onClick={() => setCreditDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-1" />
@@ -785,7 +784,7 @@ export const ViewUserPage = () => {
       />
 
       {/* Configure Club Details Modal */}
-      <Dialog open={isConfigureDetailsModalOpen} onOpenChange={setIsConfigureDetailsModalOpen}>
+      <Dialog modal={false} open={isConfigureDetailsModalOpen} onOpenChange={setIsConfigureDetailsModalOpen}>
         <DialogContent className="max-w-[500px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
           <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between shrink-0">
             <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">Configure Details</DialogTitle>
@@ -819,49 +818,42 @@ export const ViewUserPage = () => {
               </div>
               {clubFormData.clubMembershipChecked && (
                 <div className="space-y-3 ml-6">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Membership Number</Label>
-                    <Input
-                      placeholder="Enter membership number"
-                      value={clubFormData.membershipNumber}
-                      onChange={(e) =>
-                        handleClubFormChange("membershipNumber", e.target.value)
-                      }
-                      className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm mt-1.5"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Start Date</Label>
-                    <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden mt-1.5">
-                      <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
-                        <Calendar className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <Input
-                        type="date"
-                        value={clubFormData.startDate}
-                        onChange={(e) =>
-                          handleClubFormChange("startDate", e.target.value)
-                        }
-                        className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">End Date</Label>
-                    <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden mt-1.5">
-                      <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
-                        <Calendar className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <Input
-                        type="date"
-                        value={clubFormData.endDate}
-                        onChange={(e) =>
-                          handleClubFormChange("endDate", e.target.value)
-                        }
-                        className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
-                      />
-                    </div>
-                  </div>
+                  <TextField
+                    label="Membership Number"
+                    placeholder="Enter membership number"
+                    value={clubFormData.membershipNumber}
+                    onChange={(e) =>
+                      handleClubFormChange("membershipNumber", e.target.value)
+                    }
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+                  <TextField
+                    label="Start Date"
+                    type="date"
+                    value={clubFormData.startDate}
+                    onChange={(e) =>
+                      handleClubFormChange("startDate", e.target.value)
+                    }
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+                  <TextField
+                    label="End Date"
+                    type="date"
+                    value={clubFormData.endDate}
+                    onChange={(e) =>
+                      handleClubFormChange("endDate", e.target.value)
+                    }
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
                 </div>
               )}
             </div>
@@ -887,14 +879,17 @@ export const ViewUserPage = () => {
               </div>
               {clubFormData.accessCardChecked && (
                 <div className="ml-6">
-                  <Label className="text-sm font-medium text-gray-600">Access Card ID</Label>
-                  <Input
+                  <TextField
+                    label="Access Card ID"
                     placeholder="Enter access card ID"
                     value={clubFormData.accessCardId}
                     onChange={(e) =>
                       handleClubFormChange("accessCardId", e.target.value)
                     }
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm mt-1.5"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
                 </div>
               )}
@@ -921,7 +916,7 @@ export const ViewUserPage = () => {
       </Dialog>
 
       {/* Credit Wallet Dialog */}
-      <Dialog open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
+      <Dialog modal={false} open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
         <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
           <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between">
             <DialogTitle className="text-base font-bold text-gray-800">Credit Wallet</DialogTitle>
@@ -934,60 +929,55 @@ export const ViewUserPage = () => {
           </DialogHeader>
 
           <div className="p-6 space-y-5">
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                Customer Code
-              </Label>
-              <Input
-                type="text"
-                value={user?.customer_code || ""}
-                disabled
-                className="h-12 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
-              />
-            </div>
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                Amount <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                type="number"
-                value={creditAmount}
-                onChange={(e) => setCreditAmount(e.target.value)}
-                placeholder="Enter amount"
-                min="1"
-                className="h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
-              />
-            </div>
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                Payment Mode <span className="text-red-500">*</span>
-              </Label>
-              <SelectBox
-                options={[
-                  { value: "cash", label: "Cash" },
-                  { value: "online", label: "Online" },
-                  { value: "bank_transfer", label: "Bank Transfer" },
-                  { value: "upi", label: "UPI" },
-                ]}
-                defaultValue={creditPaymentMode}
-                onChange={(value: string) => setCreditPaymentMode(value)}
-                menuPortalTarget={undefined}
-                controlHeight="48px"
-                controlMinHeight="48px"
-              />
-            </div>
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                Remarks <span className="text-red-500">*</span>
-              </Label>
-              <textarea
-                value={creditRemarks}
-                onChange={(e) => setCreditRemarks(e.target.value)}
-                placeholder="Enter remarks"
-                rows={3}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-0 focus:border-[#C72030] resize-none"
-              />
-            </div>
+            <TextField
+              label="Customer Code"
+              type="text"
+              value={user?.customer_code || ""}
+              disabled
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <TextField
+              label={<>Amount <span style={{ color: 'red' }}>*</span></>}
+              type="number"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              placeholder="Enter amount"
+              inputProps={{ min: 1 }}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Payment Mode <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
+                value={creditPaymentMode}
+                onChange={(e) => setCreditPaymentMode(e.target.value)}
+                label="Payment Mode *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="cash">Cash</MenuItem>
+                <MenuItem value="online">Online</MenuItem>
+                <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
+                <MenuItem value="upi">UPI</MenuItem>
+              </MuiSelect>
+            </MuiFormControl>
+            <TextField
+              label={<>Remarks <span style={{ color: 'red' }}>*</span></>}
+              value={creditRemarks}
+              onChange={(e) => setCreditRemarks(e.target.value)}
+              placeholder="Enter remarks"
+              multiline
+              rows={3}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
 
           <div className="flex justify-center gap-4 p-4 border-t bg-white">

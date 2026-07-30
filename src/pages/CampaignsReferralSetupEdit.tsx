@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { TextField } from "@mui/material";
 import { X, Upload, FileImage } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -10,6 +11,30 @@ import {
   updateReferralSetup,
   ReferralDocument,
 } from "@/services/referralService";
+
+// Field styles for Material-UI components (matches BMS/AddHelpdeskTicket.tsx)
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
+    },
+  },
+};
 
 const CampaignsReferralSetupEdit: React.FC = () => {
   const { id } = useParams();
@@ -273,129 +298,91 @@ const CampaignsReferralSetupEdit: React.FC = () => {
             {/* Text Inputs Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Project Name */}
-              <div className="space-y-2">
-                <Label htmlFor="projectName" className="text-gray-600 text-sm">
-                  Project Name
-                </Label>
-                <Input
-                  id="projectName"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.projectName}
-                  onChange={(e) =>
-                    handleInputChange("projectName", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Project Name"
+                placeholder="Enter project name"
+                value={formData.projectName}
+                onChange={(e) => handleInputChange("projectName", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Project Reference Id */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="projectReferenceId"
-                  className="text-gray-600 text-sm"
-                >
-                  Project Reference Id
-                </Label>
-                <Input
-                  id="projectReferenceId"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.projectReferenceId}
-                  onChange={(e) =>
-                    handleInputChange("projectReferenceId", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Project Reference Id"
+                placeholder="Enter project reference id"
+                value={formData.projectReferenceId}
+                onChange={(e) => handleInputChange("projectReferenceId", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
 
             {/* Additional Text Inputs Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-gray-600 text-sm">
-                  Title
-                </Label>
-                <Input
-                  id="title"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.title}
-                  onChange={(e) =>
-                    handleInputChange("title", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Title"
+                placeholder="Enter title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-gray-600 text-sm">
-                  Description
-                </Label>
-                <Input
-                  id="description"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Description"
+                placeholder="Enter description"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Geo Link */}
-              <div className="space-y-2">
-                <Label htmlFor="geoLink" className="text-gray-600 text-sm">
-                  Geo Link
-                </Label>
-                <Input
-                  id="geoLink"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.geoLink}
-                  onChange={(e) =>
-                    handleInputChange("geoLink", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Geo Link"
+                placeholder="Enter geo link"
+                value={formData.geoLink}
+                onChange={(e) => handleInputChange("geoLink", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Details */}
-              <div className="space-y-2">
-                <Label htmlFor="details" className="text-gray-600 text-sm">
-                  Details
-                </Label>
-                <Input
-                  id="details"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.details}
-                  onChange={(e) =>
-                    handleInputChange("details", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Details"
+                placeholder="Enter details"
+                value={formData.details}
+                onChange={(e) => handleInputChange("details", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Mobile No */}
-              <div className="space-y-2">
-                <Label htmlFor="mobileNo" className="text-gray-600 text-sm">
-                  Mobile No
-                </Label>
-                <Input
-                  id="mobileNo"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.mobileNo}
-                  onChange={(e) =>
-                    handleInputChange("mobileNo", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Mobile No"
+                placeholder="Enter mobile no"
+                value={formData.mobileNo}
+                onChange={(e) => handleInputChange("mobileNo", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
 
             {/* Banner Upload */}

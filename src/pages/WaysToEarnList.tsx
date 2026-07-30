@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2, TrendingUp, X, ImageIcon } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@mui/material";
+import { Switch, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -247,7 +241,7 @@ const WaysToEarnList: React.FC = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
+                className="h-8 w-8 text-black hover:text-black hover:bg-gray-100"
                 onClick={() => openEditDialog(item)}
                 title="Edit"
               >
@@ -374,7 +368,7 @@ const WaysToEarnList: React.FC = () => {
       </div>
 
       {/* Add / Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
+      <Dialog modal={false} open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
         <DialogContent className="max-w-lg w-full p-0 overflow-hidden rounded-lg">
           <DialogHeader className="border-b border-[#D9D9D9] px-6 py-4 flex flex-row items-center justify-between">
             <DialogTitle className="text-base font-semibold text-[#1A1A1A] uppercase tracking-wide">
@@ -391,26 +385,24 @@ const WaysToEarnList: React.FC = () => {
 
           <div className="px-6 py-5 space-y-4 bg-white">
             {/* Title */}
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                Title <span className="text-red-500">*</span>
-              </Label>
-              <Select
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Title <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
                 value={form.title}
-                onValueChange={(val) => setForm((p) => ({ ...p, title: val }))}
+                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                displayEmpty
+                label="Title *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="w-full h-12 rounded-md border-[#D9D9D9] font-medium text-gray-800 focus:ring-0 focus:border-[#C72030]">
-                  <SelectValue placeholder="Select title" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TITLE_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="" disabled><em>Select title</em></MenuItem>
+                {TITLE_OPTIONS.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
             {/* Description */}
             <div className="relative">
@@ -428,30 +420,28 @@ const WaysToEarnList: React.FC = () => {
 
             {/* Points + Position */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative">
-                <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                  Points
-                </Label>
-                <input
-                  type="number"
-                  value={form.points}
-                  onChange={(e) => setForm((p) => ({ ...p, points: e.target.value }))}
-                  placeholder="e.g. 1000"
-                  className="w-full h-12 border border-[#D9D9D9] rounded-md px-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-0 focus:border-[#C72030]"
-                />
-              </div>
-              <div className="relative">
-                <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                  Position
-                </Label>
-                <input
-                  type="number"
-                  value={form.position}
-                  onChange={(e) => setForm((p) => ({ ...p, position: e.target.value }))}
-                  placeholder="e.g. 1"
-                  className="w-full h-12 border border-[#D9D9D9] rounded-md px-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-0 focus:border-[#C72030]"
-                />
-              </div>
+              <TextField
+                label="Points"
+                type="number"
+                placeholder="e.g. 1000"
+                value={form.points}
+                onChange={(e) => setForm((p) => ({ ...p, points: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Position"
+                type="number"
+                placeholder="e.g. 1"
+                value={form.position}
+                onChange={(e) => setForm((p) => ({ ...p, position: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
 
             {/* Image Upload */}
@@ -524,7 +514,7 @@ const WaysToEarnList: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={(open) => { if (!open) { setDeleteDialogOpen(false); setDeletingId(null); } }}>
+      <Dialog modal={false} open={deleteDialogOpen} onOpenChange={(open) => { if (!open) { setDeleteDialogOpen(false); setDeletingId(null); } }}>
         <DialogContent className="max-w-sm w-full p-0 overflow-hidden rounded-lg">
           <DialogHeader className="bg-[#F6F4EE] border-b border-[#D9D9D9] px-6 py-4">
             <DialogTitle className="text-base font-semibold text-[#1A1A1A]">

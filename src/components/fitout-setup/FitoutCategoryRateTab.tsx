@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Switch } from '@mui/material';
+import { StatusToggle } from './StatusToggle';
 import {
   Dialog,
   DialogContent,
@@ -12,16 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '../ticket-management/fieldStyles';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
+
+const FITOUT_TYPE_OPTIONS = ['Move In', 'Move Out', 'Fitout', 'Refund Initiate'];
 
 interface FitoutFlatRate {
   id: number;
@@ -319,17 +314,9 @@ export const FitoutCategoryRateTab: React.FC = () => {
         return <span>₹{Number(item.deposit || 0).toFixed(2)}</span>;
       case 'active':
         return (
-          <Switch
+          <StatusToggle
             checked={item.active || false}
             onChange={() => handleToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
           />
         );
       case 'created_at':
@@ -375,7 +362,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
       />
 
       {/* Add/Edit Rate Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog modal={false} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Rate' : 'Add Rate'}</DialogTitle>
@@ -400,53 +387,60 @@ export const FitoutCategoryRateTab: React.FC = () => {
               </Select>
             </div> */}
 
-            <div className="grid gap-2">
-              <Label htmlFor="category-type">Type</Label>
-              <Select value={categoryType} onValueChange={setCategoryType}>
-                <SelectTrigger id="category-type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Move In">Move In</SelectItem>
-                  <SelectItem value="Move Out">Move Out</SelectItem>
-                  <SelectItem value="Fitout">Fitout</SelectItem>
-                  <SelectItem value="Refund Initiate">Refund Initiate</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Type</InputLabel>
+              <MuiSelect
+                value={categoryType}
+                onChange={(e) => setCategoryType(e.target.value)}
+                displayEmpty
+                label="Select Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Type</em></MenuItem>
+                {FITOUT_TYPE_OPTIONS.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
-            <div className="grid gap-2">
-              <Label htmlFor="amount">Amount <span className="text-red-600">*</span></Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
+            <TextField
+              label={<>Amount <span style={{ color: 'red' }}>*</span></>}
+              type="number"
+              placeholder="Enter amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="convenience-charge">Convenience Charge</Label>
-              <Input
-                id="convenience-charge"
-                type="number"
-                placeholder="Enter convenience charge"
-                value={convenienceCharge}
-                onChange={(e) => setConvenienceCharge(e.target.value)}
-              />
-            </div>
+            <TextField
+              label="Convenience Charge"
+              type="number"
+              placeholder="Enter convenience charge"
+              value={convenienceCharge}
+              onChange={(e) => setConvenienceCharge(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="deposit">Security Deposit</Label>
-              <Input
-                id="deposit"
-                type="number"
-                placeholder="Enter security deposit"
-                value={deposit}
-                onChange={(e) => setDeposit(e.target.value)}
-              />
-            </div>
+            <TextField
+              label="Security Deposit"
+              type="number"
+              placeholder="Enter security deposit"
+              value={deposit}
+              onChange={(e) => setDeposit(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
           <DialogFooter>
             <Button

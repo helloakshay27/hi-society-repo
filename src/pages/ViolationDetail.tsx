@@ -18,16 +18,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface Attachment {
   id: number;
@@ -738,7 +733,7 @@ const ViolationDetail: React.FC = () => {
       </div>
 
       {/* Edit Status Dialog */}
-      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
+      <Dialog open={isEditStatusOpen} modal={false} onOpenChange={setIsEditStatusOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Status</DialogTitle>
@@ -748,21 +743,24 @@ const ViolationDetail: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* Status Dropdown */}
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status.id} value={String(status.id)}>
-                      {status.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Status <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                displayEmpty
+                label="Select Status *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Status</em></MenuItem>
+                {statusOptions.map((status) => (
+                  <MenuItem key={status.id} value={String(status.id)}>
+                    {status.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
             {/* Comments */}
             <div className="grid gap-2">

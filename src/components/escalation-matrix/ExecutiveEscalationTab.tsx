@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '../ticket-management/fieldStyles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -506,18 +507,19 @@ export const ExecutiveEscalationTab: React.FC = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold text-gray-900">Executive Escalation Rules</CardTitle>
             <div className="flex items-center gap-3">
-              <Label htmlFor="escalation-filter" className="text-sm font-medium text-gray-700">
-                Filter by Type
-              </Label>
-              <Select value={selectedCategoryFilter} onValueChange={setSelectedCategoryFilter}>
-                <SelectTrigger className="w-48 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]">
-                  <SelectValue placeholder="Select Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Executive Escalation">Executive Escalation</SelectItem>
-                </SelectContent>
-              </Select>
+              <MuiFormControl variant="outlined" sx={{ minWidth: 220 }}>
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Filter by Type</InputLabel>
+                <MuiSelect
+                  value={selectedCategoryFilter}
+                  onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                  label="Filter by Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="all">All Types</MenuItem>
+                  <MenuItem value="Executive Escalation">Executive Escalation</MenuItem>
+                </MuiSelect>
+              </MuiFormControl>
             </div>
           </div>
         </CardHeader>
@@ -615,7 +617,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                   </div>
 
                   {/* Edit Dialog (modal) */}
-                  <Dialog open={isEditDialogOpen && editingGroupIndex === index} onOpenChange={(open) => !open && cancelEdit()}>
+                  <Dialog modal={false} open={isEditDialogOpen && editingGroupIndex === index} onOpenChange={(open) => !open && cancelEdit()}>
                     <DialogContent className="max-w-3xl">
                       <DialogHeader>
                         <DialogTitle>Edit Executive Escalation</DialogTitle>
@@ -672,7 +674,7 @@ export const ExecutiveEscalationTab: React.FC = () => {
                         <Button
                           onClick={() => updateExecutiveEscalation(ruleGroup)}
                           disabled={updateLoading}
-                          className="bg-green-600 hover:bg-green-700 text-white"
+                          className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                         >
                           {updateLoading ? 'Saving...' : 'Save Changes'}
                         </Button>

@@ -156,6 +156,17 @@ export const SurveyDetailsPage = () => {
     loadData();
   }, [id]);
 
+  if (loading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading survey details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       {/* Header */}
@@ -186,37 +197,10 @@ export const SurveyDetailsPage = () => {
             <CardTitle className="text-lg font-semibold text-gray-900">
               Question Details
             </CardTitle>
-            {/* <div className="flex items-center gap-2">
-              {!loading && snagChecklist && (
-                <>
-                  {snagChecklist.check_type && (
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                      {snagChecklist.check_type.charAt(0).toUpperCase() +
-                        snagChecklist.check_type.slice(1)}
-                    </span>
-                  )}
-                  {snagChecklist.active !== undefined && (
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        snagChecklist.active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {snagChecklist.active ? "Active" : "Inactive"}
-                    </span>
-                  )}
-                </>
-              )}
-            </div> */}
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-gray-500">Loading Question data...</div>
-            </div>
-          ) : !snagChecklist ? (
+          {!snagChecklist ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Question not found</div>
             </div>

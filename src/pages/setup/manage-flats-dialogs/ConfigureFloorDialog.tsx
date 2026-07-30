@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -143,7 +144,7 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-white">
         <DialogHeader className="border-b pb-4">
           <div className="flex items-center justify-between">
@@ -161,36 +162,35 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
 
         <div className="flex-1 overflow-y-auto py-6 space-y-6 px-6">
           <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                Tower <span className="text-red-500">*</span>
-              </Label>
-              <SearchableSelect
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
                 value={selectedTower}
-                onChange={setSelectedTower}
-                options={towers.map((tower) => ({
-                  value: tower.id.toString(),
-                  label: tower.name,
-                }))}
-                placeholder="Select Tower"
-                className=""
-              />
-            </div>
-            <div className="relative">
-              <Label
-                htmlFor="floor-name"
-                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+                onChange={(e) => setSelectedTower(e.target.value)}
+                displayEmpty
+                label="Tower *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                Floor Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="floor-name"
-                placeholder="Enter Floor Name"
-                value={floorName}
-                onChange={(e) => setFloorName(e.target.value)}
-                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
-              />
-            </div>
+                <MenuItem value="" disabled><em>Select Tower</em></MenuItem>
+                {towers.map((tower) => (
+                  <MenuItem key={tower.id} value={tower.id.toString()}>
+                    {tower.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+
+            <TextField
+              label={<>Floor Name <span style={{ color: 'red' }}>*</span></>}
+              placeholder="Enter Floor Name"
+              value={floorName}
+              onChange={(e) => setFloorName(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
 
           <div className="flex justify-start">

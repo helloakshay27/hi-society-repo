@@ -780,7 +780,7 @@ export const ManageFlatsPage = () => {
         {/* Actions Panel */}
         {showActionDropdown && (
           <SelectionPanel
-            className="selection-panel--center"
+            className="selection-panel--end"
             onAdd={handleAddFlat}
             onImport={handleImport}
             onClearSelection={() => setShowActionDropdown(false)}

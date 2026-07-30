@@ -3,12 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getFullUrl } from "@/config/apiConfig";
 
+
+const LABEL_CLASS = "text-gray-500 font-medium text-sm";
+const FIELD_CLASS =
+  "w-full h-[36px] border-0 rounded-none bg-transparent px-0 py-0 text-base font-normal text-black placeholder:font-normal placeholder:text-gray-400 shadow-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none";
+
+const FieldBox: React.FC<{ label: React.ReactNode; children: React.ReactNode }> = ({ label, children }) => (
+  <fieldset className="border border-[#e5e1d8] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
+    <legend className={`px-1 ${LABEL_CLASS}`}>{label}</legend>
+    {children}
+  </fieldset>
+);
 
 const columns = [
   { key: "actions", label: "Actions", sortable: true },
@@ -232,12 +242,9 @@ export const CustomerPricingRuleList = () => {
             </div>
           </DialogHeader>
           <div className="space-y-4 mt-4 pb-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Organization <span className="text-red-500">*</span>
-              </Label>
+            <FieldBox label={<>Organization <span className="text-red-500">*</span></>}>
               <Select value={editOrgId?.toString()} onValueChange={setEditOrgId}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
+                <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue placeholder="Select an organization" />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,13 +259,10 @@ export const CustomerPricingRuleList = () => {
                   )}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Category <span className="text-red-500">*</span>
-              </Label>
+            </FieldBox>
+            <FieldBox label={<>Category <span className="text-red-500">*</span></>}>
               <Select value={editCatId?.toString()} onValueChange={setEditCatId}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
+                <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,13 +277,10 @@ export const CustomerPricingRuleList = () => {
                   )}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Margin Type <span className="text-red-500">*</span>
-              </Label>
+            </FieldBox>
+            <FieldBox label={<>Margin Type <span className="text-red-500">*</span></>}>
               <Select value={editMarginType} onValueChange={setEditMarginType}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
+                <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue placeholder="Select margin type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -287,21 +288,18 @@ export const CustomerPricingRuleList = () => {
                   <SelectItem value="flat">Flat</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Margin Value <span className="text-red-500">*</span>
-              </Label>
+            </FieldBox>
+            <FieldBox label={<>Margin Value <span className="text-red-500">*</span></>}>
               <Input
                 type="number"
                 value={editMarginValue}
                 onChange={e => setEditMarginValue(e.target.value)}
-                className="bg-gray-50 border-[#e5e1d8]"
+                className={FIELD_CLASS}
                 placeholder="e.g., 10"
                 min={0}
                 step={0.01}
               />
-            </div>
+            </FieldBox>
             <div className="flex justify-center gap-4 pt-4">
               <Button
                 onClick={handleEditSubmit}

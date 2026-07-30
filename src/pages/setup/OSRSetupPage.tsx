@@ -23,6 +23,8 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
 import { toast } from 'sonner';
@@ -59,6 +61,17 @@ interface StatusItem {
   second_visit?: number;
   active?: number;
 }
+
+const FIELD_CLASS =
+  'w-full h-[36px] border-0 rounded-none bg-transparent px-0 py-0 text-base font-normal text-black placeholder:font-normal placeholder:text-gray-400 shadow-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none';
+const LABEL_CLASS = 'text-gray-500 font-medium text-sm';
+
+const FieldBox: React.FC<{ label: React.ReactNode; className?: string; children: React.ReactNode }> = ({ label, className, children }) => (
+  <fieldset className={`border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030] ${className ?? ''}`}>
+    <legend className={`px-1 ${LABEL_CLASS}`}>{label}</legend>
+    {children}
+  </fieldset>
+);
 
 // ─── Tab 1: Category ─────────────────────────────────────────────────────────
 
@@ -209,20 +222,20 @@ const CategoryTab: React.FC = () => {
       </div>
 
       {/* Add Dialog */}
-      <Dialog open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) setInputVal(''); }}>
+      <Dialog modal={false} open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) setInputVal(''); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Add Category</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Category Name <span className="text-red-500">*</span></Label>
+            <FieldBox label={<>Category Name <span className="text-red-500">*</span></>}>
               <Input
                 value={inputVal}
                 onChange={e => setInputVal(e.target.value)}
                 placeholder="Enter category name"
                 onKeyDown={e => e.key === 'Enter' && handleAdd()}
                 autoFocus
+                className={FIELD_CLASS}
               />
-            </div>
+            </FieldBox>
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => { setAddOpen(false); setInputVal(''); }}>Cancel</Button>
               <Button onClick={handleAdd} disabled={submitting} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
@@ -234,20 +247,21 @@ const CategoryTab: React.FC = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog modal={false} open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Category Name</Label>
+            <FieldBox label="Category Name">
               <Input
                 value={editVal}
                 onChange={e => setEditVal(e.target.value)}
                 placeholder="Enter category name"
+                autoFocus
+                className={FIELD_CLASS}
               />
-            </div>
+            </FieldBox>
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
               <Button
@@ -547,7 +561,7 @@ const SubCategoryTab: React.FC = () => {
       </div>
 
       {/* Add Modal */}
-      <Dialog open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setFormErrors({}); } }}>
+      <Dialog modal={false} open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setFormErrors({}); } }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Add Sub Category</DialogTitle>
@@ -555,60 +569,77 @@ const SubCategoryTab: React.FC = () => {
           <div className="space-y-4 py-2">
             {/* Row 1: Category + Name */}
             <div className="flex gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label>Category <span className="text-red-500">*</span></Label>
-                <Select value={selectedCatId} onValueChange={v => { setSelectedCatId(v); setFormErrors(p => ({ ...p, category: false })); }}>
-                  <SelectTrigger className={formErrors.category ? 'border-red-500 ring-1 ring-red-500' : ''}>
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
+              <div className="flex-1">
+                <MuiFormControl fullWidth variant="outlined" error={formErrors.category}>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedCatId}
+                    onChange={e => { setSelectedCatId(e.target.value); setFormErrors(p => ({ ...p, category: false })); }}
+                    displayEmpty
+                    label="Category *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Category</em></MenuItem>
                     {categories.map(c => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>
                     ))}
-                  </SelectContent>
-                </Select>
-                {formErrors.category && <p className="text-xs text-red-500">Please select a category.</p>}
+                  </MuiSelect>
+                </MuiFormControl>
+                {formErrors.category && <p className="text-xs text-red-500 mt-1">Please select a category.</p>}
               </div>
-              <div className="flex-1 space-y-1.5">
-                <Label>Sub Category Name <span className="text-red-500">*</span></Label>
-                <Input
+              <div className="flex-1">
+                <TextField
+                  label={<>Sub Category Name <span style={{ color: 'red' }}>*</span></>}
+                  placeholder="Enter Sub Category"
                   value={inputVal}
                   onChange={e => { setInputVal(e.target.value); setFormErrors(p => ({ ...p, name: false })); }}
-                  placeholder="Enter Sub Category"
-                  className={formErrors.name ? 'border-red-500 ring-1 ring-red-500' : ''}
+                  error={formErrors.name}
                   autoFocus
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
                 />
-                {formErrors.name && <p className="text-xs text-red-500">Please enter a sub-category name.</p>}
+                {formErrors.name && <p className="text-xs text-red-500 mt-1">Please enter a sub-category name.</p>}
               </div>
             </div>
 
-            {/* Row 2: Price grid + Description */}
-            <div className="flex gap-4 items-start">
-              <div className="flex-1 space-y-1.5">
-                <Label>Prices by Flat Type</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  {flatTypes.filter(ft => ft.active === 1).map(ft => (
-                    <Input
-                      key={ft.id}
-                      value={prices[ft.id] ?? ''}
-                      onChange={e => setPrices(prev => ({ ...prev, [ft.id]: e.target.value }))}
-                      placeholder={ft.society_flat_type}
-                      type="number"
-                      min="0"
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="w-56 space-y-1.5">
-                <Label>Description</Label>
-                <Textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="Enter Description"
-                  className="h-[136px] resize-none text-sm"
-                />
+            {/* Row 2: Prices by Flat Type */}
+            <div className="space-y-1.5">
+              <Label className={LABEL_CLASS}>Prices by Flat Type</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {flatTypes.filter(ft => ft.active === 1).map(ft => (
+                  <TextField
+                    key={ft.id}
+                    label={ft.society_flat_type}
+                    placeholder="0"
+                    type="number"
+                    value={prices[ft.id] ?? ''}
+                    onChange={e => setPrices(prev => ({ ...prev, [ft.id]: e.target.value }))}
+                    inputProps={{ min: 0 }}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+                ))}
               </div>
             </div>
+
+            {/* Row 3: Description */}
+            <TextField
+              label="Description"
+              placeholder="Enter Description"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              multiline
+              rows={4}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2">
@@ -622,7 +653,7 @@ const SubCategoryTab: React.FC = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={open => { if (!open) setEditOpen(false); }}>
+      <Dialog modal={false} open={editOpen} onOpenChange={open => { if (!open) setEditOpen(false); }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Edit Sub Category</DialogTitle>
@@ -635,50 +666,52 @@ const SubCategoryTab: React.FC = () => {
           ) : (
           <div className="space-y-4 py-2">
             <div className="flex gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label>Category <span className="text-red-500">*</span></Label>
-                <Select value={editCatId} onValueChange={setEditCatId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(c => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex-1">
+                <FieldBox label={<>Category <span className="text-red-500">*</span></>}>
+                  <Select value={editCatId} onValueChange={setEditCatId}>
+                    <SelectTrigger className={FIELD_CLASS}>
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FieldBox>
               </div>
-              <div className="flex-1 space-y-1.5">
-                <Label>Sub Category Name <span className="text-red-500">*</span></Label>
-                <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter name" />
+              <div className="flex-1">
+                <FieldBox label={<>Sub Category Name <span className="text-red-500">*</span></>}>
+                  <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter name" className={FIELD_CLASS} />
+                </FieldBox>
               </div>
             </div>
-            <div className="flex gap-4 items-start">
-              <div className="flex-1 space-y-1.5">
-                <Label>Prices by Flat Type</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  {flatTypes.filter(ft => ft.active === 1).map(ft => (
+            <div className="space-y-1.5">
+              <Label className={LABEL_CLASS}>Prices by Flat Type</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {flatTypes.filter(ft => ft.active === 1).map(ft => (
+                  <FieldBox key={ft.id} label={ft.society_flat_type}>
                     <Input
-                      key={ft.id}
                       value={editPrices[ft.id] ?? ''}
                       onChange={e => setEditPrices(prev => ({ ...prev, [ft.id]: e.target.value }))}
-                      placeholder={ft.society_flat_type}
+                      placeholder="0"
                       type="number"
                       min="0"
+                      className={FIELD_CLASS}
                     />
-                  ))}
-                </div>
-              </div>
-              <div className="w-56 space-y-1.5">
-                <Label>Description</Label>
-                <Textarea
-                  value={editDescription}
-                  onChange={e => setEditDescription(e.target.value)}
-                  placeholder="Enter Description"
-                  className="h-[136px] resize-none text-sm"
-                />
+                  </FieldBox>
+                ))}
               </div>
             </div>
+
+            <FieldBox label="Description">
+              <Textarea
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                placeholder="Enter Description"
+                className="h-[120px] resize-none text-sm border-0 p-0 shadow-none focus-visible:ring-0 focus-visible:outline-none"
+              />
+            </FieldBox>
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
               <Button
@@ -883,33 +916,35 @@ const StatusTab: React.FC = () => {
       </div>
 
       {/* Add Dialog */}
-      <Dialog open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setInputVal(''); setColorVal('#C72030'); setOrderVal(''); setCanCancel(false); setSecondVisit(false); } }}>
+      <Dialog modal={false} open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setInputVal(''); setColorVal('#C72030'); setOrderVal(''); setCanCancel(false); setSecondVisit(false); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Add Status</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Status Name <span className="text-red-500">*</span></Label>
+            <FieldBox label={<>Status Name <span className="text-red-500">*</span></>}>
               <Input
                 value={inputVal}
                 onChange={e => setInputVal(e.target.value)}
                 placeholder="Enter status name"
                 onKeyDown={e => e.key === 'Enter' && handleAdd()}
                 autoFocus
+                className={FIELD_CLASS}
               />
-            </div>
+            </FieldBox>
             <div className="flex gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label>Order</Label>
-                <Input
-                  value={orderVal}
-                  onChange={e => setOrderVal(e.target.value)}
-                  placeholder="Enter order"
-                  type="number"
-                  min="0"
-                />
+              <div className="flex-1">
+                <FieldBox label="Order">
+                  <Input
+                    value={orderVal}
+                    onChange={e => setOrderVal(e.target.value)}
+                    placeholder="Enter order"
+                    type="number"
+                    min="0"
+                    className={FIELD_CLASS}
+                  />
+                </FieldBox>
               </div>
               <div className="space-y-1.5">
-                <Label>Color</Label>
+                <Label className={LABEL_CLASS}>Color</Label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -942,29 +977,30 @@ const StatusTab: React.FC = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog modal={false} open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Status</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Status Name</Label>
-              <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter status name" />
-            </div>
+            <FieldBox label="Status Name">
+              <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter status name" autoFocus className={FIELD_CLASS} />
+            </FieldBox>
             <div className="flex gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label>Order</Label>
-                <Input
-                  value={editOrder}
-                  onChange={e => setEditOrder(e.target.value)}
-                  placeholder="Enter order"
-                  type="number"
-                  min="0"
-                />
+              <div className="flex-1">
+                <FieldBox label="Order">
+                  <Input
+                    value={editOrder}
+                    onChange={e => setEditOrder(e.target.value)}
+                    placeholder="Enter order"
+                    type="number"
+                    min="0"
+                    className={FIELD_CLASS}
+                  />
+                </FieldBox>
               </div>
               <div className="space-y-1.5">
-                <Label>Color</Label>
+                <Label className={LABEL_CLASS}>Color</Label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"

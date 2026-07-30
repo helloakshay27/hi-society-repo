@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -12,16 +11,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '../ticket-management/fieldStyles';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
-import { Switch } from '@mui/material';
+import { StatusToggle } from './StatusToggle';
 import { fetchCategories } from '@/services/wasteGenerationAPI';
 
 interface Status {
@@ -304,23 +298,15 @@ export const StatusTab: React.FC = () => {
             <span className="text-xs text-gray-500">{item.color_code}</span>
           </div>
         );
-      default:
-        return <span>{String(item[columnKey as keyof Status] || '-')}</span>;
-        case 'active':
+      case 'active':
         return (
-          <Switch
+          <StatusToggle
             checked={item.active || false}
             onChange={() => handleToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
           />
         );
+      default:
+        return <span>{String(item[columnKey as keyof Status] || '-')}</span>;
     }
   }, [handleDelete, handleEdit]);
 
@@ -354,7 +340,7 @@ export const StatusTab: React.FC = () => {
       />
 
       {/* Add/Edit Status Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog modal={false} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Status' : 'Add Status'}</DialogTitle>
@@ -363,30 +349,36 @@ export const StatusTab: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="status-name">Status Name <span className='text-red-600'>*</span></Label>
-              <Input
-                id="status-name"
-                placeholder="Enter status name"
-                value={statusName}
-                onChange={(e) => setStatusName(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="fixed-state">Fixed State (Optional)</Label>
-              <Select value={fixedState} onValueChange={setFixedState}>
-                <SelectTrigger id="fixed-state">
-                  <SelectValue placeholder="Select Fixed State" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FIXED_STATES.map((state) => (
-                    <SelectItem key={state} value={state}>
-                      {state}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <TextField
+              label={<>Status Name <span style={{ color: 'red' }}>*</span></>}
+              placeholder="Enter status name"
+              value={statusName}
+              onChange={(e) => setStatusName(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Fixed State (Optional)</InputLabel>
+              <MuiSelect
+                value={fixedState}
+                onChange={(e) => setFixedState(e.target.value)}
+                displayEmpty
+                label="Fixed State (Optional)"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Fixed State</em></MenuItem>
+                {FIXED_STATES.map((state) => (
+                  <MenuItem key={state} value={state}>
+                    {state}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Color</Label>
@@ -404,17 +396,18 @@ export const StatusTab: React.FC = () => {
                   <span className="text-xs text-gray-600">{selectedColor}</span>
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="position">Position <span className='text-red-600'>*</span> </Label>
-                <Input
-                  id="position"
-                  type="number"
-                  placeholder="Position"
-                  value={statusOrder}
-                  onChange={(e) => setStatusOrder(e.target.value)}
-                  min="1"
-                />
-              </div>
+              <TextField
+                label={<>Position <span style={{ color: 'red' }}>*</span></>}
+                type="number"
+                placeholder="Position"
+                value={statusOrder}
+                onChange={(e) => setStatusOrder(e.target.value)}
+                inputProps={{ min: 1 }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
           </div>
           <DialogFooter>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -257,53 +256,53 @@ export const KYCDetailsDashboard = () => {
               <span className="sr-only">Close</span>
             </button>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="relative">
-              <Label htmlFor="userName" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+          <div className="space-y-4 py-4">
+            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
+              <legend className="px-1 text-gray-500 font-medium text-sm">
                 User Name <span className="text-red-500">*</span>
-              </Label>
+              </legend>
               <Input
                 id="userName"
-                placeholder=" "
+                placeholder="Enter User Name"
                 value={formData.userName}
                 onChange={(e) =>
                   setFormData({ ...formData, userName: e.target.value })
                 }
-                className="border border-gray-400 pt-2"
+                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
               />
-            </div>
-            <div className="relative">
-              <Label htmlFor="userEmail" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+            </fieldset>
+            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
+              <legend className="px-1 text-gray-500 font-medium text-sm">
                 User Email <span className="text-red-500">*</span>
-              </Label>
+              </legend>
               <Input
                 id="userEmail"
                 type="email"
-                placeholder=" "
+                placeholder="Enter User Email"
                 value={formData.userEmail}
                 onChange={(e) =>
                   setFormData({ ...formData, userEmail: e.target.value })
                 }
-                className="border border-gray-400 pt-2"
+                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
               />
-            </div>
-            <div className="relative">
-              <Label htmlFor="userMobile" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+            </fieldset>
+            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
+              <legend className="px-1 text-gray-500 font-medium text-sm">
                 User Mobile <span className="text-red-500">*</span>
-              </Label>
+              </legend>
               <Input
                 id="userMobile"
                 type="tel"
-                placeholder=" "
+                placeholder="Enter User Mobile"
                 value={formData.userMobile}
                 maxLength={10}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                   setFormData({ ...formData, userMobile: val });
                 }}
-                className="border border-gray-400 pt-2"
+                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
               />
-            </div>
+            </fieldset>
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button

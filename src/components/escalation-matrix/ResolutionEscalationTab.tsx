@@ -14,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "../ticket-management/fieldStyles";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -67,6 +69,10 @@ import {
 } from "@/services/ticketManagementAPI";
 import { apiClient } from "@/utils/apiClient";
 import { API_CONFIG } from "@/config/apiConfig";
+
+const FIELD_LABEL_CLASS = "text-[#C72030] font-medium text-sm";
+const FIELD_TRIGGER_CLASS =
+  "mt-1 w-full h-[45px] bg-white rounded border border-[#ddd] text-base font-normal text-black hover:border-[#C72030] focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C72030]";
 
 const resolutionEscalationSchema = z.object({
   categoryIds: z.array(z.number()).optional().default([]),
@@ -1625,69 +1631,63 @@ export const ResolutionEscalationTab: React.FC = () => {
       )}
 
       {/* ──────────────── FILTER ASSIGN RULE DIALOG ──────────────── */}
-      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+      <Dialog modal={false} open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Filter Assign Rule</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div>
-              <Label className="text-sm font-medium">Issue Type</Label>
-              <Select
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <MuiSelect
                 value={pendingFilterIssueTypeId}
-                onValueChange={setPendingFilterIssueTypeId}
+                onChange={(e) => setPendingFilterIssueTypeId(e.target.value)}
+                label="Issue Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select Issue Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Issue Types</SelectItem>
-                  {issueTypeOptions.map((it) => (
-                    <SelectItem key={it.id} value={it.id.toString()}>
-                      {it.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Category Type</Label>
-              <Select
+                <MenuItem value="all">All Issue Types</MenuItem>
+                {issueTypeOptions.map((it) => (
+                  <MenuItem key={it.id} value={it.id.toString()}>
+                    {it.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+              <MuiSelect
                 value={pendingFilterCategoryId}
-                onValueChange={setPendingFilterCategoryId}
+                onChange={(e) => setPendingFilterCategoryId(e.target.value)}
+                label="Category Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select Category Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categoryDropdownOptions.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Engineer</Label>
-              <Select
+                <MenuItem value="all">All Categories</MenuItem>
+                {categoryDropdownOptions.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Engineer</InputLabel>
+              <MuiSelect
                 value={pendingFilterAssignTo}
-                onValueChange={setPendingFilterAssignTo}
+                onChange={(e) => setPendingFilterAssignTo(e.target.value)}
+                label="Engineer"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select Engineer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Engineers</SelectItem>
-                  {serviceEngineerOptions.map((eng) => (
-                    <SelectItem key={eng.id} value={eng.id.toString()}>
-                      {eng.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="all">All Engineers</MenuItem>
+                {serviceEngineerOptions.map((eng) => (
+                  <MenuItem key={eng.id} value={eng.id.toString()}>
+                    {eng.full_name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t mt-2">
             <Button
@@ -1810,51 +1810,50 @@ export const ResolutionEscalationTab: React.FC = () => {
                   {/* Issue Type + Category Type + Category Selection row */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Issue Type Dropdown */}
-                    <div>
-                      <Label className="text-sm font-medium">Issue Type</Label>
-                      <Select
+                    <MuiFormControl fullWidth variant="outlined">
+                      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+                      <MuiSelect
                         value={escalationFormIssueTypeId}
-                        onValueChange={setEscalationFormIssueTypeId}
+                        onChange={(e) => setEscalationFormIssueTypeId(e.target.value)}
+                        displayEmpty
+                        label="Issue Type"
+                        sx={fieldStyles}
+                        MenuProps={menuProps}
                       >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select Issue Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {issueTypeOptions.map((it) => (
-                            <SelectItem key={it.id} value={it.id.toString()}>
-                              {it.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                        <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                        {issueTypeOptions.map((it) => (
+                          <MenuItem key={it.id} value={it.id.toString()}>
+                            {it.name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </MuiFormControl>
 
                     {/* Category Type Dropdown */}
-                    <div>
-                      <Label className="text-sm font-medium">
-                        Category Type
-                      </Label>
-                      <Select
+                    <MuiFormControl fullWidth variant="outlined" disabled={!escalationFormIssueTypeId || escalationFormCategoriesLoading}>
+                      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+                      <MuiSelect
                         value={escalationFormCategoryTypeId}
-                        onValueChange={setEscalationFormCategoryTypeId}
-                        disabled={!escalationFormIssueTypeId || escalationFormCategoriesLoading}
+                        onChange={(e) => setEscalationFormCategoryTypeId(e.target.value)}
+                        displayEmpty
+                        label="Category Type"
+                        sx={fieldStyles}
+                        MenuProps={menuProps}
                       >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder={escalationFormIssueTypeId ? "Loading categories..." : "Select Issue Type first"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {escalationFormCategoryOptions.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id.toString()}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                        <MenuItem value="" disabled>
+                          <em>{escalationFormIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</em>
+                        </MenuItem>
+                        {escalationFormCategoryOptions.map((cat) => (
+                          <MenuItem key={cat.id} value={cat.id.toString()}>
+                            {cat.name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </MuiFormControl>
 
                     {/* Select Categories (multi-select) */}
                     {/* <div>
-                      <Label className="text-sm font-medium">Select Categories</Label>
+                      <Label className={FIELD_LABEL_CLASS}>Select Categories</Label>
                       <ReactSelect
                         isMulti
                         options={categoryOptions}
@@ -1863,7 +1862,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                           const selectedIds = selected ? selected.map(s => s.value) : [];
                           setValue('categoryIds', selectedIds, { shouldValidate: true });
                         }}
-                        className="mt-1"
+                        className={FIELD_TRIGGER_CLASS}
                         placeholder="Select categories..."
                         isLoading={categoriesLoading}
                       />
@@ -2659,45 +2658,40 @@ export const ResolutionEscalationTab: React.FC = () => {
             <DialogTitle>Filter Escalation Rules</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div>
-              <Label className="text-sm font-medium">Issue Type</Label>
-              <Select
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <MuiSelect
                 value={pendingEscalationFilterIssueTypeId}
-                onValueChange={setPendingEscalationFilterIssueTypeId}
+                onChange={(e) => setPendingEscalationFilterIssueTypeId(e.target.value)}
+                label="Issue Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select Issue Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Issue Types</SelectItem>
-                  {issueTypeOptions.map((it) => (
-                    <SelectItem key={it.id} value={it.id.toString()}>
-                      {it.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Category Type</Label>
-              <Select
+                <MenuItem value="all">All Issue Types</MenuItem>
+                {issueTypeOptions.map((it) => (
+                  <MenuItem key={it.id} value={it.id.toString()}>
+                    {it.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+            <MuiFormControl fullWidth variant="outlined" disabled={!pendingEscalationFilterIssueTypeId || pendingEscalationFilterIssueTypeId === "all" || escalationFilterCategoriesLoading}>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+              <MuiSelect
                 value={pendingEscalationFilterCategoryId}
-                onValueChange={setPendingEscalationFilterCategoryId}
-                disabled={!pendingEscalationFilterIssueTypeId || pendingEscalationFilterIssueTypeId === "all" || escalationFilterCategoriesLoading}
+                onChange={(e) => setPendingEscalationFilterCategoryId(e.target.value)}
+                label="Category Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={pendingEscalationFilterIssueTypeId && pendingEscalationFilterIssueTypeId !== "all" ? "Loading categories..." : "Select Issue Type first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {escalationFilterCategoryOptions.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="all">All Categories</MenuItem>
+                {escalationFilterCategoryOptions.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t mt-2">
             <Button
@@ -2738,7 +2732,7 @@ export const ResolutionEscalationTab: React.FC = () => {
       </Dialog>
 
       {/* ──────────────── ADD ASSIGN RULE MODAL ──────────────── */}
-      <Dialog open={isAddAssignRuleOpen} onOpenChange={(open) => {
+      <Dialog modal={false} open={isAddAssignRuleOpen} onOpenChange={(open) => {
         if (!open) { setAddModalCategories([]); setAssignRuleForm({ issueType: "", categoryType: "", engineer: "" }); }
         setIsAddAssignRuleOpen(open);
       }}>
@@ -2747,74 +2741,76 @@ export const ResolutionEscalationTab: React.FC = () => {
             <DialogTitle>Add Assign Rule</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div>
-              <Label className="text-sm font-medium">Issue Type</Label>
-              <Select
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <MuiSelect
                 value={assignRuleForm.issueType}
-                onValueChange={(v) => {
+                onChange={(e) => {
+                  const v = e.target.value;
                   setAssignRuleForm((f) => ({ ...f, issueType: v, categoryType: "" }));
                   fetchCategoriesByIssueType(v, "add");
                 }}
+                displayEmpty
+                label="Issue Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {issueTypeOptions.map((it) => (
-                    <SelectItem key={it.id} value={it.id.toString()}>
-                      {it.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Category Type</Label>
-              <Select
+                <MenuItem value="" disabled><em>select</em></MenuItem>
+                {issueTypeOptions.map((it) => (
+                  <MenuItem key={it.id} value={it.id.toString()}>
+                    {it.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+            <MuiFormControl fullWidth variant="outlined" disabled={!assignRuleForm.issueType || addModalCategoriesLoading}>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+              <MuiSelect
                 value={assignRuleForm.categoryType}
-                onValueChange={(v) =>
-                  setAssignRuleForm((f) => ({ ...f, categoryType: v }))
+                onChange={(e) =>
+                  setAssignRuleForm((f) => ({ ...f, categoryType: e.target.value }))
                 }
-                disabled={!assignRuleForm.issueType || addModalCategoriesLoading}
+                displayEmpty
+                label="Category Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={
-                    !assignRuleForm.issueType
+                <MenuItem value="" disabled>
+                  <em>
+                    {!assignRuleForm.issueType
                       ? "Select issue type first"
                       : addModalCategoriesLoading
                       ? "Loading..."
-                      : "select"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {addModalCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Service Engineer</Label>
-              <Select
+                      : "select"}
+                  </em>
+                </MenuItem>
+                {addModalCategories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Service Engineer</InputLabel>
+              <MuiSelect
                 value={assignRuleForm.engineer}
-                onValueChange={(v) =>
-                  setAssignRuleForm((f) => ({ ...f, engineer: v }))
+                onChange={(e) =>
+                  setAssignRuleForm((f) => ({ ...f, engineer: e.target.value }))
                 }
+                displayEmpty
+                label="Service Engineer"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select Engineer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceEngineerOptions.map((eng) => (
-                    <SelectItem key={eng.id} value={eng.id.toString()}>
-                      {eng.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="" disabled><em>select Engineer</em></MenuItem>
+                {serviceEngineerOptions.map((eng) => (
+                  <MenuItem key={eng.id} value={eng.id.toString()}>
+                    {eng.full_name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
             <div className="flex justify-end pt-2">
               <Button
                 className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -2841,74 +2837,76 @@ export const ResolutionEscalationTab: React.FC = () => {
             <DialogTitle>Edit Assign Rule</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div>
-              <Label className="text-sm font-medium">Issue Type</Label>
-              <Select
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <MuiSelect
                 value={editAssignRuleForm.issueType}
-                onValueChange={(v) => {
+                onChange={(e) => {
+                  const v = e.target.value;
                   setEditAssignRuleForm((f) => ({ ...f, issueType: v, categoryType: "" }));
                   fetchCategoriesByIssueType(v, "edit");
                 }}
+                displayEmpty
+                label="Issue Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {issueTypeOptions.map((it) => (
-                    <SelectItem key={it.id} value={it.id.toString()}>
-                      {it.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Category Type</Label>
-              <Select
+                <MenuItem value="" disabled><em>select</em></MenuItem>
+                {issueTypeOptions.map((it) => (
+                  <MenuItem key={it.id} value={it.id.toString()}>
+                    {it.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+            <MuiFormControl fullWidth variant="outlined" disabled={!editAssignRuleForm.issueType || editModalCategoriesLoading}>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+              <MuiSelect
                 value={editAssignRuleForm.categoryType}
-                onValueChange={(v) =>
-                  setEditAssignRuleForm((f) => ({ ...f, categoryType: v }))
+                onChange={(e) =>
+                  setEditAssignRuleForm((f) => ({ ...f, categoryType: e.target.value }))
                 }
-                disabled={!editAssignRuleForm.issueType || editModalCategoriesLoading}
+                displayEmpty
+                label="Category Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={
-                    !editAssignRuleForm.issueType
+                <MenuItem value="" disabled>
+                  <em>
+                    {!editAssignRuleForm.issueType
                       ? "Select issue type first"
                       : editModalCategoriesLoading
                       ? "Loading..."
-                      : "select"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {editModalCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Service Engineer</Label>
-              <Select
+                      : "select"}
+                  </em>
+                </MenuItem>
+                {editModalCategories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Service Engineer</InputLabel>
+              <MuiSelect
                 value={editAssignRuleForm.engineer}
-                onValueChange={(v) =>
-                  setEditAssignRuleForm((f) => ({ ...f, engineer: v }))
+                onChange={(e) =>
+                  setEditAssignRuleForm((f) => ({ ...f, engineer: e.target.value }))
                 }
+                displayEmpty
+                label="Service Engineer"
+                sx={fieldStyles}
+                MenuProps={menuProps}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select Engineer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceEngineerOptions.map((eng) => (
-                    <SelectItem key={eng.id} value={eng.id.toString()}>
-                      {eng.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="" disabled><em>select Engineer</em></MenuItem>
+                {serviceEngineerOptions.map((eng) => (
+                  <MenuItem key={eng.id} value={eng.id.toString()}>
+                    {eng.full_name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="outline"
@@ -2929,7 +2927,7 @@ export const ResolutionEscalationTab: React.FC = () => {
       </Dialog>
 
       {/* ──────────────── EDIT ESCALATION RULE DIALOG ──────────────── */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) editReset(); }}>
+      <Dialog modal={false} open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) editReset(); }}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto overflow-x-visible">
           <DialogHeader>
             <DialogTitle>Edit</DialogTitle>
@@ -2937,43 +2935,44 @@ export const ResolutionEscalationTab: React.FC = () => {
           <form onSubmit={editHandleSubmit(handleUpdate)} className="space-y-6">
             {/* Issue Type & Category Type Selection */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Issue Type</Label>
-                <Select
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+                <MuiSelect
                   value={editEscalationIssueTypeId}
-                  onValueChange={(v) => setEditEscalationIssueTypeId(v)}
+                  onChange={(e) => setEditEscalationIssueTypeId(e.target.value)}
+                  displayEmpty
+                  label="Issue Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select Issue Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {issueTypeOptions.map((issue) => (
-                      <SelectItem key={issue.id} value={issue.id.toString()}>
-                        {issue.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Category Type</Label>
-                <Select
+                  <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                  {issueTypeOptions.map((issue) => (
+                    <MenuItem key={issue.id} value={issue.id.toString()}>
+                      {issue.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
+              <MuiFormControl fullWidth variant="outlined" disabled={!editEscalationIssueTypeId || editEscalationCategoriesLoading}>
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+                <MuiSelect
                   value={editEscalationCategoryTypeId}
-                  onValueChange={(v) => setEditEscalationCategoryTypeId(v)}
-                  disabled={!editEscalationIssueTypeId || editEscalationCategoriesLoading}
+                  onChange={(e) => setEditEscalationCategoryTypeId(e.target.value)}
+                  displayEmpty
+                  label="Category Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder={editEscalationIssueTypeId ? "Loading categories..." : "Select Issue Type first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {editEscalationCategoryOptions.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <MenuItem value="" disabled>
+                    <em>{editEscalationIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</em>
+                  </MenuItem>
+                  {editEscalationCategoryOptions.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
             </div>
 
             {/* Escalation Matrix Table */}

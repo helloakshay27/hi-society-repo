@@ -135,7 +135,7 @@ export const FMGroupDashboard = () => {
         <div className="bg-white rounded-lg border border-gray-200">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-gray-500">Loading groups...</div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
             </div>
           ) : groups.length === 0 ? (
             <div className="flex items-center justify-center py-12">
