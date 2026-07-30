@@ -835,7 +835,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                   onClick={() =>
                     setAmenities([...amenities, { name: "", description: "" }])
                   }
-                  className="!bg-[#C72030] !text-white rounded-md px-8 border-0 flex items-center gap-2"
+                  className="!bg-[#C72030] !text-white  px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -907,7 +907,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       { name: "", description: "" },
                     ])
                   }
-                  className="!bg-[#C72030] !text-white rounded-md px-8 border-0 flex items-center gap-2"
+                  className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -979,7 +979,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       { name: "", description: "" },
                     ])
                   }
-                  className="!bg-[#C72030] !text-white rounded-md px-8 border-0 flex items-center gap-2"
+                  className="!bg-[#C72030] !text-white  px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -1028,7 +1028,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                 <Button
                   type="button"
                   onClick={() => setPlans([...plans, { name: "" }])}
-                  className="!bg-[#C72030] !text-white rounded-md px-8 border-0 flex items-center gap-2"
+                  className="!bg-[#C72030] !text-white  px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>

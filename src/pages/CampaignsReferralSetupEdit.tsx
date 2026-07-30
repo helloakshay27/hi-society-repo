@@ -232,8 +232,8 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                     }
                     className={
                       formData.bannerEnabled
-                        ? "data-[state=checked]:bg-green-500"
-                        : "data-[state=unchecked]:bg-red-500"
+                        ? "data-[state=checked]:!bg-green-500"
+                        : "data-[state=unchecked]:!bg-gray-300"
                     }
                   />
                   <span className="text-sm text-gray-600">
@@ -259,8 +259,8 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                     }
                     className={
                       formData.referralBannerEnabled
-                        ? "data-[state=checked]:bg-green-500"
-                        : "data-[state=unchecked]:bg-red-500"
+                        ? "data-[state=checked]:!bg-green-500"
+                        : "data-[state=unchecked]:!bg-gray-300"
                     }
                   />
                   <span className="text-sm text-gray-600">

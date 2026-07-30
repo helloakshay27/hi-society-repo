@@ -158,7 +158,7 @@ const CampaignsReferralSetupCreate: React.FC = () => {
                   onCheckedChange={(checked) =>
                     handleToggleChange("bannerEnabled", checked)
                   }
-                  className="data-[state=checked]:bg-[#da7756] data-[state=unchecked]:bg-gray-300"
+                  className="data-[state=checked]:!bg-[#da7756] data-[state=unchecked]:!bg-gray-300"
                 />
                 <span className="text-sm text-gray-600">
                   {formData.bannerEnabled ? "Enabled" : "Disabled"}
@@ -181,7 +181,7 @@ const CampaignsReferralSetupCreate: React.FC = () => {
                     onCheckedChange={(checked) =>
                       handleToggleChange("referralBannerEnabled", checked)
                     }
-                    className="data-[state=checked]:bg-[#da7756] data-[state=unchecked]:bg-gray-300"
+                    className="data-[state=checked]:!bg-[#da7756] data-[state=unchecked]:!bg-gray-300"
                   />
                   <span className="text-sm text-gray-600">
                     {formData.referralBannerEnabled ? "Enabled" : "Disabled"}
