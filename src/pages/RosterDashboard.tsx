@@ -421,9 +421,6 @@ export const RosterDashboard = ({
     <div className="p-6 space-y-6">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#C72030]/10 text-[#C72030] flex items-center justify-center">
-            <Calendar className="w-5 h-5" />
-          </div>
           <div>
             <h1 className="text-xl font-bold tracking-wide uppercase">Roster Management</h1>
             <p className="text-gray-600">Manage roster templates and schedules</p>
@@ -505,9 +502,17 @@ export const RosterDashboard = ({
                         variant={currentPage === page ? "default" : "outline"}
                         size="sm"
                         onClick={() => goToPage(page)}
-                        className="w-8 h-8 p-0"
+                        className={
+                          currentPage === page
+                            ? "w-8 h-8 p-0 !bg-[#da7756] hover:!bg-[#da7756]"
+                            : "w-8 h-8 p-0"
+                        }
                       >
-                        {page}
+                        {currentPage === page ? (
+                          <span style={{ color: '#fff' }}>{page}</span>
+                        ) : (
+                          page
+                        )}
                       </Button>
                     ))}
 

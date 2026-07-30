@@ -882,18 +882,18 @@ export const EditStaffPage = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-4 justify-center pt-6">
-          <Button 
+          <Button
             type="submit"
             disabled={saving}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-2"
+            className="bg-red-600 hover:bg-red-700 px-8 py-2"
           >
             {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <span style={{ color: '#fff', display: 'inline-flex', alignItems: 'center' }}>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" style={{ color: '#fff' }} />
                 Updating...
-              </>
+              </span>
             ) : (
-              'Update Staff'
+              <span style={{ color: '#fff' }}>Update Staff</span>
             )}
           </Button>
           <Button 

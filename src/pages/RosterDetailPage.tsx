@@ -422,7 +422,7 @@ export const RosterDetailPage: React.FC = () => {
           </button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#C72030]/10 text-[#C72030] flex items-center justify-center">
-              <Eye className="w-5 h-5" />
+              <Eye className="w-5 h-5" style={{ color: '#fff' }} />
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-wide uppercase">Roster Template Details</h1>
@@ -441,7 +441,7 @@ export const RosterDetailPage: React.FC = () => {
         <div className="flex items-center gap-3">
          
           <Button onClick={handleEdit} variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
+            <Edit className="w-4 h-4 mr-2" style={{ color: '#da7756' }} />
             Edit
           </Button>
           {/* <Button onClick={handleDelete} variant="destructive" size="sm">
@@ -596,7 +596,7 @@ export const RosterDetailPage: React.FC = () => {
 
       {/* Footer Actions */}
       <div className="flex items-center gap-3 justify-center pt-2 border-t border-gray-200">
-        <Button onClick={handleEdit} className="px-8">
+        <Button onClick={handleEdit} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2">
           <Edit className="w-4 h-4 mr-2" />
           Edit Template
         </Button>

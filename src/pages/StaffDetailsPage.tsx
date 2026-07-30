@@ -87,9 +87,10 @@ export const StaffDetailsPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <div className="flex items-center justify-center py-8">
-          <div className="text-lg text-gray-600">Loading staff details...</div>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading staff details...</p>
         </div>
       </div>
     );
@@ -434,10 +435,10 @@ export const StaffDetailsPage = () => {
             </Button> */}
             <Button
               onClick={handleEdit}
-              style={{ backgroundColor: '#C72030' }} 
+              style={{ backgroundColor: '#C72030' }}
               className="text-white hover:bg-[#C72030]/90"
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-4 h-4" style={{ color: '#fff' }} />
             </Button>
           </div>
         </div>
@@ -751,7 +752,7 @@ export const StaffDetailsPage = () => {
           <div>
             <Button
               onClick={handlePrint}
-              className="bg-[#8B4B8C] hover:bg-[#7A4077] text-white px-6 py-2 flex items-center gap-2 mx-auto"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 mx-auto"
               disabled={!staff.qr_code_present || isPrinting}
             >
               {isPrinting ? (

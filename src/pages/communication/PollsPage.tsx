@@ -239,14 +239,12 @@ const PollsPage = () => {
           variant="contained"
           startIcon={<Plus size={20} />}
           onClick={() => navigate('/communication/polls/add')}
+          className="bg-[#da7756] hover:bg-[#da7756] !text-white rounded-md min-w-[160px]"
           sx={{
-            bgcolor: '#C72030',
-            '&:hover': { bgcolor: '#B01E2A' },
             textTransform: 'none',
             fontWeight: 600,
-            px: 3,
-            py: 1.5,
-            borderRadius: 2
+            boxShadow: 'none',
+            '&:hover': { boxShadow: 'none' },
           }}
         >
           Add Poll
@@ -274,12 +272,17 @@ const PollsPage = () => {
               }}
               sx={{ width: 280 }}
             />
-            <Button
-              variant="outlined"
-              startIcon={<Filter size={18} />}
-              sx={{ textTransform: 'none', minWidth: 'unset', p: 1 }}
+            <IconButton
+              sx={{
+                border: '1px solid #da7756',
+                borderRadius: '8px',
+                color: '#da7756',
+                width: 40,
+                height: 40,
+              }}
             >
-            </Button>
+              <Filter size={18} />
+            </IconButton>
           </Stack>
         </Box>
 

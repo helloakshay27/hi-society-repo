@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { X, Plus, Trash2, Pencil, Check, Loader } from "lucide-react";
 import {
   FormControl,
+  InputLabel,
   MenuItem,
   Select,
   TextField,
@@ -175,10 +176,16 @@ const CMSRules: React.FC = () => {
   const selectStyles = {
     backgroundColor: "#fff",
     "& .MuiOutlinedInput-root": {
-      height: "36px",
+      height: "45px",
       borderRadius: "4px",
       "& fieldset": {
         borderColor: "#ddd",
+      },
+      "&:hover fieldset": {
+        borderColor: "#C72030",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#C72030",
       },
     },
     "& .MuiSelect-select": {
@@ -190,15 +197,23 @@ const CMSRules: React.FC = () => {
   const textFieldStyles = {
     backgroundColor: "#fff",
     "& .MuiOutlinedInput-root": {
-      height: "36px",
+      height: "45px",
       borderRadius: "4px",
       "& fieldset": {
         borderColor: "#ddd",
       },
+      "&:hover fieldset": {
+        borderColor: "#C72030",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#C72030",
+      },
     },
     "& .MuiOutlinedInput-input": {
-      padding: "8px 12px",
-      fontSize: "14px",
+      padding: "10px 14px",
+      fontSize: "16px",
+      fontWeight: 600,
+      color: "#1a1a1a",
     },
   };
 
@@ -223,18 +238,18 @@ const CMSRules: React.FC = () => {
         <div className="p-4">
           <div className="border border-dashed border-[#ccc] p-4 rounded space-y-4">
             <div className="space-y-1">
-              <Typography variant="caption" color="textSecondary" fontWeight="500">
-                Trigger an email to
-              </Typography>
               <FormControl fullWidth size="small">
+                <InputLabel shrink>Trigger an email to</InputLabel>
                 <Select
                   value={formData.triggerTo}
                   onChange={(e) => handleInputChange("triggerTo", e.target.value)}
+                  label="Trigger an email to"
+                  notched
                   displayEmpty
                   sx={selectStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value="" disabled>Select</MenuItem>
+                  <MenuItem value="" disabled>Select Trigger To*</MenuItem>
                   <MenuItem value="Admin">Admin</MenuItem>
                   <MenuItem value="Resident">Resident</MenuItem>
                 </Select>
@@ -242,14 +257,14 @@ const CMSRules: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <Typography variant="caption" color="textSecondary" fontWeight="500">
-                Prior to membership expire date
-              </Typography>
               <div className="flex gap-2">
                 <FormControl sx={{ flex: 1, minWidth: "100px" }} size="small">
+                  <InputLabel shrink>Prior to membership expire date</InputLabel>
                   <Select
                     value={formData.periodType}
                     onChange={(e) => handleInputChange("periodType", e.target.value)}
+                    label="Prior to membership expire date"
+                    notched
                     displayEmpty
                     sx={selectStyles}
                     MenuProps={menuProps}
@@ -355,14 +370,15 @@ const CMSRules: React.FC = () => {
               <div className="p-4">
                 <div className="border border-dashed border-[#ccc] p-4 rounded space-y-4 bg-[#fcfcfc]">
                   <div className="space-y-1">
-                    <Typography variant="caption" color="textSecondary" fontWeight="500">
-                      Trigger an email to
-                    </Typography>
                     <FormControl fullWidth size="small">
+                      <InputLabel shrink>Trigger an email to</InputLabel>
                       <Select
                         value={isEditing ? editFormData.triggerTo : rule.triggerTo}
                         onChange={(e) => handleEditInputChange("triggerTo", e.target.value)}
                         disabled={!isEditing}
+                        label="Trigger an email to"
+                        notched
+                        displayEmpty
                         sx={{
                           ...selectStyles,
                           backgroundColor: isEditing ? "#fff" : "#f9f9f9",
@@ -379,15 +395,16 @@ const CMSRules: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <Typography variant="caption" color="textSecondary" fontWeight="500">
-                      Prior to membership expire date
-                    </Typography>
                     <div className="flex gap-2">
                       <FormControl sx={{ flex: 1, minWidth: "100px" }} size="small">
+                        <InputLabel shrink>Prior to membership expire date</InputLabel>
                         <Select
                           value={isEditing ? editFormData.periodType : rule.periodType}
                           onChange={(e) => handleEditInputChange("periodType", e.target.value)}
                           disabled={!isEditing}
+                          label="Prior to membership expire date"
+                          notched
+                          displayEmpty
                           sx={{
                             ...selectStyles,
                             backgroundColor: isEditing ? "#fff" : "#f9f9f9",

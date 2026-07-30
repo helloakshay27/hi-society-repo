@@ -359,9 +359,17 @@ export const ShiftDashboard = () => {
                         variant={currentPage === page ? "default" : "outline"}
                         size="sm"
                         onClick={() => goToPage(page)}
-                        className="w-8 h-8 p-0"
+                        className={
+                          currentPage === page
+                            ? "w-8 h-8 p-0 !bg-[#da7756] hover:!bg-[#da7756]"
+                            : "w-8 h-8 p-0"
+                        }
                       >
-                        {page}
+                        {currentPage === page ? (
+                          <span style={{ color: '#fff' }}>{page}</span>
+                        ) : (
+                          page
+                        )}
                       </Button>
                     ))}
 
