@@ -4186,9 +4186,8 @@ className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacit
                   <Button
                     onClick={handleDeviationUpdate}
                     disabled={deviationLoading}
-                    style={{ backgroundColor: '#C72030', color: 'white' }}
-                    className="px-8 hover:opacity-90"
-                  >
+                    // style={{ backgroundColor: '#C72030', color: 'white' }}
+ className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"                  >
                     {deviationLoading ? 'Updating...' : 'Update'}
                   </Button>
                 </div>
