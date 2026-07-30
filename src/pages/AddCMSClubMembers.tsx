@@ -1117,7 +1117,7 @@ const AddCMSClubMembers = () => {
                     <div className="flex justify-center gap-4 pt-4">
                         <Button
                             variant="outline"
-                            className="!bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E] hover:bg-orange-50 min-w-[120px]"
+                            className="!bg-white !text-[#da7756] !border !border-[#da7756] [&_svg]:text-[#da7756] hover:bg-orange-50 min-w-[120px]"
                             onClick={addMember}
                             disabled={members.length === 8}
                         >

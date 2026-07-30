@@ -1270,7 +1270,7 @@ export const AddBookingSetupClubPage = () => {
                       // disabled={updatingStatus}
                       sx={{
                         "& .MuiSwitch-switchBase": {
-                          color: "#ef4444",
+                          color: "#d1d5db",
                           "&.Mui-checked": {
                             color: "#22c55e",
                           },
@@ -1279,7 +1279,8 @@ export const AddBookingSetupClubPage = () => {
                           },
                         },
                         "& .MuiSwitch-track": {
-                          backgroundColor: "#ef4444",
+                          backgroundColor: "#d1d5db",
+                          opacity: "1 !important",
                         },
                       }}
                     />

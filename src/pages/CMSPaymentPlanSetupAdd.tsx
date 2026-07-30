@@ -334,11 +334,11 @@ const CMSPaymentPlanSetupAdd = () => {
                 {/* Action Buttons */}
                 <div className="flex gap-3 justify-center pt-4">
                     <Button
+                        variant="outline"
                         onClick={() => navigate('/settings/payment-plan/setup')}
                         disabled={loading}
-                        className="bg-[#C72030] hover:bg-[#A01828] !text-white border-0 disabled:opacity-60"
-                    >
-                        Cancel
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10">
+                            Cancel
                     </Button>
                     <Button
                         className="bg-[#C72030] hover:bg-[#A01828] !text-white disabled:opacity-60"
