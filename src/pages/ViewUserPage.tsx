@@ -738,7 +738,7 @@ export const ViewUserPage = () => {
                   </Typography>
                   <Button
                     onClick={() => setIsConfigureDetailsModalOpen(true)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   >
                     Configure Details
                   </Button>
@@ -923,7 +923,7 @@ export const ViewUserPage = () => {
       {/* Credit Wallet Dialog */}
       <Dialog open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
         <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
-          <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between">
+          <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between">
             <DialogTitle className="text-base font-bold text-gray-800">Credit Wallet</DialogTitle>
             <button
               onClick={() => setCreditDialogOpen(false)}
@@ -933,18 +933,20 @@ export const ViewUserPage = () => {
             </button>
           </DialogHeader>
 
-          <div className="p-6 space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-gray-600">Customer Code</Label>
+          <div className="p-6 space-y-5">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+                Customer Code
+              </Label>
               <Input
                 type="text"
                 value={user?.customer_code || ""}
                 disabled
-                className="h-9 mt-1.5 bg-gray-100 text-gray-600 cursor-not-allowed"
+                className="h-12 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
               />
             </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-600">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                 Amount <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -953,11 +955,11 @@ export const ViewUserPage = () => {
                 onChange={(e) => setCreditAmount(e.target.value)}
                 placeholder="Enter amount"
                 min="1"
-                className="h-9 mt-1.5"
+                className="h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-600">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                 Payment Mode <span className="text-red-500">*</span>
               </Label>
               <SelectBox
@@ -969,12 +971,13 @@ export const ViewUserPage = () => {
                 ]}
                 defaultValue={creditPaymentMode}
                 onChange={(value: string) => setCreditPaymentMode(value)}
-                className="mt-1.5"
                 menuPortalTarget={undefined}
+                controlHeight="48px"
+                controlMinHeight="48px"
               />
             </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-600">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                 Remarks <span className="text-red-500">*</span>
               </Label>
               <textarea
@@ -982,7 +985,7 @@ export const ViewUserPage = () => {
                 onChange={(e) => setCreditRemarks(e.target.value)}
                 placeholder="Enter remarks"
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1.5 focus:outline-none focus:ring-2 focus:ring-[#00A651] focus:border-transparent resize-none"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-0 focus:border-[#C72030] resize-none"
               />
             </div>
           </div>
@@ -997,14 +1000,14 @@ export const ViewUserPage = () => {
                 setCreditPaymentMode("cash");
               }}
               disabled={creditLoading}
-              className="px-8 h-9 border-[#00A651] text-[#00A651] hover:bg-[#00A651]/10 font-semibold text-sm rounded shadow-sm"
+              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreditWallet}
               disabled={creditLoading}
-              className="px-8 h-9 bg-[#00A651] hover:bg-[#008D4C] text-white font-semibold text-sm rounded shadow-sm"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
             >
               {creditLoading ? "Crediting..." : "Credit Points"}
             </Button>

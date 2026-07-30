@@ -7,13 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/SearchSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -295,37 +289,30 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                 >
                   Tower <span className="text-red-500">*</span>
                 </Label>
-                <Select value={formData.tower} onValueChange={(value) => onChange("tower", value)}>
-                  <SelectTrigger id="tower" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
-                    <SelectValue placeholder="Select Tower" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {towerOptions.map((tower) => (
-                      <SelectItem key={tower.id} value={tower.id.toString()}>
-                        {tower.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={formData.tower}
+                  onChange={(value) => onChange("tower", value)}
+                  options={towerOptions.map((tower) => ({
+                    value: tower.id.toString(),
+                    label: tower.name,
+                  }))}
+                  placeholder="Select Tower"
+                />
               </div>
 
               <div className="relative">
                 <Label htmlFor="floor" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                   Floor <span className="text-red-500">*</span>
                 </Label>
-                <Select
+                <SearchableSelect
                   value={formData.floor}
-                  onValueChange={(value) => onChange('floor', value)}
-                >
-                  <SelectTrigger id="floor" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
-                    <SelectValue placeholder="Select Floor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {floorOptions.map((floor) => (
-                      <SelectItem key={floor.id} value={floor.id.toString()}>{floor.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(value) => onChange('floor', value)}
+                  options={floorOptions.map((floor) => ({
+                    value: floor.id.toString(),
+                    label: floor.name,
+                  }))}
+                  placeholder="Select Floor"
+                />
               </div>
 
               <div className="relative">
@@ -383,21 +370,15 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                 >
                   Flat Type
                 </Label>
-                <Select
+                <SearchableSelect
                   value={formData.flatType}
-                  onValueChange={(value) => onChange("flatType", value)}
-                >
-                  <SelectTrigger id="flatType" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
-                    <SelectValue placeholder="Select Flat Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {flatTypeOptions.map((flatType) => (
-                      <SelectItem key={flatType.id} value={flatType.id.toString()}>
-                        {flatType.society_flat_type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(value) => onChange("flatType", value)}
+                  options={flatTypeOptions.map((flatType) => ({
+                    value: flatType.id.toString(),
+                    label: flatType.society_flat_type,
+                  }))}
+                  placeholder="Select Flat Type"
+                />
               </div>
 
               <div className="relative">
@@ -407,18 +388,15 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                 >
                   Occupied
                 </Label>
-                <Select
+                <SearchableSelect
                   value={formData.occupied}
-                  onValueChange={(value) => onChange("occupied", value)}
-                >
-                  <SelectTrigger id="occupied" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
-                    <SelectValue placeholder="Please Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
-                </Select>
+                  onChange={(value) => onChange("occupied", value)}
+                  options={[
+                    { label: "Yes", value: "Yes" },
+                    { label: "No", value: "No" },
+                  ]}
+                  placeholder="Please Select"
+                />
               </div>
 
               <div className="relative">

@@ -170,7 +170,7 @@ export const RelatedToTab: React.FC = () => {
   const renderActions = (item: RelatedToType) => (
     <div className="flex items-center gap-2">
       <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" />
+        <Edit className="h-4 w-4" style={{ color: '#000000' }} />
       </Button>
       <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
         <Trash2 className="h-4 w-4 text-red-500" />

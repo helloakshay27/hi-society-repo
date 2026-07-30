@@ -67,15 +67,16 @@ const RedButton = styled(MuiButton)(() => ({
 }));
 
 const CancelButton = styled(MuiButton)(() => ({
-  backgroundColor: "#e7e3d9",
-  color: "#C72030",
+  backgroundColor: "#ffffff",
+  color: "#ED820E",
+  border: "1px solid #ED820E",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 16px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
   "&:hover": {
-    backgroundColor: "#e7e3d9",
+    backgroundColor: "#f5f5f5",
   },
 }));
 
@@ -392,7 +393,7 @@ const PricingRuleCreate: React.FC = () => {
           {submitting ? "Submitting..." : "Submit"}
         </RedButton>
         <CancelButton onClick={handleCancel} disabled={submitting}
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          className="px-6 sm:px-8 w-full sm:w-auto h-10">
           Cancel
         </CancelButton>
       </Box>

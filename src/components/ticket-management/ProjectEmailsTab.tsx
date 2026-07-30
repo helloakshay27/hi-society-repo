@@ -233,7 +233,7 @@ export const ProjectEmailsTab: React.FC = () => {
         <Edit className="h-4 w-4" />
       </Button>
       <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4 text-red-500" />
+        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
       </Button>
     </div>
   );

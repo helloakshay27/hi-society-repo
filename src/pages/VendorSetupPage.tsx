@@ -330,7 +330,7 @@ const VendorSetupPage: React.FC = () => {
           className="h-8 w-8 p-0 hover:bg-gray-100"
           title="Edit"
         >
-          <Edit className="h-4 w-4 text-[#C72030]" />
+          <Edit className="h-4 w-4" style={{ color: '#000000' }} />
         </Button>
       )}
       <Button
@@ -340,7 +340,7 @@ const VendorSetupPage: React.FC = () => {
         className="h-8 w-8 p-0 hover:bg-gray-100"
         title="Delete"
       >
-        <Trash2 className="h-4 w-4 text-[#C72030]" />
+        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
       </Button>
     </div>
   );

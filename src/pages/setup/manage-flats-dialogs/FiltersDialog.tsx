@@ -7,13 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/SearchSelect";
 import { Label } from "@/components/ui/label";
 import MultiSelectBox from "@/components/ui/multi-selector";
 
@@ -80,8 +74,8 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {/* Select Tower */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
                 Select Tower
               </Label>
               <MultiSelectBox
@@ -94,8 +88,8 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
             </div>
 
             {/* Select Flat */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
                 Select Flat
               </Label>
               <MultiSelectBox
@@ -109,8 +103,8 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
             </div>
 
             {/* Select Flat Type */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
                 Select Flat Type
               </Label>
               <MultiSelectBox
@@ -123,8 +117,8 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
             </div>
 
             {/* Select Status */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
                 Select Status
               </Label>
               <MultiSelectBox
@@ -137,22 +131,19 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
             </div>
 
             {/* Select Occupancy */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-20">
                 Select Occupancy
               </Label>
-              <Select
+              <SearchableSelect
                 value={filters.occupancy}
-                onValueChange={(value) => onFilterChange("occupancy", value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Occupancy" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
+                onChange={(value) => onFilterChange("occupancy", value)}
+                options={[
+                  { label: "Yes", value: "Yes" },
+                  { label: "No", value: "No" },
+                ]}
+                placeholder="Select Occupancy"
+              />
             </div>
           </div>
 

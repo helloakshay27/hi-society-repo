@@ -127,7 +127,9 @@ const ApprovalMatrixSetupPage = () => {
           {loading ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-4">
-                Loading...
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+                </div>
               </TableCell>
             </TableRow>
           ) : approvalData.length === 0 ? (

@@ -128,9 +128,8 @@ const PricingRuleList: React.FC = () => {
                   e.stopPropagation();
                   handleEdit(item.id);
                 }}
-                className="text-gray-600 hover:text-[#C72030]"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-4 h-4" style={{ color: '#000000' }} />
               </button>
             )}
             <button
@@ -138,9 +137,8 @@ const PricingRuleList: React.FC = () => {
                 e.stopPropagation();
                 handleDelete(item.id);
               }}
-              className="text-gray-600 hover:text-[#C72030]"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" style={{ color: '#000000' }} />
             </button>
           </div>
         );

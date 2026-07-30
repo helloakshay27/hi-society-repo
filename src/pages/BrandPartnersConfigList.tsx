@@ -330,7 +330,7 @@ const BrandPartnersConfigList: React.FC = () => {
       {/* Add / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
         <DialogContent className="max-w-lg w-full p-0 overflow-hidden rounded-lg">
-          <DialogHeader className="bg-[#F6F4EE] border-b border-[#D9D9D9] px-6 py-4 flex flex-row items-center justify-between">
+          <DialogHeader className="border-b border-[#D9D9D9] px-6 py-4 flex flex-row items-center justify-between">
             <DialogTitle className="text-base font-semibold text-[#1A1A1A] uppercase tracking-wide">
               {editingId ? "Edit Brand Partner" : "Add Brand Partner"}
             </DialogTitle>
@@ -345,8 +345,8 @@ const BrandPartnersConfigList: React.FC = () => {
 
           <div className="px-6 py-5 space-y-4 bg-white">
             {/* Brand Name */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                 Brand Name <span className="text-red-500">*</span>
               </Label>
               <input
@@ -354,19 +354,21 @@ const BrandPartnersConfigList: React.FC = () => {
                 value={form.brand_name}
                 onChange={(e) => setForm((p) => ({ ...p, brand_name: e.target.value }))}
                 placeholder="Enter brand name"
-                className="w-full border border-[#D9D9D9] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C72030] focus:border-[#C72030]"
+                className="w-full h-12 border border-[#D9D9D9] rounded-md px-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-0 focus:border-[#C72030]"
               />
             </div>
 
             {/* Position */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-[#1A1A1A]">Position</Label>
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+                Position
+              </Label>
               <input
                 type="number"
                 value={form.position}
                 onChange={(e) => setForm((p) => ({ ...p, position: e.target.value }))}
                 placeholder="e.g. 1"
-                className="w-full border border-[#D9D9D9] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C72030] focus:border-[#C72030]"
+                className="w-full h-12 border border-[#D9D9D9] rounded-md px-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-0 focus:border-[#C72030]"
               />
             </div>
 
@@ -420,7 +422,7 @@ const BrandPartnersConfigList: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 px-6 py-4 bg-[#F6F4EE] border-t border-[#D9D9D9]">
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#D9D9D9]">
             <Button
               variant="outline"
               onClick={closeDialog}

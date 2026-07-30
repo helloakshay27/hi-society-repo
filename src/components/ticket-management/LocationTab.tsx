@@ -334,7 +334,7 @@ export const LocationTab: React.FC = () => {
   const renderActions = (item: LocationItem & { level?: number }) => (
     <div className="flex gap-2">
       <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4 text-red-500" />
+        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
       </Button>
     </div>
   );

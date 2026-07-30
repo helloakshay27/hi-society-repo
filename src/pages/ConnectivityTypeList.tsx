@@ -110,11 +110,8 @@ const ConnectivityTypeList: React.FC = () => {
         return (
           <div className="flex gap-2">
             {shouldShow("ConnectivityType", "update") && (
-              <button
-                onClick={() => handleEdit(item.id)}
-                className="text-[#C72030] hover:text-[#A01828]"
-              >
-                <Pencil size={18} />
+              <button onClick={() => handleEdit(item.id)}>
+                <Pencil size={18} style={{ color: '#000000' }} />
               </button>
             )}
           </div>
