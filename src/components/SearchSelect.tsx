@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type Option = {
@@ -23,7 +23,7 @@ export function SearchableSelect({
     value,
     onChange,
     placeholder = "Select option...",
-    searchPlaceholder = "Search...",
+    searchPlaceholder = "Type to search...",
     emptyText = "No results found.",
     className,
     disabled,
@@ -61,7 +61,10 @@ export function SearchableSelect({
                         setSearch("")
                     }
                 }}
-                className="flex w-full items-center justify-between rounded-[10px] border border-gray-300 bg-white px-3 py-2 text-sm text-[#1a1a1a] shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className={cn(
+                    "flex h-12 w-full items-center justify-between rounded-md border bg-white px-3 text-sm font-medium italic text-gray-800 shadow-sm transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+                    open ? "border-[#C72030]" : "border-gray-300 hover:bg-gray-50"
+                )}
             >
                 <span className="truncate">
                     {selected ? selected.label : <span className="text-gray-400">{placeholder}</span>}
@@ -72,7 +75,8 @@ export function SearchableSelect({
             {open && (
                 <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
                     {/* Search input */}
-                    <div className="border-b border-gray-200 px-3 py-2">
+                    <div className="flex items-center gap-2 border-b border-gray-200 px-3 py-2">
+                        <Search className="h-4 w-4 shrink-0 text-gray-400" />
                         <input
                             autoFocus
                             type="text"

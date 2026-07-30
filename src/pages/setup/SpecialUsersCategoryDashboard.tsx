@@ -310,8 +310,11 @@ export const SpecialUsersCategoryDashboard = () => {
             </DialogHeader>
 
             <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="categoryName" className="text-sm font-medium text-gray-700">
+              <div className="relative">
+                <Label
+                  htmlFor="categoryName"
+                  className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+                >
                   Category Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -319,7 +322,7 @@ export const SpecialUsersCategoryDashboard = () => {
                   placeholder="Enter Category Name"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full"
+                  className="w-full h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
@@ -363,8 +366,11 @@ export const SpecialUsersCategoryDashboard = () => {
             </DialogHeader>
 
             <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="editCategoryName" className="text-sm font-medium text-gray-700">
+              <div className="relative">
+                <Label
+                  htmlFor="editCategoryName"
+                  className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+                >
                   Category Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -372,7 +378,7 @@ export const SpecialUsersCategoryDashboard = () => {
                   placeholder="Enter Category Name"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full"
+                  className="w-full h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 

@@ -46,6 +46,15 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
   flatTypeOptions,
   flatOptions,
 }) => {
+  // Remove yellow hover from MultiSelectBox dropdown options
+  const noHoverStyles = {
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected ? "#D3D3D3" : "transparent",
+      color: state.isSelected ? "#333" : "black",
+    }),
+  };
+
   // Map options to MultiSelectBox format { label, value }
   const towerSelectOptions = towerOptions.map(t => ({ label: t.name, value: t.id.toString() }));
   const flatTypeSelectOptions = flatTypeOptions.map(ft => ({ label: ft.name, value: ft.id.toString() }));
@@ -58,7 +67,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white">
-        <DialogHeader className="bg-[#EAEAEA] p-4 flex flex-row items-center justify-between">
+        <DialogHeader className="p-4 flex flex-row items-center justify-between">
           <DialogTitle className="text-lg font-bold">Advance Filter</DialogTitle>
           <button
             onClick={() => onOpenChange(false)}
@@ -80,6 +89,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 value={filters.tower}
                 onChange={(value) => onFilterChange("tower", value)}
                 placeholder="Select Tower"
+                styles={noHoverStyles}
               />
             </div>
 
@@ -94,6 +104,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 onChange={(value) => onFilterChange("flat", value)}
                 placeholder="Select Flat"
                 disabled={filters.tower.length === 0}
+                styles={noHoverStyles}
               />
             </div>
 
@@ -107,6 +118,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 value={filters.flatType}
                 onChange={(value) => onFilterChange("flatType", value)}
                 placeholder="Select Flat Type"
+                styles={noHoverStyles}
               />
             </div>
 
@@ -120,6 +132,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 value={filters.status}
                 onChange={(value) => onFilterChange("status", value)}
                 placeholder="Select Status"
+                styles={noHoverStyles}
               />
             </div>
 
@@ -147,8 +160,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
           <div className="flex justify-center gap-4 pt-4">
             <Button
               onClick={onReset}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"              >
               Reset
             </Button>
             <Button

@@ -268,6 +268,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 id="status"
                 checked={formData.status}
                 onCheckedChange={(checked) => onChange('status', checked)}
+                className="data-[state=checked]:!bg-[#798c5e] data-[state=unchecked]:!bg-gray-300"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -276,6 +277,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 id="possession"
                 checked={formData.possession}
                 onCheckedChange={(checked) => onChange('possession', checked)}
+                className="data-[state=checked]:!bg-[#798c5e] data-[state=unchecked]:!bg-gray-300"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -284,6 +286,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 id="sold"
                 checked={formData.sold}
                 onCheckedChange={(checked) => onChange('sold', checked)}
+                className="data-[state=checked]:!bg-[#798c5e] data-[state=unchecked]:!bg-gray-300"
               />
             </div>
           </div>
@@ -291,7 +294,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
           {/* Project, Tower, Wing, Flat */}
           <div className="grid grid-cols-2 gap-4">
             {/* <div className="relative">
-              <Label htmlFor="project" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+              <Label htmlFor="project" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                 Project
               </Label>
               <SearchableSelect
@@ -311,7 +314,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             </div> */}
 
             <div className="relative">
-              <Label htmlFor="tower" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+              <Label htmlFor="tower" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                 Tower <span className="text-red-500">*</span>
               </Label>
               <SearchableSelect
@@ -325,12 +328,11 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                   label: tower.name,
                 }))}
                 placeholder="Select Tower"
-                className="pt-2"
               />
             </div>
 
             {/* <div className="relative">
-              <Label htmlFor="wing" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+              <Label htmlFor="wing" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                 Wing
               </Label>
               <SearchableSelect
@@ -346,7 +348,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             </div> */}
 
             <div className="relative">
-              <Label htmlFor="floor" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+              <Label htmlFor="floor" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                 Floor
               </Label>
               <SearchableSelect
@@ -357,12 +359,11 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                   label: floor.name,
                 }))}
                 placeholder="Select Floor"
-                className="pt-2"
               />
             </div>
 
             <div className="relative">
-              <Label htmlFor="flat" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+              <Label htmlFor="flat" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                 Flat
               </Label>
               <Input
@@ -370,34 +371,34 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder=" "
                 value={formData.flat}
                 onChange={(e) => onChange('flat', e.target.value)}
-                className="border border-gray-400"
+                className="h-12 rounded-md border border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
 
             <div className="relative">
-              <Label htmlFor="carpetArea" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Carpet Area</Label>
+              <Label htmlFor="carpetArea" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">Carpet Area</Label>
               <Input
                 id="carpetArea"
                 placeholder=" "
                 value={formData.carpetArea}
                 onChange={(e) => onChange('carpetArea', e.target.value)}
-                className="border border-gray-400"
+                className="h-12 rounded-md border border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
 
             <div className="relative">
-              <Label htmlFor="builtUpArea" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Built up Area</Label>
+              <Label htmlFor="builtUpArea" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">Built up Area</Label>
               <Input
                 id="builtUpArea"
                 placeholder=" "
                 value={formData.builtUpArea}
                 onChange={(e) => onChange('builtUpArea', e.target.value)}
-                className="border border-gray-400"
+                className="h-12 rounded-md border border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
 
             <div className="relative">
-              <Label htmlFor="flatType" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+              <Label htmlFor="flatType" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                 Flat Type
               </Label>
               <SearchableSelect
@@ -408,12 +409,11 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                   label: flatType.society_flat_type,
                 }))}
                 placeholder="Select Flat Type"
-                className="pt-2"
               />
             </div>
 
             <div className="relative">
-              <Label htmlFor="occupied" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+              <Label htmlFor="occupied" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                 Occupied
               </Label>
               <SearchableSelect
@@ -424,30 +424,29 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                   { label: "No", value: "No" },
                 ]}
                 placeholder="Please Select"
-                className="pt-2"
               />
             </div>
 
             <div className="relative">
-              <Label htmlFor="nameOnBill" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Name on Bill</Label>
+              <Label htmlFor="nameOnBill" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">Name on Bill</Label>
               <Input
                 id="nameOnBill"
                 placeholder=" "
                 value={formData.nameOnBill}
                 onChange={(e) => onChange('nameOnBill', e.target.value)}
-                className="border border-gray-400"
+                className="h-12 rounded-md border border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
 
             <div className="relative">
-              <Label htmlFor="dateOfPossession" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Date of possession</Label>
+              <Label htmlFor="dateOfPossession" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">Date of possession</Label>
               <Input
                 id="dateOfPossession"
                 type="date"
                 placeholder=" "
                 value={formData.dateOfPossession}
                 onChange={(e) => onChange('dateOfPossession', e.target.value)}
-                className="border border-gray-400"
+                className="h-12 rounded-md border border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
                 max={new Date().toISOString().split("T")[0]}
               />
             </div>

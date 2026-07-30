@@ -150,17 +150,28 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
         <div className="flex-1 overflow-y-auto py-6 space-y-6 px-6">
           {/* Add New Flat Type Form */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="flat-type">Flat/Unit Type <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Label
+                htmlFor="flat-type"
+                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+              >
+                Flat/Unit Type <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="flat-type"
                 placeholder="Enter Flat Type"
                 value={newFlatType}
                 onChange={(e) => setNewFlatType(e.target.value)}
+                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="configuration">Configuration</Label>
+            <div className="relative">
+              <Label
+                htmlFor="configuration"
+                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+              >
+                Configuration
+              </Label>
               <SearchableSelect
                 value={newConfiguration}
                 onChange={setNewConfiguration}
@@ -173,8 +184,13 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="apartment-type">Apartment Type <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <Label
+              htmlFor="apartment-type"
+              className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+            >
+              Apartment Type <span className="text-red-500">*</span>
+            </Label>
             <SearchableSelect
               value={newApartmentType}
               onChange={setNewApartmentType}

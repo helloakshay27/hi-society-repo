@@ -230,22 +230,34 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                 className=""
               />
             </div> */}
-            <div className="space-y-2">
-              <Label htmlFor="tower-name">Tower Name <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Label
+                htmlFor="tower-name"
+                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+              >
+                Tower Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="tower-name"
                 placeholder="Enter Tower Name"
                 value={newTowerName}
                 onChange={(e) => setNewTowerName(e.target.value)}
+                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="tower-abbreviation">Abbreviation <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Label
+                htmlFor="tower-abbreviation"
+                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+              >
+                Abbreviation <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="tower-abbreviation"
                 placeholder="Enter Abbreviation"
                 value={newTowerAbbreviation}
                 onChange={(e) => setNewTowerAbbreviation(e.target.value)}
+                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
           </div>

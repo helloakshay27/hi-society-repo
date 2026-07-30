@@ -6,7 +6,8 @@ export default function MultiSelectBox({
   value,
   onChange,
   placeholder,
-  disabled = false
+  disabled = false,
+  styles: customStylesOverride
 }) {
   const customStyles = {
     control: (base, state) => ({
@@ -94,7 +95,14 @@ export default function MultiSelectBox({
       placeholder={placeholder}
       className="basic-multi-select"
       classNamePrefix="select"
-      styles={customStyles}
+      styles={customStylesOverride ? Object.keys(customStyles).reduce((acc, key) => {
+        acc[key] = customStylesOverride[key] ? (base, state) => {
+          const baseStyles = customStyles[key](base, state);
+          const overrideStyles = customStylesOverride[key](base, state);
+          return { ...baseStyles, ...overrideStyles };
+        } : customStyles[key];
+        return acc;
+      }, {}) : customStyles}
       isDisabled={disabled}
     />
   );

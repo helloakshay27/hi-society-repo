@@ -552,8 +552,8 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
           <div className="p-6 bg-white space-y-4">
             {activeTab === "society-staff" ? (
               <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                <div className="relative">
+                  <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                     Category Name
                   </label>
                   <Input
@@ -563,42 +563,57 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder="Enter Category Name"
-                    className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                    className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500 px-1">
                     Estimated Time
                   </label>
                   <div className="grid grid-cols-3 gap-3">
-                    <Input
-                      type="number"
-                      value={formData.days}
-                      onChange={(e) =>
-                        setFormData({ ...formData, days: e.target.value })
-                      }
-                      placeholder="Days"
-                      className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
-                    />
-                    <Input
-                      type="number"
-                      value={formData.hours}
-                      onChange={(e) =>
-                        setFormData({ ...formData, hours: e.target.value })
-                      }
-                      placeholder="Hrs"
-                      className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
-                    />
-                    <Input
-                      type="number"
-                      value={formData.minutes}
-                      onChange={(e) =>
-                        setFormData({ ...formData, minutes: e.target.value })
-                      }
-                      placeholder="Min"
-                      className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
-                    />
+                    <div className="relative">
+                      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+                        Days
+                      </label>
+                      <Input
+                        type="number"
+                        value={formData.days}
+                        onChange={(e) =>
+                          setFormData({ ...formData, days: e.target.value })
+                        }
+                        placeholder="Days"
+                        className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
+                      />
+                    </div>
+                    <div className="relative">
+                      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+                        Hrs
+                      </label>
+                      <Input
+                        type="number"
+                        value={formData.hours}
+                        onChange={(e) =>
+                          setFormData({ ...formData, hours: e.target.value })
+                        }
+                        placeholder="Hrs"
+                        className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
+                      />
+                    </div>
+                    <div className="relative">
+                      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+                        Min
+                      </label>
+                      <Input
+                        type="number"
+                        value={formData.minutes}
+                        onChange={(e) =>
+                          setFormData({ ...formData, minutes: e.target.value })
+                        }
+                        placeholder="Min"
+                        className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -612,8 +627,8 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="relative">
+                    <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                       Name
                     </label>
                     <Input
@@ -623,12 +638,12 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
                         setFormData({ ...formData, name: e.target.value })
                       }
                       placeholder="Enter Name"
-                      className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                      className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="relative">
+                    <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                       Type
                     </label>
                     <Select
@@ -637,7 +652,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
                       }
                       value={formData.type}
                     >
-                      <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                      <SelectTrigger className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800">
                         <SelectValue placeholder="Select Type" />
                       </SelectTrigger>
                       <SelectContent>

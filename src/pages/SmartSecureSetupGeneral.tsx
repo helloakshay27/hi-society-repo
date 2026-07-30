@@ -13,13 +13,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ChevronDown } from "lucide-react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   fetchVisitorSetupData,
   fetchApprovedSocieties,
@@ -62,6 +69,77 @@ const mapStaffType = (item: StaffTypeItem): SetupItem => ({
   status: item.active === 1,
   workType: item.related_to || "-",
 });
+
+interface DropdownOption {
+  value: string;
+  label: string;
+}
+
+const SearchableDropdown: React.FC<{
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: DropdownOption[];
+  placeholder?: string;
+}> = ({ label, value, onChange, options, placeholder }) => {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div className="relative">
+      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+        {label}
+      </label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={`flex h-12 w-full items-center justify-between rounded-md border bg-white px-3 text-sm font-medium italic text-gray-800 transition-colors focus:outline-none ${
+              open ? "border-[#C72030]" : "border-gray-300"
+            }`}
+          >
+            <span className={selected ? "text-gray-800" : "text-gray-400"}>
+              {selected ? selected.label : placeholder || "Select"}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] p-0 shadow-lg border-gray-200 rounded-lg bg-white z-[99999]"
+          align="start"
+          sideOffset={8}
+        >
+          <Command className="w-full bg-white overflow-hidden">
+            <CommandInput
+              placeholder="Type to search..."
+              className="h-10 text-sm"
+            />
+            <CommandList className="max-h-[260px] overflow-y-auto w-full">
+              <CommandEmpty className="py-3 text-center text-sm text-gray-500">
+                No results found.
+              </CommandEmpty>
+              <CommandGroup className="w-full p-1.5">
+                {options.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={option.label}
+                    onSelect={() => {
+                      onChange(option.value);
+                      setOpen(false);
+                    }}
+                    className="cursor-pointer rounded-md px-2.5 py-2 text-sm italic aria-selected:bg-[#f6e8e4] aria-selected:text-[#C72030] w-full"
+                  >
+                    {option.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
 
 const SmartSecureSetupGeneral: React.FC = () => {
   const [activeTab, setActiveTab] = useState("visit-purpose");
@@ -484,32 +562,20 @@ const SmartSecureSetupGeneral: React.FC = () => {
             </button>
           </DialogHeader>
 
-          <div className="p-6 bg-white space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Select society
-              </label>
-              <Select
-                onValueChange={(val) =>
-                  setFormData({ ...formData, society: val })
-                }
-                value={formData.society}
-              >
-                <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
-                  <SelectValue placeholder="Select society" />
-                </SelectTrigger>
-                <SelectContent>
-                  {societies.map((s) => (
-                    <SelectItem key={s.id_society} value={s.id_society}>
-                      {s.society?.building_name || `Society ${s.id_society}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="p-6 bg-white space-y-5">
+            <SearchableDropdown
+              label="Select society"
+              placeholder="Select society"
+              value={formData.society}
+              onChange={(val) => setFormData({ ...formData, society: val })}
+              options={societies.map((s) => ({
+                value: s.id_society,
+                label: s.society?.building_name || `Society ${s.id_society}`,
+              }))}
+            />
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+            <div className="relative">
+              <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                 {getAddLabel()}
               </label>
               <Input
@@ -520,7 +586,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
                   setFormData({ ...formData, purpose: e.target.value })
                 }
                 placeholder={getAddLabel().toLowerCase()}
-                className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
               />
             </div>
 
@@ -545,28 +611,16 @@ const SmartSecureSetupGeneral: React.FC = () => {
             </div>
 
             {activeTab === "staff-type" && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Select Work Type
-                </label>
-                <Select
-                  onValueChange={(val) =>
-                    setFormData({ ...formData, workType: val })
-                  }
-                  value={formData.workType}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
-                    <SelectValue placeholder="Select Work Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workTypeOptions.map((wt) => (
-                      <SelectItem key={wt.value} value={wt.value}>
-                        {wt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <SearchableDropdown
+                label="Select Work Type"
+                placeholder="Select Work Type"
+                value={formData.workType}
+                onChange={(val) => setFormData({ ...formData, workType: val })}
+                options={workTypeOptions.map((wt) => ({
+                  value: wt.value,
+                  label: wt.label,
+                }))}
+              />
             )}
           </div>
 
@@ -597,9 +651,9 @@ const SmartSecureSetupGeneral: React.FC = () => {
             </button>
           </DialogHeader>
 
-          <div className="p-6 bg-white space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+          <div className="p-6 bg-white space-y-5">
+            <div className="relative">
+              <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
                 {activeTab === "staff-type" ? "Staff Type" : "Purpose"}
               </label>
               <Input
@@ -614,7 +668,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
                     ? "Enter staff type"
                     : "Enter purpose"
                 }
-                className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
+                className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
               />
             </div>
 
@@ -639,28 +693,18 @@ const SmartSecureSetupGeneral: React.FC = () => {
             </div>
 
             {activeTab === "staff-type" && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Select Work Type
-                </label>
-                <Select
-                  onValueChange={(val) =>
-                    setEditFormData({ ...editFormData, workType: val })
-                  }
-                  value={editFormData.workType}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
-                    <SelectValue placeholder="Select Work Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workTypeOptions.map((wt) => (
-                      <SelectItem key={wt.value} value={wt.value}>
-                        {wt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <SearchableDropdown
+                label="Select Work Type"
+                placeholder="Select Work Type"
+                value={editFormData.workType}
+                onChange={(val) =>
+                  setEditFormData({ ...editFormData, workType: val })
+                }
+                options={workTypeOptions.map((wt) => ({
+                  value: wt.value,
+                  label: wt.label,
+                }))}
+              />
             )}
           </div>
 

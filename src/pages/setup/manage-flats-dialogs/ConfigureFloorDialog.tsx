@@ -161,8 +161,10 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
 
         <div className="flex-1 overflow-y-auto py-6 space-y-6 px-6">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Tower <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+                Tower <span className="text-red-500">*</span>
+              </Label>
               <SearchableSelect
                 value={selectedTower}
                 onChange={setSelectedTower}
@@ -174,13 +176,19 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
                 className=""
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="floor-name">Floor Name <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Label
+                htmlFor="floor-name"
+                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+              >
+                Floor Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="floor-name"
                 placeholder="Enter Floor Name"
                 value={floorName}
                 onChange={(e) => setFloorName(e.target.value)}
+                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
           </div>

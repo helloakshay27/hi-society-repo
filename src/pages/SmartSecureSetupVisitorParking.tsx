@@ -555,7 +555,7 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
             <Button
               onClick={handleAddSlot}
               disabled={submitting}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
             >
               {submitting ? "Saving…" : "Submit"}
             </Button>

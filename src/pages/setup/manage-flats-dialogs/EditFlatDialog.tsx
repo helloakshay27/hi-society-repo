@@ -260,6 +260,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   id="status"
                   checked={formData.status}
                   onCheckedChange={(checked) => onChange("status", checked)}
+                  className="data-[state=checked]:!bg-[#798c5e] data-[state=unchecked]:!bg-gray-300"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -270,6 +271,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   id="possession"
                   checked={formData.possession}
                   onCheckedChange={(checked) => onChange("possession", checked)}
+                  className="data-[state=checked]:!bg-[#798c5e] data-[state=unchecked]:!bg-gray-300"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -280,6 +282,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   id="sold"
                   checked={formData.sold}
                   onCheckedChange={(checked) => onChange("sold", checked)}
+                  className="data-[state=checked]:!bg-[#798c5e] data-[state=unchecked]:!bg-gray-300"
                 />
               </div>
             </div>
@@ -288,12 +291,12 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               <div className="relative">
                 <Label
                   htmlFor="tower"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Tower <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.tower} onValueChange={(value) => onChange("tower", value)}>
-                  <SelectTrigger id="tower" className="border border-gray-400 pt-2">
+                  <SelectTrigger id="tower" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
                     <SelectValue placeholder="Select Tower" />
                   </SelectTrigger>
                   <SelectContent>
@@ -307,14 +310,14 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               </div>
 
               <div className="relative">
-                <Label htmlFor="floor" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+                <Label htmlFor="floor" className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
                   Floor <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={formData.floor}
                   onValueChange={(value) => onChange('floor', value)}
                 >
-                  <SelectTrigger id="floor" className="border border-gray-400 pt-2">
+                  <SelectTrigger id="floor" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
                     <SelectValue placeholder="Select Floor" />
                   </SelectTrigger>
                   <SelectContent>
@@ -328,7 +331,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               <div className="relative">
                 <Label
                   htmlFor="flat"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Flat <span className="text-red-500">*</span>
                 </Label>
@@ -337,14 +340,14 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   placeholder=" "
                   value={formData.flat}
                   onChange={(e) => onChange("flat", e.target.value)}
-                  className="border border-gray-400"
+                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
               <div className="relative">
                 <Label
                   htmlFor="carpetArea"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Carpet Area
                 </Label>
@@ -353,14 +356,14 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   placeholder=" "
                   value={formData.carpetArea}
                   onChange={(e) => onChange("carpetArea", e.target.value)}
-                  className="border border-gray-400"
+                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
               <div className="relative">
                 <Label
                   htmlFor="builtUpArea"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Built up Area
                 </Label>
@@ -369,14 +372,14 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   placeholder=" "
                   value={formData.builtUpArea}
                   onChange={(e) => onChange("builtUpArea", e.target.value)}
-                  className="border border-gray-400"
+                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
               <div className="relative">
                 <Label
                   htmlFor="flatType"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Flat Type
                 </Label>
@@ -384,7 +387,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   value={formData.flatType}
                   onValueChange={(value) => onChange("flatType", value)}
                 >
-                  <SelectTrigger id="flatType" className="border border-gray-400 pt-2">
+                  <SelectTrigger id="flatType" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
                     <SelectValue placeholder="Select Flat Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -400,7 +403,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               <div className="relative">
                 <Label
                   htmlFor="occupied"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Occupied
                 </Label>
@@ -408,7 +411,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   value={formData.occupied}
                   onValueChange={(value) => onChange("occupied", value)}
                 >
-                  <SelectTrigger id="occupied" className="border border-gray-400 pt-2">
+                  <SelectTrigger id="occupied" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
                     <SelectValue placeholder="Please Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -421,7 +424,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               <div className="relative">
                 <Label
                   htmlFor="nameOnBill"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Name on Bill
                 </Label>
@@ -430,14 +433,14 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   placeholder=" "
                   value={formData.nameOnBill}
                   onChange={(e) => onChange("nameOnBill", e.target.value)}
-                  className="border border-gray-400"
+                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
               <div className="relative">
                 <Label
                   htmlFor="dateOfPossession"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Date of possession
                 </Label>
@@ -447,19 +450,19 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   placeholder=" "
                   value={formData.dateOfPossession}
                   onChange={(e) => onChange("dateOfPossession", e.target.value)}
-                  className="border border-gray-400"
+                  className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
               {/* <div className="relative">
                 <Label
                   htmlFor="rmUser"
-                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
                 >
                   Rm User
                 </Label>
                 <Select value={formData.rmUser} onValueChange={(value) => onChange("rmUser", value)}>
-                  <SelectTrigger id="rmUser" className="border border-gray-400 pt-2">
+                  <SelectTrigger id="rmUser" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -531,8 +534,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               <Button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-8"
-              >
+ className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"              >
                 {loading ? "Updating..." : "Update"}
               </Button>
             </div>

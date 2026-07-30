@@ -45,7 +45,7 @@ const SectionHeader = styled(Box)(({ theme }) => ({
 
 const RedIcon = styled(Box)(({ theme }) => ({
   color: 'white',
-  backgroundColor: '#ED820E',
+  backgroundColor: '#da7756',
   borderRadius: '50%',
   padding: '8px',
   display: 'flex',
@@ -114,8 +114,8 @@ const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   height: 128,
   backgroundColor: '#fff',
   fontSize: '48px',
-  color: '#ED820E',
-  border: '2px solid #ED820E',
+  color: '#da7756',
+  border: '2px solid #da7756',
 }));
 
 const CameraButton = styled(IconButton)(({ theme }) => ({
@@ -719,11 +719,11 @@ export const AddUserPage = () => {
                     title="Capture from camera"
                     onClick={handleOpenCamera}
                     sx={{
-                      backgroundColor: '#ED820E',
+                      backgroundColor: '#da7756',
                       color: 'white',
                       width: '36px',
                       height: '36px',
-                      '&:hover': { backgroundColor: '#d67600' },
+                      '&:hover': { backgroundColor: '#c06548' },
                     }}
                   >
                     <Video size={18} />
@@ -736,11 +736,11 @@ export const AddUserPage = () => {
                       input?.click();
                     }}
                     sx={{
-                      backgroundColor: '#ED820E',
+                      backgroundColor: '#da7756',
                       color: 'white',
                       width: '36px',
                       height: '36px',
-                      '&:hover': { backgroundColor: '#d67600' },
+                      '&:hover': { backgroundColor: '#c06548' },
                     }}
                   >
                     <Upload size={18} />
@@ -1571,8 +1571,7 @@ export const AddUserPage = () => {
             <DraftButton
              onClick={handleCancel}
              variant="outlined"
-             className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-             disabled={loading}>Cancel</DraftButton>
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"             disabled={loading}>Cancel</DraftButton>
           </Box>
         </SectionCard>
       </Box>
