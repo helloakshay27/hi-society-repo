@@ -35,7 +35,7 @@ const HiSocNoticeList = () => {
   const [activeFilters, setActiveFilters] = useState<NoticeFilters | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const PER_PAGE = 20;
+  const PER_PAGE = 10;
 
   const getNoticeboardPermission = () => {
     try {

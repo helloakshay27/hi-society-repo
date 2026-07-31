@@ -23,6 +23,17 @@ import {
 } from "@mui/material";
 import { X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 const CampaignsReferralSetup: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +49,7 @@ const CampaignsReferralSetup: React.FC = () => {
   });
 
   const [projectsData, setProjectsData] = useState<ReferralSetup[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch referral setups from API
   const fetchReferralSetups = useCallback(async () => {
@@ -46,6 +58,7 @@ const CampaignsReferralSetup: React.FC = () => {
     try {
       const response = await getReferralSetups();
       setProjectsData(response.referral_setups || []);
+      setCurrentPage(1);
     } catch (err) {
       console.error("Failed to fetch referral setups:", err);
       setError("Failed to load referral setups. Please try again.");
@@ -57,6 +70,10 @@ const CampaignsReferralSetup: React.FC = () => {
   useEffect(() => {
     fetchReferralSetups();
   }, [fetchReferralSetups]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const handleToggleReferralProgram = async (id: number, currentValue: boolean) => {
     const item = projectsData.find((p) => p.id === id);
@@ -300,6 +317,106 @@ const CampaignsReferralSetup: React.FC = () => {
       project.project_reference_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   const handleApplyFilters = () => {
     // Apply filter logic here - connect to API or filter local data
   };
@@ -314,11 +431,10 @@ const CampaignsReferralSetup: React.FC = () => {
         {/* Table */}
         <div>
           <EnhancedTable
-            data={filteredData}
+            data={paginatedData}
             columns={columns}
             renderCell={renderCell}
-            pagination={true}
-            pageSize={10}
+            pagination={false}
             loading={isLoading}
             hideTableSearch={false}
             hideTableExport={false}
@@ -341,6 +457,28 @@ const CampaignsReferralSetup: React.FC = () => {
               </div>
             }
           />
+
+          {filteredData.length > 0 && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  {renderPaginationItems()}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </div>
 

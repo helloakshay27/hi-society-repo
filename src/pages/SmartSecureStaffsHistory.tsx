@@ -496,7 +496,7 @@ const SmartSecureStaffsHistory: React.FC = () => {
       />
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {(pagination?.total_count ?? 0) > 0 && (
         <div className="flex justify-center mt-6">
           <Pagination>
             <PaginationContent>

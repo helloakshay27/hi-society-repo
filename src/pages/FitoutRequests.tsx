@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock, XCircle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { toast } from "sonner";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -87,7 +87,7 @@ const FitoutRequests: React.FC = () => {
     }
     return undefined;
   });
-  const perPage = 15;
+  const perPage = 20;
 
   const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null, search: string = "", dateRangeValue?: DateRange) => {
     try {
@@ -170,6 +170,94 @@ const FitoutRequests: React.FC = () => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleCardFilter = (statusFilter: string | null) => {
@@ -748,50 +836,21 @@ const FitoutRequests: React.FC = () => {
           handleExport={handleExportRequests}
           loading={loading}
         />
-        {totalPages > 1 && (
+        {totalEntries > 0 && (
           <div className="mt-3 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
-                {(() => {
-                  const pages: number[] = [];
-                  const delta = 2;
-                  const left = Math.max(1, currentPage - delta);
-                  const right = Math.min(totalPages, currentPage + delta);
-                  if (left > 1) pages.push(1);
-                  if (left > 2) pages.push(-1); // ellipsis
-                  for (let p = left; p <= right; p++) pages.push(p);
-                  if (right < totalPages - 1) pages.push(-2); // ellipsis
-                  if (right < totalPages) pages.push(totalPages);
-                  return pages.map((page, idx) =>
-                    page < 0 ? (
-                      <PaginationItem key={`ellipsis-${idx}`}>
-                        <span className="px-2 text-gray-400">…</span>
-                      </PaginationItem>
-                    ) : (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  );
-                })()}
+                {renderPaginationItems()}
                 <PaginationItem>
                   <PaginationNext
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
               </PaginationContent>

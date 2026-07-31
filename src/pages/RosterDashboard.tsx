@@ -463,9 +463,9 @@ export const RosterDashboard = ({
           {/* Pagination Controls - matching BuildingPage style */}
           {allRosterData.length > 0 && (
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
+              {/* <div className="text-sm text-muted-foreground">
                 Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} rosters
-              </div>
+              </div> */}
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"

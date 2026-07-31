@@ -719,37 +719,97 @@ const SmartSecureVehiclesHistory: React.FC = () => {
 
   // ── Pagination ─────────────────────────────────────────────────────────────
 
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
     const items = [];
-    for (let i = 1; i <= totalPages; i++) {
-      if (
-        totalPages <= 7 ||
-        i === 1 ||
-        i === totalPages ||
-        Math.abs(i - currentPage) <= 1
-      ) {
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
         items.push(
-          <PaginationItem key={i}>
-            <PaginationLink
-              className="cursor-pointer"
-              onClick={() => setCurrentPage(i)}
-              isActive={currentPage === i}
-            >
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
               {i}
             </PaginationLink>
           </PaginationItem>
         );
-      } else if (
-        (i === 2 && currentPage > 4) ||
-        (i === totalPages - 1 && currentPage < totalPages - 3)
-      ) {
-        items.push(
-          <PaginationItem key={`e-${i}`}>
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
       }
     }
+
     return items;
   };
 
@@ -800,12 +860,12 @@ const SmartSecureVehiclesHistory: React.FC = () => {
       />
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalCount > 0 && (
         <div className="flex items-center justify-between mt-4 px-1">
-          <span className="text-sm text-gray-500">
+          {/* <span className="text-sm text-gray-500">
             Showing {(currentPage - 1) * perPage + 1}–
             {Math.min(currentPage * perPage, totalCount)} of {totalCount} records
-          </span>
+          </span> */}
           <Pagination>
             <PaginationContent>
               <PaginationItem>

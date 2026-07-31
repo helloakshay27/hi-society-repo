@@ -827,7 +827,7 @@ export const StaffsDashboard = () => {
       )}
       
       {/* Pagination Controls */}
-      {!error && pagination.total_pages > 1 && (
+      {!error && pagination.total_count > 0 && (
         <div className="flex justify-center mt-6">
           <Pagination>
             <PaginationContent>

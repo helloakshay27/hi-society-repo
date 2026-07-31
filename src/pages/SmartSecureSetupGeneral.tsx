@@ -30,6 +30,17 @@ import {
   type SocietyOption,
   type WorkTypeOption,
 } from "@/services/smartSecureSetupAPI";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 interface SetupItem {
   id: number;
@@ -93,6 +104,12 @@ const SearchableDropdown: React.FC<{
 
 const SmartSecureSetupGeneral: React.FC = () => {
   const [activeTab, setActiveTab] = useState("visit-purpose");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
   const [visitPurposeData, setVisitPurposeData] = useState<SetupItem[]>([]);
   const [moveInOutData, setMoveInOutData] = useState<SetupItem[]>([]);
   const [staffTypeData, setStaffTypeData] = useState<SetupItem[]>([]);
@@ -365,6 +382,127 @@ const SmartSecureSetupGeneral: React.FC = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const renderPaginationItems = (totalPages: number) => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
+  const renderPaginationBar = (dataLength: number) => {
+    if (dataLength === 0) return null;
+    const totalPages = Math.ceil(dataLength / PAGE_SIZE) || 1;
+    return (
+      <div className="mt-4 flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems(totalPages)}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    );
+  };
+
+  const paginate = <T,>(data: T[]) =>
+    data.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   const getTabLabel = () => {
     switch (activeTab) {
       case "visit-purpose":
@@ -397,7 +535,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">Setup</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200">
           <TabsTrigger
             value="visit-purpose"
@@ -426,12 +564,12 @@ const SmartSecureSetupGeneral: React.FC = () => {
 
         <TabsContent value="visit-purpose" className="mt-6">
           <EnhancedTable
-            data={visitPurposeData}
+            data={paginate(visitPurposeData)}
             columns={columns}
             renderCell={(item, columnKey) =>
               renderCell(item, columnKey, "visit")
             }
-            pagination={true}
+            pagination={false}
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
@@ -446,16 +584,17 @@ const SmartSecureSetupGeneral: React.FC = () => {
             loading={loading}
             emptyMessage="No Matching Records Found"
           />
+          {renderPaginationBar(visitPurposeData.length)}
         </TabsContent>
 
         <TabsContent value="move-in-out" className="mt-6">
           <EnhancedTable
-            data={moveInOutData}
+            data={paginate(moveInOutData)}
             columns={columns}
             renderCell={(item, columnKey) =>
               renderCell(item, columnKey, "move")
             }
-            pagination={true}
+            pagination={false}
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
@@ -470,16 +609,17 @@ const SmartSecureSetupGeneral: React.FC = () => {
             loading={loading}
             emptyMessage="No Matching Records Found"
           />
+          {renderPaginationBar(moveInOutData.length)}
         </TabsContent>
 
         <TabsContent value="staff-type" className="mt-6">
           <EnhancedTable
-            data={staffTypeData}
+            data={paginate(staffTypeData)}
             columns={staffColumns}
             renderCell={(item, columnKey) =>
               renderCell(item, columnKey, "staff")
             }
-            pagination={true}
+            pagination={false}
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
@@ -494,6 +634,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
             loading={loading}
             emptyMessage="No Matching Records Found"
           />
+          {renderPaginationBar(staffTypeData.length)}
         </TabsContent>
       </Tabs>
 
