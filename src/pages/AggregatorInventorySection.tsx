@@ -489,7 +489,7 @@ const AggregatorInventorySection = () => {
                         <TabsTrigger
                             key={category.value}
                             value={category.value}
-                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent rounded-md px-4 py-2"
+                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent  px-4 py-2"
                         >
                             {category.label}
                         </TabsTrigger>
@@ -536,7 +536,7 @@ const AggregatorInventorySection = () => {
                                         {shouldShow("Aggregator Inventory", "update") && (
                                         <Button
                                             onClick={handleSyncInventory}
-                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
                                             disabled={loading}
                                         >
                                             <RefreshCwIcon className="mr-2 h-4 w-4" />

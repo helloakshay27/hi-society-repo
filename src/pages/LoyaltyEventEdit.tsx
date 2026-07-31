@@ -1989,7 +1989,7 @@ const EventEdit = () => {
                     height: "40px",
                     backgroundColor:
                       index === currentStep || completedSteps.includes(index)
-                        ? "#C72030"
+                        ? "#da7756"
                         : index > currentStep &&
                           !completedSteps.includes(index - 1)
                           ? "rgba(245, 245, 245, 1)"
@@ -2003,7 +2003,7 @@ const EventEdit = () => {
                           : "rgba(196, 184, 157, 1)",
                     border:
                       index === currentStep || completedSteps.includes(index)
-                        ? "2px solid #C72030"
+                        ? "2px solid #da7756"
                         : index > currentStep &&
                           !completedSteps.includes(index - 1)
                           ? "1px solid rgba(200, 200, 200, 1)"
@@ -2125,7 +2125,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Event Details
@@ -2663,7 +2663,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Visibility
@@ -2785,7 +2785,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Invite CPs
@@ -3129,7 +3129,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Event Related Images
@@ -3634,8 +3634,7 @@ const EventEdit = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
-              >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"              >
                 Cancel
               </button>
             </div>
@@ -3679,7 +3678,7 @@ const EventEdit = () => {
                               }}
                             >
                               <SettingsOutlinedIcon
-                                sx={{ fontSize: 18, color: "#C72030" }}
+                                sx={{ fontSize: 18, color: "#da7756" }}
                               />
                             </Avatar>
                             Event Details
@@ -3883,7 +3882,7 @@ const EventEdit = () => {
                               }}
                             >
                               <SettingsOutlinedIcon
-                                sx={{ fontSize: 18, color: "#C72030" }}
+                                sx={{ fontSize: 18, color: "#da7756" }}
                               />
                             </Avatar>
                             Visibility
@@ -4011,7 +4010,7 @@ const EventEdit = () => {
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "#C72030" }}
+                              sx={{ fontSize: 18, color: "#da7756" }}
                             />
                           </Avatar>
                           Event Related Images
@@ -4356,7 +4355,7 @@ const EventEdit = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "#da7756" }}
                         />
                       </Avatar>
                       Event Details
@@ -4558,7 +4557,7 @@ const EventEdit = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "#da7756" }}
                         />
                       </Avatar>
                       Visibility
@@ -4741,7 +4740,7 @@ const EventEdit = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "#da7756" }}
                         />
                       </Avatar>
                       Event Related Images

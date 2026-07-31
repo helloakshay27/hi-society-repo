@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
@@ -447,8 +449,8 @@ export const WalletManagement = () => {
             </div>
           </div>
 
-          {/* Top Stats Cards - 4 Column Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Top Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* <StatsCard
               title="Opening Balance"
               value={stats.openingBalance}
@@ -555,23 +557,25 @@ export const WalletManagement = () => {
           <div className="space-y-4">
             <div className="flex align-items-center justify-between w-full bg-[#f6f4ee] p-3">
               <p className="text-lg font-bold my-auto ">Recent Transactions</p>
-              <Select
-                value={timeRange}
-                onValueChange={(val) => {
-                  setTimeRange(val);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-[150px] border-[#e5e1d8] bg-white">
-                  <SelectValue placeholder="Select range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Last 7 days</SelectItem>
-                  <SelectItem value="10">Last 10 days</SelectItem>
-                  <SelectItem value="30">Last 30 days</SelectItem>
-                  <SelectItem value="90">Last 90 days</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl sx={{ width: 180 }} variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select range</InputLabel>
+                <MuiSelect
+                  value={timeRange}
+                  onChange={(e) => {
+                    setTimeRange(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  displayEmpty
+                  label="Select range"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="7">Last 7 days</MenuItem>
+                  <MenuItem value="10">Last 10 days</MenuItem>
+                  <MenuItem value="30">Last 30 days</MenuItem>
+                  <MenuItem value="90">Last 90 days</MenuItem>
+                </MuiSelect>
+              </FormControl>
             </div>
             <EnhancedTable
               data={transactions}

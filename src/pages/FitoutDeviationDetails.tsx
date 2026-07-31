@@ -16,18 +16,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
-import { SearchableSelect } from '@/components/ui/enhanced-select';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface Deviation {
   id: number;
@@ -541,7 +534,7 @@ const FitoutDeviationDetails: React.FC = () => {
       </div>
 
       {/* Edit Status Dialog */}
-      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
+      <Dialog open={isEditStatusOpen} modal={false} onOpenChange={setIsEditStatusOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Status</DialogTitle>
@@ -551,31 +544,37 @@ const FitoutDeviationDetails: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* Status Dropdown */}
-            <div className="grid gap-2">
-              <SearchableSelect
-                label="Status *"
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Status <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
                 value={selectedStatus}
-                onChange={(value) => setSelectedStatus(String(value))}
-                options={statusOptions.map((status) => ({
-                  value: String(status.id),
-                  label: status.name,
-                }))}
-                placeholder="Select status"
-              />
-            </div>
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                displayEmpty
+                label="Select Status *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Status</em></MenuItem>
+                {statusOptions.map((status) => (
+                  <MenuItem key={status.id} value={String(status.id)}>
+                    {status.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Comments */}
-            <div className="grid gap-2">
-              <Label htmlFor="comment">Comment</Label>
-              <Textarea
-                id="comment"
-                placeholder="Enter your comments here..."
-                value={statusComment}
-                onChange={(e) => setStatusComment(e.target.value)}
-                rows={4}
-                className="resize-none"
-              />
-            </div>
+            <TextField
+              label="Comment"
+              placeholder="Enter your comments here..."
+              value={statusComment}
+              onChange={(e) => setStatusComment(e.target.value)}
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
           </div>
           <DialogFooter>
             <Button
@@ -599,7 +598,7 @@ const FitoutDeviationDetails: React.FC = () => {
       </Dialog>
 
       {/* Send Violation Dialog */}
-      <Dialog open={isSendViolationOpen} onOpenChange={setIsSendViolationOpen}>
+      <Dialog open={isSendViolationOpen} modal={false} onOpenChange={setIsSendViolationOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Send Violation</DialogTitle>
@@ -609,17 +608,17 @@ const FitoutDeviationDetails: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* Violation Message */}
-            <div className="grid gap-2">
-              <Label htmlFor="violation-message">Violation Message *</Label>
-              <Textarea
-                id="violation-message"
-                placeholder="Enter violation details..."
-                value={violationMessage}
-                onChange={(e) => setViolationMessage(e.target.value)}
-                rows={5}
-                className="resize-none"
-              />
-            </div>
+            <TextField
+              label={<>Violation Message <span style={{ color: 'red' }}>*</span></>}
+              placeholder="Enter violation details..."
+              value={violationMessage}
+              onChange={(e) => setViolationMessage(e.target.value)}
+              fullWidth
+              multiline
+              rows={5}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
 
             {/* Attachments */}
             <div className="grid gap-2">

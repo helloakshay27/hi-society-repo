@@ -42,9 +42,9 @@ const StepPill = styled(Box)<{ $active?: boolean; $completed?: boolean }>(({ $ac
   fontFamily: 'Work Sans, sans-serif',
   whiteSpace: 'nowrap',
   cursor: 'pointer',
-  backgroundColor: $active || $completed ? '#C72030' : '#FFFFFF',
+  backgroundColor: $active || $completed ? '#da7756' : '#FFFFFF',
   color: $active ? '#FFFFFF' : $completed ? '#fff' : '#333',
-  border: $active || $completed ? '2px solid #C72030' : '2px solid #E6E6E6',
+  border: $active || $completed ? '2px solid #da7756' : '2px solid #E6E6E6',
 }));
 
 function formatDate(dateString?: string) {
@@ -179,7 +179,7 @@ export default function OfferViewPage() {
             <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                  <Settings sx={{ color: '#da7756', fontSize: '24px' }} />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-black">
                   Basic Info
@@ -234,7 +234,7 @@ export default function OfferViewPage() {
             <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                  <Settings sx={{ color: '#da7756', fontSize: '24px' }} />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-black">
                   Media & Display
@@ -354,7 +354,7 @@ export default function OfferViewPage() {
             <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                  <Settings sx={{ color: '#da7756', fontSize: '24px' }} />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-black">
                   Applicability
@@ -382,7 +382,7 @@ export default function OfferViewPage() {
             <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                  <Settings sx={{ color: '#da7756', fontSize: '24px' }} />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-black">
                   Coupon
@@ -417,7 +417,7 @@ export default function OfferViewPage() {
             <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                  <Settings sx={{ color: '#da7756', fontSize: '24px' }} />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-black">
                   Validity & Status
@@ -463,7 +463,7 @@ export default function OfferViewPage() {
             <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                  <Settings sx={{ color: '#da7756', fontSize: '24px' }} />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-black">
                   Visibility
@@ -500,6 +500,17 @@ export default function OfferViewPage() {
   };
 
   const navigate = useNavigate();
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading offer details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
@@ -545,11 +556,7 @@ export default function OfferViewPage() {
           })}
         </Stepper>
       </Box>
-      {loading ? (
-        <Typography sx={{ textAlign: 'center', mt: 6 }}>Loading...</Typography>
-      ) : (
-        renderCardContent()
-      )}
+      {renderCardContent()}
     </Box>
   );
 }

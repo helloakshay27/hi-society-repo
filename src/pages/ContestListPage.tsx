@@ -471,7 +471,7 @@ export const ContestListPage: React.FC = () => {
               {shouldShow("Contest", "create") && (
               <Button
                 onClick={() => navigate("/contests/create")}
-                className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
+                className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2  transition-colors duration-200 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Create Contest

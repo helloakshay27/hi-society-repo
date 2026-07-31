@@ -348,7 +348,7 @@ const LoyaltyTiersList = () => {
         storageKey="loyalty-tiers-table"
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
-        searchPlaceholder="Search tiers (name, points, multipliers, bonus)..."
+        searchPlaceholder="Search tiers..."
         leftActions={renderCustomActions()}
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching tiers..." : "Loading tiers..."}

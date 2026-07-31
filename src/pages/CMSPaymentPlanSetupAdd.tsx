@@ -11,6 +11,30 @@ interface PaymentSchedule {
     percentage: string;
 }
 
+// Field styles for Material-UI components (matches BMS/AddHelpdeskTicket.tsx)
+const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+        height: '45px',
+        '& fieldset': {
+            borderColor: '#ddd',
+        },
+        '&:hover fieldset': {
+            borderColor: '#C72030',
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: '#C72030',
+        },
+    },
+    '& .MuiInputLabel-root': {
+        '&.Mui-focused': {
+            color: '#C72030',
+        },
+    },
+};
+
 const FREQUENCY_OPTIONS = [
     { value: 'monthly', label: 'Monthly', months: 12 },
     { value: 'quarterly', label: 'Quarterly', months: 3 },
@@ -208,48 +232,46 @@ const CMSPaymentPlanSetupAdd = () => {
             <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
                 {/* Plan Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Plan Name <span className="text-red-500">*</span>
-                        </label>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            value={planName}
-                            onChange={(e) => setPlanName(e.target.value)}
-                            placeholder="Enter plan name"
-                            disabled={loading}
-                        />
-                    </div>
+                    <TextField
+                        label={<>Plan Name <span style={{ color: 'red' }}>*</span></>}
+                        placeholder="Enter plan name"
+                        value={planName}
+                        onChange={(e) => setPlanName(e.target.value)}
+                        fullWidth
+                        required
+                        variant="outlined"
+                        disabled={loading}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                    />
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Frequency <span className="text-red-500">*</span>
-                        </label>
-                        <TextField
-                            fullWidth
-                            select
-                            size="small"
-                            value={frequency}
-                            onChange={(e) => handleFrequencyChange(e.target.value)}
-                            disabled={loading}
-                            displayEmpty
-                            SelectProps={{
-                                displayEmpty: true,
-                                renderValue: (selected) =>
-                                    selected ? FREQUENCY_OPTIONS.find(opt => opt.value === selected)?.label : <span style={{ color: '#888' }}>Select Frequency</span>
-                            }}
-                        >
-                            <MenuItem value="">
-                                <span style={{ color: '#888' }}>Select Frequency</span>
+                    <TextField
+                        label={<>Frequency <span style={{ color: 'red' }}>*</span></>}
+                        placeholder="Select Frequency"
+                        select
+                        value={frequency}
+                        onChange={(e) => handleFrequencyChange(e.target.value)}
+                        fullWidth
+                        required
+                        variant="outlined"
+                        disabled={loading}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                        SelectProps={{
+                            displayEmpty: true,
+                            renderValue: (selected) =>
+                                selected ? FREQUENCY_OPTIONS.find(opt => opt.value === selected)?.label : <span style={{ color: '#888' }}>Select Frequency</span>
+                        }}
+                    >
+                        <MenuItem value="">
+                            <span style={{ color: '#888' }}>Select Frequency</span>
+                        </MenuItem>
+                        {FREQUENCY_OPTIONS.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                                {option.label}
                             </MenuItem>
-                            {FREQUENCY_OPTIONS.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </div>
+                        ))}
+                    </TextField>
                 </div>
 
                 {/* Duration */}
@@ -315,12 +337,13 @@ const CMSPaymentPlanSetupAdd = () => {
                                             <td className="border border-gray-300 px-4 py-3">
                                                 <TextField
                                                     fullWidth
-                                                    size="small"
                                                     type="number"
                                                     value={schedule.percentage}
                                                     onChange={(e) => handlePercentageChange(index, e.target.value)}
                                                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                                                     disabled={loading}
+                                                    variant="outlined"
+                                                    InputProps={{ sx: fieldStyles }}
                                                 />
                                             </td>
                                         </tr>

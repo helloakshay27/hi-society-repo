@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { FormControl, InputLabel, Select as MuiSelect, MenuItem, Chip, Box } from "@mui/material";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -456,7 +456,7 @@ const OrdersList = () => {
         storageKey="orders-table"
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
-        searchPlaceholder="Search orders (ID, number, customer name/email)..."
+        searchPlaceholder="Search orders"
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
       />
@@ -606,15 +606,11 @@ const OrdersList = () => {
           sx={fieldStyles}
           MenuProps={menuProps}
           renderValue={(selected: string[]) =>
-            selected.length ? (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip key={value} label={statusOptions.find((o) => o.value === value)?.label || value} size="small" />
-                ))}
-              </Box>
-            ) : (
-              <em>Select Status...</em>
-            )
+            selected.length
+              ? selected
+                  .map((value) => statusOptions.find((o) => o.value === value)?.label || value)
+                  .join(', ')
+              : <em>Select Status...</em>
           }
         >
           {statusOptions.filter((opt) => opt.value !== "").map((opt) => (
@@ -640,15 +636,11 @@ const OrdersList = () => {
           sx={fieldStyles}
           MenuProps={menuProps}
           renderValue={(selected: string[]) =>
-            selected.length ? (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip key={value} label={paymentStatusOptions.find((o) => o.value === value)?.label || value} size="small" />
-                ))}
-              </Box>
-            ) : (
-              <em>Select Payment Status...</em>
-            )
+            selected.length
+              ? selected
+                  .map((value) => paymentStatusOptions.find((o) => o.value === value)?.label || value)
+                  .join(', ')
+              : <em>Select Payment Status...</em>
           }
         >
           {paymentStatusOptions.filter((opt) => opt.value !== "").map((opt) => (

@@ -1530,43 +1530,44 @@ export const CreateContestPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Step Progress Indicator ── unchanged ── */}
-      <div className="mb-4">
-        <div className="relative w-full">
-          <div
-            className="absolute top-8 left-0 right-0 h-0.5"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(to right, #9CA3AF 0, #9CA3AF 6px, transparent 6px, transparent 12px)",
-              height: "2px",
-            }}
-          ></div>
-
-          <div className="relative flex justify-between items-start">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={`flex flex-col items-center ${step.id <= Math.max(...completedSteps, currentStep)
-                  ? "cursor-pointer"
-                  : "cursor-not-allowed opacity-100"
+      {/* Step Progress Indicator */}
+      <nav aria-label="Contest creation steps" className="mb-4">
+        <ol className="flex items-center w-full">
+          {steps.map((step, index) => {
+            const isReachable = step.id <= Math.max(...completedSteps, currentStep);
+            return (
+              <li key={step.id} className={`flex items-center ${index < steps.length - 1 ? "flex-1" : ""}`}>
+                <button
+                  type="button"
+                  aria-current={step.active ? "step" : undefined}
+                  aria-disabled={!isReachable}
+                  disabled={!isReachable}
+                  onClick={() => handleStepClick(step.id)}
+                  style={step.active ? { color: "#ffffff" } : undefined}
+                  className={`flex-1 flex items-center justify-center text-center h-12 sm:h-[46px] px-5 sm:px-6  border text-xs sm:text-sm font-serif whitespace-nowrap shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E67E56] ${
+                    isReachable ? "cursor-pointer" : "cursor-not-allowed"
+                  } ${
+                    step.active
+                      ? "bg-[#E67E56] border-[#E67E56]"
+                      : "bg-white border-[#E5E7EB] text-[#1A1A1A]"
                   }`}
-                onClick={() => handleStepClick(step.id)}
-              >
-                <div className="py-2 px-3 rounded text-white font-semibold bg-white">
-                  <div
-                    className={`
-                    px-6 py-3 rounded text-white font-semibold text-xs relative z-5 transition-colors whitespace-nowrap
-                    ${step.active || step.completed || step.id < currentStep ? "bg-[#C72030]" : "bg-gray-400"}
-                  `}
-                  >
+                >
+                  <span style={step.active ? { color: "#ffffff" } : undefined}>
                     {step.id}. {step.title}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+                  </span>
+                </button>
+                {index < steps.length - 1 && (
+                  <div
+                    aria-hidden="true"
+                    className="flex-1 h-0 mx-0.5 self-center"
+                    style={{ borderTop: "2px dotted #C4B89D" }}
+                  ></div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       {/* Step Content */}
       <div className="w-full px-6">

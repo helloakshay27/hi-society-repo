@@ -214,17 +214,14 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
             <DialogActions sx={{ px: 3, pb: 2, pt: 2 }}>
                 <Button
                     onClick={handleApply}
-                    className="flex-1 text-white cursor-pointer disabled:opacity-60"
-                    style={{ backgroundColor: '#C72030' }}
-                    disabled={!hasFilters}
+                   className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"                    // style={{ backgroundColor: '#C72030' }}
                 >
                     Apply
                 </Button>
                 <Button
                     onClick={handleReset}
                     variant="outline"
-                    className="flex-1 cursor-pointer"
-                    disabled={!hasFilters}
+                 className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"
                 >
                     Reset
                 </Button>

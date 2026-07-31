@@ -876,7 +876,7 @@ export const LoyaltyInventorySection = () => {
                         <TabsTrigger
                             key={category.value}
                             value={category.value}
-                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent rounded-md px-4 py-2"
+                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent  px-4 py-2"
                         >
                             {category.label}
                         </TabsTrigger>
@@ -887,32 +887,32 @@ export const LoyaltyInventorySection = () => {
                 {productCategories.map((category) => (
                     <TabsContent key={category.value} value={category.value} className="space-y-4 mt-6">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                            <div className="bg-[#F6F4EE] p-6 rounded-lg shadow hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                                     <Package className="w-6 h-6 text-[#C72030]" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.totalItems}</div>
+                                    <div className="text-2xl font-semibold text-[#1A1A1A]">{stats.totalItems}</div>
                                     <div className="text-sm text-gray-600">Total Items</div>
                                 </div>
                             </div>
 
-                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                            <div className="bg-[#F6F4EE] p-6 rounded-lg shadow hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                                     <CheckCircle className="w-6 h-6 text-[#C72030]" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.inStock}</div>
+                                    <div className="text-2xl font-semibold text-[#1A1A1A]">{stats.inStock}</div>
                                     <div className="text-sm text-gray-600">Active</div>
                                 </div>
                             </div>
 
-                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                            <div className="bg-[#F6F4EE] p-6 rounded-lg shadow hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                                     <AlertCircle className="w-6 h-6 text-[#C72030]" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.outOfStock}</div>
+                                    <div className="text-2xl font-semibold text-[#1A1A1A]">{stats.outOfStock}</div>
                                     <div className="text-sm text-gray-600">Inactive</div>
                                 </div>
                             </div>

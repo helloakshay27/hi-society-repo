@@ -327,12 +327,12 @@ const BookingCalenderView = () => {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2"
+                        className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2 rounded-lg"
                         title="Filter"
                     >
                         <Filter className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" className="w-[40px] h-[40px] !bg-white !text-[#C72030] !border !border-[#ED820E] [&_svg]:text-[#ED820E]">
+                    <Button variant="outline" className="w-[40px] h-[40px] !bg-white !text-[#C72030] !border !border-[#ED820E] [&_svg]:text-[#ED820E] rounded-lg">
                         <Bell className="w-5 h-5" />
                     </Button>
                 </div>

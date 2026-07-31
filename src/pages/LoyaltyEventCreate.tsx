@@ -3326,7 +3326,7 @@ const EventCreate = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] h-9 px-4 text-sm font-medium min-w-[120px]"
               >
                 Proceed to save
               </button>

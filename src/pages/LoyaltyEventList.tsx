@@ -29,7 +29,6 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
-import { Switch } from "@mui/material";
 
 interface Event {
   id: number;
@@ -509,44 +508,36 @@ const LoyaltyEventsList = () => {
         return formatDateOnly(item.created_at);
       case "show_on_home":
         return (
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={item.show_on_home || false}
-              onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-              size="small"
-              sx={{
-                "& .MuiSwitch-switchBase.Mui-checked": {
-                  color: "#C72030",
-                },
-                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                  backgroundColor: "#C72030",
-                },
-              }}
-            />
-            <span className="text-sm font-medium">
-              {item.show_on_home ? "Yes" : "No"}
-            </span>
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.show_on_home ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.show_on_home ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       case "active":
         return (
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={item.active || false}
-              onChange={() => handleToggle(item.id, item.active)}
-              size="small"
-              sx={{
-                "& .MuiSwitch-switchBase.Mui-checked": {
-                  color: "#22c55e",
-                },
-                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                  backgroundColor: "#22c55e",
-                },
-              }}
-            />
-            <span className="text-sm font-medium">
-              {item.active ? "Active" : "Inactive"}
-            </span>
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       default:

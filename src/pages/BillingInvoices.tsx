@@ -4,13 +4,8 @@ import { Eye, Calendar, FileText, TrendingUp, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Toaster } from '@/components/ui/sonner';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import axios from 'axios';
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -120,19 +115,29 @@ export default function BillingInvoices() {
       {/* Header with Month Selector */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-[#1A1A1A]">BILLING PERIOD</h1>
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-[180px] bg-white border-gray-300">
-            <Calendar className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Select month" />
-          </SelectTrigger>
-          <SelectContent>
+        <FormControl sx={{ width: 180 }} variant="outlined">
+          <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select month</InputLabel>
+          <MuiSelect
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            displayEmpty
+            label="Select month"
+            sx={fieldStyles}
+            MenuProps={menuProps}
+            renderValue={(value: string) => (
+              <span className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                {value || "Select month"}
+              </span>
+            )}
+          >
             {months.map((month) => (
-              <SelectItem key={month} value={month}>
+              <MenuItem key={month} value={month}>
                 {month}
-              </SelectItem>
+              </MenuItem>
             ))}
-          </SelectContent>
-        </Select>
+          </MuiSelect>
+        </FormControl>
       </div>
 
       {/* Stats Cards */}

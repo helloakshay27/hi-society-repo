@@ -625,7 +625,7 @@ export default function OffersList() {
               className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 !border-[#da7756] [&_svg]:!text-[#da7756]"
             >
               <Calendar className="w-4 h-4" />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium !text-[#da7756]">
                 2025-01-01 - 2025-12-31
               </span>
               <Filter className="w-4 h-4" />
