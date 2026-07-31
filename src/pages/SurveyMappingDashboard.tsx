@@ -665,7 +665,7 @@ export const SurveyMappingDashboard = () => {
       return null;
     }
     const items = [];
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
     const disabled = loading || searchLoading;
 
     if (showEllipsis) {

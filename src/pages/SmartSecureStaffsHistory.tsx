@@ -394,7 +394,7 @@ const SmartSecureStaffsHistory: React.FC = () => {
   const renderPaginationItems = () => {
     const items = [];
 
-    if (totalPages <= 7) {
+    if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
         items.push(
           <PaginationItem key={i}>

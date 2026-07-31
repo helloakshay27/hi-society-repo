@@ -288,7 +288,7 @@ const BMSQuarantineTracker: React.FC = () => {
   // Render pagination items
   const renderPaginationItems = () => {
     const items = [];
-    const maxVisiblePages = 7;
+    const maxVisiblePages = 5;
 
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {

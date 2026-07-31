@@ -318,7 +318,7 @@ export default function OffersList() {
   const renderPaginationItems = () => {
     if (!computedTotalPages || computedTotalPages <= 0) return null;
     const items = [];
-    const showEllipsis = computedTotalPages > 7;
+    const showEllipsis = computedTotalPages > 5;
 
     if (showEllipsis) {
       items.push(

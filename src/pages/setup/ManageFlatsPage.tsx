@@ -502,7 +502,7 @@ export const ManageFlatsPage = () => {
     const items = [];
     const totalPages = pagination.total_pages;
     const currentPage = pagination.current_page;
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
 
     if (showEllipsis) {
       items.push(
@@ -685,7 +685,7 @@ export const ManageFlatsPage = () => {
           />
         </div>
 
-        {pagination.total_pages > 1 && (
+        {pagination.total_count > 0 && (
           <div className="flex justify-center mt-6">
             <Pagination>
               <PaginationContent>
@@ -717,11 +717,11 @@ export const ManageFlatsPage = () => {
           </div>
         )}
 
-        {pagination.total_count > 0 && (
+        {/* {pagination.total_count > 0 && (
           <div className="text-center text-sm text-gray-500 mt-2">
             Showing {Math.min((pagination.current_page - 1) * pagination.per_page + 1, pagination.total_count)}–{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
           </div>
-        )}
+        )} */}
 
         {/* Add Flat Dialog */}
         <AddFlatDialog

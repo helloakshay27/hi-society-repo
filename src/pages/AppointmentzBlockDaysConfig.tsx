@@ -108,7 +108,7 @@ const AppointmentzBlockDaysConfig = () => {
   const renderPaginationItems = () => {
     if (!totalPages || totalPages <= 0) return null;
     const items = [];
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
 
     if (showEllipsis) {
       items.push(

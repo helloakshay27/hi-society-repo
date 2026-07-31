@@ -220,7 +220,7 @@ export const StaffsDashboard = () => {
     const totalPages = pagination.total_pages;
     const currentPageState = currentPage; // Use local state instead of API response
 
-    if (totalPages <= 10) {
+    if (totalPages <= 5) {
       // Show all pages if total is 10 or less
       for (let i = 1; i <= totalPages; i++) {
         items.push(

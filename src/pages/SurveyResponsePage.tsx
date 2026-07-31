@@ -1433,7 +1433,7 @@ export const SurveyResponsePage = () => {
       return null;
     }
     const items = [];
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
     const disabled = isLoading || searchLoading;
 
     if (showEllipsis) {
