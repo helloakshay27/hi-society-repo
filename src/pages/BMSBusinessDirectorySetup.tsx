@@ -26,6 +26,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const fieldStyles = {
   height: '45px',
@@ -66,6 +75,128 @@ const selectMenuProps = {
   disableAutoFocus: true,
   disableEnforceFocus: true,
 };
+const PAGE_SIZE = 10;
+
+const buildPaginationItems = (
+  currentPage: number,
+  totalPages: number,
+  onPageChange: (page: number) => void
+) => {
+  if (!totalPages || totalPages <= 0) {
+    return null;
+  }
+  const items = [];
+  const showEllipsis = totalPages > 7;
+
+  if (showEllipsis) {
+    items.push(
+      <PaginationItem key={1} className="cursor-pointer">
+        <PaginationLink onClick={() => onPageChange(1)} isActive={currentPage === 1}>
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    if (currentPage > 4) {
+      items.push(
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage > 3 && currentPage < totalPages - 2) {
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage < totalPages - 3) {
+      items.push(
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+        if (!items.find((item) => item.key === i.toString())) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+    }
+
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key={totalPages} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(totalPages)} isActive={currentPage === totalPages}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  } else {
+    for (let i = 1; i <= totalPages; i++) {
+      items.push(
+        <PaginationItem key={i} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  }
+
+  return items;
+};
+
+const PaginationBar: React.FC<{
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}> = ({ currentPage, totalPages, onPageChange }) => (
+  <div className="mt-4 flex justify-center">
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            onClick={() => onPageChange(currentPage - 1)}
+            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+          />
+        </PaginationItem>
+        {buildPaginationItems(currentPage, totalPages, onPageChange)}
+        <PaginationItem>
+          <PaginationNext
+            onClick={() => onPageChange(currentPage + 1)}
+            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  </div>
+);
+
 interface Category {
   id: string;
   name: string;
@@ -99,6 +230,8 @@ const BMSBusinessDirectorySetup: React.FC = () => {
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [categoryPage, setCategoryPage] = useState(1)
+  const [subCategoryPage, setSubCategoryPage] = useState(1)
 
   // Category Add/Edit/Delete State
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -431,13 +564,17 @@ const BMSBusinessDirectorySetup: React.FC = () => {
           </div>
 
           <EnhancedTable
-            data={categories}
+            data={categories.slice((categoryPage - 1) * PAGE_SIZE, categoryPage * PAGE_SIZE)}
             columns={categoryColumns}
             renderCell={renderCategoryCell}
             loading={loading}
             emptyMessage="No categories found"
-            pagination={true}
-            pageSize={10}
+            pagination={false}
+          />
+          <PaginationBar
+            currentPage={categoryPage}
+            totalPages={Math.ceil(categories.length / PAGE_SIZE) || 1}
+            onPageChange={setCategoryPage}
           />
         </TabsContent>
 
@@ -454,13 +591,17 @@ const BMSBusinessDirectorySetup: React.FC = () => {
           </div>
 
           <EnhancedTable
-            data={[...subCategories].reverse()}
+            data={[...subCategories].reverse().slice((subCategoryPage - 1) * PAGE_SIZE, subCategoryPage * PAGE_SIZE)}
             columns={subCategoryColumns}
             renderCell={renderSubCategoryCell}
             loading={loading}
             emptyMessage="No sub categories found"
-            pagination={true}
-            pageSize={10}
+            pagination={false}
+          />
+          <PaginationBar
+            currentPage={subCategoryPage}
+            totalPages={Math.ceil(subCategories.length / PAGE_SIZE) || 1}
+            onPageChange={setSubCategoryPage}
           />
         </TabsContent>
       </Tabs>

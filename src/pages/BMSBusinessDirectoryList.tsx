@@ -6,6 +6,15 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
 import { BMSBusinessDirectoryFilterModal } from "@/components/BMSBusinessDirectoryFilterModal";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface BusinessDirectory {
   id: string;
@@ -17,6 +26,102 @@ interface BusinessDirectory {
   key_offering: string;
   active: boolean;
 }
+
+const PAGE_SIZE = 10;
+
+const renderPaginationItems = (
+  currentPage: number,
+  totalPages: number,
+  onPageChange: (page: number) => void
+) => {
+  if (!totalPages || totalPages <= 0) {
+    return null;
+  }
+  const items = [];
+  const showEllipsis = totalPages > 7;
+
+  if (showEllipsis) {
+    items.push(
+      <PaginationItem key={1} className="cursor-pointer">
+        <PaginationLink onClick={() => onPageChange(1)} isActive={currentPage === 1}>
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    if (currentPage > 4) {
+      items.push(
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage > 3 && currentPage < totalPages - 2) {
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage < totalPages - 3) {
+      items.push(
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+        if (!items.find((item) => item.key === i.toString())) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+    }
+
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key={totalPages} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(totalPages)} isActive={currentPage === totalPages}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  } else {
+    for (let i = 1; i <= totalPages; i++) {
+      items.push(
+        <PaginationItem key={i} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  }
+
+  return items;
+};
 
 const columns = [
   { key: "company_name", label: "Company Name", sortable: true },
@@ -41,6 +146,35 @@ const BMSBusinessDirectoryList: React.FC = () => {
     subCategory: '',
     status: '',
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const filteredDirectories = React.useMemo(() => {
+    if (!searchTerm.trim()) return directories;
+    const query = searchTerm.toLowerCase();
+    return directories.filter((item) =>
+      Object.values(item).some((value) =>
+        String(value).toLowerCase().includes(query)
+      )
+    );
+  }, [directories, searchTerm]);
+
+  const totalPages = Math.ceil(filteredDirectories.length / PAGE_SIZE) || 1;
+  const paginatedDirectories = filteredDirectories.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const fetchDirectories = async (filters = appliedFilters) => {
     try {
@@ -172,19 +306,40 @@ const BMSBusinessDirectoryList: React.FC = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <EnhancedTable
-        data={directories}
+        data={paginatedDirectories}
         columns={columns}
         renderActions={renderActions}
         renderCell={renderCell}
         searchPlaceholder="Search"
         enableSearch={true}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
         onFilterClick={handleFilters}
         leftActions={renderLeftActions}
         loading={loading}
         emptyMessage="No businesses found"
-        pagination={true}
-        pageSize={10}
+        pagination={false}
       />
+
+      <div className="mt-4 flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems(currentPage, totalPages, handlePageChange)}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
 
       <BMSBusinessDirectoryFilterModal
         open={isFilterModalOpen}
