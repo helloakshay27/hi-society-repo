@@ -2,13 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { X } from 'lucide-react';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { StaffFilters } from '@/services/societyStaffsAPI';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface FilterOption {
   label: string;
@@ -38,8 +37,6 @@ export const StaffsFilterModal = ({ isOpen, onClose, onApplyFilters }: StaffsFil
   const [flats, setFlats] = useState<FilterOption[]>([]);
   const [statuses, setStatuses] = useState<FilterOption[]>([]);
   const [loadingFlats, setLoadingFlats] = useState(false);
-
-  const commonFieldStyles = "h-10 rounded-md border border-[hsl(var(--analytics-border))] bg-white";
 
   useEffect(() => {
     if (isOpen) {
@@ -119,7 +116,7 @@ export const StaffsFilterModal = ({ isOpen, onClose, onApplyFilters }: StaffsFil
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white [&>button]:hidden">
         <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
           <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">FILTER BY</DialogTitle>
@@ -131,128 +128,148 @@ export const StaffsFilterModal = ({ isOpen, onClose, onApplyFilters }: StaffsFil
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             {/* Name / Mobile / ID */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Name / Mobile / ID</Label>
-              <Input
-                placeholder="Search by name, mobile or ID"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={commonFieldStyles}
-              />
-            </div>
+            <TextField
+              label="Name / Mobile / ID"
+              placeholder="Search by name, mobile or ID"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
 
             {/* Company Name */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Company Name</Label>
-              <Input
-                placeholder="Enter company name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className={commonFieldStyles}
-              />
-            </div>
+            <TextField
+              label="Company Name"
+              placeholder="Enter company name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
 
             {/* Work Type */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Work Type</Label>
-              <Select value={workType} onValueChange={setWorkType}>
-                <SelectTrigger className={commonFieldStyles}>
-                  <SelectValue placeholder="Select Work Type" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                  {workTypes.map((wt) => (
-                    <SelectItem key={String(wt.value)} value={String(wt.value)}>
-                      {wt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Work Type</InputLabel>
+              <MuiSelect
+                value={workType}
+                onChange={(e) => setWorkType(e.target.value)}
+                displayEmpty
+                label="Work Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Work Type</em></MenuItem>
+                {workTypes.map((wt) => (
+                  <MenuItem key={String(wt.value)} value={String(wt.value)}>
+                    {wt.label}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Staff Type */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Staff Type</Label>
-              <Select value={staffType} onValueChange={setStaffType}>
-                <SelectTrigger className={commonFieldStyles}>
-                  <SelectValue placeholder="Select Staff Type" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                  {staffTypes.map((st) => (
-                    <SelectItem key={String(st.value)} value={String(st.value)}>
-                      {st.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Staff Type</InputLabel>
+              <MuiSelect
+                value={staffType}
+                onChange={(e) => setStaffType(e.target.value)}
+                displayEmpty
+                label="Staff Type"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Staff Type</em></MenuItem>
+                {staffTypes.map((st) => (
+                  <MenuItem key={String(st.value)} value={String(st.value)}>
+                    {st.label}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Function */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Function</Label>
-              <Select value={functionId} onValueChange={setFunctionId}>
-                <SelectTrigger className={commonFieldStyles}>
-                  <SelectValue placeholder="Select Function" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                  {functions.map((fn) => (
-                    <SelectItem key={String(fn.value)} value={String(fn.value)}>
-                      {fn.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Function</InputLabel>
+              <MuiSelect
+                value={functionId}
+                onChange={(e) => setFunctionId(e.target.value)}
+                displayEmpty
+                label="Function"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Function</em></MenuItem>
+                {functions.map((fn) => (
+                  <MenuItem key={String(fn.value)} value={String(fn.value)}>
+                    {fn.label}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Status */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Select Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className={commonFieldStyles}>
-                  <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                  {statuses.map((s, idx) => (
-                    <SelectItem key={idx} value={s.value === '' ? '__empty__' : String(s.value)}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Status</InputLabel>
+              <MuiSelect
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                displayEmpty
+                label="Select Status"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Status</em></MenuItem>
+                {statuses.map((s, idx) => (
+                  <MenuItem key={idx} value={s.value === '' ? '__empty__' : String(s.value)}>
+                    {s.label}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Select Tower */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Select Tower</Label>
-              <Select value={tower} onValueChange={(val) => { setTower(val); setFlat(''); }}>
-                <SelectTrigger className={commonFieldStyles}>
-                  <SelectValue placeholder="Select Tower" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                  {towers.map((t) => (
-                    <SelectItem key={String(t.value)} value={String(t.value)}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Tower</InputLabel>
+              <MuiSelect
+                value={tower}
+                onChange={(e) => { setTower(e.target.value); setFlat(''); }}
+                displayEmpty
+                label="Select Tower"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Tower</em></MenuItem>
+                {towers.map((t) => (
+                  <MenuItem key={String(t.value)} value={String(t.value)}>
+                    {t.label}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Select Flat */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Select Flat</Label>
-              <Select value={flat} onValueChange={setFlat} disabled={!tower || loadingFlats}>
-                <SelectTrigger className={commonFieldStyles}>
-                  <SelectValue placeholder={!tower ? 'Select tower first' : loadingFlats ? 'Loading...' : flats.length === 0 ? 'No flats available' : 'Select Flat'} />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                  {flats.map((f) => (
-                    <SelectItem key={String(f.value)} value={String(f.value)}>
-                      {f.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined" disabled={!tower || loadingFlats}>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Flat</InputLabel>
+              <MuiSelect
+                value={flat}
+                onChange={(e) => setFlat(e.target.value)}
+                displayEmpty
+                label="Select Flat"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>{!tower ? 'Select tower first' : loadingFlats ? 'Loading...' : flats.length === 0 ? 'No flats available' : 'Select Flat'}</em></MenuItem>
+                {flats.map((f) => (
+                  <MenuItem key={String(f.value)} value={String(f.value)}>
+                    {f.label}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
           </div>
         </div>
 

@@ -11,15 +11,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import {
   fetchSupportStaffSetup,
   fetchDeliveryServiceProviders,
@@ -533,7 +527,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
       </Tabs>
 
       {/* Add Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      <Dialog open={isAddModalOpen} modal={false} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-[600px] bg-white p-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="p-4 border-b bg-white relative">
             <DialogTitle className="text-center font-bold text-lg">
@@ -552,68 +546,63 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
           <div className="p-6 bg-white space-y-4">
             {activeTab === "society-staff" ? (
               <>
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                    Category Name
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    placeholder="Enter Category Name"
-                    className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
-                  />
-                </div>
+                <TextField
+                  label="Category Name"
+                  placeholder="Enter Category Name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 <div className="space-y-1">
                   <label className="text-xs text-gray-500 px-1">
                     Estimated Time
                   </label>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="relative">
-                      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                        Days
-                      </label>
-                      <Input
-                        type="number"
-                        value={formData.days}
-                        onChange={(e) =>
-                          setFormData({ ...formData, days: e.target.value })
-                        }
-                        placeholder="Days"
-                        className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
-                      />
-                    </div>
-                    <div className="relative">
-                      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                        Hrs
-                      </label>
-                      <Input
-                        type="number"
-                        value={formData.hours}
-                        onChange={(e) =>
-                          setFormData({ ...formData, hours: e.target.value })
-                        }
-                        placeholder="Hrs"
-                        className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
-                      />
-                    </div>
-                    <div className="relative">
-                      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                        Min
-                      </label>
-                      <Input
-                        type="number"
-                        value={formData.minutes}
-                        onChange={(e) =>
-                          setFormData({ ...formData, minutes: e.target.value })
-                        }
-                        placeholder="Min"
-                        className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
-                      />
-                    </div>
+                    <TextField
+                      label="Days"
+                      type="number"
+                      placeholder="Days"
+                      value={formData.days}
+                      onChange={(e) =>
+                        setFormData({ ...formData, days: e.target.value })
+                      }
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
+                    />
+                    <TextField
+                      label="Hrs"
+                      type="number"
+                      placeholder="Hrs"
+                      value={formData.hours}
+                      onChange={(e) =>
+                        setFormData({ ...formData, hours: e.target.value })
+                      }
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
+                    />
+                    <TextField
+                      label="Min"
+                      type="number"
+                      placeholder="Min"
+                      value={formData.minutes}
+                      onChange={(e) =>
+                        setFormData({ ...formData, minutes: e.target.value })
+                      }
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
+                    />
                   </div>
                 </div>
 
@@ -627,43 +616,37 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                      Name
-                    </label>
-                    <Input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      placeholder="Enter Name"
-                      className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
-                    />
-                  </div>
+                  <TextField
+                    label="Name"
+                    placeholder="Enter Name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
 
-                  <div className="relative">
-                    <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                      Type
-                    </label>
-                    <Select
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, type: val })
-                      }
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Type</InputLabel>
+                    <MuiSelect
                       value={formData.type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, type: e.target.value })
+                      }
+                      displayEmpty
+                      label="Type"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
                     >
-                      <SelectTrigger className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800">
-                        <SelectValue placeholder="Select Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="support_staff">
-                          Support Staff
-                        </SelectItem>
-                        <SelectItem value="cab">Cab</SelectItem>
-                        <SelectItem value="delivery">Delivery</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <MenuItem value=""><em>Select Type</em></MenuItem>
+                      <MenuItem value="support_staff">Support Staff</MenuItem>
+                      <MenuItem value="cab">Cab</MenuItem>
+                      <MenuItem value="delivery">Delivery</MenuItem>
+                    </MuiSelect>
+                  </FormControl>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -705,9 +688,9 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
       </Dialog>
 
       {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[600px] bg-white p-0 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="p-4 border-b bg-[#F6F4EE] relative">
+          <DialogHeader className="p-4 border-b relative">
             <DialogTitle className="text-center font-bold text-lg">
               {activeTab === "society-staff"
                 ? "Edit Staff Category"
@@ -727,52 +710,62 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
 
           {activeTab === "society-staff" ? (
             <div className="p-6 bg-white space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Name
-                </label>
-                <Input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Enter Name"
-                  className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
-                />
-              </div>
+              <TextField
+                label="Name"
+                placeholder="Enter Name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
                   Estimated Time
                 </label>
                 <div className="flex gap-4">
-                  <Input
+                  <TextField
+                    label="Days"
                     type="number"
+                    placeholder="Days"
                     value={formData.days}
                     onChange={(e) =>
                       setFormData({ ...formData, days: e.target.value })
                     }
-                    placeholder="Days"
-                    className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 w-full"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
-                  <Input
+                  <TextField
+                    label="Hrs"
                     type="number"
+                    placeholder="Hrs"
                     value={formData.hours}
                     onChange={(e) =>
                       setFormData({ ...formData, hours: e.target.value })
                     }
-                    placeholder="Hrs"
-                    className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 w-full"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
-                  <Input
+                  <TextField
+                    label="Min"
                     type="number"
+                    placeholder="Min"
                     value={formData.minutes}
                     onChange={(e) =>
                       setFormData({ ...formData, minutes: e.target.value })
                     }
-                    placeholder="Min"
-                    className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 w-full"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
                 </div>
               </div>
@@ -800,43 +793,37 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
           ) : (
             <div className="p-6 bg-white space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Name <span className="text-[#C72030]">*</span>
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    placeholder="Enter name"
-                    className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
-                  />
-                </div>
+                <TextField
+                  label={<>Name <span style={{ color: '#C72030' }}>*</span></>}
+                  placeholder="Enter name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Type
-                  </label>
-                  <Select
-                    onValueChange={(val) =>
-                      setFormData({ ...formData, type: val })
-                    }
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Type</InputLabel>
+                  <MuiSelect
                     value={formData.type}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.target.value })
+                    }
+                    displayEmpty
+                    label="Type"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
-                      <SelectValue placeholder="Select Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="support_staff">
-                        Support Staff
-                      </SelectItem>
-                      <SelectItem value="cab">Cab</SelectItem>
-                      <SelectItem value="delivery">Delivery</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <MenuItem value=""><em>Select Type</em></MenuItem>
+                    <MenuItem value="support_staff">Support Staff</MenuItem>
+                    <MenuItem value="cab">Cab</MenuItem>
+                    <MenuItem value="delivery">Delivery</MenuItem>
+                  </MuiSelect>
+                </FormControl>
               </div>
 
               <div className="flex items-center space-x-2">

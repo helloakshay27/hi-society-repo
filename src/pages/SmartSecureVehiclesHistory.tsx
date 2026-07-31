@@ -13,13 +13,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -428,7 +421,7 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
     setLocal((prev) => ({ ...prev, [key]: val }));
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} modal={false} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Filter Vehicle History</DialogTitle>
@@ -441,55 +434,58 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
         ) : (
         <div className="grid gap-4 py-2">
           {/* Building */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Building</label>
-            <Select
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Building</InputLabel>
+            <MuiSelect
               value={local.building || "__all__"}
-              onValueChange={(v) => set("building", v === "__all__" ? "" : v)}
+              onChange={(e) => set("building", e.target.value === "__all__" ? "" : e.target.value)}
+              displayEmpty
+              label="Building"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger><SelectValue placeholder="All Buildings" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.buildings?.map((b) => (
-                  <SelectItem key={b.value} value={String(b.value)}>{b.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <MenuItem value="__all__">All</MenuItem>
+              {options?.buildings?.map((b) => (
+                <MenuItem key={b.value} value={String(b.value)}>{b.label}</MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Tower */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Tower</label>
-            <Select
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower</InputLabel>
+            <MuiSelect
               value={local.tower || "__all__"}
-              onValueChange={(v) => set("tower", v === "__all__" ? "" : v)}
+              onChange={(e) => set("tower", e.target.value === "__all__" ? "" : e.target.value)}
+              displayEmpty
+              label="Tower"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger><SelectValue placeholder="All Towers" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.towers?.map((t) => (
-                  <SelectItem key={t.value} value={String(t.value)}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <MenuItem value="__all__">All</MenuItem>
+              {options?.towers?.map((t) => (
+                <MenuItem key={t.value} value={String(t.value)}>{t.label}</MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Flat */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Flat</label>
-            <Select
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat</InputLabel>
+            <MuiSelect
               value={local.flat || "__all__"}
-              onValueChange={(v) => set("flat", v === "__all__" ? "" : v)}
+              onChange={(e) => set("flat", e.target.value === "__all__" ? "" : e.target.value)}
+              displayEmpty
+              label="Flat"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger><SelectValue placeholder="All Flats" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.flats?.map((f) => (
-                  <SelectItem key={f.value} value={String(f.value)}>{f.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <MenuItem value="__all__">All</MenuItem>
+              {options?.flats?.map((f) => (
+                <MenuItem key={f.value} value={String(f.value)}>{f.label}</MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Date Range */}
           <div className="grid grid-cols-2 gap-3">

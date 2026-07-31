@@ -11,22 +11,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import {
   fetchVisitorSetupData,
   fetchApprovedSocieties,
@@ -82,62 +69,25 @@ const SearchableDropdown: React.FC<{
   options: DropdownOption[];
   placeholder?: string;
 }> = ({ label, value, onChange, options, placeholder }) => {
-  const [open, setOpen] = useState(false);
-  const selected = options.find((o) => o.value === value);
-
   return (
-    <div className="relative">
-      <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-        {label}
-      </label>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className={`flex h-12 w-full items-center justify-between rounded-md border bg-white px-3 text-sm font-medium italic text-gray-800 transition-colors focus:outline-none ${
-              open ? "border-[#C72030]" : "border-gray-300"
-            }`}
-          >
-            <span className={selected ? "text-gray-800" : "text-gray-400"}>
-              {selected ? selected.label : placeholder || "Select"}
-            </span>
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] p-0 shadow-lg border-gray-200 rounded-lg bg-white z-[99999]"
-          align="start"
-          sideOffset={8}
-        >
-          <Command className="w-full bg-white overflow-hidden">
-            <CommandInput
-              placeholder="Type to search..."
-              className="h-10 text-sm"
-            />
-            <CommandList className="max-h-[260px] overflow-y-auto w-full">
-              <CommandEmpty className="py-3 text-center text-sm text-gray-500">
-                No results found.
-              </CommandEmpty>
-              <CommandGroup className="w-full p-1.5">
-                {options.map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    onSelect={() => {
-                      onChange(option.value);
-                      setOpen(false);
-                    }}
-                    className="cursor-pointer rounded-md px-2.5 py-2 text-sm italic aria-selected:bg-[#f6e8e4] aria-selected:text-[#C72030] w-full"
-                  >
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </div>
+    <FormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>{label}</InputLabel>
+      <MuiSelect
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        displayEmpty
+        label={label}
+        sx={fieldStyles}
+        MenuProps={menuProps}
+      >
+        <MenuItem value="" disabled><em>{placeholder || "Select"}</em></MenuItem>
+        {options.map((option) => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+    </FormControl>
   );
 };
 
@@ -548,7 +498,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
       </Tabs>
 
       {/* Add Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      <Dialog open={isAddModalOpen} modal={false} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white p-0">
           <DialogHeader className="p-4 border-b bg-white relative">
             <DialogTitle className="text-center font-bold text-lg">
@@ -574,21 +524,18 @@ const SmartSecureSetupGeneral: React.FC = () => {
               }))}
             />
 
-            <div className="relative">
-              <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                {getAddLabel()}
-              </label>
-              <Input
-                type="text"
-                name="purpose"
-                value={formData.purpose}
-                onChange={(e) =>
-                  setFormData({ ...formData, purpose: e.target.value })
-                }
-                placeholder={getAddLabel().toLowerCase()}
-                className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
-              />
-            </div>
+            <TextField
+              label={getAddLabel()}
+              placeholder={getAddLabel().toLowerCase()}
+              value={formData.purpose}
+              onChange={(e) =>
+                setFormData({ ...formData, purpose: e.target.value })
+              }
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
 
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -637,7 +584,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
       </Dialog>
 
       {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white p-0">
           <DialogHeader className="p-4 border-b bg-white relative">
             <DialogTitle className="text-center font-bold text-lg">
@@ -652,25 +599,22 @@ const SmartSecureSetupGeneral: React.FC = () => {
           </DialogHeader>
 
           <div className="p-6 bg-white space-y-5">
-            <div className="relative">
-              <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
-                {activeTab === "staff-type" ? "Staff Type" : "Purpose"}
-              </label>
-              <Input
-                type="text"
-                name="purpose"
-                value={editFormData.purpose}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, purpose: e.target.value })
-                }
-                placeholder={
-                  activeTab === "staff-type"
-                    ? "Enter staff type"
-                    : "Enter purpose"
-                }
-                className="bg-white border-gray-300 rounded-md focus:border-[#C72030] focus:ring-0 h-12 font-medium italic text-gray-800"
-              />
-            </div>
+            <TextField
+              label={activeTab === "staff-type" ? "Staff Type" : "Purpose"}
+              placeholder={
+                activeTab === "staff-type"
+                  ? "Enter staff type"
+                  : "Enter purpose"
+              }
+              value={editFormData.purpose}
+              onChange={(e) =>
+                setEditFormData({ ...editFormData, purpose: e.target.value })
+              }
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
 
             <div className="flex items-center space-x-2">
               <Checkbox

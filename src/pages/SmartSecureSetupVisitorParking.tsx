@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, X, RotateCcw } from "lucide-react";
+import { Plus, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -11,15 +11,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
@@ -78,9 +71,6 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
 }) => {
   const [local, setLocal] = useState<ActiveFilters>(emptyFilters);
 
-  const fieldCls =
-    "h-10 w-full rounded border border-gray-300 bg-white text-sm focus:ring-0 focus:border-gray-400";
-
   const handleApply = () => {
     onApply(local);
     onClose();
@@ -93,7 +83,7 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-lg bg-white rounded-xl shadow-xl p-0 overflow-hidden">
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 border-b border-gray-100">
           <DialogTitle className="text-base font-semibold text-gray-900 tracking-wide uppercase">
@@ -111,84 +101,64 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
 
         <div className="px-6 py-5 space-y-5">
           {/* Vehicle Type */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">Vehicle Type</Label>
-            <Select
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Vehicle Type</InputLabel>
+            <MuiSelect
               value={local.vehicle_type}
-              onValueChange={(v) => setLocal((p) => ({ ...p, vehicle_type: v }))}
+              onChange={(e) => setLocal((p) => ({ ...p, vehicle_type: e.target.value }))}
+              displayEmpty
+              label="Vehicle Type"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger className={fieldCls}>
-                <SelectValue placeholder="Select Vehicle Type" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {filterOptions?.vehicle_types.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <MenuItem value=""><em>Select Vehicle Type</em></MenuItem>
+              {filterOptions?.vehicle_types.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Parking Status */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">Parking Status</Label>
-            <Select
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Parking Status</InputLabel>
+            <MuiSelect
               value={local.parking_status}
-              onValueChange={(v) => setLocal((p) => ({ ...p, parking_status: v }))}
+              onChange={(e) => setLocal((p) => ({ ...p, parking_status: e.target.value }))}
+              displayEmpty
+              label="Parking Status"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger className={fieldCls}>
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {filterOptions?.parking_statuses.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <MenuItem value=""><em>Select Status</em></MenuItem>
+              {filterOptions?.parking_statuses.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
           {/* Active State */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">Active State</Label>
-            <Select
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Active State</InputLabel>
+            <MuiSelect
               value={local.active}
-              onValueChange={(v) => setLocal((p) => ({ ...p, active: v }))}
+              onChange={(e) => setLocal((p) => ({ ...p, active: e.target.value }))}
+              displayEmpty
+              label="Active State"
+              sx={fieldStyles}
+              MenuProps={menuProps}
             >
-              <SelectTrigger className={fieldCls}>
-                <SelectValue placeholder="Select State" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {filterOptions?.active_states.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Created By */}
-          {/* <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-gray-700">Created By</Label>
-            <Select
-              value={local.created_by_id}
-              onValueChange={(v) => setLocal((p) => ({ ...p, created_by_id: v }))}
-            >
-              <SelectTrigger className={fieldCls}>
-                <SelectValue placeholder="Select User" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {filterOptions?.created_by_users.map((u) => (
-                  <SelectItem key={u.id} value={String(u.id)}>
-                    {u.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div> */}
+              <MenuItem value=""><em>Select State</em></MenuItem>
+              {filterOptions?.active_states.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
         </div>
 
         <DialogFooter className="px-6 py-4 border-t border-gray-100 flex justify-between gap-3">
@@ -197,7 +167,6 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
             onClick={handleReset}
             className="flex items-center gap-1.5 text-gray-600 border-gray-300 hover:bg-gray-50"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
             Reset
           </Button>
           <Button
@@ -447,50 +416,42 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
   // ── Slot form fields (shared by add/edit) ──────────────────────────────────
   const renderSlotFormFields = () => (
     <div className="p-8 grid grid-cols-2 gap-6 bg-white">
-      <div className="space-y-2">
-        <div className="relative">
-          <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-            Slot Number <span className="text-[#C72030]">*</span>
-          </label>
-          <Input
-            type="text"
-            value={formData.visitor_slot_number}
-            onChange={(e) =>
-              setFormData({ ...formData, visitor_slot_number: e.target.value })
-            }
-            placeholder="Enter slot number"
-            className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
-          />
-        </div>
-      </div>
+      <TextField
+        label={<>Slot Number <span style={{ color: '#C72030' }}>*</span></>}
+        placeholder="Enter slot number"
+        value={formData.visitor_slot_number}
+        onChange={(e) =>
+          setFormData({ ...formData, visitor_slot_number: e.target.value })
+        }
+        fullWidth
+        variant="outlined"
+        InputLabelProps={{ shrink: true }}
+        InputProps={{ sx: fieldStyles }}
+      />
 
-      <div className="space-y-2">
-        <div className="relative">
-          <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-            Vehicle Type <span className="text-[#C72030]">*</span>
-          </label>
-          <Select
-            value={formData.vehicle_type}
-            onValueChange={(val) => setFormData({ ...formData, vehicle_type: val })}
-          >
-            <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions?.vehicle_types.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              )) ?? (
-                <>
-                  <SelectItem value="2 Wheeler">2 Wheeler</SelectItem>
-                  <SelectItem value="4 Wheeler">4 Wheeler</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <FormControl fullWidth variant="outlined">
+        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Vehicle Type <span style={{ color: '#C72030' }}>*</span></InputLabel>
+        <MuiSelect
+          value={formData.vehicle_type}
+          onChange={(e) => setFormData({ ...formData, vehicle_type: e.target.value })}
+          displayEmpty
+          label="Vehicle Type *"
+          sx={fieldStyles}
+          MenuProps={menuProps}
+        >
+          <MenuItem value="" disabled><em>Select type</em></MenuItem>
+          {filterOptions?.vehicle_types.map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          )) ?? (
+            <>
+              <MenuItem value="2 Wheeler">2 Wheeler</MenuItem>
+              <MenuItem value="4 Wheeler">4 Wheeler</MenuItem>
+            </>
+          )}
+        </MuiSelect>
+      </FormControl>
     </div>
   );
 
@@ -540,12 +501,13 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
       {/* Add Modal */}
       <Dialog
         open={isAddModalOpen}
+        modal={false}
         onOpenChange={(open) => {
           if (!open) setIsAddModalOpen(false);
         }}
       >
         <DialogContent className="sm:max-w-[500px] bg-white p-0">
-          <DialogHeader className="p-4 border-b bg-[#F6F4EE]">
+          <DialogHeader className="p-4 border-b">
             <DialogTitle className="text-center font-bold text-lg">
               Add Parking Slot
             </DialogTitle>
@@ -566,6 +528,7 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
       {/* Edit Modal */}
       <Dialog
         open={isEditModalOpen}
+        modal={false}
         onOpenChange={(open) => {
           if (!open) setIsEditModalOpen(false);
         }}
