@@ -38,7 +38,7 @@ export const ColumnVisibilityMenu: React.FC<ColumnVisibilityMenuProps> = ({
           variant="outline" 
           size="sm"
           title={triggerLabel ?? "Columns"}
-          className="h-8 flex items-center gap-2"
+          className="h-8 flex items-center gap-2 rounded-lg"
         >
           <Grid3x3 className="w-4 h-4" />
           {triggerLabel ? <span>{triggerLabel}</span> : null}

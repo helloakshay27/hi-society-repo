@@ -35,8 +35,7 @@ export const CloseOSRDialog = ({ isOpen, onClose, onConfirm }: CloseOSRDialogPro
           </AlertDialogAction>
           <AlertDialogCancel 
             onClick={onClose}
-            className="!bg-[#C72030] !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"           >
             Cancel
           </AlertDialogCancel>
         </AlertDialogFooter>

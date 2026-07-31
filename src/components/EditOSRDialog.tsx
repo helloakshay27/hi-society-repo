@@ -2,10 +2,9 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface EditOSRDialogProps {
   open: boolean;
@@ -29,7 +28,7 @@ export const EditOSRDialog = ({ open, onOpenChange, osrDetails, onSubmit }: Edit
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} modal={false} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="flex flex-row items-center justify-between pb-0">
           <DialogTitle className="text-lg font-semibold">Edit Details</DialogTitle>
@@ -40,53 +39,54 @@ export const EditOSRDialog = ({ open, onOpenChange, osrDetails, onSubmit }: Edit
             <X className="h-4 w-4" />
           </button>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="status" className="text-sm font-medium mb-2 block">
-              Status
-            </Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Work Pending">Work Pending</SelectItem>
-                <SelectItem value="Payment Pending">Payment Pending</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="Cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+            <MuiSelect
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              displayEmpty
+              label="Status"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value=""><em>Select Status</em></MenuItem>
+              <MenuItem value="Work Pending">Work Pending</MenuItem>
+              <MenuItem value="Payment Pending">Payment Pending</MenuItem>
+              <MenuItem value="Completed">Completed</MenuItem>
+              <MenuItem value="Cancelled">Cancelled</MenuItem>
+            </MuiSelect>
+          </FormControl>
 
-          <div>
-            <Label htmlFor="assignedTo" className="text-sm font-medium mb-2 block">
-              Assigned to
-            </Label>
-            <Select value={assignedTo} onValueChange={setAssignedTo}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Assignee" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Test Test">Test Test</SelectItem>
-                <SelectItem value="John Doe">John Doe</SelectItem>
-                <SelectItem value="Jane Smith">Jane Smith</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Assigned to</InputLabel>
+            <MuiSelect
+              value={assignedTo}
+              onChange={(e) => setAssignedTo(e.target.value)}
+              displayEmpty
+              label="Assigned to"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value=""><em>Select Assignee</em></MenuItem>
+              <MenuItem value="Test Test">Test Test</MenuItem>
+              <MenuItem value="John Doe">John Doe</MenuItem>
+              <MenuItem value="Jane Smith">Jane Smith</MenuItem>
+            </MuiSelect>
+          </FormControl>
 
-          <div>
-            <Label htmlFor="comment" className="text-sm font-medium mb-2 block">
-              Comment
-            </Label>
-            <Textarea
-              id="comment"
-              placeholder="Message"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full min-h-24"
-            />
-          </div>
+          <TextField
+            label="Comment"
+            placeholder="Message"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
         </div>
 
         <div className="flex justify-center pt-4">

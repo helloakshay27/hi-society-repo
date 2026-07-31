@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface OSRDashboardFilterModalProps {
   isOpen: boolean;
@@ -65,7 +65,7 @@ export const OSRDashboardFilterModal = ({ isOpen, onClose, onApply, onReset }: O
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">Filter</DialogTitle>
@@ -73,57 +73,66 @@ export const OSRDashboardFilterModal = ({ isOpen, onClose, onApply, onReset }: O
             Filter the OSR dashboard data by various criteria
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 p-4">
           <div className="flex items-end gap-4 flex-wrap">
-            <div className="min-w-[150px]">
-              <Label htmlFor="tower" className="text-sm font-medium mb-1 block">Select Tower</Label>
-              <Select onValueChange={(value) => handleFilterChange('tower', value)} value={filters.tower}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select Tower" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tower-a">Tower A</SelectItem>
-                  <SelectItem value="tower-b">Tower B</SelectItem>
-                  <SelectItem value="tower-c">Tower C</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl className="min-w-[150px]" variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Tower</InputLabel>
+              <MuiSelect
+                value={filters.tower}
+                onChange={(e) => handleFilterChange('tower', e.target.value)}
+                displayEmpty
+                label="Select Tower"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Tower</em></MenuItem>
+                <MenuItem value="tower-a">Tower A</MenuItem>
+                <MenuItem value="tower-b">Tower B</MenuItem>
+                <MenuItem value="tower-c">Tower C</MenuItem>
+              </MuiSelect>
+            </FormControl>
 
-            <div className="min-w-[150px]">
-              <Label htmlFor="flats" className="text-sm font-medium mb-1 block">Select Flats</Label>
-              <Select onValueChange={(value) => handleFilterChange('flats', value)} value={filters.flats}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select Flats" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="a-101">A-101</SelectItem>
-                  <SelectItem value="a-102">A-102</SelectItem>
-                  <SelectItem value="a-103">A-103</SelectItem>
-                  <SelectItem value="a-104">A-104</SelectItem>
-                  <SelectItem value="fm-office">FM - Office</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl className="min-w-[150px]" variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Flats</InputLabel>
+              <MuiSelect
+                value={filters.flats}
+                onChange={(e) => handleFilterChange('flats', e.target.value)}
+                displayEmpty
+                label="Select Flats"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Flats</em></MenuItem>
+                <MenuItem value="a-101">A-101</MenuItem>
+                <MenuItem value="a-102">A-102</MenuItem>
+                <MenuItem value="a-103">A-103</MenuItem>
+                <MenuItem value="a-104">A-104</MenuItem>
+                <MenuItem value="fm-office">FM - Office</MenuItem>
+              </MuiSelect>
+            </FormControl>
+
+            <FormControl className="min-w-[200px]" variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Category</InputLabel>
+              <MuiSelect
+                value={filters.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                displayEmpty
+                label="Select Category"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Category</em></MenuItem>
+                <MenuItem value="pest-control">Pest Control</MenuItem>
+                <MenuItem value="deep-cleaning">Deep Cleaning</MenuItem>
+                <MenuItem value="civil-mason">Civil & Mason Works</MenuItem>
+                <MenuItem value="invisible-grill">Invisible Grill</MenuItem>
+                <MenuItem value="mosquito-mesh">Mosquito Mesh Sta...</MenuItem>
+              </MuiSelect>
+            </FormControl>
 
             <div className="min-w-[200px]">
-              <Label htmlFor="category" className="text-sm font-medium mb-1 block">Select Category</Label>
-              <Select onValueChange={(value) => handleFilterChange('category', value)} value={filters.category}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Invisible Grill Starts from (per sq. ft.)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pest-control">Pest Control</SelectItem>
-                  <SelectItem value="deep-cleaning">Deep Cleaning</SelectItem>
-                  <SelectItem value="civil-mason">Civil & Mason Works</SelectItem>
-                  <SelectItem value="invisible-grill">Invisible Grill</SelectItem>
-                  <SelectItem value="mosquito-mesh">Mosquito Mesh Sta...</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="min-w-[200px]">
-              <Label className="text-sm font-medium mb-1 block">Created on</Label>
+              <label className="text-sm font-medium mb-1 block">Created on</label>
               <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -194,35 +203,41 @@ export const OSRDashboardFilterModal = ({ isOpen, onClose, onApply, onReset }: O
               </Popover>
             </div>
 
-            <div className="min-w-[150px]">
-              <Label htmlFor="status" className="text-sm font-medium mb-1 block">Select Status</Label>
-              <Select onValueChange={(value) => handleFilterChange('status', value)} value={filters.status}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="work-pending">Work Pending</SelectItem>
-                  <SelectItem value="payment-pending">Payment Pending</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl className="min-w-[150px]" variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Status</InputLabel>
+              <MuiSelect
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                displayEmpty
+                label="Select Status"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Status</em></MenuItem>
+                <MenuItem value="work-pending">Work Pending</MenuItem>
+                <MenuItem value="payment-pending">Payment Pending</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+              </MuiSelect>
+            </FormControl>
 
-            <div className="min-w-[150px]">
-              <Label htmlFor="rating" className="text-sm font-medium mb-1 block">Select Rating</Label>
-              <Select onValueChange={(value) => handleFilterChange('rating', value)} value={filters.rating}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select Rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 Star</SelectItem>
-                  <SelectItem value="2">2 Stars</SelectItem>
-                  <SelectItem value="3">3 Stars</SelectItem>
-                  <SelectItem value="4">4 Stars</SelectItem>
-                  <SelectItem value="5">5 Stars</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl className="min-w-[150px]" variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Rating</InputLabel>
+              <MuiSelect
+                value={filters.rating}
+                onChange={(e) => handleFilterChange('rating', e.target.value)}
+                displayEmpty
+                label="Select Rating"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Rating</em></MenuItem>
+                <MenuItem value="1">1 Star</MenuItem>
+                <MenuItem value="2">2 Stars</MenuItem>
+                <MenuItem value="3">3 Stars</MenuItem>
+                <MenuItem value="4">4 Stars</MenuItem>
+                <MenuItem value="5">5 Stars</MenuItem>
+              </MuiSelect>
+            </FormControl>
 
             <div className="flex gap-2 ml-auto">
               <Button 
