@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { EditRelatedToModal } from './modals/EditRelatedToModal';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
@@ -36,6 +37,9 @@ export const RelatedToTab: React.FC = () => {
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingRelatedTo, setEditingRelatedTo] = useState<RelatedToType | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch issue types from new API
   const fetchRelatedToItems = useCallback(async () => {
@@ -178,6 +182,90 @@ export const RelatedToTab: React.FC = () => {
     </div>
   );
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const filteredRelatedToItems = relatedToItems.filter((item) => {
+    if (!searchTerm) return true;
+    const query = searchTerm.toLowerCase();
+    return Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query));
+  });
+
+  const totalCount = filteredRelatedToItems.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRelatedToItems = filteredRelatedToItems.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   return (
     <div className="space-y-4">
       {/* Add Issue Type Dialog */}
@@ -229,12 +317,14 @@ export const RelatedToTab: React.FC = () => {
       {/* Main Table */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <EnhancedTable
-          data={relatedToItems}
+          data={paginatedRelatedToItems}
           columns={columns}
           renderCell={renderCell}
           renderActions={renderActions}
           storageKey="related-to-table"
-          enableSearch={true}
+          pagination={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
           searchPlaceholder="Search issue types..."
           leftActions={
             <Button
@@ -246,6 +336,21 @@ export const RelatedToTab: React.FC = () => {
             </Button>
           }
         />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
 
       {editModalOpen && editingRelatedTo && (

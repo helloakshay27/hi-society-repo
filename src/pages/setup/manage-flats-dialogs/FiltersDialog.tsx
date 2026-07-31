@@ -185,7 +185,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
           <div className="flex justify-center gap-4 pt-4">
             <Button
               onClick={onReset}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"              >
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]   h-10"              >
               Reset
             </Button>
             <Button

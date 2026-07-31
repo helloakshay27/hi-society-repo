@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2, ImageIcon, X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@mui/material";
 import {
@@ -42,6 +43,9 @@ const BrandPartnersConfigList: React.FC = () => {
 
   const [data, setData] = useState<BrandPartner[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -73,6 +77,118 @@ const BrandPartnersConfigList: React.FC = () => {
   useEffect(() => {
     fetchList();
   }, [fetchList]);
+
+  const filteredData = React.useMemo(() => {
+    if (!searchTerm.trim()) return data;
+    const query = searchTerm.toLowerCase();
+    return data.filter((item) =>
+      Object.values(item).some((v) => String(v ?? "").toLowerCase().includes(query))
+    );
+  }, [data, searchTerm]);
+
+  const totalCount = filteredData.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const openAddDialog = () => {
     setEditingId(null);
@@ -209,7 +325,7 @@ const BrandPartnersConfigList: React.FC = () => {
   const renderCell = (item: BrandPartner, columnKey: string, index?: number) => {
     switch (columnKey) {
       case "srNo":
-        return (index !== undefined ? index : data.findIndex((d) => d.id === item.id)) + 1;
+        return startIndex + (index !== undefined ? index : paginatedData.findIndex((d) => d.id === item.id)) + 1;
 
       case "actions":
         return (
@@ -307,7 +423,7 @@ const BrandPartnersConfigList: React.FC = () => {
 
       <div className="overflow-x-auto animate-fade-in">
         <EnhancedTable
-          data={data}
+          data={paginatedData}
           columns={columns}
           renderCell={renderCell}
           pagination={false}
@@ -315,6 +431,8 @@ const BrandPartnersConfigList: React.FC = () => {
           exportFileName="brand-partners-config"
           storageKey="brand-partners-config-table"
           enableSelection={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleGlobalSearch}
           leftActions={renderCustomActions()}
           rightActions={null}
           searchPlaceholder="Search"
@@ -325,6 +443,27 @@ const BrandPartnersConfigList: React.FC = () => {
           loadingMessage="Loading..."
           getItemId={(item) => String(item.id)}
         />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
 
       {/* Add / Edit Dialog */}

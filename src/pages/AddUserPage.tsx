@@ -65,7 +65,6 @@ const RedButton = styled(MuiButton)(({ theme }) => ({
   fontWeight: 500,
   boxShadow: 'none',
   '&:hover': {
-    backgroundColor: '#b36146 !important',
     opacity: 1,
   },
   '&.Mui-disabled': {
@@ -1582,7 +1581,7 @@ export const AddUserPage = () => {
             <DraftButton
              onClick={handleCancel}
              variant="outlined"
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"             disabled={loading}>Cancel</DraftButton>
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"             disabled={loading}>Cancel</DraftButton>
           </Box>
         </SectionCard>
       </Box>

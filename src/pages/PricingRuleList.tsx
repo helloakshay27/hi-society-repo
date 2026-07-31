@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface PricingRule {
@@ -30,6 +31,10 @@ const PricingRuleList: React.FC = () => {
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   const fetchPricingRules = useCallback(async () => {
     setLoading(true);
@@ -50,7 +55,11 @@ const PricingRuleList: React.FC = () => {
           rule.margin_type?.toLowerCase().includes(query)
         );
       }
-      setPricingRules(allRules);
+      setTotalCount(allRules.length);
+      setTotalPages(Math.ceil(allRules.length / itemsPerPage) || 1);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginatedRules = allRules.slice(startIndex, startIndex + itemsPerPage);
+      setPricingRules(paginatedRules);
     } catch (error) {
       toast.error("Failed to load pricing rules", {
         description: String(error),
@@ -59,7 +68,7 @@ const PricingRuleList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, currentPage]);
 
   useEffect(() => {
     fetchPricingRules();
@@ -67,6 +76,101 @@ const PricingRuleList: React.FC = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleAdd = () => {
@@ -118,6 +222,7 @@ const PricingRuleList: React.FC = () => {
 
   const renderCell = (item: any, columnKey: string) => {
     const index = pricingRules.findIndex(r => r.id === item.id);
+    const startIndex = (currentPage - 1) * itemsPerPage;
     switch (columnKey) {
       case "actions":
         return (
@@ -143,7 +248,7 @@ const PricingRuleList: React.FC = () => {
           </div>
         );
       case "id":
-        return <span className="text-sm font-medium">{index + 1}</span>;
+        return <span className="text-sm font-medium">{startIndex + index + 1}</span>;
       case "organization_id":
         return <span className="text-sm">{item.organization_id || "-"}</span>;
       case "generic_category_id":
@@ -192,6 +297,27 @@ const PricingRuleList: React.FC = () => {
           loading={loading}
           loadingMessage="Loading pricing rules..."
         />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   );

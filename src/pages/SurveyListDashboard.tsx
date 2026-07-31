@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/utils/apiClient";
 import { SurveyListFilterModal } from "@/components/SurveyListFilterModal";
@@ -72,6 +73,8 @@ export const SurveyListDashboard = () => {
     checkType: "all",
   });
   const [allSurveys, setAllSurveys] = useState<SurveyItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchSurveyData();
@@ -464,8 +467,109 @@ export const SurveyListDashboard = () => {
     });
   }, [surveys, searchTerm]);
 
-  console.log("Filtered surveys:", filteredSurveys);
-  console.log("Columns:", columns);
+  const totalCount = filteredSurveys.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedSurveys = filteredSurveys.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -479,7 +583,7 @@ export const SurveyListDashboard = () => {
 
       <div>
         <EnhancedTable
-          data={filteredSurveys}
+          data={paginatedSurveys}
           columns={columns}
           selectable={false}
           getItemId={(item) => item.id.toString()}
@@ -488,10 +592,9 @@ export const SurveyListDashboard = () => {
           enableExport={true}
           exportFileName="survey-list-data"
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={handleSearchChange}
           searchPlaceholder="Search surveys..."
-          pagination={true}
-          pageSize={10}
+          pagination={false}
           loading={loading}
           leftActions={
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
@@ -509,6 +612,27 @@ export const SurveyListDashboard = () => {
           onFilterClick={handleOpenFilterModal}
           handleExport={handleExportSurveys}
         />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
 
       <SurveyListFilterModal

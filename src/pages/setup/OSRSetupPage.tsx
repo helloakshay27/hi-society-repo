@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { apiClient } from '@/utils/apiClient';
 import { toast } from 'sonner';
 
@@ -72,6 +73,154 @@ const FieldBox: React.FC<{ label: React.ReactNode; className?: string; children:
     {children}
   </fieldset>
 );
+
+const ITEMS_PER_PAGE = 10;
+
+function usePagedSearch<T>(items: T[]) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const filtered = React.useMemo(() => {
+    if (!searchTerm.trim()) return items;
+    const query = searchTerm.toLowerCase();
+    return items.filter((item) =>
+      Object.values(item as Record<string, unknown>).some((v) => String(v ?? '').toLowerCase().includes(query))
+    );
+  }, [items, searchTerm]);
+
+  const totalCount = filtered.length;
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE) || 1;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paged = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  return { searchTerm, currentPage, totalCount, totalPages, startIndex, paged, handleSearch, handlePageChange };
+}
+
+const renderPaginationItems = (currentPage: number, totalPages: number, handlePageChange: (p: number) => void) => {
+  if (!totalPages || totalPages <= 0) return null;
+  const items = [];
+  const showEllipsis = totalPages > 5;
+
+  if (showEllipsis) {
+    items.push(
+      <PaginationItem key={1} className="cursor-pointer">
+        <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    if (currentPage > 4) {
+      items.push(
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage > 3 && currentPage < totalPages - 2) {
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage < totalPages - 3) {
+      items.push(
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+        if (!items.find((item) => item.key === i.toString())) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+    }
+
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key={totalPages} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  } else {
+    for (let i = 1; i <= totalPages; i++) {
+      items.push(
+        <PaginationItem key={i} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  }
+
+  return items;
+};
+
+const PaginationBar: React.FC<{ currentPage: number; totalPages: number; totalCount: number; onPageChange: (p: number) => void }> = ({
+  currentPage, totalPages, totalCount, onPageChange,
+}) => {
+  if (totalCount <= 0) return null;
+  return (
+    <div className="flex items-center justify-center mt-4">
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => onPageChange(currentPage - 1)}
+              className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+          {renderPaginationItems(currentPage, totalPages, onPageChange)}
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => onPageChange(currentPage + 1)}
+              className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
+  );
+};
 
 // ─── Tab 1: Category ─────────────────────────────────────────────────────────
 
@@ -157,13 +306,15 @@ const CategoryTab: React.FC = () => {
     }
   };
 
+  const { searchTerm, currentPage, totalCount, totalPages, startIndex, paged: pagedCategories, handleSearch, handlePageChange } = usePagedSearch(categories);
+
   const catColumns = [
     { key: 'srno',  label: 'S.No.',    sortable: false },
     { key: 'name',  label: 'Category', sortable: true  },
   ];
 
   const renderCatCell = (item: Category, columnKey: string, index: number) => {
-    if (columnKey === 'srno') return index + 1;
+    if (columnKey === 'srno') return startIndex + index + 1;
     if (columnKey === 'name') return item.name;
     return '--';
   };
@@ -201,13 +352,14 @@ const CategoryTab: React.FC = () => {
     <div className="space-y-4">
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <EnhancedTable
-          data={categories}
+          data={pagedCategories}
           columns={catColumns}
           renderCell={renderCatCell}
           renderActions={renderCatActions}
           storageKey="osr-category-table"
           searchPlaceholder="Search categories..."
-          enableSearch
+          enableGlobalSearch
+          onGlobalSearch={handleSearch}
           loading={loading}
           emptyMessage="No categories found."
           leftActions={
@@ -219,6 +371,7 @@ const CategoryTab: React.FC = () => {
             </Button>
           }
         />
+        <PaginationBar currentPage={currentPage} totalPages={totalPages} totalCount={totalCount} onPageChange={handlePageChange} />
       </div>
 
       {/* Add Dialog */}
@@ -454,6 +607,8 @@ const SubCategoryTab: React.FC = () => {
     ? subCategories
     : subCategories.filter(s => s.osr_categories_id === activeCatId);
 
+  const { searchTerm, currentPage, totalCount, totalPages, startIndex, paged: pagedSubs, handleSearch, handlePageChange } = usePagedSearch(filteredSubs);
+
   // Columns — hide Category column when a specific category is selected
   const scColumns = activeCatId === 'all'
     ? [
@@ -467,7 +622,7 @@ const SubCategoryTab: React.FC = () => {
       ];
 
   const renderScCell = (item: SubCategory, columnKey: string, index: number) => {
-    if (columnKey === 'srno') return index + 1;
+    if (columnKey === 'srno') return startIndex + index + 1;
     if (columnKey === 'category_name')
       return categories.find(c => c.id === item.osr_categories_id)?.name ?? '—';
     if (columnKey === 'name') return item.name;
@@ -509,13 +664,14 @@ const SubCategoryTab: React.FC = () => {
       {/* ── Table ─────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <EnhancedTable
-          data={filteredSubs}
+          data={pagedSubs}
           columns={scColumns}
           renderCell={renderScCell}
           renderActions={renderScActions}
           storageKey={`osr-sub-category-${activeCatId}`}
           searchPlaceholder="Search sub-categories..."
-          enableSearch
+          enableGlobalSearch
+          onGlobalSearch={handleSearch}
           loading={loading}
           emptyMessage={activeCatId === 'all' ? 'No sub-categories found.' : 'No sub-categories for this category.'}
           leftActions={
@@ -558,6 +714,7 @@ const SubCategoryTab: React.FC = () => {
             </div>
           }
         />
+        <PaginationBar currentPage={currentPage} totalPages={totalPages} totalCount={totalCount} onPageChange={handlePageChange} />
       </div>
 
       {/* Add Modal */}
@@ -837,6 +994,8 @@ const StatusTab: React.FC = () => {
     }
   };
 
+  const { searchTerm, currentPage, totalCount, totalPages, startIndex, paged: pagedStatuses, handleSearch, handlePageChange } = usePagedSearch(statuses);
+
   const stColumns = [
     { key: 'srno',       label: 'S.No.',  sortable: false },
     { key: 'name',       label: 'Status', sortable: true  },
@@ -845,7 +1004,7 @@ const StatusTab: React.FC = () => {
   ];
 
   const renderStCell = (item: StatusItem, columnKey: string, index: number) => {
-    if (columnKey === 'srno') return index + 1;
+    if (columnKey === 'srno') return startIndex + index + 1;
     if (columnKey === 'name') return item.name;
     if (columnKey === 'order_as') return item.order_as ?? '-';
     if (columnKey === 'color_code') {
@@ -895,13 +1054,14 @@ const StatusTab: React.FC = () => {
     <div className="space-y-4">
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <EnhancedTable
-          data={statuses}
+          data={pagedStatuses}
           columns={stColumns}
           renderCell={renderStCell}
           renderActions={renderStActions}
           storageKey="osr-status-table"
           searchPlaceholder="Search statuses..."
-          enableSearch
+          enableGlobalSearch
+          onGlobalSearch={handleSearch}
           loading={loading}
           emptyMessage="No statuses found."
           leftActions={
@@ -913,6 +1073,7 @@ const StatusTab: React.FC = () => {
             </Button>
           }
         />
+        <PaginationBar currentPage={currentPage} totalPages={totalPages} totalCount={totalCount} onPageChange={handlePageChange} />
       </div>
 
       {/* Add Dialog */}

@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
@@ -23,6 +24,10 @@ const ConnectivityTypeList: React.FC = () => {
   const [connectivityTypes, setConnectivityTypes] = useState<ConnectivityType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   const fetchConnectivityTypes = useCallback(async () => {
     setLoading(true);
@@ -33,7 +38,7 @@ const ConnectivityTypeList: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-      
+
       let allTypes = response.data && Array.isArray(response.data) ? response.data : [];
 
       // Client-side search
@@ -44,7 +49,12 @@ const ConnectivityTypeList: React.FC = () => {
         );
       }
 
-      setConnectivityTypes(allTypes);
+      setTotalCount(allTypes.length);
+      setTotalPages(Math.ceil(allTypes.length / itemsPerPage) || 1);
+
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginatedTypes = allTypes.slice(startIndex, startIndex + itemsPerPage);
+      setConnectivityTypes(paginatedTypes);
     } catch (error) {
       console.error("Error fetching connectivity types:", error);
       toast.error("Failed to fetch connectivity types");
@@ -52,7 +62,7 @@ const ConnectivityTypeList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, currentPage]);
 
   useEffect(() => {
     fetchConnectivityTypes();
@@ -60,6 +70,101 @@ const ConnectivityTypeList: React.FC = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleAdd = () => {
@@ -104,6 +209,7 @@ const ConnectivityTypeList: React.FC = () => {
 
   const renderCell = (item: ConnectivityType, columnKey: string) => {
     const index = connectivityTypes.findIndex(t => t.id === item.id);
+    const startIndex = (currentPage - 1) * itemsPerPage;
 
     switch (columnKey) {
       case "actions":
@@ -117,7 +223,7 @@ const ConnectivityTypeList: React.FC = () => {
           </div>
         );
       case "id":
-        return <span className="font-medium">{index + 1}</span>;
+        return <span className="font-medium">{startIndex + index + 1}</span>;
       case "name":
         return <span>{item.name || "-"}</span>;
       case "status":
@@ -171,6 +277,27 @@ const ConnectivityTypeList: React.FC = () => {
           loading={loading}
           loadingMessage="Loading connectivity types..."
         />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   );

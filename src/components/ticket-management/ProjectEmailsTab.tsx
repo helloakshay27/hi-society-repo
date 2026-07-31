@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Trash2, Edit, Plus } from 'lucide-react';
@@ -38,6 +39,9 @@ export const ProjectEmailsTab: React.FC = () => {
   const [editingEmail, setEditingEmail] = useState<ProjectEmail | null>(null);
   const [editEmailInput, setEditEmailInput] = useState('');
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch project emails
   const fetchProjectEmails = useCallback(async () => {
@@ -214,8 +218,92 @@ export const ProjectEmailsTab: React.FC = () => {
     { key: 'email', label: 'Email Id', sortable: true },
   ];
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const filteredEmails = emails.filter((item) => {
+    if (!searchTerm) return true;
+    const query = searchTerm.toLowerCase();
+    return Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query));
+  });
+
+  const totalCount = filteredEmails.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedEmails = filteredEmails.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   const renderCell = (item: ProjectEmail, columnKey: string) => {
-    const index = emails.findIndex(e => e.id === item.id);
+    const index = filteredEmails.findIndex(e => e.id === item.id);
 
     switch (columnKey) {
       case 'srno':
@@ -335,12 +423,14 @@ export const ProjectEmailsTab: React.FC = () => {
       {/* Main Table */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <EnhancedTable
-          data={emails}
+          data={paginatedEmails}
           columns={columns}
           renderCell={renderCell}
           renderActions={renderActions}
           storageKey="project-emails-table"
-          enableSearch={true}
+          pagination={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
           searchPlaceholder="Search emails..."
           leftActions={
             <Button
@@ -352,6 +442,21 @@ export const ProjectEmailsTab: React.FC = () => {
             </Button>
           }
         />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   );

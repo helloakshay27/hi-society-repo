@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
@@ -133,6 +134,68 @@ export const SubCategoryTab: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     fetchSubCategories(page);
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
   };
 
   useEffect(() => {
@@ -456,71 +519,21 @@ export const SubCategoryTab: React.FC = () => {
           }
         />
         {/* Pagination */}
-        {subCategories.length > 0 && totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="text-sm text-gray-500">
-                    Showing {totalCount > 0 ? (currentPage - 1) * perPage + 1 : 0}–{Math.min(currentPage * perPage, totalCount || subCategories.length)} of {totalCount || subCategories.length} sub-categories
-                  </div>
-                  {totalPages > 1 && (
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(1)}
-                        disabled={currentPage === 1}
-                      >
-                        «
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      >
-                        ‹
-                      </Button>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                        .reduce((acc: Array<number | 'ellipsis'>, p, idx, arr) => {
-                          if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
-                          acc.push(p);
-                          return acc;
-                        }, [])
-                        .map((p, idx) =>
-                          p === 'ellipsis' ? (
-                            <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">…</span>
-                          ) : (
-                            <Button
-                              key={p}
-                              variant={p === currentPage ? 'default' : 'outline'}
-                              size="sm"
-                              onClick={() => handlePageChange(p as number)}
-                              className="w-8"
-                            >
-                              {p}
-                            </Button>
-                          )
-                        )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      >
-                        ›
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(totalPages)}
-                        disabled={currentPage === totalPages}
-                      >
-                        »
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+        {(totalCount || subCategories.length) > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
 
       {/* Edit Sub-Category Modal */}

@@ -439,7 +439,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               {!attachment ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-[#0EA5E9] hover:bg-blue-50/40 transition-colors"
+                  className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-[#C72030] hover:bg-red-50/40 transition-colors"
                 >
                   <Upload className="h-7 w-7 text-gray-400" />
                   <p className="text-sm font-medium text-gray-600">Click to upload a file</p>

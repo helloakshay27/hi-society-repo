@@ -59,7 +59,7 @@ const RedButton = styled(MuiButton)(() => ({
     fontFamily: 'Work Sans, sans-serif',
     fontWeight: 500,
     '&:hover': {
-        backgroundColor: '#a01828 !important',
+      
         opacity: 1,
     },
     '&.Mui-disabled': {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, Trash2, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
@@ -74,6 +75,9 @@ const VendorSetupPage: React.FC = () => {
   const navigate = useNavigate();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -110,6 +114,118 @@ const VendorSetupPage: React.FC = () => {
   useEffect(() => {
     fetchVendors();
   }, [fetchVendors]);
+
+  const filteredVendors = React.useMemo(() => {
+    if (!searchTerm.trim()) return vendors;
+    const query = searchTerm.toLowerCase();
+    return vendors.filter((item) =>
+      Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query))
+    );
+  }, [vendors, searchTerm]);
+
+  const totalCount = filteredVendors.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedVendors = filteredVendors.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   // ── Open Add dialog ─────────────────────────────────────────────────────────
   const handleAdd = () => {
@@ -272,10 +388,10 @@ const VendorSetupPage: React.FC = () => {
   ];
 
   const renderCell = (item: Vendor, columnKey: string) => {
-    const index = vendors.findIndex((v) => v.id === item.id);
+    const index = paginatedVendors.findIndex((v) => v.id === item.id);
     switch (columnKey) {
       case 'srno':
-        return index + 1;
+        return startIndex + index + 1;
       case 'name': {
         const name = [item.first_name, item.last_name].filter(Boolean).join(' ');
         return name || '--';
@@ -360,12 +476,13 @@ const VendorSetupPage: React.FC = () => {
 
       {/* Table */}
       <EnhancedTable
-        data={vendors}
+        data={paginatedVendors}
         columns={columns}
         renderCell={renderCell}
         renderActions={renderActions}
         storageKey="vendor-setup-table"
-        enableSearch={true}
+        enableGlobalSearch={true}
+        onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search vendors..."
         loading={loading}
         loadingMessage="Loading vendors..."
@@ -376,11 +493,32 @@ const VendorSetupPage: React.FC = () => {
               className="bg-[#C72030] hover:bg-[#a01828] text-white h-9 px-4 text-sm font-medium"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add 
+              Add
             </Button>
           )}</>
         }
       />
+      {totalCount > 0 && (
+        <div className="flex items-center justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

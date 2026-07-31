@@ -443,7 +443,7 @@ export const KYCDetailsDashboard = () => {
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"                
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"                
               onClick={() => {
                 setShowAddDialog(false);
                 setFormData({ userName: "", userEmail: "", userMobile: "" });
@@ -454,7 +454,7 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
             </Button>
             <Button
               onClick={handleSubmitKYCDetail}
-              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              className="bg-[#C72030] text-white"
             >
               Add
             </Button>

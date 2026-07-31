@@ -8,6 +8,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Plus, Trash2 } from 'lucide-react';
@@ -109,6 +110,9 @@ export const AgingRuleTab: React.FC = () => {
   const [editColor, setEditColor] = useState('#00C853');
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch aging rules
   const fetchAgingRules = useCallback(async () => {
@@ -283,8 +287,92 @@ export const AgingRuleTab: React.FC = () => {
     { key: 'color', label: 'Color', sortable: false },
   ];
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const filteredAgingRules = agingRules.filter((item) => {
+    if (!searchTerm) return true;
+    const query = searchTerm.toLowerCase();
+    return Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query));
+  });
+
+  const totalCount = filteredAgingRules.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAgingRules = filteredAgingRules.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   const renderCell = (item: AgingRule, columnKey: string) => {
-    const index = agingRules.findIndex(r => r.id === item.id);
+    const index = filteredAgingRules.findIndex(r => r.id === item.id);
 
     switch (columnKey) {
       case 'srno':
@@ -521,12 +609,14 @@ export const AgingRuleTab: React.FC = () => {
       {/* Main Table */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <EnhancedTable
-          data={agingRules}
+          data={paginatedAgingRules}
           columns={columns}
           renderCell={renderCell}
           renderActions={renderActions}
           storageKey="aging-rules-table"
-          enableSearch={true}
+          pagination={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
           searchPlaceholder="Search aging rules..."
           leftActions={
             <Button
@@ -538,6 +628,21 @@ export const AgingRuleTab: React.FC = () => {
             </Button>
           }
         />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   );
