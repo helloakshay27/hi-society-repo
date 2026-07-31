@@ -277,16 +277,35 @@ const CampaignsReferralSetupCreate: React.FC = () => {
               />
 
               {/* Details */}
-              <TextField
-                label="Details"
-                placeholder="Enter details"
-                value={formData.details}
-                onChange={(e) => handleInputChange("details", e.target.value)}
-                fullWidth
-                variant="outlined"
-                slotProps={{ inputLabel: { shrink: true } }}
-                InputProps={{ sx: fieldStyles }}
-              />
+              <div className="relative w-full md:col-span-2">
+                <textarea
+                  id="details"
+                  value={formData.details}
+                  onChange={(e) =>
+                    handleInputChange("details", e.target.value)
+                  }
+                  name="details"
+                  rows={3}
+                  placeholder=" "
+                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+      focus:outline-none
+      focus:border-[2px]
+      focus:border-[rgb(25,118,210)]
+      resize-vertical"
+                />
+                <label
+                  htmlFor="details"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+      peer-placeholder-shown:top-4
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-focus:-top-[10px]
+      peer-focus:text-sm
+      peer-focus:text-[rgb(25,118,210)]"
+                >
+                  Details
+                </label>
+              </div>
 
               {/* Mobile No */}
               <TextField
