@@ -6,6 +6,15 @@ import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material
 import { Button as MuiButton } from '@mui/material';
 import { toast, Toaster } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { useNavigate } from 'react-router-dom';
 import { Column } from 'jspdf-autotable';
 import axios from 'axios';
@@ -299,6 +308,100 @@ export default function OffersList() {
 
   // Get filtered offers
   const filteredOffers = applyFilters(offers, currentFilters);
+  const PAGE_SIZE = 10;
+  const computedTotalPages = Math.ceil(filteredOffers.length / PAGE_SIZE) || 1;
+  const paginatedOffers = filteredOffers.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const renderPaginationItems = () => {
+    if (!computedTotalPages || computedTotalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = computedTotalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, computedTotalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < computedTotalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < computedTotalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(computedTotalPages - 2, 2); i < computedTotalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (computedTotalPages > 1) {
+        items.push(
+          <PaginationItem key={computedTotalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(computedTotalPages)} isActive={currentPage === computedTotalPages}>
+              {computedTotalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= computedTotalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -699,11 +802,10 @@ export default function OffersList() {
             )}
             {/* Pass columns and data from state to EnhancedTable */}
             <EnhancedTable
-              data={filteredOffers}
+              data={paginatedOffers}
               columns={columns}
               renderCell={renderCell}
-              pagination={true}
-              pageSize={10}
+              pagination={false}
               enableExport={false}
               handleExport={handleExport}
               storageKey="offers-table"
@@ -728,12 +830,26 @@ export default function OffersList() {
               loadingMessage="Loading offers..."
             />
 
-            {/* Pagination - Only show if needed for filtered results */}
-            {filteredOffers.length > 10 && (
-              <div className="mt-6">
-                <div className="text-center mt-2 text-sm text-gray-600">
-                  Showing {filteredOffers.length} offers (Filtered)
-                </div>
+            {/* Pagination */}
+            {filteredOffers.length > 0 && (
+              <div className="mt-6 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    {renderPaginationItems()}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className={currentPage === computedTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
             {filteredOffers.length === 0 && Object.keys(currentFilters).some(key => currentFilters[key as keyof OffersFilterParams]) && (

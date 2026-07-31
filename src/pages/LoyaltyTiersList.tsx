@@ -353,7 +353,7 @@ const LoyaltyTiersList = () => {
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching tiers..." : "Loading tiers..."}
       />
-      {totalPages > 1 && (
+      {totalCount > 0 && (
         <div className="flex flex-col items-center gap-2 mt-4">
           <Pagination>
             <PaginationContent>

@@ -588,7 +588,7 @@ export const WalletManagement = () => {
               exportFileName="wallet-transactions"
               storageKey="wallet-management-table"
             />
-            {totalPages > 1 && (
+            {totalCount > 0 && (
               <div className="flex flex-col items-center gap-2 mt-4">
                 <Pagination>
                   <PaginationContent>

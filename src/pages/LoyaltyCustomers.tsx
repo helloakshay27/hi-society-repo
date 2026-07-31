@@ -232,30 +232,28 @@ export const LoyaltyCustomers = () => {
                     loadingMessage="Loading customers..."
                     emptyMessage="No customers found"
                 />
-                {totalPages > 1 && (
-                    <div className="flex flex-col items-center gap-2 mt-4">
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                        className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                                {renderPaginationItems()}
-                                <PaginationItem>
-                                    <PaginationNext
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                        <p className="text-sm text-gray-600">
-                            Showing page {currentPage} of {totalPages} ({totalCount} total customers)
-                        </p>
-                    </div>
-                )}
+                <div className="flex flex-col items-center gap-2 mt-4">
+                    <Pagination>
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                />
+                            </PaginationItem>
+                            {renderPaginationItems()}
+                            <PaginationItem>
+                                <PaginationNext
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                    <p className="text-sm text-gray-600">
+                        Showing page {currentPage} of {totalPages} ({totalCount} total customers)
+                    </p>
+                </div>
             </div>
         </div>
     );

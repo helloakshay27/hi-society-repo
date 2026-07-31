@@ -696,7 +696,7 @@ const LoyaltyEventsList = () => {
             isSearching ? "Searching events..." : "Loading events..."
           }
         />
-        {totalPages > 1 && (
+        {totalCount > 0 && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>

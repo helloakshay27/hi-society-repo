@@ -337,7 +337,7 @@ const FaqList = () => {
             loading={loading}
             loadingMessage="Loading FAQs..."
           />
-          {!loading && (
+          {!loading && totalCount > 0 && (
             <div className="flex items-center justify-center mt-6">
               <Pagination>
                 <PaginationContent>

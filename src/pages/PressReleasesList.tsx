@@ -346,7 +346,7 @@ const PressReleasesList = () => {
             loading={loading}
             loadingMessage="Loading press releases..."
           />
-          {!loading && (
+          {!loading && totalCount > 0 && (
             <div className="flex items-center justify-center mt-6">
               <Pagination>
                 <PaginationContent>
