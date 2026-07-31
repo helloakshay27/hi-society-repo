@@ -2,18 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Wallet, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import {
@@ -608,43 +600,47 @@ const WalletTopup: React.FC = () => {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-2">
-              <Label htmlFor="organization_select" className="text-[#1a1a1a]">
-                Organization <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={selectedOrgId}
-                onValueChange={(value) => {
-                  setSelectedOrgId(value);
-                  setError(null);
-                  setSuccess(null);
-                }}
-                disabled={loadingOrgs}
+              <MuiFormControl
+                fullWidth
+                variant="outlined"
+                required
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
               >
-                <SelectTrigger className="border-[#e5e1d8] focus:border-[#C72030] focus:ring-[#C72030]">
-                  <SelectValue
-                    placeholder={
-                      loadingOrgs ? "Loading..." : "Select organization"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
+                <InputLabel shrink>Organization</InputLabel>
+                <MuiSelect
+                  id="organization_select"
+                  value={selectedOrgId}
+                  onChange={(e) => {
+                    setSelectedOrgId(e.target.value as string);
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                  label="Organization"
+                  notched
+                  displayEmpty
+                  disabled={loadingOrgs}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="">
+                    {loadingOrgs ? "Loading..." : "Select organization"}
+                  </MenuItem>
                   {loadingOrgs ? (
-                    <SelectItem value="loading" disabled>
+                    <MenuItem value="loading" disabled>
                       Loading organizations...
-                    </SelectItem>
+                    </MenuItem>
                   ) : organizations.length === 0 ? (
-                    <SelectItem value="empty" disabled>
+                    <MenuItem value="empty" disabled>
                       No organizations found
-                    </SelectItem>
+                    </MenuItem>
                   ) : (
                     organizations.map((org) => (
-                      <SelectItem key={org.id} value={org.id.toString()}>
+                      <MenuItem key={org.id} value={org.id.toString()}>
                         {org.name}
-                      </SelectItem>
+                      </MenuItem>
                     ))
                   )}
-                </SelectContent>
-              </Select>
+                </MuiSelect>
+              </MuiFormControl>
             </div>
           </CardContent>
         </Card>
@@ -725,23 +721,28 @@ const WalletTopup: React.FC = () => {
                 <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
                   Transaction History
                 </CardTitle>
-                <Select
-                  value={txTimeRange}
-                  onValueChange={(val) => {
-                    setTxTimeRange(val);
-                    setTxCurrentPage(1);
-                  }}
+                <MuiFormControl
+                  variant="outlined"
+                  sx={{ width: 180, '& .MuiInputBase-root': fieldStyles }}
                 >
-                  <SelectTrigger className="w-[150px] border-[#e5e1d8] bg-white">
-                    <SelectValue placeholder="Select range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7">Last 7 days</SelectItem>
-                    <SelectItem value="10">Last 10 days</SelectItem>
-                    <SelectItem value="30">Last 30 days</SelectItem>
-                    <SelectItem value="90">Last 90 days</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <InputLabel shrink>Range</InputLabel>
+                  <MuiSelect
+                    value={txTimeRange}
+                    onChange={(e) => {
+                      setTxTimeRange(e.target.value as string);
+                      setTxCurrentPage(1);
+                    }}
+                    label="Range"
+                    notched
+                    displayEmpty
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="7">Last 7 days</MenuItem>
+                    <MenuItem value="10">Last 10 days</MenuItem>
+                    <MenuItem value="30">Last 30 days</MenuItem>
+                    <MenuItem value="90">Last 90 days</MenuItem>
+                  </MuiSelect>
+                </MuiFormControl>
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -821,37 +822,39 @@ const WalletTopup: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Amount */}
                   <div className="space-y-2">
-                    <Label htmlFor="amount" className="text-[#1a1a1a]">
-                      Amount (₹) <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
+                    <TextField
                       id="amount"
                       name="amount"
                       type="number"
+                      label={<>Amount (₹) <span style={{ color: 'red' }}>*</span></>}
                       placeholder="Enter amount"
                       value={formData.amount}
                       onChange={handleInputChange}
                       required
-                      min="0.01"
-                      step="0.01"
-                      className="border-[#e5e1d8] focus:border-[#C72030] focus:ring-[#C72030]"
+                      inputProps={{ min: "0.01", step: "0.01" }}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                   </div>
 
                   {/* Remarks */}
                   <div className="space-y-2">
-                    <Label htmlFor="remarks" className="text-[#1a1a1a]">
-                      Remarks <span className="text-red-500">*</span>
-                    </Label>
-                    <Textarea
+                    <TextField
                       id="remarks"
                       name="remarks"
+                      label={<>Remarks <span style={{ color: 'red' }}>*</span></>}
                       placeholder="Enter remarks for this transaction"
                       value={formData.remarks}
                       onChange={handleInputChange}
                       required
+                      multiline
                       rows={1}
-                      className="border-[#e5e1d8] focus:border-[#C72030] focus:ring-[#C72030] resize-none"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                   </div>
                 </div>

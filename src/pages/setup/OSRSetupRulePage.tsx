@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, CalendarX2, CircleOff, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 
@@ -340,21 +340,28 @@ export const OSRSetupRulePage: React.FC = () => {
               <label className="text-sm font-medium text-gray-700 w-52 shrink-0">
                 Reminder Notification 01
               </label>
-              <Input
+              <TextField
                 type="number"
-                min="0"
+                inputProps={{ min: 0 }}
                 value={form.staffReminder01Value}
                 onChange={e => set('staffReminder01Value', e.target.value)}
-                className="w-24 text-center"
+                sx={{ width: 96 }}
+                variant="outlined"
+                InputProps={{ sx: fieldStyles }}
               />
-              <Select value={form.staffReminder01Unit} onValueChange={v => set('staffReminder01Unit', v)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MuiFormControl variant="outlined" sx={{ width: 128, '& .MuiInputBase-root': fieldStyles }}>
+                <InputLabel shrink>Unit</InputLabel>
+                <MuiSelect
+                  value={form.staffReminder01Unit}
+                  onChange={e => set('staffReminder01Unit', e.target.value as string)}
+                  label="Unit"
+                  notched
+                  displayEmpty
+                  MenuProps={menuProps}
+                >
+                  {TIME_UNITS.map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                </MuiSelect>
+              </MuiFormControl>
             </div>
 
             {/* Reminder 02 */}
@@ -362,21 +369,28 @@ export const OSRSetupRulePage: React.FC = () => {
               <label className="text-sm font-medium text-gray-700 w-52 shrink-0">
                 Reminder Notification 02
               </label>
-              <Input
+              <TextField
                 type="number"
-                min="0"
+                inputProps={{ min: 0 }}
                 value={form.staffReminder02Value}
                 onChange={e => set('staffReminder02Value', e.target.value)}
-                className="w-24 text-center"
+                sx={{ width: 96 }}
+                variant="outlined"
+                InputProps={{ sx: fieldStyles }}
               />
-              <Select value={form.staffReminder02Unit} onValueChange={v => set('staffReminder02Unit', v)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MuiFormControl variant="outlined" sx={{ width: 128, '& .MuiInputBase-root': fieldStyles }}>
+                <InputLabel shrink>Unit</InputLabel>
+                <MuiSelect
+                  value={form.staffReminder02Unit}
+                  onChange={e => set('staffReminder02Unit', e.target.value as string)}
+                  label="Unit"
+                  notched
+                  displayEmpty
+                  MenuProps={menuProps}
+                >
+                  {TIME_UNITS.map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                </MuiSelect>
+              </MuiFormControl>
             </div>
           </div>
         </div>
@@ -393,24 +407,34 @@ export const OSRSetupRulePage: React.FC = () => {
                 </label>
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <Select value={form.userReminder01Value} onValueChange={v => set('userReminder01Value', v)}>
-                      <SelectTrigger className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
+                    <MuiFormControl variant="outlined" sx={{ width: 96, '& .MuiInputBase-root': fieldStyles }}>
+                      <InputLabel shrink>Value</InputLabel>
+                      <MuiSelect
+                        value={form.userReminder01Value}
+                        onChange={e => set('userReminder01Value', e.target.value as string)}
+                        label="Value"
+                        notched
+                        displayEmpty
+                        MenuProps={menuProps}
+                      >
                         {Array.from({ length: 60 }, (_, i) => String(i + 1)).map(n => (
-                          <SelectItem key={n} value={n}>{n}</SelectItem>
+                          <MenuItem key={n} value={n}>{n}</MenuItem>
                         ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={form.userReminder01ValueUnit} onValueChange={v => set('userReminder01ValueUnit', v)}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MINUTE_UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                      </MuiSelect>
+                    </MuiFormControl>
+                    <MuiFormControl variant="outlined" sx={{ width: 128, '& .MuiInputBase-root': fieldStyles }}>
+                      <InputLabel shrink>Unit</InputLabel>
+                      <MuiSelect
+                        value={form.userReminder01ValueUnit}
+                        onChange={e => set('userReminder01ValueUnit', e.target.value as string)}
+                        label="Unit"
+                        notched
+                        displayEmpty
+                        MenuProps={menuProps}
+                      >
+                        {MINUTE_UNITS.map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                      </MuiSelect>
+                    </MuiFormControl>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     (Notification will be send to users one day prior to the schedule)
@@ -424,22 +448,29 @@ export const OSRSetupRulePage: React.FC = () => {
               <label className="text-sm font-medium text-gray-700 w-52 shrink-0">
                 Reminder Notification 02
               </label>
-              <Select value={form.userReminder02Unit} onValueChange={v => set('userReminder02Unit', v)}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Hrs">Hrs</SelectItem>
-                  <SelectItem value="Min">Min</SelectItem>
-                  <SelectItem value="Days">Days</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
+              <MuiFormControl variant="outlined" sx={{ width: 96, '& .MuiInputBase-root': fieldStyles }}>
+                <InputLabel shrink>Unit</InputLabel>
+                <MuiSelect
+                  value={form.userReminder02Unit}
+                  onChange={e => set('userReminder02Unit', e.target.value as string)}
+                  label="Unit"
+                  notched
+                  displayEmpty
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="Hrs">Hrs</MenuItem>
+                  <MenuItem value="Min">Min</MenuItem>
+                  <MenuItem value="Days">Days</MenuItem>
+                </MuiSelect>
+              </MuiFormControl>
+              <TextField
                 type="number"
-                min="0"
+                inputProps={{ min: 0 }}
                 value={form.userReminder02Value}
                 onChange={e => set('userReminder02Value', e.target.value)}
-                className="w-24 text-center"
+                sx={{ width: 96 }}
+                variant="outlined"
+                InputProps={{ sx: fieldStyles }}
               />
             </div>
           </div>
@@ -453,22 +484,29 @@ export const OSRSetupRulePage: React.FC = () => {
               <label className="text-sm font-medium text-gray-700 w-52 shrink-0">
                 Notification before
               </label>
-              <Select value={form.finalReminderUnit} onValueChange={v => set('finalReminderUnit', v)}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Hrs">Hrs</SelectItem>
-                  <SelectItem value="Min">Min</SelectItem>
-                  <SelectItem value="Days">Days</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
+              <MuiFormControl variant="outlined" sx={{ width: 96, '& .MuiInputBase-root': fieldStyles }}>
+                <InputLabel shrink>Unit</InputLabel>
+                <MuiSelect
+                  value={form.finalReminderUnit}
+                  onChange={e => set('finalReminderUnit', e.target.value as string)}
+                  label="Unit"
+                  notched
+                  displayEmpty
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="Hrs">Hrs</MenuItem>
+                  <MenuItem value="Min">Min</MenuItem>
+                  <MenuItem value="Days">Days</MenuItem>
+                </MuiSelect>
+              </MuiFormControl>
+              <TextField
                 type="number"
-                min="0"
+                inputProps={{ min: 0 }}
                 value={form.finalReminderValue}
                 onChange={e => set('finalReminderValue', e.target.value)}
-                className="w-24 text-center"
+                sx={{ width: 96 }}
+                variant="outlined"
+                InputProps={{ sx: fieldStyles }}
               />
             </div>
           </div>
@@ -505,25 +543,28 @@ export const OSRSetupRulePage: React.FC = () => {
                   {form.cancellationRows.map((row, idx) => (
                     <tr key={idx}>
                       <td className="px-4 py-2 border-r border-gray-200">
-                        <Input
+                        <TextField
                           type="number"
-                          min="0"
+                          inputProps={{ min: 0 }}
                           placeholder="e.g. 10"
                           value={row.cutoffTime}
                           onChange={e => setCancellationRow(idx, 'cutoffTime', e.target.value)}
-                          className="text-center"
+                          fullWidth
+                          variant="outlined"
+                          InputProps={{ sx: fieldStyles }}
                         />
                       </td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
-                          <Input
+                          <TextField
                             type="number"
-                            min="0"
-                            max="100"
+                            inputProps={{ min: 0, max: 100 }}
                             placeholder="e.g. 5"
                             value={row.returnAmount}
                             onChange={e => setCancellationRow(idx, 'returnAmount', e.target.value)}
-                            className="text-center flex-1"
+                            fullWidth
+                            variant="outlined"
+                            InputProps={{ sx: fieldStyles }}
                           />
                           <span className="text-sm font-medium text-gray-600">%</span>
                         </div>
@@ -560,27 +601,36 @@ export const OSRSetupRulePage: React.FC = () => {
           <SectionHeader icon={CircleOff} title="Schedule Setting" />
           <div className="px-5 py-3">
             <div className="flex items-center gap-3 flex-wrap">
-              <Input
+              <TextField
                 value={form.scheduleBeforeText}
                 onChange={e => set('scheduleBeforeText', e.target.value)}
-                className="w-72 text-sm"
                 placeholder="Label text"
+                sx={{ width: 288 }}
+                variant="outlined"
+                InputProps={{ sx: fieldStyles }}
               />
-              <Input
+              <TextField
                 type="number"
-                min="0"
+                inputProps={{ min: 0 }}
                 value={form.scheduleBeforeValue}
                 onChange={e => set('scheduleBeforeValue', e.target.value)}
-                className="w-24 text-center"
+                sx={{ width: 96 }}
+                variant="outlined"
+                InputProps={{ sx: fieldStyles }}
               />
-              <Select value={form.scheduleBeforeUnit} onValueChange={v => set('scheduleBeforeUnit', v)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MuiFormControl variant="outlined" sx={{ width: 128, '& .MuiInputBase-root': fieldStyles }}>
+                <InputLabel shrink>Unit</InputLabel>
+                <MuiSelect
+                  value={form.scheduleBeforeUnit}
+                  onChange={e => set('scheduleBeforeUnit', e.target.value as string)}
+                  label="Unit"
+                  notched
+                  displayEmpty
+                  MenuProps={menuProps}
+                >
+                  {TIME_UNITS.map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                </MuiSelect>
+              </MuiFormControl>
             </div>
           </div>
         </div>
