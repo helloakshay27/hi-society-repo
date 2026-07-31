@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -11,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Plus } from "lucide-react";
+import { Plus, X, CalendarDays, Wallet } from "lucide-react";
 
 interface LedgerOption {
   id: number;
@@ -200,163 +201,203 @@ const AccountingOpeningBalances: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-white min-h-screen">
-      <div className="flex gap-10">
-        <div className="flex-1 max-w-4xl">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Opening Balance</h1>
+    <div className="w-full bg-white p-6" style={{ minHeight: "100vh", boxSizing: "border-box" }}>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Opening Balance</h1>
 
-          <div className="flex items-center gap-4 bg-gray-100 px-4 py-3 mb-2">
-            <label className="text-sm font-medium text-[#a94442] whitespace-nowrap">
-              Opening Balance Date
+      {/* Opening Balance Date Section */}
+      <div className="bg-white rounded-lg border-2 p-6 space-y-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+            <CalendarDays className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Opening Balance Date</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Opening Balance Date <span className="text-red-600">*</span>
             </label>
             <Input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-64 bg-white"
-              placeholder="DD/MM/YYYY"
+              className="w-full h-9 md:h-[45px]"
             />
           </div>
+        </div>
+      </div>
 
-          <div className="border-t border-gray-200">
-            <div className="flex items-center py-2 border-b border-gray-300 text-sm font-semibold text-gray-800">
-              <div className="flex-1">Accounts</div>
-              <div className="w-40 text-right pr-2">Debit (INR)</div>
-              <div className="w-40 text-right">Credit (INR)</div>
-            </div>
+      {/* Accounts Section */}
+      <div className="bg-white rounded-lg border-2 p-6 space-y-4 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+            <Wallet className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Accounts</h3>
+        </div>
 
-            {loading ? (
-              <div className="py-8 text-center text-sm text-gray-500">Loading accounts...</div>
-            ) : (
-              visibleLedgers.map((ledger) => (
-                <div
-                  key={ledger.id}
-                  className="flex items-center py-2 border-b border-gray-200 text-sm"
-                >
-                  <div className="flex-1 text-gray-700">{ledger.name}</div>
-                  <div className="w-40 pr-2">
-                    <Input
-                      type="number"
-                      min={0}
-                      value={values[ledger.id]?.debit || ""}
-                      onChange={(e) => handleValueChange(ledger.id, "debit", e.target.value)}
-                      className="h-9 text-right"
-                    />
-                  </div>
-                  <div className="w-40">
-                    <Input
-                      type="number"
-                      min={0}
-                      value={values[ledger.id]?.credit || ""}
-                      onChange={(e) => handleValueChange(ledger.id, "credit", e.target.value)}
-                      className="h-9 text-right"
-                    />
-                  </div>
+        <div className="border border-gray-200 rounded-md overflow-hidden">
+          <div className="flex items-center py-2 px-3 border-b border-gray-300 bg-gray-50 text-sm font-semibold text-gray-800">
+            <div className="flex-1">Accounts</div>
+            <div className="w-40 text-right pr-2">Debit (INR)</div>
+            <div className="w-40 text-right">Credit (INR)</div>
+          </div>
+
+          {loading ? (
+            <div className="py-8 text-center text-sm text-gray-500">Loading accounts...</div>
+          ) : (
+            visibleLedgers.map((ledger) => (
+              <div
+                key={ledger.id}
+                className="flex items-center py-2 px-3 border-b border-gray-200 text-sm"
+              >
+                <div className="flex-1 text-gray-700">{ledger.name}</div>
+                <div className="w-40 pr-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={values[ledger.id]?.debit || ""}
+                    onChange={(e) => handleValueChange(ledger.id, "debit", e.target.value)}
+                    className="h-9 text-right"
+                  />
                 </div>
-              ))
-            )}
-
-            <div className="py-2 border-b border-gray-200">
-              {isAddingAccount ? (
-                <div className="flex items-center gap-2">
-                  <Select value={newAccountId} onValueChange={setNewAccountId}>
-                    <SelectTrigger className="w-64 h-9">
-                      <SelectValue placeholder="Select Account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {remainingLedgers.map((ledger) => (
-                        <SelectItem key={ledger.id} value={String(ledger.id)}>
-                          {ledger.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" onClick={handleAddAccount} disabled={!newAccountId}>
-                    Add
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddingAccount(false);
-                      setNewAccountId("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsAddingAccount(true)}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                >
-                  <Plus className="h-3.5 w-3.5" /> New Account
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center py-2 border-b border-gray-300 text-sm font-semibold text-gray-800">
-              <div className="flex-1 text-right pr-4">Total</div>
-              <div className="w-40 text-right pr-2">{formatAmount(totalDebit)}</div>
-              <div className="w-40 text-right">{formatAmount(totalCredit)}</div>
-            </div>
-
-            <div className="py-2 border-b border-gray-200">
-              <div className="flex items-center text-sm">
-                <div className="flex-1 text-[#a94442] font-medium">Opening Balance Adjustments</div>
-                <div className="w-40 text-right pr-2 text-[#a94442]">
-                  {!adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
-                </div>
-                <div className="w-40 text-right text-[#a94442]">
-                  {adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
+                <div className="w-40">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={values[ledger.id]?.credit || ""}
+                    onChange={(e) => handleValueChange(ledger.id, "credit", e.target.value)}
+                    className="h-9 text-right"
+                  />
                 </div>
               </div>
-              <p className="text-xs text-gray-500 italic mt-1">
-                This account will hold the difference in the credits and debits.
-              </p>
-            </div>
+            ))
+          )}
 
-            <div className="flex items-center py-2 border-b border-gray-300 text-sm font-bold text-gray-900">
-              <div className="flex-1 text-right pr-4">TOTAL AMOUNT</div>
-              <div className="w-40 text-right pr-2">{formatAmount(finalDebit)}</div>
-              <div className="w-40 text-right">{formatAmount(finalCredit)}</div>
+          <div className="py-2 px-3 border-b border-gray-200">
+            <button
+              type="button"
+              onClick={() => setIsAddingAccount(true)}
+              className="flex items-center gap-1 text-sm text-[#C72030] hover:text-[#A01020] font-medium"
+            >
+              <Plus className="h-3.5 w-3.5" /> New Account
+            </button>
+          </div>
+
+          <div className="flex items-center py-2 px-3 border-b border-gray-300 bg-gray-50 text-sm font-semibold text-gray-800">
+            <div className="flex-1 text-right pr-4">Total</div>
+            <div className="w-40 text-right pr-2">{formatAmount(totalDebit)}</div>
+            <div className="w-40 text-right">{formatAmount(totalCredit)}</div>
+          </div>
+
+          <div className="py-2 px-3 border-b border-gray-200">
+            <div className="flex items-center text-sm">
+              <div className="flex-1 text-[#a94442] font-medium">Opening Balance Adjustments</div>
+              <div className="w-40 text-right pr-2 text-[#a94442]">
+                {!adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
+              </div>
+              <div className="w-40 text-right text-[#a94442]">
+                {adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
+              </div>
             </div>
-            <p className="text-xs text-gray-500 italic py-1">
-              including Opening Balance Adjustment account
+            <p className="text-xs text-gray-500 italic mt-1">
+              This account will hold the difference in the credits and debits.
             </p>
           </div>
 
-          <div className="flex gap-3 pt-6">
+          <div className="flex items-center py-2 px-3 border-b border-gray-300 bg-gray-50 text-sm font-bold text-gray-900">
+            <div className="flex-1 text-right pr-4">TOTAL AMOUNT</div>
+            <div className="w-40 text-right pr-2">{formatAmount(finalDebit)}</div>
+            <div className="w-40 text-right">{formatAmount(finalCredit)}</div>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 italic">
+          including Opening Balance Adjustment account
+        </p>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-5 mt-5 mb-5 justify-center">
+        <Button
+          onClick={handleContinue}
+          disabled={submitting || loading}
+          className="bg-[#C72030] hover:bg-[#A01020] text-white min-w-[140px]"
+        >
+          {submitting ? "Submitting..." : "Continue"}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleCancel}
+          disabled={submitting}
+          className="min-w-[100px]"
+        >
+          Cancel
+        </Button>
+      </div>
+
+      <Dialog
+        open={isAddingAccount}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsAddingAccount(false);
+            setNewAccountId("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">New Account</h2>
             <Button
-              onClick={handleContinue}
-              disabled={submitting || loading}
-              className="bg-sky-500 hover:bg-sky-600 text-white min-w-[110px]"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setIsAddingAccount(false);
+                setNewAccountId("");
+              }}
+              className="h-6 w-6 p-0"
             >
-              {submitting ? "Submitting..." : "Continue"}
+              <X className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={handleCancel} disabled={submitting}>
+          </div>
+
+          <div className="space-y-4 px-6 py-4">
+            <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[160px_1fr]">
+              <label className="text-sm font-medium text-gray-800">Select Account</label>
+              <Select value={newAccountId} onValueChange={setNewAccountId}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select Account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {remainingLedgers.map((ledger) => (
+                    <SelectItem key={ledger.id} value={String(ledger.id)}>
+                      {ledger.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
+            <Button
+              onClick={handleAddAccount}
+              disabled={!newAccountId}
+              className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
+            >
+              Add
+            </Button>
+            <Button
+              onClick={() => {
+                setIsAddingAccount(false);
+                setNewAccountId("");
+              }}
+              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] h-10"
+            >
               Cancel
             </Button>
           </div>
-        </div>
-
-        <div className="w-64 flex-shrink-0 hidden lg:block">
-          <h3 className="text-xs font-bold text-gray-500 tracking-wide mb-3">RELATED TIPS</h3>
-          <ul className="space-y-3 text-sm">
-            <li>
-              <span className="text-blue-600 hover:underline cursor-pointer">
-                What is an opening balance?
-              </span>
-            </li>
-            <li>
-              <span className="text-blue-600 hover:underline cursor-pointer">
-                How do I enter opening balance for my customers and vendors?
-              </span>
-            </li>
-          </ul>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

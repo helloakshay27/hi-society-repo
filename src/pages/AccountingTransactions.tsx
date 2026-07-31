@@ -4,11 +4,19 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Plus, RefreshCw, Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 
 interface LedgerRecord {
   id?: number;
@@ -79,6 +87,7 @@ const AccountingTransactions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [transactions, setTransactions] = useState<LockAccountTransaction[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterId, setFilterId] = useState("");
   const [filterReference, setFilterReference] = useState("");
   const [filterVoucherDate, setFilterVoucherDate] = useState("");
@@ -178,6 +187,7 @@ const AccountingTransactions: React.FC = () => {
       voucherDate: filterVoucherDate,
       createdOn: filterCreatedOn,
     });
+    setIsFilterOpen(false);
   };
 
   const handleResetFilters = () => {
@@ -238,68 +248,6 @@ const AccountingTransactions: React.FC = () => {
           ))}
         </TabsList>
 
-        {activeTab !== "all" && (
-          <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex flex-wrap items-end gap-3">
-              <Input
-                placeholder="ID"
-                value={filterId}
-                onChange={(e) => setFilterId(e.target.value)}
-                className="w-32"
-              />
-              <Input
-                placeholder="Reference"
-                value={filterReference}
-                onChange={(e) => setFilterReference(e.target.value)}
-                className="w-40"
-              />
-              <Input
-                type="date"
-                placeholder="Voucher Date"
-                value={filterVoucherDate}
-                onChange={(e) => setFilterVoucherDate(e.target.value)}
-                className="w-44"
-              />
-              <Input
-                type="date"
-                placeholder="Created on"
-                value={filterCreatedOn}
-                onChange={(e) => setFilterCreatedOn(e.target.value)}
-                className="w-44"
-              />
-              <Button
-                onClick={handleApplyFilters}
-                className="bg-brand-green text-white hover:bg-brand-green/90"
-              >
-                Apply
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleResetFilters}
-                className="border-brand-teal text-brand-teal hover:bg-brand-teal/10"
-              >
-                Reset
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-2 lg:items-end">
-              <Button
-                onClick={handleAddTransaction}
-                className="bg-brand text-white hover:bg-brand-hover"
-              >
-                <Plus className="mr-2 h-4 w-4" /> Add
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleImport}
-                className="border-brand-card-border text-brand-text hover:bg-brand-selected"
-              >
-                <Upload className="mr-2 h-4 w-4" /> Import
-              </Button>
-            </div>
-          </div>
-        )}
-
         <div className="mt-4">
           <EnhancedTable
             data={filteredRows}
@@ -311,22 +259,97 @@ const AccountingTransactions: React.FC = () => {
             enableExport
             exportFileName={`accounting-transactions-${activeTab}`}
             storageKey={`accounting-transactions-${activeTab}-table`}
-            rightActions={
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={fetchTransactions}
-                title="Refresh"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
+            leftActions={
+              activeTab === "journal" ? (
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleAddTransaction}
+                     className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleImport}
+                     className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                  >
+                    <Upload className="mr-2 h-4 w-4" /> Import
+                  </Button>
+                </div>
+              ) : undefined
             }
+            onFilterClick={() => setIsFilterOpen(true)}
             loading={loading}
             loadingMessage="Loading transactions..."
             emptyMessage="No matching records found"
           />
         </div>
       </Tabs>
+
+      <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <DialogContent className="max-w-lg bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-brand-h2 text-brand-text">
+              Filter Transactions
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="filter-id">ID</Label>
+              <Input
+                id="filter-id"
+                placeholder="ID"
+                value={filterId}
+                onChange={(e) => setFilterId(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="filter-reference">Reference</Label>
+              <Input
+                id="filter-reference"
+                placeholder="Reference"
+                value={filterReference}
+                onChange={(e) => setFilterReference(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="filter-voucher-date">Voucher Date</Label>
+              <Input
+                id="filter-voucher-date"
+                type="date"
+                value={filterVoucherDate}
+                onChange={(e) => setFilterVoucherDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="filter-created-on">Created On</Label>
+              <Input
+                id="filter-created-on"
+                type="date"
+                value={filterCreatedOn}
+                onChange={(e) => setFilterCreatedOn(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={handleResetFilters}
+              className="border-brand-card-border text-brand-text hover:bg-brand-selected"
+            >
+              Reset
+            </Button>
+            <Button
+              onClick={handleApplyFilters}
+              className="bg-brand text-white hover:bg-brand-hover"
+            >
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

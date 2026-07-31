@@ -1120,7 +1120,6 @@ const ProfitAndLossReport = lazy(() => import("./pages/ClubManagement/ProfitAndL
 const RecurringJournalAdd = lazy(() => import("./pages/ClubManagement/RecurringJournalAdd"));
 const BillEdit = lazy(() => import("./pages/ClubManagement/BillEdit").then(m => ({ default: m.BillEdit })));
 const ExpenseEditPage = lazy(() => import("./pages/ExpenseEditPage").then(m => ({ default: m.ExpenseEditPage })));
-const TaxSetup = lazy(() => import("./pages/ClubManagement/TaxSetup"));
 const TaxSetupTabView = lazy(() => import("./pages/ClubManagement/TaxSetupTabView"));
 const TaxSummaryReport = lazy(() => import("./pages/ClubManagement/TaxSummaryReport"));
 const TransactionsAdd = lazy(() => import("./pages/ClubManagement/TransationsAdd"));
@@ -3607,10 +3606,6 @@ function App() {
                         <Route
                           path="/accounting/opening-balance"
                           element={<OpeningBalance />}
-                        />
-                        <Route
-                          path="/accounting/tax-setup"
-                          element={<TaxSetup />}
                         />
                         <Route
                           path="/accounting/tax-setup-tab"

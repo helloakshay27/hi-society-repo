@@ -188,8 +188,7 @@ const AccountingReceipts: React.FC = () => {
         storageKey="accounting-receipts-table"
         leftActions={
           <Button
-            className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
-            onClick={() => setIsImportOpen(true)}
+ className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"            onClick={() => setIsImportOpen(true)}
           >
             <Upload className="mr-2 h-4 w-4" /> Import Receipts
           </Button>

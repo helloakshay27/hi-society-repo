@@ -100,7 +100,9 @@ const AccountingCostCenter: React.FC = () => {
         loadingMessage="Loading cost centres..."
         emptyMessage="No matching records found"
         leftActions={
-          <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={handleAdd}>
+          <Button 
+           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          onClick={handleAdd}>
             <Plus className="mr-2 h-4 w-4" /> Add
           </Button>
         }

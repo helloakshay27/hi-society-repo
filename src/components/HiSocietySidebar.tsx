@@ -137,7 +137,6 @@ export const HiSocietySidebar: React.FC = () => {
     // Check for Application Setup paths first - these should stay in settings
     if (
       path.startsWith("/fitout/setup") ||
-      path.startsWith("/accounting/tax-setup") ||
       path.startsWith("/accounting/payment-terms") ||
       path.startsWith("/accounting/vendors") ||
       path.startsWith("/smartsecure/visitor-purpose") ||

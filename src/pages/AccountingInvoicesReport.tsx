@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { CalendarIcon, X, Filter, NotepadText } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -160,87 +160,51 @@ const AccountingInvoicesReport: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-[#f9f7f2] p-6" style={{ minHeight: "100vh", boxSizing: "border-box" }}>
-      {/* Header */}
-      <div className="mb-6 rounded-lg border-2 bg-white p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E5E0D3] text-[#C72030]">
-            <NotepadText className="h-6 w-6" />
-          </div>
-          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Invoices Report</h3>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-            onClick={handleOpenFilter}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
-          </Button>
-        </div>
-
-        {/* Applied Filters */}
-        {hasAppliedFilters && (
-          <div className="border-t border-dashed border-gray-300 mt-4 pt-4">
-            <p className="text-sm font-semibold text-gray-700 mb-2">Applied Filters</p>
-            <div className="flex flex-wrap gap-2">
-              {appliedFilters.tower && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-gray-300 px-3 py-1 text-xs text-gray-700">
-                  Tower: {appliedFilters.tower}
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => removeAppliedFilter("tower")} />
-                </span>
-              )}
-              {appliedFilters.flat && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-gray-300 px-3 py-1 text-xs text-gray-700">
-                  Flat: {appliedFilters.flat}
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => removeAppliedFilter("flat")} />
-                </span>
-              )}
-              {appliedFilters.dueDate && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-gray-300 px-3 py-1 text-xs text-gray-700">
-                  Due Date: {format(appliedFilters.dueDate, "dd/MM/yyyy")}
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => removeAppliedFilter("dueDate")} />
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      <div className="mb-4">
+        <h1 className="text-brand-h2 font-semibold text-brand-text">Invoices Report</h1>
+        <p className="mt-1 text-brand-body-4 text-brand-text-light">
+          {hasAppliedFilters ? "Filtered results" : "All invoices"}
+        </p>
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border bg-white overflow-hidden">
-        <div className="px-6 py-5 text-center border-b border-[#EAECF0] bg-[#F8F9FC]">
-          <p className="text-sm font-medium text-[#667085]">Lockated</p>
-          <h1 className="mt-1 text-2xl font-semibold text-[#101828]">Invoices Report</h1>
-          <p className="mt-1 text-sm text-[#475467]">
-            {hasAppliedFilters ? "Filtered results" : "All invoices"}
-          </p>
+      {hasAppliedFilters && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="text-brand-body-4 font-medium text-brand-text-light">
+            Applied Filters:
+          </span>
+          {appliedFilters.tower && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-brand-card-border bg-brand-light px-3 py-1 text-xs text-brand-text">
+              Tower: {appliedFilters.tower}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => removeAppliedFilter("tower")} />
+            </span>
+          )}
+          {appliedFilters.flat && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-brand-card-border bg-brand-light px-3 py-1 text-xs text-brand-text">
+              Flat: {appliedFilters.flat}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => removeAppliedFilter("flat")} />
+            </span>
+          )}
+          {appliedFilters.dueDate && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-brand-card-border bg-brand-light px-3 py-1 text-xs text-brand-text">
+              Due Date: {format(appliedFilters.dueDate, "dd/MM/yyyy")}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => removeAppliedFilter("dueDate")} />
+            </span>
+          )}
         </div>
+      )}
 
-        <div className="p-4">
-          <EnhancedTable
-            data={filteredRows}
-            columns={columns}
-            renderCell={renderCell}
-            getItemId={(item) => String(item.sr)}
-            enableExport
-            exportFileName="invoices-report"
-            storageKey="accounting-invoices-report-table"
-            emptyMessage="No invoices found"
-            leftActions={
-              <Button
-                variant="outline"
-                className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-                onClick={handleOpenFilter}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
-              </Button>
-            }
-          />
-        </div>
-      </div>
+      <EnhancedTable
+        data={filteredRows}
+        columns={columns}
+        renderCell={renderCell}
+        getItemId={(item) => String(item.sr)}
+        enableExport
+        exportFileName="invoices-report"
+        storageKey="accounting-invoices-report-table"
+        emptyMessage="No invoices found"
+        onFilterClick={handleOpenFilter}
+      />
 
       {/* Filter Dialog */}
       <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
@@ -321,12 +285,16 @@ const AccountingInvoicesReport: React.FC = () => {
           </div>
 
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={handleResetFilters}>
+            <Button
+              variant="outline"
+              onClick={handleResetFilters}
+              className="border-brand-card-border text-brand-text hover:bg-brand-selected"
+            >
               Reset
             </Button>
             <Button
               onClick={handleApplyFilters}
-              className="bg-[#C72030] hover:bg-[#A01B28] text-white"
+              className="bg-brand text-white hover:bg-brand-hover"
             >
               Apply Filters
             </Button>

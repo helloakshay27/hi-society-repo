@@ -6,7 +6,18 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Eye, Plus, Download, Send, FileSpreadsheet, CheckSquare } from "lucide-react";
+import {
+  Eye,
+  Plus,
+  Download,
+  Send,
+  FileSpreadsheet,
+  CheckSquare,
+  Receipt,
+  IndianRupee,
+  Clock,
+  CheckCircle2,
+} from "lucide-react";
 import {
   AccountingInvoiceFilterDialog,
   AccountingInvoiceFilters,
@@ -210,10 +221,10 @@ const AccountingInvoices: React.FC = () => {
   }, [rows]);
 
   const statCards = [
-    { label: "Total Bills", value: totals.totalBills, gradient: "from-fuchsia-800 via-rose-700 to-orange-500" },
-    { label: "Total Amount", value: totals.totalAmount.toFixed(1), gradient: "from-rose-700 via-orange-500 to-amber-400" },
-    { label: "Pending Amount", value: totals.pendingAmount.toFixed(2), gradient: "from-orange-600 to-amber-400" },
-    { label: "Paid Amount", value: totals.paidAmount.toFixed(2), gradient: "from-rose-900 via-orange-700 to-amber-600" },
+    { label: "Total Bills", value: totals.totalBills.toLocaleString(), icon: Receipt },
+    { label: "Total Amount", value: `₹${totals.totalAmount.toFixed(2)}`, icon: IndianRupee },
+    { label: "Pending Amount", value: `₹${totals.pendingAmount.toFixed(2)}`, icon: Clock },
+    { label: "Paid Amount", value: `₹${totals.paidAmount.toFixed(2)}`, icon: CheckCircle2 },
   ];
 
   const handleSelectAll = (checked: boolean) => {
@@ -316,47 +327,53 @@ const AccountingInvoices: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className={`rounded-lg bg-gradient-to-r ${card.gradient} p-6 text-white shadow`}
-          >
-            <div className="text-2xl font-bold">{card.value}</div>
-            <div className="text-sm opacity-90">{card.label}</div>
-          </div>
-        ))}
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={card.label}
+              className="flex items-center gap-3 rounded-lg bg-brand-bg p-4 shadow-brand-card transition-shadow hover:shadow-system-md"
+            >
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center bg-brand-light">
+                <Icon className="h-5 w-5 text-brand" />
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-xl font-semibold text-brand-text">
+                  {card.value}
+                </div>
+                <div className="truncate text-xs font-medium text-brand-text">
+                  {card.label}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="mb-4 flex flex-wrap gap-3">
+       
         <Button
-          className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
-          onClick={() => navigate("/accounting/invoices/add")}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add New
-        </Button>
-        <Button
-          className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
           onClick={() => handleSelectAll(selectedIds.length !== filteredRows.length)}
         >
           <CheckSquare className="mr-2 h-4 w-4" /> Select All
         </Button>
         <Button
-          className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
-          onClick={() => exportRowsToCsv(filteredRows, "invoices")}
+ className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"          onClick={() => exportRowsToCsv(filteredRows, "invoices")}
         >
           <Download className="mr-2 h-4 w-4" /> Export
         </Button>
         <Button
-          className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
           onClick={() => exportRowsToCsv(rows, "invoices-all")}
         >
           <FileSpreadsheet className="mr-2 h-4 w-4" /> Export All
         </Button>
-        <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={handleRaiseInvoices}>
+        <Button className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium" onClick={handleRaiseInvoices}>
           <Send className="mr-2 h-4 w-4" /> Raise Invoices
         </Button>
-        <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={handleRemind}>
+        <Button className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium" onClick={handleRemind}>
           Remind
         </Button>
       </div>
@@ -379,6 +396,14 @@ const AccountingInvoices: React.FC = () => {
         loading={loading}
         loadingMessage="Loading invoices..."
         emptyMessage="No matching records found"
+         leftActions={
+                  <Button
+           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          onClick={() => navigate("/accounting/invoices/add")}
+        >
+          <Plus className="mr-2 h-4 w-4" /> Add
+        </Button>
+                }
       />
 
       <AccountingInvoiceFilterDialog

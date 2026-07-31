@@ -107,21 +107,21 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
-        <div className="flex items-center justify-between bg-cyan-500 px-6 py-3">
-          <h2 className="text-lg font-medium text-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">
             {editingCostCentre ? "Edit Account" : "New Account"}
           </h2>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleClose}
-            className="text-white hover:opacity-80"
-            aria-label="Close"
+            className="h-6 w-6 p-0"
           >
-            <X className="h-5 w-5" />
-          </button>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
-        <div className="space-y-4 p-6">
+        <div className="space-y-4 px-6 py-4">
           <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[160px_1fr]">
             <label className="text-sm font-medium text-gray-800">Cost Centre Name</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -142,15 +142,23 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
             <Input type="date" value={budgetEnd} onChange={(e) => setBudgetEnd(e.target.value)} />
           </div>
 
-          <div className="flex justify-center border-t border-gray-200 pt-4">
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="min-w-[140px] bg-green-600 text-white hover:bg-green-700"
-            >
-              {submitting ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
+        </div>
+
+        <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
+          >
+            {submitting ? "Submitting..." : "Submit"}
+          </Button>
+          <Button
+            onClick={handleClose}
+            disabled={submitting}
+            className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] h-10"
+          >
+            Cancel
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

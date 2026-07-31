@@ -100,8 +100,9 @@ const AccountingCharges: React.FC = () => {
         exportFileName="accounting-charges"
         storageKey="accounting-charges-table"
         leftActions={
-          <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={() => setIsAddOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Add
+          <Button           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4 mr-2" /> Add
           </Button>
         }
         loading={loading}

@@ -247,33 +247,47 @@ const AccountingChartOfAccounts: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-      <div className="mb-4 flex flex-wrap gap-3">
-        <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={handleAddAccount}>
-          <Plus className="mr-2 h-4 w-4" /> Account
-        </Button>
-        <Button
-          className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
-          onClick={() => setViewType(viewType === "tree" ? "table" : "tree")}
-        >
-          {viewType === "tree" ? (
-            <>
-              <Table2 className="mr-2 h-4 w-4" /> Table View
-            </>
-          ) : (
-            <>
-              <ListTree className="mr-2 h-4 w-4" /> Tree View
-            </>
-          )}
-        </Button>
-        <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={handleSyncFlatLedgers}>
-          <Plus className="mr-2 h-4 w-4" /> Sync Flat Ledgers
-        </Button>
-        <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={handleSyncVendorLedgers}>
-          <Plus className="mr-2 h-4 w-4" /> Sync Vendor Ledgers
-        </Button>
-        <Button className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90" onClick={handleRaiseToBuilder}>
-          <DownloadCloud className="mr-2 h-4 w-4" /> Raise To Builder
-        </Button>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+       
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+            onClick={() => setViewType(viewType === "tree" ? "table" : "tree")}
+          >
+            {viewType === "tree" ? (
+              <>
+                <Table2 className="mr-2 h-4 w-4" /> Table View
+              </>
+            ) : (
+              <>
+                <ListTree className="mr-2 h-4 w-4" /> Tree View
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+            onClick={handleSyncFlatLedgers}
+          >
+            <UploadCloud className="mr-2 h-4 w-4" /> Sync Flat Ledgers
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+            onClick={handleSyncVendorLedgers}
+          >
+            <UploadCloud className="mr-2 h-4 w-4" /> Sync Vendor Ledgers
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+            onClick={handleRaiseToBuilder}
+          >
+            <DownloadCloud className="mr-2 h-4 w-4" /> Raise To Builder
+          </Button>
+        </div>
       </div>
 
       {viewType === "table" ? (
@@ -290,6 +304,14 @@ const AccountingChartOfAccounts: React.FC = () => {
           loading={loading}
           loadingMessage="Loading chart of accounts..."
           emptyMessage="No matching records found"
+           leftActions={
+                    <Button
+          onClick={handleAddAccount}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Account
+        </Button>
+                  }
         />
       ) : (
         <div className="rounded-md border border-gray-200 bg-white p-4">
