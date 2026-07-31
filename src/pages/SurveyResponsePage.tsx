@@ -1427,6 +1427,122 @@ export const SurveyResponsePage = () => {
     // Note: fetchSurveyResponses will be called automatically when currentPage changes due to the useCallback dependency
   };
 
+  const renderPaginationItems = () => {
+    const totalPages = pagination.total_pages;
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 7;
+    const disabled = isLoading || searchLoading;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => !disabled && handlePageChange(1)}
+            isActive={currentPage === 1}
+            className={disabled ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => !disabled && handlePageChange(i)}
+                  isActive={currentPage === i}
+                  className={disabled ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(i)}
+              isActive={currentPage === i}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   // Get dynamic counts from summary stats
   const getTotalActiveCount = () => {
     const count = summaryStats.total_active_surveys;
@@ -1714,7 +1830,7 @@ export const SurveyResponsePage = () => {
                 )} */}
 
             {/* Server-side Pagination Controls */}
-            {pagination.total_pages > 1 && (
+            {(
               <div className="mt-6">
                 <Pagination>
                   <PaginationContent>
@@ -1727,37 +1843,11 @@ export const SurveyResponsePage = () => {
                         className={
                           currentPage === 1 || isLoading || searchLoading
                             ? "pointer-events-none opacity-50"
-                            : ""
+                            : "cursor-pointer"
                         }
                       />
                     </PaginationItem>
-                    {Array.from(
-                      { length: Math.min(pagination.total_pages, 10) },
-                      (_, i) => i + 1
-                    ).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => {
-                            if (!isLoading && !searchLoading) {
-                              handlePageChange(page);
-                            }
-                          }}
-                          isActive={currentPage === page}
-                          className={
-                            isLoading || searchLoading
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    {pagination.total_pages > 10 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
+                    {renderPaginationItems()}
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => {
@@ -1767,16 +1857,16 @@ export const SurveyResponsePage = () => {
                         className={
                           currentPage === pagination.total_pages || isLoading || searchLoading
                             ? "pointer-events-none opacity-50"
-                            : ""
+                            : "cursor-pointer"
                         }
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
-                <div className="text-center mt-2 text-sm text-gray-600">
+                {/* <div className="text-center mt-2 text-sm text-gray-600">
                   Showing page {currentPage} of {pagination.total_pages} (
                   {pagination.total_count} total survey responses)
-                </div>
+                </div> */}
               </div>
             )}
           </div>

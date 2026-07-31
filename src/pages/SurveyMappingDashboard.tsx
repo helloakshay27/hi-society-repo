@@ -660,6 +660,121 @@ export const SurveyMappingDashboard = () => {
     fetchSurveyMappingsData(1, searchTerm.trim() || undefined, filters, true);
   };
 
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 7;
+    const disabled = loading || searchLoading;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => !disabled && handlePageChange(1)}
+            isActive={currentPage === 1}
+            className={disabled ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => !disabled && handlePageChange(i)}
+                  isActive={currentPage === i}
+                  className={disabled ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(i)}
+              isActive={currentPage === i}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   // Handle page change for server-side pagination
   const handlePageChange = async (page: number) => {
     try {
@@ -1175,131 +1290,50 @@ export const SurveyMappingDashboard = () => {
         </div>
 
         {/* Server-side Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-6 overflow-x-auto">
-            <Pagination className="flex-wrap justify-center sm:justify-start gap-1 sm:gap-2">
-              <PaginationContent>
-                {/* Previous Button */}
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => {
-                      if (currentPage > 1 && !loading && !searchLoading) {
-                        handlePageChange(currentPage - 1);
-                      }
-                    }}
-                    className={
-                      currentPage === 1 || loading || searchLoading
-                        ? "pointer-events-none opacity-50"
-                        : ""
+        <div className="mt-6 overflow-x-auto">
+          <Pagination className="flex-wrap justify-center gap-1 sm:gap-2">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => {
+                    if (currentPage > 1 && !loading && !searchLoading) {
+                      handlePageChange(currentPage - 1);
                     }
-                  />
-                </PaginationItem>
-
-                {/* First Page */}
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={() => {
-                      if (!loading && !searchLoading) {
-                        handlePageChange(1);
-                      }
-                    }}
-                    isActive={currentPage === 1}
-                    className={
-                      loading || searchLoading
-                        ? "pointer-events-none opacity-50"
-                        : ""
+                  }}
+                  className={
+                    currentPage === 1 || loading || searchLoading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => {
+                    if (
+                      currentPage < totalPages &&
+                      !loading &&
+                      !searchLoading
+                    ) {
+                      handlePageChange(currentPage + 1);
                     }
-                  >
-                    1
-                  </PaginationLink>
-                </PaginationItem>
+                  }}
+                  className={
+                    currentPage === totalPages || loading || searchLoading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
 
-                {/* Ellipsis before current range */}
-                {currentPage > 4 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-
-                {/* Dynamic middle pages */}
-                {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i)
-                  .filter((page) => page > 1 && page < totalPages)
-                  .map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => {
-                          if (!loading && !searchLoading) {
-                            handlePageChange(page);
-                          }
-                        }}
-                        isActive={currentPage === page}
-                        className={
-                          loading || searchLoading
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                {/* Ellipsis after current range */}
-                {currentPage < totalPages - 3 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-
-                {/* Last Page (if not same as first) */}
-                {totalPages > 1 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      onClick={() => {
-                        if (!loading && !searchLoading) {
-                          handlePageChange(totalPages);
-                        }
-                      }}
-                      isActive={currentPage === totalPages}
-                      className={
-                        loading || searchLoading
-                          ? "pointer-events-none opacity-50"
-                          : ""
-                      }
-                    >
-                      {totalPages}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-
-                {/* Next Button */}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => {
-                      if (
-                        currentPage < totalPages &&
-                        !loading &&
-                        !searchLoading
-                      ) {
-                        handlePageChange(currentPage + 1);
-                      }
-                    }}
-                    className={
-                      currentPage === totalPages || loading || searchLoading
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-
-            <div className="text-center mt-2 text-sm text-gray-600">
-              Showing page {currentPage} of {totalPages} ({totalCount} total
-              survey mappings)
-            </div>
-          </div>
-        )}
+          {/* <div className="text-center mt-2 text-sm text-gray-600">
+            Showing page {currentPage} of {totalPages} ({totalCount} total
+            survey mappings)
+          </div> */}
+        </div>
       </div>
 
       {/* Bulk Upload Modal */}

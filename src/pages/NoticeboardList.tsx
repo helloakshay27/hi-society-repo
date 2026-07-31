@@ -7,10 +7,20 @@ import { Plus, Eye, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationLink,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 const NoticeboardList = () => {
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+  const [allNoticeboards, setAllNoticeboards] = useState([]);
   const [noticeboards, setNoticeboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [noticeboardPermission, setNoticeboardPermission] = useState<{
@@ -21,6 +31,9 @@ const NoticeboardList = () => {
   }>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
   const getNoticeboardPermission = () => {
     try {
@@ -111,11 +124,13 @@ const NoticeboardList = () => {
           );
         }
 
-        setNoticeboards(filteredNoticeboards);
+        setAllNoticeboards(filteredNoticeboards);
+        setTotalPages(Math.ceil(filteredNoticeboards.length / itemsPerPage) || 1);
       } catch (error) {
         console.error("Error fetching noticeboards:", error);
         toast.error("Failed to fetch noticeboards");
-        setNoticeboards([]);
+        setAllNoticeboards([]);
+        setTotalPages(1);
       } finally {
         setLoading(false);
         setIsSearching(false);
@@ -128,8 +143,110 @@ const NoticeboardList = () => {
     fetchNoticeboards(searchTerm);
   }, [searchTerm, fetchNoticeboards]);
 
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    setNoticeboards(allNoticeboards.slice(startIndex, startIndex + itemsPerPage));
+  }, [allNoticeboards, currentPage]);
+
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleAddNoticeboard = () => {
@@ -235,7 +352,11 @@ const NoticeboardList = () => {
           </div>
         );
       case "id":
-        return <span className="text-sm text-gray-700">{index + 1}</span>;
+        return (
+          <span className="text-sm text-gray-700">
+            {(currentPage - 1) * itemsPerPage + index + 1}
+          </span>
+        );
       case "notice_heading":
         return item.notice_heading || "-";
       case "notice_type":
@@ -320,6 +441,25 @@ const NoticeboardList = () => {
           isSearching ? "Searching broadcasts..." : "Loading broadcasts..."
         }
       />
+      <div className="mt-6 flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 

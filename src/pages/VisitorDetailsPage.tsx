@@ -503,7 +503,7 @@ export const VisitorDetailsPage = () => {
       <div className="p-6 bg-white min-h-screen">
         <div className="text-center text-red-500">
           <p>{error || "Visitor not found"}</p>
-          <Button onClick={handleBackToList} className="mt-4">
+          <Button onClick={handleBackToList}  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 mx-auto">
             Back to List
           </Button>
         </div>
