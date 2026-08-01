@@ -16,6 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 import {
@@ -43,6 +50,8 @@ export const WalletManagement = () => {
   const ITEMS_PER_PAGE = 10; // fixed page size used only for UI
 
   const [timeRange, setTimeRange] = useState("10");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [draftTimeRange, setDraftTimeRange] = useState("10");
   const [loading, setLoading] = useState(false);
   const [cardsData, setCardsData] = useState<any>([]);
   const [activeTab, setActiveTab] = useState("wallet-management");
@@ -555,28 +564,9 @@ export const WalletManagement = () => {
 
           {/* Recent Transactions Table (API) */}
           <div className="space-y-4">
-            <div className="flex align-items-center justify-between w-full bg-[#f6f4ee] p-3">
+            {/* <div className="flex align-items-center justify-between w-full bg-[#f6f4ee] p-3">
               <p className="text-lg font-bold my-auto ">Recent Transactions</p>
-              <FormControl sx={{ width: 180 }} variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select range</InputLabel>
-                <MuiSelect
-                  value={timeRange}
-                  onChange={(e) => {
-                    setTimeRange(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  displayEmpty
-                  label="Select range"
-                  sx={fieldStyles}
-                  MenuProps={menuProps}
-                >
-                  <MenuItem value="7">Last 7 days</MenuItem>
-                  <MenuItem value="10">Last 10 days</MenuItem>
-                  <MenuItem value="30">Last 30 days</MenuItem>
-                  <MenuItem value="90">Last 90 days</MenuItem>
-                </MuiSelect>
-              </FormControl>
-            </div>
+            </div> */}
             <EnhancedTable
               data={transactions}
               columns={apiColumns}
@@ -587,6 +577,10 @@ export const WalletManagement = () => {
               enableExport={true}
               exportFileName="wallet-transactions"
               storageKey="wallet-management-table"
+              onFilterClick={() => {
+                setDraftTimeRange(timeRange);
+                setIsFilterOpen(true);
+              }}
             />
             {totalCount > 0 && (
               <div className="flex flex-col items-center gap-2 mt-4">
@@ -613,6 +607,62 @@ export const WalletManagement = () => {
               </div>
             )}
           </div>
+
+          <Dialog open={isFilterOpen} modal={false} onOpenChange={setIsFilterOpen}>
+            <DialogContent className="max-w-sm bg-white">
+              <DialogHeader>
+                <DialogTitle className="text-brand-h2 text-brand-text">
+                  Filter Transactions
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="py-2">
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                    Select range
+                  </InputLabel>
+                  <MuiSelect
+                    value={draftTimeRange}
+                    onChange={(e) => setDraftTimeRange(e.target.value)}
+                    displayEmpty
+                    label="Select range"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="7">Last 7 days</MenuItem>
+                    <MenuItem value="10">Last 10 days</MenuItem>
+                    <MenuItem value="30">Last 30 days</MenuItem>
+                    <MenuItem value="90">Last 90 days</MenuItem>
+                  </MuiSelect>
+                </FormControl>
+              </div>
+
+              <DialogFooter className="gap-2 sm:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDraftTimeRange("10");
+                    setTimeRange("10");
+                    setCurrentPage(1);
+                    setIsFilterOpen(false);
+                  }}
+                  className="border-brand-card-border text-brand-text hover:bg-brand-selected"
+                >
+                  Reset
+                </Button>
+                <Button
+                  onClick={() => {
+                    setTimeRange(draftTimeRange);
+                    setCurrentPage(1);
+                    setIsFilterOpen(false);
+                  }}
+                  className="bg-brand text-white hover:bg-brand-hover"
+                >
+                  Apply
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="auto-top-up" className="space-y-6 mt-6">

@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { OrdersListFilterModal } from "@/components/OrdersListFilterModal";
 import {
   Pagination,
   PaginationContent,
@@ -62,6 +61,7 @@ const OrdersList = () => {
     { value: "2024", label: "2024" },
   ]);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const statusOptions = [
     { label: "All Statuses", value: "" },
@@ -205,6 +205,13 @@ const OrdersList = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+  };
+
+  const handleApplyFilter = (data: { status: string[]; paymentStatus: string[]; orderDate: string }) => {
+    setStatusFilter(data.status);
+    setPaymentStatusFilter(data.paymentStatus);
+    setOrderDateFilter(data.orderDate || "last_30_days");
     setPagination((prev) => ({ ...prev, current_page: 1 }));
   };
 
@@ -444,7 +451,6 @@ const OrdersList = () => {
 
   const renderListTab = () => (
     <div className="space-y-4">
-      {renderCustomFilters()}
       <EnhancedTable
         data={orders}
         columns={columns}
@@ -459,6 +465,7 @@ const OrdersList = () => {
         searchPlaceholder="Search orders"
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
+        onFilterClick={() => setIsFilterOpen(true)}
       />
       <div className="flex justify-center mt-6">
         <Pagination>
@@ -574,107 +581,6 @@ const OrdersList = () => {
     }
   };
 
-  const renderCustomFilters = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      {/* Clear Filter Button */}
-      <div className="col-span-3 flex justify-end mb-2">
-        <button
-          className="px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#A01828] transition-colors"
-          onClick={() => {
-            setStatusFilter([]);
-            setPaymentStatusFilter([]);
-            setOrderDateFilter("last_30_days");
-            setSearchTerm("");
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-        >
-          Clear Filter
-        </button>
-      </div>
-      <FormControl fullWidth variant="outlined">
-        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status Filter</InputLabel>
-        <MuiSelect
-          multiple
-          value={statusFilter}
-          onChange={(e) => {
-            const values = e.target.value as string[];
-            setStatusFilter(values);
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-          displayEmpty
-          label="Status Filter"
-          sx={fieldStyles}
-          MenuProps={menuProps}
-          renderValue={(selected: string[]) =>
-            selected.length
-              ? selected
-                  .map((value) => statusOptions.find((o) => o.value === value)?.label || value)
-                  .join(', ')
-              : <em>Select Status...</em>
-          }
-        >
-          {statusOptions.filter((opt) => opt.value !== "").map((opt) => (
-            <MenuItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </MenuItem>
-          ))}
-        </MuiSelect>
-      </FormControl>
-
-      <FormControl fullWidth variant="outlined">
-        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Payment Status</InputLabel>
-        <MuiSelect
-          multiple
-          value={paymentStatusFilter}
-          onChange={(e) => {
-            const values = e.target.value as string[];
-            setPaymentStatusFilter(values);
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-          displayEmpty
-          label="Payment Status"
-          sx={fieldStyles}
-          MenuProps={menuProps}
-          renderValue={(selected: string[]) =>
-            selected.length
-              ? selected
-                  .map((value) => paymentStatusOptions.find((o) => o.value === value)?.label || value)
-                  .join(', ')
-              : <em>Select Payment Status...</em>
-          }
-        >
-          {paymentStatusOptions.filter((opt) => opt.value !== "").map((opt) => (
-            <MenuItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </MenuItem>
-          ))}
-        </MuiSelect>
-      </FormControl>
-
-      <FormControl fullWidth variant="outlined">
-        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Order Date</InputLabel>
-        <MuiSelect
-          value={orderDateFilter}
-          onChange={(e) => {
-            setOrderDateFilter(e.target.value || "last_30_days");
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-          displayEmpty
-          label="Order Date"
-          sx={fieldStyles}
-          MenuProps={menuProps}
-        >
-          <MenuItem value=""><em>Select Date Range...</em></MenuItem>
-          {orderDateOptions.map((opt) => (
-            <MenuItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </MenuItem>
-          ))}
-        </MuiSelect>
-      </FormControl>
-    </div>)
-
-
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
@@ -682,6 +588,18 @@ const OrdersList = () => {
         <h1 className="text-2xl font-bold text-gray-900">ORDERS ({pagination.total_count} total)</h1>
       </div>
       {renderListTab()}
+
+      <OrdersListFilterModal
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        initialStatus={statusFilter}
+        initialPaymentStatus={paymentStatusFilter}
+        initialOrderDate={orderDateFilter}
+        statusOptions={statusOptions}
+        paymentStatusOptions={paymentStatusOptions}
+        orderDateOptions={orderDateOptions}
+        onApply={handleApplyFilter}
+      />
     </div>
   );
 };
