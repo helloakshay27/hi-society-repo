@@ -365,19 +365,19 @@ const FitoutReport: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="mt-6 flex justify-start gap-3">
-            <Button
+            {/* <Button
               onClick={fetchReportData}
               disabled={isFetchingReport}
               className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Search className="w-4 h-4 mr-2" />
               {isFetchingReport ? "Loading..." : "View Report"}
-            </Button>
+            </Button> */}
             <Button
               onClick={handleExport}
               disabled={isExporting}
               variant="outline"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+               className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4 mr-2" />
               {isExporting ? "Exporting..." : "Export"}
