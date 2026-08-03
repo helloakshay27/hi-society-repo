@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Trash2, Search } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -62,6 +62,7 @@ const HiSocNoticeCreate = () => {
   const previewUrlsRef = useRef(new Map());
   const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
   const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
+  const [individualSearchTerm, setIndividualSearchTerm] = useState("");
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -416,6 +417,18 @@ const HiSocNoticeCreate = () => {
   const handleCancel = () => {
     navigate(-1);
   };
+
+  const getMemberDisplayName = (member) => {
+    if (!member?.user) return "";
+    const name = `${member.user.firstname || ''} ${member.user.lastname || ''}`.trim();
+    const flat = member.user_flat?.flat ? ` - Flat ${member.user_flat.flat}` : '';
+    const block = member.user_flat?.block ? ` (${member.user_flat.block})` : '';
+    return name + flat + block;
+  };
+
+  const filteredUsers = users.filter((member) =>
+    getMemberDisplayName(member).toLowerCase().includes(individualSearchTerm.trim().toLowerCase())
+  );
 
   const fetchGroups = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
     const params = new URLSearchParams();
@@ -820,23 +833,36 @@ const HiSocNoticeCreate = () => {
                       />
                     </div>
 
+                    {/* Search Members */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={individualSearchTerm}
+                        onChange={(e) => setIndividualSearchTerm(e.target.value)}
+                        placeholder="Search members by name or flat..."
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030]"
+                      />
+                    </div>
+
                     {/* Select All Checkbox */}
-                    {users.length > 0 && (
+                    {filteredUsers.length > 0 && (
                       <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
                         <input
                           type="checkbox"
                           id="selectAllUsers"
-                          checked={formData.user_ids.length === users.length && users.length > 0}
+                          checked={filteredUsers.every((u) => formData.user_ids.includes(u.id))}
                           onChange={(e) => {
+                            const filteredIds = filteredUsers.map((u) => u.id);
                             if (e.target.checked) {
                               setFormData((prev) => ({
                                 ...prev,
-                                user_ids: users.map((u) => u.id),
+                                user_ids: Array.from(new Set([...prev.user_ids, ...filteredIds])),
                               }));
                             } else {
                               setFormData((prev) => ({
                                 ...prev,
-                                user_ids: [],
+                                user_ids: prev.user_ids.filter((id) => !filteredIds.includes(id)),
                               }));
                             }
                           }}
@@ -851,46 +877,48 @@ const HiSocNoticeCreate = () => {
 
                     {/* Members List with Checkboxes */}
                     {users.length > 0 ? (
-                      <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
-                        <div className="divide-y">
-                          {users.map((member) => {
-                            if (!member?.user) return null;
-                            const name = `${member.user.firstname || ''} ${member.user.lastname || ''}`.trim();
-                            const flat = member.user_flat?.flat ? ` - Flat ${member.user_flat.flat}` : '';
-                            const block = member.user_flat?.block ? ` (${member.user_flat.block})` : '';
-                            const displayName = name + flat + block;
-                            const isChecked = formData.user_ids.includes(member.id);
+                      filteredUsers.length > 0 ? (
+                        <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                          <div className="divide-y">
+                            {filteredUsers.map((member) => {
+                              const displayName = getMemberDisplayName(member);
+                              const isChecked = formData.user_ids.includes(member.id);
 
-                            return (
-                              <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
-                                <input
-                                  type="checkbox"
-                                  id={`user-${member.id}`}
-                                  checked={isChecked}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        user_ids: [...prev.user_ids, member.id],
-                                      }));
-                                    } else {
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        user_ids: prev.user_ids.filter((id) => id !== member.id),
-                                      }));
-                                    }
-                                  }}
-                                  className="w-4 h-4 rounded"
-                                  style={{ accentColor: '#C72030' }}
-                                />
-                                <label htmlFor={`user-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
-                                  {displayName}
-                                </label>
-                              </div>
-                            );
-                          })}
+                              return (
+                                <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    id={`user-${member.id}`}
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          user_ids: [...prev.user_ids, member.id],
+                                        }));
+                                      } else {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          user_ids: prev.user_ids.filter((id) => id !== member.id),
+                                        }));
+                                      }
+                                    }}
+                                    className="w-4 h-4 rounded"
+                                    style={{ accentColor: '#C72030' }}
+                                  />
+                                  <label htmlFor={`user-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+                                    {displayName}
+                                  </label>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                          No members match "{individualSearchTerm}"
+                        </div>
+                      )
                     ) : (
                       <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
                         No members available
