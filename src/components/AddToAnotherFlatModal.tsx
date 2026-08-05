@@ -39,7 +39,7 @@ export const AddToAnotherFlatModal: React.FC<AddToAnotherFlatModalProps> = ({
     const token = localStorage.getItem('token');
 
     const getSocietyId = () => {
-        return localStorage.getItem('selectedUserSociety') || '';
+        return localStorage.getItem('selectedSocietyId') || '';
     };
 
     const [formData, setFormData] = useState({
