@@ -130,11 +130,11 @@ const AccountingSubgroupSetup: React.FC = () => {
                     <Plus className="w-4 h-4 mr-2" /> Add
           </Button>
         }
-        rightActions={
-          <Button variant="outline" size="icon" onClick={fetchGroups} title="Refresh">
-            <RotateCw className="h-4 w-4" />
-          </Button>
-        }
+        // rightActions={
+        //   <Button variant="outline" size="icon" onClick={fetchGroups} title="Refresh">
+        //     <RotateCw className="h-4 w-4" />
+        //   </Button>
+        // }
       />
 
       <AddLockAccountGroupModal
