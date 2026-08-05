@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Calendar, FileText, TrendingUp, AlertCircle } from 'lucide-react';
+import { Eye, FileText, TrendingUp, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Toaster } from '@/components/ui/sonner';
-import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { BillingInvoicesFilterModal } from '@/components/BillingInvoicesFilterModal';
 import axios from 'axios';
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -39,6 +38,7 @@ export default function BillingInvoices() {
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   // Stats
   const [totalInvoices, setTotalInvoices] = useState(1);
@@ -215,11 +215,6 @@ export default function BillingInvoices() {
     }
   };
 
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
@@ -227,29 +222,6 @@ export default function BillingInvoices() {
       {/* Header with Month Selector */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-[#1A1A1A]">BILLING PERIOD</h1>
-        <FormControl sx={{ width: 180 }} variant="outlined">
-          <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select month</InputLabel>
-          <MuiSelect
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            displayEmpty
-            label="Select month"
-            sx={fieldStyles}
-            MenuProps={menuProps}
-            renderValue={(value: string) => (
-              <span className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                {value || "Select month"}
-              </span>
-            )}
-          >
-            {months.map((month) => (
-              <MenuItem key={month} value={month}>
-                {month}
-              </MenuItem>
-            ))}
-          </MuiSelect>
-        </FormControl>
       </div>
 
       {/* Stats Cards */}
@@ -310,6 +282,7 @@ export default function BillingInvoices() {
           exportFileName="billing-invoices"
           enableGlobalSearch={true}
           searchPlaceholder="Search invoices..."
+          onFilterClick={() => setIsFilterModalOpen(true)}
           loading={loading}
           loadingMessage="Loading invoices..."
         />
@@ -333,6 +306,13 @@ export default function BillingInvoices() {
           </Pagination>
         </div>
       </div>
+
+      <BillingInvoicesFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApply={(month) => setSelectedMonth(month)}
+        selectedMonth={selectedMonth}
+      />
     </div>
   );
 }

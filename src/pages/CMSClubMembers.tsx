@@ -393,7 +393,7 @@ const CMSClubMembers = () => {
             ))}
             {names.length > 2 && (
               <span
-                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                className="text-xs text-black-600 cursor-pointer hover:underline"
                 onClick={() => {
                   setModalData({
                     isOpen: true,
@@ -419,7 +419,7 @@ const CMSClubMembers = () => {
             ))}
             {emails.length > 2 && (
               <span
-                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                className="text-xs text-black-600 cursor-pointer hover:underline"
                 onClick={() => {
                   setModalData({
                     isOpen: true,
@@ -445,7 +445,7 @@ const CMSClubMembers = () => {
             ))}
             {mobiles.length > 2 && (
               <span
-                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                className="text-xs text-black-600 cursor-pointer hover:underline"
                 onClick={() => {
                   setModalData({
                     isOpen: true,

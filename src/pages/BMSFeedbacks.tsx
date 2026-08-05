@@ -242,7 +242,7 @@ const BMSFeedbacks: React.FC = () => {
   // Render custom right actions
   const renderRightActions = () => (
     <div className="flex gap-2">
-      <Button
+      {/* <Button
         variant="outline"
         size="sm"
         onClick={handleRefresh}
@@ -250,12 +250,12 @@ const BMSFeedbacks: React.FC = () => {
         className="h-9"
       >
         <RefreshCw className={`w-4 h-4 text-[#C72030]${isLoading ? "animate-spin" : ""}`} />
-      </Button>
+      </Button> */}
       <Button
         variant="outline"
         size="sm"
         onClick={handleExport}
-        className="h-9 "
+        className="h-9 rounded-lg"
       >
         <Download className="w-4 h-4 text-[#C72030]" />
       </Button>

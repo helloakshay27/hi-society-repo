@@ -10,15 +10,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+  FormHelperText,
+} from "@mui/material";
 import { toast } from "sonner";
 import {
   getRMUsers,
@@ -51,6 +50,32 @@ const parseActiveStatus = (value: unknown): boolean => {
     return normalizedValue === "true" || normalizedValue === "1";
   }
   return false;
+};
+
+const fieldStyles = {
+  height: { xs: 28, sm: 36, md: 45 },
+  backgroundColor: "white",
+  "& .MuiInputBase-input, & .MuiSelect-select": {
+    padding: { xs: "8px", sm: "10px", md: "12px" },
+    backgroundColor: "white",
+  },
+};
+
+const selectMenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: 224,
+      backgroundColor: "white",
+      border: "1px solid #e2e8f0",
+      borderRadius: "8px",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      zIndex: 9999,
+    },
+  },
+  disablePortal: false,
+  disableAutoFocus: true,
+  disableEnforceFocus: true,
 };
 
 const AppointmentzRMConfig = () => {
@@ -203,7 +228,9 @@ const AppointmentzRMConfig = () => {
     // For server-side search, you would call the API with search params
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     if (name === "mobile") {
       // Only allow numbers and max 10 digits
@@ -594,146 +621,116 @@ const AppointmentzRMConfig = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="p-8 grid grid-cols-2 gap-x-6 gap-y-12 bg-white">
-            <div className="relative">
-              <label
-                htmlFor="firstName"
-                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
-              >
-                First Name <span className="text-[#C72030]">*</span>
-              </label>
-              <Input
-                id="firstName"
-                name="firstName"
-                placeholder="Enter First Name"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
-                  formErrors.firstName ? "border-red-500" : ""
-                }`}
-              />
-              {formErrors.firstName && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.firstName}</p>
-              )}
-            </div>
+          <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 bg-white">
+            <TextField
+              label="First Name"
+              name="firstName"
+              placeholder="Enter First Name"
+              value={formData.firstName}
+              onChange={handleInputChange}
+              fullWidth
+              variant="outlined"
+              required
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+              error={!!formErrors.firstName}
+              helperText={formErrors.firstName}
+            />
 
-            <div className="relative">
-              <label
-                htmlFor="lastName"
-                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
-              >
-                Last Name <span className="text-[#C72030]">*</span>
-              </label>
-              <Input
-                id="lastName"
-                name="lastName"
-                placeholder="Last Name"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
-                  formErrors.lastName ? "border-red-500" : ""
-                }`}
-              />
-              {formErrors.lastName && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.lastName}</p>
-              )}
-            </div>
+            <TextField
+              label="Last Name"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={handleInputChange}
+              fullWidth
+              variant="outlined"
+              required
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+              error={!!formErrors.lastName}
+              helperText={formErrors.lastName}
+            />
 
-            <div className="relative">
-              <label
-                htmlFor="email"
-                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
-              >
-                Email <span className="text-[#C72030]">*</span>
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleInputChange}
-                disabled={isEditMode}
-                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
-                  isEditMode ? "opacity-60 cursor-not-allowed" : ""
-                } ${formErrors.email ? "border-red-500" : ""}`}
-              />
-              {formErrors.email && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
-              )}
-            </div>
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleInputChange}
+              fullWidth
+              variant="outlined"
+              required
+              disabled={isEditMode}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{
+                sx: fieldStyles,
+                ...(isEditMode
+                  ? { style: { opacity: 0.6, cursor: "not-allowed" } }
+                  : {}),
+              }}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
+            />
 
-            <div className="relative">
-              <label
-                htmlFor="mobile"
-                className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
-              >
-                Mobile <span className="text-[#C72030]">*</span>
-              </label>
-              <Input
-                id="mobile"
-                name="mobile"
-                placeholder="Mobile Number"
-                value={formData.mobile}
-                onChange={handleInputChange}
-                className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
-                  formErrors.mobile ? "border-red-500" : ""
-                }`}
-              />
-              {formErrors.mobile && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.mobile}</p>
-              )}
-            </div>
+            <TextField
+              label="Mobile"
+              name="mobile"
+              placeholder="Mobile Number"
+              value={formData.mobile}
+              onChange={handleInputChange}
+              fullWidth
+              variant="outlined"
+              required
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+              error={!!formErrors.mobile}
+              helperText={formErrors.mobile}
+            />
 
             {!isEditMode && (
-              <div className="relative">
-                <label
-                  htmlFor="password"
-                  className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10"
-                >
-                  Password <span className="text-[#C72030]">*</span>
-                </label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
-                    formErrors.password ? "border-red-500" : ""
-                  }`}
-                />
-                {formErrors.password && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>
-                )}
-              </div>
+              <TextField
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+                fullWidth
+                variant="outlined"
+                required
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+                error={!!formErrors.password}
+                helperText={formErrors.password}
+              />
             )}
 
-            <div className="relative">
-              <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                User Type <span className="text-[#C72030]">*</span>
-              </label>
-              <Select
-                onValueChange={handleSelectChange}
+            <FormControl
+              fullWidth
+              variant="outlined"
+              error={!!formErrors.userType}
+            >
+              <InputLabel shrink>User Type</InputLabel>
+              <MuiSelect
                 value={formData.userType}
+                onChange={(e) => handleSelectChange(e.target.value as string)}
+                label="User Type"
+                displayEmpty
+                MenuProps={selectMenuProps}
+                sx={fieldStyles}
               >
-                <SelectTrigger className={`bg-white border-black hover:border-brand focus:border-brand focus:ring-0 h-10 ${
-                  formErrors.userType ? "border-red-500" : ""
-                }`}>
-                  <SelectValue placeholder="Select User Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cs_user">Customer Support</SelectItem>
-                  <SelectItem value="rm_user">RM User</SelectItem>
-                </SelectContent>
-              </Select>
+                <MenuItem value="">
+                  <em>Select User Type</em>
+                </MenuItem>
+                <MenuItem value="cs_user">Customer Support</MenuItem>
+                <MenuItem value="rm_user">RM User</MenuItem>
+              </MuiSelect>
               {formErrors.userType && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.userType}</p>
+                <FormHelperText>{formErrors.userType}</FormHelperText>
               )}
-            </div>
-
-
+            </FormControl>
           </div>
 
           <DialogFooter className="p-4 bg-white border-t flex justify-center">

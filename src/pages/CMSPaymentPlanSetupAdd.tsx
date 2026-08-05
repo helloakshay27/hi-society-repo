@@ -233,7 +233,9 @@ const CMSPaymentPlanSetupAdd = () => {
                 {/* Plan Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <TextField
-                        label={<>Plan Name <span style={{ color: 'red' }}>*</span></>}
+                        label={<>Plan Name 
+                        {/* <span style={{ color: 'red' }}>*</span> */}
+                        </>}
                         placeholder="Enter plan name"
                         value={planName}
                         onChange={(e) => setPlanName(e.target.value)}
@@ -246,7 +248,9 @@ const CMSPaymentPlanSetupAdd = () => {
                     />
 
                     <TextField
-                        label={<>Frequency <span style={{ color: 'red' }}>*</span></>}
+                        label={<>Frequency 
+                        {/* <span style={{ color: 'red' }}>*</span> */}
+                        </>}
                         placeholder="Select Frequency"
                         select
                         value={frequency}

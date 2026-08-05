@@ -189,7 +189,7 @@ const CampaignsReferralCreate: React.FC = () => {
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="mx-auto">
         {/* Header */}
-        <div className="bg-[#F2EEE9] text-[#BF213E] px-4 py-3 mb-6 rounded-t">
+        <div className=" px-4 py-3 mb-6 rounded-t">
           <h1 className="text-lg font-medium">CREATE LEAD</h1>
         </div>
 
@@ -205,12 +205,14 @@ const CampaignsReferralCreate: React.FC = () => {
             {/* Project - Dynamic dropdown */}
             <FormControl fullWidth variant="outlined" required sx={fieldStyles}>
               <InputLabel shrink>
-                Project <span style={{ color: "#C72030" }}>*</span>
+                Project 
+                {/* <span style={{ color: "#C72030" }}>*
+                </span> */}
               </InputLabel>
               <MuiSelect
                 value={formData.projectId}
                 onChange={(e) => handleInputChange("projectId", e.target.value)}
-                label="Project *"
+                label="Project"
                 notched
                 displayEmpty
               >
@@ -255,7 +257,8 @@ const CampaignsReferralCreate: React.FC = () => {
             <TextField
               label={
                 <span>
-                  Client Name <span style={{ color: "#C72030" }}>*</span>
+                  Client Name 
+                  {/* <span style={{ color: "#C72030" }}>*</span> */}
                 </span>
               }
               placeholder="Client Name"
@@ -272,7 +275,8 @@ const CampaignsReferralCreate: React.FC = () => {
             <TextField
               label={
                 <span>
-                  Mobile <span style={{ color: "#C72030" }}>*</span>
+                  Mobile 
+                  {/* <span style={{ color: "#C72030" }}>*</span> */}
                 </span>
               }
               placeholder="Phone"

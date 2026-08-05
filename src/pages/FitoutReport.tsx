@@ -299,7 +299,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move all to selected"
               >
-                <ChevronsRight className="h-4 w-4" />
+                <ChevronsRight className="h-4 w-4 text-[#C72030]" />
               </Button>
               <Button
                 variant="outline"
@@ -313,7 +313,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move to selected"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 text-[#C72030]" />
               </Button>
               <Button
                 variant="outline"
@@ -327,7 +327,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move to available"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 text-[#C72030]" />
               </Button>
               <Button
                 variant="outline"
@@ -337,7 +337,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move all to available"
               >
-                <ChevronsLeft className="h-4 w-4" />
+                <ChevronsLeft className="h-4 w-4 text-[#C72030]" />
               </Button>
             </div>
 

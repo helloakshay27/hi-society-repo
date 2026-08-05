@@ -204,7 +204,7 @@ const NotificationsPage = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6" >
       {/* Header */}
-        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
+        <div className=" mb-6">
         <div className="px-6 py-4">
            
           <h1 className="text-2xl font-semibold text-gray-900">Send Notifications</h1>
@@ -213,11 +213,11 @@ const NotificationsPage = () => {
     {/* Form Card */}
       <div className="bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit} className="p-8">
-          <div className="max-w-3xl space-y-6">
+          <div className="w-full space-y-6">
            
             {/* Title Field */}
            <div className="p-2">
-             <div className="grid grid-cols-3 md:grid-cols-2 gap-6 items-center">
+             <div className="w-full items-center">
                 <TextField
                  label="Title"
                  name="title"
@@ -467,7 +467,27 @@ const NotificationsPage = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-center pt-6 border-t">
+            <div className="flex justify-center gap-4 pt-6 border-t">
+              <Button
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    title: '',
+                    text: '',
+                    file: null,
+                    shareWith: 'all',
+                    user_id: [],
+                    group_id: [],
+                  });
+                  const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+                  if (fileInput) {
+                    fileInput.value = '';
+                  }
+                }}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-12 py-2.5 text-base font-medium"
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 className="bg-[#C72030] hover:bg-[#A01828] text-white px-12 py-2.5 text-base font-medium"
