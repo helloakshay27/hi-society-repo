@@ -353,10 +353,10 @@ export const AddVisitorPage = () => {
             return;
         }
 
-        if (!formData.societyGate) {
-            toast.error("Please select a society gate");
-            return;
-        }
+        // if (!formData.societyGate) {
+        //     toast.error("Please select a society gate");
+        //     return;
+        // }
 
         if (formData.visitorType === "support" && !formData.supportCategory) {
             toast.error("Please select a support staff category");
@@ -818,7 +818,7 @@ export const AddVisitorPage = () => {
                                 <FormControl
                                     fullWidth
                                     variant="outlined"
-                                    required
+                                    // required
                                     sx={fieldStyles}
                                 >
                                     <InputLabel shrink>Society Gate</InputLabel>
