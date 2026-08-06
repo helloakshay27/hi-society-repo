@@ -538,6 +538,7 @@ export const ViewUserPage = () => {
                     <InfoField label="Lives Here" value={user?.lives_here === "true" ? "Yes" : "No"} />
                     <InfoField label="Membership Type" value={user?.is_primary ? "Primary" : "Secondary"} />
                     <InfoField label="Move In Date" value={user?.movein_date || "-"} />
+                    <InfoField label="Agreement Expire Date" value={user?.user_flat?.agreement_expire_date || "-"} />
                   </Box>
                 </Paper>
               </Box>
