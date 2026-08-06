@@ -13,6 +13,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
 import { API_CONFIG } from '@/config/apiConfig';
 import axios from 'axios';
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TaxSetup from "./TaxSetup";
 import TaxSetupMaster from "./TaxSetupMaster";
@@ -112,7 +113,9 @@ const TaxSetupTabView: React.FC = () => {
   const [saving, setSaving] = useState(false);
    const lock_account_id = localStorage.getItem("lock_account_id");
 
-   const [activeTab, setActiveTab] = useState("indirect");
+   const [searchParams] = useSearchParams();
+   const initialTab = searchParams.get("tab") || "indirect";
+   const [activeTab, setActiveTab] = useState(initialTab);
 const [gstApplicable, setGstApplicable] = useState(false);
   // ── Fetch existing GST settings on mount ──────────────────────────────────
   useEffect(() => {
@@ -248,7 +251,7 @@ const [gstApplicable, setGstApplicable] = useState(false);
 
 
 <div className="mt-6">
-  <Tabs defaultValue="indirect" className="w-full">
+  <Tabs defaultValue={initialTab} className="w-full">
 
     {/* Tabs Header */}
     <TabsList className="grid w-full grid-cols-3 bg-white border-b border-gray-200 rounded-none ">
