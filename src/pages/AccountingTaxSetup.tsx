@@ -16,6 +16,11 @@ import axios from 'axios';
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
+  palette: {
+    error: {
+      main: "#C72030",
+    },
+  },
   components: {
     MuiInputLabel: {
       styleOverrides: {
@@ -105,7 +110,8 @@ const AccountingTaxSetup: React.FC = () => {
   const [form, setForm] = useState<GstForm>(defaultForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const lock_account_id = localStorage.getItem("lock_account_id");
+  const [gstSettingId, setGstSettingId] = useState<number | null>(null);
+  const lock_account_id = localStorage.getItem("lock_account_id") || "3";
 
   // ── Fetch existing GST settings on mount ──────────────────────────────────
   useEffect(() => {
@@ -118,8 +124,9 @@ const AccountingTaxSetup: React.FC = () => {
         return;
       }
       try {
-        const url = `${baseUrl}/lock_accounts/${lock_account_id}/gst_settings.json`;
+        const url = `${baseUrl}/tax_rates/gst_settings.json`;
         const response = await axios.get(url, {
+          params: { lock_account_id },
           headers: {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -127,6 +134,8 @@ const AccountingTaxSetup: React.FC = () => {
         });
 
         const data = response.data?.gst_setting || response.data || {};
+
+        setGstSettingId(data.id ?? null);
 
         // Map API fields → local form state
         setForm({
@@ -193,11 +202,12 @@ const AccountingTaxSetup: React.FC = () => {
     // Build request payload matching API shape
     const payload = {
       gst_setting: {
+        ...(gstSettingId ? { id: gstSettingId } : {}),
         gstin: form.gstin,
-        composition_scheme: form.compositionScheme,
-        reverse_charge: form.reverseCharge,
-        overseas_trading: form.overseasTrading,
-        digi_service: form.digitalServices,
+        composition_scheme: form.compositionScheme ? 1 : 0,
+        reverse_charge: form.reverseCharge ? 1 : 0,
+        overseas_trading: form.overseasTrading ? 1 : 0,
+        digi_service: form.digitalServices ? 1 : 0,
         gst_regi_on: form.gstRegisteredOn || null,
         gstin_uname: form.gstinUsername,
         reporting_period: form.reportingPeriod,
@@ -207,14 +217,18 @@ const AccountingTaxSetup: React.FC = () => {
 
     setSaving(true);
     try {
-      const url = `${baseUrl}/lock_accounts/${lock_account_id}/gst_settings.json`;
-      await axios.post(url, payload, {
+      const url = `${baseUrl}/tax_rates/new_gst_settings.json`;
+      const response = await axios.patch(url, payload, {
+        params: { lock_account_id },
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
-      toast.success("GST settings saved successfully!");
+      if (response.data?.gst_setting?.id) {
+        setGstSettingId(response.data.gst_setting.id);
+      }
+      toast.success(response.data?.notice || "GST settings saved successfully!");
     } catch (error: any) {
       console.error("Error saving GST settings:", error);
       const message =
@@ -265,12 +279,14 @@ const AccountingTaxSetup: React.FC = () => {
                 name="gstin"
                 value={form.gstin}
                 onChange={handleChange}
-                className={`w-full ${errors.gstin ? 'border-red-500' : ''}`}
+                className={`w-full ${errors.gstin ? 'border-[#C72030]' : ''}`}
                 placeholder="Enter GSTIN"
                 inputProps={{ maxLength: 15 }}
                 error={!!errors.gstin}
-                helperText={errors.gstin}
               />
+              {errors.gstin && (
+                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.gstin}</div>
+              )}
             </div>
             <div>
               <TextField
@@ -285,11 +301,13 @@ const AccountingTaxSetup: React.FC = () => {
                 type="date"
                 value={form.gstRegisteredOn}
                 onChange={handleChange}
-                className={`w-full ${errors.gstRegisteredOn ? 'border-red-500' : ''}`}
+                className={`w-full ${errors.gstRegisteredOn ? 'border-[#C72030]' : ''}`}
                 InputLabelProps={{ shrink: true }}
                 error={!!errors.gstRegisteredOn}
-                helperText={errors.gstRegisteredOn}
               />
+              {errors.gstRegisteredOn && (
+                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.gstRegisteredOn}</div>
+              )}
             </div>
           </div>
         </div>
@@ -400,11 +418,13 @@ const AccountingTaxSetup: React.FC = () => {
                 name="gstinUsername"
                 value={form.gstinUsername}
                 onChange={handleChange}
-                className={`w-full ${errors.gstinUsername ? 'border-red-500' : ''}`}
+                className={`w-full ${errors.gstinUsername ? 'border-[#C72030]' : ''}`}
                 placeholder="Enter GSTIN Username"
                 error={!!errors.gstinUsername}
-                helperText={errors.gstinUsername}
               />
+              {errors.gstinUsername && (
+                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.gstinUsername}</div>
+              )}
             </div>
 
             {/* Reporting Period */}
@@ -427,17 +447,17 @@ const AccountingTaxSetup: React.FC = () => {
                     setForm((prev) => ({ ...prev, reportingPeriod: e.target.value as string }))
                   }
                   displayEmpty
-                  className={errors.reportingPeriod ? 'border-red-500' : ''}
+                  className={errors.reportingPeriod ? 'border-[#C72030]' : ''}
                 >
                   <MenuItem value="">
                     <span style={{ color: "#888" }}>Select</span>
                   </MenuItem>
-                  <MenuItem value="monthly">Monthly</MenuItem>
-                  <MenuItem value="quarterly">Quarterly</MenuItem>
-                  <MenuItem value="yearly">Yearly</MenuItem>
+                  <MenuItem value="Monthly">Monthly</MenuItem>
+                  <MenuItem value="Quarterly">Quarterly</MenuItem>
+                  <MenuItem value="Yearly">Yearly</MenuItem>
                 </Select>
                 {errors.reportingPeriod && (
-                  <div className="text-xs text-red-500 mt-1">{errors.reportingPeriod}</div>
+                  <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.reportingPeriod}</div>
                 )}
               </FormControl>
             </div>
@@ -456,11 +476,13 @@ const AccountingTaxSetup: React.FC = () => {
                 type="date"
                 value={form.generateFirstTaxReturnFrom}
                 onChange={handleChange}
-                className={`w-full ${errors.generateFirstTaxReturnFrom ? 'border-red-500' : ''}`}
+                className={`w-full ${errors.generateFirstTaxReturnFrom ? 'border-[#C72030]' : ''}`}
                 InputLabelProps={{ shrink: true }}
                 error={!!errors.generateFirstTaxReturnFrom}
-                helperText={errors.generateFirstTaxReturnFrom}
               />
+              {errors.generateFirstTaxReturnFrom && (
+                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.generateFirstTaxReturnFrom}</div>
+              )}
             </div>
           </div>
         </div>
