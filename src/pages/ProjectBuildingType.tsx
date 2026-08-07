@@ -165,6 +165,7 @@ const ProjectBuildingType = () => {
     sx={{
       width: "350px",
       "& .MuiInputBase-root": fieldStyles,
+      "& .MuiFormLabel-asterisk": { color: "#da7756" },
     }}
     required
   >
@@ -217,6 +218,7 @@ const ProjectBuildingType = () => {
         padding: "12px 14px",
         boxSizing: "border-box",
       },
+      "& .MuiFormLabel-asterisk": { color: "#da7756" },
     }}
   />
 </div>

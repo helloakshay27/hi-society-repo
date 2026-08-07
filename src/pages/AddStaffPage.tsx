@@ -349,7 +349,8 @@ export const AddStaffPage = () => {
   const minuteOptions = ['00', '15', '30', '45'];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen add-staff-page">
+      <style>{`.add-staff-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Camera Modal */}
       {showCameraModal && (
         <div className="fixed top-20 left-8 z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4">
@@ -488,7 +489,7 @@ export const AddStaffPage = () => {
                 }}
               />
               <TextField
-                label="First Name*"
+                label={<span>First Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 placeholder="First Name"
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -505,7 +506,7 @@ export const AddStaffPage = () => {
               />
               
               <TextField
-                label="Last Name*"
+                label={<span>Last Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 placeholder="Last Name"
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -558,7 +559,7 @@ export const AddStaffPage = () => {
               />
               
               <TextField
-                label="Mobile*"
+                label={<span>Mobile<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 placeholder="Mobile Number"
                 value={formData.mobile}
                 onChange={(e) => {
@@ -682,7 +683,7 @@ export const AddStaffPage = () => {
               /> */}
               
               <TextField
-                label="Valid From*"
+                label={<span>Valid From<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="date"
                 value={formData.validFrom}
                 onChange={(e) => handleInputChange('validFrom', e.target.value)}
@@ -699,7 +700,7 @@ export const AddStaffPage = () => {
               />
               
               <TextField
-                label="Valid Till*"
+                label={<span>Valid Till<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="date"
                 value={formData.validTill}
                 onChange={(e) => handleInputChange('validTill', e.target.value)}

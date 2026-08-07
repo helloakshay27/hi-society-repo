@@ -102,6 +102,9 @@ const fieldStyles = {
             color: '#C72030',
         },
     },
+    '& .MuiFormLabel-asterisk': {
+        color: '#da7756',
+    },
     '& .MuiInputBase-input': {
         fontSize: '14px',
         fontFamily: 'Work Sans, sans-serif',

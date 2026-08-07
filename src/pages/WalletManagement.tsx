@@ -656,7 +656,8 @@ export const WalletManagement = () => {
                     setCurrentPage(1);
                     setIsFilterOpen(false);
                   }}
-                  className="bg-brand text-white hover:bg-brand-hover"
+                  style={{ color: "#fff" }}
+                  className="!bg-brand !text-white"
                 >
                   Apply
                 </Button>

@@ -260,7 +260,8 @@ export const AddMembershipPlanPage = () => {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <div className="p-6 bg-white">
+      <div className="p-6 bg-white add-membership-plan-page">
+        <style>{`.add-membership-plan-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -287,7 +288,7 @@ export const AddMembershipPlanPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <TextField
-                label="Plan Name*"
+                label={<span>Plan Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 value={formData.name}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -300,7 +301,7 @@ export const AddMembershipPlanPage = () => {
               />
 
               <TextField
-                label="Price*"
+                label={<span>Price<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="text"
                 value={formData.price}
                 onChange={(e) => {
@@ -332,13 +333,13 @@ export const AddMembershipPlanPage = () => {
 
 
               <FormControl variant="outlined">
-                <InputLabel>Membership Type*</InputLabel>
+                <InputLabel><span>Membership Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
                 <Select
                   value={formData.renewalTerms}
                   onChange={(e) =>
                     setFormData({ ...formData, renewalTerms: e.target.value })
                   }
-                  label="Membership Type*"
+                  label={<span>Membership Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 >
                   <MenuItem value="">
                     <em>Select Membership Type</em>
@@ -351,7 +352,7 @@ export const AddMembershipPlanPage = () => {
               </FormControl>
 
               <FormControl variant="outlined">
-                <InputLabel>Payment Plan*</InputLabel>
+                <InputLabel><span>Payment Plan<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
                 <Select
                   value={formData.payment_plan_id}
                   onChange={(e) =>

@@ -234,7 +234,7 @@ export const CustomerPricingRuleList = () => {
               fullWidth
               variant="outlined"
               required
-              sx={{ '& .MuiInputBase-root': fieldStyles }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
             >
               <InputLabel shrink>Organization</InputLabel>
               <MuiSelect
@@ -261,7 +261,7 @@ export const CustomerPricingRuleList = () => {
               fullWidth
               variant="outlined"
               required
-              sx={{ '& .MuiInputBase-root': fieldStyles }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
             >
               <InputLabel shrink>Category</InputLabel>
               <MuiSelect
@@ -288,7 +288,7 @@ export const CustomerPricingRuleList = () => {
               fullWidth
               variant="outlined"
               required
-              sx={{ '& .MuiInputBase-root': fieldStyles }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
             >
               <InputLabel shrink>Margin Type</InputLabel>
               <MuiSelect
@@ -314,7 +314,7 @@ export const CustomerPricingRuleList = () => {
               placeholder="e.g., 10"
               InputLabelProps={{ shrink: true }}
               inputProps={{ min: 0, step: 0.01 }}
-              sx={{ '& .MuiInputBase-root': fieldStyles }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
             />
             <div className="flex justify-center gap-4 pt-4">
               <Button

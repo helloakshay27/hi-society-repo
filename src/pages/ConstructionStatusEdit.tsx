@@ -151,7 +151,7 @@ const ConstructionStatusEdit = () => {
                 onChange={handleChange}
                 fullWidth
                 variant="outlined"
-                slotProps={{ inputLabel: { shrink: true } }}
+                slotProps={{ inputLabel: { shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } } }}
                 InputProps={{ sx: { ...fieldStyles, width: '350px' } }}
                 required
               />

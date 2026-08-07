@@ -2252,7 +2252,8 @@ const ProjectDetailsCreate = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
+    <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28 project-details-create-page">
+      <style>{`.project-details-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header Section */}
       <div className="mb-8">
              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">

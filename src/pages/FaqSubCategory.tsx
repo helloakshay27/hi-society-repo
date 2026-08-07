@@ -240,13 +240,13 @@ const FaqSubCategory = () => {
                   disabled={loading}
                   error={!!errors.name}
                   helperText={errors.name}
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                   InputProps={{ sx: fieldStyles }}
                 />
 
                 {/* FAQ Category */}
                 <FormControl fullWidth variant="outlined" required error={!!errors.faq_category_id}>
-                  <InputLabel shrink htmlFor="category-select">
+                  <InputLabel shrink htmlFor="category-select" sx={{ '& .MuiFormLabel-asterisk': { color: '#da7756' } }}>
                     FAQ Category
                   </InputLabel>
                   <MuiSelect

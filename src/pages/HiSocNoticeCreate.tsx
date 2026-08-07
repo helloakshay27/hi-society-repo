@@ -460,7 +460,8 @@ const HiSocNoticeCreate = () => {
   }, [formData.shared]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">
+    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto hi-soc-notice-create-page">
+      <style>{`.hi-soc-notice-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -561,7 +562,7 @@ const HiSocNoticeCreate = () => {
                 </MuiSelect>
               </FormControl>
               <TextField
-                label={<span>Expire Date<span className="text-red-500">*</span></span>}
+                label={<span>Expire Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="date"
                 value={formData.expire_date}
                 onChange={handleChange}
@@ -607,11 +608,11 @@ const HiSocNoticeCreate = () => {
       peer-focus:text-sm
       peer-focus:text-[rgb(25,118,210)]"
                 >
-                  Notice Description <span className="text-red-500">*</span>
+                  Notice Description <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </label>
               </div>
                <TextField
-                label={<span>Expire Time<span className="text-red-500">*</span></span>}
+                label={<span>Expire Time<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="time"
                 value={formData.expire_time}
                 onChange={handleChange}
@@ -639,7 +640,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Mark Important */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -678,7 +679,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Send Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -760,7 +761,7 @@ const HiSocNoticeCreate = () => {
             {/* Share With */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Share With <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Share With <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
                     <input

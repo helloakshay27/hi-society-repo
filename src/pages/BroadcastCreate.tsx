@@ -406,7 +406,8 @@ const BroadcastCreate = () => {
   }, [formData.shared, groups.length]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">
+    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto broadcast-create-page">
+      <style>{`.broadcast-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -509,7 +510,7 @@ const BroadcastCreate = () => {
               {/* Description spanning 2 columns */}
               <div className="md:col-span-2">
                 <TextField
-                  label={<span>Notice Description<span className="text-red-500">*</span></span>}
+                  label={<span>Notice Description<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                   placeholder="Enter Description"
                   value={formData.notice_text}
                   onChange={handleChange}
@@ -529,7 +530,7 @@ const BroadcastCreate = () => {
 
               {/* Broadcast From */}
               <TextField
-                label={<span>Expire Date<span className="text-red-500">*</span></span>}
+                label={<span>Expire Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="date"
                 value={formData.expire_date}
                 onChange={handleChange}
@@ -554,7 +555,7 @@ const BroadcastCreate = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Broadcast To */}
                <TextField
-                label={<span>Expire Time<span className="text-red-500">*</span></span>}
+                label={<span>Expire Time<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="time"
                 value={formData.expire_time}
                 onChange={handleChange}

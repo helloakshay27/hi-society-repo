@@ -297,7 +297,8 @@ const AddApprovalMatrixPage = () => {
               shrink={true}
               sx={{
                 color: '#1a1a1a',
-                '&.Mui-focused': { color: '#C72030' }
+                '&.Mui-focused': { color: '#C72030' },
+                '& .MuiFormLabel-asterisk': { color: '#da7756' },
               }}
             >
               Function
@@ -348,7 +349,7 @@ const AddApprovalMatrixPage = () => {
                     value={level.order}
                     type="number"
                     onChange={(e) => updateApprovalLevel(index, 'order', parseInt(e.target.value) || 1)}
-                    InputLabelProps={{ shrink: true }}
+                    InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                     size="small"
                     fullWidth
                     sx={{
@@ -372,7 +373,7 @@ const AddApprovalMatrixPage = () => {
                     placeholder="Enter Name of Level"
                     value={level.name}
                     onChange={(e) => updateApprovalLevel(index, 'name', e.target.value)}
-                    InputLabelProps={{ shrink: true }}
+                    InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                     size="small"
                     fullWidth
                     sx={{
@@ -396,7 +397,8 @@ const AddApprovalMatrixPage = () => {
                       shrink={true}
                       sx={{
                         color: '#1a1a1a',
-                        '&.Mui-focused': { color: '#C72030' }
+                        '&.Mui-focused': { color: '#C72030' },
+                        '& .MuiFormLabel-asterisk': { color: '#da7756' },
                       }}
                     >
                       Users

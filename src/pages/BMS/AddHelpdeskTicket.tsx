@@ -1436,7 +1436,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen add-helpdesk-ticket-page">
+      <style>{`.add-helpdesk-ticket-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">

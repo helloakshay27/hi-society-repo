@@ -210,7 +210,8 @@ const CMSPaymentPlanSetupAdd = () => {
     const totalPercentage = calculateTotalPercentage();
 
     return (
-        <div className="p-[30px] min-h-screen bg-transparent">
+        <div className="p-[30px] min-h-screen bg-transparent cms-payment-plan-setup-add-page">
+            <style>{`.cms-payment-plan-setup-add-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
             {/* Header */}
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 cursor-pointer">
                 <button

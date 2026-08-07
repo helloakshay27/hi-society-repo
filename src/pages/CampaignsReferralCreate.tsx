@@ -186,7 +186,8 @@ const CampaignsReferralCreate: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="bg-gray-50 min-h-screen p-6 campaigns-referral-create-page">
+      <style>{`.campaigns-referral-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       <div className="mx-auto">
         {/* Header */}
         <div className=" px-4 py-3 mb-6 rounded-t">

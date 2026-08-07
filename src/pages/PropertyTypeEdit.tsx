@@ -137,7 +137,7 @@ const PropertyTypeEdit = () => {
                 onChange={(e) => setName(e.target.value)}
                 fullWidth
                 variant="outlined"
-                slotProps={{ inputLabel: { shrink: true } }}
+                slotProps={{ inputLabel: { shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } } }}
                 InputProps={{ sx: fieldStyles }}
                 required
                 disabled={loading}

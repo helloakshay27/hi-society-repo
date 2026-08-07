@@ -218,7 +218,8 @@ const PressReleasesCreate = () => {
   ];
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 press-releases-create-page">
+      <style>{`.press-releases-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
         {/* Header */}
         <div className="mb-8">
@@ -375,7 +376,7 @@ const PressReleasesCreate = () => {
                         </span>
                       )}
                     </span>
-                    <span className="text-red-500 ml-1">*</span>
+                    <span style={{ color: 'var(--color-primary, #da7756)', marginLeft: '4px' }}>*</span>
                   </h5>
 
                   <button

@@ -510,6 +510,7 @@ const AppointmentzBlockDaysConfig = () => {
                   "&.Mui-focused fieldset": { borderColor: "#C72030" },
                 },
                 "& .MuiInputLabel-root.Mui-focused": { color: "#C72030" },
+                "& .MuiFormLabel-asterisk": { color: "#da7756" },
               }}
             >
               <InputLabel id="rm-user-label" shrink required>
@@ -544,7 +545,7 @@ const AppointmentzBlockDaysConfig = () => {
             <div className="space-y-2">
               <div className="relative">
                 <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  Block Dates <span className="text-[#C72030]">*</span>
+                  Block Dates <span className="text-[#da7756]">*</span>
                 </label>
                 <Input
                   type="date"

@@ -222,7 +222,7 @@ const FaqCategoryForm = () => {
                   fullWidth
                   variant="outlined"
                   disabled={loading}
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                   InputProps={{ sx: fieldStyles }}
                 />
 

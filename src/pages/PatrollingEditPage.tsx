@@ -96,11 +96,11 @@ const CheckpointLocationSelector: React.FC<{
         variant="outlined"
         sx={{ "& .MuiInputBase-root": fieldStyles }}
       >
-        <InputLabel shrink>Building *</InputLabel>
+        <InputLabel shrink><span>Building <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
         <MuiSelect
           value={checkpoint.buildingId || ""}
           onChange={(e) => onLocationChange('building', Number(e.target.value) || null)}
-          label="Building *"
+          label={<span>Building <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
           notched
           displayEmpty
           disabled={disabled || loadingStates.buildings}
@@ -1555,7 +1555,8 @@ export const PatrollingEditPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-6 space-y-6 relative patrolling-edit-page">
+      <style>{`.patrolling-edit-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
@@ -1586,7 +1587,7 @@ export const PatrollingEditPage: React.FC = () => {
               <TextField
                 label={
                   <>
-                    Name<span className="text-red-500">*</span>
+                    Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                   </>
                 }
                 placeholder="Enter Patrol Name"
@@ -1635,7 +1636,7 @@ export const PatrollingEditPage: React.FC = () => {
               type="date"
               label={
                 <>
-                  Start Date<span className="text-red-500">*</span>
+                  Start Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               value={startDate}
@@ -1654,7 +1655,7 @@ export const PatrollingEditPage: React.FC = () => {
               type="date"
               label={
                 <>
-                  End Date<span className="text-red-500">*</span>
+                  End Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               value={endDate}
@@ -1670,7 +1671,7 @@ export const PatrollingEditPage: React.FC = () => {
           </div>
           <div>
             <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-              <InputLabel shrink>Grace Type<span className="text-red-500">*</span></InputLabel>
+              <InputLabel shrink>Grace Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
               <MuiSelect
                 value={graceType}
                 onChange={(e) => setGraceType(e.target.value as 'minutes' | 'hours')}
@@ -1688,7 +1689,7 @@ export const PatrollingEditPage: React.FC = () => {
               type="number"
               label={
                 <>
-                  Grace Period ({graceType === 'hours' ? 'hours' : 'minutes'})<span className="text-red-500">*</span>
+                  Grace Period ({graceType === 'hours' ? 'hours' : 'minutes'})<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               placeholder={`Enter grace period in ${graceType === 'hours' ? 'hours' : 'minutes'}`}
@@ -1786,7 +1787,7 @@ export const PatrollingEditPage: React.FC = () => {
                   <TextField
                     label={
                       <>
-                        Question<span className="text-red-500">*</span>
+                        Question<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                       </>
                     }
                     placeholder="Enter Task"
@@ -1808,14 +1809,14 @@ export const PatrollingEditPage: React.FC = () => {
                     sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
                     <InputLabel shrink>
-                      Input Type<span className="text-red-500">*</span>
+                      Input Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                     </InputLabel>
                     <MuiSelect
                       value={q.inputType}
                       onChange={(e) =>
                         updateQuestion(idx, "inputType", String(e.target.value))
                       }
-                      label="Input Type*"
+                      label={<span>Input Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                       notched
                       displayEmpty
                       disabled={isSubmitting || !!selectedChecklist}
@@ -1996,7 +1997,7 @@ export const PatrollingEditPage: React.FC = () => {
                     variant="outlined"
                     sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
-                    <InputLabel shrink>Guard<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Guard<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.assignee || ""}
                       onChange={(e) =>
@@ -2030,7 +2031,7 @@ export const PatrollingEditPage: React.FC = () => {
                     variant="outlined"
                     sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
-                    <InputLabel shrink>Supervisor<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Supervisor<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.supervisor || ""}
                       onChange={(e) =>
@@ -2116,7 +2117,7 @@ export const PatrollingEditPage: React.FC = () => {
                     <TextField
                       label={
                         <>
-                          Checkpoint Name<span className="text-red-500">*</span>
+                          Checkpoint Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                         </>
                       }
                       placeholder="Enter checkpoint name"

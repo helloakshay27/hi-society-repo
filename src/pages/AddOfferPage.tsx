@@ -1463,7 +1463,8 @@ export default function AddOfferPage() {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', maxHeight: '90vh', overflowY: 'auto' }}>
+        <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', maxHeight: '90vh', overflowY: 'auto' }} className="add-offer-page">
+            <style>{`.add-offer-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
             <Toaster position="top-right" richColors closeButton />
 
             {/* Back Navigation */}
