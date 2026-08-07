@@ -38,6 +38,12 @@ const navigationItems: NavigationItem[] = [
     path: "/bms/helpdesk",
   },
   {
+    id: "incidents",
+    label: "Incidents",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/safety/incident",
+  },
+  {
     id: "settings",
     label: "Settings",
     icon: <SettingsIcon className="w-4 h-4" />,
@@ -135,7 +141,7 @@ export const UIHiSocietyNavigation: React.FC = () => {
       setActiveNav("accounting");
     } else if (path.startsWith("/smartsecure") || path.startsWith("/security")) {
       setActiveNav("smartsecure");
-    } else if (path.startsWith("/incidents")) {
+    } else if (path.startsWith("/incidents") || path.startsWith("/safety")) {
       setActiveNav("incidents");
     } else if (path.startsWith("/appointmentz")) {
       setActiveNav("Appointmentz");

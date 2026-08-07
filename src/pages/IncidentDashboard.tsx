@@ -645,8 +645,8 @@ export const IncidentDashboard = () => {
       draggable: true,
     },
     {
-      key: "site_name",
-      label: "Site",
+      key: "tower_name",
+      label: "Tower",
       sortable: true,
       defaultVisible: true,
       draggable: false,
@@ -992,8 +992,8 @@ export const IncidentDashboard = () => {
             {(currentPage - 1) * 20 + index + 1}
           </span>
         );
-      case "site_name":
-        return <span>{item.site_name || item.building_name || "-"}</span>;
+      case "tower_name":
+        return <span>{item.tower_name || item.building_name || item.site_name || "-"}</span>;
       case "inc_time":
         return (
           <span>

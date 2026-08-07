@@ -76,7 +76,7 @@ const navigationItems: NavigationItem[] = [
     id: "incidents",
     label: "Incidents",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/incidents/setup",
+    path: "/safety/incident",
   },
   {
     id: "fb",
@@ -209,7 +209,7 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("accounting");
     } else if (path.startsWith("/smartsecure") || path.startsWith("/security")) {
       setActiveNav("smartsecure");
-    } else if (path.startsWith("/incidents")) {
+    } else if (path.startsWith("/incidents") || path.startsWith("/safety")) {
       setActiveNav("incidents");
     } else if (path.startsWith("/appointmentz")) {
       setActiveNav("Appointmentz");

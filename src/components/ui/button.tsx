@@ -8,7 +8,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "!bg-[#F2EEE9] !text-[#BF213E] [&_svg]:text-[#BF213E]",
+        default: "!bg-[#F2EEE9] !text-[#FFF] [&_svg]:text-[#BF213E]",
         destructive: "!bg-[#F2EEE9] !text-[#BF213E] [&_svg]:text-[#BF213E]",
         outline: "!bg-white !text-[#BF213E] !border !border-[#BF213E] [&_svg]:text-[#BF213E]",
         secondary: "!bg-[#F2EEE9] !text-[#BF213E] !border-none [&_svg]:text-[#BF213E]",
@@ -33,7 +33,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 

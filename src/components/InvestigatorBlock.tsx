@@ -247,7 +247,7 @@ export const InvestigatorBlock: React.FC<InvestigatorBlockProps> = ({
                 </Button>
                 {isLast && (
                     <Button
-                        className=" w-25 bg-[#BF213E] text-white hover:bg-[#9d1a32]"
+                        className=" w-25 "
                         onClick={onAddBlock}
                     >
                         Add Investigator
