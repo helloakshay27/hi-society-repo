@@ -165,6 +165,7 @@ export const UIHiSocietySidebar: React.FC = () => {
     if (path.startsWith("/fitout")) return "fitout";
     if (path.startsWith("/accounting")) return "accounting";
     if (path.startsWith("/smartsecure")) return "smartsecure";
+    if (path.startsWith("/safety")) return "incidents";
     if (path.startsWith("/incidents")) return "incidents";
     if (path.startsWith("/appointmentz")) return "appointmentz";
     if (path.startsWith("/settings")) return "settings";
@@ -864,7 +865,7 @@ export const UIHiSocietySidebar: React.FC = () => {
           id: "incidents",
           label: "Incidents",
           icon: AlertTriangle,
-          path: "/incidents/incidents",
+          path: "/safety/incident",
         },
         {
           id: "design-inputs",

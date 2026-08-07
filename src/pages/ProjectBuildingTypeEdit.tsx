@@ -206,7 +206,7 @@ const ProjectBuildingTypeEdit = () => {
 >
   {/* Property Type */}
   <FormControl variant="outlined" required>
-    <InputLabel shrink>Property Type</InputLabel>
+    <InputLabel shrink sx={{ '& .MuiFormLabel-asterisk': { color: '#da7756' } }}>Property Type</InputLabel>
     <MuiSelect
       value={formData.Property_Type}
       onChange={(e) => {
@@ -244,7 +244,7 @@ const ProjectBuildingTypeEdit = () => {
     value={buildingType}
     onChange={(e) => setBuildingType(e.target.value)}
     variant="outlined"
-    slotProps={{ inputLabel: { shrink: true } }}
+    slotProps={{ inputLabel: { shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } } }}
     InputProps={{ sx: { ...fieldStyles, width: "350px" } }}
     required
     disabled={loading}

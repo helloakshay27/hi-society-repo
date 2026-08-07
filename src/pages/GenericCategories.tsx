@@ -249,7 +249,7 @@ const GenericCategories: React.FC = () => {
                 variant="outlined"
                 required
                 disabled={loadingOrgs}
-                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
               >
                 <InputLabel shrink>Organization</InputLabel>
                 <MuiSelect

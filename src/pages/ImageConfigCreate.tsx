@@ -252,6 +252,7 @@ const CreateImageConfiguration = () => {
                   sx={{
                     width: "350px",
                     "& .MuiInputBase-root": fieldStyles,
+                    "& .MuiFormLabel-asterisk": { color: "#da7756" },
                   }}
                   required
                 >
@@ -281,6 +282,7 @@ const CreateImageConfiguration = () => {
                   sx={{
                     width: "350px",
                     "& .MuiInputBase-root": fieldStyles,
+                    "& .MuiFormLabel-asterisk": { color: "#da7756" },
                   }}
                   required
                   disabled={!selectedName}

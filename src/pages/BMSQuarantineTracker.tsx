@@ -391,7 +391,7 @@ const BMSQuarantineTracker: React.FC = () => {
         size="sm"
         onClick={handleRefresh}
         disabled={isLoading}
-        className="h-9 !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]"
+        className="h-9 !bg-white !text-[#da7756] !border !border-[#da7756] [&_svg]:text-[#da7756]"
       >
         <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
         Refresh
@@ -400,7 +400,7 @@ const BMSQuarantineTracker: React.FC = () => {
         variant="outline"
         size="sm"
         onClick={handleExport}
-        className="h-9 !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]"
+        className="h-9 !bg-white !text-[#da7756] !border !border-[#da7756] [&_svg]:text-[#da7756]"
       >
         <Download className="w-4 h-4 mr-2" />
         Export

@@ -202,7 +202,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/users/get_escalate_to_users.json`, {
+            const response = await fetch(`${baseUrl}/users/get_escalate_to_users.json`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -235,7 +235,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/incidence_tags.json?q[tag_type_eq]=PropertyDamageCategory`, {
+            const response = await fetch(`${baseUrl}/incidence_tags.json?q[tag_type_eq]=PropertyDamageCategory`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -265,7 +265,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/incidence_tags.json?q[tag_type_eq]=RCACategory`, {
+            const response = await fetch(`${baseUrl}/incidence_tags.json?q[tag_type_eq]=RCACategory`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -295,7 +295,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/incidence_tags.json?q[tag_type_eq]=CorrectiveAction`, {
+            const response = await fetch(`${baseUrl}/incidence_tags.json?q[tag_type_eq]=CorrectiveAction`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -325,7 +325,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/incidence_tags.json?q[tag_type_eq]=PreventiveAction`, {
+            const response = await fetch(`${baseUrl}/incidence_tags.json?q[tag_type_eq]=PreventiveAction`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -355,7 +355,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/{+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/incidence_tags.json?q[tag_type_eq]=SubstandardCondition`, {
+            const response = await fetch(`${baseUrl}/incidence_tags.json?q[tag_type_eq]=SubstandardCondition`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -385,7 +385,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/{+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/incidence_tags.json?q[tag_type_eq]=SubstandardAct`, {
+            const response = await fetch(`${baseUrl}/incidence_tags.json?q[tag_type_eq]=SubstandardAct`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -719,7 +719,7 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/pms/incidents/${id}/incident_report?access_token=${token}`, {
+            const response = await fetch(`${baseUrl}/incidents/${id}/incident_report?access_token=${token}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -763,7 +763,7 @@ export const IncidentNewDetails = () => {
                 const formData = new FormData();
                 formData.append('incident[incident_over_time]', incidentOverTime);
 
-                const response = await fetch(`${baseUrl}/pms/incidents/${id}.json`, {
+                const response = await fetch(`${baseUrl}/incidents/${id}.json`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1014,7 +1014,7 @@ export const IncidentNewDetails = () => {
 
                 console.log('Sending investigation payload:', JSON.stringify(payload, null, 2));
 
-                const response = await fetch(`${baseUrl}/pms/incidents/add_inc_details.json`, {
+                const response = await fetch(`${baseUrl}/incidents/add_inc_details.json`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1139,7 +1139,7 @@ export const IncidentNewDetails = () => {
 
                 console.log('Sending provisional closure payload:', JSON.stringify(payload, null, 2));
 
-                const response = await fetch(`${baseUrl}/pms/incidents/inc_clousure_details.json?access_token=${token}`, {
+                const response = await fetch(`${baseUrl}/incidents/inc_clousure_details.json?access_token=${token}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1230,7 +1230,7 @@ export const IncidentNewDetails = () => {
                 console.log('Sending final closure payload:', JSON.stringify(payload, null, 2));
 
                 try {
-                    const response = await fetch(`${baseUrl}/pms/incidents/inc_clousure_details.json?access_token=${token}`, {
+                    const response = await fetch(`${baseUrl}/incidents/inc_clousure_details.json?access_token=${token}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -2518,7 +2518,9 @@ export const IncidentNewDetails = () => {
                                     Save as draft
                                 </Button>
                                 <Button
-                                    className="flex-1 bg-[#BF213E] text-white hover:bg-[#9d1a32]"
+                                    // className="flex-1 bg-[#BF213E] text-white hover:bg-[#9d1a32]"
+                                    className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-50"
+
                                     onClick={handleSubmit}
                                 >
                                     Submit

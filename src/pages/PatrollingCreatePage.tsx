@@ -32,7 +32,7 @@ import { useLayout } from '@/contexts/LayoutContext';
 const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
   <section className="bg-white rounded-lg border border-[#E5E7EB]">
     <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center gap-3">
-      <div className="text-[#ED820E] flex items-center justify-center">
+      <div className="text-brand flex items-center justify-center">
         {icon}
       </div>
       <h2 className="text-[13px] font-bold tracking-wider uppercase text-gray-900">{title}</h2>
@@ -74,11 +74,11 @@ const CheckpointLocationSelector: React.FC<{
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Tower */}
       <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Tower *</InputLabel>
+        <InputLabel shrink><span>Tower <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
         <MuiSelect
           value={checkpoint.buildingId || ''}
           onChange={(e) => onLocationChange('building', Number(e.target.value) || null)}
-          label="Tower *"
+          label={<span>Tower <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
           notched
           displayEmpty
           disabled={disabled || loadingStates.buildings}
@@ -1216,7 +1216,8 @@ export const PatrollingCreatePage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-6 space-y-6 relative patrolling-create-page">
+      <style>{`.patrolling-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
@@ -1302,7 +1303,7 @@ export const PatrollingCreatePage: React.FC = () => {
               type="date"
               label={
                 <>
-                  Start Date<span className="text-red-500">*</span>
+                  Start Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               placeholder="dd-mm-yyyy"
@@ -1328,7 +1329,7 @@ export const PatrollingCreatePage: React.FC = () => {
               type="date"
               label={
                 <>
-                  End Date<span className="text-red-500">*</span>
+                  End Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               placeholder="dd-mm-yyyy"
@@ -1353,12 +1354,12 @@ export const PatrollingCreatePage: React.FC = () => {
           <div>
             <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
               <InputLabel shrink>
-                Grace Type<span className="text-red-500">*</span>
+                Grace Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
               </InputLabel>
               <MuiSelect
                 value={graceType}
                 onChange={(e) => setGraceType(e.target.value as 'minutes' | 'hours')}
-                label={<>Grace Type<span className="text-red-500">*</span></>}
+                label={<>Grace Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></>}
                 notched
                 disabled={isSubmitting}
               >
@@ -1373,7 +1374,7 @@ export const PatrollingCreatePage: React.FC = () => {
               type="number"
               label={
                 <>
-                  Grace Period (minutes)<span className="text-red-500">*</span>
+                  Grace Period (minutes)<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               placeholder="Enter grace period in minutes"
@@ -1451,7 +1452,7 @@ export const PatrollingCreatePage: React.FC = () => {
                   <TextField
                     label={
                       <>
-                        Question<span className="text-red-500">*</span>
+                        Question<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                       </>
                     }
                     placeholder="Enter Task"
@@ -1471,7 +1472,7 @@ export const PatrollingCreatePage: React.FC = () => {
                 </div>
                 <div>
                   <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                    <InputLabel shrink>Input Type<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Input Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={q.inputType}
                       label="Input Type*"
@@ -1581,7 +1582,7 @@ export const PatrollingCreatePage: React.FC = () => {
                 {/* Assignee Dropdown */}
                 {/* <div>
                   <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                    <InputLabel shrink>Guard<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Guard<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.assignee}
                       onChange={(e) => updateShift(idx, 'assignee', String(e.target.value))}
@@ -1610,7 +1611,7 @@ export const PatrollingCreatePage: React.FC = () => {
                 {/* Supervisor Dropdown */}
                 {/* <div>
                   <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                    <InputLabel shrink>Supervisor<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Supervisor<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.supervisor}
                       onChange={(e) => updateShift(idx, 'supervisor', String(e.target.value))}
@@ -1679,7 +1680,7 @@ export const PatrollingCreatePage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <TextField
-                    label="Checkpoint Name*"
+                    label={<span>Checkpoint Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                     placeholder="Enter checkpoint name"
                     value={c.name}
                     onChange={(e) => updateCheckpoint(idx, 'name', e.target.value)}

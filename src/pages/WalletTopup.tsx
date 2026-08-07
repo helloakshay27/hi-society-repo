@@ -604,7 +604,7 @@ const WalletTopup: React.FC = () => {
                 fullWidth
                 variant="outlined"
                 required
-                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
               >
                 <InputLabel shrink>Organization</InputLabel>
                 <MuiSelect
@@ -826,7 +826,7 @@ const WalletTopup: React.FC = () => {
                       id="amount"
                       name="amount"
                       type="number"
-                      label={<>Amount (₹) <span style={{ color: 'red' }}>*</span></>}
+                      label="Amount (₹)"
                       placeholder="Enter amount"
                       value={formData.amount}
                       onChange={handleInputChange}
@@ -834,7 +834,7 @@ const WalletTopup: React.FC = () => {
                       inputProps={{ min: "0.01", step: "0.01" }}
                       fullWidth
                       variant="outlined"
-                      InputLabelProps={{ shrink: true }}
+                      InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                       InputProps={{ sx: fieldStyles }}
                     />
                   </div>
@@ -844,7 +844,7 @@ const WalletTopup: React.FC = () => {
                     <TextField
                       id="remarks"
                       name="remarks"
-                      label={<>Remarks <span style={{ color: 'red' }}>*</span></>}
+                      label="Remarks"
                       placeholder="Enter remarks for this transaction"
                       value={formData.remarks}
                       onChange={handleInputChange}
@@ -853,7 +853,7 @@ const WalletTopup: React.FC = () => {
                       rows={1}
                       fullWidth
                       variant="outlined"
-                      InputLabelProps={{ shrink: true }}
+                      InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                       InputProps={{ sx: fieldStyles }}
                     />
                   </div>

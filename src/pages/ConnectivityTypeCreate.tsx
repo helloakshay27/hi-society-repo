@@ -158,6 +158,7 @@ const ConnectivityTypeCreate: React.FC = () => {
                   sx={{
                     width: "350px",
                     ...fieldStyles,
+                    "& .MuiFormLabel-asterisk": { color: "#da7756" },
                   }}
                 />
               </div>
@@ -169,6 +170,7 @@ const ConnectivityTypeCreate: React.FC = () => {
                   sx={{
                     width: "350px",
                     "& .MuiInputBase-root": fieldStyles,
+                    "& .MuiFormLabel-asterisk": { color: "#da7756" },
                   }}
                   required
                 >

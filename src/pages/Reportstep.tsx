@@ -67,7 +67,7 @@ const ReportStep: React.FC<ReportStepProps> = ({
                         />
                     </LocalizationProvider>
                 </FormControl>
-                <Clock className="w-5 h-5 text-gray-600" />
+                {/* <Clock className="w-5 h-5 text-gray-600" /> */}
             </div>
 
             <div className="bg-white shadow-md rounded-md p-6">

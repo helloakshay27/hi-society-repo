@@ -631,7 +631,7 @@ const AppointmentzRMConfig = () => {
               fullWidth
               variant="outlined"
               required
-              InputLabelProps={{ shrink: true }}
+              InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
               InputProps={{ sx: fieldStyles }}
               error={!!formErrors.firstName}
               helperText={formErrors.firstName}
@@ -646,7 +646,7 @@ const AppointmentzRMConfig = () => {
               fullWidth
               variant="outlined"
               required
-              InputLabelProps={{ shrink: true }}
+              InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
               InputProps={{ sx: fieldStyles }}
               error={!!formErrors.lastName}
               helperText={formErrors.lastName}
@@ -663,7 +663,7 @@ const AppointmentzRMConfig = () => {
               variant="outlined"
               required
               disabled={isEditMode}
-              InputLabelProps={{ shrink: true }}
+              InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
               InputProps={{
                 sx: fieldStyles,
                 ...(isEditMode
@@ -683,7 +683,7 @@ const AppointmentzRMConfig = () => {
               fullWidth
               variant="outlined"
               required
-              InputLabelProps={{ shrink: true }}
+              InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
               InputProps={{ sx: fieldStyles }}
               error={!!formErrors.mobile}
               helperText={formErrors.mobile}
@@ -700,7 +700,7 @@ const AppointmentzRMConfig = () => {
                 fullWidth
                 variant="outlined"
                 required
-                InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                 InputProps={{ sx: fieldStyles }}
                 error={!!formErrors.password}
                 helperText={formErrors.password}

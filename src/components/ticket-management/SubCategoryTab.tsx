@@ -423,7 +423,7 @@ export const SubCategoryTab: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
-                Select Issue Type <span style={{ color: '#ef4444' }}>*</span>
+                Select Issue Type <span style={{ color: '#da7756' }}>*</span>
               </InputLabel>
               <MuiSelect
                 label="Select Issue Type *"
@@ -441,7 +441,7 @@ export const SubCategoryTab: React.FC = () => {
             </FormControl>
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
-                Select Category <span style={{ color: '#ef4444' }}>*</span>
+                Select Category <span style={{ color: '#da7756' }}>*</span>
               </InputLabel>
               <MuiSelect
                 label="Select Category *"
@@ -548,7 +548,7 @@ export const SubCategoryTab: React.FC = () => {
                 {/* Issue Type Dropdown */}
                 <FormControl fullWidth variant="outlined">
                   <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
-                    Select Issue Type <span style={{ color: '#ef4444' }}>*</span>
+                    Select Issue Type <span style={{ color: '#da7756' }}>*</span>
                   </InputLabel>
                   <MuiSelect
                     label="Select Issue Type *"
@@ -568,7 +568,7 @@ export const SubCategoryTab: React.FC = () => {
                 {/* Category Dropdown */}
                 <FormControl fullWidth variant="outlined">
                   <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
-                    Select Category <span style={{ color: '#ef4444' }}>*</span>
+                    Select Category <span style={{ color: '#da7756' }}>*</span>
                   </InputLabel>
                   <MuiSelect
                     label="Select Category *"

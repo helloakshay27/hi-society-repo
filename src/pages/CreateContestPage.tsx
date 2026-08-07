@@ -897,7 +897,7 @@ export const CreateContestPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <TextField
                   fullWidth
-                  label="Contest Name *"
+                  label={<span>Contest Name <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                   placeholder="Enter Title"
                   value={contestName}
                   onChange={(e) => setContestName(e.target.value)}
@@ -907,7 +907,7 @@ export const CreateContestPage: React.FC = () => {
                 />
 
                 <FormControl fullWidth size="small" sx={textFieldSx}>
-                  <InputLabel>Contest Type *</InputLabel>
+                  <InputLabel><span>Contest Type <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
                   <MuiSelect
                     value={contestType}
                     label="Contest Type"
@@ -926,7 +926,7 @@ export const CreateContestPage: React.FC = () => {
                 <div className="relative w-full border border-gray-300 rounded-lg bg-white">
                   {/* Floating Label */}
                   <label className="absolute -top-2 left-3 bg-white px-1 text-[12.5px] text-black pointer-events-none">
-                    Contest Description <span className="text-[#C72030]">*</span>
+                    Contest Description <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                   </label>
 
                   <div className="relative p-4 pt-2">
@@ -1019,7 +1019,7 @@ export const CreateContestPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <TextField
                       fullWidth
-                      label="Offer Title *"
+                      label={<span>Offer Title <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                       value={offer.offerTitle}
                       onChange={(e) => updateOffer(offer.id, "offerTitle", e.target.value)}
                       sx={textFieldSx}
@@ -1071,7 +1071,7 @@ export const CreateContestPage: React.FC = () => {
                         <InputLabel>Resource</InputLabel>
                         <MuiSelect
                           value={offer.resourceId}
-                          label="Resource *"
+                          label={<span>Resource <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                           onChange={(e) => updateOffer(offer.id, "resourceId", e.target.value)}
                         >
                           {loadingProducts ? (
@@ -1177,7 +1177,7 @@ export const CreateContestPage: React.FC = () => {
                   <div className="mt-4">
                     <Typography variant="body2" className="text-gray-700 mb-2">
                       Upload Banner Image
-                      <span className="text-[#C72030]">*</span>
+                      <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                     </Typography>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                       <p className="text-sm text-gray-600 mb-2">
@@ -1256,7 +1256,7 @@ export const CreateContestPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <TextField
                     fullWidth
-                    label="Start Date *"
+                    label={<span>Start Date <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     variant="outlined"
@@ -1278,7 +1278,7 @@ export const CreateContestPage: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="Start Time *"
+                    label={<span>Start Time <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                     placeholder="HH:MM"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
@@ -1302,7 +1302,7 @@ export const CreateContestPage: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="End Date *"
+                    label={<span>End Date <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                     placeholder="DD/MM/YYYY"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
@@ -1327,7 +1327,7 @@ export const CreateContestPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <TextField
                     fullWidth
-                    label="End Time *"
+                    label={<span>End Time <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                     placeholder="HH:MM"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
@@ -1518,7 +1518,8 @@ export const CreateContestPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
+    <div className="p-4 sm:p-6 min-h-screen bg-gray-50 create-contest-page">
+      <style>{`.create-contest-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-4">
         <button

@@ -1247,7 +1247,7 @@ export const AddIncidentPage = () => {
     day: currentDateTime.day,
     hour: currentDateTime.hour,
     minute: currentDateTime.minute,
-    building: '',
+    tower: '',
     // Primary hierarchy
     primaryCategory: '',
     subCategory: '',
@@ -1271,8 +1271,8 @@ export const AddIncidentPage = () => {
   });
 
 
-  // State for buildings
-  const [buildings, setBuildings] = useState<{ id: number; name: string }[]>([]);
+  // State for towers
+  const [towers, setTowers] = useState<{ id: number; name: string }[]>([]);
   // Category hierarchy states
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [subCategories, setSubCategories] = useState<any[]>([]);
@@ -1301,7 +1301,7 @@ export const AddIncidentPage = () => {
   const fetchByTagType = async (tagType: string, parentId?: string | number) => {
     const { baseUrl, token } = getBaseUrl();
     try {
-      let url = `${baseUrl}/pms/incidence_tags.json?q[tag_type_eq]=${tagType}`;
+      let url = `${baseUrl}/incidence_tags.json?q[tag_type_eq]=${tagType}`;
       if (parentId) {
         url += `&q[parent_id_eq]=${parentId}`;
       }
@@ -1383,27 +1383,46 @@ export const AddIncidentPage = () => {
     } catch (e) { console.error(e); }
   };
 
-  const fetchBuildings = async () => {
-    const { baseUrl, token } = getBaseUrl();
+  const fetchTowers = async () => {
+    const { token } = getBaseUrl();
+    const societyId = localStorage.getItem('selectedSocietyId') || '';
+
     try {
-      const response = await fetch(`${baseUrl}/pms/buildings.json`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setBuildings(Array.isArray(result.pms_buildings) ? result.pms_buildings.map((b: any) => ({ id: b.id, name: b.name })) : []);
-      } else {
-        setBuildings([]);
-      }
+      const response = await fetch(
+        `https://hi-society.lockated.com/get_society_blocks.json?society_id=${societyId}`,
+        {
+          headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch towers');
+      const result = await response.json();
+
+      const list =
+        (Array.isArray(result) && result) ||
+        result.blocks ||
+        result.society_blocks ||
+        result.data ||
+        [];
+
+      const normalized = list.map((item: any) => ({
+        id: item.id ?? item.block_id ?? item.tower_id,
+        name: item.name ?? item.block_name ?? item.tower_name ?? ''
+      }));
+
+      setTowers(normalized);
     } catch (e) {
-      console.error('Error fetching buildings:', e);
-      setBuildings([]);
+      console.error('Error fetching towers:', e);
+      setTowers([]);
     }
   };
 
   // Fetch initial data on mount
   useEffect(() => {
-    fetchBuildings();
+    fetchTowers();
     fetchCategories();
     fetchSecondaryCategories();
     fetchIncidentLevels();
@@ -1603,9 +1622,9 @@ export const AddIncidentPage = () => {
       return;
     }
 
-    // Building validation
-    if (!incidentData.building) {
-      toast.error('Please select a building');
+    // Tower validation
+    if (!incidentData.tower) {
+      toast.error('Please select a tower');
       return;
     }
 
@@ -1666,8 +1685,8 @@ export const AddIncidentPage = () => {
       form.append('incident[inc_time(4i)]', incidentData.hour);
       form.append('incident[inc_time(5i)]', incidentData.minute);
 
-      // Building
-      form.append('incident[building_id]', incidentData.building);
+      // Tower
+      form.append('incident[tower_id]', incidentData.tower);
 
       // Primary hierarchy
       form.append('incident[inc_category_id]', incidentData.primaryCategory);
@@ -1709,7 +1728,7 @@ export const AddIncidentPage = () => {
         });
       }
 
-      const resp = await fetch(`${baseUrl}/pms/incidents.json`, {
+      const resp = await fetch(`${baseUrl}/incidents.json`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: form
@@ -1861,20 +1880,20 @@ export const AddIncidentPage = () => {
 
           {/* Building and Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Building Dropdown */}
+            {/* Tower Dropdown */}
             <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-              <InputLabel shrink>Building <span style={{ color: '#C72030' }}>*</span></InputLabel>
+              <InputLabel shrink>Tower <span style={{ color: '#C72030' }}>*</span></InputLabel>
               <MuiSelect
-                label="Building *"
-                value={incidentData.building}
-                onChange={e => handleInputChange('building', e.target.value)}
+                label="Tower *"
+                value={incidentData.tower}
+                onChange={e => handleInputChange('tower', e.target.value)}
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Building</em></MenuItem>
-                {buildings.map(b => (
-                  <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
+                <MenuItem value=""><em>Select Tower</em></MenuItem>
+                {towers.map(t => (
+                  <MenuItem key={t.id} value={String(t.id)}>{t.name}</MenuItem>
                 ))}
               </MuiSelect>
             </FormControl>

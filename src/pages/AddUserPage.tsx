@@ -106,6 +106,9 @@ const fieldStyles = {
       color: '#C72030',
     },
   },
+  '& .MuiFormLabel-asterisk': {
+    color: '#da7756',
+  },
 };
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({

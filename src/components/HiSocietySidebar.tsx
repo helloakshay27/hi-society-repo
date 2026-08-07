@@ -171,6 +171,7 @@ export const HiSocietySidebar: React.FC = () => {
     if (path.startsWith("/accounting")) return "accounting";
     if (path.startsWith("/smartsecure")) return "smartsecure";
     if (path.startsWith("/security")) return "smartsecure";
+    if (path.startsWith("/safety")) return "incidents";
     if (path.startsWith("/incidents")) return "incidents";
     if (path.startsWith("/appointmentz")) return "appointmentz";
     if (path.startsWith("/settings")) return "settings";
@@ -645,7 +646,7 @@ export const HiSocietySidebar: React.FC = () => {
             },
           ],
         },
-        
+
         {
           id: "transactions",
           label: "Transactions",
@@ -664,43 +665,43 @@ export const HiSocietySidebar: React.FC = () => {
           icon: Receipt,
           path: "/accounting/receipts",
         },
-         {
-                  id: "configuration",
-                  label: "Configuration",
-                  icon: BarChart3,
-                  subItems: [
-                    {
-                      id: "charges",
-                      label: "Charges",
-                      icon: PieChart,
-                      path: "/accounting/charges",
-                    },
-                    {
-                      id: "bill-cycles",
-                      label: "Bill Cycles",
-                      icon: FileText,
-                      path: "/accounting/bill-cycles",
-                    },
-                    {
-                      id: "units-bill-cycle-mapping",
-                      label: "Units & Bill Cycle Mapping",
-                      icon: Database,
-                      path: "/accounting/units-bill-cycle-mapping",
-                    },
-                    {
-                      id: "charge-calculations",
-                      label: "Charge Calculations",
-                      icon: Database,
-                      path: "/accounting/charge-calculations",
-                    },
-                  ],
-                },
-                {
+        {
+          id: "configuration",
+          label: "Configuration",
+          icon: BarChart3,
+          subItems: [
+            {
+              id: "charges",
+              label: "Charges",
+              icon: PieChart,
+              path: "/accounting/charges",
+            },
+            {
+              id: "bill-cycles",
+              label: "Bill Cycles",
+              icon: FileText,
+              path: "/accounting/bill-cycles",
+            },
+            {
+              id: "units-bill-cycle-mapping",
+              label: "Units & Bill Cycle Mapping",
+              icon: Database,
+              path: "/accounting/units-bill-cycle-mapping",
+            },
+            {
+              id: "charge-calculations",
+              label: "Charge Calculations",
+              icon: Database,
+              path: "/accounting/charge-calculations",
+            },
+          ],
+        },
+        {
           id: "custom-settings",
           label: "Custom Settings",
           icon: FileText,
           path: "/accounting/custom-settings",
-        },  
+        },
         {
           id: "reports",
           label: "Reports",
@@ -712,7 +713,7 @@ export const HiSocietySidebar: React.FC = () => {
               icon: FileText,
               path: "/accounting/balance-sheet",
             },
-             {
+            {
               id: "profit-loss",
               label: "Profit & Loss",
               icon: PieChart,
@@ -738,13 +739,13 @@ export const HiSocietySidebar: React.FC = () => {
             },
           ],
         },
-         {
+        {
           id: "invoices-report",
           label: "Invoices Report",
           icon: FileText,
           path: "/accounting/invoices-report",
         },
-         {
+        {
           id: "download-report",
           label: "Download Report",
           icon: FileText,
@@ -969,7 +970,7 @@ export const HiSocietySidebar: React.FC = () => {
           id: "incidents",
           label: "Incidents",
           icon: AlertTriangle,
-          path: "/incidents/incidents",
+          path: "/safety/incident",
         },
         {
           id: "design-inputs",
@@ -1339,7 +1340,7 @@ export const HiSocietySidebar: React.FC = () => {
           icon: FileText,
           path: "/settings/general-settings",
         },
-         {
+        {
           id: "osr-setup",
           label: "OSR Setup",
           icon: SettingsIcon,
@@ -1572,9 +1573,8 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${
-        showCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40
+      className={`${showCollapsed ? "w-16" : "w-64"
+        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40
         ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
