@@ -388,11 +388,16 @@ export const API_CONFIG = {
     ATTACHMENTS: "/crm/admin/attachments.json",
     SHARE_MULTIPLE_DOCUMENTS: "/crm/admin/share_multiple_documents.json",
     LOYALTY_DASHBOARD_HOME: "/loyalty/dashboard/home",
+    LOYALTY_DASHBOARD_OVERVIEW: "/loyalty/dashboard/overview",
     LOYALTY_DASHBOARD_MEMBERS: "/loyalty/dashboard/members",
     LOYALTY_DASHBOARD_WALLET: "/loyalty/dashboard/wallet",
     LOYALTY_DASHBOARD_ORDERS: "/loyalty/dashboard/orders",
     LOYALTY_DASHBOARD_STORE: "/loyalty/dashboard/store",
     LOYALTY_DASHBOARD_REDEMPTION: "/loyalty/dashboard/redemption",
+    LOYALTY_DASHBOARD_RULE_SUMMARY: "/wallet_transaction_logs/rules_summary",
+    LOYALTY_DASHBOARD_RULES: "/wallet_transaction_logs/rules",
+    LOYALTY_DASHBOARD_FIRES_BY_CATEGORY: "/wallet_transaction_logs/fires_by_category",
+    LOYALTY_DASHBOARD_DAILY_FIRES: "/wallet_transaction_logs/daily_fires",
   },
 } as const;
 
