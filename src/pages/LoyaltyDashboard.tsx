@@ -129,6 +129,50 @@ export function LoyaltyDashboard() {
     }
   });
 
+  const { data: ruleSummaryData } = useQuery({
+    queryKey: ['loyalty-dashboard-rule-summary', dateFilter],
+    queryFn: async () => {
+      const url = `${getHiSocietyBaseUrl()}${ENDPOINTS.LOYALTY_DASHBOARD_RULE_SUMMARY}`;
+      const response = await axios.get(url, {
+        params: { token: API_CONFIG.TOKEN, ...dateParams }
+      });
+      return response.data;
+    }
+  });
+
+  const { data: activeRulesData } = useQuery({
+    queryKey: ['loyalty-dashboard-rules', dateFilter],
+    queryFn: async () => {
+      const url = `${getHiSocietyBaseUrl()}${ENDPOINTS.LOYALTY_DASHBOARD_RULES}`;
+      const response = await axios.get(url, {
+        params: { token: API_CONFIG.TOKEN, ...dateParams }
+      });
+      return response.data;
+    }
+  });
+
+  const { data: firesByCategoryData } = useQuery({
+    queryKey: ['loyalty-dashboard-fires-by-category', dateFilter],
+    queryFn: async () => {
+      const url = `${getHiSocietyBaseUrl()}${ENDPOINTS.LOYALTY_DASHBOARD_FIRES_BY_CATEGORY}`;
+      const response = await axios.get(url, {
+        params: { token: API_CONFIG.TOKEN, ...dateParams }
+      });
+      return response.data;
+    }
+  });
+
+  const { data: dailyFiresData } = useQuery({
+    queryKey: ['loyalty-dashboard-daily-fires', dateFilter],
+    queryFn: async () => {
+      const url = `${getHiSocietyBaseUrl()}${ENDPOINTS.LOYALTY_DASHBOARD_DAILY_FIRES}`;
+      const response = await axios.get(url, {
+        params: { token: API_CONFIG.TOKEN, ...dateParams }
+      });
+      return response.data;
+    }
+  });
+
   const tierDistribution = dashboardData?.tier_distribution || [];
   const tiersChartData = tierDistribution.length > 0 ? {
     labels: tierDistribution.map((t: any) => t.name || 'Unknown'),
@@ -200,7 +244,58 @@ export function LoyaltyDashboard() {
           </>
         );
       }
-      case 'Rules Engine':
+      case 'Rules Engine': {
+        const ruleSummaryCards = [
+          { key: 'collection', title: 'COLLECTIONS', borderClass: 'border-t-[#DA7756]', badgeClass: 'bg-[#E2F0EC] text-[#108C72] border-[#108C72]/20' },
+          { key: 'engagement', title: 'MARKETING ENGAGEMENT', borderClass: 'border-t-[#6B9BCC]', badgeClass: 'bg-[#E6F0F9] text-[#2C6299] border-[#2C6299]/20' },
+          { key: 'possession', title: 'POSSESSION', borderClass: 'border-t-[#8FA8A1]', badgeClass: 'bg-[#E2F0EC] text-[#108C72] border-[#108C72]/20' },
+          { key: 'sales', title: 'SALES & BOOKING', borderClass: 'border-t-[#108C72]', badgeClass: 'bg-[#E6F0F9] text-[#2C6299] border-[#2C6299]/20' },
+          { key: 'referral', title: 'REFERRALS', borderClass: 'border-t-[#EDC488]', badgeClass: 'bg-[#FFF7EB] text-[#DA7756] border-[#DA7756]/20' },
+          { key: 'app', title: 'APP ADOPTION', borderClass: 'border-t-[#E7848E]', badgeClass: 'bg-[#E2F0EC] text-[#108C72] border-[#108C72]/20' },
+        ];
+
+        const summaryCategories = Array.isArray(ruleSummaryData?.categories) ? ruleSummaryData.categories : [];
+
+        const renderedRuleCards = ruleSummaryCards.map((card) => {
+          const match = summaryCategories.find((item: any) => {
+            const categoryName = String(item?.category || '').toLowerCase();
+            return categoryName.includes(card.key) || categoryName.includes(card.title.toLowerCase().replace(/[^a-z ]/g, '').split(' ')[0]);
+          });
+
+          const ruleCount = Number(match?.rule_count ?? 0);
+          const fires = Number(match?.fires_this_month ?? 0);
+
+          return {
+            ...card,
+            ruleCount,
+            fires,
+            statusLabel: ruleCount > 0 ? 'Active' : 'No rules',
+            subtitle: fires > 0 ? `${fires.toLocaleString()} fires this month` : 'No recent activity',
+          };
+        });
+
+        const firesByCategory = firesByCategoryData?.fires_by_category || [];
+        const ruleCatChartData = firesByCategory.length > 0 ? {
+          labels: firesByCategory.map((c: any) => c.category || c.name || 'Unknown'),
+          values: firesByCategory.map((c: any) => c.fires_mtd || c.count || c.fires || 0),
+          colors: ['#DA7756', '#108C72', '#EDC488', '#6B9BCC', '#E7848E', '#2C2C2C'].slice(0, firesByCategory.length),
+          h: false,
+          def: 'bar'
+        } : undefined;
+
+        const dailyFires = dailyFiresData?.daily_fires || [];
+        const dailyFiresChartData = dailyFires.length > 0 ? {
+          labels: dailyFires.map((d: any) => {
+            if (!d.date) return '';
+            const dt = new Date(d.date);
+            return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          }),
+          values: dailyFires.map((d: any) => d.fires || 0),
+          colors: ['#DA7756'],
+          h: false,
+          def: 'line'
+        } : undefined;
+
         return (
           <>
             {/* Top Control Bar */}
@@ -252,84 +347,24 @@ export function LoyaltyDashboard() {
 
             {/* Category Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px] mb-[20px]">
-              {/* Card 1 */}
-              <div className="bg-white border border-[#E0D8CC] border-t-4 border-t-[#DA7756] rounded-[10px] p-[16px] shadow-sm">
-                <div className="text-[9px] font-bold text-[#A89F8E] uppercase tracking-wider mb-1">COLLECTIONS</div>
-                <div className="text-[20px] font-bold text-[#2C2C2C] mb-1">8 rules</div>
-                <div className="text-[11px] text-[#798C5E] mb-4">4,120 fires this month · 100% active</div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-[#E2F0EC] text-[#108C72] border border-[#108C72]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">All Active</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Demand Note</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Early Payment</span>
+              {renderedRuleCards.map((card) => (
+                <div key={card.title} className={`bg-white border border-[#E0D8CC] border-t-4 rounded-[10px] p-[16px] shadow-sm ${card.borderClass}`}>
+                  <div className="text-[9px] font-bold text-[#A89F8E] uppercase tracking-wider mb-1">{card.title}</div>
+                  <div className="text-[20px] font-bold text-[#2C2C2C] mb-1">{card.ruleCount} rules</div>
+                  <div className="text-[11px] text-[#798C5E] mb-4">{card.subtitle} · {card.statusLabel}</div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className={`border px-2 py-0.5 rounded-full text-[10px] font-semibold ${card.badgeClass}`}>{card.statusLabel}</span>
+                    <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">{card.fires.toLocaleString()} fires</span>
+                  </div>
                 </div>
-              </div>
-
-              {/* Card 2 */}
-              <div className="bg-white border border-[#E0D8CC] border-t-4 border-t-[#6B9BCC] rounded-[10px] p-[16px] shadow-sm">
-                <div className="text-[9px] font-bold text-[#A89F8E] uppercase tracking-wider mb-1">MARKETING ENGAGEMENT</div>
-                <div className="text-[20px] font-bold text-[#2C2C2C] mb-1">5 rules</div>
-                <div className="text-[11px] text-[#798C5E] mb-4">3,200 fires this month · 4 active</div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-[#FFF7EB] text-[#DA7756] border border-[#DA7756]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">1 Paused</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Email Open</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">App Login</span>
-                </div>
-              </div>
-
-              {/* Card 3 */}
-              <div className="bg-white border border-[#E0D8CC] border-t-4 border-t-[#8FA8A1] rounded-[10px] p-[16px] shadow-sm">
-                <div className="text-[9px] font-bold text-[#A89F8E] uppercase tracking-wider mb-1">POSSESSION</div>
-                <div className="text-[20px] font-bold text-[#2C2C2C] mb-1">5 rules</div>
-                <div className="text-[11px] text-[#798C5E] mb-4">2,340 fires this month · All active</div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-[#E2F0EC] text-[#108C72] border border-[#108C72]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">All Active</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Early Payment</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Docs Upload</span>
-                </div>
-              </div>
-
-              {/* Card 4 */}
-              <div className="bg-white border border-[#E0D8CC] border-t-4 border-t-[#108C72] rounded-[10px] p-[16px] shadow-sm">
-                <div className="text-[9px] font-bold text-[#A89F8E] uppercase tracking-wider mb-1">SALES & BOOKING</div>
-                <div className="text-[20px] font-bold text-[#2C2C2C] mb-1">7 rules</div>
-                <div className="text-[11px] text-[#798C5E] mb-4">1,650 fires this month · 6 active</div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-[#FFF7EB] text-[#DA7756] border border-[#DA7756]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">1 Draft</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Token Payment</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Site Visit</span>
-                </div>
-              </div>
-
-              {/* Card 5 */}
-              <div className="bg-white border border-[#E0D8CC] border-t-4 border-t-[#EDC488] rounded-[10px] p-[16px] shadow-sm">
-                <div className="text-[9px] font-bold text-[#A89F8E] uppercase tracking-wider mb-1">REFERRALS</div>
-                <div className="text-[20px] font-bold text-[#2C2C2C] mb-1">6 rules</div>
-                <div className="text-[11px] text-[#798C5E] mb-4">890 fires this month · 5 active</div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-[#FFF7EB] text-[#DA7756] border border-[#DA7756]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">1 Paused</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Friend Referral</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Conversion</span>
-                </div>
-              </div>
-
-              {/* Card 6 */}
-              <div className="bg-white border border-[#E0D8CC] border-t-4 border-t-[#E7848E] rounded-[10px] p-[16px] shadow-sm">
-                <div className="text-[9px] font-bold text-[#A89F8E] uppercase tracking-wider mb-1">APP ADOPTION</div>
-                <div className="text-[20px] font-bold text-[#2C2C2C] mb-1">3 rules</div>
-                <div className="text-[11px] text-[#798C5E] mb-4">780 fires this month · All active</div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-[#E2F0EC] text-[#108C72] border border-[#108C72]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">All Active</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">First Login</span>
-                  <span className="bg-[#E6F0F9] text-[#2C6299] border border-[#2C6299]/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">Profile Complete</span>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Table Area */}
             <div className="bg-white border border-[#E0D8CC] rounded-[10px] p-[20px] mb-[14px]">
               <div className="mb-4">
                 <div className="text-[14px] font-bold text-[#2C2C2C] mb-1">All Active Rules</div>
-                <div className="text-[11px] text-[#A89F8E]">34 rules · click any row to inspect</div>
+                <div className="text-[11px] text-[#A89F8E]">{activeRulesData?.rules?.length || 0} rules · click any row to inspect</div>
               </div>
               
               <div className="overflow-x-auto">
@@ -347,43 +382,38 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { 
-                        name: 'Early Demand Note Payment', 
-                        category: 'Collections', catBg: 'bg-[#FFF7EB]', catText: 'text-[#DA7756]',
-                        type: 'Transaction', 
-                        trigger: 'Paid ≤ 5 days of demand', 
-                        pts: '6,000', 
-                        fires: '824', fireColor: 'text-[#DA7756]',
-                        last: 'Today 11:42', 
-                        status: 'Active', statusColor: 'text-[#108C72]'
-                      },
-                      { 
-                        name: 'App Login Streak - 3 days', 
-                        category: 'App Adoption', catBg: 'bg-[#F3E8FF]', catText: 'text-[#7E22CE]',
-                        type: 'Engagement', 
-                        trigger: '3 consecutive logins', 
-                        pts: '250', 
-                        fires: '412', fireColor: 'text-[#2C6299]',
-                        last: 'Today 09:15', 
-                        status: 'Active', statusColor: 'text-[#108C72]'
+                    {activeRulesData?.rules?.map((rule: any, i: number) => {
+                      let catBg = 'bg-[#FFF7EB]';
+                      let catText = 'text-[#DA7756]';
+                      if (rule.category === 'Engagement') {
+                        catBg = 'bg-[#F3E8FF]';
+                        catText = 'text-[#7E22CE]';
+                      } else if (rule.category === 'Referral') {
+                        catBg = 'bg-[#E6F0F9]';
+                        catText = 'text-[#2C6299]';
                       }
-                    ].map((row, i) => (
-                      <tr key={i} className="hover:bg-[#F6F4EE]/50 transition-colors cursor-pointer border-b border-[#E0D8CC] last:border-0">
-                        <td className="p-[12px_8px] font-semibold text-[#2C2C2C]">{row.name}</td>
+
+                      return (
+                      <tr key={rule.n8n_rule_id || i} className="hover:bg-[#F6F4EE]/50 transition-colors cursor-pointer border-b border-[#E0D8CC] last:border-0">
+                        <td className="p-[12px_8px] font-semibold text-[#2C2C2C]">{rule.rule_name || '-'}</td>
                         <td className="p-[12px_8px]">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${row.catBg} ${row.catText}`}>{row.category}</span>
+                          {rule.category ? (
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${catBg} ${catText}`}>{rule.category}</span>
+                          ) : (
+                            <span className="text-[#A89F8E]">-</span>
+                          )}
                         </td>
-                        <td className="p-[12px_8px] text-[#2C2C2C]">{row.type}</td>
-                        <td className="p-[12px_8px] text-[#2C2C2C]">{row.trigger}</td>
-                        <td className="p-[12px_8px] font-bold text-[#2C2C2C]">{row.pts}</td>
-                        <td className={`p-[12px_8px] font-bold ${row.fireColor}`}>{row.fires}</td>
-                        <td className="p-[12px_8px] text-[#798C5E]">{row.last}</td>
-                        <td className={`p-[12px_8px] font-semibold ${row.statusColor}`}>
-                          <span className="text-[12px] mr-1">•</span>{row.status}
+                        <td className="p-[12px_8px] text-[#2C2C2C]">-</td>
+                        <td className="p-[12px_8px] text-[#2C2C2C]">-</td>
+                        <td className="p-[12px_8px] font-bold text-[#2C2C2C]">{rule.points ? parseFloat(rule.points).toLocaleString() : '0'}</td>
+                        <td className={`p-[12px_8px] font-bold text-[#2C6299]`}>{rule.fires_mtd?.toLocaleString() || '0'}</td>
+                        <td className="p-[12px_8px] text-[#798C5E]">{rule.last_fired_at ? new Date(rule.last_fired_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : '-'}</td>
+                        <td className={`p-[12px_8px] font-semibold text-[#108C72]`}>
+                          <span className="text-[12px] mr-1">•</span>Active
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -396,10 +426,12 @@ export function LoyaltyDashboard() {
                 acts={[{type:'bar',label:'Bar'},{type:'doughnut',label:'Donut'},{type:'tbl',label:'Table'}]} 
                 insight={{bgClass:'bg-[#FFF7EB]',borderClass:'border-[#DA7756]',textClass:'text-[#DA7756]',label:'RULE PERFORMANCE INSIGHT',text:'Click Generate Insight for AI analysis.', btnText: '+ Generate Insight'}}
                 onAiOpen={() => setIsAiOpen(true)}
+                chartDataOverride={ruleCatChartData}
               />
               <ChartCard 
                 id="dailyfires" title="Daily Rule Fires — Last 7 Days" 
                 acts={[{type:'line',label:'Line'},{type:'bar',label:'Bar'},{type:'tbl',label:'Table'}]} 
+                chartDataOverride={dailyFiresChartData}
               />
               <button className="absolute bottom-[-10px] right-[-10px] w-12 h-12 bg-[#DA7756] rounded-full flex items-center justify-center text-white shadow-[0_4px_12px_rgba(218,119,86,.4)] hover:bg-[#C26547] transition-colors cursor-pointer z-10">
                 <Sparkles className="w-5 h-5 text-white" />
@@ -407,6 +439,7 @@ export function LoyaltyDashboard() {
             </div>
           </>
         );
+      }
       case 'Members': {
         const topEarner = membersData?.top_earners?.[0];
         const memTierDist = membersData?.tier_distribution || dashboardData?.tier_distribution || [];
@@ -1247,30 +1280,24 @@ export function LoyaltyDashboard() {
       </div>
 
       {/* TabNav */}
-      <div className="flex gap-0 px-5 bg-white border-b border-[#C4B89D] sticky top-[60px] z-[299] overflow-x-auto">
+      <div className="flex gap-0 px-5 bg-white border-b border-[#C4B89D] sticky top-[60px] z-[299] overflow-x-auto overflow-y-hidden scrollbar-hide">
         {tabs.map(tab => (
           <div 
-            key=<span className="flex items-center">
-              {tab}
-              {tab === 'Overview' && <InfoIcon details="High-level dashboard overview of loyalty metrics." />}
-              {tab === 'Rules Engine' && <InfoIcon details="Manage and configure points earning rules." />}
-              {tab === 'Members' && <InfoIcon details="Member directory and tier distributions." />}
-              {tab === 'Redemption' && <InfoIcon details="Manage points redemption activities and backlog." />}
-              {tab === 'Wallet' && <InfoIcon details="Financial flow of issued, redeemed, and expired points." />}
-              {tab === 'Orders' && <InfoIcon details="Track fulfillment of physical and digital rewards." />}
-              {tab === 'Store & Inventory' && <InfoIcon details="Manage rewards catalog and stock levels." />}
-            </span>
+            key={tab}
             className={`flex items-center gap-[5px] px-[14px] py-[10px] border-b-2 text-[10.5px] cursor-pointer whitespace-nowrap transition-all duration-150 mb-[-1px] ${activeTab === tab ? 'text-[#DA7756] border-[#DA7756] font-semibold' : 'border-transparent font-medium text-[#798C5E] hover:text-[#DA7756]'}`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab === 'Overview' && <Activity className="w-3.5 h-3.5" />}
-            {tab === 'Rules Engine' && <FileText className="w-3.5 h-3.5" />}
-            {tab === 'Members' && <MessageSquare className="w-3.5 h-3.5" />}
-            {tab === 'Redemption' && <MessageSquare className="w-3.5 h-3.5" />}
-            {tab === 'Wallet' && <MessageSquare className="w-3.5 h-3.5" />}
-            {tab === 'Orders' && <MessageSquare className="w-3.5 h-3.5" />}
-            {tab === 'Store & Inventory' && <MessageSquare className="w-3.5 h-3.5" />}
-            {tab}
+            <span className="flex items-center gap-[5px]">
+              {tab === 'Overview' && <Activity className="w-3.5 h-3.5" />}
+              {tab === 'Rules Engine' && <FileText className="w-3.5 h-3.5" />}
+              {tab === 'Members' && <MessageSquare className="w-3.5 h-3.5" />}
+              {tab === 'Redemption' && <MessageSquare className="w-3.5 h-3.5" />}
+              {tab === 'Wallet' && <MessageSquare className="w-3.5 h-3.5" />}
+              {tab === 'Orders' && <MessageSquare className="w-3.5 h-3.5" />}
+              {tab === 'Store & Inventory' && <MessageSquare className="w-3.5 h-3.5" />}
+              {tab}
+
+            </span>
           </div>
         ))}
       </div>

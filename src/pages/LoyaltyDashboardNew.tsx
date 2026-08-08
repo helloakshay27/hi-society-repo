@@ -489,9 +489,13 @@ export const LoyaltyDashboardNew = () => {
               "warn"
             )}
             <DSec>Member Breakdown <InfoIcon details="Information about Member Breakdown" /></DSec>
-            <DSl l="Satish Poojary" r={<span className="font-bold">4,200 pts</span>} />
-            <DSl l="Shivaji Mali" r={<span className="font-bold">4,100 pts</span>} />
-            <DSl l="Sanjay Yadav" r={<span className="font-bold">4,100 pts</span>} />
+            {dashboardData?.top_members && dashboardData.top_members.length > 0 ? (
+               dashboardData.top_members.slice(0, 3).map((m: any, idx: number) => (
+                 <DSl key={idx} l={m.name} r={<span className="font-bold">{m.points_balance} pts</span>} />
+               ))
+            ) : (
+               <div className="text-[11px] text-[#A89F8E] px-2 py-1">No detailed member breakdown available.</div>
+            )}
             {drillBtn("🏪 Fix Store — Add Items", () => openDrill("d-store-alert"))}
           </>
         );
@@ -577,11 +581,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="100%" lbl="Already Paid" color="#108C72" />
             </DkStrip>
             <DSec>Stuck Orders (sample) <InfoIcon details="Information about Stuck Orders (sample)" /></DSec>
-            <DSl l="ORD20260312...8032B" r="₹660 · Pending" />
-            <DSl l="ORD20260312...3DB" r="₹6,203 · Pending" />
-            <DSl l="ORD20260312...0C51" r="₹1,771 · Pending" />
-            <DSl l="ORD20260312...C093" r="₹6,203 · Pending" />
-            <DSl l="+3 more, same customer" r="" />
+            <div className="text-[11px] text-[#A89F8E] px-2 py-1">Pending dynamic order list.</div>
             <DSec>Root Cause <InfoIcon details="Information about Root Cause" /></DSec>
             {infoBox(
               "All 7 belong to customer Roshan Shetty, created 12–13 Mar 2026. Payment cleared and points were deducted, but order status was never advanced past Pending — likely a fulfilment-team follow-up gap rather than a payment issue."
@@ -651,12 +651,7 @@ export const LoyaltyDashboardNew = () => {
               <Dk val="66" lbl="Oldest (days)" color="#E7848E" />
             </DkStrip>
             <DSec>Granted Claims — Oldest First <InfoIcon details="Information about Granted Claims — Oldest First" /></DSec>
-            <DSl l="Pravin Deshmukh" r={<span><BadgeWarn>Granted</BadgeWarn> 66d</span>} />
-            <DSl l="Yogesh Kene" r={<span><BadgeWarn>Granted</BadgeWarn> 33d</span>} />
-            <DSl l="Sanjay Yadav" r={<span><BadgeWarn>Granted</BadgeWarn> 32d</span>} />
-            <DSl l="Roshan Shetty" r={<span><BadgeWarn>Granted</BadgeWarn> 31d</span>} />
-            <DSl l="ASHOK YADAV" r={<span><BadgeWarn>Granted</BadgeWarn> 30d</span>} />
-            <div className="mt-1.5 text-[10px] text-[#798C5E]">+13 more Granted claims</div>
+            <div className="text-[11px] text-[#A89F8E] px-2 py-1">Pending dynamic claims list.</div>
             {drillBtn("📦 Go to Claims", () => showToast("Opening Claims page…"))}
           </>
         );
