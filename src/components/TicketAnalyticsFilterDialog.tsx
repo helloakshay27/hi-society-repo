@@ -93,7 +93,7 @@ export const TicketAnalyticsFilterDialog: React.FC<TicketAnalyticsFilterDialogPr
         <div className="flex flex-col sm:flex-row gap-4 pt-6">
           <Button 
             onClick={handleSubmit}
-            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
           >
             Apply Filters
           </Button>
