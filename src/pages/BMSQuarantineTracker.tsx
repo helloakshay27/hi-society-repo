@@ -84,6 +84,7 @@ const BMSQuarantineTracker: React.FC = () => {
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const columns = [
+    { key: "actions", label: "Actions", sortable: false },
     { key: "residentName", label: "Resident Name", sortable: true },
     { key: "tower", label: "Tower", sortable: true },
     { key: "flat", label: "Flat", sortable: true },
@@ -98,7 +99,6 @@ const BMSQuarantineTracker: React.FC = () => {
     { key: "symptoms", label: "Symptoms", sortable: false },
     { key: "testResult", label: "Test Result", sortable: true },
     { key: "createdOn", label: "Created On", sortable: true },
-    { key: "actions", label: "Actions", sortable: false },
   ];
 
   const handleAddRecord = () => {

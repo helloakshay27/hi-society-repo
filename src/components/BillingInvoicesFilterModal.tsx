@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
@@ -36,7 +36,7 @@ export const BillingInvoicesFilterModal: React.FC<BillingInvoicesFilterModalProp
 
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="md">
-      <DialogContent className="p-6">
+      <DialogContent className="p-6" sx={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-lg font-semibold">FILTER BY</h5>
           <Button
@@ -69,11 +69,10 @@ export const BillingInvoicesFilterModal: React.FC<BillingInvoicesFilterModalProp
           </FormControl>
         </div>
 
-        <div className="flex gap-3 pt-4">
+        <DialogActions className="px-6 pb-6">
           <Button
             onClick={handleApply}
-            className="flex-1 text-white"
-            style={{ backgroundColor: '#C72030' }}
+            className="flex-1 !bg-white !text-brand !border !border-brand"
           >
             Apply
           </Button>
@@ -84,7 +83,7 @@ export const BillingInvoicesFilterModal: React.FC<BillingInvoicesFilterModalProp
           >
             Reset
           </Button>
-        </div>
+        </DialogActions>
       </DialogContent>
     </Dialog>
   );

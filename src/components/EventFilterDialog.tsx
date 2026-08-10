@@ -294,7 +294,7 @@ export const EventFilterDialog: React.FC<Props> = ({
           <Button
             variant="ghost"
             onClick={handleReset}
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 gap-1.5 text-sm"
+            className="bg-white border border-brand text-brand gap-1.5 text-sm [&_svg]:text-brand"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Reset

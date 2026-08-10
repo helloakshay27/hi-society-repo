@@ -148,8 +148,7 @@ export const OrdersListFilterModal: React.FC<OrdersListFilterModalProps> = ({
         <div className="flex gap-3 pt-4">
           <Button
             onClick={handleApply}
-            className="flex-1 text-white"
-            style={{ backgroundColor: '#C72030' }}
+            className="flex-1 !bg-white !text-brand !border !border-brand"
           >
             Apply
           </Button>

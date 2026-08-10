@@ -70,19 +70,20 @@ const RedButton = styled(MuiButton)({
 });
 
 const DraftButton = styled(MuiButton)({
-  backgroundColor: "var(--color-primary, #da7756)",
-  color: "#ffffff !important",
+  backgroundColor: "#ffffff",
+  color: "var(--color-primary, #da7756) !important",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 40px",
+  border: "1px solid var(--color-primary, #da7756)",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
   "& .MuiButton-startIcon, & .MuiButton-startIcon svg": {
-    color: "#ffffff !important",
-    stroke: "#ffffff !important",
+    color: "var(--color-primary, #da7756) !important",
+    stroke: "var(--color-primary, #da7756) !important",
   },
   "&:hover": {
-    backgroundColor: "var(--color-primary-hover, rgba(218,119,86,0.85))",
+    backgroundColor: "rgba(218, 119, 86, 0.1)",
   },
   "&.Mui-disabled": {
     opacity: 0.5,
@@ -240,7 +241,6 @@ const AddQuarantinePage: React.FC = () => {
                 <DraftButton
                   
                   onClick={handleCancel}
-                  startIcon={<X size={16} />}
                 >
                   Cancel
                 </DraftButton>

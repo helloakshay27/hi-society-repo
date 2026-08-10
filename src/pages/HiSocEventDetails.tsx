@@ -220,7 +220,7 @@ const HiSocEventDetails = () => {
             {[
               { label: 'Event Details', value: 'event-details' },
               { label: 'Events Related Images', value: 'images' },
-              { label: 'Invited CPs', value: 'invited-cps' },
+              { label: 'Invited Member / User', value: 'invited-cps' },
               { label: 'Participants', value: 'participants' },
             ].map((tab) => (
               <TabsTrigger
@@ -388,7 +388,7 @@ const HiSocEventDetails = () => {
             </div>
           </TabsContent>
 
-          {/* Invited CPs Tab */}
+          {/* Invited Member / User Tab */}
           <TabsContent value="invited-cps" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
@@ -397,12 +397,12 @@ const HiSocEventDetails = () => {
                     <Users className="w-6 h-6 text-[#C72030]" />
                   </div>
                   <h3 className="text-lg font-semibold text-black">
-                    Invited CPs
+                    Invited Member / User
                   </h3>
                 </div>
               </div>
               <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
-                <p className="text-gray-600">Invited CPs content will be displayed here.</p>
+                <p className="text-gray-600">Invited Member / User content will be displayed here.</p>
               </div>
             </div>
           </TabsContent>

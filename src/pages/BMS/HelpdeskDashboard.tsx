@@ -1495,7 +1495,7 @@ export const TicketDashboard = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border-gray-300"
               >
                 <Calendar className="w-4 h-4 text-[#C72030]" />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-brand">
                   {analyticsDateRange.startDate} - {analyticsDateRange.endDate}
                 </span>
                 <Filter className="w-4 h-4 text-[#C72030]" />
