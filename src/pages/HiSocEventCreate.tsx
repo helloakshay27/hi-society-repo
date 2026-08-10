@@ -101,7 +101,7 @@ const HiSocEventCreate = () => {
   const totalSteps = 3;
   const EVENT_DRAFT_STORAGE_KEY = 'event_create_draft';
 
-  // Invite CPs state
+  // Invite Member / User state
   const [channelPartners, setChannelPartners] = useState([]);
   const [selectedChannelPartners, setSelectedChannelPartners] = useState([]);
   const [csvFiles, setCsvFiles] = useState([]);
@@ -748,7 +748,7 @@ const HiSocEventCreate = () => {
     return true;
   };
 
-  // Validate Step 2 (Invite CPs) - only if RSVP is Yes
+  // Validate Step 2 (Invite Member / User) - only if RSVP is Yes
   const validateStep2 = () => {
     toast.dismiss();
     // Channel partner invitation is optional
@@ -1348,39 +1348,23 @@ const HiSocEventCreate = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
-    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
-    if (currentStep === 0 && formData.rsvp_action === "0") {
+    // If on Step 0 (Event Details), go to Step 1 (Event Images)
+    if (currentStep === 0) {
       setCurrentStep(1);
       setShowPreviousSections(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // If on Step 0 (Event Details) and RSVP is Yes, go to Step 1 (Event Images)
-    if (currentStep === 0 && formData.rsvp_action === "1") {
-      setCurrentStep(1);
-      setShowPreviousSections(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // If on Step 1 (Event Images) and RSVP is Yes, go to Step 2 (Invite CPs)
-    if (currentStep === 1 && formData.rsvp_action === "1") {
+    // If on Step 1 (Event Images), go to Step 2 (Invite Member / User / Share With)
+    if (currentStep === 1) {
       setCurrentStep(2);
       setShowPreviousSections(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // If on Step 1 (Event Images) and RSVP is No, go directly to preview
-    if (currentStep === 1 && formData.rsvp_action === "0") {
-      setIsPreviewMode(true);
-      setShowPreviousSections(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // If on Step 2 (Invite CPs), go to preview
+    // If on Step 2 (Invite Member / User), go to preview
     if (currentStep === totalSteps - 1) {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
@@ -1439,9 +1423,7 @@ const HiSocEventCreate = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = formData.rsvp_action === "1" 
-      ? ['Event Details', 'Event Related Images', 'Invite CPs']
-      : ['Event Details', 'Event Related Images'];
+    const steps = ['Event Details', 'Event Related Images', 'Invite Member / User'];
 
     return (
       <Box sx={{ mb: 4, width: '100%' }}>
@@ -2001,7 +1983,7 @@ const HiSocEventCreate = () => {
               </div> */}
 
               
-              {/* Share With section moved to Step 2: Invite CPs */}
+              {/* Share With section moved to Step 2: Invite Member / User */}
             </div>
           </div>
         </div>
@@ -2142,7 +2124,7 @@ const HiSocEventCreate = () => {
           </div>
         )}
 
-        {/* Step 3: Invite CPs */}
+        {/* Step 3: Invite Member / User */}
         {currentStep === 2 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
@@ -2157,7 +2139,7 @@ const HiSocEventCreate = () => {
                 >
                   <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
-                Invite CPs
+                Invite Member / User
               </h2>
             </div>
             <div className="p-6 space-y-6">
@@ -3330,7 +3312,7 @@ const HiSocEventCreate = () => {
                         >
                           <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
-                        Invite CPs
+                        Invite Member / User
                       </h2>
                       <button
                         type="button"
@@ -3956,7 +3938,7 @@ const HiSocEventCreate = () => {
                 </div>
               </div>
 
-              {/* Step 3: Invite CPs Preview */}
+              {/* Step 3: Invite Member / User Preview */}
               <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
@@ -3971,7 +3953,7 @@ const HiSocEventCreate = () => {
                       >
                         <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
-                      Invite CPs
+                      Invite Member / User
                     </h2>
                     <button
                       type="button"
