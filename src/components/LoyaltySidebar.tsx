@@ -34,12 +34,12 @@ export const LoyaltySidebar: React.FC = () => {
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
 
   const loyaltyMenuItems: MenuItem[] = [
-    {
-      id: "loyalty-dashboard",
-      label: "Dashboard",
-      icon: BarChart3,
-      path: "/loyalty/dashboard",
-    },
+    // {
+    //   id: "loyalty-dashboard",
+    //   label: "Dashboard",
+    //   icon: BarChart3,
+    //   path: "/loyalty/dashboard",
+    // },
     // {
     //   id: "loyalty-dashboard-new",
     //   label: "Dashboard New",
