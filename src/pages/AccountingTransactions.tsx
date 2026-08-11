@@ -260,7 +260,7 @@ const AccountingTransactions: React.FC = () => {
             exportFileName={`accounting-transactions-${activeTab}`}
             storageKey={`accounting-transactions-${activeTab}-table`}
             leftActions={
-              activeTab === "journal" ? (
+              activeTabConfig.type ? (
                 <div className="flex gap-3">
                   <Button
                     onClick={handleAddTransaction}

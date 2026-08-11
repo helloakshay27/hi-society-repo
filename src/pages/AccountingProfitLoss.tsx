@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import TextField from "@mui/material/TextField";
 import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
+import { API_CONFIG } from "@/config/apiConfig";
 import {
   StatementNode,
   StatementRow,
@@ -9,6 +11,18 @@ import {
   formatAmount,
   buildSideRows,
 } from "@/utils/financialStatement";
+
+// Real response shape returned by GET /lock_account_transactions/pnl
+interface PnlSection {
+  node_name: string; // "expenditure" | "income"
+  accounts: StatementNode[];
+}
+
+interface PnlApiResponse {
+  pnl?: {
+    accounts?: PnlSection[];
+  };
+}
 
 // Fixed statutory line items (Maharashtra Co-operative Societies "Form N" style
 // Profit and Loss / Income & Expenditure account). Amounts are populated from
@@ -78,51 +92,57 @@ const INCOME_TEMPLATE: SectionTemplate[] = [
   },
 ];
 
-// TODO: replace with a real fetch (same tree shape) once the Profit & Loss
-// API endpoint is available; wired up the same way as AccountingBalanceSheet.
-const DUMMY_EXPENDITURE_NODES: StatementNode[] = [
-  {
-    name: "Indirect Expense",
-    values: [{ total: 0 }],
-    accounts: [
-      { name: "Lift Pvt Ltd", values: [{ total: 0 }] },
-      { name: "KALESHWARI ENGINEERS PRIVATE LIMITED", values: [{ total: 0 }] },
-      { name: "ACHLA CORPORATION", values: [{ total: 0 }] },
-      { name: "CNW property solutions", values: [{ total: 0 }] },
-      { name: "Unify Facility Management Pvt Ltd", values: [{ total: 0 }] },
-      { name: "Cosmos Integrated Solutions Pvt. Ltd.", values: [{ total: 0 }] },
-      { name: "ANSEC H.R.SERVICES LTD.", values: [{ total: 0 }] },
-      { name: "TATA", values: [{ total: 0 }] },
-    ],
-  },
-];
-
-const DUMMY_INCOME_NODES: StatementNode[] = [
-  {
-    name: "Miscellaneous Income",
-    values: [{ total: 0 }],
-    accounts: [
-      { name: "Sinking Fund", values: [{ total: 0 }] },
-      { name: "Repair Fund", values: [{ total: 0 }] },
-      { name: "Common Maintenance Charges", values: [{ total: 0 }] },
-      { name: "Common Electricity Charges", values: [{ total: 0 }] },
-      { name: "Common Insurance", values: [{ total: 0 }] },
-      { name: "Statutory, Water and Other Expenses", values: [{ total: 0 }] },
-      { name: "Non Occupancy Charges", values: [{ total: 0 }] },
-    ],
-  },
-];
-
 const AccountingProfitLoss: React.FC = () => {
+  const lock_account_id = localStorage.getItem("lock_account_id") || "3";
+
+  const [pnlData, setPnlData] = useState<PnlApiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({ fromDate: "", toDate: "" });
+
+  const fetchPnl = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(`${baseUrl}/lock_account_transactions/pnl`, {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        params: {
+          lock_account_id,
+          from_date: filters.fromDate || undefined,
+          to_date: filters.toDate || undefined,
+        },
+      });
+      setPnlData(response.data);
+    } catch (err) {
+      console.error("Error fetching profit and loss:", err);
+      setError("Failed to load profit and loss data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPnl();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const { rows: expenditureRows } = buildSideRows(EXPENDITURE_TEMPLATE, DUMMY_EXPENDITURE_NODES);
-  const { rows: incomeRows } = buildSideRows(INCOME_TEMPLATE, DUMMY_INCOME_NODES);
+  const expenditureNodes =
+    pnlData?.pnl?.accounts?.find((s) => s.node_name === "expenditure")?.accounts || [];
+  const incomeNodes =
+    pnlData?.pnl?.accounts?.find((s) => s.node_name === "income")?.accounts || [];
+
+  const { rows: expenditureRows } = buildSideRows(EXPENDITURE_TEMPLATE, expenditureNodes);
+  const { rows: incomeRows } = buildSideRows(INCOME_TEMPLATE, incomeNodes);
 
   const rowCount = Math.max(expenditureRows.length, incomeRows.length);
 
@@ -192,7 +212,12 @@ const AccountingProfitLoss: React.FC = () => {
             fullWidth
             size="small"
           />
-          <Button className="bg-[#C72030] hover:bg-[#A01020] text-white h-[40px]">View</Button>
+          <Button
+            onClick={fetchPnl}
+            className="bg-[#C72030] hover:bg-[#A01020] text-white h-[40px]"
+          >
+            View
+          </Button>
         </div>
       </div>
 
@@ -201,30 +226,40 @@ const AccountingProfitLoss: React.FC = () => {
           <h1 className="text-xl font-bold">Profit and Loss</h1>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border border-gray-300 text-sm">
-            <thead className="bg-[#E5E0D3]">
-              <tr>
-                <th className="border border-gray-300 px-3 py-2">Previous Year</th>
-                <th className="border border-gray-300 px-3 py-2 text-left">Expenditure</th>
-                <th className="border border-gray-300 px-3 py-2">Total</th>
-                <th className="border border-gray-300 px-3 py-2">Current Year</th>
-                <th className="border border-gray-300 px-3 py-2">Previous Year</th>
-                <th className="border border-gray-300 px-3 py-2 text-left">Income</th>
-                <th className="border border-gray-300 px-3 py-2">Total</th>
-                <th className="border border-gray-300 px-3 py-2">Current Year</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: rowCount }).map((_, i) => (
-                <tr key={i}>
-                  {renderSideCells(expenditureRows[i])}
-                  {renderSideCells(incomeRows[i])}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-red-500">{error}</div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border border-gray-300 text-sm">
+              <thead className="bg-[#E5E0D3]">
+                <tr>
+                  <th className="border border-gray-300 px-3 py-2">Previous Year</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Expenditure</th>
+                  <th className="border border-gray-300 px-3 py-2">Total</th>
+                  <th className="border border-gray-300 px-3 py-2">Current Year</th>
+                  <th className="border border-gray-300 px-3 py-2">Previous Year</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Income</th>
+                  <th className="border border-gray-300 px-3 py-2">Total</th>
+                  <th className="border border-gray-300 px-3 py-2">Current Year</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {Array.from({ length: rowCount }).map((_, i) => (
+                  <tr key={i}>
+                    {renderSideCells(expenditureRows[i])}
+                    {renderSideCells(incomeRows[i])}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

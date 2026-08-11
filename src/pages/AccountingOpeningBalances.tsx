@@ -45,16 +45,20 @@ const AccountingOpeningBalances: React.FC = () => {
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers.json`;
+        const url = `${baseUrl}/lock_account_ledgers/opening`;
         const response = await axios.get(url, {
+          params: { lock_account_id: lockAccountId },
           headers: {
             "Content-Type": "application/json",
+            Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
-        const options: LedgerOption[] = Array.isArray(response.data)
-          ? response.data.map((item: any) => ({ id: item.id, name: item.name }))
-          : [];
+        const rawLedgers = response.data?.lock_account_ledgers || [];
+        const options: LedgerOption[] = rawLedgers.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+        }));
         setLedgers(options);
         setVisibleLedgerIds(options.map((option) => option.id));
         setValues(
@@ -215,7 +219,7 @@ const AccountingOpeningBalances: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Opening Balance Date <span className="text-red-600">*</span>
+              Opening Balance Date <span className="text-[#da7756]">*</span>
             </label>
             <Input
               type="date"
@@ -292,11 +296,11 @@ const AccountingOpeningBalances: React.FC = () => {
 
           <div className="py-2 px-3 border-b border-gray-200">
             <div className="flex items-center text-sm">
-              <div className="flex-1 text-[#a94442] font-medium">Opening Balance Adjustments</div>
-              <div className="w-40 text-right pr-2 text-[#a94442]">
+              <div className="flex-1 text-[#da7756] font-medium">Opening Balance Adjustments</div>
+              <div className="w-40 text-right pr-2 text-[#da7756]">
                 {!adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
               </div>
-              <div className="w-40 text-right text-[#a94442]">
+              <div className="w-40 text-right text-[#da7756]">
                 {adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
               </div>
             </div>

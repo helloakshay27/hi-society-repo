@@ -129,6 +129,7 @@ const AccountingTaxSetup: React.FC = () => {
           params: { lock_account_id },
           headers: {
             "Content-Type": "application/json",
+            Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
@@ -222,6 +223,7 @@ const AccountingTaxSetup: React.FC = () => {
         params: { lock_account_id },
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });

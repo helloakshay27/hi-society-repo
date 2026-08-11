@@ -359,6 +359,9 @@ const AccountingDashboard = lazy(() => import("@/pages/AccountingDashboard"));
 const AccountingChartOfAccounts = lazy(
   () => import("@/pages/AccountingChartOfAccounts")
 );
+const AccountingLedgerDetails = lazy(
+  () => import("@/pages/AccountingLedgerDetails")
+);
 const AccountingSubgroupSetup = lazy(
   () => import("@/pages/AccountingSubgroupSetup")
 );
@@ -1461,6 +1464,10 @@ export const setupMemberRoutes = (
     <Route
       path="/accounting/chart-of-accounts"
       Component={withSuspense(AccountingChartOfAccounts)}
+    />
+    <Route
+      path="/accounting/ledger/:ledgerId"
+      Component={withSuspense(AccountingLedgerDetails)}
     />
     <Route
       path="/accounting/subgroup-setup"

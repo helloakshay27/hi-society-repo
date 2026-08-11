@@ -1,12 +1,55 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import TextField from "@mui/material/TextField";
 import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
+import { API_CONFIG } from "@/config/apiConfig";
 import { formatAmount } from "@/utils/financialStatement";
-import { DUMMY_TAX_SUMMARY_ROWS, formatLedgerTaxName } from "@/utils/taxSummary";
+import { TaxSummaryApiRow, TaxSummaryRow, mapTaxSummaryRow, formatLedgerTaxName } from "@/utils/taxSummary";
 
 const AccountingTaxSummary: React.FC = () => {
+  const lock_account_id = localStorage.getItem("lock_account_id") || "3";
+
+  const [rows, setRows] = useState<TaxSummaryRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({ fromDate: "", toDate: "" });
+
+  const fetchTaxSummary = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(`${baseUrl}/lock_account_transactions/tax_summary`, {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        params: {
+          lock_account_id,
+          from_date: filters.fromDate || undefined,
+          to_date: filters.toDate || undefined,
+        },
+      });
+      const data = response.data;
+      const list: TaxSummaryApiRow[] = Array.isArray(data)
+        ? data
+        : data?.tax_summary || data?.data || [];
+      setRows(list.map(mapTaxSummaryRow));
+    } catch (err) {
+      console.error("Error fetching tax summary:", err);
+      setError("Failed to load tax summary data");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTaxSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,7 +87,12 @@ const AccountingTaxSummary: React.FC = () => {
             fullWidth
             size="small"
           />
-          <Button className="bg-[#C72030] hover:bg-[#A01020] text-white h-[40px]">View</Button>
+          <Button
+            onClick={fetchTaxSummary}
+            className="bg-[#C72030] hover:bg-[#A01020] text-white h-[40px]"
+          >
+            View
+          </Button>
         </div>
       </div>
 
@@ -53,32 +101,50 @@ const AccountingTaxSummary: React.FC = () => {
           <h1 className="text-xl font-bold">Tax Summary</h1>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border border-gray-300 text-sm">
-            <thead className="bg-[#E5E0D3]">
-              <tr>
-                <th className="border border-gray-300 px-3 py-2 text-left">Ledger ID</th>
-                <th className="border border-gray-300 px-3 py-2 text-left">Ledger & Tax Name</th>
-                <th className="border border-gray-300 px-3 py-2">Tax Percentage</th>
-                <th className="border border-gray-300 px-3 py-2">Transaction Amount</th>
-                <th className="border border-gray-300 px-3 py-2">Tax Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {DUMMY_TAX_SUMMARY_ROWS.map((row) => (
-                <tr key={row.ledgerId}>
-                  <td className="border border-gray-300 px-3 py-1.5">{row.ledgerId}</td>
-                  <td className="border border-gray-300 px-3 py-1.5">{formatLedgerTaxName(row)}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxPercentage}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-right">
-                    {formatAmount(row.transactionAmount)}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxAmount}</td>
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-red-500">{error}</div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border border-gray-300 text-sm">
+              <thead className="bg-[#E5E0D3]">
+                <tr>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Ledger ID</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Ledger & Tax Name</th>
+                  <th className="border border-gray-300 px-3 py-2">Tax Percentage</th>
+                  <th className="border border-gray-300 px-3 py-2">Transaction Amount</th>
+                  <th className="border border-gray-300 px-3 py-2">Tax Amount</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="border border-gray-300 px-3 py-4 text-center text-gray-500">
+                      No matching records found
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((row, index) => (
+                    <tr key={`${row.ledgerId}-${index}`}>
+                      <td className="border border-gray-300 px-3 py-1.5">{row.ledgerId}</td>
+                      <td className="border border-gray-300 px-3 py-1.5">{formatLedgerTaxName(row)}</td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxPercentage}</td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-right">
+                        {formatAmount(row.transactionAmount)}
+                      </td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxAmount}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

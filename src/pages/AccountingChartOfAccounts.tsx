@@ -1,35 +1,56 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Eye, Pencil, Plus, ListTree, Table2, UploadCloud, DownloadCloud, Folder, Code2 } from "lucide-react";
+import { Eye, Edit, Plus, Trash2, ListTree, Table2, UploadCloud, DownloadCloud, Folder, Code2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import {
   AddChartOfAccountModal,
   ChartOfAccountLedger,
 } from "@/components/AddChartOfAccountModal";
 
+// Shape returned by GET /lock_account_ledgers/opening (bulk list for the table)
 interface LockAccountLedgerAPI {
   id: number;
   name: string;
+  fixed_type?: string | null;
   account_code?: string;
   lock_account_group_id?: number;
-  lock_account_group_name?: string;
-  base_group_type?: string;
-  budget?: number | string;
-  budget_start_date?: string;
-  budget_end_date?: string;
-  description?: string;
-  watchlist?: boolean;
-  allow_cost_center?: boolean;
+}
+
+// Shape returned by GET /lock_account_ledgers/:id (single ledger detail)
+interface LockAccountLedgerDetailAPI {
+  id: number;
+  lock_account_id?: number;
+  lock_account_group_id?: number;
+  name: string;
+  fixed_type?: string | null;
+  active?: boolean;
+  account_code?: string;
+  description?: string | null;
+  budget?: number | string | null;
+  watchlist?: boolean | null;
+  assoc_cost_centre?: boolean | null;
+}
+
+interface LockAccountGroupAPI {
+  id: number;
+  group_name: string;
+  parent_group_id?: number | null;
 }
 
 interface LedgerRow {
@@ -37,7 +58,6 @@ interface LedgerRow {
   id: number;
   accountName: string;
   accountCode: string;
-  budget: string;
   accountType: string;
   raw: LockAccountLedgerAPI;
 }
@@ -49,42 +69,47 @@ interface AccountTreeNodeData {
   children: AccountTreeNodeData[];
 }
 
+// jsTree-style flat node returned by GET /lock_account_ledgers
+interface FlatTreeNode {
+  id: string | number;
+  parent: string | number;
+  text: string;
+}
+
 const columns: ColumnConfig[] = [
   { key: "actions", label: "Actions", sortable: false },
   { key: "sr", label: "Sr", sortable: true },
   { key: "accountName", label: "Account Name", sortable: true },
   { key: "accountCode", label: "Account Code", sortable: true },
-  { key: "budget", label: "Budget", sortable: true },
   { key: "accountType", label: "Account Type", sortable: true },
 ];
 
-const toRow = (ledger: LockAccountLedgerAPI, index: number): LedgerRow => ({
-  sr: index + 1,
-  id: ledger.id,
-  accountName: ledger.name,
-  accountCode: ledger.account_code || "",
-  budget: ledger.budget !== undefined && ledger.budget !== null ? String(ledger.budget) : "",
-  accountType: ledger.base_group_type || ledger.lock_account_group_name || "",
-  raw: ledger,
-});
-
-const buildGroupTree = (groups: any[]): AccountTreeNodeData[] =>
-  groups.map((group) => ({
-    id: group.id,
-    name: group.group_name,
-    type: "group",
-    children: [
-      ...(Array.isArray(group.ledgers)
-        ? group.ledgers.map((ledger: any) => ({
-            id: ledger.id,
-            name: ledger.name,
-            type: "ledger" as const,
-            children: [],
-          }))
-        : []),
-      ...(Array.isArray(group.children) ? buildGroupTree(group.children) : []),
-    ],
-  }));
+// numeric id → group node; "documents_..._<ledgerId>" string id → ledger node
+const buildTreeFromFlat = (flat: FlatTreeNode[]): AccountTreeNodeData[] => {
+  const nodeMap = new Map<string, AccountTreeNodeData>();
+  flat.forEach((n) => {
+    const isLedger = typeof n.id === "string" && n.id.startsWith("documents_");
+    nodeMap.set(String(n.id), {
+      id: n.id,
+      name: n.text,
+      type: isLedger ? "ledger" : "group",
+      children: [],
+    });
+  });
+  const roots: AccountTreeNodeData[] = [];
+  flat.forEach((n) => {
+    const node = nodeMap.get(String(n.id));
+    if (!node) return;
+    if (n.parent === "#") {
+      roots.push(node);
+      return;
+    }
+    const parentNode = nodeMap.get(String(n.parent));
+    if (parentNode) parentNode.children.push(node);
+    else roots.push(node);
+  });
+  return roots;
+};
 
 const AccountTreeNode: React.FC<{ node: AccountTreeNodeData; level: number }> = ({
   node,
@@ -105,9 +130,9 @@ const AccountTreeNode: React.FC<{ node: AccountTreeNodeData; level: number }> = 
       >
         {level > 0 && <span className="h-px w-4 border-t border-dashed border-gray-300" />}
         {isLeaf ? (
-          <Code2 className="h-4 w-4 flex-shrink-0 text-[#3b82c4]" />
+          <Code2 className="h-4 w-4 flex-shrink-0 text-[#da7756]" />
         ) : (
-          <Folder className="h-4 w-4 flex-shrink-0 text-[#3b82c4]" />
+          <Folder className="h-4 w-4 flex-shrink-0 text-[#da7756]" />
         )}
         <span className="text-sm text-gray-700 group-hover:text-[#C72030]">{node.name}</span>
       </div>
@@ -123,23 +148,47 @@ const AccountTreeNode: React.FC<{ node: AccountTreeNodeData; level: number }> = 
 };
 
 const AccountingChartOfAccounts: React.FC = () => {
+  const navigate = useNavigate();
   const [viewType, setViewType] = useState<"table" | "tree">("table");
   const [ledgers, setLedgers] = useState<LockAccountLedgerAPI[]>([]);
+  const [groups, setGroups] = useState<LockAccountGroupAPI[]>([]);
   const [tree, setTree] = useState<AccountTreeNodeData[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingLedger, setEditingLedger] = useState<ChartOfAccountLedger | null>(null);
-  const [previewLedger, setPreviewLedger] = useState<LedgerRow | null>(null);
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+
+  const authHeaders = () => {
+    const token = API_CONFIG.TOKEN;
+    return {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  };
+
+  const fetchGroups = useCallback(async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const response = await axios.get(`${baseUrl}/lock_account_groups`, {
+        params: { lock_account_id: lockAccountId },
+        headers: authHeaders(),
+      });
+      setGroups(response.data?.lock_account_groups || []);
+    } catch (error) {
+      console.error("Error fetching account groups:", error);
+      setGroups([]);
+    }
+  }, [lockAccountId]);
 
   const fetchLedgers = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const token = API_CONFIG.TOKEN;
-      const url = `${baseUrl}/lock_accounts.json?access_token=${token}`;
-      const response = await axios.get(url);
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers/opening`, {
+        params: { lock_account_id: lockAccountId },
+        headers: authHeaders(),
+      });
       setLedgers(response.data?.lock_account_ledgers || []);
     } catch (error) {
       console.error("Error fetching chart of accounts:", error);
@@ -148,15 +197,17 @@ const AccountingChartOfAccounts: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [lockAccountId]);
 
   const fetchTree = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const token = API_CONFIG.TOKEN;
-      const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_groups?format=tree&access_token=${token}`;
-      const response = await axios.get(url);
-      setTree(buildGroupTree(response.data?.data || []));
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers`, {
+        params: { lock_account_id: lockAccountId },
+        headers: authHeaders(),
+      });
+      const flat: FlatTreeNode[] = Array.isArray(response.data) ? response.data : [];
+      setTree(buildTreeFromFlat(flat));
     } catch (error) {
       console.error("Error fetching account tree:", error);
       setTree([]);
@@ -164,22 +215,44 @@ const AccountingChartOfAccounts: React.FC = () => {
   }, [lockAccountId]);
 
   useEffect(() => {
+    fetchGroups();
     fetchLedgers();
     fetchTree();
-  }, [fetchLedgers, fetchTree]);
+  }, [fetchGroups, fetchLedgers, fetchTree]);
 
-  const rows = useMemo(() => ledgers.map(toRow), [ledgers]);
+  const groupNameById = useMemo(() => {
+    const map = new Map<number, string>();
+    groups.forEach((g) => map.set(g.id, g.group_name));
+    return map;
+  }, [groups]);
 
-  const rootNode: AccountTreeNodeData = { id: "root", name: "Account Ledgers", type: "root", children: tree };
+  const rows = useMemo<LedgerRow[]>(
+    () =>
+      ledgers.map((ledger, index) => ({
+        sr: index + 1,
+        id: ledger.id,
+        accountName: ledger.name,
+        accountCode: ledger.account_code || "",
+        accountType: ledger.lock_account_group_id
+          ? groupNameById.get(ledger.lock_account_group_id) || ""
+          : "",
+        raw: ledger,
+      })),
+    [ledgers, groupNameById]
+  );
+
+  // The API's root jsTree node ("Account Ledgers", parent "#") already reads
+  // as the tree's single root, so render it directly instead of a synthetic wrapper.
+  const rootNode: AccountTreeNodeData =
+    tree[0] ?? { id: "root", name: "Account Ledgers", type: "root", children: [] };
 
   const callSyncEndpoint = async (path: string, successMessage: string) => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const token = API_CONFIG.TOKEN;
       await axios.post(
         `${baseUrl}/lock_accounts/${lockAccountId}/${path}.json`,
         {},
-        { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
+        { headers: authHeaders() }
       );
       toast.success(successMessage);
       fetchLedgers();
@@ -199,35 +272,90 @@ const AccountingChartOfAccounts: React.FC = () => {
     setIsAddOpen(true);
   };
 
-  const handleEditAccount = (row: LedgerRow) => {
+  const fetchLedgerDetail = async (id: number): Promise<LockAccountLedgerDetailAPI | null> => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers/${id}`, {
+        params: { lock_account_id: lockAccountId },
+        headers: authHeaders(),
+      });
+      return response.data?.lock_account_ledger || null;
+    } catch (error) {
+      console.error("Error fetching ledger detail:", error);
+      toast.error("Failed to load account details");
+      return null;
+    }
+  };
+
+  const handleEditAccount = async (row: LedgerRow) => {
+    const detail = await fetchLedgerDetail(row.id);
     setEditingLedger({
-      id: row.raw.id,
-      name: row.raw.name,
-      account_code: row.raw.account_code,
-      lock_account_group_id: row.raw.lock_account_group_id,
-      budget: row.raw.budget,
-      budget_start_date: row.raw.budget_start_date,
-      budget_end_date: row.raw.budget_end_date,
-      description: row.raw.description,
-      watchlist: row.raw.watchlist,
-      allow_cost_center: row.raw.allow_cost_center,
+      id: row.id,
+      name: detail?.name ?? row.accountName,
+      account_code: detail?.account_code ?? row.accountCode,
+      lock_account_group_id: detail?.lock_account_group_id ?? row.raw.lock_account_group_id,
+      budget: detail?.budget ?? undefined,
+      description: detail?.description ?? undefined,
+      watchlist: Boolean(detail?.watchlist),
+      allow_cost_center: Boolean(detail?.assoc_cost_centre),
     });
     setIsAddOpen(true);
+  };
+
+  const handleViewAccount = (row: LedgerRow) => {
+    navigate(`/accounting/ledger/${row.id}`);
+  };
+
+  const handleDeleteAccount = async (row: LedgerRow) => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      await axios.delete(`${baseUrl}/lock_account_ledgers/${row.id}`, {
+        headers: authHeaders(),
+      });
+      toast.success("Account deleted successfully");
+      fetchLedgers();
+      fetchTree();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account");
+    }
   };
 
   const renderCell = (item: LedgerRow, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="flex items-center gap-2">
-            <Eye
-              className="h-4 w-4 cursor-pointer text-[#3b82c4] hover:text-[#C72030]"
-              onClick={() => setPreviewLedger(item)}
-            />
-            <Pencil
-              className="h-4 w-4 cursor-pointer text-[#3b82c4] hover:text-[#C72030]"
-              onClick={() => handleEditAccount(item)}
-            />
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" className="p-1" onClick={() => handleViewAccount(item)}>
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="ghost" className="p-1" onClick={() => handleEditAccount(item)}>
+              <Edit className="w-4 h-4" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="p-1">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete <strong>{item.accountName}</strong>? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
+                    onClick={() => handleDeleteAccount(item)}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         );
       case "sr":
@@ -236,8 +364,6 @@ const AccountingChartOfAccounts: React.FC = () => {
         return item.accountName;
       case "accountCode":
         return item.accountCode;
-      case "budget":
-        return item.budget;
       case "accountType":
         return item.accountType;
       default:
@@ -298,7 +424,7 @@ const AccountingChartOfAccounts: React.FC = () => {
           getItemId={(item) => String(item.id)}
           pagination
           pageSize={20}
-          enableExport
+          // enableExport
           exportFileName="chart-of-accounts"
           storageKey="chart-of-accounts-table"
           loading={loading}
@@ -328,36 +454,6 @@ const AccountingChartOfAccounts: React.FC = () => {
         }}
         editingLedger={editingLedger}
       />
-
-      <Dialog open={Boolean(previewLedger)} onOpenChange={(open) => !open && setPreviewLedger(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{previewLedger?.accountName}</DialogTitle>
-          </DialogHeader>
-          {previewLedger && (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Account Code</span>
-                <span className="font-medium">{previewLedger.accountCode || "-"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Budget</span>
-                <span className="font-medium">{previewLedger.budget || "-"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Account Type</span>
-                <span className="font-medium">{previewLedger.accountType || "-"}</span>
-              </div>
-              {previewLedger.raw.description && (
-                <div className="pt-2">
-                  <span className="text-gray-500">Description</span>
-                  <p className="mt-1">{previewLedger.raw.description}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
