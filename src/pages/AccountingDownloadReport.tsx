@@ -168,7 +168,8 @@ const AccountingDownloadReport: React.FC = () => {
           <Button
             onClick={handleDownload}
             disabled={downloading}
-            className="bg-brand text-white hover:bg-brand-hover"
+           variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
           >
             <Download className="mr-2 h-4 w-4" />
             {downloading ? "Preparing..." : "Download"}

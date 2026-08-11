@@ -318,8 +318,8 @@ const ThresholdAlerts: React.FC = () => {
       {shouldShow("ThresholdAlert", "create") && (
         <Button
           onClick={openAdd}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium flex items-center gap-2"
-        >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
           <Plus className="w-4 h-4" />
           Add
         </Button>

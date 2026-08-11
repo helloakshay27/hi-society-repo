@@ -941,8 +941,7 @@ const BannerEdit = () => {
 
                     <button
                       type="button"
-                      className="bg-[#C72030] hover:bg-[#A01828] !text-white h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                      onClick={() => setShowUploader(true)}
+           className="btn-primary h-9 px-4 text-sm font-medium"                       onClick={() => setShowUploader(true)}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1102,14 +1101,13 @@ const BannerEdit = () => {
           type="submit"
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-[#C72030] hover:bg-[#B01C29] !text-white px-10 py-2"
-        >
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
           {loading ? 'Submitting...' : 'Submit'}
         </button>
         <button
           type="button"
           onClick={handleCancel}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"        >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"     >
           Cancel
         </button>
       </div>

@@ -530,8 +530,7 @@ const PressReleasesEdit = () => {
                   </h5>
 
                   <button
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
-                    type="button"
+           className="btn-primary h-9 px-4 text-sm font-medium"                    type="button"
                     onClick={() => setShowUploader(true)}
                   >
                     <svg
@@ -653,14 +652,15 @@ const PressReleasesEdit = () => {
             <button
               type="submit"
               disabled={loading}
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 h-10"
-            >
+           className="btn-primary h-9 px-4 text-sm font-medium"            >
               {loading ? 'Update' : 'Update'}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="px-8 border border-brand bg-white text-brand flex items-center gap-2 h-10"
+         
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+
             >
               Cancel
             </button>

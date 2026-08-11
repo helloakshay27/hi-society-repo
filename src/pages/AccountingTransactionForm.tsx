@@ -360,8 +360,8 @@ const AccountingTransactionForm: React.FC = () => {
           type="button"
           onClick={() => handleSubmit(false)}
           disabled={submitting}
-          className="min-w-[120px] bg-brand-green text-white hover:bg-brand-green/90"
-        >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
           Create
         </Button>
         <Button

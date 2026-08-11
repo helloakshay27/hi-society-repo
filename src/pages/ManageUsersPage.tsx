@@ -1228,8 +1228,8 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
             leftActions={
               <Button
                 size="sm"
-                className="mr-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-                onClick={handleActionClick}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                 onClick={handleActionClick}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Action

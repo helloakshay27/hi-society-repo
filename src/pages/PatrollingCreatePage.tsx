@@ -1734,8 +1734,8 @@ export const PatrollingCreatePage: React.FC = () => {
 
       <div className="flex items-center gap-3 justify-center pt-2">
         <Button
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={handleSubmit}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"          onClick={handleSubmit}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -1750,8 +1750,7 @@ export const PatrollingCreatePage: React.FC = () => {
         <Button
           onClick={() => navigate('/security/patrolling')}
           disabled={isSubmitting}
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+ className="btn-cancel h-9 px-4 text-sm font-medium !bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"        >
           Cancel
         </Button>
       </div>

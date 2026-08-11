@@ -527,8 +527,8 @@ const AddMISPage: React.FC = () => {
     type="submit"
     disabled={isSubmitting}
     onClick={handleSubmit}
-    className="bg-[#C72030] hover:bg-[#A01828] !text-white px-8 py-2"
-  >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"  >
     {isSubmitting ? "Submitting..." : "Submit"}
   </Button>
 
@@ -536,7 +536,7 @@ const AddMISPage: React.FC = () => {
     type="button"
     variant="outline"
     onClick={handleCancel}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"  >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">
     Cancel
   </Button>
 </div>

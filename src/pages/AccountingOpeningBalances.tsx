@@ -321,8 +321,9 @@ const AccountingOpeningBalances: React.FC = () => {
         <Button
           onClick={handleContinue}
           disabled={submitting || loading}
-          className="bg-[#C72030] hover:bg-[#A01020] text-white min-w-[140px]"
-        >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"     
+              >
           {submitting ? "Submitting..." : "Continue"}
         </Button>
         <Button

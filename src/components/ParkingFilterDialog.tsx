@@ -251,12 +251,13 @@ export const ParkingFilterDialog: React.FC<Props> = ({
             Clear Filters
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button  className="btn-cancel h-9 px-4 text-sm font-medium !bg-white border border-[#da7756] text-[#da7756] " onClick={onClose}>
               Cancel
             </Button>
             <Button
               onClick={handleApply}
-              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
             >
               Apply Filters
             </Button>

@@ -484,13 +484,14 @@ const NotificationsPage = () => {
                     fileInput.value = '';
                   }
                 }}
-                className="!bg-white border border-brand text-brand px-12 py-2.5 text-base font-medium"
+                className="!bg-white border border-brand text-brand px-4 py-2.5 text-base font-medium"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-[#C72030] hover:bg-[#A01828] text-white px-12 py-2.5 text-base font-medium"
+               variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
               >
                 Submit
               </Button>

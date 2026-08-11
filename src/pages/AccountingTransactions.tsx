@@ -343,8 +343,8 @@ const AccountingTransactions: React.FC = () => {
             </Button>
             <Button
               onClick={handleApplyFilters}
-              className="bg-brand text-white hover:bg-brand-hover"
-            >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
               Apply
             </Button>
           </DialogFooter>

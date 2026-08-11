@@ -148,8 +148,8 @@ export const CustomerPricingRuleList = () => {
   const renderCustomActions = () => (
     <Button
       onClick={handleAdd}
-      className="bg-[#C72030] hover:bg-[#A01828] text-white"
-    >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"     >
       <Plus className="h-4 w-4 mr-2" />
       Add Pricing Rule
     </Button>
@@ -199,7 +199,8 @@ export const CustomerPricingRuleList = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold">Customer Pricing Rules</h1>
-        <Button className="bg-[#C72030] text-white" onClick={() => setEditOpen(true)}>
+        <Button variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" onClick={() => setEditOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> Add Rule
         </Button>
       </div>

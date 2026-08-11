@@ -125,8 +125,8 @@ const AccountingSubgroupSetup: React.FC = () => {
           <Button
             // className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
             onClick={() => setIsAddOpen(true)}
-         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-                  >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                  >
                     <Plus className="w-4 h-4 mr-2" /> Add
           </Button>
         }

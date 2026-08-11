@@ -223,8 +223,8 @@ export const FMGroupDashboard = () => {
         <div className="flex items-center gap-3 mb-6">
           {shouldShow("Groups", "create") && (
             <Button 
-              className="bg-[#C72030] hover:bg-[#B8252F] text-white"
-              onClick={() => setIsAddModalOpen(true)}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               onClick={() => setIsAddModalOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
               Add

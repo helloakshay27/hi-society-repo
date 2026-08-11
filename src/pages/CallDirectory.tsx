@@ -519,8 +519,8 @@ const CallDirectory: React.FC = () => {
         }
         setIsAddOpen(true);
       }}
-      className="hidden sm:inline-flex bg-[#C72030] hover:bg-[#A01828] !text-white"
-    >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"    >
       + Add
     </Button>
   );
@@ -678,8 +678,7 @@ const CallDirectory: React.FC = () => {
             <button
               type="button"
               onClick={onSubmit}
-              className="bg-[#C72030] hover:bg-[#A01828] text-white px-10 h-9  border-0"
-              disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
+           className="btn-primary h-9 px-4 text-sm font-medium"               disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
               title={!form.quick_call_icon_id ? "Please select an icon" : ""}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
@@ -687,8 +686,8 @@ const CallDirectory: React.FC = () => {
             <button
               type="button"
               onClick={closeAdd}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"            >
-              Cancel
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">
+                  Cancel
             </button>
           </div>
         </DialogContent>

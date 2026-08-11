@@ -346,15 +346,14 @@ export const PatrollingFilterModal = ({ isOpen, onClose, onApply }: PatrollingFi
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-6">
             <Button 
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-8 border-0"
-              onClick={handleApply}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               onClick={handleApply}
             >
               Apply Filters
             </Button>
             <Button 
               variant="outline"
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleReset}
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"              onClick={handleReset}
             >
               Reset
             </Button>

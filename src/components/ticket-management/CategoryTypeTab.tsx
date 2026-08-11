@@ -1051,8 +1051,8 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
             <button
               type="button"
               onClick={() => setAddDialogOpen(true)}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-4 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 text-sm"
-            >
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
               <Plus className="h-4 w-4" />
               Add
             </button>
