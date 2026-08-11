@@ -448,8 +448,8 @@ const CampaignsReferralSetup: React.FC = () => {
               <div className="flex items-center gap-2">
                 {shouldShow("Referral Setup","create")&&(
                 <Button
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => navigate("/campaigns/referral-setup/create")}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                   onClick={() => navigate("/campaigns/referral-setup/create")}
                 >
                   <Plus className="w-4 h-4" />
                   Add

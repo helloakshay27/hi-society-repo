@@ -928,8 +928,8 @@ const BookingListDashboard = () => {
             {
               shouldShow("Facility Bookings", "create") && (
                 <Button
-                  variant="ghost"
-                  className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white w-[106px] h-[36px] py-[10px] px-[20px]"
+                 variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
                   onClick={() => setShowActionPanel(true)}
                 >
                   <Plus className="w-4 h-4" />

@@ -23,7 +23,7 @@ const navigationItems: NavigationItem[] = [
     id: "loyalty",
     label: "Loyalty",
     icon: <Gift className="w-4 h-4" />,
-    path: "/loyalty/dashboard",
+    path: "/loyalty/wallet-management",
   },
   {
     id: "maintenance",

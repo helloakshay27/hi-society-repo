@@ -913,8 +913,7 @@ const BroadcastCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C72030] text-white hover:bg-[#A01828] h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                  type="button"
+           className="btn-primary h-9 px-4 text-sm font-medium"                  type="button"
                   onClick={() => document.getElementById('coverImageInput')?.click()}
                 >
                   {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -1034,8 +1033,8 @@ const BroadcastCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C72030] text-white hover:bg-[#A01828] h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                  type="button"
+
+           className="btn-primary h-9 px-4 text-sm font-medium"                  type="button"
                   onClick={() => document.getElementById('broadcastAttachmentInput')?.click()}
                 >
                   {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -1109,14 +1108,13 @@ const BroadcastCreate = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
-          >
+           className="btn-primary h-9 px-4 text-sm font-medium"          >
             {loading ? 'Submit' : 'Submit'}
           </button>
           <button
             type="button"
             onClick={handleCancel}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"          >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"     >
             Cancel
           </button>
         </div>

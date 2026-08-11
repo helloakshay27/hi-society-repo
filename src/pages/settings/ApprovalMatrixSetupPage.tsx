@@ -94,8 +94,8 @@ const ApprovalMatrixSetupPage = () => {
       {shouldShow("ApprovalMatrix", "create") && (
         <Button
           onClick={() => navigate('/settings/approval-matrix/setup/add')}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
-        >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
           + Add
         </Button>
       )}

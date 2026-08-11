@@ -164,45 +164,61 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
         </div>
 
         <div className="space-y-4 px-6 py-4">
-          <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[160px_1fr]">
-            <label className="text-sm font-medium text-gray-800">
-              Cost Centre Name <span className="text-[#C72030]">*</span>
-            </label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} disabled={readOnly} />
-          </div>
+          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
+            <legend className="px-1 text-gray-500 font-medium text-sm">
+              Cost Centre Name <span className="text-red-500">*</span>
+            </legend>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={readOnly}
+              placeholder="Enter Cost Centre Name"
+              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
+            />
+          </fieldset>
 
-          <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[160px_1fr]">
-            <label className="text-sm font-medium text-gray-800">
-              Budget <span className="text-[#C72030]">*</span>
-            </label>
-            <Input type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} disabled={readOnly} />
-          </div>
+          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
+            <legend className="px-1 text-gray-500 font-medium text-sm">
+              Budget <span className="text-red-500">*</span>
+            </legend>
+            <Input
+              type="number"
+              min={0}
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              disabled={readOnly}
+              placeholder="Enter Budget"
+              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
+            />
+          </fieldset>
 
-          <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[160px_1fr]">
-            <label className="text-sm font-medium text-gray-800">
-              Budget Start <span className="text-[#C72030]">*</span>
-            </label>
+          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
+            <legend className="px-1 text-gray-500 font-medium text-sm">
+              Budget Start <span className="text-red-500">*</span>
+            </legend>
             <Input
               type="date"
               min={todayStr}
               value={budgetStart}
               onChange={(e) => setBudgetStart(e.target.value)}
               disabled={readOnly}
+              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
             />
-          </div>
+          </fieldset>
 
-          <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[160px_1fr]">
-            <label className="text-sm font-medium text-gray-800">
-              Budget End <span className="text-[#C72030]">*</span>
-            </label>
+          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
+            <legend className="px-1 text-gray-500 font-medium text-sm">
+              Budget End <span className="text-red-500">*</span>
+            </legend>
             <Input
               type="date"
               min={budgetStart || todayStr}
               value={budgetEnd}
               onChange={(e) => setBudgetEnd(e.target.value)}
               disabled={readOnly}
+              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
             />
-          </div>
+          </fieldset>
 
         </div>
 

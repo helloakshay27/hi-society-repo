@@ -1,31 +1,122 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import TextField from "@mui/material/TextField";
 import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
+import { API_CONFIG } from "@/config/apiConfig";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { formatAmount } from "@/utils/financialStatement";
 
-interface GstPayableRow {
-  ledgerName: string;
-  gstPercent: string;
-  totalAmount: number;
-  gstAmount: number;
+// Real response shape returned by GET /lock_account_transactions/gst_payable
+// It only returns the chart-of-accounts scaffold (no GST %/amount figures)
+// split into the Income and Expense sides.
+interface GstPayableLedgerAPI {
+  id: number;
+  name: string;
+  account_code?: string | null;
 }
 
-// TODO: replace with a real fetch once the GST Payable API endpoint is
-// available; wire it the same way as AccountingBalanceSheet.
-const DUMMY_GST_PAYABLE_ROWS: GstPayableRow[] = [
-  { ledgerName: "CGST Payable", gstPercent: "9%", totalAmount: 10000, gstAmount: 900 },
-  { ledgerName: "SGST Payable", gstPercent: "9%", totalAmount: 10000, gstAmount: 900 },
-  { ledgerName: "IGST Payable", gstPercent: "18%", totalAmount: 5000, gstAmount: 900 },
-  { ledgerName: "GST Payable - Reverse Charge", gstPercent: "18%", totalAmount: 2000, gstAmount: 360 },
+interface GstPayableGroupAPI {
+  id: number;
+  group_name: string;
+  ledgers?: GstPayableLedgerAPI[];
+}
+
+interface GstPayableApiResponse {
+  code?: number;
+  report?: string;
+  income?: GstPayableGroupAPI;
+  expense?: GstPayableGroupAPI;
+}
+
+interface GstPayableRow {
+  id: number;
+  ledgerName: string;
+  gstPercent: string;
+  totalAmount: number | null;
+  gstAmount: number | null;
+}
+
+const columns: ColumnConfig[] = [
+  { key: "ledgerName", label: "Ledger Name", sortable: true },
+  { key: "gstPercent", label: "GST %", sortable: true },
+  { key: "totalAmount", label: "Total Amount", sortable: true },
+  { key: "gstAmount", label: "GST Amount", sortable: true },
 ];
 
 const AccountingGSTPayable: React.FC = () => {
+  const lock_account_id = localStorage.getItem("lock_account_id") || "3";
+
+  const [rows, setRows] = useState<GstPayableRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({ fromDate: "", toDate: "" });
+
+  const fetchGstPayable = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get<GstPayableApiResponse>(
+        `${baseUrl}/lock_account_transactions/gst_payable`,
+        {
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          params: {
+            lock_account_id,
+            from_date: filters.fromDate || undefined,
+            to_date: filters.toDate || undefined,
+          },
+        }
+      );
+      const data = response.data;
+      // The API doesn't return gst_percent/total_amount/gst_amount yet — only
+      // the ledger scaffold — so those columns render blank until it does.
+      const toRows = (group: GstPayableGroupAPI | undefined): GstPayableRow[] =>
+        (group?.ledgers || []).map((ledger) => ({
+          id: ledger.id,
+          ledgerName: ledger.name,
+          gstPercent: "",
+          totalAmount: null,
+          gstAmount: null,
+        }));
+      setRows([...toRows(data.income), ...toRows(data.expense)]);
+    } catch (err) {
+      console.error("Error fetching GST payable:", err);
+      setError("Failed to load GST payable data");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGstPayable();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const renderCell = (item: GstPayableRow, columnKey: string) => {
+    switch (columnKey) {
+      case "ledgerName":
+        return item.ledgerName;
+      case "gstPercent":
+        return item.gstPercent || "-";
+      case "totalAmount":
+        return item.totalAmount !== null ? formatAmount(item.totalAmount) : "-";
+      case "gstAmount":
+        return item.gstAmount !== null ? formatAmount(item.gstAmount) : "-";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -59,7 +150,12 @@ const AccountingGSTPayable: React.FC = () => {
             fullWidth
             size="small"
           />
-          <Button className="bg-[#C72030] hover:bg-[#A01020] text-white h-[40px]">View</Button>
+          <Button
+            onClick={fetchGstPayable}
+            className="bg-[#C72030] hover:bg-[#A01020] text-white h-[40px]"
+          >
+            View
+          </Button>
         </div>
       </div>
 
@@ -68,32 +164,28 @@ const AccountingGSTPayable: React.FC = () => {
           <h1 className="text-xl font-bold">GST Payable</h1>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border border-gray-300 text-sm">
-            <thead className="bg-[#E5E0D3]">
-              <tr>
-                <th className="border border-gray-300 px-3 py-2 text-left">Ledger Name</th>
-                <th className="border border-gray-300 px-3 py-2">GST %</th>
-                <th className="border border-gray-300 px-3 py-2">Total Amount</th>
-                <th className="border border-gray-300 px-3 py-2">GST Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {DUMMY_GST_PAYABLE_ROWS.map((row) => (
-                <tr key={row.ledgerName}>
-                  <td className="border border-gray-300 px-3 py-1.5">{row.ledgerName}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-right">{row.gstPercent}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-right">
-                    {formatAmount(row.totalAmount)}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-right">
-                    {formatAmount(row.gstAmount)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {error ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-red-500">{error}</div>
+          </div>
+        ) : (
+          <EnhancedTable
+            data={rows}
+            columns={columns}
+            renderCell={renderCell}
+            getItemId={(item) => String(item.id)}
+            pagination
+            pageSize={20}
+            enableGlobalSearch
+            searchPlaceholder="Search ledgers"
+            enableExport
+            exportFileName="gst-payable"
+            storageKey="gst-payable-table"
+            loading={loading}
+            loadingMessage="Loading GST payable data..."
+            emptyMessage="No matching records found"
+          />
+        )}
       </div>
     </div>
   );

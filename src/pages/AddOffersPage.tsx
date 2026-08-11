@@ -492,14 +492,16 @@ const AddOffersPage: React.FC = () => {
                 }}
               >
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   type="button"
                   onClick={() => navigate(-1)}
                   disabled={isSubmitting}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"                >
+        className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+             >
                   Cancel
                 </Button>
                 <Button
+                variant="ghost"
                   type="submit"
                   disabled={isSubmitting}
  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"                >

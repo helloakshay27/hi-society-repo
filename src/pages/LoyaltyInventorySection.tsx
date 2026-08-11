@@ -702,8 +702,8 @@ export const LoyaltyInventorySection = () => {
             {shouldShow("Inventory Section", "create") && (
             <Button
                 onClick={handleAddItem}
-                className="bg-[#C72030] hover:bg-[#A01828] text-white"
-            >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Item
             </Button>

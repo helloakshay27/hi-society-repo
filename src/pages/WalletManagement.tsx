@@ -657,8 +657,8 @@ export const WalletManagement = () => {
                     setIsFilterOpen(false);
                   }}
                   style={{ color: "#fff" }}
-                  className="!bg-brand !text-white"
-                >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                 >
                   Apply
                 </Button>
               </DialogFooter>

@@ -3885,7 +3885,8 @@ const ProjectDetailsCreate = () => {
               <button
                 type="button"
                 onClick={handleAddConnectivity}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition-colors"
+              //  variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
               >
                 <span>Add</span>
               </button>
@@ -4240,8 +4241,8 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                    type="button"
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                     type="button"
                     onClick={() => setShowBannerModal(true)}
                   >
                     {/* <svg
@@ -4375,7 +4376,8 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    // variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -4546,7 +4548,8 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
                     type="button"
                     onClick={() => setShowGalleryModal(true)}
                   >
@@ -4877,8 +4880,8 @@ const ProjectDetailsCreate = () => {
 
                   <button
                     type="button"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                    onClick={(e) => {
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       document.getElementById("brochure")?.click();
@@ -5021,8 +5024,8 @@ const ProjectDetailsCreate = () => {
 
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("project_layout").click()}
+                 variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={() => document.getElementById("project_layout").click()}
                         >
                          
                           <span>Add</span>
@@ -5247,8 +5250,8 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={(e) => {
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             document.getElementById("project_creative_offers").click();
@@ -5601,8 +5604,8 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={(e) => {
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             document.getElementById("videos").click();
@@ -5701,8 +5704,8 @@ const ProjectDetailsCreate = () => {
             </h2>
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-              onClick={(e) => {
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleAddVirtualTour();
@@ -6039,17 +6042,17 @@ const ProjectDetailsCreate = () => {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
+           className="btn-primary h-9 px-4 text-sm font-medium"               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit"}
             </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"            >
-              Cancel
-            </button>
+           <button
+  type="button"
+  onClick={handleCancel}
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+>
+  Cancel
+</button>
           </div>
         </div>
       </form>

@@ -818,8 +818,8 @@ const FitoutRequests: React.FC = () => {
               {shouldShow("Fitout Requests", "create") && (
               <Button
                 onClick={handleAddRequest}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               >
                 <Plus className="w-4 h-4" />
                 Add
               </Button>

@@ -2034,7 +2034,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="!bg-[#C72030] hover:!bg-[#A01828] !text-white px-12 py-3 text-base font-medium"
+             variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
           >
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </Button>

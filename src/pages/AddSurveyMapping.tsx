@@ -1201,7 +1201,8 @@ export const AddSurveyMapping = () => {
 
       <div className="flex flex-col sm:flex-row items-center gap-3 justify-center pt-2">
         <Button
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        variant="ghost"
+          className="btn-primary h-9 px-4 text-sm font-medium"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
@@ -1216,7 +1217,7 @@ export const AddSurveyMapping = () => {
         </Button>
         <Button
           variant="outline"
-          className="px-6 sm:px-8 w-full sm:w-auto"
+          className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
           onClick={() => navigate("/maintenance/survey/mapping")}
           disabled={isSubmitting}
         >

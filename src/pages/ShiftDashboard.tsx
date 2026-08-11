@@ -309,8 +309,8 @@ export const ShiftDashboard = () => {
                 {shouldShow("Shift", "create") && (
                   <Button 
                     onClick={handleAdd} 
-                    className="flex items-center gap-2 bg-[#C72030] hover:bg-[#C72030]/90 text-white"
-                  >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                   >
                     <Plus className="w-4 h-4" />
                     Add
                   </Button>

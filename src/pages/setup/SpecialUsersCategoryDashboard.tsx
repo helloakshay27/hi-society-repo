@@ -398,8 +398,8 @@ export const SpecialUsersCategoryDashboard = () => {
                   <Button
                     size="sm"
                     onClick={handleAddCategory}
-                    className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
-                  >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add
                   </Button>

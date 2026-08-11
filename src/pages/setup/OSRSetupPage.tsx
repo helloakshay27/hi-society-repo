@@ -365,8 +365,8 @@ const CategoryTab: React.FC = () => {
           leftActions={
             <Button
               onClick={() => setAddOpen(true)}
-              className="flex items-center gap-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-            >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
               <Plus className="w-4 h-4" /> Add
             </Button>
           }
@@ -678,8 +678,8 @@ const SubCategoryTab: React.FC = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <Button
                 onClick={openAdd}
-                className="flex items-center gap-1 border-0 h-auto px-3 py-2 text-sm font-medium shrink-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-              >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               >
                 <Plus className="w-4 h-4" /> Add
               </Button>
               {/* <div className="flex items-center gap-1 flex-wrap">
@@ -1067,8 +1067,8 @@ const StatusTab: React.FC = () => {
           leftActions={
             <Button
               onClick={() => setAddOpen(true)}
-              className="flex items-center gap-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-            >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
               <Plus className="w-4 h-4" /> Add
             </Button>
           }

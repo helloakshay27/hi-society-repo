@@ -195,7 +195,8 @@ const AccountingChargeCalculations: React.FC = () => {
           </Select>
         </div>
         <Button
-          className="bg-[#1A2B4C] text-white hover:bg-[#1A2B4C]/90"
+         variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
           onClick={handleCalculate}
           disabled={calculating || loading}
         >

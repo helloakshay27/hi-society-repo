@@ -312,15 +312,13 @@ const NewTier = () => {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="px-8 py-2.5 bg-[#C72030] !text-white  hover:bg-[#A01828] transition-colors font-medium"
-                  >
+           className="btn-primary h-9 px-4 text-sm font-medium"                  >
                     Next
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate("/loyalty/loyalty-tiers-list")}
-                    className="px-8 py-2.5 bg-white border border-[#C72030] text-[#C72030]  hover:bg-[#FDEFF1] transition-colors font-medium"
-                  >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"                  >
                     Cancel
                   </button>
                 </div>

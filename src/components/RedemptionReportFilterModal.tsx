@@ -91,15 +91,14 @@ export const RedemptionReportFilterModal: React.FC<RedemptionReportFilterModalPr
         <div className="flex gap-3 pt-4">
           <Button
             onClick={handleApply}
-            className="flex-1 !bg-white !text-brand !border !border-brand"
-          >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"           >
             Apply
           </Button>
           <Button
             onClick={handleReset}
             variant="outline"
-            className="flex-1"
-          >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"          >
             Reset
           </Button>
         </div>

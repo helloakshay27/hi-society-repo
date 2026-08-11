@@ -464,15 +464,14 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
         <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
           <Button
             onClick={handleSubmit}
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
-            disabled={loading}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             disabled={loading}
           >
             {loading ? 'Submitting...' : 'Submit'}
           </Button>
           <Button
             onClick={handleClose}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]   h-10"         
-   disabled={loading}
+  className="btn-cancel h-9 px-4 text-sm font-medium !bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"   disabled={loading}
           >
             Cancel
           </Button>

@@ -289,8 +289,8 @@ const BMSOffers: React.FC = () => {
     shouldShow("Offers","create")&&(
     <Button
       onClick={handleAddOffer}
-      className="bg-[#C72030] hover:bg-[#A01828] !text-white h-9 px-4 text-sm font-medium"
-    >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"     >
       <Plus className="w-4 h-4 mr-2" />
       Add
     </Button>
@@ -352,8 +352,9 @@ const BMSOffers: React.FC = () => {
           <div className="text-center">
             <p className="text-red-600 font-medium">Error loading offers</p>
             <p className="text-sm text-gray-500 mt-1">{error?.message || "Please try again"}</p>
-            <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4 !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]">
-              <RefreshCw className="w-4 h-4 mr-2" />
+            <Button onClick={() => refetch()} variant="outline" size="sm"   className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+              >
+              <RefreshCw className="w-4 h-4 mr-2 text-brand" />
               Retry
             </Button>
           </div>
