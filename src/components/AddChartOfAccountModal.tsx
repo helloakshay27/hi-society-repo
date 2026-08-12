@@ -36,31 +36,26 @@ interface AddChartOfAccountModalProps {
   editingLedger?: ChartOfAccountLedger | null;
 }
 
-interface AccountGroupAPI {
+// Shape returned by the dedicated GET /lock_account_ledgers/account_types
+// endpoint — every group is a valid account type, each pre-labeled with its
+// own parent ("<group_name> - <parent_group_name>").
+interface AccountTypeAPI {
   id: number;
   group_name: string;
   parent_group_id?: number | null;
+  parent_group_name?: string | null;
+  label?: string;
 }
 
-// lock_account_groups comes back as a flat list (parent_group_id links to a
-// parent) rather than nested, so build each option's display name by walking
-// its ancestor chain.
-const flattenGroups = (groups: AccountGroupAPI[]): AccountGroupOption[] => {
-  const byId = new Map(groups.map((g) => [g.id, g]));
-  const nameWithAncestry = (group: AccountGroupAPI): string => {
-    const names: string[] = [group.group_name];
-    const seen = new Set<number>([group.id]);
-    let parentId = group.parent_group_id;
-    while (parentId && byId.has(parentId) && !seen.has(parentId)) {
-      const parent = byId.get(parentId)!;
-      names.unshift(parent.group_name);
-      seen.add(parentId);
-      parentId = parent.parent_group_id;
-    }
-    return names.join(" > ");
-  };
-  return groups.map((g) => ({ id: g.id, group_name: nameWithAncestry(g) }));
-};
+// The 4 fundamental account types are fixed system roots that never appear as
+// their own entries in GET /lock_account_ledgers/account_types, but ledgers
+// can still be assigned directly under one of them.
+const ROOT_GROUPS: AccountGroupOption[] = [
+  { id: 1, group_name: "Assets" },
+  { id: 2, group_name: "Liabilities" },
+  { id: 3, group_name: "Income" },
+  { id: 4, group_name: "Expenditure" },
+];
 
 export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
   open,
@@ -86,12 +81,17 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_groups`, {
+        const res = await axios.get(`${baseUrl}/lock_account_ledgers/account_types`, {
           params: { lock_account_id: lockAccountId },
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         });
-        const groups: AccountGroupAPI[] = res.data?.lock_account_groups || [];
-        setAccountTypes(flattenGroups(groups));
+        const groups: AccountTypeAPI[] = res.data?.lock_account_groups || [];
+        const options = groups.map((g) => ({ id: g.id, group_name: g.label || g.group_name }));
+        setAccountTypes([...ROOT_GROUPS, ...options]);
       } catch (error) {
         console.error("Error fetching account types:", error);
         setAccountTypes([]);
@@ -143,6 +143,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       const token = API_CONFIG.TOKEN;
       const headers = {
         "Content-Type": "application/json",
+        Accept: "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
@@ -228,7 +229,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
                   ...menuProps,
                   PaperProps: {
                     ...menuProps.PaperProps,
-                    style: { ...menuProps.PaperProps.style, maxHeight: 300 },
+                    style: { ...menuProps.PaperProps.style, maxHeight: 300, maxWidth: 420 },
                   },
                 }}
               >
@@ -236,7 +237,11 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
                   Select Account Type
                 </MenuItem>
                 {accountTypes.map((type) => (
-                  <MenuItem key={type.id} value={String(type.id)}>
+                  <MenuItem
+                    key={type.id}
+                    value={String(type.id)}
+                    sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                  >
                     {type.group_name}
                   </MenuItem>
                 ))}

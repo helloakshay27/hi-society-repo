@@ -145,56 +145,44 @@ const AccountingOpeningBalances: React.FC = () => {
       return;
     }
 
-    const records = visibleLedgers
-      .flatMap((ledger) => {
-        const entry = values[ledger.id];
-        const rows: { ledger_id: number; dr?: string; cr?: string }[] = [];
-        if (entry?.debit && Number(entry.debit) > 0) {
-          rows.push({ ledger_id: ledger.id, dr: entry.debit });
-        }
-        if (entry?.credit && Number(entry.credit) > 0) {
-          rows.push({ ledger_id: ledger.id, cr: entry.credit });
-        }
-        return rows;
-      });
+    const ledgerPayload: Record<string, { dr_amount: string; cr_amount: string }> = {};
+    visibleLedgers.forEach((ledger) => {
+      const entry = values[ledger.id];
+      const debit = entry?.debit && Number(entry.debit) > 0 ? entry.debit : "";
+      const credit = entry?.credit && Number(entry.credit) > 0 ? entry.credit : "";
+      if (debit || credit) {
+        ledgerPayload[String(ledger.id)] = { dr_amount: debit, cr_amount: credit };
+      }
+    });
 
-    if (records.length === 0) {
+    if (Object.keys(ledgerPayload).length === 0) {
       toast.error("Please enter at least one debit or credit amount");
       return;
     }
 
     if (adjustment > 0 && adjustmentLedger) {
-      records.push(
-        adjustmentOnCreditSide
-          ? { ledger_id: adjustmentLedger.id, cr: String(adjustment) }
-          : { ledger_id: adjustmentLedger.id, dr: String(adjustment) }
-      );
+      ledgerPayload[String(adjustmentLedger.id)] = adjustmentOnCreditSide
+        ? { dr_amount: "", cr_amount: String(adjustment) }
+        : { dr_amount: String(adjustment), cr_amount: "" };
     }
 
     setSubmitting(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
       const payload = {
-        lock_account_transaction: {
-          transaction_type: "Opening Balance",
-          transaction_date: date,
-          description: `Opening balances as on ${date}`,
-          publish: true,
-          lock_account_id: lockAccountId,
-        },
-        lock_account_transaction_records: records,
+        lock_account_id: Number(lockAccountId),
+        tr_date: date,
+        ledger: ledgerPayload,
       };
 
-      await axios.post(
-        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_transactions.json`,
-        payload,
-        { headers }
-      );
+      await axios.post(`${baseUrl}/lock_account_ledgers/create_opening`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
       toast.success("Opening balance submitted successfully");
     } catch (error) {
       console.error("Error submitting opening balance:", error);

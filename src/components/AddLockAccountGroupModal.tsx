@@ -31,18 +31,27 @@ interface AddLockAccountGroupModalProps {
   editingGroup?: EditableLockAccountGroup | null;
 }
 
-interface AccountGroupAPI {
+// Shape returned by the dedicated GET /lock_account_groups/parent_groups
+// endpoint — every group is a valid parent choice, each pre-labeled with its
+// own parent ("<group_name> - <parent_group_name>").
+interface ParentGroupAPI {
   id: number;
   group_name: string;
   parent_group_id?: number | null;
+  parent_group_name?: string | null;
+  label?: string;
 }
 
-// parent_group_id: null = top-level group; non-null = nested subgroup.
-// Only top-level groups are valid choices for a new subgroup's parent.
-const topLevelGroups = (groups: AccountGroupAPI[]): ParentGroupOption[] =>
-  groups
-    .filter((g) => g.parent_group_id === null || g.parent_group_id === undefined)
-    .map((g) => ({ id: g.id, group_name: g.group_name }));
+// The 4 fundamental account types are fixed system roots that never appear as
+// their own entries in GET /lock_account_groups/parent_groups, but plenty of
+// real subgroups point directly to one of them as parent_group_id — without
+// these, that value can't be preselected because it matches no option.
+const ROOT_GROUPS: ParentGroupOption[] = [
+  { id: 1, group_name: "Assets" },
+  { id: 2, group_name: "Liabilities" },
+  { id: 3, group_name: "Income" },
+  { id: 4, group_name: "Expenditure" },
+];
 
 export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> = ({
   open,
@@ -64,7 +73,7 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_groups`, {
+        const res = await axios.get(`${baseUrl}/lock_account_groups/parent_groups`, {
           params: { lock_account_id: lockAccountId },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -72,9 +81,14 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
             Accept: "application/json",
           },
         });
-        const groups: AccountGroupAPI[] = res.data?.lock_account_groups || [];
-        const options = topLevelGroups(groups).filter((g) => g.id !== editingGroup?.id);
-        setParentGroups(options);
+        const groups: ParentGroupAPI[] = res.data?.lock_account_groups || [];
+        const options = groups
+          .filter((g) => g.id !== editingGroup?.id)
+          .map((g) => ({ id: g.id, group_name: g.label || g.group_name }));
+        setParentGroups([
+          ...ROOT_GROUPS.filter((g) => g.id !== editingGroup?.id),
+          ...options,
+        ]);
       } catch (error) {
         console.error("Error fetching parent groups:", error);
         setParentGroups([]);
@@ -112,6 +126,7 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
       const token = API_CONFIG.TOKEN;
       const headers = {
         "Content-Type": "application/json",
+        Accept: "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
       if (editingGroup) {
@@ -141,9 +156,14 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
       }
       onSaved();
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving group:", error);
-      toast.error("Failed to save group");
+      const apiErrors = error?.response?.data?.errors;
+      const apiError = error?.response?.data?.error;
+      const message = Array.isArray(apiErrors)
+        ? apiErrors.join(", ")
+        : apiError || "Failed to save group";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -184,7 +204,7 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
                   ...menuProps,
                   PaperProps: {
                     ...menuProps.PaperProps,
-                    style: { ...menuProps.PaperProps.style, maxHeight: 300 },
+                    style: { ...menuProps.PaperProps.style, maxHeight: 300, maxWidth: 420 },
                   },
                 }}
               >
@@ -192,7 +212,11 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
                   Select Group
                 </MenuItem>
                 {parentGroups.map((group) => (
-                  <MenuItem key={group.id} value={String(group.id)}>
+                  <MenuItem
+                    key={group.id}
+                    value={String(group.id)}
+                    sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                  >
                     {group.group_name}
                   </MenuItem>
                 ))}
