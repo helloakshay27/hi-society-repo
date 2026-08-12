@@ -116,6 +116,9 @@ const AccountingSubgroupSetup: React.FC = () => {
     setIsAddOpen(true);
   };
 
+  // GET /lock_account_groups/:id currently 404s server-side even for ids that
+  // exist (confirmed against this list), so edit uses the already-fetched row
+  // data instead of a detail round-trip that can't succeed.
   const handleEdit = (item: SubgroupRow) => {
     setEditingGroup({
       id: item.raw.id,

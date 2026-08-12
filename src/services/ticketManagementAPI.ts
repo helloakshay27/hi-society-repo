@@ -1691,6 +1691,73 @@ export const ticketManagementAPI = {
     }
   },
 
+  // Create a Smartsecure-type society gate (Society + Society Block, no building)
+  async createSmartsecureGate(gateData: {
+    gate_name: string;
+    gate_device: string;
+    resource_id: number;
+    society_block_id: number;
+    user_id: number;
+  }) {
+    try {
+      const response = await apiClient.post(ENDPOINTS.SOCIETY_GATES, {
+        society_gate: gateData,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating smartsecure gate:', error);
+      throw error;
+    }
+  },
+
+  // Update a Smartsecure-type society gate
+  async updateSmartsecureGate(gateId: string | number, gateData: Partial<{
+    gate_name: string;
+    gate_device: string;
+    resource_id: number;
+    society_block_id: number;
+    user_id: number;
+    active: number;
+  }>) {
+    try {
+      const response = await apiClient.patch(`${ENDPOINTS.UPDATE_SOCIETY_GATE}/${gateId}.json`, {
+        society_gate: gateData,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating smartsecure gate:', error);
+      throw error;
+    }
+  },
+
+  // Admin societies list (for Smartsecure gate "Society" dropdown)
+  async getAdminSocieties(page: number = 1, perPage: number = 200, search: string = '') {
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('per_page', perPage.toString());
+      if (search.trim()) {
+        params.append('q[building_name_cont]', search.trim());
+      }
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN_SOCIETIES}?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching admin societies:', error);
+      throw error;
+    }
+  },
+
+  // Society blocks for a given society (Smartsecure gate "Society Block" dropdown)
+  async getSocietyBlocksForSociety(societyId: number | string) {
+    try {
+      const response = await apiClient.get(`${ENDPOINTS.GET_SOCIETY_BLOCKS}?society_id=${societyId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching society blocks:', error);
+      throw error;
+    }
+  },
+
   // Get recent surveys
   async getRecentSurveys() {
     try {

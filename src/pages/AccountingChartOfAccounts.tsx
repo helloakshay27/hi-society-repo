@@ -185,7 +185,7 @@ const AccountingChartOfAccounts: React.FC = () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers/opening`, {
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers`, {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
@@ -202,11 +202,11 @@ const AccountingChartOfAccounts: React.FC = () => {
   const fetchTree = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers`, {
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers/tree`, {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
-      const flat: FlatTreeNode[] = Array.isArray(response.data) ? response.data : [];
+      const flat: FlatTreeNode[] = response.data?.jstree_data || [];
       setTree(buildTreeFromFlat(flat));
     } catch (error) {
       console.error("Error fetching account tree:", error);

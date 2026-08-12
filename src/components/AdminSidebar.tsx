@@ -131,6 +131,11 @@ const adminNavigationStructure = {
         icon: DollarSign,
         href: "/ops-console/admin/lock-fees",
       },
+      {
+        name: "Smartsecure Integration",
+        icon: DollarSign,
+        href: "/ops-console/admin/smartsecure-integration",
+      },
     ],
   },
 };
