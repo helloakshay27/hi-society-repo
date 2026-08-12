@@ -329,6 +329,10 @@ export const API_CONFIG = {
     // Society gate by ID endpoints
     SOCIETY_GATE_BY_ID: "/admin/society_gates", // Base path, will append /{id}.json
     UPDATE_SOCIETY_GATE: "/admin/society_gates", // Base path, will append /{id}.json
+    // Admin societies list (for Smartsecure gate Society dropdown)
+    ADMIN_SOCIETIES: "/admin/societies.json",
+    // Society blocks for a given society (Smartsecure gate Society Block dropdown)
+    GET_SOCIETY_BLOCKS: "/get_society_blocks.json",
     RECENT_SURVEYS: "/survey_mappings/response_list.json?&recent=true",
     // Visitor history export endpoint
     VISITOR_HISTORY_EXPORT: "/pms/admin/visitors/visitors_history.xlsx",

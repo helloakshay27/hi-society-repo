@@ -1134,6 +1134,9 @@ import { OccupantUserDetailWrapper } from "./components/OccupantUserDetailWrappe
 import { LoginPageWrapper } from "./components/LoginPageWrapper";
 const ModulesManagement = lazy(() => import("./pages/settings/ModulesManagement"));
 const LoyaltyTDS = lazy(() => import("./pages/ops-console/admin/LoyaltyTDS").then(m => ({ default: m.LoyaltyTDS })));
+const SmartsecureIntegration = lazy(() => import("./pages/ops-console/admin/SmartsecureIntegration"));
+const AddSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/AddSmartsecureGatePage"));
+const EditSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/EditSmartsecureGatePage"));
 const HiSocietyUsersDashboard = lazy(() => import("./pages/master/HiSocietyUsersDashboard").then(m => ({ default: m.HiSocietyUsersDashboard })));
 const ViewHiSocietyUserPage = lazy(() => import("./pages/master/ViewHiSocietyUserPage").then(m => ({ default: m.ViewHiSocietyUserPage })));
 const GCMList = lazy(() => import("./pages/master/GCMList").then(m => ({ default: m.GCMList })));
@@ -1468,6 +1471,18 @@ function App() {
                         <Route
                           path="admin/loyalty-tds"
                           element={<LoyaltyTDS />}
+                        />
+                        <Route
+                          path="admin/smartsecure-integration"
+                          element={<SmartsecureIntegration />}
+                        />
+                        <Route
+                          path="admin/smartsecure-integration/add"
+                          element={<AddSmartsecureGatePage />}
+                        />
+                        <Route
+                          path="admin/smartsecure-integration/edit/:id"
+                          element={<EditSmartsecureGatePage />}
                         />
                         {/* <Route
                       path="settings/account/lock-module/view/:id"
