@@ -751,6 +751,12 @@ export const HiSocietySidebar: React.FC = () => {
           icon: FileText,
           path: "/accounting/download-report",
         },
+        {
+          id: "invoice-creation",
+          label: "Invoice Creation",
+          icon: FileText,
+          path: "/accounting/invoice-creation",
+        },
       ],
     },
     smartsecure: {
