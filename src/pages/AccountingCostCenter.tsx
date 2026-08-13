@@ -159,6 +159,10 @@ const AccountingCostCenter: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+       <header className="flex items-center justify-between mb-5">
+                <h1 className="text-2xl font-bold">Cost Centre List</h1>
+            </header>
+
       <EnhancedTable
         data={costCentres}
         columns={columns}

@@ -19,6 +19,8 @@ export interface ChartOfAccountLedger {
   account_code?: string;
   lock_account_group_id?: number;
   budget?: number | string;
+  budget_start_date?: string;
+  budget_end_date?: string;
   description?: string;
   watchlist?: boolean;
   allow_cost_center?: boolean;
@@ -70,6 +72,8 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
   const [accountName, setAccountName] = useState("");
   const [accountCode, setAccountCode] = useState("");
   const [accountBudget, setAccountBudget] = useState("");
+  const [budgetStart, setBudgetStart] = useState("");
+  const [budgetEnd, setBudgetEnd] = useState("");
   const [description, setDescription] = useState("");
   const [addToWatchlist, setAddToWatchlist] = useState(false);
   const [allowCostCenter, setAllowCostCenter] = useState(false);
@@ -108,6 +112,8 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       setAccountName(editingLedger.name || "");
       setAccountCode(editingLedger.account_code || "");
       setAccountBudget(String(editingLedger.budget ?? ""));
+      setBudgetStart(editingLedger.budget_start_date || "");
+      setBudgetEnd(editingLedger.budget_end_date || "");
       setDescription(editingLedger.description || "");
       setAddToWatchlist(Boolean(editingLedger.watchlist));
       setAllowCostCenter(Boolean(editingLedger.allow_cost_center));
@@ -116,6 +122,8 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       setAccountName("");
       setAccountCode("");
       setAccountBudget("");
+      setBudgetStart("");
+      setBudgetEnd("");
       setDescription("");
       setAddToWatchlist(false);
       setAllowCostCenter(false);
@@ -155,6 +163,8 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
             account_code: accountCode || null,
             description: description || null,
             budget: accountBudget || null,
+            budget_start_date: budgetStart || null,
+            budget_end_date: budgetEnd || null,
             watchlist: addToWatchlist,
             assoc_cost_centre: allowCostCenter,
           },
@@ -174,6 +184,8 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
             account_code: accountCode || null,
             description: description || null,
             budget: accountBudget || null,
+            budget_start_date: budgetStart || null,
+            budget_end_date: budgetEnd || null,
             watchlist: addToWatchlist,
             assoc_cost_centre: allowCostCenter,
             active: true,
@@ -279,6 +291,26 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
               value={accountBudget}
               onChange={(e) => setAccountBudget(e.target.value)}
               placeholder="Enter Account Budget"
+              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
+            />
+          </fieldset>
+
+          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
+            <legend className="px-1 text-gray-500 font-medium text-sm">Budget Start</legend>
+            <Input
+              type="date"
+              value={budgetStart}
+              onChange={(e) => setBudgetStart(e.target.value)}
+              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
+            />
+          </fieldset>
+
+          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
+            <legend className="px-1 text-gray-500 font-medium text-sm">Budget End</legend>
+            <Input
+              type="date"
+              value={budgetEnd}
+              onChange={(e) => setBudgetEnd(e.target.value)}
               className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
             />
           </fieldset>
