@@ -189,12 +189,23 @@ const SmartSecureVisitorIn: React.FC = () => {
         },
         body: JSON.stringify({ otp: otpValue.trim() }),
       });
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      toast.success("OTP verified successfully");
+
+      let data: { message?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // Response had no JSON body; fall back to generic messages below.
+      }
+
+      if (!res.ok) {
+        throw new Error(data.message || `Request failed: ${res.status}`);
+      }
+
+      toast.success(data.message || "OTP verified successfully");
       setOtpDialogOpen(false);
       setOtpValue("");
-    } catch {
-      toast.error("Invalid OTP. Please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Invalid OTP. Please try again.");
     } finally {
       setOtpLoading(false);
     }
