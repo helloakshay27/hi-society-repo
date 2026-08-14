@@ -23,6 +23,7 @@ export interface NewSocietyStaff {
     value: number;
     label: string;
   };
+  is_blocked?: boolean | null;
   associated_flats: unknown[];
   actions: {
     view_url: string;
