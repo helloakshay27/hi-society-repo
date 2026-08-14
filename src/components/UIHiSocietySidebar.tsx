@@ -708,6 +708,12 @@ export const UIHiSocietySidebar: React.FC = () => {
             },
           ],
         },
+        {
+          id: "invoice-creation",
+          label: "Invoice Creation",
+          icon: FileText,
+          path: "/accounting/invoice-creation",
+        },
       ],
     },
     smartsecure: {

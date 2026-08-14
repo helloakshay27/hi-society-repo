@@ -162,6 +162,7 @@ export interface SocietyStaffDetails {
   department_name: string;
   work_type_name: string;
   status_text: string;
+  is_blocked?: boolean | null;
   staff_image_url: string;
   qr_code_present: boolean;
   qr_code_url: string | null;
@@ -236,6 +237,7 @@ export interface StaffDetailsApiResponse {
       value: number;
       label: string;
     };
+    is_blocked?: boolean | null;
     associated_flats: unknown[];
     actions: {
       view_url: string;
@@ -524,7 +526,8 @@ export const staffService = {
         unit_name: null,
         department_name: '',
         work_type_name: staff.work_type,
-        status_text: staff.status?.label ?? '',
+        status_text: staff.is_blocked ? 'Blocked' : (staff.status?.label ?? ''),
+        is_blocked: staff.is_blocked ?? null,
         staff_image_url: staff.image_url,
         qr_code_present: !!staff.qr_code_url,
         qr_code_url: staff.qr_code_url,

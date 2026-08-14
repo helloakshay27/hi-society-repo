@@ -9,33 +9,28 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { formatAmount } from "@/utils/financialStatement";
 
 // Real response shape returned by GET /lock_account_transactions/gst_payable
-// It only returns the chart-of-accounts scaffold (no GST %/amount figures)
-// split into the Income and Expense sides.
-interface GstPayableLedgerAPI {
-  id: number;
-  name: string;
-  account_code?: string | null;
-}
-
-interface GstPayableGroupAPI {
-  id: number;
-  group_name: string;
-  ledgers?: GstPayableLedgerAPI[];
+interface GstPayableRecordAPI {
+  ledger_id: number;
+  ledger_name: string;
+  gst_percentage: number | null;
+  total_amount: number;
+  gst_amount: number;
 }
 
 interface GstPayableApiResponse {
   code?: number;
   report?: string;
-  income?: GstPayableGroupAPI;
-  expense?: GstPayableGroupAPI;
+  date_range?: [string, string];
+  lock_account?: { id: number; name: string };
+  records?: GstPayableRecordAPI[];
 }
 
 interface GstPayableRow {
   id: number;
   ledgerName: string;
-  gstPercent: string;
-  totalAmount: number | null;
-  gstAmount: number | null;
+  gstPercent: number | null;
+  totalAmount: number;
+  gstAmount: number;
 }
 
 const columns: ColumnConfig[] = [
@@ -60,7 +55,7 @@ const AccountingGSTPayable: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const response = await axios.get<GstPayableApiResponse>(
-        `${baseUrl}/lock_account_transactions/gst_payable`,
+        `${baseUrl}/lock_account_transactions/gst_payable.json`,
         {
           headers: {
             Accept: "application/json",
@@ -73,18 +68,16 @@ const AccountingGSTPayable: React.FC = () => {
           },
         }
       );
-      const data = response.data;
-      // The API doesn't return gst_percent/total_amount/gst_amount yet — only
-      // the ledger scaffold — so those columns render blank until it does.
-      const toRows = (group: GstPayableGroupAPI | undefined): GstPayableRow[] =>
-        (group?.ledgers || []).map((ledger) => ({
-          id: ledger.id,
-          ledgerName: ledger.name,
-          gstPercent: "",
-          totalAmount: null,
-          gstAmount: null,
-        }));
-      setRows([...toRows(data.income), ...toRows(data.expense)]);
+      const records = response.data.records || [];
+      setRows(
+        records.map((record) => ({
+          id: record.ledger_id,
+          ledgerName: record.ledger_name,
+          gstPercent: record.gst_percentage,
+          totalAmount: record.total_amount,
+          gstAmount: record.gst_amount,
+        }))
+      );
     } catch (err) {
       console.error("Error fetching GST payable:", err);
       setError("Failed to load GST payable data");
@@ -109,11 +102,11 @@ const AccountingGSTPayable: React.FC = () => {
       case "ledgerName":
         return item.ledgerName;
       case "gstPercent":
-        return item.gstPercent || "-";
+        return item.gstPercent !== null ? `${item.gstPercent}%` : "-";
       case "totalAmount":
-        return item.totalAmount !== null ? formatAmount(item.totalAmount) : "-";
+        return formatAmount(item.totalAmount);
       case "gstAmount":
-        return item.gstAmount !== null ? formatAmount(item.gstAmount) : "-";
+        return formatAmount(item.gstAmount);
       default:
         return "";
     }

@@ -45,7 +45,7 @@ const AccountingOpeningBalances: React.FC = () => {
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const url = `${baseUrl}/lock_account_ledgers/opening`;
+        const url = `${baseUrl}/lock_account_ledgers/opening.json`;
         const response = await axios.get(url, {
           params: { lock_account_id: lockAccountId },
           headers: {
@@ -176,7 +176,8 @@ const AccountingOpeningBalances: React.FC = () => {
         ledger: ledgerPayload,
       };
 
-      await axios.post(`${baseUrl}/lock_account_ledgers/create_opening`, payload, {
+      await axios.post(`${baseUrl}/lock_account_ledgers/create_opening.json`, payload, {
+        params: { lock_account_id: lockAccountId },
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

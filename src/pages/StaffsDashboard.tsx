@@ -61,6 +61,8 @@ const getStatusBadgeColor = (status: string) => {
       return 'bg-yellow-100 text-yellow-600 border-yellow-200';
     case 'rejected':
       return 'bg-red-100 text-red-600 border-red-200';
+    case 'blocked':
+      return 'bg-red-100 text-red-700 border-red-300';
     default:
       return 'bg-gray-100 text-gray-600 border-gray-200';
   }
@@ -446,7 +448,7 @@ export const StaffsDashboard = () => {
         companyName: staff.company_name || '--',
         createdAt: staff.created_at_formatted || staff.created_at || '--',
         staffType: staff.staff_type || '--',
-        status: staff.status?.label || 'Unknown',
+        status: staff.is_blocked ? 'Blocked' : (staff.status?.label || 'Unknown'),
         imageUrl: staff.image_url || '/images/male.jpg',
         qrCodeUrl: staff.qr_code_url || '',
         associatedFlats: flats,
