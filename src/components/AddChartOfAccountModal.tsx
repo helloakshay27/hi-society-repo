@@ -85,10 +85,9 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_ledgers/account_types`, {
+        const res = await axios.get(`${baseUrl}/lock_account_ledgers/account_types.json`, {
           params: { lock_account_id: lockAccountId },
           headers: {
-            "Content-Type": "application/json",
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
@@ -170,7 +169,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
           },
         };
         await axios.patch(
-          `${baseUrl}/lock_account_ledgers/${editingLedger.id}`,
+          `${baseUrl}/lock_account_ledgers/${editingLedger.id}.json`,
           payload,
           { headers }
         );
@@ -178,7 +177,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       } else {
         const payload = {
           lock_account_ledger: {
-            lock_account_id: lockAccountId,
+            lock_account_id: Number(lockAccountId),
             lock_account_group_id: Number(accountTypeId),
             name: accountName,
             account_code: accountCode || null,
@@ -191,7 +190,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
             active: true,
           },
         };
-        await axios.post(`${baseUrl}/lock_account_ledgers`, payload, { headers });
+        await axios.post(`${baseUrl}/lock_account_ledgers.json`, payload, { headers });
         toast.success("Account created successfully");
       }
       onSaved();
