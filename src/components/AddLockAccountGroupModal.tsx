@@ -73,7 +73,7 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_groups/parent_groups`, {
+        const res = await axios.get(`${baseUrl}/lock_account_groups/parent_groups.json`, {
           params: { lock_account_id: lockAccountId },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -129,29 +129,32 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
         Accept: "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
+      const parentGroupIdNumber = parentGroupId ? Number(parentGroupId) : null;
       if (editingGroup) {
         const payload = {
           lock_account_group: {
             group_name: groupName.trim(),
-            parent_group_id: parentGroupId ? Number(parentGroupId) : null,
+            parent_group_id: parentGroupIdNumber,
+            base_group_id: parentGroupIdNumber,
             locked,
           },
         };
-        await axios.patch(`${baseUrl}/lock_account_groups/${editingGroup.id}`, payload, { headers });
+        await axios.patch(`${baseUrl}/lock_account_groups/${editingGroup.id}.json`, payload, { headers });
         toast.success("Group updated successfully");
       } else {
         const payload = {
           lock_account_group: {
             lock_account_id: lockAccountId,
             group_name: groupName.trim(),
-            parent_group_id: parentGroupId ? Number(parentGroupId) : null,
+            parent_group_id: parentGroupIdNumber,
+            base_group_id: parentGroupIdNumber,
             locked,
             credit_rule: "-",
             debit_rule: "+",
             active: true,
           },
         };
-        await axios.post(`${baseUrl}/lock_account_groups`, payload, { headers });
+        await axios.post(`${baseUrl}/lock_account_groups.json`, payload, { headers });
         toast.success("Group created successfully");
       }
       onSaved();
