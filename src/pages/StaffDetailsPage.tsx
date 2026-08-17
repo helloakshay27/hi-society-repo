@@ -537,8 +537,24 @@ export const StaffDetailsPage = () => {
                 </div>
               </div>
             )}
+
+            {hasData(staff.blocked_by_user_name) && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Blocked By</span>
+                <span className="text-gray-500 mx-3">:</span>
+                <span className="text-gray-900 font-semibold flex-1">{staff.blocked_by_user_name}</span>
+              </div>
+            )}
+
+            {hasData(staff.block_reason) && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Block Reason</span>
+                <span className="text-gray-500 mx-3">:</span>
+                <span className="text-gray-900 font-semibold flex-1">{staff.block_reason}</span>
+              </div>
+            )}
           </div>
-          
+
           <div className="space-y-4">
            
             

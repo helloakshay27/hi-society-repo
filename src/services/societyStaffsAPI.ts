@@ -24,6 +24,12 @@ export interface NewSocietyStaff {
     label: string;
   };
   is_blocked?: boolean | null;
+  blocked_by?: number | null;
+  blocked_by_user_name?: string | null;
+  block_requested_by?: number | null;
+  block_requested_by_user_name?: string | null;
+  block_reason?: string | null;
+  blocked_on?: string | null;
   associated_flats: unknown[];
   actions: {
     view_url: string;

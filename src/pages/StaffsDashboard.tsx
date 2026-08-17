@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,10 +47,11 @@ const columns: ColumnConfig[] = [
   { key: 'mobile', label: 'Mobile', sortable: true, hideable: true, draggable: true },
   { key: 'staffId', label: 'Staff Id', sortable: true, hideable: true, draggable: true },
   { key: 'workType', label: 'Work Type', sortable: true, hideable: true, draggable: true },
-  { key: 'companyName', label: 'Company Name', sortable: true, hideable: true, draggable: true },
   { key: 'createdAt', label: 'Created At', sortable: true, hideable: true, draggable: true },
   { key: 'staffType', label: 'Staff Type', sortable: true, hideable: true, draggable: true },
-  { key: 'status', label: 'Status', sortable: true, hideable: true, draggable: true, width: '100px' }
+  { key: 'status', label: 'Status', sortable: true, hideable: true, draggable: true, width: '100px' },
+  { key: 'blockedBy', label: 'Blocked By', sortable: false, hideable: true, draggable: true },
+  { key: 'approveReject', label: 'Blacklist Approve/Reject', sortable: false, hideable: false, draggable: false, width: '160px', excludeFromExport: true }
 ];
 
 const getStatusBadgeColor = (status: string) => {
@@ -160,42 +161,42 @@ export const StaffsDashboard = () => {
   }, []);
 
   // Fetch staff data from API
-  useEffect(() => {
-    const loadStaffsData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        let response;
-        if (activeSearchQuery.trim()) {
-          response = await searchSocietyStaffs(activeSearchQuery, currentPage, activeFilters);
-        } else {
-          response = await fetchSocietyStaffs(currentPage, undefined, activeFilters);
-        }
-        
-        // Handle both old and new API response formats
-        const staffsList = response.data || response.society_staffs || [];
-        
-        setApiStaffsData(staffsList as NewSocietyStaff[]);
-        
-        // Normalize pagination data
-        setPagination({
-          current_page: response.pagination.current_page || response.pagination.page || currentPage,
-          total_count: response.pagination.total_count,
-          total_pages: response.pagination.total_pages
-        });
-      } catch (err) {
-        console.error('❌ Error loading staffs data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load staffs data');
-        toast.error('Failed to load staffs data');
-      } finally {
-        setLoading(false);
-        setIsSearching(false);
-      }
-    };
+  const loadStaffsData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    loadStaffsData();
+      let response;
+      if (activeSearchQuery.trim()) {
+        response = await searchSocietyStaffs(activeSearchQuery, currentPage, activeFilters);
+      } else {
+        response = await fetchSocietyStaffs(currentPage, undefined, activeFilters);
+      }
+
+      // Handle both old and new API response formats
+      const staffsList = response.data || response.society_staffs || [];
+
+      setApiStaffsData(staffsList as NewSocietyStaff[]);
+
+      // Normalize pagination data
+      setPagination({
+        current_page: response.pagination.current_page || response.pagination.page || currentPage,
+        total_count: response.pagination.total_count,
+        total_pages: response.pagination.total_pages
+      });
+    } catch (err) {
+      console.error('❌ Error loading staffs data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load staffs data');
+      toast.error('Failed to load staffs data');
+    } finally {
+      setLoading(false);
+      setIsSearching(false);
+    }
   }, [currentPage, activeSearchQuery, activeFilters]);
+
+  useEffect(() => {
+    loadStaffsData();
+  }, [loadStaffsData]);
 
   // Pagination handlers
   const handlePreviousPage = () => {
@@ -418,6 +419,32 @@ export const StaffsDashboard = () => {
     // Add delete functionality here
   };
 
+  const [processingStaffId, setProcessingStaffId] = useState<string | null>(null);
+
+  const handleApproveBlock = async (staffId: string) => {
+    setProcessingStaffId(staffId);
+    try {
+      await staffService.approveBlockedStaff(parseInt(staffId, 10));
+      await loadStaffsData();
+    } catch (error) {
+      // Error already toasted in staffService
+    } finally {
+      setProcessingStaffId(null);
+    }
+  };
+
+  const handleRejectBlock = async (staffId: string) => {
+    setProcessingStaffId(staffId);
+    try {
+      await staffService.rejectBlockedStaff(parseInt(staffId, 10));
+      await loadStaffsData();
+    } catch (error) {
+      // Error already toasted in staffService
+    } finally {
+      setProcessingStaffId(null);
+    }
+  };
+
   const handleStaffSelection = (staffId: string, checked: boolean) => {
     setSelectedStaffs(prev => 
       checked 
@@ -445,7 +472,6 @@ export const StaffsDashboard = () => {
         mobile: staff.mobile || '--',
         staffId: staff.staff_id || '--',
         workType: staff.work_type || '--',
-        companyName: staff.company_name || '--',
         createdAt: staff.created_at_formatted || staff.created_at || '--',
         staffType: staff.staff_type || '--',
         status: staff.is_blocked ? 'Blocked' : (staff.status?.label || 'Unknown'),
@@ -453,6 +479,9 @@ export const StaffsDashboard = () => {
         qrCodeUrl: staff.qr_code_url || '',
         associatedFlats: flats,
         rawStatus: staff.status?.value || 0,
+        isBlocked: !!staff.is_blocked,
+        blockedBy: staff.blocked_by_user_name || staff.block_requested_by_user_name || '--',
+        hasBlockRequest: !!staff.block_requested_by_user_name,
         isIn: false
       };
     });
@@ -539,13 +568,42 @@ export const StaffsDashboard = () => {
     mobile: staff.mobile,
     staffId: staff.staffId,
     workType: staff.workType,
-    companyName: staff.companyName,
     createdAt: staff.createdAt,
     staffType: staff.staffType,
     status: (
       <Badge className={getStatusBadgeColor(staff.status)}>
         {staff.status}
       </Badge>
+    ),
+    blockedBy: staff.blockedBy,
+    approveReject: staff.hasBlockRequest && !staff.isBlocked ? (
+      <div className="flex justify-center gap-2">
+        <Button
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleApproveBlock(staff.id);
+          }}
+          disabled={processingStaffId === staff.id}
+          className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+        >
+          Yes
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRejectBlock(staff.id);
+          }}
+          disabled={processingStaffId === staff.id}
+          className="h-8 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50"
+        >
+          No
+        </Button>
+      </div>
+    ) : (
+      <span className="text-sm text-gray-600 flex justify-center">{staff.isBlocked ? 'Yes' : 'No'}</span>
     )
   });
 
