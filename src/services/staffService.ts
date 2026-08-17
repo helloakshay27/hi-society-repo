@@ -163,6 +163,8 @@ export interface SocietyStaffDetails {
   work_type_name: string;
   status_text: string;
   is_blocked?: boolean | null;
+  blocked_by_user_name?: string | null;
+  block_reason?: string | null;
   staff_image_url: string;
   qr_code_present: boolean;
   qr_code_url: string | null;
@@ -238,6 +240,8 @@ export interface StaffDetailsApiResponse {
       label: string;
     };
     is_blocked?: boolean | null;
+    blocked_by_user_name?: string | null;
+    block_reason?: string | null;
     associated_flats: unknown[];
     actions: {
       view_url: string;
@@ -528,6 +532,8 @@ export const staffService = {
         work_type_name: staff.work_type,
         status_text: staff.is_blocked ? 'Blocked' : (staff.status?.label ?? ''),
         is_blocked: staff.is_blocked ?? null,
+        blocked_by_user_name: staff.blocked_by_user_name ?? null,
+        block_reason: staff.block_reason ?? null,
         staff_image_url: staff.image_url,
         qr_code_present: !!staff.qr_code_url,
         qr_code_url: staff.qr_code_url,
@@ -844,6 +850,60 @@ export const staffService = {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP';
       console.error('Error sending OTP:', error);
+      toast.error(errorMessage);
+      throw error;
+    }
+  },
+
+  // Approve a staff block request
+  approveBlockedStaff: async (staffId: number): Promise<{ message?: string }> => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/approve_blockstaff/${staffId}.json`, {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to approve staff block');
+      }
+
+      toast.success(data?.message || 'Staff block approved successfully');
+      return data;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to approve staff block';
+      console.error('Error approving staff block:', error);
+      toast.error(errorMessage);
+      throw error;
+    }
+  },
+
+  // Reject a staff block request
+  rejectBlockedStaff: async (staffId: number): Promise<{ message?: string }> => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/reject_blockstaff/${staffId}.json`, {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to reject staff block');
+      }
+
+      toast.success(data?.message || 'Staff block rejected successfully');
+      return data;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to reject staff block';
+      console.error('Error rejecting staff block:', error);
       toast.error(errorMessage);
       throw error;
     }
