@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
     ArrowLeft,
     CalendarDays,
+    CalendarIcon,
     CreditCard,
     DollarSign,
     FileImage,
@@ -29,6 +30,21 @@ import {
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
 import axios from "axios";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import TailwindMultiSelect from "@/components/TailwindMultiSelect";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+
+const WEEKDAY_OPTIONS = [
+    { label: "Monday", value: "Monday" },
+    { label: "Tuesday", value: "Tuesday" },
+    { label: "Wednesday", value: "Wednesday" },
+    { label: "Thursday", value: "Thursday" },
+    { label: "Friday", value: "Friday" },
+    { label: "Saturday", value: "Saturday" },
+    { label: "Sunday", value: "Sunday" },
+];
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -125,11 +141,14 @@ export const EditBookingSetupClubPage = () => {
     >([]);
     const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
     const [deletedCoverImageId, setDeletedCoverImageId] = useState<number | null>(null);
-    const [deletedBlockDayIds, setDeletedBlockDayIds] = useState<number[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>(
         {}
     );
+    const [blockDaySaving, setBlockDaySaving] = useState<{ [key: number]: boolean }>(
+        {}
+    );
+    const [deletingBlockDayId, setDeletingBlockDayId] = useState<number | null>(null);
 
     console.log(existingBookingAttachments);
 
@@ -223,6 +242,7 @@ export const EditBookingSetupClubPage = () => {
             blockReason: string;
             selectedSlots: number[];
             disabledSlots: Array<{ id: number; ampm: string }>;
+            selectedDays: string[];
         }>,
     });
 
@@ -814,69 +834,8 @@ export const EditBookingSetupClubPage = () => {
                 });
             }
 
-            // Block Days - Handle multiple block day records
-            console.log("=== Preparing Block Days Payload ===");
-            formData.blockDays.forEach((blockDay, index) => {
-                console.log(`Block day ${index}:`, {
-                    id: blockDay.id,
-                    startDate: blockDay.startDate,
-                    dayType: blockDay.dayType,
-                    selectedSlots: blockDay.selectedSlots,
-                    selectedSlotsCount: blockDay.selectedSlots?.length || 0,
-                });
-
-                // Include ID only if it exists (existing block day from API)
-                if (blockDay.id) {
-                    formDataToSend.append(
-                        `facility_setup[facility_blockings_attributes][][id]`,
-                        blockDay.id.toString()
-                    );
-                }
-
-                if (blockDay.startDate) {
-                    formDataToSend.append(
-                        `facility_setup[facility_blockings_attributes][][ondate]`,
-                        blockDay.startDate
-                    );
-                }
-
-                formDataToSend.append(
-                    `facility_setup[facility_blockings_attributes][][reason]`,
-                    blockDay.blockReason
-                );
-
-                // formDataToSend.append(
-                //     `facility_setup[reason]`,
-                //     blockDay.blockReason
-                // );
-
-                if (
-                    blockDay.dayType === "selectedSlots" &&
-                    blockDay.selectedSlots &&
-                    blockDay.selectedSlots.length > 0
-                ) {
-                    blockDay.selectedSlots.forEach((slotId) => {
-                        formDataToSend.append(
-                            `facility_setup[facility_blockings_attributes][][block_slot][]`,
-                            slotId.toString()
-                        );
-                    });
-                }
-            });
-
-            // Handle deleted block days
-            if (deletedBlockDayIds.length > 0) {
-                deletedBlockDayIds.forEach((id) => {
-                    formDataToSend.append(
-                        `facility_setup[facility_blockings_attributes][][id]`,
-                        id.toString()
-                    );
-                    formDataToSend.append(
-                        `facility_setup[facility_blockings_attributes][][_destroy]`,
-                        "true"
-                    );
-                });
-            }
+            // Block Days are saved via a separate block_days.json call (submitBlockDay),
+            // not bundled into this facility_setup submit.
 
             // Booking Window Configs
             formDataToSend.append(
@@ -1302,7 +1261,8 @@ export const EditBookingSetupClubPage = () => {
                     (data.facility_blockings || []).map((blocking: any) => ({
                         id: blocking.facility_blocking?.id,
                         startDate: blocking.facility_blocking?.ondate || "",
-                        endDate: "",
+                        endDate: blocking.facility_blocking?.ondate || "",
+                        selectedDays: blocking.facility_blocking?.days || [],
                         dayType:
                             blocking.facility_blocking?.block_slot &&
                                 blocking.facility_blocking?.block_slot.length > 0
@@ -1496,9 +1456,17 @@ export const EditBookingSetupClubPage = () => {
                     `Slots fetched for block day ${blockIndex}:`,
                     response.data.slots
                 );
+                // Normalize: the API sometimes omits `id`/`ampm` on the slot itself and
+                // nests them under `slot`, or uses `Index` instead of `id`. Without this,
+                // multiple slots can end up with the same (undefined) id, which makes
+                // checking one checkbox appear to check every slot sharing that id.
+                const normalizedSlots = response.data.slots.map((s: any) => ({
+                    id: s.id ?? s.Index ?? s.slot?.id ?? s.slot?.Index,
+                    ampm: s.ampm ?? s.slot?.ampm ?? s.time,
+                }));
                 setBlockDaySlots((prev) => ({
                     ...prev,
-                    [blockIndex]: response.data.slots,
+                    [blockIndex]: normalizedSlots,
                 }));
             }
         } catch (error) {
@@ -1519,11 +1487,143 @@ export const EditBookingSetupClubPage = () => {
             blockReason: "",
             selectedSlots: [],
             disabledSlots: [],
+            selectedDays: [],
         };
         setFormData({
             ...formData,
             blockDays: [...formData.blockDays, newBlockDay],
         });
+    };
+
+    const submitBlockDay = async (blockIndex: number) => {
+        const blockDay = formData.blockDays[blockIndex];
+
+        if (!blockDay.startDate) {
+            toast.error("Please select a date or date range");
+            return;
+        }
+        if (!blockDay.blockReason) {
+            toast.error("Please enter a block reason");
+            return;
+        }
+
+        const payload = new URLSearchParams();
+        if (blockDay.endDate && blockDay.endDate !== blockDay.startDate) {
+            payload.append("start_date", blockDay.startDate);
+            payload.append("end_date", blockDay.endDate);
+        } else {
+            payload.append("date", blockDay.startDate);
+        }
+        payload.append("reason", blockDay.blockReason);
+        (blockDay.selectedDays || []).forEach((day) => {
+            payload.append("days[]", day);
+        });
+        if (blockDay.dayType === "selectedSlots") {
+            (blockDay.selectedSlots || []).forEach((slotId) => {
+                payload.append("block_slot[]", slotId.toString());
+            });
+        }
+
+        setBlockDaySaving((prev) => ({ ...prev, [blockIndex]: true }));
+        try {
+            await axios.post(
+                `https://${baseUrl}/crm/admin/facility_setups/${id}/block_days.json`,
+                payload,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                }
+            );
+            toast.success("Block day saved successfully");
+            await fetchFacilityDetails();
+        } catch (error) {
+            console.error("Error saving block day:", error);
+            toast.error("Failed to save block day");
+        } finally {
+            setBlockDaySaving((prev) => ({ ...prev, [blockIndex]: false }));
+        }
+    };
+
+    const deleteBlockDay = async (blockDayId: number) => {
+        setDeletingBlockDayId(blockDayId);
+        try {
+            await axios.delete(
+                `https://${baseUrl}/crm/admin/facility_setups/${id}/block_days.json`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    params: {
+                        block_day_id: blockDayId,
+                    },
+                }
+            );
+            toast.success("Block day removed successfully");
+            await fetchFacilityDetails();
+        } catch (error) {
+            console.error("Error removing block day:", error);
+            toast.error("Failed to remove block day");
+        } finally {
+            setDeletingBlockDayId(null);
+        }
+    };
+
+    const blockDayColumns = [
+        { key: "srNo", label: "Sr. No.", sortable: false },
+        { key: "date", label: "Date", sortable: false },
+        { key: "type", label: "Type", sortable: false },
+        { key: "slots", label: "Slots", sortable: false },
+        { key: "days", label: "Days", sortable: false },
+        { key: "reason", label: "Reason", sortable: false },
+        { key: "actions", label: "Actions", sortable: false },
+    ];
+
+    const renderBlockDayCell = (
+        item: (typeof formData.blockDays)[number],
+        columnKey: string,
+        index: number
+    ) => {
+        switch (columnKey) {
+            case "srNo":
+                return index + 1;
+            case "date":
+                if (!item.startDate) return "-";
+                if (item.endDate && item.endDate !== item.startDate) {
+                    return `${format(new Date(item.startDate), "MM/dd/yyyy")} - ${format(
+                        new Date(item.endDate),
+                        "MM/dd/yyyy"
+                    )}`;
+                }
+                return format(new Date(item.startDate), "MM/dd/yyyy");
+            case "type":
+                return item.dayType === "selectedSlots" ? "Selected Slots" : "Entire Day";
+            case "slots":
+                return item.dayType === "selectedSlots"
+                    ? item.disabledSlots?.map((s) => s.ampm).join(", ") || "-"
+                    : "-";
+            case "days":
+                return item.selectedDays && item.selectedDays.length > 0
+                    ? item.selectedDays.join(", ")
+                    : "Every day";
+            case "reason":
+                return item.blockReason || "-";
+            case "actions":
+                return (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteBlockDay(item.id as number)}
+                        disabled={deletingBlockDayId === item.id}
+                        className="text-red-500 hover:text-red-700 hover:bg-transparent"
+                    >
+                        {deletingBlockDayId === item.id ? "Removing..." : "Remove"}
+                    </Button>
+                );
+            default:
+                return null;
+        }
     };
 
     return (
@@ -3850,6 +3950,9 @@ export const EditBookingSetupClubPage = () => {
                                 .map((blockDay, reverseIndex) => {
                                     const blockIndex =
                                         formData.blockDays.length - 1 - reverseIndex;
+                                    if (blockDay.id) {
+                                        return null;
+                                    }
                                     return (
                                         <div
                                             key={blockIndex}
@@ -3862,10 +3965,6 @@ export const EditBookingSetupClubPage = () => {
                                                     </span>
                                                     <button
                                                         onClick={() => {
-                                                            const removedBlockDay = formData.blockDays[blockIndex];
-                                                            if (removedBlockDay.id) {
-                                                                setDeletedBlockDayIds(prev => [...prev, removedBlockDay.id]);
-                                                            }
                                                             setFormData({
                                                                 ...formData,
                                                                 blockDays: formData.blockDays.filter(
@@ -3880,34 +3979,131 @@ export const EditBookingSetupClubPage = () => {
                                                 </div>
                                             )}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <TextField
-                                                    label="Date"
-                                                    type="date"
-                                                    value={blockDay.startDate}
-                                                    onChange={(e) => {
-                                                        const newBlockDays = [...formData.blockDays];
-                                                        newBlockDays[blockIndex].startDate = e.target.value;
-                                                        setFormData({
-                                                            ...formData,
-                                                            blockDays: newBlockDays,
-                                                        });
-                                                        // Fetch slots automatically if selectedSlots is active
-                                                        if (
-                                                            blockDay.dayType === "selectedSlots" &&
-                                                            e.target.value
-                                                        ) {
-                                                            fetchBlockDaySlots(
-                                                                id!,
-                                                                e.target.value,
-                                                                blockIndex
-                                                            );
-                                                        }
-                                                    }}
-                                                    variant="outlined"
-                                                    InputLabelProps={{
-                                                        shrink: true,
-                                                    }}
-                                                />
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                                        Date
+                                                    </label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <button
+                                                                type="button"
+                                                                className="w-full h-[45px] inline-flex items-center rounded-md border border-gray-300 bg-white px-3 text-sm text-left hover:bg-gray-50"
+                                                            >
+                                                                <CalendarIcon className="mr-2 h-4 w-4 text-gray-500 shrink-0" />
+                                                                {blockDay.startDate ? (
+                                                                    blockDay.endDate &&
+                                                                        blockDay.endDate !== blockDay.startDate ? (
+                                                                        <>
+                                                                            {format(
+                                                                                new Date(blockDay.startDate),
+                                                                                "MM/dd/yyyy"
+                                                                            )}{" "}
+                                                                            -{" "}
+                                                                            {format(
+                                                                                new Date(blockDay.endDate),
+                                                                                "MM/dd/yyyy"
+                                                                            )}
+                                                                        </>
+                                                                    ) : (
+                                                                        format(
+                                                                            new Date(blockDay.startDate),
+                                                                            "MM/dd/yyyy"
+                                                                        )
+                                                                    )
+                                                                ) : (
+                                                                    <span className="text-gray-400">
+                                                                        Pick a date range
+                                                                    </span>
+                                                                )}
+                                                            </button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar
+                                                                initialFocus
+                                                                mode="range"
+                                                                defaultMonth={
+                                                                    blockDay.startDate
+                                                                        ? new Date(blockDay.startDate)
+                                                                        : undefined
+                                                                }
+                                                                selected={{
+                                                                    from: blockDay.startDate
+                                                                        ? new Date(blockDay.startDate)
+                                                                        : undefined,
+                                                                    to: blockDay.endDate
+                                                                        ? new Date(blockDay.endDate)
+                                                                        : undefined,
+                                                                }}
+                                                                onSelect={(range) => {
+                                                                    const newBlockDays = [...formData.blockDays];
+                                                                    const startDate = range?.from
+                                                                        ? format(range.from, "yyyy-MM-dd")
+                                                                        : "";
+                                                                    const endDate = range?.to
+                                                                        ? format(range.to, "yyyy-MM-dd")
+                                                                        : startDate;
+                                                                    newBlockDays[blockIndex].startDate = startDate;
+                                                                    newBlockDays[blockIndex].endDate = endDate;
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        blockDays: newBlockDays,
+                                                                    });
+                                                                    // Fetch slots automatically if selectedSlots is active
+                                                                    if (
+                                                                        blockDay.dayType === "selectedSlots" &&
+                                                                        startDate
+                                                                    ) {
+                                                                        fetchBlockDaySlots(
+                                                                            id!,
+                                                                            startDate,
+                                                                            blockIndex
+                                                                        );
+                                                                    }
+                                                                }}
+                                                                numberOfMonths={2}
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                                        Block Reason
+                                                    </label>
+                                                    <Textarea
+                                                        placeholder="Please mention block reason"
+                                                        value={blockDay.blockReason}
+                                                        onChange={(e) => {
+                                                            const newBlockDays = [...formData.blockDays];
+                                                            newBlockDays[blockIndex].blockReason =
+                                                                e.target.value;
+                                                            setFormData({
+                                                                ...formData,
+                                                                blockDays: newBlockDays,
+                                                            });
+                                                        }}
+                                                        className="min-h-[100px]"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <TailwindMultiSelect
+                                                        label="Day"
+                                                        options={WEEKDAY_OPTIONS}
+                                                        selected={blockDay.selectedDays || []}
+                                                        onChange={(values) => {
+                                                            const newBlockDays = [...formData.blockDays];
+                                                            newBlockDays[blockIndex].selectedDays = values;
+                                                            setFormData({
+                                                                ...formData,
+                                                                blockDays: newBlockDays,
+                                                            });
+                                                        }}
+                                                        placeholder="Every day in range"
+                                                    />
+                                                </div>
                                             </div>
 
                                             <div className="flex gap-6 px-1">
@@ -4033,7 +4229,7 @@ export const EditBookingSetupClubPage = () => {
                                                                                 htmlFor={`slot-${blockIndex}-${slot.id}`}
                                                                                 className="cursor-pointer text-sm font-medium"
                                                                             >
-                                                                                {slot.ampm || slot.slot.ampm}
+                                                                                {slot.ampm}
                                                                             </label>
                                                                         </div>
                                                                     );
@@ -4044,29 +4240,29 @@ export const EditBookingSetupClubPage = () => {
                                                 </div>
                                             )}
 
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                                    Block Reason
-                                                </label>
-                                                <Textarea
-                                                    placeholder="Please mention block reason"
-                                                    value={blockDay.blockReason}
-                                                    onChange={(e) => {
-                                                        const newBlockDays = [...formData.blockDays];
-                                                        newBlockDays[blockIndex].blockReason =
-                                                            e.target.value;
-                                                        setFormData({
-                                                            ...formData,
-                                                            blockDays: newBlockDays,
-                                                        });
-                                                    }}
-                                                    className="min-h-[100px]"
-                                                />
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    onClick={() => submitBlockDay(blockIndex)}
+                                                    disabled={!!blockDaySaving[blockIndex]}
+                                                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                                                >
+                                                    {blockDaySaving[blockIndex] ? "Saving..." : "Block"}
+                                                </Button>
                                             </div>
                                         </div>
                                     );
                                 })}
                         </div>
+
+                        <EnhancedTable
+                            data={formData.blockDays.filter((bd) => !!bd.id)}
+                            columns={blockDayColumns}
+                            renderCell={renderBlockDayCell}
+                            pagination={false}
+                            emptyMessage="No blocked days yet"
+                            hideColumnsButton={true}
+                            hideTableSearch={true}
+                        />
                     </div>
 
                     <div className="bg-white rounded-lg border-2 p-6 space-y-6">
