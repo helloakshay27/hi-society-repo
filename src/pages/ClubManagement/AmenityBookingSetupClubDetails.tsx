@@ -39,6 +39,8 @@ import axios from "axios";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { format } from "date-fns";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -203,6 +205,7 @@ export const BookingSetupDetailClubPage = () => {
       blockReason: string;
       selectedSlots: string[];
       slots: Array<{ id: number; ampm: string }>;
+      selectedDays: string[];
     }>,
   });
   const [departments, setDepartments] = useState([]);
@@ -502,7 +505,7 @@ export const BookingSetupDetailClubPage = () => {
         blockDays: response?.facility_blockings?.map((blocking: any) => ({
           id: blocking.facility_blocking?.id,
           startDate: blocking.facility_blocking?.ondate || "",
-          endDate: "",
+          endDate: blocking.facility_blocking?.ondate || "",
           dayType: blocking.facility_blocking?.block_slot && blocking.facility_blocking?.block_slot.length > 0 ? "selectedSlots" : "entireDay",
           blockReason: blocking.facility_blocking?.reason || "",
           selectedSlots: blocking.facility_blocking?.block_slot || [],
@@ -510,6 +513,7 @@ export const BookingSetupDetailClubPage = () => {
             id: detail.id,
             ampm: detail.label
           })) || [],
+          selectedDays: blocking.facility_blocking?.days || [],
         })) || [],
       });
 
@@ -629,6 +633,49 @@ export const BookingSetupDetailClubPage = () => {
     fetchInventories();
     fetchFacilityBookingDetails();
   }, []);
+
+  const blockDayColumns = [
+    { key: "srNo", label: "Sr. No.", sortable: false },
+    { key: "date", label: "Date", sortable: false },
+    { key: "type", label: "Type", sortable: false },
+    { key: "slots", label: "Slots", sortable: false },
+    { key: "days", label: "Days", sortable: false },
+    { key: "reason", label: "Reason", sortable: false },
+  ];
+
+  const renderBlockDayCell = (
+    item: (typeof formData.blockDays)[number],
+    columnKey: string,
+    index: number
+  ) => {
+    switch (columnKey) {
+      case "srNo":
+        return index + 1;
+      case "date":
+        if (!item.startDate) return "-";
+        if (item.endDate && item.endDate !== item.startDate) {
+          return `${format(new Date(item.startDate), "MM/dd/yyyy")} - ${format(
+            new Date(item.endDate),
+            "MM/dd/yyyy"
+          )}`;
+        }
+        return format(new Date(item.startDate), "MM/dd/yyyy");
+      case "type":
+        return item.dayType === "selectedSlots" ? "Selected Slots" : "Entire Day";
+      case "slots":
+        return item.dayType === "selectedSlots"
+          ? item.slots?.map((s) => s.ampm).join(", ") || "-"
+          : "-";
+      case "days":
+        return item.selectedDays && item.selectedDays.length > 0
+          ? item.selectedDays.join(", ")
+          : "Every day";
+      case "reason":
+        return item.blockReason || "-";
+      default:
+        return null;
+    }
+  };
 
   return (
     <ThemeProvider theme={muiTheme}>
@@ -1289,7 +1336,7 @@ export const BookingSetupDetailClubPage = () => {
           </div>
 
           {/* Block Days Section */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="bg-white rounded-lg border-2 p-6 space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
@@ -1297,96 +1344,15 @@ export const BookingSetupDetailClubPage = () => {
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Block Days</h3>
             </div>
 
-            {formData.blockDays.length > 0 ? (
-              <div className="space-y-6">
-                {formData.blockDays.map((blockDay, index) => (
-                  <div key={blockDay.id || index} className="p-4 border rounded-lg space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-700">Block Day {index + 1}</h4>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <TextField
-                        label="Date"
-                        type="date"
-                        value={blockDay.startDate}
-                        variant="outlined"
-                        InputProps={{ readOnly: true }}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex gap-6 px-1">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={`entireDay-${index}`}
-                          name={`dayType-${index}`}
-                          checked={blockDay.dayType === "entireDay"}
-                          disabled
-                          className="text-blue-600"
-                        />
-                        <label htmlFor={`entireDay-${index}`}>Entire Day</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={`selectedSlots-${index}`}
-                          name={`dayType-${index}`}
-                          checked={blockDay.dayType === "selectedSlots"}
-                          disabled
-                          className="text-blue-600"
-                        />
-                        <label htmlFor={`selectedSlots-${index}`}>Selected Slots</label>
-                      </div>
-                    </div>
-
-                    {blockDay.dayType === "selectedSlots" && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Select Slots to Block</label>
-                        {blockDay.slots && blockDay.slots.length > 0 ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {blockDay.slots.map((slot: any) => {
-                              const isBlocked = blockDay.selectedSlots.includes(slot.id.toString());
-                              return (
-                                <div key={slot.id} className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
-                                  <input
-                                    type="checkbox"
-                                    id={`block-slot-${index}-${slot.id}`}
-                                    checked={isBlocked}
-                                    disabled
-                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-not-allowed"
-                                  />
-                                  <label
-                                    htmlFor={`block-slot-${index}-${slot.id}`}
-                                    className="text-sm font-medium cursor-not-allowed"
-                                  >
-                                    {slot.ampm}
-                                  </label>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="text-gray-500 text-sm">No slots selected</div>
-                        )}
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Block Reason</label>
-                      <Textarea
-                        value={blockDay.blockReason}
-                        className="min-h-[100px]"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No block days configured</p>
-            )}
+            <EnhancedTable
+              data={formData.blockDays}
+              columns={blockDayColumns}
+              renderCell={renderBlockDayCell}
+              pagination={false}
+              emptyMessage="No block days configured"
+              hideColumnsButton={true}
+              hideTableSearch={true}
+            />
           </div>
 
           {/* Configure Payment */}
