@@ -22,6 +22,7 @@ import { AdminLayout } from "./components/AdminLayout";
 import { PWALayoutWrapper } from "./components/PWALayoutWrapper";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Dashboard } from "./pages/Dashboard";
+const TicketsDashboardPage = lazy(() => import("./pages/TicketsDashboardPage"));
 const DashboardConfiguration = lazy(() => import("./pages/DashboardConfiguration"));
 const ParkingBookingListSiteWise = lazy(() => import("./pages/ParkingBookingListSiteWise"));
 const ConditionalParkingPage = lazy(() => import("./pages/ConditionalParkingPage"));
@@ -1611,6 +1612,15 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <Dashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/tickets-dashboard"
+                        element={
+                          <ProtectedRoute>
+                            <TicketsDashboardPage />
                           </ProtectedRoute>
                         }
                       />
