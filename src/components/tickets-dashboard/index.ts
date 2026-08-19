@@ -1,9 +1,12 @@
 export { ChartCardShell, SampleDataBadge } from './ChartCardShell';
+export { TicketsDashboardGrid } from './TicketsDashboardGrid';
+export { DEFAULT_TICKETS_GRID_LAYOUT } from './ticketsDashboardGridLayout';
 export { PieChartCard, type PieChartSegment } from './PieChartCard';
 export { BarChartCard, type BarChartSeries } from './BarChartCard';
 export { TICKETS_CHART_PALETTE, getTicketsChartColor } from './colors';
 export { DashboardTopNav } from './DashboardTopNav';
-export { TicketsKpiTilesRow } from './TicketsKpiTilesRow';
+export { TicketsKpiTile } from './TicketsKpiTilesRow';
+export { useTicketsOverview } from './useTicketsOverview';
 export { TicketsPieCard, type TicketsPieMetric } from './TicketsPieCard';
 export { TicketsBarCard, type TicketsBarMetric } from './TicketsBarCard';
 export { ActivityFeedCard } from './ActivityFeedCard';

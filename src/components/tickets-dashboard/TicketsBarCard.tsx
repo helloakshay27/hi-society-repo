@@ -6,7 +6,7 @@ import {
   TicketDistributionResponse,
   TicketOverviewResponse,
 } from '@/services/ticketReportsAPI';
-import { REACTIVE_COLOR, PROACTIVE_COLOR, ACHIEVED_COLOR, BREACHED_COLOR, getTicketsChartColor } from './colors';
+import { REACTIVE_COLOR, PROACTIVE_COLOR, TAT_ACHIEVED_COLOR, TAT_BREACHED_COLOR, getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
 import { SAMPLE_DELIVERY_VISITORS } from './sampleData';
 
@@ -174,10 +174,10 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
       const variant = metric === 'response-tat' ? 'response' : 'resolution';
       const tat = overview?.tat?.[variant];
       data = [
-        { name: 'Achieved', value: tat?.achieved ?? 0, color: ACHIEVED_COLOR },
-        { name: 'Breached', value: tat?.breached ?? 0, color: BREACHED_COLOR },
+        { name: 'Achieved', value: tat?.achieved ?? 0, color: TAT_ACHIEVED_COLOR },
+        { name: 'Breached', value: tat?.breached ?? 0, color: TAT_BREACHED_COLOR },
       ];
-      series = [{ dataKey: 'value', name: BAR_METRIC_META[metric].title, color: ACHIEVED_COLOR }];
+      series = [{ dataKey: 'value', name: BAR_METRIC_META[metric].title, color: TAT_ACHIEVED_COLOR }];
       categoryKey = 'name';
       colorKey = 'color';
       break;

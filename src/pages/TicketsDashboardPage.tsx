@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import {
   DashboardTopNav,
-  TicketsKpiTilesRow,
+  TicketsKpiTile,
+  useTicketsOverview,
   TicketsPieCard,
   TicketsBarCard,
   ActivityFeedCard,
   TicketsAgeingMatrixCard,
   CheckListCard,
+  TicketsDashboardGrid,
   type TicketsDashboardDateRange,
 } from '@/components/tickets-dashboard';
 
@@ -19,6 +21,8 @@ const getDefaultDateRange = (): TicketsDashboardDateRange => {
 
 const TicketsDashboardPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<TicketsDashboardDateRange>(getDefaultDateRange);
+
+  const overview = useTicketsOverview(dateRange);
 
   const handleStartDateChange = (value: string) => {
     if (!value) return;
@@ -35,43 +39,71 @@ const TicketsDashboardPage: React.FC = () => {
       <DashboardTopNav dateRange={dateRange} onStartDateChange={handleStartDateChange} onEndDateChange={handleEndDateChange} />
 
       <div className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 gap-6">
-          <TicketsKpiTilesRow dateRange={dateRange} />
+        <TicketsDashboardGrid>
+          <div key="kpi-open">
+            <TicketsKpiTile label="Open Tickets" value={overview?.ticket_status.total_open} bg="bg-brand-purple-bg" />
+          </div>
+          <div key="kpi-closed">
+            <TicketsKpiTile label="Closed Tickets" value={overview?.ticket_status.total_closed} bg="bg-brand-teal-bg" />
+          </div>
+          <div key="kpi-total">
+            <TicketsKpiTile label="Total Tickets" value={overview?.total_tickets} bg="bg-brand-error-bg" />
+          </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div key="tickets-overview">
             <TicketsPieCard metric="tickets-overview" dateRange={dateRange} />
+          </div>
+          <div key="proactive-reactive">
             <TicketsPieCard metric="proactive-reactive" dateRange={dateRange} />
           </div>
 
-          <ActivityFeedCard />
+          <div key="activity-feed">
+            <ActivityFeedCard />
+          </div>
 
-          <TicketsBarCard metric="unit-category" dateRange={dateRange} />
-          <TicketsBarCard metric="unit-category-proactive" dateRange={dateRange} />
+          <div key="unit-category">
+            <TicketsBarCard metric="unit-category" dateRange={dateRange} />
+          </div>
+          <div key="unit-category-proactive">
+            <TicketsBarCard metric="unit-category-proactive" dateRange={dateRange} />
+          </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div key="common-area-category">
             <TicketsBarCard metric="common-area-category" dateRange={dateRange} />
+          </div>
+          <div key="common-area-category-proactive">
             <TicketsBarCard metric="common-area-category-proactive" dateRange={dateRange} />
           </div>
 
-          <TicketsAgeingMatrixCard dateRange={dateRange} />
+          <div key="ageing-matrix">
+            <TicketsAgeingMatrixCard dateRange={dateRange} />
+          </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div key="response-tat">
             <TicketsBarCard metric="response-tat" dateRange={dateRange} />
+          </div>
+          <div key="resolution-tat">
             <TicketsBarCard metric="resolution-tat" dateRange={dateRange} />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div key="fm-vs-project">
             <TicketsPieCard metric="fm-vs-project" dateRange={dateRange} />
+          </div>
+          <div key="golden-tickets">
             <TicketsPieCard metric="golden-tickets" dateRange={dateRange} />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div key="complaint-mode">
             <TicketsBarCard metric="complaint-mode" dateRange={dateRange} />
+          </div>
+          <div key="delivery-visitors">
             <TicketsBarCard metric="delivery-visitors" dateRange={dateRange} />
           </div>
 
-          <CheckListCard />
-        </div>
+          <div key="checklist">
+            <CheckListCard />
+          </div>
+        </TicketsDashboardGrid>
       </div>
     </div>
   );

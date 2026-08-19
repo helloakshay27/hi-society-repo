@@ -28,7 +28,7 @@ export const ChartCardShell: React.FC<ChartCardShellProps> = ({
   rightSlot,
 }) => {
   return (
-    <Card className={`border border-brand-border bg-white shadow-system-sm ${className}`}>
+    <Card className={`flex h-full flex-col border border-brand-border bg-white shadow-system-sm ${className}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -38,13 +38,13 @@ export const ChartCardShell: React.FC<ChartCardShellProps> = ({
           {rightSlot}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-auto">
         {loading ? (
-          <div className="flex h-48 items-center justify-center text-brand-text-light">
+          <div className="flex h-full min-h-48 items-center justify-center text-brand-text-light">
             <Loader2 className="h-5 w-5 animate-spin" />
           </div>
         ) : error ? (
-          <div className="flex h-48 flex-col items-center justify-center gap-1 text-center text-brand-body-5 text-brand">
+          <div className="flex h-full min-h-48 flex-col items-center justify-center gap-1 text-center text-brand-body-5 text-brand">
             <span>Failed to load this card.</span>
             <span className="text-brand-text-light">{error}</span>
           </div>
