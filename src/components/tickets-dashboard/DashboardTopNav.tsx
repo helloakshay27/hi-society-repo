@@ -2,8 +2,6 @@ import React from 'react';
 import { CalendarDays, Settings, Search, ChevronDown, Award, Flag } from 'lucide-react';
 import { TicketsDashboardDateRange } from './types';
 
-const OTHER_MODULES = ['Maintenance', 'Safety', 'Finance', 'CRM', 'Utility', 'Security', 'Value Added Services'];
-
 const toInputValue = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -19,7 +17,7 @@ interface DashboardTopNavProps {
 
 export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({ dateRange, onStartDateChange, onEndDateChange }) => {
   return (
-    <div className="sticky top-0 z-20 -mx-4 mb-6 border-b border-brand-border bg-white sm:-mx-6">
+    <div className="sticky top-0 z-20 mb-6 rounded-lg border border-brand-border bg-white">
       {/* Title bar */}
       <div className="flex items-center justify-between px-4 py-4 sm:px-6">
         <h1 className="text-brand-h2 font-bold text-brand-text">Dashboard View</h1>
@@ -74,15 +72,6 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({ dateRange, onS
         >
           Tickets
         </button>
-        {OTHER_MODULES.map((label) => (
-          <button
-            key={label}
-            type="button"
-            className="flex-shrink-0 whitespace-nowrap border-b-2 border-transparent px-1 py-3 text-brand-body-4 font-medium text-brand-text hover:text-brand"
-          >
-            {label}
-          </button>
-        ))}
       </div>
 
       {/* Section pill row */}

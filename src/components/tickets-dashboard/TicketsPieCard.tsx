@@ -5,7 +5,7 @@ import {
   TicketOverviewResponse,
   TicketDistributionResponse,
 } from '@/services/ticketReportsAPI';
-import { OPEN_COLOR, CLOSED_COLOR, PROACTIVE_COLOR, REACTIVE_COLOR, getTicketsChartColor } from './colors';
+import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR, PIE_PROACTIVE_COLOR, PIE_REACTIVE_COLOR, getPieChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
 
 export type TicketsPieMetric = 'tickets-overview' | 'proactive-reactive' | 'golden-tickets' | 'fm-vs-project';
@@ -68,29 +68,29 @@ export const TicketsPieCard: React.FC<TicketsPieCardProps> = ({ metric, dateRang
   switch (metric) {
     case 'tickets-overview':
       segments = [
-        { name: 'Open', value: overview?.ticket_status.total_open ?? 0, color: OPEN_COLOR },
-        { name: 'Closed', value: overview?.ticket_status.total_closed ?? 0, color: CLOSED_COLOR },
+        { name: 'Open', value: overview?.ticket_status.total_open ?? 0, color: PIE_OPEN_COLOR },
+        { name: 'Closed', value: overview?.ticket_status.total_closed ?? 0, color: PIE_CLOSED_COLOR },
       ];
       break;
     case 'proactive-reactive': {
       const pr = overview?.proactive_reactive;
       segments = [
-        { name: 'Proactive', value: (pr?.proactive.open ?? 0) + (pr?.proactive.closed ?? 0), color: PROACTIVE_COLOR },
-        { name: 'Reactive', value: (pr?.reactive.open ?? 0) + (pr?.reactive.closed ?? 0), color: REACTIVE_COLOR },
+        { name: 'Proactive', value: (pr?.proactive.open ?? 0) + (pr?.proactive.closed ?? 0), color: PIE_PROACTIVE_COLOR },
+        { name: 'Reactive', value: (pr?.reactive.open ?? 0) + (pr?.reactive.closed ?? 0), color: PIE_REACTIVE_COLOR },
       ];
       break;
     }
     case 'golden-tickets':
       segments = [
-        { name: 'Open', value: overview?.golden_user_tickets.open ?? 0, color: OPEN_COLOR },
-        { name: 'Closed', value: overview?.golden_user_tickets.closed ?? 0, color: CLOSED_COLOR },
+        { name: 'Open', value: overview?.golden_user_tickets.open ?? 0, color: PIE_OPEN_COLOR },
+        { name: 'Closed', value: overview?.golden_user_tickets.closed ?? 0, color: PIE_CLOSED_COLOR },
       ];
       break;
     case 'fm-vs-project':
       segments = (distribution?.by_issue ?? []).map((entry, i) => ({
         name: entry.issue,
         value: entry.count,
-        color: getTicketsChartColor(i),
+        color: getPieChartColor(i),
       }));
       break;
   }

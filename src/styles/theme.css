@@ -475,7 +475,7 @@ select:focus {
 
 [class*="MuiChip-outlinedPrimary"] {
   border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
+   color: #ffffff !important;
 }
 
 /* ===========================================
@@ -2352,6 +2352,16 @@ thead th,
   color: var(--color-text) !important;
   background-color: var(--color-bg) !important;
   font-weight: 600 !important;
+}
+
+.tickets-ageing-matrix-table thead th {
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.tickets-ageing-matrix-table thead th.tickets-ageing-matrix-bucket {
+  color: #ffffff !important;
 }
 
 /* Table cell text - BLACK */
