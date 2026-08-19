@@ -475,7 +475,7 @@ select:focus {
 
 [class*="MuiChip-outlinedPrimary"] {
   border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
+   color: #ffffff !important;
 }
 
 /* ===========================================
