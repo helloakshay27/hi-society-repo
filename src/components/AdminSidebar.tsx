@@ -82,10 +82,10 @@ const adminNavigationStructure = {
           //   name: "Locked Users",
           //   href: "/ops-console/settings/account/locked-users",
           // },
-          // {
-          //   name: "Manage Users",
-          //   href: "/ops-console/admin/users/manage",
-          // },
+          {
+            name: "Manage Users",
+            href: "/ops-console/admin/users/manage",
+          },
           // {
           //   name: "Occupant Users OTP",
           //   href: "/ops-console/settings/account/user-list-otp",

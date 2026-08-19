@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Edit2, X, Check, Mail, Phone, User, Shield } from "lucide-react";
-import { TextField, CircularProgress } from "@mui/material";
+import { ArrowLeft, Loader2, Edit2, X, Check, Mail, Phone, User, Shield, Building2 } from "lucide-react";
+import { TextField, CircularProgress, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { toast } from "sonner";
 import { useApiConfig } from "@/hooks/useApiConfig";
+import { getOrganizations, getCompanies } from "@/services/adminUserAPI";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+
+const labelSx = {
+  shrink: true,
+  sx: {
+    backgroundColor: "white",
+    px: 1,
+    "& .MuiFormLabel-asterisk": { color: "#C72030" },
+  },
+};
 
 interface AdminUser {
   id: number;
@@ -19,8 +30,21 @@ interface AdminUser {
   updated_at: string;
   company_name?: string | null;
   organization_id?: number | null;
+  company_id?: number | null;
   otp?: string | null;
   [key: string]: any;
+}
+
+interface Organization {
+  id: number;
+  name: string;
+  active: boolean;
+}
+
+interface Company {
+  id: number;
+  name: string;
+  organization_id: number;
 }
 
 interface FormData {
@@ -31,6 +55,8 @@ interface FormData {
   password: string;
   password_confirmation: string;
   otp: string;
+  organization_id: string;
+  company_id: string;
 }
 
 export const AdminUsersDetails = () => {
@@ -51,13 +77,77 @@ export const AdminUsersDetails = () => {
     password: "",
     password_confirmation: "",
     otp: "",
+    organization_id: "",
+    company_id: "",
   });
+
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+  const [loadingOrganizations, setLoadingOrganizations] = useState(false);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
 
   useEffect(() => {
     if (userId) {
       fetchUserDetails();
     }
+    fetchOrganizations();
+    fetchCompanies();
   }, [userId]);
+
+  // Filter companies to the selected organization, mirroring CreateAdminUserPage
+  useEffect(() => {
+    if (formData.organization_id) {
+      const filtered = companies.filter(
+        (company) =>
+          company.organization_id !== null &&
+          company.organization_id.toString() === formData.organization_id
+      );
+      setFilteredCompanies(filtered);
+      if (
+        formData.company_id &&
+        !filtered.find((c) => c.id.toString() === formData.company_id)
+      ) {
+        setFormData((prev) => ({ ...prev, company_id: "" }));
+      }
+    } else {
+      setFilteredCompanies([]);
+    }
+  }, [formData.organization_id, companies]);
+
+  const fetchOrganizations = async () => {
+    setLoadingOrganizations(true);
+    try {
+      const result = await getOrganizations();
+      if (result.success && result.data) {
+        setOrganizations(result.data);
+      } else {
+        setOrganizations([]);
+      }
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+      setOrganizations([]);
+    } finally {
+      setLoadingOrganizations(false);
+    }
+  };
+
+  const fetchCompanies = async () => {
+    setLoadingCompanies(true);
+    try {
+      const result = await getCompanies();
+      if (result.success && result.data) {
+        setCompanies(result.data);
+      } else {
+        setCompanies([]);
+      }
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      setCompanies([]);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
 
   const fetchUserDetails = async () => {
     setIsLoading(true);
@@ -71,12 +161,10 @@ export const AdminUsersDetails = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("API Response:", data);
-        
+
         // Handle nested user object response
         const userData = data.user || data;
-        console.log("User details:", userData);
-        
+
         setUser(userData);
         setFormData({
           email: userData.email || "",
@@ -86,15 +174,17 @@ export const AdminUsersDetails = () => {
           password: "",
           password_confirmation: "",
           otp: userData.otp || "",
+          organization_id: userData.organization_id ? userData.organization_id.toString() : "",
+          company_id: userData.company_id ? userData.company_id.toString() : "",
         });
       } else {
         toast.error("Failed to load user details");
-        navigate("/ops-console/admin/users");
+        navigate("/ops-console/admin/users/manage");
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
       toast.error("Error loading user details");
-      navigate("/ops-console/admin/users");
+      navigate("/ops-console/admin/users/manage");
     } finally {
       setIsLoading(false);
     }
@@ -134,6 +224,8 @@ export const AdminUsersDetails = () => {
         updateData.append("user[password_confirmation]", formData.password_confirmation);
       }
       updateData.append("user[otp]", formData.otp);
+      updateData.append("user[organization_id]", formData.organization_id);
+      updateData.append("user[company_id]", formData.company_id);
 
       const response = await fetch(getFullUrl(`/admin/users_update?id=${user.id}`), {
         method: "PUT",
@@ -171,9 +263,16 @@ export const AdminUsersDetails = () => {
         password: "",
         password_confirmation: "",
         otp: user.otp || "",
+        organization_id: user.organization_id ? user.organization_id.toString() : "",
+        company_id: user.company_id ? user.company_id.toString() : "",
       });
     }
   };
+
+  const organizationName =
+    organizations.find((org) => org.id === user?.organization_id)?.name ||
+    user?.organization_name ||
+    "-";
 
   if (isLoading) {
     return (
@@ -192,7 +291,7 @@ export const AdminUsersDetails = () => {
         <div className="text-center py-12">
           <h3 className="text-lg font-semibold text-gray-900">User not found</h3>
           <Button
-            onClick={() => navigate("/ops-console/admin/users")}
+            onClick={() => navigate("/ops-console/admin/users/manage")}
             className="mt-4 bg-[#C72030] hover:bg-[#A01020] text-white"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -205,19 +304,19 @@ export const AdminUsersDetails = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto">
         {/* Header with Background */}
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => navigate("/ops-console/admin/users")}
+            onClick={() => navigate("/ops-console/admin/users/manage")}
             className="mb-6 text-gray-600 hover:text-gray-900 hover:bg-white/50"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Users
           </Button>
 
-          <div className="bg-gradient-to-r from-[#C72030] to-[#A01020] rounded-lg p-6 text-white shadow-lg mb-6">
+          <div className="bg-gradient-to-r from-[#da7756] to-[#da7756] rounded-lg p-6 text-white shadow-lg mb-6">
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-3xl font-bold mb-2">
@@ -277,7 +376,7 @@ export const AdminUsersDetails = () => {
           {!isEditing ? (
             // View Mode
             <div className="p-6 sm:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Basic Information Card */}
                 <div>
                   <div className="flex items-center gap-2 mb-6">
@@ -289,7 +388,7 @@ export const AdminUsersDetails = () => {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                         Email Address
                       </label>
-                      <p className="text-gray-900 font-medium">{user.email}</p>
+                      <p className="text-gray-900 font-medium break-words">{user.email}</p>
                     </div>
 
                     <div className="pb-5 border-b border-gray-200 last:border-0">
@@ -312,6 +411,29 @@ export const AdminUsersDetails = () => {
                         Mobile Number
                       </label>
                       <p className="text-gray-900 font-medium">{user.mobile || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Organization & Company Card */}
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <Building2 className="w-5 h-5 text-[#C72030]" />
+                    <h2 className="text-lg font-semibold text-gray-900">Organization & Company</h2>
+                  </div>
+                  <div className="space-y-5">
+                    <div className="pb-5 border-b border-gray-200 last:border-0">
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        Organization
+                      </label>
+                      <p className="text-gray-900 font-medium">{organizationName}</p>
+                    </div>
+
+                    <div className="pb-5 border-b border-gray-200 last:border-0">
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        Company
+                      </label>
+                      <p className="text-gray-900 font-medium">{user.company_name || "-"}</p>
                     </div>
                   </div>
                 </div>
@@ -354,13 +476,6 @@ export const AdminUsersDetails = () => {
                         OTP
                       </label>
                       <p className="text-gray-900 font-medium font-mono text-lg">{user.otp || "-"}</p>
-                    </div>
-
-                    <div className="pb-5 border-b border-gray-200 last:border-0">
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                        Company Name
-                      </label>
-                      <p className="text-gray-900 font-medium">{user.company_name || "-"}</p>
                     </div>
                   </div>
                 </div>
@@ -420,98 +535,138 @@ export const AdminUsersDetails = () => {
                     Basic Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Email <span className="text-[#C72030]">*</span>
-                      </label>
-                      <TextField
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="user@example.com"
-                        disabled={isSaving}
-                        slotProps={{
-                          input: {
-                            style: {
-                              height: "44px",
-                              fontSize: "14px",
-                            },
-                          },
-                        }}
-                      />
-                    </div>
+                    <TextField
+                      label="Email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="user@example.com"
+                      required
+                      disabled={isSaving}
+                      InputLabelProps={labelSx}
+                      InputProps={{ sx: fieldStyles }}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        First Name
-                      </label>
-                      <TextField
-                        name="firstname"
-                        value={formData.firstname}
-                        onChange={handleInputChange}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="First name"
-                        disabled={isSaving}
-                        slotProps={{
-                          input: {
-                            style: {
-                              height: "44px",
-                              fontSize: "14px",
-                            },
-                          },
-                        }}
-                      />
-                    </div>
+                    <TextField
+                      label="First Name"
+                      name="firstname"
+                      value={formData.firstname}
+                      onChange={handleInputChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="First name"
+                      disabled={isSaving}
+                      InputLabelProps={labelSx}
+                      InputProps={{ sx: fieldStyles }}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Last Name
-                      </label>
-                      <TextField
-                        name="lastname"
-                        value={formData.lastname}
-                        onChange={handleInputChange}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Last name"
-                        disabled={isSaving}
-                        slotProps={{
-                          input: {
-                            style: {
-                              height: "44px",
-                              fontSize: "14px",
-                            },
-                          },
-                        }}
-                      />
-                    </div>
+                    <TextField
+                      label="Last Name"
+                      name="lastname"
+                      value={formData.lastname}
+                      onChange={handleInputChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Last name"
+                      disabled={isSaving}
+                      InputLabelProps={labelSx}
+                      InputProps={{ sx: fieldStyles }}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Mobile Number
-                      </label>
-                      <TextField
-                        name="mobile"
-                        value={formData.mobile}
-                        onChange={handleInputChange}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="10 digit mobile"
-                        disabled={isSaving}
-                        slotProps={{
-                          input: {
-                            style: {
-                              height: "44px",
-                              fontSize: "14px",
-                            },
-                          },
-                        }}
-                      />
-                    </div>
+                    <TextField
+                      label="Mobile Number"
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleInputChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="10 digit mobile"
+                      disabled={isSaving}
+                      InputLabelProps={labelSx}
+                      InputProps={{ sx: fieldStyles }}
+                    />
+                  </div>
+                </div>
+
+                {/* Organization Information Section */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4 pb-3 border-b-2 border-[#C72030]">
+                    Organization Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel {...labelSx}>Organization</InputLabel>
+                      <MuiSelect
+                        value={formData.organization_id}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            organization_id: e.target.value as string,
+                          }))
+                        }
+                        label="Organization"
+                        displayEmpty
+                        MenuProps={menuProps}
+                        sx={fieldStyles}
+                        disabled={loadingOrganizations || isSaving}
+                      >
+                        <MenuItem value="">
+                          <em>
+                            {loadingOrganizations
+                              ? "Loading organizations..."
+                              : "Select Organization"}
+                          </em>
+                        </MenuItem>
+                        {organizations.map((org) => (
+                          <MenuItem key={org.id} value={org.id.toString()}>
+                            {org.name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel {...labelSx}>Company</InputLabel>
+                      <MuiSelect
+                        value={formData.company_id}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            company_id: e.target.value as string,
+                          }))
+                        }
+                        label="Company"
+                        displayEmpty
+                        MenuProps={menuProps}
+                        sx={fieldStyles}
+                        disabled={
+                          loadingCompanies ||
+                          !formData.organization_id ||
+                          filteredCompanies.length === 0 ||
+                          isSaving
+                        }
+                      >
+                        <MenuItem value="">
+                          <em>
+                            {!formData.organization_id
+                              ? "Select organization first"
+                              : loadingCompanies
+                                ? "Loading companies..."
+                                : filteredCompanies.length === 0
+                                  ? "No companies available"
+                                  : "Select Company"}
+                          </em>
+                        </MenuItem>
+                        {filteredCompanies.map((company) => (
+                          <MenuItem key={company.id} value={company.id.toString()}>
+                            {company.name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
                   </div>
                 </div>
 
@@ -521,28 +676,18 @@ export const AdminUsersDetails = () => {
                     Security Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        OTP Code
-                      </label>
-                      <TextField
-                        name="otp"
-                        value={formData.otp}
-                        onChange={handleInputChange}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="OTP"
-                        disabled={isSaving}
-                        slotProps={{
-                          input: {
-                            style: {
-                              height: "44px",
-                              fontSize: "14px",
-                            },
-                          },
-                        }}
-                      />
-                    </div>
+                    <TextField
+                      label="OTP Code"
+                      name="otp"
+                      value={formData.otp}
+                      onChange={handleInputChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="OTP"
+                      disabled={isSaving}
+                      InputLabelProps={labelSx}
+                      InputProps={{ sx: fieldStyles }}
+                    />
                   </div>
                 </div>
 
@@ -552,53 +697,33 @@ export const AdminUsersDetails = () => {
                     Change Password (Optional)
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        New Password
-                      </label>
-                      <TextField
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Leave empty to keep current"
-                        disabled={isSaving}
-                        slotProps={{
-                          input: {
-                            style: {
-                              height: "44px",
-                              fontSize: "14px",
-                            },
-                          },
-                        }}
-                      />
-                    </div>
+                    <TextField
+                      label="New Password"
+                      name="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Leave empty to keep current"
+                      disabled={isSaving}
+                      InputLabelProps={labelSx}
+                      InputProps={{ sx: fieldStyles }}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Confirm Password
-                      </label>
-                      <TextField
-                        name="password_confirmation"
-                        type="password"
-                        value={formData.password_confirmation}
-                        onChange={handleInputChange}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Confirm password"
-                        disabled={isSaving}
-                        slotProps={{
-                          input: {
-                            style: {
-                              height: "44px",
-                              fontSize: "14px",
-                            },
-                          },
-                        }}
-                      />
-                    </div>
+                    <TextField
+                      label="Confirm Password"
+                      name="password_confirmation"
+                      type="password"
+                      value={formData.password_confirmation}
+                      onChange={handleInputChange}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Confirm password"
+                      disabled={isSaving}
+                      InputLabelProps={labelSx}
+                      InputProps={{ sx: fieldStyles }}
+                    />
                   </div>
                 </div>
 

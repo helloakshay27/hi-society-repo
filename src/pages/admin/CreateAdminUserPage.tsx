@@ -253,7 +253,7 @@ export const CreateAdminUserPage = () => {
         toast.success("Organization admin user created successfully!");
 
         // Navigate back to the users list or admin console
-        navigate("/ops-console/admin/users");
+        navigate("/ops-console/admin/users/manage");
       } else {
         console.error("Failed to create admin user:", result.error);
 
@@ -315,7 +315,7 @@ export const CreateAdminUserPage = () => {
   };
 
   const handleCancel = () => {
-    navigate("/ops-console/admin/users");
+    navigate("/ops-console/admin/users/manage");
   };
 
   const handleAssignPermission = async () => {
@@ -377,7 +377,7 @@ export const CreateAdminUserPage = () => {
       </div>
 
       {/* Form Section */}
-      <div className="grid grid-cols-1 gap-6 max-w-4xl">
+      <div className="grid grid-cols-1 gap-6 ">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

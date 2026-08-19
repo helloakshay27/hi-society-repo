@@ -196,7 +196,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#C72030] border-r-[#C72030] border-b-gray-200 border-l-gray-200"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#da7756] border-r-[#da7756] border-b-gray-200 border-l-gray-200"></div>
           <p className="text-gray-600">Verifying access...</p>
         </div>
       </div>
