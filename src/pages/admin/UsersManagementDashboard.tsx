@@ -389,7 +389,13 @@ export const UsersManagementDashboard = () => {
             Manage organization admin users and their permissions
           </p>
         </div>
-        
+        <Button
+          onClick={() => navigate("/ops-console/admin/create-admin-user")}
+          className="bg-[#C72030] hover:bg-[#A01020] text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add
+        </Button>
       </div>
 
       {/* Search and Filters */}

@@ -886,6 +886,8 @@ const TaskSubmissionPage = lazy(() => import("./pages/TaskSubmissionPage").then(
 const AdminUsersDashboard = lazy(() => import("./pages/admin/AdminUsersDashboard").then(m => ({ default: m.AdminUsersDashboard })));
 const CreateAdminUserPage = lazy(() => import("./pages/admin/CreateAdminUserPage").then(m => ({ default: m.CreateAdminUserPage })));
 const UserDetailsPage = lazy(() => import("./pages/admin/UserDetailsPage").then(m => ({ default: m.UserDetailsPage })));
+const UsersManagementDashboard = lazy(() => import("./pages/admin/UsersManagementDashboard").then(m => ({ default: m.UsersManagementDashboard })));
+const AdminUsersDetails = lazy(() => import("./pages/admin/AdminUsersDetails").then(m => ({ default: m.AdminUsersDetails })));
 const DocumentManagement = lazy(() => import("./pages/DocumentManagement").then(m => ({ default: m.DocumentManagement })));
 const AddDocumentDashboard = lazy(() => import("./pages/AddDocumentDashboard").then(m => ({ default: m.AddDocumentDashboard })));
 const EditDocumentPage = lazy(() => import("./pages/EditDocumentPage").then(m => ({ default: m.EditDocumentPage })));
@@ -1316,7 +1318,7 @@ function App() {
                   <Suspense fallback={
                     <div className="min-h-screen flex items-center justify-center bg-gray-50">
                       <div className="flex flex-col items-center gap-4">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#C72030] border-r-[#C72030] border-b-gray-200 border-l-gray-200"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#da7756] border-r-[#da7756] border-b-gray-200 border-l-gray-200"></div>
                         <p className="text-gray-600">Loading...</p>
                       </div>
                     </div>
@@ -1366,6 +1368,14 @@ function App() {
                         <Route
                           path="admin/users"
                           element={<AdminUsersDashboard />}
+                        />
+                        <Route
+                          path="admin/users/manage"
+                          element={<UsersManagementDashboard />}
+                        />
+                        <Route
+                          path="admin/users/edit/:id"
+                          element={<AdminUsersDetails />}
                         />
                         <Route
                           path="admin/users/:id"

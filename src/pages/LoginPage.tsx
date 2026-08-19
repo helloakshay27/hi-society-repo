@@ -682,7 +682,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       >
         {isLoading ? (
           <div className="flex items-center justify-center">
-            <span className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+            <span className="animate-spin mr-2 h-5 w-5 border-2 border-[#da7756] border-t-transparent rounded-full" />
             <span>Finding Organizations...</span>
           </div>
         ) : (
@@ -853,7 +853,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       >
         {loginLoading ? (
           <div className="flex items-center justify-center">
-            <span className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+            <span className="animate-spin mr-2 h-5 w-5 border-2 border-[#da7756] border-t-transparent rounded-full" />
             <span>Logging in...</span>
           </div>
         ) : (

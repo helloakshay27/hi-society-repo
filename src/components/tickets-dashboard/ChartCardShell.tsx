@@ -32,7 +32,7 @@ export const ChartCardShell: React.FC<ChartCardShellProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <CardTitle className="text-brand-body-3 font-bold text-brand-text">{title}</CardTitle>
+            <CardTitle className="text-brand-body-4 font-bold text-brand-text">{title}</CardTitle>
             {subtitle && <p className="mt-0.5 text-brand-body-5 text-brand-text-light">{subtitle}</p>}
           </div>
           {rightSlot}
