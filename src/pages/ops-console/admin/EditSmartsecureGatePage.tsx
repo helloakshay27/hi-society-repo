@@ -174,10 +174,6 @@ const EditSmartsecureGatePage: React.FC = () => {
       toast.error("Please select a society block");
       return;
     }
-    if (!formData.userId) {
-      toast.error("Please select a user");
-      return;
-    }
     if (!formData.gateName.trim()) {
       toast.error("Please enter gate name");
       return;
@@ -192,7 +188,7 @@ const EditSmartsecureGatePage: React.FC = () => {
       gate_device: formData.gateDevice.trim(),
       resource_id: parseInt(formData.societyId, 10),
       society_block_id: parseInt(formData.societyBlockId, 10),
-      user_id: parseInt(formData.userId, 10),
+      ...(formData.userId ? { user_id: parseInt(formData.userId, 10) } : {}),
     };
 
     setSubmitting(true);
@@ -290,7 +286,7 @@ const EditSmartsecureGatePage: React.FC = () => {
                 </FormControl>
 
                 <FormControl fullWidth variant="outlined" sx={fieldStyles}>
-                  <InputLabel shrink required>User</InputLabel>
+                  <InputLabel shrink>User</InputLabel>
                   <MuiSelect
                     value={formData.userId}
                     onChange={(e) => handleInputChange("userId", e.target.value)}
