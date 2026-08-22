@@ -49,6 +49,7 @@ interface ProductEntry {
 const PRODUCT_OPTIONS = [
   { label: "HiSociety", value: "HiSociety", code: "HS" },
   { label: "FM Matrix", value: "FM Matrix", code: "FM" },
+  { label: "Snagging", value: "Snagging", code: "Snag" },
 ];
 interface WelcomeDescription {
   description: string;
@@ -1155,7 +1156,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 disabled={isSubmitting}
               /> */}
 
-            
+
               {/* <TextField
                 label="Designation"
                 value={ceoInfo.designation}
@@ -1166,7 +1167,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
               /> */}
             </div>
 
-           
+
             {/* <div className="mt-4">
               <TextField
                 label="Description"
