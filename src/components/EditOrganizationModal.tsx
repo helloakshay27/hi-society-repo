@@ -54,6 +54,7 @@ interface ProductEntry {
 const PRODUCT_OPTIONS = [
   { label: "HiSociety", value: "HiSociety", code: "HS" },
   { label: "FM Matrix", value: "FM Matrix", code: "FM" },
+  { label: "Snagging", value: "Snagging", code: "Snag" },
 ];
 
 interface WelcomeDescription {
@@ -266,16 +267,16 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     }
   };
 
-const mapDescriptionObjectToArray = (
-  descriptionObj?: Record<string, { text: string; bold: string }>
-) => {
-  if (!descriptionObj) return [{ description: "", active: false }];
+  const mapDescriptionObjectToArray = (
+    descriptionObj?: Record<string, { text: string; bold: string }>
+  ) => {
+    if (!descriptionObj) return [{ description: "", active: false }];
 
-  return Object.keys(descriptionObj).map((key) => ({
-    description: descriptionObj[key].text || "",
-    active: descriptionObj[key].bold === "true",
-  }));
-};
+    return Object.keys(descriptionObj).map((key) => ({
+      description: descriptionObj[key].text || "",
+      active: descriptionObj[key].bold === "true",
+    }));
+  };
 
   const fetchOrganizationData = useCallback(async () => {
     setIsLoading(true);
@@ -310,14 +311,14 @@ const mapDescriptionObjectToArray = (
 
         const existingProducts: ProductEntry[] = Array.isArray(org?.organization_products) && org.organization_products.length > 0
           ? org.organization_products.map((p: { id?: number; product_name?: string; product_code?: string; domain?: string; sub_domain?: string; front_domain?: string; front_subdomain?: string }) => ({
-              id: p.id,
-              product_name: p.product_name || "HiSociety",
-              product_code: p.product_code || "HS",
-              domain: p.domain || "",
-              sub_domain: p.sub_domain || "",
-              front_domain: p.front_domain || "",
-              front_subdomain: p.front_subdomain || "",
-            }))
+            id: p.id,
+            product_name: p.product_name || "HiSociety",
+            product_code: p.product_code || "HS",
+            domain: p.domain || "",
+            sub_domain: p.sub_domain || "",
+            front_domain: p.front_domain || "",
+            front_subdomain: p.front_subdomain || "",
+          }))
           : [{ product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" }];
         setProducts(existingProducts);
 
@@ -335,7 +336,7 @@ const mapDescriptionObjectToArray = (
           name: otherConfig?.ceo_info?.name || "",
           designation: otherConfig?.ceo_info?.designation || "CEO",
           description: otherConfig?.ceo_info?.description || "",
-          photo:  null, // file cannot be prefilled
+          photo: null, // file cannot be prefilled
           photoPreviewUrl: org?.ceo_photo.document_url || null, // optional: set if API gives image URL
           video: null, // file cannot be prefilled
           videoUrl: org?.ceo_video?.document_url || null, // optional: set if API gives video URL
@@ -418,7 +419,7 @@ const mapDescriptionObjectToArray = (
     }
 
 
-     if (welcomeDescriptions && welcomeDescriptions.length > 0) {
+    if (welcomeDescriptions && welcomeDescriptions.length > 0) {
       welcomeDescriptions.forEach((desc, index) => {
         submitFormData.append(
           `organization[other_config][welcome][description][${index}][text]`,
@@ -458,40 +459,40 @@ const mapDescriptionObjectToArray = (
     }
 
     // ---------------------
-// Add CEO info if present
-// ---------------------
-if (ceoInfo) {
-  submitFormData.append(
-    "organization[other_config][ceo_info][name]",
-    ceoInfo.name
-  );
-  submitFormData.append(
-    "organization[other_config][ceo_info][designation]",
-    "CEO" // or ceoInfo.designation if dynamic
-  );
-  submitFormData.append(
-    "organization[other_config][ceo_info][description]",
-    ceoInfo.description
-  );
+    // Add CEO info if present
+    // ---------------------
+    if (ceoInfo) {
+      submitFormData.append(
+        "organization[other_config][ceo_info][name]",
+        ceoInfo.name
+      );
+      submitFormData.append(
+        "organization[other_config][ceo_info][designation]",
+        "CEO" // or ceoInfo.designation if dynamic
+      );
+      submitFormData.append(
+        "organization[other_config][ceo_info][description]",
+        ceoInfo.description
+      );
 
-  // These are references; your API may use relation names for files
-  submitFormData.append(
-    "organization[other_config][ceo_info][photo_relation]",
-    "CEOPhoto"
-  );
-  submitFormData.append(
-    "organization[other_config][ceo_info][video_relation]",
-    "CEOVideo"
-  );
+      // These are references; your API may use relation names for files
+      submitFormData.append(
+        "organization[other_config][ceo_info][photo_relation]",
+        "CEOPhoto"
+      );
+      submitFormData.append(
+        "organization[other_config][ceo_info][video_relation]",
+        "CEOVideo"
+      );
 
-  // Actual files
-  if (ceoInfo.photo) {
-    submitFormData.append("organization[ceo_photo]", ceoInfo.photo);
-  }
-  if (ceoInfo.video) {
-    submitFormData.append("organization[ceo_video]", ceoInfo.video);
-  }
-}
+      // Actual files
+      if (ceoInfo.photo) {
+        submitFormData.append("organization[ceo_photo]", ceoInfo.photo);
+      }
+      if (ceoInfo.video) {
+        submitFormData.append("organization[ceo_video]", ceoInfo.video);
+      }
+    }
 
 
     try {
@@ -1219,7 +1220,7 @@ if (ceoInfo) {
               {/* CEO Info Section */}
               <div className="mt-8">
                 {/* <h3 className="text-sm font-medium text-[#C72030] mb-4">CEO Info</h3> */}
-{/* 
+                {/* 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  
                   <TextField
@@ -1357,7 +1358,7 @@ if (ceoInfo) {
               )}
             </div> */}
                 {/* Video Upload */}
-              
+
 
                 {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Video</span>
@@ -1406,7 +1407,7 @@ if (ceoInfo) {
               )}
             </div> */}
 
-                </div>
+              </div>
             </div>
           </div>
         )}
