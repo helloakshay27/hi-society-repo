@@ -78,10 +78,10 @@ const adminNavigationStructure = {
           // { name: "Admin Users", href: "/ops-console/admin/users" },
           // { name: "Create Admin User", href: "/ops-console/admin/create-admin-user" },
           { name: "Roles", href: `${window.location.hostname === "localhost" ? "/ops-console/settings/vi-roles/role" : "/ops-console/settings/roles/role"}` },
-          // {
-          //   name: "Locked Users",
-          //   href: "/ops-console/settings/account/locked-users",
-          // },
+          {
+            name: "Locked Users",
+            href: "/ops-console/settings/account/locked-users",
+          },
           {
             name: "Manage Users",
             href: "/ops-console/admin/users/manage",
