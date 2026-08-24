@@ -4,13 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Loader2 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
+  Dialog as MuiDialog,
+  DialogTitle as MuiDialogTitle,
+  DialogContent as MuiDialogContent,
+  DialogActions as MuiDialogActions,
   TextField,
   FormControl,
   InputLabel,
@@ -50,6 +47,35 @@ const parseActiveStatus = (value: unknown): boolean => {
     return normalizedValue === "true" || normalizedValue === "1";
   }
   return false;
+};
+
+const transformRMUser = (user: APIRMUser): RMUser => {
+  const fullName =
+    user.full_name ||
+    [user.firstname || user.first_name, user.lastname || user.last_name]
+      .filter(Boolean)
+      .join(" ");
+  const nameParts = fullName.trim().split(" ");
+
+  return {
+    id: user.id,
+    userId: `${user.user_id}`,
+    name: fullName,
+    firstName: nameParts[0] || "",
+    lastName: nameParts.slice(1).join(" "),
+    email: user.email || "",
+    mobile: user.mobile || "",
+    userType:
+      user.user_type === "cs_user"
+        ? "Customer Support"
+        : user.user_type === "rm_user"
+        ? "RM User"
+        : user.user_type || "-",
+    createdOn: user.created_at
+      ? new Date(user.created_at).toLocaleDateString("en-GB")
+      : "",
+    status: parseActiveStatus(user.active),
+  };
 };
 
 const fieldStyles = {
@@ -118,36 +144,7 @@ const AppointmentzRMConfig = () => {
     try {
       const response = await getRMUsers(page);
 
-      // Transform API data to component format
-      // List API returns only full_name (no separate firstname/lastname)
-      const transformedData: RMUser[] = response.data.map((user) => {
-        const fullName = user.full_name || "";
-        const nameParts = fullName.trim().split(" ");
-        const firstName = nameParts[0] || "";
-        const lastName = nameParts.slice(1).join(" ");
-
-        const userTypeLabel =
-          user.user_type === "cs_user"
-            ? "Customer Support"
-            : user.user_type === "rm_user"
-            ? "RM User"
-            : user.user_type || "-";
-
-        return {
-          id: user.id,
-          userId: `${user.user_id}`,
-          name: fullName,
-          firstName,
-          lastName,
-          email: user.email || "",
-          mobile: user.mobile || "",
-          userType: userTypeLabel,
-          createdOn: user.created_at
-            ? new Date(user.created_at).toLocaleDateString("en-GB")
-            : "",
-          status: parseActiveStatus(user.active),
-        };
-      });
+      const transformedData = response.data.map(transformRMUser);
       setData(transformedData);
       setTotalPages(response.pagination.total_pages);
       setTotalCount(response.pagination.total_count);
@@ -488,6 +485,19 @@ const AppointmentzRMConfig = () => {
         // Go to page 1 to see newly added user
         setCurrentPage(1);
         await fetchRMUsers(1);
+
+        if (response.rm_user_id) {
+          try {
+            const createdUserResponse = await getRMUserById(response.rm_user_id);
+            const createdUser = transformRMUser(createdUserResponse.data);
+            setData((previousData) => [
+              createdUser,
+              ...previousData.filter((user) => user.id !== createdUser.id),
+            ].slice(0, 10));
+          } catch (error) {
+            console.warn("User created but could not be loaded into the table:", error);
+          }
+        }
       }
       setIsAddModalOpen(false);
     } catch (error: unknown) {
@@ -613,15 +623,18 @@ const AppointmentzRMConfig = () => {
         loading={loading}
       />
 
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white">
-          <DialogHeader className="bg-white p-4 border-b flex flex-row items-center justify-between">
-            <DialogTitle className="text-center w-full font-bold text-lg">
-              {isEditMode ? `Edit - ${editingUserName}` : "Add New User"}
-            </DialogTitle>
-          </DialogHeader>
+      <MuiDialog
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{ className: "bg-white overflow-hidden" }}
+      >
+        <MuiDialogTitle className="bg-white p-4 border-b text-center font-bold text-lg">
+          {isEditMode ? `Edit - ${editingUserName}` : "Add New User"}
+        </MuiDialogTitle>
 
-          <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 bg-white">
+        <MuiDialogContent className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 bg-white">
             <TextField
               label="First Name"
               name="firstName"
@@ -700,6 +713,7 @@ const AppointmentzRMConfig = () => {
                 fullWidth
                 variant="outlined"
                 required
+                autoComplete="new-password"
                 InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                 InputProps={{ sx: fieldStyles }}
                 error={!!formErrors.password}
@@ -731,20 +745,19 @@ const AppointmentzRMConfig = () => {
                 <FormHelperText>{formErrors.userType}</FormHelperText>
               )}
             </FormControl>
-          </div>
+        </MuiDialogContent>
 
-          <DialogFooter className="p-4 bg-white border-t flex justify-center">
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <MuiDialogActions className="p-4 bg-white border-t justify-center">
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+          >
+            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+        </MuiDialogActions>
+      </MuiDialog>
     </div>
   );
 };

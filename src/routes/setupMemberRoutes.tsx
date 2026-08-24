@@ -519,6 +519,10 @@ const IncidentsDesignInputs = lazy(
 );
 
 // Appointmentz Pages
+const AppointmentzRequest = lazy(() => import("@/pages/AppointmentzRequest"));
+const AppointmentzVirtualRequests = lazy(
+  () => import("@/pages/AppointmentzVirtualRequests")
+);
 const AppointmentzRMConfig = lazy(() => import("@/pages/AppointmentzRMConfig"));
 const AppointmentzSiteScheduling = lazy(
   () => import("@/pages/AppointmentzSiteScheduling")
@@ -527,8 +531,17 @@ const AppointmentzSiteScheduling = lazy(
 const AppointmentzSlotsConfig = lazy(
   () => import("@/pages/AppointmentzSlotsConfig")
 );
+const AppointmentzScheduleSetup = lazy(
+  () => import("@/pages/AppointmentzScheduleSetup")
+);
 const AppointmentzBlockDaysConfig = lazy(
   () => import("@/pages/AppointmentzBlockDaysConfig")
+);
+const AppointmentzManageFlats = lazy(
+  () => import("@/pages/AppointmentzManageFlats")
+);
+const AppointmentzManageFlatDetails = lazy(
+  () => import("@/pages/AppointmentzManageFlatDetails")
 );
 
 // Wallet Topup Page
@@ -1779,6 +1792,18 @@ export const setupMemberRoutes = (
 
     {/* Appointmentz Routes */}
     <Route
+      path="/appointmentz/request"
+      Component={withSuspense(AppointmentzRequest)}
+    />
+    <Route
+      path="/appointmentz/virtual-requests"
+      Component={withSuspense(AppointmentzVirtualRequests)}
+    />
+    <Route
+      path="/appointmentz/virtual-request"
+      Component={withSuspense(AppointmentzVirtualRequests)}
+    />
+    <Route
       path="/appointmentz/rm-config"
       Component={withSuspense(AppointmentzRMConfig)}
     />
@@ -1796,8 +1821,32 @@ export const setupMemberRoutes = (
       Component={withSuspense(AppointmentzSlotsConfig)}
     />
     <Route
+      path="/appointmentz/schedule-setup"
+      Component={withSuspense(AppointmentzScheduleSetup)}
+    />
+    <Route
+      path="/settings/schedule-setup"
+      Component={withSuspense(AppointmentzScheduleSetup)}
+    />
+    <Route
       path="/appointmentz/block-days-config"
       Component={withSuspense(AppointmentzBlockDaysConfig)}
+    />
+    <Route
+      path="/appointmentz/manage-flats"
+      Component={withSuspense(AppointmentzManageFlats)}
+    />
+    <Route
+      path="/appointmentz/manage-flats/view/:id"
+      Component={withSuspense(AppointmentzManageFlatDetails)}
+    />
+    <Route
+      path="/settings/manage-flats/view/:id"
+      Component={withSuspense(AppointmentzManageFlatDetails)}
+    />
+    <Route
+      path="/manage-flats/view/:id"
+      Component={withSuspense(AppointmentzManageFlatDetails)}
     />
 
     {/* Offers Routes */}

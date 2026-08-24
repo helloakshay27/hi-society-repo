@@ -28,7 +28,7 @@ const menuItems: MenuItem[] = [
         id: "manage-flats",
         label: "Manage Flats",
         icon: Building2,
-        path: "/settings/manage-flats",
+        path: "/appointmentz/manage-flats",
     },
     {
         id: "setup",

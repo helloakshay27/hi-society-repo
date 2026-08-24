@@ -48,6 +48,7 @@ import {
   Trash2,
   Clock,
   MapPin,
+  Video,
 } from "lucide-react";
 
 interface MenuItem {
@@ -1007,10 +1008,28 @@ export const HiSocietySidebar: React.FC = () => {
       title: "Appointmentz",
       items: [
         {
-          id: "site-visit-requests",
-          label: "Site Visit Requests",
+          id: "request",
+          label: "Request",
           icon: Calendar,
-          path: "/appointmentz/site-scheduling",
+          path: "/appointmentz/request",
+        },
+        // {
+        //   id: "site-visit-requests",
+        //   label: "Site Visit Requests",
+        //   icon: Calendar,
+        //   path: "/appointmentz/site-scheduling",
+        // },
+        {
+          id: "virtual-requests",
+          label: "virtual Requests",
+          icon: Video,
+          path: "/appointmentz/virtual-requests",
+        },
+        {
+          id: "manage-flats",
+          label: "Manage Flats",
+          icon: Building2,
+          path: "/appointmentz/manage-flats",
         },
         {
           id: "rm-cs-config",

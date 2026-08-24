@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { countries } from "country-data";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video } from "lucide-react";
+import { User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video, Check, ShieldCheck, ShieldAlert } from "lucide-react";
 import {
   Box,
   Paper,
@@ -133,6 +133,35 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
+// Password policy per the organization's Information Security policy:
+// >= 8 alphanumeric characters, mixed case, at least one digit, and not a
+// common/dictionary password. Checked live as the user types, and again
+// before submit, so a weak password can never reach the create request.
+const PASSWORD_REQUIREMENTS: {
+  key: string;
+  label: string;
+  test: (pwd: string) => boolean;
+}[] = [
+    { key: "length", label: "At least 8 characters", test: (p) => p.length >= 8 },
+    { key: "upper", label: "At least one uppercase letter (A-Z)", test: (p) => /[A-Z]/.test(p) },
+    { key: "lower", label: "At least one lowercase letter (a-z)", test: (p) => /[a-z]/.test(p) },
+    { key: "number", label: "At least one number (0-9)", test: (p) => /[0-9]/.test(p) },
+    {
+      key: "notCommon",
+      label: "Not a common or easily guessable password",
+      test: (p) => !COMMON_PASSWORDS.has(p.toLowerCase()),
+    },
+  ];
+
+// A small set of the most common/dictionary passwords — best-effort check for
+// the "must not contain dictionary words" requirement (a full dictionary
+// lookup isn't practical client-side).
+const COMMON_PASSWORDS = new Set([
+  "password", "password1", "password123", "12345678", "123456789",
+  "welcome1", "admin1234", "iloveyou1", "1234567890",
+  "abc123456", "passw0rd", "welcome123",
+]);
+
 const getCreateApiUrl = () => {
   const baseUrl = localStorage.getItem('baseUrl') || '';
   const token = localStorage.getItem('token') || '';
@@ -262,6 +291,16 @@ export const AddUserPage = () => {
   const [loading, setLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
+  const passwordChecks = useMemo(
+    () =>
+      PASSWORD_REQUIREMENTS.map((req) => ({
+        ...req,
+        passed: req.test(formData.password),
+      })),
+    [formData.password]
+  );
+  const isPasswordStrong = passwordChecks.every((check) => check.passed);
 
   // Camera capture state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -425,8 +464,8 @@ export const AddUserPage = () => {
     if (!isEdit && !formData.password.trim()) {
       return "Password is required";
     }
-    if (!isEdit && formData.password.length < 6) {
-      return "Password must be at least 6 characters";
+    if (!isEdit && !isPasswordStrong) {
+      return "Please satisfy all password requirements listed below.";
     }
     if (!formData.phase) {
       return "Please select a phase";
@@ -955,6 +994,40 @@ export const AddUserPage = () => {
                     ),
                   }}
                 />
+
+                {/* Password Requirements — live-checked as the user types; spans the full
+                    row so it doesn't stretch the height of the Email/Mobile cells beside it */}
+                {formData.password && (
+                  <Box sx={{ gridColumn: 'span 3', mt: '-8px' }}>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg border">
+                      <div
+                        className={`flex items-center gap-2 mb-2 text-xs font-medium ${isPasswordStrong ? "text-green-700" : "text-amber-700"
+                          }`}
+                      >
+                        {isPasswordStrong ? (
+                          <ShieldCheck size={14} />
+                        ) : (
+                          <ShieldAlert size={14} />
+                        )}
+                        {isPasswordStrong
+                          ? "Meets password policy"
+                          : "Does not meet password policy yet"}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                        {passwordChecks.map((check) => (
+                          <div
+                            key={check.key}
+                            className={`flex items-center gap-2 text-xs ${check.passed ? "text-green-600" : "text-gray-400"
+                              }`}
+                          >
+                            {check.passed ? <Check size={12} /> : <X size={12} />}
+                            {check.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Box>
+                )}
 
                 {/* Phase */}
                 <FormControl fullWidth required size="small" sx={fieldStyles}>
