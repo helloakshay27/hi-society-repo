@@ -80,11 +80,17 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                     : <em>Select Tower</em>
                 }
               >
-                {towerSelectOptions.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    <ListItemText primary={opt.label} />
+                {towerSelectOptions.length === 0 ? (
+                  <MenuItem disabled>
+                    <ListItemText primary="No Tower Found" />
                   </MenuItem>
-                ))}
+                ) : (
+                  towerSelectOptions.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      <ListItemText primary={opt.label} />
+                    </MenuItem>
+                  ))
+                )}
               </MuiSelect>
             </MuiFormControl>
 
@@ -105,11 +111,17 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                     : <em>Select Flat</em>
                 }
               >
-                {flatOptions.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    <ListItemText primary={opt.label} />
+                {flatOptions.length === 0 ? (
+                  <MenuItem disabled>
+                    <ListItemText primary={filters.tower.length === 0 ? "Select a tower first" : "No Flat Found"} />
                   </MenuItem>
-                ))}
+                ) : (
+                  flatOptions.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      <ListItemText primary={opt.label} />
+                    </MenuItem>
+                  ))
+                )}
               </MuiSelect>
             </MuiFormControl>
 
@@ -130,11 +142,17 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                     : <em>Select Flat Type</em>
                 }
               >
-                {flatTypeSelectOptions.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    <ListItemText primary={opt.label} />
+                {flatTypeSelectOptions.length === 0 ? (
+                  <MenuItem disabled>
+                    <ListItemText primary="No Flat Type Found" />
                   </MenuItem>
-                ))}
+                ) : (
+                  flatTypeSelectOptions.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      <ListItemText primary={opt.label} />
+                    </MenuItem>
+                  ))
+                )}
               </MuiSelect>
             </MuiFormControl>
 
