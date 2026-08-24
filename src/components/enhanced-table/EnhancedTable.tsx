@@ -169,6 +169,7 @@ interface EnhancedTableProps<T> {
   leftActions?: React.ReactNode;
   rightActions?: React.ReactNode;
   onFilterClick?: () => void;
+  filterButtonClassName?: string;
   canAddRow?: boolean;
   onAddRow?: (newRowData: Partial<T>) => void;
   renderEditableCell?: (
@@ -237,6 +238,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   leftActions,
   rightActions,
   onFilterClick,
+  filterButtonClassName,
   canAddRow = false,
   onAddRow,
   renderEditableCell,
@@ -906,7 +908,10 @@ export function EnhancedTable<T extends Record<string, any>>({
             <Button
               variant="outline"
               size="sm"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2 rounded-lg"
+              className={cn(
+                "border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2 rounded-lg",
+                filterButtonClassName
+              )}
               onClick={onFilterClick}
               title="Filter"
             >
