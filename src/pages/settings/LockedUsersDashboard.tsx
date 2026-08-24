@@ -274,7 +274,7 @@ export const LockedUsersDashboard = () => {
             <Button
               onClick={() => setBulkUnlockDialogOpen(true)}
               disabled={bulkUnlocking}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="!bg-green-600 hover:!bg-green-700 text-white"
             >
               <UnlockIcon className="w-4 h-4 mr-2" />
               Unlock ({selectedIds.size})
@@ -602,7 +602,7 @@ export const LockedUsersDashboard = () => {
             <Button
               onClick={handleBulkUnlockUsers}
               disabled={bulkUnlocking}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="!bg-green-600 hover:!bg-green-700 text-white"
             >
               {bulkUnlocking ? (
                 <>
