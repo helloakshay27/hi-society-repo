@@ -1309,6 +1309,12 @@ export const AddTicketDashboard = () => {
         return;
       }
 
+      if (!formData.assignedTo) {
+        toast.error("Please select an assignee", { description: "Validation Error" });
+        setIsSubmitting(false);
+        return;
+      }
+
       // For user behalf, ensure user is selected
       if (onBehalfOf === 'occupant-user' && !selectedUserId) {
         toast.error("Please select a user", { description: "Validation Error" });
@@ -1765,6 +1771,7 @@ export const AddTicketDashboard = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
+                      required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
                       <InputLabel shrink>Assigned To</InputLabel>
@@ -1777,7 +1784,7 @@ export const AddTicketDashboard = () => {
                         disabled={loadingEngineers}
                       >
                         <MenuItem value="">
-                          {loadingEngineers ? "Loading..." : "Select engineer"}
+                          {loadingEngineers ? "Loading..." : "Select engineer*"}
                         </MenuItem>
                         {engineers.map((engineer) => (
                           <MenuItem key={engineer.id} value={engineer.id.toString()}>
@@ -2043,6 +2050,7 @@ export const AddTicketDashboard = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
+                      required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
                       <InputLabel shrink>Assigned To</InputLabel>
@@ -2055,7 +2063,7 @@ export const AddTicketDashboard = () => {
                         disabled={loadingEngineers}
                       >
                         <MenuItem value="">
-                          {loadingEngineers ? "Loading..." : "Select engineer"}
+                          {loadingEngineers ? "Loading..." : "Select engineer*"}
                         </MenuItem>
                         {engineers.map((engineer) => (
                           <MenuItem key={engineer.id} value={engineer.id.toString()}>
