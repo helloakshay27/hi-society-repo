@@ -136,7 +136,7 @@ export const ManageFlatsPage = () => {
 
       if (filters.tower.length > 0) {
         filters.tower.forEach((tId) => {
-          url += `&society_block_id=${tId.value}`;
+          url += `&society_block_id=${tId}`;
         });
       }
 
@@ -162,19 +162,18 @@ export const ManageFlatsPage = () => {
       // Append filters to URL using Ransack format
       if (currentFilters.tower.length > 0) {
         currentFilters.tower.forEach((tId: any) => {
-          url += `&q[society_block_id_in][]=${tId.value}`;
+          url += `&q[society_block_id_in][]=${tId}`;
         });
       }
       if (currentFilters.flatType.length > 0) {
         currentFilters.flatType.forEach((ftId: any) => {
-          url += `&q[society_flat_type_id_in][]=${ftId.value}`;
+          url += `&q[society_flat_type_id_in][]=${ftId}`;
         });
       }
       if (currentFilters.status.length > 0) {
         currentFilters.status.forEach((s: any) => {
-          // Map "active" to true, "inactive" to false if applicable
-          const val = s.value === "active" ? true : s.value === "inactive" ? false : s.value;
-          url += `&q[approve_in][]=${val}`;
+          // Values come from FiltersDialog as "true"/"false" strings
+          url += `&q[approve_in][]=${s}`;
         });
       }
       if (currentFilters.occupancy) {
@@ -182,7 +181,7 @@ export const ManageFlatsPage = () => {
       }
       if (currentFilters.flat.length > 0) {
         currentFilters.flat.forEach((f: any) => {
-          url += `&q[id_in][]=${f.value}`;
+          url += `&q[id_in][]=${f}`;
         });
       }
       if (searchTerm) {
