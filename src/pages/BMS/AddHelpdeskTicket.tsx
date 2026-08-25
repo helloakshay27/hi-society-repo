@@ -160,11 +160,11 @@ const getUserDataFromLocalStorage = () => {
     if (userData) {
       const user = JSON.parse(userData);
       console.log('🔍 Raw user data from localStorage:', user); // Debug log
-      
+
       // Try multiple possible department field names with extensive logging
       const possibleDepartmentFields = [
         'department_name',
-        'designation', 
+        'designation',
         'department',
         'role_name',
         'lock_user_permission?.designation',
@@ -172,9 +172,9 @@ const getUserDataFromLocalStorage = () => {
         'profile?.designation',
         'profile?.department_name'
       ];
-      
+
       console.log('🔍 Checking department fields:', possibleDepartmentFields);
-      
+
       let department = '';
       // Check each possible field
       if (user.department_name) {
@@ -205,9 +205,9 @@ const getUserDataFromLocalStorage = () => {
         console.log('❌ No department field found in user data');
         console.log('Available fields:', Object.keys(user));
       }
-      
+
       console.log('🎯 Final extracted department:', department);
-      
+
       return {
         name: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
         department: department,
@@ -266,13 +266,13 @@ const getUserProfileFromAlternativeAPI = async () => {
     console.log('🔄 Trying alternative API for user profile...');
     const occupantResponse = await ticketManagementAPI.getOccupantUsers();
     console.log('🔄 Occupant users response:', occupantResponse);
-    
+
     // Try to get current user from localStorage to find their ID
     const currentUserData = localStorage.getItem('user');
     if (currentUserData) {
       const user = JSON.parse(currentUserData);
       console.log('🔄 Looking for current user ID:', user.id);
-      
+
       // Find current user in occupant users list
       const currentUserProfile = occupantResponse.find(u => u.id === user.id);
       if (currentUserProfile && currentUserProfile.lock_user_permission?.designation) {
@@ -284,12 +284,12 @@ const getUserProfileFromAlternativeAPI = async () => {
         };
       }
     }
-    
+
     // Try FM users API as well
     const fmResponse = await ticketManagementAPI.getEngineers();
     const fmUsers = fmResponse.users || [];
     console.log('🔄 FM users response:', fmUsers);
-    
+
     if (currentUserData) {
       const user = JSON.parse(currentUserData);
       const currentUserFMProfile = fmUsers.find(u => u.id === user.id);
@@ -303,7 +303,7 @@ const getUserProfileFromAlternativeAPI = async () => {
         };
       }
     }
-    
+
     console.log('❌ No alternative profile found');
     return null;
   } catch (error) {
@@ -345,7 +345,9 @@ export const AddTicketDashboard = () => {
   const [filteredRooms, setFilteredRooms] = useState<RoomResponse[]>([]);
   const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
-  
+  const [engineers, setEngineers] = useState<{ id: number; full_name: string }[]>([]);
+  const [loadingEngineers, setLoadingEngineers] = useState(false);
+
   // New CRM API states
   const [societyBlocks, setSocietyBlocks] = useState<SocietyBlockResponse[]>([]);
   const [societyFlats, setSocietyFlats] = useState<SocietyFlatResponse[]>([]);
@@ -368,7 +370,7 @@ export const AddTicketDashboard = () => {
   const [loadingWings, setLoadingWings] = useState(false);
   const [loadingFloors, setLoadingFloors] = useState(false);
   const [loadingRooms, setLoadingRooms] = useState(false);
-  
+
   // New CRM API loading states
   const [loadingBlocks, setLoadingBlocks] = useState(false);
   const [loadingFlats, setLoadingFlats] = useState(false);
@@ -422,16 +424,16 @@ export const AddTicketDashboard = () => {
       console.log('🚀 API response keys:', Object.keys(response)); // Debug log
       console.log('🚀 Department field in API response:', response.department_name); // Debug log
       setUserAccount(response);
-      
+
       // Store in localStorage for future use
       localStorage.setItem('user', JSON.stringify(response));
       console.log('💾 Stored user data in localStorage:', JSON.stringify(response, null, 2));
-      
+
       // Populate form data when account is loaded for self
       if (onBehalfOf === 'self' && response) {
         let department = response.department_name || '';
         console.log('🎯 Department from API response:', department); // Debug log
-        
+
         // If no department found, try alternative APIs
         if (!department) {
           console.log('🔄 No department in main API, trying alternative sources...');
@@ -439,12 +441,12 @@ export const AddTicketDashboard = () => {
           if (alternativeProfile) {
             department = alternativeProfile.department_name || alternativeProfile.designation || alternativeProfile.role_name || '';
             console.log('🎯 Department from alternative API:', department);
-            
+
             // Update stored user data with enhanced profile
             localStorage.setItem('user', JSON.stringify(alternativeProfile));
           }
         }
-        
+
         setFormData(prev => ({
           ...prev,
           name: `${response.firstname} ${response.lastname}`,
@@ -467,7 +469,7 @@ export const AddTicketDashboard = () => {
     setLoadingAccount(true);
     try {
       const userData = getUserDataFromLocalStorage();
-      
+
       if (userData) {
         setUserAccount({
           firstname: userData.name.split(' ')[0] || '',
@@ -479,18 +481,18 @@ export const AddTicketDashboard = () => {
           email: userData.email || '',
           company_id: userData.company_id || ''
         });
-        
+
         // Populate form data when account is loaded for self
         if (onBehalfOf === 'self') {
           console.log('🎯 Setting form data with userData:', userData); // Debug log
-          
+
           // If no department in localStorage, try to fetch it fresh
           if (!userData.department) {
             console.log('🔄 No department in localStorage, will fetch from API');
             loadUserAccountFromAPI();
             return;
           }
-          
+
           setFormData(prev => ({
             ...prev,
             name: userData.name,
@@ -607,12 +609,12 @@ export const AddTicketDashboard = () => {
     try {
       // Get society_id from multiple sources
       let finalSocietyId: number | string | undefined = societyId;
-      
+
       // Try userAccount.society.id
       if (!finalSocietyId && userAccount?.society?.id) {
         finalSocietyId = userAccount.society.id;
       }
-      
+
       // Try localStorage
       if (!finalSocietyId) {
         const userData = getUserDataFromLocalStorage();
@@ -630,16 +632,16 @@ export const AddTicketDashboard = () => {
             console.error('Error parsing user from localStorage:', e);
           }
         }
-        
+
         // Fallback to site_id if society id not found
         if (!finalSocietyId && userData?.site_id) {
           finalSocietyId = userData.site_id;
         }
       }
-      
+
       console.log('Loading issue types with society_id:', finalSocietyId);
-      
-      const url = finalSocietyId 
+
+      const url = finalSocietyId
         ? getFullUrl(`/user/issue_type.json?society_id=${finalSocietyId}`)
         : getFullUrl('/user/issue_type.json');
       const options = getAuthenticatedFetchOptions('GET');
@@ -661,7 +663,7 @@ export const AddTicketDashboard = () => {
   const loadCategories = async (issueTypeId?: string) => {
     setLoadingCategories(true);
     try {
-      const url = issueTypeId 
+      const url = issueTypeId
         ? getFullUrl(`/crm/admin/helpdesk_categories.json?q[issue_type_id_eq]=${issueTypeId}`)
         : getFullUrl('/crm/admin/helpdesk_categories.json');
       const options = getAuthenticatedFetchOptions('GET');
@@ -740,6 +742,26 @@ export const AddTicketDashboard = () => {
       }
     };
     fetchSuppliers();
+  }, []);
+
+  useEffect(() => {
+    const fetchEngineers = async () => {
+      setLoadingEngineers(true);
+      try {
+        const url = getFullUrl('/dropdown/service_engineers');
+        const options = getAuthenticatedFetchOptions('GET');
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error('Failed to fetch engineers');
+        const data = await response.json();
+        setEngineers(Array.isArray(data.helpdesk_users) ? data.helpdesk_users : []);
+      } catch (error) {
+        console.error('Error loading engineers:', error);
+        toast.error("Failed to load assignees", { description: "Error" });
+      } finally {
+        setLoadingEngineers(false);
+      }
+    };
+    fetchEngineers();
   }, []);
 
   // Fallback API method for occupant users
@@ -887,7 +909,7 @@ export const AddTicketDashboard = () => {
       setComplaintModes(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading complaint modes:', error);
-          toast.error("Failed to load complaint modes", { description: "Error" });
+      toast.error("Failed to load complaint modes", { description: "Error" });
     } finally {
       setLoadingComplaintModes(false);
     }
@@ -916,7 +938,7 @@ export const AddTicketDashboard = () => {
       setAreas(data.areas || []);
     } catch (error) {
       console.error('Error loading areas:', error);
-          toast.error("Failed to load areas", { description: "Error" });
+      toast.error("Failed to load areas", { description: "Error" });
     } finally {
       setLoadingAreas(false);
     }
@@ -938,7 +960,7 @@ export const AddTicketDashboard = () => {
       setBuildings(data.pms_buildings || data || []);
     } catch (error) {
       console.error('Error loading buildings:', error);
-          toast.error("Failed to load buildings", { description: "Error" });
+      toast.error("Failed to load buildings", { description: "Error" });
     } finally {
       setLoadingBuildings(false);
     }
@@ -960,7 +982,7 @@ export const AddTicketDashboard = () => {
       setWings(data.wings || []);
     } catch (error) {
       console.error('Error loading wings:', error);
-          toast.error("Failed to load wings", { description: "Error" });
+      toast.error("Failed to load wings", { description: "Error" });
     } finally {
       setLoadingWings(false);
     }
@@ -982,7 +1004,7 @@ export const AddTicketDashboard = () => {
       setFloors(data.floors || []);
     } catch (error) {
       console.error('Error loading floors:', error);
-          toast.error("Failed to load floors", { description: "Error" });
+      toast.error("Failed to load floors", { description: "Error" });
     } finally {
       setLoadingFloors(false);
     }
@@ -1004,7 +1026,7 @@ export const AddTicketDashboard = () => {
       setRooms(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading rooms:', error);
-          toast.error("Failed to load rooms", { description: "Error" });
+      toast.error("Failed to load rooms", { description: "Error" });
     } finally {
       setLoadingRooms(false);
     }
@@ -1336,6 +1358,10 @@ export const AddTicketDashboard = () => {
         formDataToSubmit.append('complaint[issue_related_to]', selectedIssueRelatedTo);
       }
 
+      if (formData.assignedTo) {
+        formDataToSubmit.append('complaint[assigned_to]', formData.assignedTo);
+      }
+
       // Add user ID for behalf of user
       if (onBehalfOf === 'occupant-user' && selectedUserId) {
         formDataToSubmit.append('user_soc', selectedUserId.toString());
@@ -1359,10 +1385,10 @@ export const AddTicketDashboard = () => {
       // Make API call
       const url = getFullUrl('/crm/admin/complaints.json');
       const options = getAuthenticatedFetchOptions('POST');
-      
+
       // Remove Content-Type header to let browser set it with boundary for multipart/form-data
       delete options.headers['Content-Type'];
-      
+
       const response = await fetch(url, {
         ...options,
         body: formDataToSubmit
@@ -1378,10 +1404,10 @@ export const AddTicketDashboard = () => {
       console.log('Create ticket response:', responseData);
 
       // Extract ticket ID or number from response
-      const ticketId = responseData?.complaint?.id || 
-                       responseData?.complaint?.complaint_number || 
-                       responseData?.id || 
-                       responseData?.complaint_number;
+      const ticketId = responseData?.complaint?.id ||
+        responseData?.complaint?.complaint_number ||
+        responseData?.id ||
+        responseData?.complaint_number;
 
       toast.success(ticketId
         ? `Ticket created successfully - #${ticketId}`
@@ -1426,7 +1452,7 @@ export const AddTicketDashboard = () => {
   const handleGoBack = () => {
     const currentPath = window.location.pathname;
 
-if (currentPath.includes("/club-management/helpdesk")) {
+    if (currentPath.includes("/club-management/helpdesk")) {
       navigate("/club-management/helpdesk");
     } else if (currentPath.includes("tickets")) {
       navigate("/tickets");
@@ -1534,7 +1560,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
               </div>
 
               {/* Conditional Fields Based on Radio Button Selection */}
-              
+
               {/* ADMIN FIELDS - Show when Admin is selected */}
               {onBehalfOf === 'self' && (
                 <>
@@ -1603,8 +1629,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         disabled={loadingFlats || !selectedBlock}
                       >
                         <MenuItem value="">
-                          {loadingFlats ? "Loading..." : 
-                           !selectedBlock ? "Select Tower First" : "Select Flat*"}
+                          {loadingFlats ? "Loading..." :
+                            !selectedBlock ? "Select Tower First" : "Select Flat*"}
                         </MenuItem>
                         {societyFlats.filter(flat => flat.approve).map((flat) => (
                           <MenuItem key={flat.id} value={flat.id.toString()}>
@@ -1659,8 +1685,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         disabled={loadingCategories || !selectedIssueType}
                       >
                         <MenuItem value="">
-                          {loadingCategories ? "Loading..." : 
-                           !selectedIssueType ? "Select Issue Type First" : "Select Category*"}
+                          {loadingCategories ? "Loading..." :
+                            !selectedIssueType ? "Select Issue Type First" : "Select Category*"}
                         </MenuItem>
                         {categories.map((category) => (
                           <MenuItem key={category.id} value={category.id.toString()}>
@@ -1696,7 +1722,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
                     </FormControl>
                   </div>
 
-                  {/* Row 3: Issue Related To, Title, Select Type */}
+                  {/* Row 3: Issue Related To, Title, Select Type, Assigned To */}
                   <div className="grid grid-cols-3 gap-4">
                     <FormControl
                       fullWidth
@@ -1734,6 +1760,32 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         sx: fieldStyles,
                       }}
                     />
+
+
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ '& .MuiInputBase-root': fieldStyles }}
+                    >
+                      <InputLabel shrink>Assigned To</InputLabel>
+                      <MuiSelect
+                        value={formData.assignedTo}
+                        onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                        label="Assigned To"
+                        notched
+                        displayEmpty
+                        disabled={loadingEngineers}
+                      >
+                        <MenuItem value="">
+                          {loadingEngineers ? "Loading..." : "Select engineer"}
+                        </MenuItem>
+                        {engineers.map((engineer) => (
+                          <MenuItem key={engineer.id} value={engineer.id.toString()}>
+                            {engineer.full_name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
 
                     <FormControl
                       fullWidth
@@ -1826,8 +1878,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         disabled={loadingFlats || !selectedBlock}
                       >
                         <MenuItem value="">
-                          {loadingFlats ? "Loading..." : 
-                           !selectedBlock ? "Select Tower First" : "Select Flat*"}
+                          {loadingFlats ? "Loading..." :
+                            !selectedBlock ? "Select Tower First" : "Select Flat*"}
                         </MenuItem>
                         {societyFlats.filter(flat => flat.approve).map((flat) => (
                           <MenuItem key={flat.id} value={flat.id.toString()}>
@@ -1859,8 +1911,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         disabled={loadingFlatUsers || !selectedFlat}
                       >
                         <MenuItem value="">
-                          {loadingFlatUsers ? "Loading..." : 
-                           !selectedFlat ? "Select Flat First" : "Select User*"}
+                          {loadingFlatUsers ? "Loading..." :
+                            !selectedFlat ? "Select Flat First" : "Select User*"}
                         </MenuItem>
                         {flatUsers.map(([name, id]) => (
                           <MenuItem key={id} value={id.toString()}>
@@ -1912,8 +1964,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         disabled={loadingCategories || !selectedIssueType}
                       >
                         <MenuItem value="">
-                          {loadingCategories ? "Loading..." : 
-                           !selectedIssueType ? "Select Issue Type First" : "Select Category*"}
+                          {loadingCategories ? "Loading..." :
+                            !selectedIssueType ? "Select Issue Type First" : "Select Category*"}
                         </MenuItem>
                         {categories.map((category) => (
                           <MenuItem key={category.id} value={category.id.toString()}>
@@ -1923,8 +1975,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       </MuiSelect>
                     </FormControl>
                   </div>
-               
-                  <div className="grid grid-cols-3 gap-4">
+
+                  <div className="grid grid-cols-4 gap-4">
                     <FormControl
                       fullWidth
                       variant="outlined"
@@ -1987,6 +2039,31 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         <MenuItem value="Reactive">Reactive</MenuItem>
                       </MuiSelect>
                     </FormControl>
+
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ '& .MuiInputBase-root': fieldStyles }}
+                    >
+                      <InputLabel shrink>Assigned To</InputLabel>
+                      <MuiSelect
+                        value={formData.assignedTo}
+                        onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                        label="Assigned To"
+                        notched
+                        displayEmpty
+                        disabled={loadingEngineers}
+                      >
+                        <MenuItem value="">
+                          {loadingEngineers ? "Loading..." : "Select engineer"}
+                        </MenuItem>
+                        {engineers.map((engineer) => (
+                          <MenuItem key={engineer.id} value={engineer.id.toString()}>
+                            {engineer.full_name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
                   </div>
                 </>
               )}
@@ -2002,7 +2079,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
                   accept="image/*,.pdf,.doc,.docx"
                 />
                 <label htmlFor="file-upload" className="cursor-pointer text-center">
-                
+
                   <p className="text-sm text-gray-600">Click to upload files</p>
                 </label>
                 {attachedFiles.length > 0 && (
@@ -2034,8 +2111,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
           <Button
             type="submit"
             disabled={isSubmitting}
-             variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium" 
+            variant="ghost"
+            className="btn-primary h-9 px-4 text-sm font-medium"
           >
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </Button>
@@ -2054,7 +2131,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
           </div>
           <div className="p-6 space-y-6">
             {/* Radio buttons for ticket type and flags */}
-            {/* <div className="flex gap-8">
+        {/* <div className="flex gap-8">
               <RadioGroup value={ticketType} onValueChange={setTicketType} className="flex gap-8">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="request" id="request" className="text-[#C72030] border-[#C72030]" />
@@ -2071,7 +2148,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
               </RadioGroup>
             </div> */}
 
-            {/* <div className="flex gap-8">
+        {/* <div className="flex gap-8">
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -2100,10 +2177,10 @@ if (currentPath.includes("/club-management/helpdesk")) {
               </div>
             </div> */}
 
-            {/* Form fields in exact layout as per image */}
-            {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4"> */}
-              {/* Row 1: Category Type, Sub Category Type, Assigned To, Mode */}
-              {/* <FormControl
+        {/* Form fields in exact layout as per image */}
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4"> */}
+        {/* Row 1: Category Type, Sub Category Type, Assigned To, Mode */}
+        {/* <FormControl
                 fullWidth
                 variant="outlined"
                 required
@@ -2126,10 +2203,10 @@ if (currentPath.includes("/club-management/helpdesk")) {
                   ))}
                 </MuiSelect>
               </FormControl> */}
-            {/* </div> */}
+        {/* </div> */}
 
-            {/* Description - Full width */}
-            {/* <div className="relative w-full">
+        {/* Description - Full width */}
+        {/* <div className="relative w-full">
               <textarea
                 id="description"
                 value={formData.description}
@@ -2156,7 +2233,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
                 Descriptions
               </label>
             </div> */}
-          {/* </div>
+        {/* </div>
         </div> */}
 
         {/* Section 3: Location Details - Keeping for reference */}
