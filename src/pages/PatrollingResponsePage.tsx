@@ -1,21 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, CheckCircle, AlertCircle, Activity, X, ChevronLeft, ChevronRight, Paperclip, CalendarIcon, Filter, Eye, Pencil } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, Activity, X, ChevronLeft, ChevronRight, Paperclip, Eye, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { API_CONFIG, getFullUrl, getAuthenticatedFetchOptions } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import ReactSelect from 'react-select';
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { TicketPagination } from '@/components/TicketPagination';
 
 interface VisitAttachment {
@@ -313,11 +308,11 @@ export const PatrollingResponsePage = () => {
   const [fPatrolName,      setFPatrolName]      = useState('');
   const [fStatus,          setFStatus]          = useState('');
   // Schedule date range
-  const [fScheduleDateFrom, setFScheduleDateFrom] = useState<Date | undefined>(undefined);
-  const [fScheduleDateTo,   setFScheduleDateTo]   = useState<Date | undefined>(undefined);
+  const [fScheduleDateFrom, setFScheduleDateFrom] = useState('');
+  const [fScheduleDateTo,   setFScheduleDateTo]   = useState('');
   // Patrol (visited_at) date range
-  const [fPatrolDateFrom,  setFPatrolDateFrom]  = useState<Date | undefined>(undefined);
-  const [fPatrolDateTo,    setFPatrolDateTo]    = useState<Date | undefined>(undefined);
+  const [fPatrolDateFrom,  setFPatrolDateFrom]  = useState('');
+  const [fPatrolDateTo,    setFPatrolDateTo]    = useState('');
   const [fGuardId,         setFGuardId]         = useState<number | null>(null);
   const [fBuildingId,      setFBuildingId]      = useState<number | null>(null);
   const [fWingId,          setFWingId]          = useState<number | null>(null);
@@ -621,10 +616,10 @@ export const PatrollingResponsePage = () => {
     setAppliedFilters({
       patrolName:       fPatrolName,
       status:           fStatus,
-      scheduleDateFrom: fScheduleDateFrom ? format(fScheduleDateFrom, 'yyyy-MM-dd') : '',
-      scheduleDateTo:   fScheduleDateTo   ? format(fScheduleDateTo,   'yyyy-MM-dd') : '',
-      patrolDateFrom:   fPatrolDateFrom   ? format(fPatrolDateFrom,   'yyyy-MM-dd') : '',
-      patrolDateTo:     fPatrolDateTo     ? format(fPatrolDateTo,     'yyyy-MM-dd') : '',
+      scheduleDateFrom: fScheduleDateFrom,
+      scheduleDateTo:   fScheduleDateTo,
+      patrolDateFrom:   fPatrolDateFrom,
+      patrolDateTo:     fPatrolDateTo,
       guardId:          fGuardId,
       buildingId:       fBuildingId,
       wingId:           fWingId,
@@ -638,8 +633,8 @@ export const PatrollingResponsePage = () => {
 
   const handleClearFilters = () => {
     setFPatrolName('');           setFStatus('');
-    setFScheduleDateFrom(undefined); setFScheduleDateTo(undefined);
-    setFPatrolDateFrom(undefined);   setFPatrolDateTo(undefined);
+    setFScheduleDateFrom(''); setFScheduleDateTo('');
+    setFPatrolDateFrom('');   setFPatrolDateTo('');
     setFGuardId(null);
     setFBuildingId(null); setFWingId(null); setFAreaId(null);
     setFFloorId(null);    setFRoomId(null);
@@ -1307,193 +1302,215 @@ export const PatrollingResponsePage = () => {
           </div>
 
           {/* Filter Dialog */}
-          <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" aria-describedby="patrolling-filter-description">
-              <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <DialogTitle className="text-lg font-semibold">Filter Patrolling Responses</DialogTitle>
+          <Dialog open={isFilterOpen} modal={false} onOpenChange={setIsFilterOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white [&>button]:hidden" aria-describedby="patrolling-filter-description">
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+                <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+                  FILTER BY
+                </DialogTitle>
                 <Button variant="ghost" size="sm" onClick={() => setIsFilterOpen(false)} className="h-6 w-6 p-0">
                   <X className="h-4 w-4" />
                 </Button>
                 <div id="patrolling-filter-description" className="sr-only">Filter patrolling responses by various criteria</div>
               </DialogHeader>
-              <div className="space-y-4 py-2">
 
-                {/* Patrol Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="f-patrol-name">Patrol Name</Label>
-                  <Input
-                    id="f-patrol-name"
-                    placeholder="Enter patrol name..."
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField
+                    label="Patrol Name"
+                    placeholder="Enter patrol name"
                     value={fPatrolName}
-                    onChange={e => setFPatrolName(e.target.value)}
+                    onChange={(e) => setFPatrolName(e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
-                </div>
 
-                {/* Status */}
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <ReactSelect
-                    isClearable
-                    isLoading={loadingDropdowns}
-                    options={statusOptions}
-                    value={statusOptions.find(o => o.value === fStatus) || null}
-                    onChange={opt => setFStatus(opt?.value || '')}
-                    placeholder="Select status..."
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+                    <MuiSelect
+                      value={fStatus}
+                      onChange={(e) => setFStatus(e.target.value)}
+                      displayEmpty
+                      label="Status"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                      disabled={loadingDropdowns}
+                    >
+                      <MenuItem value=""><em>Select Status</em></MenuItem>
+                      {statusOptions.map((o) => (
+                        <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+
+                  <TextField
+                    label="Schedule From Date"
+                    type="date"
+                    value={fScheduleDateFrom}
+                    onChange={(e) => setFScheduleDateFrom(e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
-                </div>
-
-                {/* Schedule Date Range */}
-                <div className="space-y-2">
-                  <Label>Schedule Date</Label>
-                  <div className="flex gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {fScheduleDateFrom ? format(fScheduleDateFrom, 'dd MMM yyyy') : 'From'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={fScheduleDateFrom} onSelect={setFScheduleDateFrom} initialFocus />
-                      </PopoverContent>
-                    </Popover>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {fScheduleDateTo ? format(fScheduleDateTo, 'dd MMM yyyy') : 'To'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={fScheduleDateTo} onSelect={setFScheduleDateTo} initialFocus />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-
-                {/* Patrol Date Range (visited_at) */}
-                <div className="space-y-2">
-                  <Label>Patrol Date</Label>
-                  <div className="flex gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {fPatrolDateFrom ? format(fPatrolDateFrom, 'dd MMM yyyy') : 'From'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={fPatrolDateFrom} onSelect={setFPatrolDateFrom} initialFocus />
-                      </PopoverContent>
-                    </Popover>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex-1">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {fPatrolDateTo ? format(fPatrolDateTo, 'dd MMM yyyy') : 'To'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={fPatrolDateTo} onSelect={setFPatrolDateTo} initialFocus />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-
-                {/* Submitted By */}
-                <div className="space-y-2">
-                  <Label>Submitted By</Label>
-                  <ReactSelect
-                    isClearable
-                    isLoading={loadingDropdowns}
-                    options={guards}
-                    value={guards.find(o => o.value === fGuardId) || null}
-                    onChange={opt => setFGuardId(opt ? opt.value : null)}
-                    placeholder="Select guard..."
+                  <TextField
+                    label="Schedule To Date"
+                    type="date"
+                    value={fScheduleDateTo}
+                    onChange={(e) => setFScheduleDateTo(e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
+
+                  <TextField
+                    label="Patrol From Date"
+                    type="date"
+                    value={fPatrolDateFrom}
+                    onChange={(e) => setFPatrolDateFrom(e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+                  <TextField
+                    label="Patrol To Date"
+                    type="date"
+                    value={fPatrolDateTo}
+                    onChange={(e) => setFPatrolDateTo(e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Submitted By</InputLabel>
+                    <MuiSelect
+                      value={fGuardId != null ? String(fGuardId) : ''}
+                      onChange={(e) => setFGuardId(e.target.value ? Number(e.target.value) : null)}
+                      displayEmpty
+                      label="Submitted By"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                      disabled={loadingDropdowns}
+                    >
+                      <MenuItem value=""><em>Select Guard</em></MenuItem>
+                      {guards.map((o) => (
+                        <MenuItem key={o.value} value={String(o.value)}>{o.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Building</InputLabel>
+                    <MuiSelect
+                      value={fBuildingId != null ? String(fBuildingId) : ''}
+                      onChange={(e) => setFBuildingId(e.target.value ? Number(e.target.value) : null)}
+                      displayEmpty
+                      label="Building"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                      disabled={loadingDropdowns}
+                    >
+                      <MenuItem value=""><em>Select Building</em></MenuItem>
+                      {buildings.map((o) => (
+                        <MenuItem key={o.value} value={String(o.value)}>{o.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Wing</InputLabel>
+                    <MuiSelect
+                      value={fWingId != null ? String(fWingId) : ''}
+                      onChange={(e) => setFWingId(e.target.value ? Number(e.target.value) : null)}
+                      displayEmpty
+                      label="Wing"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                      disabled={loadingDropdowns}
+                    >
+                      <MenuItem value=""><em>Select Wing</em></MenuItem>
+                      {wings.map((o) => (
+                        <MenuItem key={o.value} value={String(o.value)}>{o.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Area</InputLabel>
+                    <MuiSelect
+                      value={fAreaId != null ? String(fAreaId) : ''}
+                      onChange={(e) => setFAreaId(e.target.value ? Number(e.target.value) : null)}
+                      displayEmpty
+                      label="Area"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                      disabled={loadingDropdowns}
+                    >
+                      <MenuItem value=""><em>Select Area</em></MenuItem>
+                      {areas.map((o) => (
+                        <MenuItem key={o.value} value={String(o.value)}>{o.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Floor</InputLabel>
+                    <MuiSelect
+                      value={fFloorId != null ? String(fFloorId) : ''}
+                      onChange={(e) => setFFloorId(e.target.value ? Number(e.target.value) : null)}
+                      displayEmpty
+                      label="Floor"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                      disabled={loadingDropdowns}
+                    >
+                      <MenuItem value=""><em>Select Floor</em></MenuItem>
+                      {floors.map((o) => (
+                        <MenuItem key={o.value} value={String(o.value)}>{o.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Room</InputLabel>
+                    <MuiSelect
+                      value={fRoomId != null ? String(fRoomId) : ''}
+                      onChange={(e) => setFRoomId(e.target.value ? Number(e.target.value) : null)}
+                      displayEmpty
+                      label="Room"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                      disabled={loadingDropdowns}
+                    >
+                      <MenuItem value=""><em>Select Room</em></MenuItem>
+                      {rooms.map((o) => (
+                        <MenuItem key={o.value} value={String(o.value)}>{o.label}</MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
                 </div>
+              </div>
 
-                {/* Location – all dropdowns from /patrolling/dropdowns (no cascade) */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-gray-700">Location</Label>
-
-                  {/* Building – full width */}
-                  <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Building</Label>
-                    <ReactSelect
-                      isClearable
-                      isLoading={loadingDropdowns}
-                      options={buildings}
-                      value={buildings.find(o => o.value === fBuildingId) || null}
-                      onChange={opt => setFBuildingId(opt ? opt.value : null)}
-                      placeholder="Select building..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Wing */}
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">Wing</Label>
-                      <ReactSelect
-                        isClearable
-                        isLoading={loadingDropdowns}
-                        options={wings}
-                        value={wings.find(o => o.value === fWingId) || null}
-                        onChange={opt => setFWingId(opt ? opt.value : null)}
-                        placeholder="Select wing..."
-                      />
-                    </div>
-
-                    {/* Area */}
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">Area</Label>
-                      <ReactSelect
-                        isClearable
-                        isLoading={loadingDropdowns}
-                        options={areas}
-                        value={areas.find(o => o.value === fAreaId) || null}
-                        onChange={opt => setFAreaId(opt ? opt.value : null)}
-                        placeholder="Select area..."
-                      />
-                    </div>
-
-                    {/* Floor */}
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">Floor</Label>
-                      <ReactSelect
-                        isClearable
-                        isLoading={loadingDropdowns}
-                        options={floors}
-                        value={floors.find(o => o.value === fFloorId) || null}
-                        onChange={opt => setFFloorId(opt ? opt.value : null)}
-                        placeholder="Select floor..."
-                      />
-                    </div>
-
-                    {/* Room */}
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">Room</Label>
-                      <ReactSelect
-                        isClearable
-                        isLoading={loadingDropdowns}
-                        options={rooms}
-                        value={rooms.find(o => o.value === fRoomId) || null}
-                        onChange={opt => setFRoomId(opt ? opt.value : null)}
-                        placeholder="Select room..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-2">
-                  <Button onClick={handleApplyFilters} className="flex-1 bg-[#C72030] text-white hover:bg-[#C72030]/90">
-                    Apply Filters
-                  </Button>
-                  <Button variant="outline" onClick={handleClearFilters} className="flex-1">
-                    Clear Filters
-                  </Button>
-                </div>
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={handleClearFilters}
+                  className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+                >
+                  Reset
+                </Button>
+                <Button
+                  onClick={handleApplyFilters}
+                  className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+                >
+                  Apply Filters
+                </Button>
               </div>
             </DialogContent>
           </Dialog>

@@ -8,40 +8,43 @@ import { formatAmount } from "@/utils/financialStatement";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 
-// Real response shape returned by GET /lock_account_transactions/gst_receivable
-interface GstReceivableRecordAPI {
-  ledger_id: number;
-  ledger_name: string;
-  cgst: number;
-  sgst: number;
-  igst: number;
-  total: number;
+// Confirmed shape returned by the sibling GET /lock_account_transactions/gst_payable
+// endpoint on the same controller — { income: {ledgers}, expense: {ledgers} },
+// no tax percentage/amount fields. gst_receivable is assumed to match until a
+// live response (it currently times out server-side) confirms otherwise.
+interface GstReceivableLedgerAPI {
+  id: number;
+  name: string;
+  account_code?: string | null;
+}
+
+interface GstReceivableGroupAPI {
+  id: number;
+  group_name: string;
+  ledgers?: GstReceivableLedgerAPI[];
 }
 
 interface GstReceivableApiResponse {
   code?: number;
   report?: string;
-  date_range?: [string, string];
-  lock_account?: { id: number; name: string };
-  records?: GstReceivableRecordAPI[];
+  income?: GstReceivableGroupAPI;
+  expense?: GstReceivableGroupAPI;
 }
 
 interface GstReceivableRow {
   ledgerId: number;
   ledgerName: string;
-  cgst: number;
-  sgst: number;
-  igst: number;
-  total: number;
+  taxPercentage: string;
+  transactionAmount: number | null;
+  taxAmount: number | null;
 }
 
 const columns: ColumnConfig[] = [
   { key: "ledgerId", label: "Ledger ID", sortable: true },
-  { key: "ledgerName", label: "Ledger Name", sortable: true },
-  { key: "cgst", label: "CGST", sortable: true },
-  { key: "sgst", label: "SGST", sortable: true },
-  { key: "igst", label: "IGST", sortable: true },
-  { key: "total", label: "Total", sortable: true },
+  { key: "ledgerName", label: "Ledger & Tax Name", sortable: true },
+  { key: "taxPercentage", label: "Tax Percentage", sortable: true },
+  { key: "transactionAmount", label: "Transaction Amount", sortable: true },
+  { key: "taxAmount", label: "Tax Amount", sortable: true },
 ];
 
 const AccountingGSTReceivable: React.FC = () => {
@@ -59,7 +62,7 @@ const AccountingGSTReceivable: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const response = await axios.get<GstReceivableApiResponse>(
-        `${baseUrl}/lock_account_transactions/gst_receivable.json`,
+        `${baseUrl}/lock_account_transactions/gst_receivable`,
         {
           headers: {
             Accept: "application/json",
@@ -72,17 +75,16 @@ const AccountingGSTReceivable: React.FC = () => {
           },
         }
       );
-      const records = response.data.records || [];
-      setRows(
-        records.map((record) => ({
-          ledgerId: record.ledger_id,
-          ledgerName: record.ledger_name,
-          cgst: record.cgst,
-          sgst: record.sgst,
-          igst: record.igst,
-          total: record.total,
-        }))
-      );
+      const data = response.data;
+      const toRows = (group: GstReceivableGroupAPI | undefined): GstReceivableRow[] =>
+        (group?.ledgers || []).map((ledger) => ({
+          ledgerId: ledger.id,
+          ledgerName: ledger.name,
+          taxPercentage: "",
+          transactionAmount: null,
+          taxAmount: null,
+        }));
+      setRows([...toRows(data.income), ...toRows(data.expense)]);
     } catch (err) {
       console.error("Error fetching GST receivable:", err);
       setError("Failed to load GST receivable data");
@@ -108,14 +110,12 @@ const AccountingGSTReceivable: React.FC = () => {
         return item.ledgerId;
       case "ledgerName":
         return item.ledgerName;
-      case "cgst":
-        return formatAmount(item.cgst);
-      case "sgst":
-        return formatAmount(item.sgst);
-      case "igst":
-        return formatAmount(item.igst);
-      case "total":
-        return formatAmount(item.total);
+      case "taxPercentage":
+        return item.taxPercentage || "-";
+      case "transactionAmount":
+        return item.transactionAmount !== null ? formatAmount(item.transactionAmount) : "-";
+      case "taxAmount":
+        return item.taxAmount !== null ? formatAmount(item.taxAmount) : "-";
       default:
         return "";
     }

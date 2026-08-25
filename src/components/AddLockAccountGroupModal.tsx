@@ -31,27 +31,18 @@ interface AddLockAccountGroupModalProps {
   editingGroup?: EditableLockAccountGroup | null;
 }
 
-// Shape returned by the dedicated GET /lock_account_groups/parent_groups
-// endpoint — every group is a valid parent choice, each pre-labeled with its
-// own parent ("<group_name> - <parent_group_name>").
-interface ParentGroupAPI {
+interface AccountGroupAPI {
   id: number;
   group_name: string;
   parent_group_id?: number | null;
-  parent_group_name?: string | null;
-  label?: string;
 }
 
-// The 4 fundamental account types are fixed system roots that never appear as
-// their own entries in GET /lock_account_groups/parent_groups, but plenty of
-// real subgroups point directly to one of them as parent_group_id — without
-// these, that value can't be preselected because it matches no option.
-const ROOT_GROUPS: ParentGroupOption[] = [
-  { id: 1, group_name: "Assets" },
-  { id: 2, group_name: "Liabilities" },
-  { id: 3, group_name: "Income" },
-  { id: 4, group_name: "Expenditure" },
-];
+// parent_group_id: null = top-level group; non-null = nested subgroup.
+// Only top-level groups are valid choices for a new subgroup's parent.
+const topLevelGroups = (groups: AccountGroupAPI[]): ParentGroupOption[] =>
+  groups
+    .filter((g) => g.parent_group_id === null || g.parent_group_id === undefined)
+    .map((g) => ({ id: g.id, group_name: g.group_name }));
 
 export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> = ({
   open,
@@ -73,7 +64,7 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_groups/parent_groups.json`, {
+        const res = await axios.get(`${baseUrl}/lock_account_groups`, {
           params: { lock_account_id: lockAccountId },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,14 +72,9 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
             Accept: "application/json",
           },
         });
-        const groups: ParentGroupAPI[] = res.data?.lock_account_groups || [];
-        const options = groups
-          .filter((g) => g.id !== editingGroup?.id)
-          .map((g) => ({ id: g.id, group_name: g.label || g.group_name }));
-        setParentGroups([
-          ...ROOT_GROUPS.filter((g) => g.id !== editingGroup?.id),
-          ...options,
-        ]);
+        const groups: AccountGroupAPI[] = res.data?.lock_account_groups || [];
+        const options = topLevelGroups(groups).filter((g) => g.id !== editingGroup?.id);
+        setParentGroups(options);
       } catch (error) {
         console.error("Error fetching parent groups:", error);
         setParentGroups([]);
@@ -129,44 +115,36 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
         Accept: "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
-      const parentGroupIdNumber = parentGroupId ? Number(parentGroupId) : null;
       if (editingGroup) {
         const payload = {
           lock_account_group: {
             group_name: groupName.trim(),
-            parent_group_id: parentGroupIdNumber,
-            base_group_id: parentGroupIdNumber,
+            parent_group_id: parentGroupId ? Number(parentGroupId) : null,
             locked,
           },
         };
-        await axios.patch(`${baseUrl}/lock_account_groups/${editingGroup.id}.json`, payload, { headers });
+        await axios.patch(`${baseUrl}/lock_account_groups/${editingGroup.id}`, payload, { headers });
         toast.success("Group updated successfully");
       } else {
         const payload = {
           lock_account_group: {
             lock_account_id: lockAccountId,
             group_name: groupName.trim(),
-            parent_group_id: parentGroupIdNumber,
-            base_group_id: parentGroupIdNumber,
+            parent_group_id: parentGroupId ? Number(parentGroupId) : null,
             locked,
             credit_rule: "-",
             debit_rule: "+",
             active: true,
           },
         };
-        await axios.post(`${baseUrl}/lock_account_groups.json`, payload, { headers });
+        await axios.post(`${baseUrl}/lock_account_groups`, payload, { headers });
         toast.success("Group created successfully");
       }
       onSaved();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving group:", error);
-      const apiErrors = error?.response?.data?.errors;
-      const apiError = error?.response?.data?.error;
-      const message = Array.isArray(apiErrors)
-        ? apiErrors.join(", ")
-        : apiError || "Failed to save group";
-      toast.error(message);
+      toast.error("Failed to save group");
     } finally {
       setSubmitting(false);
     }
@@ -207,7 +185,7 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
                   ...menuProps,
                   PaperProps: {
                     ...menuProps.PaperProps,
-                    style: { ...menuProps.PaperProps.style, maxHeight: 300, maxWidth: 420 },
+                    style: { ...menuProps.PaperProps.style, maxHeight: 300 },
                   },
                 }}
               >
@@ -215,11 +193,7 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
                   Select Group
                 </MenuItem>
                 {parentGroups.map((group) => (
-                  <MenuItem
-                    key={group.id}
-                    value={String(group.id)}
-                    sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
-                  >
+                  <MenuItem key={group.id} value={String(group.id)}>
                     {group.group_name}
                   </MenuItem>
                 ))}

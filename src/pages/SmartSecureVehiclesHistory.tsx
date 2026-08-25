@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, Eye, Pencil, Loader2 } from "lucide-react";
+import { Plus, Eye, Pencil, Loader2, X } from "lucide-react";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, RadioGroup, FormControlLabel, Radio } from "@mui/material";
 import {
   Dialog,
@@ -412,7 +412,6 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
 }) => {
   const [local, setLocal] = useState<FilterState>(filters);
 
-  // Sync local state whenever the dialog opens with latest active filters
   useEffect(() => {
     if (open) setLocal(filters);
   }, [open, filters]);
@@ -420,11 +419,47 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
   const set = (key: keyof FilterState, val: string) =>
     setLocal((prev) => ({ ...prev, [key]: val }));
 
+  const renderSelectField = (
+    label: string,
+    placeholder: string,
+    value: string,
+    key: keyof FilterState,
+    items: FilterOption[] = [],
+  ) => (
+    <FormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+        {label}
+      </InputLabel>
+      <MuiSelect
+        value={value}
+        onChange={(e) => set(key, e.target.value)}
+        displayEmpty
+        label={label}
+        sx={fieldStyles}
+        MenuProps={menuProps}
+      >
+        <MenuItem value="">
+          <em>{placeholder}</em>
+        </MenuItem>
+        {items.map((item) => (
+          <MenuItem key={`${label}-${item.value}`} value={String(item.value)}>
+            {item.label}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+    </FormControl>
+  );
+
   return (
     <Dialog open={open} modal={false} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Filter Vehicle History</DialogTitle>
+      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+            FILTER BY
+          </DialogTitle>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+            <X className="w-4 h-4" />
+          </Button>
         </DialogHeader>
 
         {loadingOptions ? (
@@ -432,101 +467,50 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
             <Loader2 className="w-5 h-5 animate-spin text-[#C72030]" />
           </div>
         ) : (
-        <div className="grid gap-4 py-2">
-          {/* Building */}
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Building</InputLabel>
-            <MuiSelect
-              value={local.building || "__all__"}
-              onChange={(e) => set("building", e.target.value === "__all__" ? "" : e.target.value)}
-              displayEmpty
-              label="Building"
-              sx={fieldStyles}
-              MenuProps={menuProps}
-            >
-              <MenuItem value="__all__">All</MenuItem>
-              {options?.buildings?.map((b) => (
-                <MenuItem key={b.value} value={String(b.value)}>{b.label}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          {/* Tower */}
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower</InputLabel>
-            <MuiSelect
-              value={local.tower || "__all__"}
-              onChange={(e) => set("tower", e.target.value === "__all__" ? "" : e.target.value)}
-              displayEmpty
-              label="Tower"
-              sx={fieldStyles}
-              MenuProps={menuProps}
-            >
-              <MenuItem value="__all__">All</MenuItem>
-              {options?.towers?.map((t) => (
-                <MenuItem key={t.value} value={String(t.value)}>{t.label}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          {/* Flat */}
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat</InputLabel>
-            <MuiSelect
-              value={local.flat || "__all__"}
-              onChange={(e) => set("flat", e.target.value === "__all__" ? "" : e.target.value)}
-              displayEmpty
-              label="Flat"
-              sx={fieldStyles}
-              MenuProps={menuProps}
-            >
-              <MenuItem value="__all__">All</MenuItem>
-              {options?.flats?.map((f) => (
-                <MenuItem key={f.value} value={String(f.value)}>{f.label}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          {/* Date Range */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <label className="text-sm font-medium text-gray-700">From Date</label>
-              <input
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              {renderSelectField("Building", "Select Building", local.building, "building", options?.buildings)}
+              {renderSelectField("Tower", "Select Tower", local.tower, "tower", options?.towers)}
+              {renderSelectField("Flat", "Select Flat", local.flat, "flat", options?.flats)}
+              <TextField
+                label="From Date"
                 type="date"
-                title="From Date"
                 value={local.from_date}
                 onChange={(e) => set("from_date", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
-            </div>
-            <div className="grid gap-1.5">
-              <label className="text-sm font-medium text-gray-700">To Date</label>
-              <input
+              <TextField
+                label="To Date"
                 type="date"
-                title="To Date"
                 value={local.to_date}
                 onChange={(e) => set("to_date", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
             </div>
           </div>
-        </div>
         )}
 
-        <DialogFooter className="gap-2">
+        <div className="flex justify-end gap-3 pt-4 border-t">
           <Button
             variant="outline"
             onClick={() => { setLocal(defaultFilters); onReset(); }}
+            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
           >
             Reset
           </Button>
           <Button
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             onClick={() => onApply(local)}
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
           >
-            Apply
+            Apply Filters
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

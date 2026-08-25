@@ -3,13 +3,9 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import { menuProps } from "@/components/ticket-management/fieldStyles";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
 import { X } from "lucide-react";
 
@@ -19,8 +15,6 @@ export interface ChartOfAccountLedger {
   account_code?: string;
   lock_account_group_id?: number;
   budget?: number | string;
-  budget_start_date?: string;
-  budget_end_date?: string;
   description?: string;
   watchlist?: boolean;
   allow_cost_center?: boolean;
@@ -38,26 +32,31 @@ interface AddChartOfAccountModalProps {
   editingLedger?: ChartOfAccountLedger | null;
 }
 
-// Shape returned by the dedicated GET /lock_account_ledgers/account_types
-// endpoint — every group is a valid account type, each pre-labeled with its
-// own parent ("<group_name> - <parent_group_name>").
-interface AccountTypeAPI {
+interface AccountGroupAPI {
   id: number;
   group_name: string;
   parent_group_id?: number | null;
-  parent_group_name?: string | null;
-  label?: string;
 }
 
-// The 4 fundamental account types are fixed system roots that never appear as
-// their own entries in GET /lock_account_ledgers/account_types, but ledgers
-// can still be assigned directly under one of them.
-const ROOT_GROUPS: AccountGroupOption[] = [
-  { id: 1, group_name: "Assets" },
-  { id: 2, group_name: "Liabilities" },
-  { id: 3, group_name: "Income" },
-  { id: 4, group_name: "Expenditure" },
-];
+// lock_account_groups comes back as a flat list (parent_group_id links to a
+// parent) rather than nested, so build each option's display name by walking
+// its ancestor chain.
+const flattenGroups = (groups: AccountGroupAPI[]): AccountGroupOption[] => {
+  const byId = new Map(groups.map((g) => [g.id, g]));
+  const nameWithAncestry = (group: AccountGroupAPI): string => {
+    const names: string[] = [group.group_name];
+    const seen = new Set<number>([group.id]);
+    let parentId = group.parent_group_id;
+    while (parentId && byId.has(parentId) && !seen.has(parentId)) {
+      const parent = byId.get(parentId)!;
+      names.unshift(parent.group_name);
+      seen.add(parentId);
+      parentId = parent.parent_group_id;
+    }
+    return names.join(" > ");
+  };
+  return groups.map((g) => ({ id: g.id, group_name: nameWithAncestry(g) }));
+};
 
 export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
   open,
@@ -72,8 +71,6 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
   const [accountName, setAccountName] = useState("");
   const [accountCode, setAccountCode] = useState("");
   const [accountBudget, setAccountBudget] = useState("");
-  const [budgetStart, setBudgetStart] = useState("");
-  const [budgetEnd, setBudgetEnd] = useState("");
   const [description, setDescription] = useState("");
   const [addToWatchlist, setAddToWatchlist] = useState(false);
   const [allowCostCenter, setAllowCostCenter] = useState(false);
@@ -85,16 +82,12 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_ledgers/account_types.json`, {
+        const res = await axios.get(`${baseUrl}/lock_account_groups`, {
           params: { lock_account_id: lockAccountId },
-          headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         });
-        const groups: AccountTypeAPI[] = res.data?.lock_account_groups || [];
-        const options = groups.map((g) => ({ id: g.id, group_name: g.label || g.group_name }));
-        setAccountTypes([...ROOT_GROUPS, ...options]);
+        const groups: AccountGroupAPI[] = res.data?.lock_account_groups || [];
+        setAccountTypes(flattenGroups(groups));
       } catch (error) {
         console.error("Error fetching account types:", error);
         setAccountTypes([]);
@@ -111,8 +104,6 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       setAccountName(editingLedger.name || "");
       setAccountCode(editingLedger.account_code || "");
       setAccountBudget(String(editingLedger.budget ?? ""));
-      setBudgetStart(editingLedger.budget_start_date || "");
-      setBudgetEnd(editingLedger.budget_end_date || "");
       setDescription(editingLedger.description || "");
       setAddToWatchlist(Boolean(editingLedger.watchlist));
       setAllowCostCenter(Boolean(editingLedger.allow_cost_center));
@@ -121,8 +112,6 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       setAccountName("");
       setAccountCode("");
       setAccountBudget("");
-      setBudgetStart("");
-      setBudgetEnd("");
       setDescription("");
       setAddToWatchlist(false);
       setAllowCostCenter(false);
@@ -162,14 +151,12 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
             account_code: accountCode || null,
             description: description || null,
             budget: accountBudget || null,
-            budget_start_date: budgetStart || null,
-            budget_end_date: budgetEnd || null,
             watchlist: addToWatchlist,
             assoc_cost_centre: allowCostCenter,
           },
         };
         await axios.patch(
-          `${baseUrl}/lock_account_ledgers/${editingLedger.id}.json`,
+          `${baseUrl}/lock_account_ledgers/${editingLedger.id}`,
           payload,
           { headers }
         );
@@ -177,20 +164,18 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       } else {
         const payload = {
           lock_account_ledger: {
-            lock_account_id: Number(lockAccountId),
+            lock_account_id: lockAccountId,
             lock_account_group_id: Number(accountTypeId),
             name: accountName,
             account_code: accountCode || null,
             description: description || null,
             budget: accountBudget || null,
-            budget_start_date: budgetStart || null,
-            budget_end_date: budgetEnd || null,
             watchlist: addToWatchlist,
             assoc_cost_centre: allowCostCenter,
             active: true,
           },
         };
-        await axios.post(`${baseUrl}/lock_account_ledgers.json`, payload, { headers });
+        await axios.post(`${baseUrl}/lock_account_ledgers`, payload, { headers });
         toast.success("Account created successfully");
       }
       onSaved();
@@ -221,109 +206,81 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
         </div>
 
         <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Account Type <span className="text-red-500">*</span>
-            </legend>
-            <FormControl variant="standard" fullWidth>
-              <Select
-                value={accountTypeId}
-                onChange={(e) => setAccountTypeId(e.target.value as string)}
-                displayEmpty
-                disableUnderline
-                sx={{
-                  height: 36,
-                  outline: "none",
-                  "& .MuiSelect-select:focus": { outline: "none", backgroundColor: "transparent" },
-                }}
-                MenuProps={{
-                  ...menuProps,
-                  PaperProps: {
-                    ...menuProps.PaperProps,
-                    style: { ...menuProps.PaperProps.style, maxHeight: 300, maxWidth: 420 },
-                  },
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Select Account Type
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Account Type <span style={{ color: "#C72030" }}>*</span>
+            </InputLabel>
+            <MuiSelect
+              value={accountTypeId}
+              onChange={(e) => setAccountTypeId(e.target.value as string)}
+              displayEmpty
+              label="Account Type *"
+              sx={fieldStyles}
+              MenuProps={{
+                ...menuProps,
+                PaperProps: {
+                  ...menuProps.PaperProps,
+                  style: { ...menuProps.PaperProps.style, maxHeight: 300 },
+                },
+              }}
+            >
+              <MenuItem value="">
+                <em>Select Account Type</em>
+              </MenuItem>
+              {accountTypes.map((type) => (
+                <MenuItem key={type.id} value={String(type.id)}>
+                  {type.group_name}
                 </MenuItem>
-                {accountTypes.map((type) => (
-                  <MenuItem
-                    key={type.id}
-                    value={String(type.id)}
-                    sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
-                  >
-                    {type.group_name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </fieldset>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Account Name <span className="text-red-500">*</span>
-            </legend>
-            <Input
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-              placeholder="Enter Account Name"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label={<>Account Name <span style={{ color: "#C72030" }}>*</span></>}
+            placeholder="Enter Account Name"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Account Code</legend>
-            <Input
-              value={accountCode}
-              onChange={(e) => setAccountCode(e.target.value)}
-              placeholder="Enter Account Code"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label="Account Code"
+            placeholder="Enter Account Code"
+            value={accountCode}
+            onChange={(e) => setAccountCode(e.target.value)}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Account Budget</legend>
-            <Input
-              type="number"
-              min={0}
-              value={accountBudget}
-              onChange={(e) => setAccountBudget(e.target.value)}
-              placeholder="Enter Account Budget"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label="Account Budget"
+            type="number"
+            placeholder="Enter Account Budget"
+            value={accountBudget}
+            onChange={(e) => setAccountBudget(e.target.value)}
+            fullWidth
+            variant="outlined"
+            inputProps={{ min: 0 }}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Budget Start</legend>
-            <Input
-              type="date"
-              value={budgetStart}
-              onChange={(e) => setBudgetStart(e.target.value)}
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
-
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Budget End</legend>
-            <Input
-              type="date"
-              value={budgetEnd}
-              onChange={(e) => setBudgetEnd(e.target.value)}
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
-
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Description</legend>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              placeholder="Enter Description"
-              className="border-0 shadow-none px-0 resize-none focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label="Description"
+            placeholder="Enter Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            fullWidth
+            variant="outlined"
+            multiline
+            rows={4}
+            InputLabelProps={{ shrink: true }}
+          />
 
           <div className="flex items-center gap-2">
             <Checkbox
@@ -346,7 +303,6 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
               Allow Cost Center
             </label>
           </div>
-
         </div>
 
         <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">

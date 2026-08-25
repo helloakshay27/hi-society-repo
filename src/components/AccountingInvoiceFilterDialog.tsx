@@ -4,18 +4,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { X } from "lucide-react";
 
 export interface AccountingInvoiceFilters {
@@ -48,11 +40,11 @@ export const AccountingInvoiceFilterDialog: React.FC<AccountingInvoiceFilterDial
   const [filters, setFilters] = useState<AccountingInvoiceFilters>(currentFilters);
 
   useEffect(() => {
-    setFilters(currentFilters);
-  }, [currentFilters]);
+    if (isOpen) setFilters(currentFilters);
+  }, [isOpen, currentFilters]);
 
   const handleFilterChange = (key: keyof AccountingInvoiceFilters, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value === "all" ? undefined : value }));
+    setFilters((prev) => ({ ...prev, [key]: value || undefined }));
   };
 
   const handleApply = () => {
@@ -65,111 +57,114 @@ export const AccountingInvoiceFilterDialog: React.FC<AccountingInvoiceFilterDial
     onResetFilters();
   };
 
+  const renderSelectField = (
+    label: string,
+    placeholder: string,
+    value: string,
+    key: keyof AccountingInvoiceFilters,
+    items: { label: string; value: string }[],
+  ) => (
+    <FormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+        {label}
+      </InputLabel>
+      <MuiSelect
+        value={value}
+        onChange={(e) => handleFilterChange(key, e.target.value)}
+        displayEmpty
+        label={label}
+        sx={fieldStyles}
+        MenuProps={menuProps}
+      >
+        <MenuItem value="">
+          <em>{placeholder}</em>
+        </MenuItem>
+        {items.map((item) => (
+          <MenuItem key={item.value} value={item.value}>
+            {item.label}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+    </FormControl>
+  );
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-visible">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <DialogTitle className="text-lg font-semibold">Filter Bills</DialogTitle>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+            FILTER BY
+          </DialogTitle>
           <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label>Select Tower</Label>
-            <Select
-              value={filters.tower || "all"}
-              onValueChange={(value) => handleFilterChange("tower", value)}
-            >
-              <SelectTrigger className="w-full bg-white border border-gray-300">
-                <SelectValue placeholder="Select Tower" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                <SelectItem value="all">All Towers</SelectItem>
-                {towerOptions.map((tower) => (
-                  <SelectItem key={tower} value={tower}>
-                    {tower}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="billNumber">Bill Number Search</Label>
-            <Input
-              id="billNumber"
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            {renderSelectField(
+              "Select Tower",
+              "All Towers",
+              filters.tower || "",
+              "tower",
+              towerOptions.map((tower) => ({ label: tower, value: tower })),
+            )}
+            <TextField
+              label="Bill Number Search"
               placeholder="Bill Number Search"
               value={filters.billNumber || ""}
               onChange={(e) => handleFilterChange("billNumber", e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
             />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Unit</Label>
-            <Select
-              value={filters.unit || "all"}
-              onValueChange={(value) => handleFilterChange("unit", value)}
-            >
-              <SelectTrigger className="w-full bg-white border border-gray-300">
-                <SelectValue placeholder="Select Unit" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                <SelectItem value="all">All Units</SelectItem>
-                {unitOptions.map((unit) => (
-                  <SelectItem key={unit} value={unit}>
-                    {unit}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Payment Status</Label>
-            <Select
-              value={filters.paymentStatus || "all"}
-              onValueChange={(value) => handleFilterChange("paymentStatus", value)}
-            >
-              <SelectTrigger className="w-full bg-white border border-gray-300">
-                <SelectValue placeholder="Select Payment Status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Paid">Paid</SelectItem>
-                <SelectItem value="Overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Publish Status</Label>
-            <Select
-              value={filters.publishStatus || "all"}
-              onValueChange={(value) => handleFilterChange("publishStatus", value)}
-            >
-              <SelectTrigger className="w-full bg-white border border-gray-300">
-                <SelectValue placeholder="Select Publish Status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="Yes">Yes</SelectItem>
-                <SelectItem value="No">No</SelectItem>
-              </SelectContent>
-            </Select>
+            {renderSelectField(
+              "Select Unit",
+              "All Units",
+              filters.unit || "",
+              "unit",
+              unitOptions.map((unit) => ({ label: unit, value: unit })),
+            )}
+            {renderSelectField(
+              "Select Payment Status",
+              "All",
+              filters.paymentStatus || "",
+              "paymentStatus",
+              [
+                { label: "Pending", value: "Pending" },
+                { label: "Paid", value: "Paid" },
+                { label: "Overdue", value: "Overdue" },
+              ],
+            )}
+            {renderSelectField(
+              "Select Publish Status",
+              "All",
+              filters.publishStatus || "",
+              "publishStatus",
+              [
+                { label: "Yes", value: "Yes" },
+                { label: "No", value: "No" },
+              ],
+            )}
           </div>
         </div>
 
-        <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={handleReset}>
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+          >
             Reset
           </Button>
-          <Button onClick={handleApply} className="bg-[#C72030] hover:bg-[#A01B28] text-white">
+          <Button
+            onClick={handleApply}
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+          >
             Apply Filters
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

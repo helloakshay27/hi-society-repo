@@ -4,16 +4,56 @@ import TextField from "@mui/material/TextField";
 import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
-import { formatAmount } from "@/utils/financialStatement";
+import {
+  StatementNode,
+  StatementRow,
+  SectionTemplate,
+  formatAmount,
+  buildSideRows,
+} from "@/utils/financialStatement";
 
 // Real response shape returned by GET /lock_account_transactions/pnl
-interface PnlLedgerAPI {
-  id: number;
-  name: string;
-  total: number;
-  display_total: number;
-  fixed_type?: string | null;
+interface PnlSection {
+  node_name: string; // "expenditure" | "income"
+  accounts: StatementNode[];
 }
+
+interface PnlApiResponse {
+  pnl?: {
+    accounts?: PnlSection[];
+  };
+}
+
+// Fixed statutory line items (Maharashtra Co-operative Societies "Form N" style
+// Profit and Loss / Income & Expenditure account). Amounts are populated from
+// the API by matching ledger/group names below; anything the society has
+// added beyond this standard template (custom groups/ledgers) is appended
+// automatically so no data is dropped.
+const EXPENDITURE_TEMPLATE: SectionTemplate[] = [
+  {
+    label: "Indirect Expense",
+    children: [
+      "Interest Paid",
+      "Interest Payable",
+      "Bank Charges",
+      "Salaries and Allowances of Staff",
+      "Contribution to Staff Provident Fund",
+      "Salary and Allowances of Managing Director",
+      "Attendance fees and travelling expenses of Directors and Committee Members",
+      "Travelling expenses of staff",
+      "Rent, rates and taxes",
+      "Postage, Telegram and Telephone charges",
+      "Printing and Stationery",
+      "Audit fees",
+      "General expenses",
+      "Bad Debts written off or provision made for bad debts",
+      "Depreciation on fixed assets",
+      "Land Income and Expenditure account",
+      "Other Items",
+      { label: "Net Profit carried to Balance Sheet", summary: true },
+    ],
+  },
+];
 
 interface PnlGroupAPI {
   id: number;
@@ -22,60 +62,6 @@ interface PnlGroupAPI {
   children?: PnlGroupAPI[];
   ledgers?: PnlLedgerAPI[];
 }
-
-interface PnlSideAPI {
-  groups?: PnlGroupAPI[];
-  ledgers?: PnlLedgerAPI[];
-}
-
-interface PnlSummaryAPI {
-  income_total: number;
-  expense_total: number;
-  bt: number;
-  net_profit: number;
-  net_loss: number;
-}
-
-interface PnlApiResponse {
-  code?: number;
-  report?: string;
-  lock_account?: { id: number; name: string };
-  summary?: PnlSummaryAPI;
-  expense?: PnlSideAPI;
-  income?: PnlSideAPI;
-  totals?: { expense: number; income: number };
-}
-
-interface PnlRow {
-  level: number;
-  label: string;
-  amount: number;
-  isGroup?: boolean;
-  isTotal?: boolean;
-}
-
-const ledgerAmount = (ledger: PnlLedgerAPI): number => ledger.display_total ?? ledger.total ?? 0;
-
-const buildGroupRows = (group: PnlGroupAPI, level: number): PnlRow[] => {
-  const rows: PnlRow[] = [
-    { level, label: group.group_name, amount: group.group_total ?? 0, isGroup: true },
-  ];
-  (group.children || []).forEach((child) => rows.push(...buildGroupRows(child, level + 1)));
-  (group.ledgers || []).forEach((ledger) =>
-    rows.push({ level: level + 1, label: ledger.name, amount: ledgerAmount(ledger) })
-  );
-  return rows;
-};
-
-const buildSideRows = (side: PnlSideAPI | undefined, totalAmount: number): PnlRow[] => {
-  const rows: PnlRow[] = [];
-  (side?.groups || []).forEach((group) => rows.push(...buildGroupRows(group, 0)));
-  (side?.ledgers || []).forEach((ledger) =>
-    rows.push({ level: 0, label: ledger.name, amount: ledgerAmount(ledger) })
-  );
-  rows.push({ level: 0, label: "Total", amount: totalAmount, isTotal: true });
-  return rows;
-};
 
 const AccountingProfitLoss: React.FC = () => {
   const lock_account_id = localStorage.getItem("lock_account_id") || "3";
@@ -91,7 +77,7 @@ const AccountingProfitLoss: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const response = await axios.get<PnlApiResponse>(`${baseUrl}/lock_account_transactions/pnl.json`, {
+      const response = await axios.get(`${baseUrl}/lock_account_transactions/pnl`, {
         headers: {
           Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -121,11 +107,13 @@ const AccountingProfitLoss: React.FC = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const expenseTotal = pnlData?.summary?.expense_total ?? pnlData?.totals?.expense ?? 0;
-  const incomeTotal = pnlData?.summary?.income_total ?? pnlData?.totals?.income ?? 0;
+  const expenditureNodes =
+    pnlData?.pnl?.accounts?.find((s) => s.node_name === "expenditure")?.accounts || [];
+  const incomeNodes =
+    pnlData?.pnl?.accounts?.find((s) => s.node_name === "income")?.accounts || [];
 
-  const expenditureRows = buildSideRows(pnlData?.expense, expenseTotal);
-  const incomeRows = buildSideRows(pnlData?.income, incomeTotal);
+  const { rows: expenditureRows } = buildSideRows(EXPENDITURE_TEMPLATE, expenditureNodes);
+  const { rows: incomeRows } = buildSideRows(INCOME_TEMPLATE, incomeNodes);
 
   const rowCount = Math.max(expenditureRows.length, incomeRows.length);
 
@@ -233,20 +221,12 @@ const AccountingProfitLoss: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {rowCount === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="border border-gray-300 px-3 py-4 text-center text-gray-500">
-                      No matching records found
-                    </td>
+                {Array.from({ length: rowCount }).map((_, i) => (
+                  <tr key={i}>
+                    {renderSideCells(expenditureRows[i])}
+                    {renderSideCells(incomeRows[i])}
                   </tr>
-                ) : (
-                  Array.from({ length: rowCount }).map((_, i) => (
-                    <tr key={i}>
-                      {renderSideCells(expenditureRows[i])}
-                      {renderSideCells(incomeRows[i])}
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>

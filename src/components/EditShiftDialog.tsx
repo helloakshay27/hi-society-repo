@@ -240,7 +240,7 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
         </DialogHeader>
         
         <div className="space-y-6">
-          <div className="flex gap-2 items-end mt-2">
+          <div className="grid grid-cols-[1fr_auto_1fr_minmax(140px,140px)] gap-2 items-end mt-2">
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>From Hr *</InputLabel>
               <MuiSelect
@@ -274,14 +274,20 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
                 ))}
               </MuiSelect>
             </FormControl>
-            <FormControl sx={{ width: 110 }} variant="outlined">
+            <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>AM/PM *</InputLabel>
               <MuiSelect
                 value={fromAmPm}
                 onChange={(e) => setFromAmPm(e.target.value)}
                 displayEmpty
                 label="AM/PM *"
-                sx={fieldStyles}
+                sx={{
+                  ...fieldStyles,
+                  '& .MuiSelect-select': {
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  },
+                }}
                 MenuProps={menuProps}
               >
                 <MenuItem value="AM">AM</MenuItem>
@@ -289,7 +295,7 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
               </MuiSelect>
             </FormControl>
           </div>
-          <div className="flex gap-2 items-end mt-4">
+          <div className="grid grid-cols-[1fr_auto_1fr_minmax(140px,140px)] gap-2 items-end mt-4">
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>To Hr *</InputLabel>
               <MuiSelect
@@ -323,14 +329,20 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
                 ))}
               </MuiSelect>
             </FormControl>
-            <FormControl sx={{ width: 110 }} variant="outlined">
+            <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>AM/PM *</InputLabel>
               <MuiSelect
                 value={toAmPm}
                 onChange={(e) => setToAmPm(e.target.value)}
                 displayEmpty
                 label="AM/PM *"
-                sx={fieldStyles}
+                sx={{
+                  ...fieldStyles,
+                  '& .MuiSelect-select': {
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  },
+                }}
                 MenuProps={menuProps}
               >
                 <MenuItem value="AM">AM</MenuItem>

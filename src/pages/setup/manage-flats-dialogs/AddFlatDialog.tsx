@@ -459,6 +459,29 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles, inputProps: { max: new Date().toISOString().split("T")[0] } }}
             />
+
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Rm User</InputLabel>
+              <MuiSelect
+                value={formData.rmUser}
+                onChange={(e) => onChange('rmUser', e.target.value)}
+                displayEmpty
+                label="Rm User"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select</em></MenuItem>
+                {rmUsers.length === 0 ? (
+                  <MenuItem value="no-rm-user" disabled><em>No Rm User Found</em></MenuItem>
+                ) : (
+                  rmUsers.map((user: any) => (
+                    <MenuItem key={user.id} value={user.id.toString()}>
+                      {user.name}
+                    </MenuItem>
+                  ))
+                )}
+              </MuiSelect>
+            </MuiFormControl>
           </div>
 
           {/* Attachment Upload */}

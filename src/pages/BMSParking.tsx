@@ -41,7 +41,6 @@ import {
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import {
   TextField,
   FormControl,
@@ -59,10 +58,28 @@ const clickableMenuProps: Partial<MenuProps> = {
   ...menuProps,
   PaperProps: {
     ...menuProps.PaperProps,
+    className: "disable-mui-select-search",
     style: {
       ...(menuProps.PaperProps?.style || {}),
-      // cast to any to satisfy MUI/TS pointerEvents typing
-      pointerEvents: "auto" as any,
+      maxHeight: 280,
+      overflowY: "auto",
+      pointerEvents: "auto" as const,
+      zIndex: 10050,
+    },
+    onWheel: (e: React.WheelEvent) => {
+      e.stopPropagation();
+    },
+  },
+  MenuListProps: {
+    className: "disable-mui-select-search",
+    style: {
+      maxHeight: 280,
+      overflowY: "auto",
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
+    onWheel: (e: React.WheelEvent) => {
+      e.stopPropagation();
     },
   },
 };
@@ -866,126 +883,113 @@ const BMSParking: React.FC = () => {
           Parking Slot Details
         </p>
         <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">
-              Slot Name <span className="text-red-500">*</span>
-            </Label>
-            <TextField
-              placeholder="Enter slot name"
-              value={formData.slotName}
-              onChange={(e) => {
-                setFormData((p) => ({ ...p, slotName: e.target.value }));
-                if (e.target.value.trim()) setSlotNameError(false);
-              }}
-              fullWidth
-              variant="outlined"
-              slotProps={{ inputLabel: { shrink: true } }}
-              InputProps={{
-                sx: {
-                  ...fieldStyles,
-                  ...(slotNameError
-                    ? {
+          <TextField
+            label={<>Slot Name <span style={{ color: "#C72030" }}>*</span></>}
+            placeholder="Enter slot name"
+            value={formData.slotName}
+            onChange={(e) => {
+              setFormData((p) => ({ ...p, slotName: e.target.value }));
+              if (e.target.value.trim()) setSlotNameError(false);
+            }}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              sx: {
+                ...fieldStyles,
+                ...(slotNameError
+                  ? {
                       "& .MuiOutlinedInput-notchedOutline": {
                         borderColor: "#ef4444 !important",
                       },
                     }
-                    : {}),
-                },
-              }}
-              error={slotNameError}
-              helperText={slotNameError ? "Slot name is required" : ""}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Vehicle Type</Label>
-            <FormControl
-              fullWidth
-              variant="outlined"
-              sx={{ "& .MuiInputBase-root": fieldStyles }}
-            >
-              <InputLabel shrink>Vehicle Type</InputLabel>
-              <MuiSelect
-                value={formData.vehicleType || ""}
-                onChange={(e) =>
-                  setFormData((p) => ({
-                    ...p,
-                    vehicleType: e.target.value as string,
-                  }))
-                }
-                label="Vehicle Type"
-                notched
-                displayEmpty
-                MenuProps={clickableMenuProps}
-              >
-                <MenuItem value="">
-                  <em>Select Vehicle Type</em>
-                </MenuItem>
-                {vehicleTypes.map((t) => (
-                  <MenuItem key={t} value={t}>
-                    {t}
-                  </MenuItem>
-                ))}
-                {formData.vehicleType &&
-                  !vehicleTypes.includes(formData.vehicleType) && (
-                    <MenuItem value={formData.vehicleType}>
-                      {formData.vehicleType}
-                    </MenuItem>
-                  )}
-              </MuiSelect>
-            </FormControl>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Parking Type</Label>
-            <FormControl
-              fullWidth
-              variant="outlined"
-              sx={{ "& .MuiInputBase-root": fieldStyles }}
-            >
-              <InputLabel shrink>Parking Type</InputLabel>
-              <MuiSelect
-                value={formData.parkingType || ""}
-                onChange={(e) =>
-                  setFormData((p) => ({
-                    ...p,
-                    parkingType: e.target.value as string,
-                  }))
-                }
-                label="Parking Type"
-                notched
-                displayEmpty
-                MenuProps={clickableMenuProps}
-              >
-                <MenuItem value="">
-                  <em>Select Parking Type</em>
-                </MenuItem>
-                {parkingTypes.map((t) => (
-                  <MenuItem key={t} value={t}>
-                    {t}
-                  </MenuItem>
-                ))}
-                {formData.parkingType &&
-                  !parkingTypes.includes(formData.parkingType) && (
-                    <MenuItem value={formData.parkingType}>
-                      {formData.parkingType}
-                    </MenuItem>
-                  )}
-              </MuiSelect>
-            </FormControl>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Sticker Number</Label>
-            <TextField
-              placeholder="Enter sticker number"
-              value={formData.stickerNumber}
+                  : {}),
+              },
+            }}
+            error={slotNameError}
+            helperText={slotNameError ? "Slot name is required" : ""}
+          />
+
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Vehicle Type
+            </InputLabel>
+            <MuiSelect
+              value={formData.vehicleType || ""}
               onChange={(e) =>
-                setFormData((p) => ({ ...p, stickerNumber: e.target.value }))
+                setFormData((p) => ({
+                  ...p,
+                  vehicleType: e.target.value as string,
+                }))
               }
-              fullWidth
-              variant="outlined"
-              slotProps={{ inputLabel: { shrink: true } }}
-              InputProps={{ sx: fieldStyles }}
-            />
-          </div>
+              label="Vehicle Type"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>Select Vehicle Type</em>
+              </MenuItem>
+              {vehicleTypes.map((t) => (
+                <MenuItem key={t} value={t}>
+                  {t}
+                </MenuItem>
+              ))}
+              {formData.vehicleType &&
+                !vehicleTypes.includes(formData.vehicleType) && (
+                  <MenuItem value={formData.vehicleType}>
+                    {formData.vehicleType}
+                  </MenuItem>
+                )}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Parking Type
+            </InputLabel>
+            <MuiSelect
+              value={formData.parkingType || ""}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  parkingType: e.target.value as string,
+                }))
+              }
+              label="Parking Type"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>Select Parking Type</em>
+              </MenuItem>
+              {parkingTypes.map((t) => (
+                <MenuItem key={t} value={t}>
+                  {t}
+                </MenuItem>
+              ))}
+              {formData.parkingType &&
+                !parkingTypes.includes(formData.parkingType) && (
+                  <MenuItem value={formData.parkingType}>
+                    {formData.parkingType}
+                  </MenuItem>
+                )}
+            </MuiSelect>
+          </FormControl>
+
+          <TextField
+            label="Sticker Number"
+            placeholder="Enter sticker number"
+            value={formData.stickerNumber}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, stickerNumber: e.target.value }))
+            }
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
         </div>
       </div>
 
@@ -995,125 +999,112 @@ const BMSParking: React.FC = () => {
           Associate With Flat
         </p>
         <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Tower / Block</Label>
-            <FormControl
-              fullWidth
-              variant="outlined"
-              disabled={loadingBlocks}
-              sx={{ "& .MuiInputBase-root": fieldStyles }}
+          <FormControl fullWidth variant="outlined" disabled={loadingBlocks}>
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Tower / Block
+            </InputLabel>
+            <MuiSelect
+              value={formData.towerId || ""}
+              onChange={(e) => handleTowerChange(e.target.value as string)}
+              label="Tower / Block"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
             >
-              <InputLabel shrink>Tower / Block</InputLabel>
-              <MuiSelect
-                value={formData.towerId || ""}
-                onChange={(e) => handleTowerChange(e.target.value as string)}
-                label="Tower / Block"
-                notched
-                displayEmpty
-                MenuProps={clickableMenuProps}
-              >
-                <MenuItem value="">
-                  <em>
-                    {loadingBlocks ? "Loading..." : "Select Tower / Block"}
-                  </em>
+              <MenuItem value="">
+                <em>
+                  {loadingBlocks ? "Loading..." : "Select Tower / Block"}
+                </em>
+              </MenuItem>
+              {blocks.map((b) => (
+                <MenuItem key={b.id} value={b.id.toString()}>
+                  {b.name}
                 </MenuItem>
-                {blocks.map((b) => (
-                  <MenuItem key={b.id} value={b.id.toString()}>
-                    {b.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Select Flat</Label>
-            <FormControl
-              fullWidth
-              variant="outlined"
-              disabled={loadingFlats || !formData.towerId}
-              sx={{ "& .MuiInputBase-root": fieldStyles }}
-            >
-              <InputLabel shrink>Select Flat</InputLabel>
-              <MuiSelect
-                value={formData.flatId || ""}
-                onChange={(e) =>
-                  setFormData((p) => ({
-                    ...p,
-                    flatId: e.target.value as string,
-                  }))
-                }
-                label="Select Flat"
-                notched
-                displayEmpty
-                MenuProps={clickableMenuProps}
-              >
-                <MenuItem value="">
-                  <em>
-                    {loadingFlats
-                      ? "Loading..."
-                      : !formData.towerId
-                        ? "Select tower first"
-                        : "Select Flat"}
-                  </em>
-                </MenuItem>
-                {flats.map((f) => (
-                  <MenuItem key={f.id} value={f.id.toString()}>
-                    {f.flat_str ||
-                      (f.block_name && f.flat_no
-                        ? `${f.block_name} - ${f.flat_no}`
-                        : f.flat_no || f.id.toString())}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Vehicle Number</Label>
-            <TextField
-              placeholder="Enter vehicle number"
-              value={formData.vehicleNumber}
+              ))}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl
+            fullWidth
+            variant="outlined"
+            disabled={loadingFlats || !formData.towerId}
+          >
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Select Flat
+            </InputLabel>
+            <MuiSelect
+              value={formData.flatId || ""}
               onChange={(e) =>
-                setFormData((p) => ({ ...p, vehicleNumber: e.target.value }))
+                setFormData((p) => ({
+                  ...p,
+                  flatId: e.target.value as string,
+                }))
               }
-              fullWidth
-              variant="outlined"
-              slotProps={{ inputLabel: { shrink: true } }}
-              InputProps={{ sx: fieldStyles }}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Charge Applicable</Label>
-            <FormControl
-              fullWidth
-              variant="outlined"
-              disabled={loadingCharges}
-              sx={{ "& .MuiInputBase-root": fieldStyles }}
+              label="Select Flat"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
             >
-              <InputLabel shrink>Charge Applicable</InputLabel>
-              <MuiSelect
-                value={formData.chargeSetupId || ""}
-                onChange={(e) =>
-                  setFormData((p) => ({
-                    ...p,
-                    chargeSetupId: e.target.value as string,
-                  }))
-                }
-                label="Charge Applicable"
-                notched
-                displayEmpty
-                MenuProps={clickableMenuProps}
-              >
-                <MenuItem value="">
-                  <em>{loadingCharges ? "Loading..." : "Select Charge"}</em>
+              <MenuItem value="">
+                <em>
+                  {loadingFlats
+                    ? "Loading..."
+                    : !formData.towerId
+                      ? "Select tower first"
+                      : "Select Flat"}
+                </em>
+              </MenuItem>
+              {flats.map((f) => (
+                <MenuItem key={f.id} value={f.id.toString()}>
+                  {f.flat_str ||
+                    (f.block_name && f.flat_no
+                      ? `${f.block_name} - ${f.flat_no}`
+                      : f.flat_no || f.id.toString())}
                 </MenuItem>
-                {chargeOptions.map((c) => (
-                  <MenuItem key={c.id} value={c.id.toString()}>
-                    {c.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </div>
+              ))}
+            </MuiSelect>
+          </FormControl>
+
+          <TextField
+            label="Vehicle Number"
+            placeholder="Enter vehicle number"
+            value={formData.vehicleNumber}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, vehicleNumber: e.target.value }))
+            }
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
+
+          <FormControl fullWidth variant="outlined" disabled={loadingCharges}>
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Charge Applicable
+            </InputLabel>
+            <MuiSelect
+              value={formData.chargeSetupId || ""}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  chargeSetupId: e.target.value as string,
+                }))
+              }
+              label="Charge Applicable"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>{loadingCharges ? "Loading..." : "Select Charge"}</em>
+              </MenuItem>
+              {chargeOptions.map((c) => (
+                <MenuItem key={c.id} value={c.id.toString()}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
         </div>
       </div>
 
@@ -1253,7 +1244,7 @@ const BMSParking: React.FC = () => {
       </div>
 
       {/* Add Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      <Dialog open={isAddModalOpen} modal={false} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">
@@ -1265,7 +1256,7 @@ const BMSParking: React.FC = () => {
       </Dialog>
 
       {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">

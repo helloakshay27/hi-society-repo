@@ -1,25 +1,15 @@
 import React, { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { CalendarIcon, X } from "lucide-react";
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { X } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 
@@ -207,99 +197,110 @@ const AccountingInvoicesReport: React.FC = () => {
       />
 
       {/* Filter Dialog */}
-      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white">
-          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <DialogTitle className="text-lg font-semibold">Filter Invoices</DialogTitle>
+      <Dialog open={filterDialogOpen} modal={false} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
+          <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+            <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+              FILTER BY
+            </DialogTitle>
             <Button variant="ghost" size="sm" onClick={handleCloseFilter} className="h-6 w-6 p-0">
               <X className="h-4 w-4" />
             </Button>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Select Tower</Label>
-              <Select
-                value={filterValues.tower}
-                onValueChange={(value) => setFilterValues((prev) => ({ ...prev, tower: value === "all" ? "" : value }))}
-              >
-                <SelectTrigger className="w-full bg-white border border-gray-300">
-                  <SelectValue placeholder="Select Tower" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999] max-h-[200px] overflow-y-auto">
-                  <SelectItem value="all">All Towers</SelectItem>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Select Tower
+                </InputLabel>
+                <MuiSelect
+                  value={filterValues.tower}
+                  onChange={(e) =>
+                    setFilterValues((prev) => ({ ...prev, tower: e.target.value }))
+                  }
+                  displayEmpty
+                  label="Select Tower"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="">
+                    <em>All Towers</em>
+                  </MenuItem>
                   {TOWERS.map((tower) => (
-                    <SelectItem key={tower} value={tower}>
+                    <MenuItem key={tower} value={tower}>
                       {tower}
-                    </SelectItem>
+                    </MenuItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </MuiSelect>
+              </FormControl>
 
-            <div className="grid gap-2">
-              <Label>Select Flat</Label>
-              <Select
-                value={filterValues.flat}
-                onValueChange={(value) => setFilterValues((prev) => ({ ...prev, flat: value === "all" ? "" : value }))}
-              >
-                <SelectTrigger className="w-full bg-white border border-gray-300">
-                  <SelectValue placeholder="Select Flat" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999] max-h-[200px] overflow-y-auto">
-                  <SelectItem value="all">All Flats</SelectItem>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Select Flat
+                </InputLabel>
+                <MuiSelect
+                  value={filterValues.flat}
+                  onChange={(e) =>
+                    setFilterValues((prev) => ({ ...prev, flat: e.target.value }))
+                  }
+                  displayEmpty
+                  label="Select Flat"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="">
+                    <em>All Flats</em>
+                  </MenuItem>
                   {FLATS.map((flat) => (
-                    <SelectItem key={flat} value={flat}>
+                    <MenuItem key={flat} value={flat}>
                       {flat}
-                    </SelectItem>
+                    </MenuItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </MuiSelect>
+              </FormControl>
 
-            <div className="grid gap-2">
-              <Label>Due Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !filterValues.dueDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filterValues.dueDate ? format(filterValues.dueDate, "dd/MM/yyyy") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={filterValues.dueDate}
-                    onSelect={(date) => setFilterValues((prev) => ({ ...prev, dueDate: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <TextField
+                label="Due Date"
+                type="date"
+                value={
+                  filterValues.dueDate ? format(filterValues.dueDate, "yyyy-MM-dd") : ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!value) {
+                    setFilterValues((prev) => ({ ...prev, dueDate: undefined }));
+                    return;
+                  }
+                  const [year, month, day] = value.split("-").map(Number);
+                  setFilterValues((prev) => ({
+                    ...prev,
+                    dueDate: new Date(year, month - 1, day),
+                  }));
+                }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
           </div>
 
-          <DialogFooter className="flex gap-2">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button
               variant="outline"
               onClick={handleResetFilters}
-              className="border-brand-card-border text-brand-text hover:bg-brand-selected"
+              className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
             >
               Reset
             </Button>
             <Button
               onClick={handleApplyFilters}
-              variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium" 
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
             >
               Apply Filters
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

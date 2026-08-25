@@ -3,7 +3,8 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { TextField } from "@mui/material";
+import { fieldStyles } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
 import { X } from "lucide-react";
 
@@ -147,7 +148,7 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} modal={false} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">
@@ -164,62 +165,57 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
         </div>
 
         <div className="space-y-4 px-6 py-4">
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Cost Centre Name <span className="text-red-500">*</span>
-            </legend>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={readOnly}
-              placeholder="Enter Cost Centre Name"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label={<>Cost Centre Name <span style={{ color: "#C72030" }}>*</span></>}
+            placeholder="Enter Cost Centre Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={readOnly}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Budget <span className="text-red-500">*</span>
-            </legend>
-            <Input
-              type="number"
-              min={0}
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              disabled={readOnly}
-              placeholder="Enter Budget"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label={<>Budget <span style={{ color: "#C72030" }}>*</span></>}
+            type="number"
+            placeholder="Enter Budget"
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            disabled={readOnly}
+            fullWidth
+            variant="outlined"
+            inputProps={{ min: 0 }}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Budget Start <span className="text-red-500">*</span>
-            </legend>
-            <Input
-              type="date"
-              min={todayStr}
-              value={budgetStart}
-              onChange={(e) => setBudgetStart(e.target.value)}
-              disabled={readOnly}
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label={<>Budget Start <span style={{ color: "#C72030" }}>*</span></>}
+            type="date"
+            value={budgetStart}
+            onChange={(e) => setBudgetStart(e.target.value)}
+            disabled={readOnly}
+            fullWidth
+            variant="outlined"
+            inputProps={{ min: todayStr }}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Budget End <span className="text-red-500">*</span>
-            </legend>
-            <Input
-              type="date"
-              min={budgetStart || todayStr}
-              value={budgetEnd}
-              onChange={(e) => setBudgetEnd(e.target.value)}
-              disabled={readOnly}
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
-
+          <TextField
+            label={<>Budget End <span style={{ color: "#C72030" }}>*</span></>}
+            type="date"
+            value={budgetEnd}
+            onChange={(e) => setBudgetEnd(e.target.value)}
+            disabled={readOnly}
+            fullWidth
+            variant="outlined"
+            inputProps={{ min: budgetStart || todayStr }}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
         </div>
 
         <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">

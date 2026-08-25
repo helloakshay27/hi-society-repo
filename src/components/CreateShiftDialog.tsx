@@ -195,9 +195,11 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
         
         <div className="space-y-6">
           {/* Shift Timings From */}
-          <div className="flex gap-2 items-end mt-2">
+          <div className="grid grid-cols-[1fr_auto_1fr_minmax(140px,140px)] gap-2 items-end mt-2">
             <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}><span>From Hr <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                <span>From Hr <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>
+              </InputLabel>
               <MuiSelect
                 value={fromHour}
                 onChange={(e) => setFromHour(e.target.value)}
@@ -214,7 +216,9 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
             </FormControl>
             <span className="flex items-center text-gray-500 px-1 h-[45px]">:</span>
             <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}><span>From Min <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                <span>From Min <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>
+              </InputLabel>
               <MuiSelect
                 value={fromMinute}
                 onChange={(e) => setFromMinute(e.target.value)}
@@ -229,14 +233,22 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
                 ))}
               </MuiSelect>
             </FormControl>
-            <FormControl sx={{ width: 110 }} variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}><span>AM/PM <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                <span>AM/PM <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>
+              </InputLabel>
               <MuiSelect
                 value={fromAmPm}
                 onChange={(e) => setFromAmPm(e.target.value)}
                 displayEmpty
                 label={<span>AM/PM <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
-                sx={fieldStyles}
+                sx={{
+                  ...fieldStyles,
+                  '& .MuiSelect-select': {
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  },
+                }}
                 MenuProps={menuProps}
               >
                 <MenuItem value="AM">AM</MenuItem>
@@ -246,9 +258,11 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
           </div>
 
           {/* Shift Timings To */}
-          <div className="flex gap-2 items-end mt-4">
+          <div className="grid grid-cols-[1fr_auto_1fr_minmax(140px,140px)] gap-2 items-end mt-4">
             <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}><span>To Hr <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                <span>To Hr <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>
+              </InputLabel>
               <MuiSelect
                 value={toHour}
                 onChange={(e) => setToHour(e.target.value)}
@@ -265,7 +279,9 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
             </FormControl>
             <span className="flex items-center text-gray-500 px-1 h-[45px]">:</span>
             <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}><span>To Min <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                <span>To Min <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>
+              </InputLabel>
               <MuiSelect
                 value={toMinute}
                 onChange={(e) => setToMinute(e.target.value)}
@@ -280,14 +296,22 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
                 ))}
               </MuiSelect>
             </FormControl>
-            <FormControl sx={{ width: 110 }} variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}><span>AM/PM <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                <span>AM/PM <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>
+              </InputLabel>
               <MuiSelect
                 value={toAmPm}
                 onChange={(e) => setToAmPm(e.target.value)}
                 displayEmpty
                 label={<span>AM/PM <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
-                sx={fieldStyles}
+                sx={{
+                  ...fieldStyles,
+                  '& .MuiSelect-select': {
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  },
+                }}
                 MenuProps={menuProps}
               >
                 <MenuItem value="AM">AM</MenuItem>

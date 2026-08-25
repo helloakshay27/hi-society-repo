@@ -494,15 +494,15 @@ const AccountingTaxSetup: React.FC = () => {
           <Button
             type="submit"
             disabled={saving}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"           >
+            className="bg-[#C72030] hover:bg-[#A01020] text-white min-w-[140px]"
+          >
             {saving ? "Saving..." : "Save"}
           </Button>
           <Button
             variant="outline"
             type="button"
             onClick={() => window.history.back()}
-             className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+            className="min-w-[100px]"
             disabled={saving}
           >
             Cancel

@@ -3,20 +3,19 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { TextField } from "@mui/material";
+import { fieldStyles } from "@/components/ticket-management/fieldStyles";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, X } from "lucide-react";
 
 interface LedgerRecord {
   id?: number;
@@ -101,34 +100,19 @@ const AccountingTransactions: React.FC = () => {
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
-  // GET /lock_account_transactions/get_by_type — currently 500s server-side
-  // ("undefined method `paginate' for an instance of ActiveRecord::Relation"),
-  // confirmed unconditional (fails with/without tr_type, with/without
-  // page/per_page). Wired up anyway per explicit instruction; will work once
-  // the backend pagination bug is fixed. "All" tab omits tr_type entirely.
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const activeTabConfig = TABS.find((tab) => tab.value === activeTab) ?? TABS[0];
-      const trType = activeTabConfig.type
-        ? activeTabConfig.type.toLowerCase().replace(/\s+/g, "_")
-        : undefined;
-      const response = await axios.get(`${baseUrl}/lock_account_transactions/get_by_type.json`, {
+      const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_transactions.json`;
+      const response = await axios.get(url, {
         headers: {
-          Accept: "application/json",
+          "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        params: {
-          lock_account_id: lockAccountId,
-          tr_type: trType,
-        },
       });
-      const data = response.data;
-      setTransactions(
-        data?.lock_account_transactions || data?.transactions || (Array.isArray(data) ? data : [])
-      );
+      setTransactions(response.data?.lock_account_transactions || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
       toast.error("Failed to fetch transactions");
@@ -136,7 +120,7 @@ const AccountingTransactions: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId, activeTab]);
+  }, [lockAccountId]);
 
   useEffect(() => {
     fetchTransactions();
@@ -162,6 +146,9 @@ const AccountingTransactions: React.FC = () => {
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
+      if (activeTabConfig.type && row.transactionType !== activeTabConfig.type) {
+        return false;
+      }
       if (
         appliedFilters.id &&
         !String(row.transactionId).includes(appliedFilters.id.trim())
@@ -298,68 +285,82 @@ const AccountingTransactions: React.FC = () => {
         </div>
       </Tabs>
 
-      <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <DialogContent className="max-w-lg bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-brand-h2 text-brand-text">
-              Filter Transactions
+      <Dialog open={isFilterOpen} modal={false} onOpenChange={setIsFilterOpen}>
+        <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
+          <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+            <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+              FILTER BY
             </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsFilterOpen(false)}
+              className="h-6 w-6 p-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="filter-id">ID</Label>
-              <Input
-                id="filter-id"
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                label="ID"
                 placeholder="ID"
                 value={filterId}
                 onChange={(e) => setFilterId(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="filter-reference">Reference</Label>
-              <Input
-                id="filter-reference"
+              <TextField
+                label="Reference"
                 placeholder="Reference"
                 value={filterReference}
                 onChange={(e) => setFilterReference(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="filter-voucher-date">Voucher Date</Label>
-              <Input
-                id="filter-voucher-date"
+              <TextField
+                label="Voucher Date"
                 type="date"
                 value={filterVoucherDate}
                 onChange={(e) => setFilterVoucherDate(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="filter-created-on">Created On</Label>
-              <Input
-                id="filter-created-on"
+              <TextField
+                label="Created On"
                 type="date"
                 value={filterCreatedOn}
                 onChange={(e) => setFilterCreatedOn(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:justify-end">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button
               variant="outline"
               onClick={handleResetFilters}
-              className="border-brand-card-border text-brand-text hover:bg-brand-selected"
+              className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
             >
               Reset
             </Button>
             <Button
               onClick={handleApplyFilters}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
-              Apply
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            >
+              Apply Filters
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -21,7 +21,7 @@ const AccountingTaxSummary: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const response = await axios.get(`${baseUrl}/lock_account_transactions/tax_summary.json`, {
+      const response = await axios.get(`${baseUrl}/lock_account_transactions/tax_summary`, {
         headers: {
           Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -33,7 +33,9 @@ const AccountingTaxSummary: React.FC = () => {
         },
       });
       const data = response.data;
-      const list: TaxSummaryApiRow[] = Array.isArray(data) ? data : data?.records || [];
+      const list: TaxSummaryApiRow[] = Array.isArray(data)
+        ? data
+        : data?.tax_summary || data?.data || [];
       setRows(list.map(mapTaxSummaryRow));
     } catch (err) {
       console.error("Error fetching tax summary:", err);
@@ -131,15 +133,11 @@ const AccountingTaxSummary: React.FC = () => {
                     <tr key={`${row.ledgerId}-${index}`}>
                       <td className="border border-gray-300 px-3 py-1.5">{row.ledgerId}</td>
                       <td className="border border-gray-300 px-3 py-1.5">{formatLedgerTaxName(row)}</td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-right">
-                        {row.taxPercentage ? `${row.taxPercentage}%` : "-"}
-                      </td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxPercentage}</td>
                       <td className="border border-gray-300 px-3 py-1.5 text-right">
                         {formatAmount(row.transactionAmount)}
                       </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-right">
-                        {formatAmount(row.taxAmount)}
-                      </td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxAmount}</td>
                     </tr>
                   ))
                 )}

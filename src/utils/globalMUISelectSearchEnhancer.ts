@@ -6,6 +6,9 @@ let globalCleanupInterval: NodeJS.Timeout;
 
 export const initializeGlobalMUISelectSearchEnhancer = () => {
   console.log('🚀 Initializing Global MUI Select Search Enhancer');
+
+  const searchDisabledSelector =
+    '.disable-mui-select-search, [data-disable-mui-search="true"]';
   
   // Global cleanup to remove duplicate search inputs
   const removeAllExistingSearchInputs = () => {
@@ -37,6 +40,14 @@ export const initializeGlobalMUISelectSearchEnhancer = () => {
   
   // Add search functionality to a dropdown
   const addSearchToDropdown = (dropdown: Element) => {
+    if (
+      dropdown.matches(searchDisabledSelector) ||
+      dropdown.closest(searchDisabledSelector) ||
+      dropdown.querySelector(searchDisabledSelector)
+    ) {
+      return;
+    }
+
     // Prevent multiple enhancements on same dropdown
     if (enhancedDropdowns.has(dropdown)) {
       return;
@@ -47,6 +58,14 @@ export const initializeGlobalMUISelectSearchEnhancer = () => {
     // Find the listbox (where options are)
     const listbox = dropdown.querySelector('[role="listbox"]');
     if (!listbox) {
+      return;
+    }
+
+    if (
+      listbox.matches(searchDisabledSelector) ||
+      listbox.closest(searchDisabledSelector) ||
+      listbox.querySelector(searchDisabledSelector)
+    ) {
       return;
     }
     
