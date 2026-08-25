@@ -101,34 +101,19 @@ const AccountingTransactions: React.FC = () => {
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
-  // GET /lock_account_transactions/get_by_type — currently 500s server-side
-  // ("undefined method `paginate' for an instance of ActiveRecord::Relation"),
-  // confirmed unconditional (fails with/without tr_type, with/without
-  // page/per_page). Wired up anyway per explicit instruction; will work once
-  // the backend pagination bug is fixed. "All" tab omits tr_type entirely.
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const activeTabConfig = TABS.find((tab) => tab.value === activeTab) ?? TABS[0];
-      const trType = activeTabConfig.type
-        ? activeTabConfig.type.toLowerCase().replace(/\s+/g, "_")
-        : undefined;
-      const response = await axios.get(`${baseUrl}/lock_account_transactions/get_by_type.json`, {
+      const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_transactions.json`;
+      const response = await axios.get(url, {
         headers: {
-          Accept: "application/json",
+          "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        params: {
-          lock_account_id: lockAccountId,
-          tr_type: trType,
-        },
       });
-      const data = response.data;
-      setTransactions(
-        data?.lock_account_transactions || data?.transactions || (Array.isArray(data) ? data : [])
-      );
+      setTransactions(response.data?.lock_account_transactions || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
       toast.error("Failed to fetch transactions");
@@ -136,7 +121,7 @@ const AccountingTransactions: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId, activeTab]);
+  }, [lockAccountId]);
 
   useEffect(() => {
     fetchTransactions();
@@ -162,6 +147,9 @@ const AccountingTransactions: React.FC = () => {
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
+      if (activeTabConfig.type && row.transactionType !== activeTabConfig.type) {
+        return false;
+      }
       if (
         appliedFilters.id &&
         !String(row.transactionId).includes(appliedFilters.id.trim())
@@ -355,8 +343,8 @@ const AccountingTransactions: React.FC = () => {
             </Button>
             <Button
               onClick={handleApplyFilters}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
+              className="bg-brand text-white hover:bg-brand-hover"
+            >
               Apply
             </Button>
           </DialogFooter>

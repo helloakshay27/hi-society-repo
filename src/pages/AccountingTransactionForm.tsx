@@ -58,16 +58,15 @@ const AccountingTransactionForm: React.FC = () => {
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const url = `${baseUrl}/lock_account_ledgers.json`;
+        const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers.json`;
         const response = await axios.get(url, {
-          params: { lock_account_id: lockAccountId },
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
-        setLedgerOptions(response.data?.lock_account_ledgers || []);
+        setLedgerOptions(response.data || []);
       } catch (error) {
         console.error("Error fetching ledger options:", error);
         toast.error("Failed to load ledgers");

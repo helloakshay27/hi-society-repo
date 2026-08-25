@@ -43,8 +43,6 @@ interface LockAccountLedgerDetailAPI {
   account_code?: string;
   description?: string | null;
   budget?: number | string | null;
-  budget_start_date?: string | null;
-  budget_end_date?: string | null;
   watchlist?: boolean | null;
   assoc_cost_centre?: boolean | null;
 }
@@ -172,7 +170,7 @@ const AccountingChartOfAccounts: React.FC = () => {
   const fetchGroups = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_groups.json`, {
+      const response = await axios.get(`${baseUrl}/lock_account_groups`, {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
@@ -187,7 +185,7 @@ const AccountingChartOfAccounts: React.FC = () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers.json`, {
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers/opening`, {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
@@ -204,11 +202,11 @@ const AccountingChartOfAccounts: React.FC = () => {
   const fetchTree = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers/tree.json`, {
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers`, {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
-      const flat: FlatTreeNode[] = response.data?.jstree_data || [];
+      const flat: FlatTreeNode[] = Array.isArray(response.data) ? response.data : [];
       setTree(buildTreeFromFlat(flat));
     } catch (error) {
       console.error("Error fetching account tree:", error);
@@ -277,7 +275,7 @@ const AccountingChartOfAccounts: React.FC = () => {
   const fetchLedgerDetail = async (id: number): Promise<LockAccountLedgerDetailAPI | null> => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers/${id}.json`, {
+      const response = await axios.get(`${baseUrl}/lock_account_ledgers/${id}`, {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
@@ -297,8 +295,6 @@ const AccountingChartOfAccounts: React.FC = () => {
       account_code: detail?.account_code ?? row.accountCode,
       lock_account_group_id: detail?.lock_account_group_id ?? row.raw.lock_account_group_id,
       budget: detail?.budget ?? undefined,
-      budget_start_date: detail?.budget_start_date ?? undefined,
-      budget_end_date: detail?.budget_end_date ?? undefined,
       description: detail?.description ?? undefined,
       watchlist: Boolean(detail?.watchlist),
       allow_cost_center: Boolean(detail?.assoc_cost_centre),
@@ -313,7 +309,7 @@ const AccountingChartOfAccounts: React.FC = () => {
   const handleDeleteAccount = async (row: LedgerRow) => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      await axios.delete(`${baseUrl}/lock_account_ledgers/${row.id}.json`, {
+      await axios.delete(`${baseUrl}/lock_account_ledgers/${row.id}`, {
         headers: authHeaders(),
       });
       toast.success("Account deleted successfully");

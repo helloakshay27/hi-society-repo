@@ -78,7 +78,7 @@ const AccountingSubgroupSetup: React.FC = () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const res = await axios.get(`${baseUrl}/lock_account_groups.json`, {
+      const res = await axios.get(`${baseUrl}/lock_account_groups`, {
         params: { lock_account_id: lockAccountId },
         headers: { ...authHeaders(), "Content-Type": "application/json" },
       });
@@ -116,9 +116,6 @@ const AccountingSubgroupSetup: React.FC = () => {
     setIsAddOpen(true);
   };
 
-  // GET /lock_account_groups/:id currently 404s server-side even for ids that
-  // exist (confirmed against this list), so edit uses the already-fetched row
-  // data instead of a detail round-trip that can't succeed.
   const handleEdit = (item: SubgroupRow) => {
     setEditingGroup({
       id: item.raw.id,
@@ -132,7 +129,7 @@ const AccountingSubgroupSetup: React.FC = () => {
   const handleDelete = async (item: SubgroupRow) => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      await axios.delete(`${baseUrl}/lock_account_groups/${item.id}.json`, {
+      await axios.delete(`${baseUrl}/lock_account_groups/${item.id}`, {
         headers: authHeaders(),
       });
       toast.success("Group deleted successfully");

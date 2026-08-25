@@ -23,8 +23,8 @@ export interface TaxSummaryApiRow {
 export const mapTaxSummaryRow = (row: TaxSummaryApiRow): TaxSummaryRow => ({
   ledgerId: row.ledger_id ?? 0,
   ledgerName: row.ledger_name || "",
-  taxName: row.tax_name || undefined,
-  taxPercentage: row.tax_percentage !== undefined && row.tax_percentage !== null ? `${row.tax_percentage}` : "",
+  taxName: row.tax_name,
+  taxPercentage: row.tax_percentage !== undefined ? `${row.tax_percentage}` : "",
   transactionAmount: row.transaction_amount || 0,
   taxAmount: row.tax_amount || 0,
 });

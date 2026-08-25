@@ -45,7 +45,7 @@ const AccountingOpeningBalances: React.FC = () => {
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const url = `${baseUrl}/lock_account_ledgers/opening.json`;
+        const url = `${baseUrl}/lock_account_ledgers/opening`;
         const response = await axios.get(url, {
           params: { lock_account_id: lockAccountId },
           headers: {
