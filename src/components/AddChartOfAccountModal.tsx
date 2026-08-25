@@ -3,13 +3,9 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import { menuProps } from "@/components/ticket-management/fieldStyles";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
 import { X } from "lucide-react";
 
@@ -210,85 +206,81 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
         </div>
 
         <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Account Type <span className="text-red-500">*</span>
-            </legend>
-            <FormControl variant="standard" fullWidth>
-              <Select
-                value={accountTypeId}
-                onChange={(e) => setAccountTypeId(e.target.value as string)}
-                displayEmpty
-                disableUnderline
-                sx={{
-                  height: 36,
-                  outline: "none",
-                  "& .MuiSelect-select:focus": { outline: "none", backgroundColor: "transparent" },
-                }}
-                MenuProps={{
-                  ...menuProps,
-                  PaperProps: {
-                    ...menuProps.PaperProps,
-                    style: { ...menuProps.PaperProps.style, maxHeight: 300 },
-                  },
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Select Account Type
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Account Type <span style={{ color: "#C72030" }}>*</span>
+            </InputLabel>
+            <MuiSelect
+              value={accountTypeId}
+              onChange={(e) => setAccountTypeId(e.target.value as string)}
+              displayEmpty
+              label="Account Type *"
+              sx={fieldStyles}
+              MenuProps={{
+                ...menuProps,
+                PaperProps: {
+                  ...menuProps.PaperProps,
+                  style: { ...menuProps.PaperProps.style, maxHeight: 300 },
+                },
+              }}
+            >
+              <MenuItem value="">
+                <em>Select Account Type</em>
+              </MenuItem>
+              {accountTypes.map((type) => (
+                <MenuItem key={type.id} value={String(type.id)}>
+                  {type.group_name}
                 </MenuItem>
-                {accountTypes.map((type) => (
-                  <MenuItem key={type.id} value={String(type.id)}>
-                    {type.group_name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </fieldset>
+              ))}
+            </MuiSelect>
+          </FormControl>
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">
-              Account Name <span className="text-red-500">*</span>
-            </legend>
-            <Input
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-              placeholder="Enter Account Name"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label={<>Account Name <span style={{ color: "#C72030" }}>*</span></>}
+            placeholder="Enter Account Name"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Account Code</legend>
-            <Input
-              value={accountCode}
-              onChange={(e) => setAccountCode(e.target.value)}
-              placeholder="Enter Account Code"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label="Account Code"
+            placeholder="Enter Account Code"
+            value={accountCode}
+            onChange={(e) => setAccountCode(e.target.value)}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Account Budget</legend>
-            <Input
-              type="number"
-              min={0}
-              value={accountBudget}
-              onChange={(e) => setAccountBudget(e.target.value)}
-              placeholder="Enter Account Budget"
-              className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label="Account Budget"
+            type="number"
+            placeholder="Enter Account Budget"
+            value={accountBudget}
+            onChange={(e) => setAccountBudget(e.target.value)}
+            fullWidth
+            variant="outlined"
+            inputProps={{ min: 0 }}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
 
-          <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-            <legend className="px-1 text-gray-500 font-medium text-sm">Description</legend>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              placeholder="Enter Description"
-              className="border-0 shadow-none px-0 resize-none focus-visible:ring-0 focus-visible:outline-none"
-            />
-          </fieldset>
+          <TextField
+            label="Description"
+            placeholder="Enter Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            fullWidth
+            variant="outlined"
+            multiline
+            rows={4}
+            InputLabelProps={{ shrink: true }}
+          />
 
           <div className="flex items-center gap-2">
             <Checkbox
@@ -311,7 +303,6 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
               Allow Cost Center
             </label>
           </div>
-
         </div>
 
         <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">

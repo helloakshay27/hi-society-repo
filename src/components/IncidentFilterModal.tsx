@@ -750,15 +750,14 @@ export const IncidentFilterModal: React.FC<IncidentFilterModalProps> = ({
             <Button
               onClick={handleApply}
               disabled={isLoading}
-              style={{ backgroundColor: '#C72030' }}
-              className="text-white hover:opacity-90 px-8"
+              className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8"
             >
               {isLoading ? 'Applying...' : 'Apply'}
             </Button>
             <Button
               onClick={handleReset}
               variant="outline"
-              className="px-8"
+              className="!bg-white !text-[#C72030] !border !border-[#C72030] px-8"
               disabled={isLoading}
             >
               Reset

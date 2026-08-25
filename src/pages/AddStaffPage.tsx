@@ -964,18 +964,20 @@ export const AddStaffPage = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-4 justify-center pt-6">
-          <Button 
+          <Button
             type="submit"
             disabled={isSubmitting}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"           >
-            {isSubmitting ? 'Creating...' : 'Submit'}
+            className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white h-9 px-4 text-sm font-medium"
+          >
+            {isSubmitting ? "Creating..." : "Submit"}
           </Button>
-          <Button 
+          <Button
             type="button"
             onClick={handleCancel}
-  className="btn-cancel h-9 px-4 text-sm font-medium !bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">           
-   Cancel
+            variant="outline"
+            className="!bg-white !text-[#C72030] !border !border-[#C72030] h-9 px-4 text-sm font-medium hover:!bg-gray-50"
+          >
+            Cancel
           </Button>
         </div>
       </form>

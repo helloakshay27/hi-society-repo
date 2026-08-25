@@ -1734,8 +1734,9 @@ export const PatrollingCreatePage: React.FC = () => {
 
       <div className="flex items-center gap-3 justify-center pt-2">
         <Button
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"          onClick={handleSubmit}
+          variant="ghost"
+          className="btn-primary h-9 px-4 text-sm font-medium"
+          onClick={handleSubmit}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -1748,9 +1749,11 @@ variant="ghost"
           )}
         </Button>
         <Button
+          variant="outline"
           onClick={() => navigate('/security/patrolling')}
           disabled={isSubmitting}
- className="btn-cancel h-9 px-4 text-sm font-medium !bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"        >
+          className="btn-cancel h-9 px-4 text-sm font-medium !bg-white !border-[#da7756] !text-[#da7756] hover:!bg-gray-100"
+        >
           Cancel
         </Button>
       </div>

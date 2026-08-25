@@ -69,6 +69,7 @@ interface FilterDialogProps {
   isOpen: boolean;
   onClose: () => void;
   filterOptions: FilterOptions | null;
+  initialFilters?: ActiveFilters;
   onApply: (filters: ActiveFilters) => void;
   onClear: () => void;
 }
@@ -77,10 +78,15 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
   isOpen,
   onClose,
   filterOptions,
+  initialFilters = emptyFilters,
   onApply,
   onClear,
 }) => {
-  const [local, setLocal] = useState<ActiveFilters>(emptyFilters);
+  const [local, setLocal] = useState<ActiveFilters>(initialFilters);
+
+  useEffect(() => {
+    if (isOpen) setLocal(initialFilters);
+  }, [isOpen, initialFilters]);
 
   const handleApply = () => {
     onApply(local);
@@ -90,103 +96,92 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
   const handleReset = () => {
     setLocal(emptyFilters);
     onClear();
-    onClose();
   };
+
+  const renderSelectField = (
+    label: string,
+    placeholder: string,
+    value: string,
+    key: keyof ActiveFilters,
+    items: { label: string; value: string }[] = [],
+  ) => (
+    <FormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+        {label}
+      </InputLabel>
+      <MuiSelect
+        value={value}
+        onChange={(e) => setLocal((p) => ({ ...p, [key]: e.target.value }))}
+        displayEmpty
+        label={label}
+        sx={fieldStyles}
+        MenuProps={menuProps}
+      >
+        <MenuItem value="">
+          <em>{placeholder}</em>
+        </MenuItem>
+        {items.map((opt) => (
+          <MenuItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+    </FormControl>
+  );
 
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg bg-white rounded-xl shadow-xl p-0 overflow-hidden">
-        <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 border-b border-gray-100">
-          <DialogTitle className="text-base font-semibold text-gray-900 tracking-wide uppercase">
-            Filter Parking Slots
+      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+            FILTER BY
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
-          >
-            <X className="w-4 h-4 text-gray-500" />
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+            <X className="w-4 h-4" />
           </Button>
         </DialogHeader>
 
-        <div className="px-6 py-5 space-y-5">
-          {/* Vehicle Type */}
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Vehicle Type</InputLabel>
-            <MuiSelect
-              value={local.vehicle_type}
-              onChange={(e) => setLocal((p) => ({ ...p, vehicle_type: e.target.value }))}
-              displayEmpty
-              label="Vehicle Type"
-              sx={fieldStyles}
-              MenuProps={menuProps}
-            >
-              <MenuItem value=""><em>Select Vehicle Type</em></MenuItem>
-              {filterOptions?.vehicle_types.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          {/* Parking Status */}
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Parking Status</InputLabel>
-            <MuiSelect
-              value={local.parking_status}
-              onChange={(e) => setLocal((p) => ({ ...p, parking_status: e.target.value }))}
-              displayEmpty
-              label="Parking Status"
-              sx={fieldStyles}
-              MenuProps={menuProps}
-            >
-              <MenuItem value=""><em>Select Status</em></MenuItem>
-              {filterOptions?.parking_statuses.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          {/* Active State */}
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Active State</InputLabel>
-            <MuiSelect
-              value={local.active}
-              onChange={(e) => setLocal((p) => ({ ...p, active: e.target.value }))}
-              displayEmpty
-              label="Active State"
-              sx={fieldStyles}
-              MenuProps={menuProps}
-            >
-              <MenuItem value=""><em>Select State</em></MenuItem>
-              {filterOptions?.active_states.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            {renderSelectField(
+              "Vehicle Type",
+              "Select Vehicle Type",
+              local.vehicle_type,
+              "vehicle_type",
+              filterOptions?.vehicle_types,
+            )}
+            {renderSelectField(
+              "Parking Status",
+              "Select Status",
+              local.parking_status,
+              "parking_status",
+              filterOptions?.parking_statuses,
+            )}
+            {renderSelectField(
+              "Active State",
+              "Select State",
+              local.active,
+              "active",
+              filterOptions?.active_states,
+            )}
+          </div>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t border-gray-100 flex justify-between gap-3">
+        <div className="flex justify-end gap-3 pt-4 border-t">
           <Button
             variant="outline"
             onClick={handleReset}
-            className="flex items-center gap-1.5 text-gray-600 border-gray-300 hover:bg-gray-50"
+            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
           >
             Reset
           </Button>
           <Button
             onClick={handleApply}
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-6"
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
           >
             Apply Filters
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -636,6 +631,7 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         filterOptions={filterOptions}
+        initialFilters={activeFilters}
         onApply={(filters) => setActiveFilters(filters)}
         onClear={() => setActiveFilters(emptyFilters)}
       />

@@ -1,24 +1,16 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, Eye, Pencil, Loader2 } from "lucide-react";
+import { Plus, Eye, Pencil, Loader2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -30,7 +22,9 @@ import {
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect, TextField } from "@mui/material";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
@@ -186,120 +180,101 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
 }) => {
   const [local, setLocal] = useState<FilterState>(filters);
 
+  useEffect(() => {
+    if (open) setLocal(filters);
+  }, [open, filters]);
+
   const set = (key: keyof FilterState, val: string) =>
     setLocal((prev) => ({ ...prev, [key]: val }));
 
+  const renderSelectField = (
+    label: string,
+    placeholder: string,
+    value: string,
+    key: keyof FilterState,
+    items: FilterOption[] = [],
+  ) => (
+    <FormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+        {label}
+      </InputLabel>
+      <MuiSelect
+        value={value}
+        onChange={(e) => set(key, e.target.value)}
+        displayEmpty
+        label={label}
+        sx={fieldStyles}
+        MenuProps={menuProps}
+      >
+        <MenuItem value="">
+          <em>{placeholder}</em>
+        </MenuItem>
+        {items.map((item) => (
+          <MenuItem key={`${label}-${item.value}`} value={String(item.value)}>
+            {item.label}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+    </FormControl>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Filter Visitor History</DialogTitle>
+    <Dialog open={open} modal={false} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+            FILTER BY
+          </DialogTitle>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+            <X className="w-4 h-4" />
+          </Button>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          {/* Building */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Building</label>
-            <Select value={local.building || "__all__"} onValueChange={(v) => set("building", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Buildings" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.buildings.map((b) => (
-                  <SelectItem key={b.value} value={String(b.value)}>{b.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Tower */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Tower</label>
-            <Select value={local.tower || "__all__"} onValueChange={(v) => set("tower", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Towers" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.towers.map((t) => (
-                  <SelectItem key={t.value} value={String(t.value)}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Flat */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Flat</label>
-            <Select value={local.flat || "__all__"} onValueChange={(v) => set("flat", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Flats" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.flats.map((f) => (
-                  <SelectItem key={f.value} value={String(f.value)}>{f.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Visitor Type */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Visitor Type</label>
-            <Select value={local.visitor_type || "__all__"} onValueChange={(v) => set("visitor_type", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.visitor_types.map((vt) => (
-                  <SelectItem key={vt.value} value={String(vt.value)}>{vt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Approval Status */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Approval Status</label>
-            <Select value={local.approval_status || "__all__"} onValueChange={(v) => set("approval_status", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.approval_statuses.map((s) => (
-                  <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Date Range */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <label className="text-sm font-medium text-gray-700">From Date</label>
-              <input
-                type="date"
-                title="From Date"
-                value={local.from_date}
-                onChange={(e) => set("from_date", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <label className="text-sm font-medium text-gray-700">To Date</label>
-              <input
-                type="date"
-                title="To Date"
-                value={local.to_date}
-                onChange={(e) => set("to_date", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-            </div>
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            {renderSelectField("Building", "Select Building", local.building, "building", options?.buildings)}
+            {renderSelectField("Tower", "Select Tower", local.tower, "tower", options?.towers)}
+            {renderSelectField("Flat", "Select Flat", local.flat, "flat", options?.flats)}
+            {renderSelectField("Visitor Type", "Select Visitor Type", local.visitor_type, "visitor_type", options?.visitor_types)}
+            {renderSelectField("Approval Status", "Select Approval Status", local.approval_status, "approval_status", options?.approval_statuses)}
+            <TextField
+              label="From Date"
+              type="date"
+              value={local.from_date}
+              onChange={(e) => set("from_date", e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <TextField
+              label="To Date"
+              type="date"
+              value={local.to_date}
+              onChange={(e) => set("to_date", e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => { setLocal(defaultFilters); onReset(); }}>
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={() => { setLocal(defaultFilters); onReset(); }}
+            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+          >
             Reset
           </Button>
-          <Button className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => onApply(local)}>
-            Apply
+          <Button
+            onClick={() => onApply(local)}
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+          >
+            Apply Filters
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

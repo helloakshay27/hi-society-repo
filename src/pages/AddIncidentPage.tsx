@@ -2242,8 +2242,12 @@ export const AddIncidentPage = () => {
                   multiple
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <Button className="flex items-center gap-2"
-                    onClick={() => fileInputRef.current?.click()}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex items-center gap-2 !bg-white !text-[#C72030] !border !border-[#C72030] hover:!bg-[#F6F4EE] hover:!text-[#C72030]"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     Choose Files
                   </Button>
                 </label>
@@ -2333,11 +2337,7 @@ export const AddIncidentPage = () => {
       <div className="flex justify-center pt-6">
         <Button
           onClick={handleSubmit}
-          // style={{
-          //   backgroundColor: '#8B4A8C'
-          // }}
-          // className="text-white hover:opacity-90 px-8 py-3 text-lg"
-          className='text-[18px]'
+          className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8 py-3 text-[18px]"
         >
           Create Incident
         </Button>
