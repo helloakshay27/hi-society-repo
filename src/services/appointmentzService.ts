@@ -184,6 +184,11 @@ export interface VirtualRequestItem {
   };
 }
 
+export interface VirtualRequestTower {
+  id: number;
+  name: string;
+}
+
 export interface VirtualRequestsResponse {
   pagination?: {
     current_page: number;
@@ -193,7 +198,41 @@ export interface VirtualRequestsResponse {
   };
   virtual_requests?: VirtualRequestItem[];
   site_schedule_requests?: VirtualRequestItem[];
+  towers?: VirtualRequestTower[];
 }
+
+export interface SocietyFlatOption {
+  id: number;
+  flat_no: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Fetch flats for a given tower (society block) — used by the Virtual Requests
+ * "Select Flat" dropdown, populated after a Tower is picked.
+ */
+export const getSocietyFlatsByTower = async (
+  towerId: number | string
+): Promise<SocietyFlatOption[]> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = getToken();
+
+  const response = await axios.get(
+    `https://${baseUrl}/rm_users/society_flats.json`,
+    {
+      params: {
+        token,
+        "q[society_block_id_eq]": towerId,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data?.society_flats || [];
+};
 
 export interface CreateVirtualRequestPayload {
   tower_id?: number | string;
@@ -1043,77 +1082,134 @@ export const sendFlatInviteEmail = async (flatId: string | number): Promise<{ su
   }
 };
 
-export interface ScheduleSetupData {
-  d1_start_days: number | string;
-  d1_end_days: number | string;
-  d2_start_days: number | string;
-  d2_end_days: number | string;
-  rm_slot_days_limit: number | string;
-  logo_url?: string;
-  backdrop_url?: string;
+export interface ScheduleSetupSettings {
+  d1_start_days: number;
+  d1_end_days: number;
+  d2_start_days: number;
+  d2_end_days: number;
+  site_schedule_start_days: number;
+}
+
+export interface ScheduleSetupAssets {
+  logo_url: string | null;
+  backdrop_url: string | null;
+}
+
+export interface ScheduleSetupResponse {
+  code: number;
+  settings: ScheduleSetupSettings;
+  assets: ScheduleSetupAssets;
+  site_schedules: SiteSchedule[];
 }
 
 /**
- * Fetch Schedule Setup settings
+ * Fetch Schedule Setup screen data (D1/D2 days, RM slot-days limit, logo & backdrop URLs)
  */
-export const getScheduleSetup = async (): Promise<ScheduleSetupData> => {
+export const getScheduleSetup = async (): Promise<ScheduleSetupResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = localStorage.getItem("token");
-  const societyId = localStorage.getItem("selectedSocietyId");
+  const token = getToken();
 
-  try {
-    const response = await axios.get(
-      `https://${baseUrl}/crm/admin/schedule_setups.json`,
-      {
-        params: { token, society_id: societyId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data?.schedule_setup || response.data;
-  } catch (error) {
-    console.warn("Could not fetch schedule setup from API:", error);
-    return {
-      d1_start_days: 8,
-      d1_end_days: 28,
-      d2_start_days: 1,
-      d2_end_days: 14,
-      rm_slot_days_limit: 7,
-    };
-  }
+  const response = await axios.get(
+    `https://${baseUrl}/rm_users/site_schedules`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export interface UpdateScheduleSetupDaysPayload {
+  start_days: number | string;
+  end_days: number | string;
+  start_days2: number | string;
+  end_days2: number | string;
+}
+
+/**
+ * Save the "Schedule Setup" panel (D1 + D2 start/end days)
+ */
+export const updateScheduleSetupDays = async (
+  payload: UpdateScheduleSetupDaysPayload
+): Promise<{ success: boolean; message?: string }> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = getToken();
+
+  const response = await axios.put(
+    `https://${baseUrl}/rm_users/site_schedules/update_system_constant`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
 };
 
 /**
- * Update Schedule Setup settings
+ * Save the "RM Slot Days limit" panel
  */
-export const updateScheduleSetup = async (payload: Partial<ScheduleSetupData>): Promise<{ success: boolean; message: string }> => {
+export const updateRMSlotDaysLimit = async (
+  siteScheduleStartDays: number | string
+): Promise<{ success: boolean; message?: string }> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = localStorage.getItem("token");
+  const token = getToken();
   const societyId = localStorage.getItem("selectedSocietyId");
 
-  try {
-    const response = await axios.post(
-      `https://${baseUrl}/crm/admin/schedule_setups.json`,
-      {
-        schedule_setup: {
-          ...payload,
-          society_id: societyId,
-        },
+  const response = await axios.patch(
+    `https://${baseUrl}/update_site_schedule_start_days`,
+    {
+      id: societyId ? Number(societyId) : undefined,
+      society: { site_schedule_start_days: siteScheduleStartDays },
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-      {
-        params: { token },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return { success: true, message: response.data?.message || "Schedule setup updated successfully" };
-  } catch (error) {
-    console.warn("Could not save schedule setup:", error);
-    return { success: true, message: "Schedule setup saved" };
+    }
+  );
+
+  return response.data;
+};
+
+export type SiteSchedulerAssetRelation = "SiteSchedulerLogo" | "SiteSchedulerBackdrop";
+
+/**
+ * Upload the Site Scheduler (Email) Logo or Backdrop image
+ */
+export const uploadSiteSchedulerAsset = async (
+  file: File,
+  relation: SiteSchedulerAssetRelation
+): Promise<{ success: boolean; message?: string }> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = getToken();
+  const societyId = localStorage.getItem("selectedSocietyId");
+
+  const formData = new FormData();
+  formData.append("attachfile[relation]", relation);
+  if (societyId) {
+    formData.append("attachfile[relation_id]", societyId);
   }
+  formData.append("attachfile[document]", file);
+
+  const response = await axios.post(
+    `https://${baseUrl}/update_site_scheduler_logo`,
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
 };
 
