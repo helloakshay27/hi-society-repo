@@ -9,6 +9,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import VirtualizedSocietySelect from "@/components/reusable/VirtualizedSocietySelect";
 
 const fieldStyles = {
     height: '45px',
@@ -63,17 +64,24 @@ const modules = [
     "OFFERS"
 ];
 
+interface Society {
+    id: number;
+    building_name: string;
+}
+
 const LockFeesAdd = () => {
     const navigate = useNavigate();
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
 
     const [loading, setLoading] = useState(false);
+    const [societies, setSocieties] = useState<Society[]>([]);
+    const [loadingSocieties, setLoadingSocieties] = useState(false);
     const [formData, setFormData] = useState({
         module: "OSR",
         display_name: "",
         fee_for: "society",
-        fee_for_id: "",
+        fee_for_id: localStorage.getItem("selectedSocietyId") || "",
         cca_sub_account: "",
         maxx: "",
         start_date: null,
@@ -82,6 +90,29 @@ const LockFeesAdd = () => {
         rate: "",
         active: true,
     });
+
+    useEffect(() => {
+        const fetchSocieties = async () => {
+            try {
+                setLoadingSocieties(true);
+                const response = await axios.get(
+                    `https://${baseUrl}/api/societies/search.json`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                setSocieties(response.data?.societies || []);
+            } catch (error) {
+                console.error("Error fetching societies:", error);
+                toast.error("Failed to fetch societies");
+            } finally {
+                setLoadingSocieties(false);
+            }
+        };
+        fetchSocieties();
+    }, [baseUrl, token]);
 
 
 
@@ -98,6 +129,10 @@ const LockFeesAdd = () => {
     };
 
     const validateForm = () => {
+        if (!formData.fee_for_id) {
+            toast.error("Society is required");
+            return false;
+        }
         if (!formData.display_name.trim()) {
             toast.error("Display Name is required");
             return false;
@@ -144,7 +179,7 @@ const LockFeesAdd = () => {
                     module: formData.module,
                     display_name: formData.display_name,
                     fee_for: "society",
-                    fee_for_id: localStorage.getItem("selectedSocietyId"),
+                    fee_for_id: formData.fee_for_id,
                     cca_sub_account: formData.cca_sub_account,
                     maxx: parseInt(formData.maxx),
                     start_date: dayjs(formData.start_date).format("YYYY-MM-DD"),
@@ -216,6 +251,15 @@ const LockFeesAdd = () => {
                     <div className="p-6 space-y-6">
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Society */}
+                                <VirtualizedSocietySelect
+                                    societies={societies}
+                                    value={formData.fee_for_id}
+                                    onChange={(value) => handleInputChange("fee_for_id", value)}
+                                    loading={loadingSocieties}
+                                    sx={fieldStyles}
+                                />
+
                                 {/* Module */}
                                 <FormControl fullWidth>
                                     <InputLabel shrink>Module</InputLabel>

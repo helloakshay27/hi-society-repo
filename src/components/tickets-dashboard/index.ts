@@ -4,7 +4,7 @@ export { DEFAULT_TICKETS_GRID_LAYOUT } from './ticketsDashboardGridLayout';
 export { PieChartCard, type PieChartSegment } from './PieChartCard';
 export { BarChartCard, type BarChartSeries } from './BarChartCard';
 export { TICKETS_CHART_PALETTE, getTicketsChartColor } from './colors';
-export { DashboardTopNav } from './DashboardTopNav';
+export { DashboardTopNav, type DashboardTab } from './DashboardTopNav';
 export { TicketsKpiTile } from './TicketsKpiTilesRow';
 export { useTicketsOverview } from './useTicketsOverview';
 export { TicketsPieCard, type TicketsPieMetric } from './TicketsPieCard';

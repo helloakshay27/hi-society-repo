@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import FormControl from "@mui/material/FormControl";
@@ -8,6 +10,7 @@ import { menuProps } from "@/components/ticket-management/fieldStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { API_CONFIG } from "@/config/apiConfig";
 
 interface ChargeRow {
   key: string;
@@ -33,13 +36,27 @@ const emptyCharge = (): ChargeRow => ({
   sgstRate: "0",
 });
 
-const BILL_CYCLES = ["April 2026", "May 2026", "June 2026", "July 2026", "August 2026"];
-const BILL_FREQUENCIES = ["Monthly", "Quarterly", "Half Yearly", "Yearly"];
-const UNITS = ["A-101", "A-102", "B-201", "B-202", "C-301"];
-const RESIDENT_TYPES = ["Owner", "Tenant"];
-const INVOICE_FORMATS = ["Standard", "GST Invoice", "Simple Receipt"];
-const LEDGERS = ["Maintenance", "Water Charges", "Parking", "Electricity", "Club House", "Sinking Fund"];
-const CHARGE_TYPES = ["Recurring", "One Time", "Adhoc"];
+interface SelectOption {
+  id: string;
+  label: string;
+}
+
+// The invoice_form_options / bill_frequencies APIs are expected to return
+// arrays of either plain strings or objects — normalize both shapes into
+// {id, label} so FormSelect never has to care which one it got.
+const normalizeOptions = (list: unknown): SelectOption[] => {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    if (item && typeof item === "object") {
+      const obj = item as Record<string, unknown>;
+      const rawId = obj.id ?? obj.value ?? obj.code ?? obj.name ?? obj.label;
+      const rawLabel =
+        obj.name ?? obj.label ?? obj.title ?? obj.formatted_name ?? obj.text ?? rawId ?? "";
+      return { id: String(rawId ?? ""), label: String(rawLabel) };
+    }
+    return { id: String(item), label: String(item) };
+  });
+};
 
 const computeChargeAmounts = (row: ChargeRow) => {
   const quantity = Number(row.quantity) || 0;
@@ -70,11 +87,12 @@ const FormSelect: React.FC<{
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
-  options: string[];
+  options: SelectOption[];
   bordered?: boolean;
-}> = ({ value, onChange, placeholder, options, bordered = false }) => {
+  disabled?: boolean;
+}> = ({ value, onChange, placeholder, options, bordered = false, disabled = false }) => {
   const select = (
-    <FormControl variant="standard" fullWidth>
+    <FormControl variant="standard" fullWidth disabled={disabled}>
       <Select
         value={value}
         onChange={(e) => onChange(e.target.value as string)}
@@ -83,14 +101,20 @@ const FormSelect: React.FC<{
         sx={{
           height: 36,
           outline: "none",
-          "& .MuiSelect-select": { paddingLeft: bordered ? "12px" : "0px", color: value ? "#2c2c2c" : "#888780" },
+          "& .MuiSelect-select": {
+            paddingLeft: bordered ? "12px" : "0px",
+            color: value ? "#2c2c2c" : "#888780",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          },
           "& .MuiSelect-select:focus": { outline: "none", backgroundColor: "transparent" },
         }}
         MenuProps={{
           ...menuProps,
           PaperProps: {
             ...menuProps.PaperProps,
-            style: { ...menuProps.PaperProps.style, maxHeight: 300 },
+            style: { ...menuProps.PaperProps.style, maxHeight: 300, maxWidth: 260 },
           },
         }}
       >
@@ -98,8 +122,13 @@ const FormSelect: React.FC<{
           {placeholder}
         </MenuItem>
         {options.map((option) => (
-          <MenuItem key={option} value={option}>
-            {option}
+          <MenuItem
+            key={option.id}
+            value={option.id}
+            sx={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            title={option.label}
+          >
+            {option.label}
           </MenuItem>
         ))}
       </Select>
@@ -114,19 +143,120 @@ const FormSelect: React.FC<{
 };
 
 const AccountingInvoiceCreation: React.FC = () => {
+  const navigate = useNavigate();
+  const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+
   const [billNumber, setBillNumber] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [billCycle, setBillCycle] = useState("");
+  const [billCycleId, setBillCycleId] = useState("");
   const [billFrequency, setBillFrequency] = useState("");
-  const [unit, setUnit] = useState("");
-  const [residentType, setResidentType] = useState("");
+  const [unitId, setUnitId] = useState("");
+  const [residentTypeId, setResidentTypeId] = useState("");
   const [otherPreferences, setOtherPreferences] = useState("");
-  const [invoiceFormat, setInvoiceFormat] = useState("");
+  const [invoiceFormatId, setInvoiceFormatId] = useState("");
   const [irnNo, setIrnNo] = useState("");
   const [acknowledgementNo, setAcknowledgementNo] = useState("");
   const [acknowledgementDate, setAcknowledgementDate] = useState("");
   const [note, setNote] = useState("");
   const [charges, setCharges] = useState<ChargeRow[]>([emptyCharge()]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [billCycleOptions, setBillCycleOptions] = useState<SelectOption[]>([]);
+  const [billFrequencyOptions, setBillFrequencyOptions] = useState<SelectOption[]>([]);
+  const [unitOptions, setUnitOptions] = useState<SelectOption[]>([]);
+  const [residentTypeOptions, setResidentTypeOptions] = useState<SelectOption[]>([]);
+  const [invoiceFormatOptions, setInvoiceFormatOptions] = useState<SelectOption[]>([]);
+  const [ledgerOptions, setLedgerOptions] = useState<SelectOption[]>([]);
+  const [chargeTypeOptions, setChargeTypeOptions] = useState<SelectOption[]>([]);
+  const [frequencyLoading, setFrequencyLoading] = useState(false);
+
+  // GET /lock_account_bills/invoice_form_options?lock_account_id=... — bundles
+  // every static dropdown this form needs (bill cycles, units, resident types,
+  // invoice formats, ledgers, charge types) into one response.
+  useEffect(() => {
+    const fetchFormOptions = async () => {
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/lock_account_bills/invoice_form_options`, {
+          params: { lock_account_id: lockAccountId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data || {};
+        setBillCycleOptions(normalizeOptions(data.bill_cycles));
+        setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
+        setResidentTypeOptions(normalizeOptions(data.resident_types));
+        setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
+        setChargeTypeOptions(normalizeOptions(data.charge_types));
+      } catch (error) {
+        console.error("Error fetching invoice form options:", error);
+        toast.error("Failed to load invoice form options");
+      }
+    };
+    fetchFormOptions();
+  }, [lockAccountId]);
+
+  // GET /lock_account_ledgers?lock_account_id=... — list of ledgers selectable
+  // as charges on the invoice.
+  useEffect(() => {
+    const fetchLedgers = async () => {
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/lock_account_ledgers`, {
+          params: { lock_account_id: lockAccountId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list = Array.isArray(data) ? data : data?.lock_account_ledgers ?? data?.data ?? [];
+        setLedgerOptions(normalizeOptions(list));
+      } catch (error) {
+        console.error("Error fetching ledgers:", error);
+        setLedgerOptions([]);
+      }
+    };
+    fetchLedgers();
+  }, [lockAccountId]);
+
+  // GET /lock_account_bills/bill_frequencies?bill_cycle_id=... — frequencies
+  // depend on the selected bill cycle, so re-fetch whenever it changes.
+  useEffect(() => {
+    if (!billCycleId) {
+      setBillFrequencyOptions([]);
+      setBillFrequency("");
+      return;
+    }
+    const fetchFrequencies = async () => {
+      setFrequencyLoading(true);
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/lock_account_bills/bill_frequencies`, {
+          params: { bill_cycle_id: billCycleId, lock_account_id: lockAccountId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list = Array.isArray(data) ? data : data?.bill_frequencies ?? data?.data ?? [];
+        setBillFrequencyOptions(normalizeOptions(list));
+      } catch (error) {
+        console.error("Error fetching bill frequencies:", error);
+        setBillFrequencyOptions([]);
+      } finally {
+        setFrequencyLoading(false);
+      }
+    };
+    setBillFrequency("");
+    fetchFrequencies();
+  }, [billCycleId, lockAccountId]);
 
   const total = useMemo(
     () => charges.reduce((sum, row) => sum + computeChargeAmounts(row).totalAmount, 0),
@@ -143,7 +273,7 @@ const AccountingInvoiceCreation: React.FC = () => {
     setCharges((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!billNumber.trim()) {
       toast.error("Bill Number is required.");
@@ -153,7 +283,75 @@ const AccountingInvoiceCreation: React.FC = () => {
       toast.error("Due Date is required.");
       return;
     }
-    toast.success("Invoice details captured.");
+    if (!unitId) {
+      toast.error("Select Unit is required.");
+      return;
+    }
+    const validCharges = charges.filter((row) => row.ledgerId);
+    if (validCharges.length === 0) {
+      toast.error("Please add at least one charge with a ledger selected.");
+      return;
+    }
+
+    const societyId =
+      localStorage.getItem("society_id") || localStorage.getItem("selectedSocietyId") || "";
+
+    const payload = {
+      lock_account_id: Number(lockAccountId),
+      lock_account_bill: {
+        bill_number: billNumber,
+        ledger_id: Number(unitId),
+        society_id: Number(societyId) || undefined,
+        due_date: dueDate,
+        bill_cycle_id: billCycleId ? Number(billCycleId) : undefined,
+        frequency: billFrequency || undefined,
+        resident_type: residentTypeId,
+        other_preferences: otherPreferences || undefined,
+        invoice_format: invoiceFormatId || undefined,
+        irn_no: irnNo || undefined,
+        acknowledgement_no: acknowledgementNo || undefined,
+        acknowledgement_date: acknowledgementDate || undefined,
+        note,
+      },
+      lock_account_bill_charges: validCharges.map((row) => {
+        const { amount, igstAmount, cgstAmount, sgstAmount, totalAmount } =
+          computeChargeAmounts(row);
+        return {
+          ledger_id: Number(row.ledgerId),
+          description: row.description,
+          quantity: Number(row.quantity) || 0,
+          rate: Number(row.rate) || 0,
+          amount,
+          igst_rate: Number(row.igstRate) || 0,
+          igst_amount: igstAmount,
+          cgst_rate: Number(row.cgstRate) || 0,
+          cgst_amount: cgstAmount,
+          sgst_rate: Number(row.sgstRate) || 0,
+          sgst_amount: sgstAmount,
+          total_amount: totalAmount,
+        };
+      }),
+    };
+
+    setSubmitting(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      await axios.post(`${baseUrl}/lock_account_bills.json`, payload, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      toast.success("Invoice created successfully");
+      navigate("/accounting/invoices");
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      toast.error("Failed to create invoice");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -163,7 +361,7 @@ const AccountingInvoiceCreation: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3 items-start">
           <FieldsetField label="Bill Number" required>
             <Input
               placeholder="Enter bill number"
@@ -182,10 +380,10 @@ const AccountingInvoiceCreation: React.FC = () => {
           </FieldsetField>
           <FieldsetField label="Bill Cycle">
             <FormSelect
-              value={billCycle}
-              onChange={setBillCycle}
+              value={billCycleId}
+              onChange={setBillCycleId}
               placeholder="Select Bill Cycle"
-              options={BILL_CYCLES}
+              options={billCycleOptions}
             />
           </FieldsetField>
         </div>
@@ -195,27 +393,34 @@ const AccountingInvoiceCreation: React.FC = () => {
             <FormSelect
               value={billFrequency}
               onChange={setBillFrequency}
-              placeholder="Select Frequency"
-              options={BILL_FREQUENCIES}
+              placeholder={
+                !billCycleId
+                  ? "Select Bill Cycle first"
+                  : frequencyLoading
+                  ? "Loading..."
+                  : "Select Frequency"
+              }
+              options={billFrequencyOptions}
+              disabled={!billCycleId || frequencyLoading}
             />
           </FieldsetField>
           <FieldsetField label="Select Unit">
             <FormSelect
-              value={unit}
-              onChange={setUnit}
+              value={unitId}
+              onChange={setUnitId}
               placeholder="Select Unit"
-              options={UNITS}
+              options={unitOptions}
             />
           </FieldsetField>
         </div>
 
-        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3 items-start">
           <FieldsetField label="Resident Type">
             <FormSelect
-              value={residentType}
-              onChange={setResidentType}
+              value={residentTypeId}
+              onChange={setResidentTypeId}
               placeholder="Select Resident Type"
-              options={RESIDENT_TYPES}
+              options={residentTypeOptions}
             />
           </FieldsetField>
           <FieldsetField label="Other Preferences">
@@ -224,15 +429,15 @@ const AccountingInvoiceCreation: React.FC = () => {
               value={otherPreferences}
               onChange={(e) => setOtherPreferences(e.target.value)}
               rows={1}
-              className="min-h-9 resize-none border-0 px-0 py-1.5 shadow-none focus-visible:outline-none focus-visible:ring-0"
+              className="h-9 min-h-0 resize-none overflow-hidden border-0 px-0 py-1.5 shadow-none focus-visible:outline-none focus-visible:ring-0"
             />
           </FieldsetField>
           <FieldsetField label="Invoice Format">
             <FormSelect
-              value={invoiceFormat}
-              onChange={setInvoiceFormat}
+              value={invoiceFormatId}
+              onChange={setInvoiceFormatId}
               placeholder="Select Invoice Format"
-              options={INVOICE_FORMATS}
+              options={invoiceFormatOptions}
             />
           </FieldsetField>
         </div>
@@ -300,7 +505,7 @@ const AccountingInvoiceCreation: React.FC = () => {
                           value={row.ledgerId}
                           onChange={(value) => updateCharge(row.key, "ledgerId", value)}
                           placeholder="Select Ledger"
-                          options={LEDGERS}
+                          options={ledgerOptions}
                           bordered
                         />
                       </td>
@@ -319,7 +524,7 @@ const AccountingInvoiceCreation: React.FC = () => {
                           value={row.chargeType}
                           onChange={(value) => updateCharge(row.key, "chargeType", value)}
                           placeholder="Select Type"
-                          options={CHARGE_TYPES}
+                          options={chargeTypeOptions}
                           bordered
                         />
                       </td>
@@ -446,9 +651,22 @@ const AccountingInvoiceCreation: React.FC = () => {
           </FieldsetField>
         </div>
 
-        <div className="mt-6 flex justify-center border-t border-brand-border pt-6">
-          <Button type="submit" variant="ghost" className="btn-primary min-w-[140px] h-9 px-4 text-sm font-medium">
-            Submit
+        <div className="mt-6 flex justify-center gap-3 border-t border-brand-border pt-6">
+          <Button
+            type="submit"
+            variant="ghost"
+            disabled={submitting}
+            className="btn-primary min-w-[140px] h-9 px-4 text-sm font-medium"
+          >
+            {submitting ? "Submitting..." : "Submit"}
+          </Button>
+          <Button
+            type="button"
+            disabled={submitting}
+            onClick={() => navigate("/accounting/invoices")}
+            className="min-w-[140px] h-9 !bg-white border !border-[#da7756] !text-[#da7756] px-4 text-sm font-medium"
+          >
+            Cancel
           </Button>
         </div>
       </form>

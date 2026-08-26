@@ -19,8 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer, FileText, Receipt, Wallet } from "lucide-react";
 
 interface BillCharge {
   id: number;
@@ -248,145 +249,215 @@ const AccountingInvoiceDetails: React.FC = () => {
   const isPaid = bill.status?.toLowerCase() === "paid";
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-4xl mx-auto">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 no-print">
-        <span
-          className={`rounded px-3 py-1 text-sm font-medium text-white ${
-            isPaid ? "bg-green-600" : "bg-[#C72030]"
-          }`}
+    <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
+      <div className="mb-6 no-print">
+        <button
+          onClick={() => navigate("/accounting/invoices")}
+          className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
         >
-          {bill.status || "Pending"}
-        </span>
+          <ArrowLeft className="h-4 w-4" />
+          Back to Invoices
+        </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Raise to Builder:</span>
-          <Switch checked={Boolean(bill.publish)} onCheckedChange={handleTogglePublish} />
-        </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="mb-2 text-2xl font-bold text-[#1a1a1a]">
+              Invoice #{bill.bill_number}
+            </h1>
+            <Badge
+              className="text-xs text-white"
+              style={{ backgroundColor: isPaid ? "#16a34a" : "#C72030" }}
+            >
+              {bill.status || "Pending"}
+            </Badge>
+          </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsPaymentOpen(true)}>
-            Receive Payment
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/accounting/invoices/add?id=${bill.id}`)}
-          >
-            Edit
-          </Button>
-          <Button variant="outline" onClick={handleDownloadInvoice}>
-            <Download className="mr-2 h-4 w-4" /> Download Invoice
-          </Button>
-          <Button variant="outline" size="icon" onClick={handlePrint} title="Print">
-            <Printer className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Raise to Builder:</span>
+              <Switch checked={Boolean(bill.publish)} onCheckedChange={handleTogglePublish} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => setIsPaymentOpen(true)}
+                size="sm"
+                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#B01C29]"
+              >
+                Receive Payment
+              </Button>
+              <Button
+                onClick={() => navigate(`/accounting/invoices/${bill.id}/edit`)}
+                size="sm"
+                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#B01C29]"
+              >
+                Edit
+              </Button>
+              <Button
+                onClick={handleDownloadInvoice}
+                size="sm"
+                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#B01C29]"
+              >
+                <Download className="mr-2 h-4 w-4" /> Download Invoice
+              </Button>
+              <Button
+                onClick={handlePrint}
+                size="icon"
+                title="Print"
+                className="bg-[#C72030] text-white hover:bg-[#B01C29]"
+              >
+                <Printer className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mb-6 space-y-1 text-sm">
-        <div>
-          <span className="font-medium text-gray-700">Bill Number: </span>
-          <span>{bill.bill_number}</span>
+      <div className="space-y-6">
+        {/* Bill Details */}
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 px-6 py-3" style={{ backgroundColor: "#F6F4EE" }}>
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-full"
+                style={{ backgroundColor: "#E5E0D3" }}
+              >
+                <FileText className="h-4 w-4" style={{ color: "#C72030" }} />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">Bill Details</h3>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex flex-col">
+                <span className="mb-1 text-xs text-gray-600">Bill Number</span>
+                <span className="font-medium text-gray-900">{bill.bill_number}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="mb-1 text-xs text-gray-600">Flat</span>
+                <span className="font-medium text-gray-900">
+                  {bill.ledger_name || bill.lock_account_ledger?.name || "-"}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="mb-1 text-xs text-gray-600">Due Date</span>
+                <span className="font-medium text-gray-900">{bill.due_date}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="mb-1 text-xs text-gray-600">Bill Period</span>
+                <span className="font-medium text-gray-900">{bill.bill_period || "-"}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <span className="font-medium text-gray-700">Flat: </span>
-          <span>{bill.ledger_name || bill.lock_account_ledger?.name || "-"}</span>
-        </div>
-        <div>
-          <span className="font-medium text-gray-700">Due Date: </span>
-          <span>{bill.due_date}</span>
-        </div>
-        <div>
-          <span className="font-medium text-gray-700">Bill Period: </span>
-          <span>{bill.bill_period || ""}</span>
-        </div>
-      </div>
 
-      <table className="w-full border-collapse border border-gray-300 text-sm">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="border border-gray-300 px-3 py-2 text-left">Particular</th>
-            <th className="border border-gray-300 px-3 py-2 text-right">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {charges.map((charge) => (
-            <tr key={charge.id}>
-              <td className="border border-gray-300 px-3 py-2">{charge.name}</td>
-              <td className="border border-gray-300 px-3 py-2 text-right">
-                {Number(charge.total_amount || 0).toFixed(1)}
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td className="border border-gray-300 px-3 py-2 text-right font-semibold">
-              Total Amount
-            </td>
-            <td className="border border-gray-300 px-3 py-2 text-right font-semibold">
-              {totalAmount.toFixed(1)}
-            </td>
-          </tr>
-          <tr>
-            <td className="border border-gray-300 px-3 py-2 text-right font-semibold">
-              Balance Amount
-            </td>
-            <td className="border border-gray-300 px-3 py-2 text-right font-semibold">
-              {balanceAmount.toFixed(1)}
-            </td>
-          </tr>
-          <tr>
-            <td className="border border-gray-300 px-3 py-2 text-right font-semibold">
-              Total Receivable Amount
-            </td>
-            <td className="border border-gray-300 px-3 py-2 text-right font-semibold">
-              {totalReceivable.toFixed(1)}
-            </td>
-          </tr>
-          <tr>
-            <td className="border border-gray-300 px-3 py-2 text-right font-semibold" colSpan={2}>
-              Amt. in word: {amountInWords}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        {/* Charges */}
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 px-6 py-3" style={{ backgroundColor: "#F6F4EE" }}>
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-full"
+                style={{ backgroundColor: "#E5E0D3" }}
+              >
+                <Receipt className="h-4 w-4" style={{ color: "#C72030" }} />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">Charges</h3>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs text-gray-600">
+                  <th className="px-6 py-2 font-medium">Particular</th>
+                  <th className="px-6 py-2 text-right font-medium">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {charges.map((charge) => (
+                  <tr key={charge.id} className="border-t border-gray-200">
+                    <td className="px-6 py-2">{charge.name}</td>
+                    <td className="px-6 py-2 text-right">
+                      {Number(charge.total_amount || 0).toFixed(1)}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold">Total Amount</td>
+                  <td className="px-6 py-2 text-right font-semibold">{totalAmount.toFixed(1)}</td>
+                </tr>
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold">Balance Amount</td>
+                  <td className="px-6 py-2 text-right font-semibold">{balanceAmount.toFixed(1)}</td>
+                </tr>
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold">Total Receivable Amount</td>
+                  <td className="px-6 py-2 text-right font-semibold">
+                    {totalReceivable.toFixed(1)}
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold" colSpan={2}>
+                    Amt. in word: {amountInWords}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-      {bill.note && (
-        <div className="mt-4 text-sm">
-          <span className="font-medium text-gray-700">Notes: </span>
-          {bill.note}
-        </div>
-      )}
-
-      <h3 className="mt-8 mb-2 text-base font-semibold text-gray-900">Payment details</h3>
-      <table className="w-full border-collapse border border-gray-300 text-sm">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="border border-gray-300 px-3 py-2 text-left">ID</th>
-            <th className="border border-gray-300 px-3 py-2 text-left">Date</th>
-            <th className="border border-gray-300 px-3 py-2 text-left">Amount</th>
-            <th className="border border-gray-300 px-3 py-2 text-left">Payment Mode</th>
-            <th className="border border-gray-300 px-3 py-2 text-left">Transaction Number</th>
-          </tr>
-        </thead>
-        <tbody>
-          {payments.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="border border-gray-300 px-3 py-4 text-center text-gray-500">
-                No payments recorded
-              </td>
-            </tr>
-          ) : (
-            payments.map((payment) => (
-              <tr key={payment.id}>
-                <td className="border border-gray-300 px-3 py-2">{payment.id}</td>
-                <td className="border border-gray-300 px-3 py-2">{payment.payment_date}</td>
-                <td className="border border-gray-300 px-3 py-2">{payment.amount}</td>
-                <td className="border border-gray-300 px-3 py-2">{payment.payment_mode}</td>
-                <td className="border border-gray-300 px-3 py-2">{payment.transaction_number}</td>
-              </tr>
-            ))
+          {bill.note && (
+            <div className="border-t border-gray-200 px-6 py-3 text-sm">
+              <span className="font-medium text-gray-700">Notes: </span>
+              {bill.note}
+            </div>
           )}
-        </tbody>
-      </table>
+        </div>
+
+        {/* Payment Details */}
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 px-6 py-3" style={{ backgroundColor: "#F6F4EE" }}>
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-full"
+                style={{ backgroundColor: "#E5E0D3" }}
+              >
+                <Wallet className="h-4 w-4" style={{ color: "#C72030" }} />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">Payment Details</h3>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs text-gray-600">
+                  <th className="px-6 py-2 font-medium">ID</th>
+                  <th className="px-6 py-2 font-medium">Date</th>
+                  <th className="px-6 py-2 font-medium">Amount</th>
+                  <th className="px-6 py-2 font-medium">Payment Mode</th>
+                  <th className="px-6 py-2 font-medium">Transaction Number</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.length === 0 ? (
+                  <tr className="border-t border-gray-200">
+                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                      No payments recorded
+                    </td>
+                  </tr>
+                ) : (
+                  payments.map((payment) => (
+                    <tr key={payment.id} className="border-t border-gray-200">
+                      <td className="px-6 py-2">{payment.id}</td>
+                      <td className="px-6 py-2">{payment.payment_date}</td>
+                      <td className="px-6 py-2">{payment.amount}</td>
+                      <td className="px-6 py-2">{payment.payment_mode}</td>
+                      <td className="px-6 py-2">{payment.transaction_number}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
         <DialogContent className="sm:max-w-[420px]">

@@ -37,8 +37,13 @@ import {
   getVirtualRequests,
   createVirtualRequest,
   updateSiteScheduleRequest,
+  getSocietyFlatsByTower,
   VirtualRequestItem,
+  VirtualRequestTower,
+  SocietyFlatOption,
 } from "@/services/appointmentzService";
+
+const REQUEST_TYPES = ["Inspection", "Possession", "ReWalkthrough"];
 
 export interface VirtualRequestRow {
   id: number;
@@ -96,14 +101,25 @@ export const AppointmentzVirtualRequests: React.FC = () => {
     dateTo: "",
   });
 
+  // Towers come from the GET /virtual_requests response
+  const [towers, setTowers] = useState<VirtualRequestTower[]>([]);
+
   // Add Details Modal State (matching Screenshot 2)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
   const [newRequestData, setNewRequestData] = useState({
-    tower: "",
-    flat: "",
-    type: "Inspection",
+    towerId: "",
+    towerName: "",
+    flatId: "",
+    flatNo: "",
+    type: REQUEST_TYPES[0],
   });
+  const [addFlats, setAddFlats] = useState<SocietyFlatOption[]>([]);
+  const [isLoadingAddFlats, setIsLoadingAddFlats] = useState(false);
+
+  // Filter Modal's Flat dropdown, cascaded from the selected filter Tower
+  const [filterFlats, setFilterFlats] = useState<SocietyFlatOption[]>([]);
+  const [isLoadingFilterFlats, setIsLoadingFilterFlats] = useState(false);
 
   // Fetch Virtual Requests
   const fetchRequests = useCallback(async () => {
@@ -140,6 +156,9 @@ export const AppointmentzVirtualRequests: React.FC = () => {
         setData([]);
         setTotalPages(1);
       }
+      if (response.towers) {
+        setTowers(response.towers);
+      }
     } catch (error) {
       console.warn("Could not fetch virtual requests:", error);
       setData([]);
@@ -153,15 +172,40 @@ export const AppointmentzVirtualRequests: React.FC = () => {
     fetchRequests();
   }, [fetchRequests]);
 
-  // Derived lists for towers and flats
-  const uniqueTowers = useMemo(() => {
-    const towers = new Set<string>();
-    data.forEach((d) => {
-      if (d.tower && d.tower !== "-") towers.add(d.tower);
-    });
-    return Array.from(towers);
-  }, [data]);
+  // Fetch flats for the Add Request modal once a Tower is picked
+  useEffect(() => {
+    if (!newRequestData.towerId) {
+      setAddFlats([]);
+      return;
+    }
+    setIsLoadingAddFlats(true);
+    getSocietyFlatsByTower(newRequestData.towerId)
+      .then(setAddFlats)
+      .catch((err) => {
+        console.warn("Could not fetch flats for tower:", err);
+        setAddFlats([]);
+      })
+      .finally(() => setIsLoadingAddFlats(false));
+  }, [newRequestData.towerId]);
 
+  // Fetch flats for the Filter modal once a Tower is picked
+  useEffect(() => {
+    const selectedTower = towers.find((t) => t.name === filterTower);
+    if (!selectedTower) {
+      setFilterFlats([]);
+      return;
+    }
+    setIsLoadingFilterFlats(true);
+    getSocietyFlatsByTower(selectedTower.id)
+      .then(setFilterFlats)
+      .catch((err) => {
+        console.warn("Could not fetch flats for tower:", err);
+        setFilterFlats([]);
+      })
+      .finally(() => setIsLoadingFilterFlats(false));
+  }, [filterTower, towers]);
+
+  // Derived fallback list of flats (used in Filter modal before a Tower is picked)
   const uniqueFlats = useMemo(() => {
     const flats = new Set<string>();
     data.forEach((d) => {
@@ -242,7 +286,7 @@ export const AppointmentzVirtualRequests: React.FC = () => {
 
   // Submit new Virtual Request from Details Modal (Screenshot 2)
   const handleCreateVirtualRequest = async () => {
-    if (!newRequestData.tower || !newRequestData.flat) {
+    if (!newRequestData.towerId || !newRequestData.flatId) {
       toast.error("Please select both Tower and Flat");
       return;
     }
@@ -250,23 +294,25 @@ export const AppointmentzVirtualRequests: React.FC = () => {
     setIsSubmittingAdd(true);
     try {
       await createVirtualRequest({
-        tower_name: newRequestData.tower,
-        flat_no: newRequestData.flat,
-        request_type: newRequestData.type || "Inspection",
+        tower_id: newRequestData.towerId,
+        tower_name: newRequestData.towerName,
+        flat_id: newRequestData.flatId,
+        flat_no: newRequestData.flatNo,
+        request_type: newRequestData.type || REQUEST_TYPES[0],
       });
 
       toast.success("Virtual request created successfully");
       setIsAddModalOpen(false);
-      setNewRequestData({ tower: "", flat: "", type: "Inspection" });
+      setNewRequestData({ towerId: "", towerName: "", flatId: "", flatNo: "", type: REQUEST_TYPES[0] });
       fetchRequests();
     } catch (error) {
       // Create locally in state if offline/unsupported
       const newEntry: VirtualRequestRow = {
         id: Date.now(),
         token: Date.now().toString(),
-        tower: newRequestData.tower,
-        flat: newRequestData.flat,
-        request_type: newRequestData.type || "Inspection",
+        tower: newRequestData.towerName,
+        flat: newRequestData.flatNo,
+        request_type: newRequestData.type || REQUEST_TYPES[0],
         created_at: new Date().toLocaleDateString("en-GB"),
         scheduled_by: "Admin",
         scheduled_on: "-",
@@ -278,7 +324,7 @@ export const AppointmentzVirtualRequests: React.FC = () => {
       setData([newEntry, ...data]);
       toast.success("Virtual request added successfully");
       setIsAddModalOpen(false);
-      setNewRequestData({ tower: "", flat: "", type: "Inspection" });
+      setNewRequestData({ towerId: "", towerName: "", flatId: "", flatNo: "", type: REQUEST_TYPES[0] });
     } finally {
       setIsSubmittingAdd(false);
     }
@@ -543,21 +589,25 @@ export const AppointmentzVirtualRequests: React.FC = () => {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-[#1A1A1A]">Select Tower</Label>
               <Select
-                value={newRequestData.tower}
-                onValueChange={(val) => setNewRequestData({ ...newRequestData, tower: val })}
+                value={newRequestData.towerId}
+                onValueChange={(val) => {
+                  const tower = towers.find((t) => String(t.id) === val);
+                  setNewRequestData({
+                    ...newRequestData,
+                    towerId: val,
+                    towerName: tower?.name || "",
+                    flatId: "",
+                    flatNo: "",
+                  });
+                }}
               >
                 <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
                   <SelectValue placeholder="Select Tower" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Tower A">Tower A</SelectItem>
-                  <SelectItem value="Tower B">Tower B</SelectItem>
-                  <SelectItem value="Tower C">Tower C</SelectItem>
-                  <SelectItem value="D - WING">D - WING</SelectItem>
-                  <SelectItem value="FM">FM</SelectItem>
-                  {uniqueTowers.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
+                  {towers.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -568,20 +618,32 @@ export const AppointmentzVirtualRequests: React.FC = () => {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-[#1A1A1A]">Select Flat</Label>
               <Select
-                value={newRequestData.flat}
-                onValueChange={(val) => setNewRequestData({ ...newRequestData, flat: val })}
+                value={newRequestData.flatId}
+                onValueChange={(val) => {
+                  const flat = addFlats.find((f) => String(f.id) === val);
+                  setNewRequestData({
+                    ...newRequestData,
+                    flatId: val,
+                    flatNo: flat?.flat_no || "",
+                  });
+                }}
+                disabled={!newRequestData.towerId || isLoadingAddFlats}
               >
                 <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
-                  <SelectValue placeholder="Select Flat" />
+                  <SelectValue
+                    placeholder={
+                      !newRequestData.towerId
+                        ? "Select Tower first"
+                        : isLoadingAddFlats
+                        ? "Loading flats..."
+                        : "Select Flat"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="101">101</SelectItem>
-                  <SelectItem value="102">102</SelectItem>
-                  <SelectItem value="D-3502">D-3502</SelectItem>
-                  <SelectItem value="D-3508">D-3508</SelectItem>
-                  {uniqueFlats.map((f) => (
-                    <SelectItem key={f} value={f}>
-                      {f}
+                  {addFlats.map((f) => (
+                    <SelectItem key={f.id} value={String(f.id)}>
+                      {f.flat_no}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -599,11 +661,11 @@ export const AppointmentzVirtualRequests: React.FC = () => {
                   <SelectValue placeholder="Select Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Inspection">Inspection</SelectItem>
-                  <SelectItem value="Discussion">Discussion</SelectItem>
-                  <SelectItem value="Handover">Handover</SelectItem>
-                  <SelectItem value="Document Verification">Document Verification</SelectItem>
-                  <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                  {REQUEST_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -643,15 +705,21 @@ export const AppointmentzVirtualRequests: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Tower</Label>
-                <Select value={filterTower} onValueChange={setFilterTower}>
+                <Select
+                  value={filterTower}
+                  onValueChange={(val) => {
+                    setFilterTower(val);
+                    setFilterFlat("");
+                  }}
+                >
                   <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
                     <SelectValue placeholder="Select Tower" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Towers</SelectItem>
-                    {uniqueTowers.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
+                    {towers.map((t) => (
+                      <SelectItem key={t.id} value={t.name}>
+                        {t.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -660,13 +728,13 @@ export const AppointmentzVirtualRequests: React.FC = () => {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Flat</Label>
-                <Select value={filterFlat} onValueChange={setFilterFlat}>
+                <Select value={filterFlat} onValueChange={setFilterFlat} disabled={isLoadingFilterFlats}>
                   <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
-                    <SelectValue placeholder="Select Flat" />
+                    <SelectValue placeholder={isLoadingFilterFlats ? "Loading flats..." : "Select Flat"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Flats</SelectItem>
-                    {uniqueFlats.map((f) => (
+                    {(filterFlats.length > 0 ? filterFlats.map((f) => f.flat_no) : uniqueFlats).map((f) => (
                       <SelectItem key={f} value={f}>
                         {f}
                       </SelectItem>
@@ -683,10 +751,11 @@ export const AppointmentzVirtualRequests: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Inspection">Inspection</SelectItem>
-                    <SelectItem value="Discussion">Discussion</SelectItem>
-                    <SelectItem value="Handover">Handover</SelectItem>
-                    <SelectItem value="Document Verification">Document Verification</SelectItem>
+                    {REQUEST_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

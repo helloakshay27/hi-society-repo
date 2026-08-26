@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Loader2, Calendar } from "lucide-react";
+import { Plus, Edit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Autocomplete,
@@ -29,10 +28,8 @@ import {
   createSiteSchedule,
   updateSiteSchedule,
   getAllRMUsers,
-  getScheduleSetup,
-  updateScheduleSetup,
-  ScheduleSetupData,
 } from "@/services/appointmentzService";
+import { ScheduleSetupPanel } from "@/components/appointmentz/ScheduleSetupPanel";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   Pagination,
@@ -68,7 +65,6 @@ interface SlotConfig {
 }
 
 const AppointmentzSlotsConfig = () => {
-  const navigate = useNavigate();
   const [data, setData] = useState<SlotConfig[]>([]);
   const { shouldShow } = useDynamicPermissions();
 
@@ -487,7 +483,11 @@ const AppointmentzSlotsConfig = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-brand-bg min-h-screen">
+      <div className="bg-white border border-brand-border rounded-lg p-5 mb-6 shadow-system-sm">
+        <ScheduleSetupPanel />
+      </div>
+
       <EnhancedTable
         data={paginatedData}
         columns={columns}
@@ -497,26 +497,16 @@ const AppointmentzSlotsConfig = () => {
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
         leftActions={
-          <div className="flex items-center gap-2">
-            {shouldShow("Slots Configuration", "create") && (
-              <button
-                type="button"
-                onClick={handleOpenAddModal}
-                className="bg-[#C72030] text-white font-semibold h-9 px-4 text-xs rounded shadow-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-4 h-4 text-white" />
-                <span>Add</span>
-              </button>
-            )}
+          shouldShow("Slots Configuration", "create") && (
             <button
               type="button"
-              onClick={() => navigate("/appointmentz/schedule-setup")}
+              onClick={handleOpenAddModal}
               className="bg-[#C72030] text-white font-semibold h-9 px-4 text-xs rounded shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
-              <Calendar className="w-4 h-4 text-white" />
-              <span>Schedule Setup</span>
+              <Plus className="w-4 h-4 text-white" />
+              <span>Add</span>
             </button>
-          </div>
+          )
         }
         loading={loading}
       />

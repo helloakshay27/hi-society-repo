@@ -377,10 +377,13 @@ const AccountingTransactionForm = lazy(
   () => import("@/pages/AccountingTransactionForm")
 );
 const AccountingInvoices = lazy(() => import("@/pages/AccountingInvoices"));
-const AccountingInvoiceForm = lazy(() => import("@/pages/AccountingInvoiceForm"));
+const AccountingInvoiceCreation = lazy(
+  () => import("@/pages/AccountingInvoiceCreation")
+);
 const AccountingInvoiceDetails = lazy(
   () => import("@/pages/AccountingInvoiceDetails")
 );
+const AccountingInvoiceEdit = lazy(() => import("@/pages/AccountingInvoiceEdit"));
 const AccountingReceipts = lazy(() => import("@/pages/AccountingReceipts"));
 const AccountingCharges = lazy(() => import("@/pages/AccountingCharges"));
 const AccountingBillCycles = lazy(() => import("@/pages/AccountingBillCycles"));
@@ -526,6 +529,16 @@ const AppointmentzSlotsConfig = lazy(
 );
 const AppointmentzBlockDaysConfig = lazy(
   () => import("@/pages/AppointmentzBlockDaysConfig")
+);
+const AppointmentzRequest = lazy(() => import("@/pages/AppointmentzRequest"));
+const AppointmentzVirtualRequests = lazy(
+  () => import("@/pages/AppointmentzVirtualRequests")
+);
+const AppointmentzManageFlats = lazy(
+  () => import("@/pages/AppointmentzManageFlats")
+);
+const AppointmentzManageFlatDetails = lazy(
+  () => import("@/pages/AppointmentzManageFlatDetails")
 );
 
 // Wallet Topup Page
@@ -1498,6 +1511,18 @@ export const setupMemberRoutes = (
       Component={withSuspense(AccountingInvoices)}
     />
     <Route
+      path="/accounting/invoice-creation"
+      Component={withSuspense(AccountingInvoiceCreation)}
+    />
+    <Route
+      path="/accounting/invoices/:id"
+      Component={withSuspense(AccountingInvoiceDetails)}
+    />
+    <Route
+      path="/accounting/invoices/:id/edit"
+      Component={withSuspense(AccountingInvoiceEdit)}
+    />
+    <Route
       path="/accounting/receipts"
       Component={withSuspense(AccountingReceipts)}
     />
@@ -1771,6 +1796,22 @@ export const setupMemberRoutes = (
     />
 
     {/* Appointmentz Routes */}
+    <Route
+      path="/appointmentz/request"
+      Component={withSuspense(AppointmentzRequest)}
+    />
+    <Route
+      path="/appointmentz/virtual-requests"
+      Component={withSuspense(AppointmentzVirtualRequests)}
+    />
+    <Route
+      path="/appointmentz/manage-flats"
+      Component={withSuspense(AppointmentzManageFlats)}
+    />
+    <Route
+      path="/appointmentz/manage-flats/view/:id"
+      Component={withSuspense(AppointmentzManageFlatDetails)}
+    />
     <Route
       path="/appointmentz/rm-config"
       Component={withSuspense(AppointmentzRMConfig)}

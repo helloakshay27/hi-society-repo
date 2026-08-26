@@ -2,6 +2,8 @@ import React from 'react';
 import { CalendarDays, Settings, Search, ChevronDown, Award, Flag } from 'lucide-react';
 import { TicketsDashboardDateRange } from './types';
 
+export type DashboardTab = 'tickets' | 'utility' | 'escalation' | 'visitor';
+
 const toInputValue = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -13,9 +15,24 @@ interface DashboardTopNavProps {
   dateRange: TicketsDashboardDateRange;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
+  activeTab: DashboardTab;
+  onTabChange: (tab: DashboardTab) => void;
 }
 
-export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({ dateRange, onStartDateChange, onEndDateChange }) => {
+const TABS: { key: DashboardTab; label: string }[] = [
+  { key: 'tickets', label: 'Tickets' },
+  { key: 'utility', label: 'Utility' },
+  { key: 'escalation', label: 'Escalation' },
+  { key: 'visitor', label: 'Visitor' },
+];
+
+export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({
+  dateRange,
+  onStartDateChange,
+  onEndDateChange,
+  activeTab,
+  onTabChange,
+}) => {
   return (
     <div className="sticky top-0 z-20 mb-6 rounded-lg border border-brand-border bg-white">
       {/* Title bar */}
@@ -64,14 +81,22 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({ dateRange, onS
         </div>
       </div>
 
-      {/* Module tabs — Tickets stands in for what would be "Transitioning" and is the active module here */}
+      {/* Module tabs */}
       <div className="flex items-center gap-6 overflow-x-auto px-4 sm:px-6">
-        <button
-          type="button"
-          className="flex-shrink-0 whitespace-nowrap border-b-2 border-brand px-1 py-3 text-brand-body-4 font-semibold text-brand"
-        >
-          Tickets
-        </button>
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => onTabChange(tab.key)}
+            className={`flex-shrink-0 whitespace-nowrap border-b-2 px-1 py-3 text-brand-body-4 font-semibold transition-colors ${
+              activeTab === tab.key
+                ? 'border-brand text-brand'
+                : 'border-transparent text-brand-text-light hover:text-brand-text'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Section pill row */}
