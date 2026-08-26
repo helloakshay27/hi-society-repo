@@ -527,6 +527,16 @@ const AppointmentzSlotsConfig = lazy(
 const AppointmentzBlockDaysConfig = lazy(
   () => import("@/pages/AppointmentzBlockDaysConfig")
 );
+const AppointmentzRequest = lazy(() => import("@/pages/AppointmentzRequest"));
+const AppointmentzVirtualRequests = lazy(
+  () => import("@/pages/AppointmentzVirtualRequests")
+);
+const AppointmentzManageFlats = lazy(
+  () => import("@/pages/AppointmentzManageFlats")
+);
+const AppointmentzManageFlatDetails = lazy(
+  () => import("@/pages/AppointmentzManageFlatDetails")
+);
 
 // Wallet Topup Page
 const WalletTopup = lazy(() => import("@/pages/WalletTopup"));
@@ -1771,6 +1781,22 @@ export const setupMemberRoutes = (
     />
 
     {/* Appointmentz Routes */}
+    <Route
+      path="/appointmentz/request"
+      Component={withSuspense(AppointmentzRequest)}
+    />
+    <Route
+      path="/appointmentz/virtual-requests"
+      Component={withSuspense(AppointmentzVirtualRequests)}
+    />
+    <Route
+      path="/appointmentz/manage-flats"
+      Component={withSuspense(AppointmentzManageFlats)}
+    />
+    <Route
+      path="/appointmentz/manage-flats/view/:id"
+      Component={withSuspense(AppointmentzManageFlatDetails)}
+    />
     <Route
       path="/appointmentz/rm-config"
       Component={withSuspense(AppointmentzRMConfig)}
