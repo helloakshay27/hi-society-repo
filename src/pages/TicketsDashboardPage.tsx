@@ -10,6 +10,7 @@ import {
   CheckListCard,
   TicketsDashboardGrid,
   type TicketsDashboardDateRange,
+  type DashboardTab,
 } from '@/components/tickets-dashboard';
 
 const getDefaultDateRange = (): TicketsDashboardDateRange => {
@@ -21,6 +22,7 @@ const getDefaultDateRange = (): TicketsDashboardDateRange => {
 
 const TicketsDashboardPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<TicketsDashboardDateRange>(getDefaultDateRange);
+  const [activeTab, setActiveTab] = useState<DashboardTab>('tickets');
 
   const overview = useTicketsOverview(dateRange);
 
@@ -36,10 +38,17 @@ const TicketsDashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-brand-bg">
-      <DashboardTopNav dateRange={dateRange} onStartDateChange={handleStartDateChange} onEndDateChange={handleEndDateChange} />
+      <DashboardTopNav
+        dateRange={dateRange}
+        onStartDateChange={handleStartDateChange}
+        onEndDateChange={handleEndDateChange}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       <div className="p-4 sm:p-6">
-        <TicketsDashboardGrid>
+        {activeTab === 'tickets' && (
+          <TicketsDashboardGrid>
           <div key="kpi-open">
             <TicketsKpiTile label="Open Tickets" value={overview?.ticket_status.total_open} bg="bg-brand-purple-bg" />
           </div>
@@ -104,6 +113,25 @@ const TicketsDashboardPage: React.FC = () => {
             <CheckListCard />
           </div>
         </TicketsDashboardGrid>
+        )}
+
+        {activeTab === 'utility' && (
+          <div className="flex items-center justify-center rounded-lg border border-dashed border-brand-border bg-white py-24">
+            <p className="text-brand-body-3 text-brand-text-light">Utility dashboard coming soon</p>
+          </div>
+        )}
+
+        {activeTab === 'escalation' && (
+          <div className="flex items-center justify-center rounded-lg border border-dashed border-brand-border bg-white py-24">
+            <p className="text-brand-body-3 text-brand-text-light">Escalation dashboard coming soon</p>
+          </div>
+        )}
+
+        {activeTab === 'visitor' && (
+          <div className="flex items-center justify-center rounded-lg border border-dashed border-brand-border bg-white py-24">
+            <p className="text-brand-body-3 text-brand-text-light">Visitor dashboard coming soon</p>
+          </div>
+        )}
       </div>
     </div>
   );
