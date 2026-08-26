@@ -8,6 +8,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import {
   Eye,
+  Pencil,
   Plus,
   Download,
   Send,
@@ -96,6 +97,25 @@ const toRow = (bill: LockAccountBill): InvoiceRow => ({
   mailSent: Boolean(bill.mail_sent),
 });
 
+// Shown only when the API call fails, so the list + row actions (eye button →
+// details page) can still be exercised while the backend is unreachable.
+const DUMMY_BILL: LockAccountBill = {
+  id: 0,
+  bill_number: "DUMMY-0001",
+  irn_no: null,
+  society_name: "Sample Society",
+  tower_name: "A",
+  ledger_name: "C - 101",
+  name_on_bill: "Sample Resident",
+  due_date: "2026-09-10",
+  total_amount: 1180,
+  note: "Dummy record shown because the invoices API is unreachable",
+  bill_cycle: "September 2026",
+  status: "Pending",
+  publish: false,
+  mail_sent: false,
+};
+
 const exportRowsToCsv = (rows: InvoiceRow[], fileName: string) => {
   if (rows.length === 0) {
     toast.error("No data to export");
@@ -155,6 +175,7 @@ const AccountingInvoices: React.FC = () => {
       const url = `${baseUrl}/lock_account_bills.json?lock_account_id=${lockAccountId}`;
       const response = await axios.get(url, {
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
@@ -164,7 +185,7 @@ const AccountingInvoices: React.FC = () => {
     } catch (error) {
       console.error("Error fetching bills:", error);
       toast.error("Failed to fetch invoices");
-      setBills([]);
+      setBills([DUMMY_BILL]);
     } finally {
       setLoading(false);
     }
@@ -250,6 +271,7 @@ const AccountingInvoices: React.FC = () => {
             { lock_account_bill: { publish: true } },
             {
               headers: {
+                Accept: "application/json",
                 "Content-Type": "application/json",
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
               },
@@ -278,10 +300,20 @@ const AccountingInvoices: React.FC = () => {
     switch (columnKey) {
       case "actions":
         return (
-          <Eye
-            className="h-4 w-4 cursor-pointer text-gray-600 hover:text-[#C72030]"
-            onClick={() => navigate(`/accounting/invoices/${item.id}`)}
-          />
+          <div className="flex items-center gap-3">
+            <span title="View">
+              <Eye
+                className="h-4 w-4 cursor-pointer text-gray-600 hover:text-[#C72030]"
+                onClick={() => navigate(`/accounting/invoices/${item.id}`)}
+              />
+            </span>
+            <span title="Edit">
+              <Pencil
+                className="h-4 w-4 cursor-pointer text-gray-600 hover:text-[#C72030]"
+                onClick={() => navigate(`/accounting/invoices/${item.id}/edit`)}
+              />
+            </span>
+          </div>
         );
       case "id":
         return item.id;
@@ -399,7 +431,7 @@ const AccountingInvoices: React.FC = () => {
          leftActions={
                   <Button
            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-          onClick={() => navigate("/accounting/invoices/add")}
+          onClick={() => navigate("/accounting/invoice-creation")}
         >
           <Plus className="mr-2 h-4 w-4" /> Add
         </Button>
