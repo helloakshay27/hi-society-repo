@@ -328,7 +328,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
   const fetchCompaniesDropdown = useCallback(async () => {
     try {
       const response = await fetch(
-        getFullUrl("/pms/company_setups/company_index.json"),
+        getFullUrl("/pms/company_setups/all_companies.json"),
         {
           headers: {
             Authorization: getAuthHeader(),
