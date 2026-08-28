@@ -6,7 +6,7 @@ export type KpiTone = 'purple' | 'teal' | 'peach' | 'blue';
 export const KPI_TONE_BG: Record<KpiTone, string> = {
   purple: '#EFEFFB',
   teal: '#B7DCD44D',
-  peach: '#E3909026',
+  peach: '#CDCAF526',
   blue: '#85BDF633',
 };
 

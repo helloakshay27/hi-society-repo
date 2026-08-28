@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
 import { visitorReportsAPI, VisitorOverviewResponse } from '@/services/visitorReportsAPI';
-import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR, getPieChartColor } from './colors';
+import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR } from './colors';
 import { TicketsDashboardDateRange } from './types';
 import { SAMPLE_VISITOR_OVERVIEW, SAMPLE_DELIVERY_VISITORS } from './sampleData';
 
@@ -112,13 +112,15 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
         { name: 'Goods Out', value: overview?.goods_outwards ?? 0, color: PIE_OPEN_COLOR },
       ];
       break;
-    case 'delivery-visitors':
+    case 'delivery-visitors': {
+      const DELIVERY_COLORS = ['#CDCAF5', '#76CDC1'] as const;
       segments = delivery.map((entry, i) => ({
         name: entry.name,
         value: entry.value,
-        color: getPieChartColor(i),
+        color: DELIVERY_COLORS[i % DELIVERY_COLORS.length],
       }));
       break;
+    }
   }
 
   const meta = PIE_METRIC_META[metric];
