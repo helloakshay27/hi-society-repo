@@ -111,36 +111,8 @@ const AddFacilityBookingPage = () => {
         slotPremiumDetails: [],
       };
 
-    // If booking rule rate is 0, make the entire booking free for this user
-    if (bookingRuleData && bookingRuleData.adult_rate === 0 && bookingRuleData.child_rate === 0) {
-      return {
-        subTotal: 0,
-        cgstAmount: 0,
-        sgstAmount: 0,
-        igstAmount: 0,
-        gst: 0,
-        convenienceCharge: 0,
-        grandTotal: 0,
-        slotPremiumDetails: selectedSlotIds.length > 0
-          ? selectedSlotIds.map((slotId) => {
-            const slot = availableSlots.find((s) => (s.id || s.Index)?.toString() === slotId);
-            return {
-              slotLabel: slot ? (slot.ampm || slot.time || `Slot ${slotId}`) : `Slot ${slotId}`,
-              slotPremiumPercent: 0,
-              premiumAmount: 0,
-              baseAmount: 0,
-              total: 0,
-            };
-          })
-          : [],
-        cgst_percent: 0,
-        sgst_percent: 0,
-        igst_percent: 0,
-        slotCount: selectedSlotIds.length || 1,
-      };
-    }
-
-    // Booking rule (per selected user) overrides the facility's default member charge
+    // Booking rule (per selected user) overrides the facility's default member charge.
+    // This only zeroes out the Member rate — Guest/Tenant/Non Member charges below are unaffected.
     const adultMemberRate = (bookingRuleData && typeof bookingRuleData.adult_rate === 'number')
       ? bookingRuleData.adult_rate
       : (charge.adult_member_charge || 0);
