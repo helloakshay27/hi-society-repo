@@ -72,13 +72,13 @@ export const ExecutiveEscalationCard: React.FC<ExecutiveEscalationCardProps> = (
         </div>
       ) : (
         <div className="max-h-96 overflow-auto">
-          <table className="w-full min-w-[720px] border-separate border-spacing-0 overflow-hidden rounded-2xl border border-[#d5dbdb] text-brand-body-5">
+          <table className="tickets-ageing-matrix-table w-full min-w-[720px] border-separate border-spacing-0 overflow-hidden rounded-2xl border border-[#d5dbdb] text-brand-body-5">
             <thead>
               <tr>
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
-                    className="sticky top-0 border-b border-brand bg-brand px-3 py-2.5 text-left font-bold text-white"
+                    className="sticky top-0 bg-brand px-3 py-2.5 text-left font-bold text-white"
                   >
                     {col.label}
                   </th>
