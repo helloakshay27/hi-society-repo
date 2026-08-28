@@ -131,6 +131,7 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
       loading={loading}
       isSample={isSample}
       className={className}
+      maxVisibleSegments={metric === 'delivery-visitors' ? 6 : undefined}
     />
   );
 };
