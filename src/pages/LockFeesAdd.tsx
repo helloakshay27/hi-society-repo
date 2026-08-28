@@ -133,32 +133,12 @@ const LockFeesAdd = () => {
             toast.error("Society is required");
             return false;
         }
+        if (!formData.module) {
+            toast.error("Module is required");
+            return false;
+        }
         if (!formData.display_name.trim()) {
             toast.error("Display Name is required");
-            return false;
-        }
-        if (!formData.cca_sub_account.trim()) {
-            toast.error("CCA Sub Account is required");
-            return false;
-        }
-        if (!formData.maxx.trim()) {
-            toast.error("Maximum Amount is required");
-            return false;
-        }
-        if (!formData.start_date) {
-            toast.error("Start Date is required");
-            return false;
-        }
-        if (!formData.end_date) {
-            toast.error("End Date is required");
-            return false;
-        }
-        if (!formData.fee_type) {
-            toast.error("Fee Type is required");
-            return false;
-        }
-        if (!formData.rate.trim()) {
-            toast.error("Rate is required");
             return false;
         }
         return true;
@@ -180,12 +160,12 @@ const LockFeesAdd = () => {
                     display_name: formData.display_name,
                     fee_for: "society",
                     fee_for_id: formData.fee_for_id,
-                    cca_sub_account: formData.cca_sub_account,
-                    maxx: parseInt(formData.maxx),
-                    start_date: dayjs(formData.start_date).format("YYYY-MM-DD"),
-                    end_date: dayjs(formData.end_date).format("YYYY-MM-DD"),
-                    fee_type: formData.fee_type,
-                    rate: parseInt(formData.rate),
+                    cca_sub_account: formData.cca_sub_account || null,
+                    maxx: formData.maxx.trim() ? parseInt(formData.maxx) : null,
+                    start_date: formData.start_date ? dayjs(formData.start_date).format("YYYY-MM-DD") : null,
+                    end_date: formData.end_date ? dayjs(formData.end_date).format("YYYY-MM-DD") : null,
+                    fee_type: formData.fee_type || null,
+                    rate: formData.rate.trim() ? parseInt(formData.rate) : null,
                     active: formData.active,
                 }
             };
@@ -257,16 +237,18 @@ const LockFeesAdd = () => {
                                     value={formData.fee_for_id}
                                     onChange={(value) => handleInputChange("fee_for_id", value)}
                                     loading={loadingSocieties}
+                                    required
                                     sx={fieldStyles}
                                 />
 
                                 {/* Module */}
-                                <FormControl fullWidth>
+                                <FormControl fullWidth required>
                                     <InputLabel shrink>Module</InputLabel>
 
                                     <MuiSelect
                                         value={formData.module}
                                         label="Module"
+                                        required
                                         onChange={(e) => handleInputChange("module", e.target.value)}
                                         displayEmpty
                                         sx={fieldStyles}
@@ -302,7 +284,6 @@ const LockFeesAdd = () => {
                                 <TextField
                                     fullWidth
                                     label="CCAVENUE ID"
-                                    required
                                     value={formData.cca_sub_account}
                                     onChange={(e) => handleInputChange("cca_sub_account", e.target.value)}
                                     placeholder="Enter CCAVENUE ID"
@@ -321,7 +302,6 @@ const LockFeesAdd = () => {
                                 <TextField
                                     fullWidth
                                     label="Max Charge"
-                                    required
                                     type="number"
                                     value={formData.maxx}
                                     onChange={(e) => handleInputChange("maxx", e.target.value)}
@@ -345,7 +325,6 @@ const LockFeesAdd = () => {
                                     slotProps={{
                                         textField: {
                                             fullWidth: true,
-                                            required: true,
                                             variant: "outlined",
                                             InputProps: {
                                                 sx: fieldStyles,
@@ -362,7 +341,6 @@ const LockFeesAdd = () => {
                                     slotProps={{
                                         textField: {
                                             fullWidth: true,
-                                            required: true,
                                             variant: "outlined",
                                             InputProps: {
                                                 sx: fieldStyles,
@@ -392,7 +370,6 @@ const LockFeesAdd = () => {
                                 <TextField
                                     fullWidth
                                     label="Convinience Charge"
-                                    required
                                     type="number"
                                     value={formData.rate}
                                     onChange={(e) => handleInputChange("rate", e.target.value)}

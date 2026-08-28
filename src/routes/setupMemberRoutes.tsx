@@ -540,6 +540,9 @@ const AppointmentzManageFlats = lazy(
 const AppointmentzManageFlatDetails = lazy(
   () => import("@/pages/AppointmentzManageFlatDetails")
 );
+const EncashmentConfigPage = lazy(() => import("@/pages/EncashmentConfigPage"));
+const EncashmentRequestsPage = lazy(() => import("@/pages/EncashmentRequestsPage"));
+const KycRequestsPage = lazy(() => import("@/pages/KycRequestsPage"));
 
 // Wallet Topup Page
 const WalletTopup = lazy(() => import("@/pages/WalletTopup"));
@@ -585,6 +588,18 @@ export const setupMemberRoutes = (
     <Route path="/loyalty/dashboard-new" element={<LoyaltyDashboard />} />
     <Route path="/loyalty/rule-engine" element={<LoyaltyRuleEngine />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
+    <Route
+      path="/loyalty/encashment/config"
+      Component={withSuspense(EncashmentConfigPage)}
+    />
+    <Route
+      path="/loyalty/encashment/requests"
+      Component={withSuspense(EncashmentRequestsPage)}
+    />
+    <Route
+      path="/loyalty/encashment/kyc-requests"
+      Component={withSuspense(KycRequestsPage)}
+    />
     <Route path="/settings/wallet-topup" element={<WalletTopup />} />
     <Route path="/settings/threshold-alerts" Component={withSuspense(ThresholdAlerts)} />
     <Route path="/settings/threshold-alerts/:id" Component={withSuspense(ThresholdAlertDetail)} />
