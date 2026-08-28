@@ -2,9 +2,9 @@ import GridLayout from 'react-grid-layout';
 
 /** Default 12-col layout — KPI row uses compact h:3 to match revamp metric cards. */
 export const DEFAULT_TICKETS_GRID_LAYOUT: GridLayout.Layout[] = [
-  { i: 'kpi-open', x: 0, y: 0, w: 4, h: 3, minW: 2, minH: 3 },
-  { i: 'kpi-closed', x: 4, y: 0, w: 4, h: 3, minW: 2, minH: 3 },
-  { i: 'kpi-total', x: 8, y: 0, w: 4, h: 3, minW: 2, minH: 3 },
+  { i: 'kpi-open', x: 0, y: 0, w: 4, h: 3, minW: 2, minH: 3, maxH: 3 },
+  { i: 'kpi-closed', x: 4, y: 0, w: 4, h: 3, minW: 2, minH: 3, maxH: 3 },
+  { i: 'kpi-total', x: 8, y: 0, w: 4, h: 3, minW: 2, minH: 3, maxH: 3 },
   { i: 'tickets-overview', x: 0, y: 3, w: 6, h: 8, minW: 4, minH: 6 },
   { i: 'proactive-reactive', x: 6, y: 3, w: 6, h: 8, minW: 4, minH: 6 },
   { i: 'activity-feed', x: 0, y: 11, w: 12, h: 8, minW: 6, minH: 6 },

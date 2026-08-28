@@ -14,6 +14,12 @@
   border-radius: 0.5rem;
 }
 
+/* Tickets dashboard — grid children fill cell so KPI tiles match height */
+.tickets-dashboard-grid .react-grid-item > div:first-child {
+  height: 100%;
+  width: 100%;
+}
+
 .react-grid-item img {
   pointer-events: none;
   user-select: none;

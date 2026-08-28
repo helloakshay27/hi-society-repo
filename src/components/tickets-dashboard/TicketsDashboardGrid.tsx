@@ -21,7 +21,24 @@ const mergeWithDefaults = (
 ): GridLayout.Layout[] => {
   const savedMap = new Map(saved.map((l) => [l.i, l]));
   const defaultIds = new Set(defaults.map((l) => l.i));
-  const merged = defaults.map((d) => savedMap.get(d.i) ?? d);
+  const merged = defaults.map((d) => {
+    const savedItem = savedMap.get(d.i);
+    if (!savedItem) return d;
+    // KPI tiles always use default dimensions so all stat cards stay the same height.
+    if (d.i.startsWith('kpi-')) {
+      return {
+        ...savedItem,
+        x: d.x,
+        y: d.y,
+        w: d.w,
+        h: d.h,
+        minW: d.minW,
+        minH: d.minH,
+        maxH: d.maxH,
+      };
+    }
+    return savedItem;
+  });
   for (const l of saved) {
     if (!defaultIds.has(l.i)) merged.push(l);
   }
@@ -59,7 +76,7 @@ export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({
 
   return (
     <ResponsiveGridLayout
-      className={className}
+      className={`tickets-dashboard-grid${className ? ` ${className}` : ''}`}
       layouts={{ lg: layouts }}
       onLayoutChange={handleLayoutChange}
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}

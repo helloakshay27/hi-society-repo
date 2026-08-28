@@ -194,7 +194,7 @@ const TicketsDashboardPage: React.FC = () => {
 
         {activeTab === 'visitor' && (
           <TicketsDashboardGrid
-            storageKey="visitor-dashboard-grid-layout-v3"
+            storageKey="visitor-dashboard-grid-layout-v5"
             defaultLayout={DEFAULT_VISITOR_GRID_LAYOUT}
           >
             <div key="kpi-total-visitors">
