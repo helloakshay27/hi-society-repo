@@ -112,7 +112,7 @@ const AddFacilityBookingPage = () => {
       };
 
     // If booking rule rate is 0, make the entire booking free for this user
-    if (bookingRuleData && bookingRuleData.rate === 0) {
+    if (bookingRuleData && bookingRuleData.adult_rate === 0 && bookingRuleData.child_rate === 0) {
       return {
         subTotal: 0,
         cgstAmount: 0,
@@ -140,8 +140,13 @@ const AddFacilityBookingPage = () => {
       };
     }
 
-    const adultMemberRate = charge.adult_member_charge || 0;
-    console.log(adultMemberRate)
+    // Booking rule (per selected user) overrides the facility's default member charge
+    const adultMemberRate = (bookingRuleData && typeof bookingRuleData.adult_rate === 'number')
+      ? bookingRuleData.adult_rate
+      : (charge.adult_member_charge || 0);
+    const childMemberRate = (bookingRuleData && typeof bookingRuleData.child_rate === 'number')
+      ? bookingRuleData.child_rate
+      : (charge.child_member_charge || 0);
 
     let baseSubTotal = 0;
     let slotPremiumDetails: Array<{
@@ -162,7 +167,7 @@ const AddFacilityBookingPage = () => {
         // Calculate base amount for this slot
         let slotBaseAmount = 0;
         slotBaseAmount += memberCounts.adultMember * adultMemberRate;
-        slotBaseAmount += memberCounts.childMember * (charge.child_member_charge || 0);
+        slotBaseAmount += memberCounts.childMember * childMemberRate;
         slotBaseAmount += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
         slotBaseAmount += memberCounts.childGuest * (charge.child_guest_charge || 0);
         slotBaseAmount += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
@@ -190,7 +195,7 @@ const AddFacilityBookingPage = () => {
     } else {
       // No slots selected, use base charges
       baseSubTotal += memberCounts.adultMember * adultMemberRate;
-      baseSubTotal += memberCounts.childMember * (charge.child_member_charge || 0);
+      baseSubTotal += memberCounts.childMember * childMemberRate;
       baseSubTotal += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
       baseSubTotal += memberCounts.childGuest * (charge.child_guest_charge || 0);
       baseSubTotal += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
@@ -999,8 +1004,13 @@ const AddFacilityBookingPage = () => {
                                 label: "Member",
                                 key: "Member",
                                 visible: activeCharge.member,
-                                adultCharge: activeCharge.adult_member_charge,
-                                childCharge: activeCharge.child_member_charge,
+                                // Booking rule (per selected user) overrides the facility's default member charge
+                                adultCharge: (bookingRuleData && typeof bookingRuleData.adult_rate === 'number')
+                                  ? bookingRuleData.adult_rate
+                                  : activeCharge.adult_member_charge,
+                                childCharge: (bookingRuleData && typeof bookingRuleData.child_rate === 'number')
+                                  ? bookingRuleData.child_rate
+                                  : activeCharge.child_member_charge,
                               },
                               {
                                 label: "Guest",
