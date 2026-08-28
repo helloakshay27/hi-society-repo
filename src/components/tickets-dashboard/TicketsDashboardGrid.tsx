@@ -6,17 +6,39 @@ import { DEFAULT_TICKETS_GRID_LAYOUT } from './ticketsDashboardGridLayout';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-const STORAGE_KEY = 'tickets-dashboard-grid-layout';
+const DEFAULT_STORAGE_KEY = 'tickets-dashboard-grid-layout';
 
 interface TicketsDashboardGridProps {
   children: React.ReactNode;
   className?: string;
+  storageKey?: string;
+  defaultLayout?: GridLayout.Layout[];
 }
 
-const mergeWithDefaults = (saved: GridLayout.Layout[]): GridLayout.Layout[] => {
+const mergeWithDefaults = (
+  saved: GridLayout.Layout[],
+  defaults: GridLayout.Layout[]
+): GridLayout.Layout[] => {
   const savedMap = new Map(saved.map((l) => [l.i, l]));
-  const defaultIds = new Set(DEFAULT_TICKETS_GRID_LAYOUT.map((l) => l.i));
-  const merged = DEFAULT_TICKETS_GRID_LAYOUT.map((d) => savedMap.get(d.i) ?? d);
+  const defaultIds = new Set(defaults.map((l) => l.i));
+  const merged = defaults.map((d) => {
+    const savedItem = savedMap.get(d.i);
+    if (!savedItem) return d;
+    // KPI tiles always use default dimensions so all stat cards stay the same height.
+    if (d.i.startsWith('kpi-')) {
+      return {
+        ...savedItem,
+        x: d.x,
+        y: d.y,
+        w: d.w,
+        h: d.h,
+        minW: d.minW,
+        minH: d.minH,
+        maxH: d.maxH,
+      };
+    }
+    return savedItem;
+  });
   for (const l of saved) {
     if (!defaultIds.has(l.i)) merged.push(l);
   }
@@ -24,24 +46,29 @@ const mergeWithDefaults = (saved: GridLayout.Layout[]): GridLayout.Layout[] => {
 };
 
 /** Shared draggable + resizable grid that wraps every card on the Tickets Dashboard. */
-export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({ children, className }) => {
+export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({
+  children,
+  className,
+  storageKey = DEFAULT_STORAGE_KEY,
+  defaultLayout = DEFAULT_TICKETS_GRID_LAYOUT,
+}) => {
   const [layouts, setLayouts] = useState<GridLayout.Layout[]>(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return mergeWithDefaults(JSON.parse(raw) as GridLayout.Layout[]);
+      const raw = localStorage.getItem(storageKey);
+      if (raw) return mergeWithDefaults(JSON.parse(raw) as GridLayout.Layout[], defaultLayout);
     } catch {
       // ignore corrupt storage
     }
-    return DEFAULT_TICKETS_GRID_LAYOUT;
+    return defaultLayout;
   });
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
+      localStorage.setItem(storageKey, JSON.stringify(layouts));
     } catch {
       // ignore quota errors
     }
-  }, [layouts]);
+  }, [layouts, storageKey]);
 
   const handleLayoutChange = useCallback((_current: GridLayout.Layout[], allLayouts: GridLayout.Layouts) => {
     setLayouts(allLayouts.lg ?? []);
@@ -49,7 +76,7 @@ export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({ chil
 
   return (
     <ResponsiveGridLayout
-      className={className}
+      className={`tickets-dashboard-grid${className ? ` ${className}` : ''}`}
       layouts={{ lg: layouts }}
       onLayoutChange={handleLayoutChange}
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}

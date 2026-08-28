@@ -18,6 +18,7 @@ export const SampleDataBadge: React.FC = () => (
   </span>
 );
 
+/** Chart card shell matching FM Matrix /dashboard-revamp white analytics cards. */
 export const ChartCardShell: React.FC<ChartCardShellProps> = ({
   title,
   subtitle,
@@ -28,7 +29,9 @@ export const ChartCardShell: React.FC<ChartCardShellProps> = ({
   rightSlot,
 }) => {
   return (
-    <Card className={`flex h-full flex-col border border-brand-border bg-white shadow-system-sm ${className}`}>
+    <Card
+      className={`flex h-full flex-col rounded-xl border border-brand-border bg-white shadow-sm transition-shadow hover:shadow-md ${className}`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div>
