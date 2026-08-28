@@ -136,7 +136,7 @@ export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, da
       break;
     case 'average-escalation': {
       const avg = overview?.average_ageing ?? 0;
-      segments = [{ name: 'Average Days', value: avg > 0 ? avg : 0, color: PIE_CHART_PALETTE[2] }];
+      segments = [{ name: 'Average Days', value: avg > 0 ? avg : 0, color: '#CDCAF5' }];
       centerValue = avg > 0 ? (Number.isInteger(avg) ? avg : avg.toFixed(1)) : undefined;
       centerLabel = 'Days';
       break;
