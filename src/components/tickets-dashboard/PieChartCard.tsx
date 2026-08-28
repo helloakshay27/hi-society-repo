@@ -16,6 +16,10 @@ interface PieChartCardProps {
   isSample?: boolean;
   emptyMessage?: string;
   className?: string;
+  /** Overrides the donut center number (defaults to sum of segments). */
+  centerValue?: string | number;
+  /** Overrides the donut center caption (defaults to "Total"). */
+  centerLabel?: string;
 }
 
 /** Generic donut chart card: donut with a centered total, and a legend on the right listing each segment's count + percentage. */
@@ -27,8 +31,11 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
   isSample,
   emptyMessage = 'No data for the selected date range.',
   className,
+  centerValue,
+  centerLabel = 'Total',
 }) => {
   const total = segments.reduce((sum, s) => sum + s.value, 0);
+  const displayCenter = centerValue ?? total;
 
   return (
     <ChartCardShell
@@ -53,8 +60,8 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
               </PieChart>
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-brand-h2 font-bold text-brand-text">{total}</span>
-              <span className="text-brand-caption text-brand-text-light">Total</span>
+              <span className="text-brand-h2 font-bold text-brand-text">{displayCenter}</span>
+              <span className="text-brand-caption text-brand-text-light">{centerLabel}</span>
             </div>
           </div>
           <div className="w-full space-y-3">

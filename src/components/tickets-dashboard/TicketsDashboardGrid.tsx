@@ -6,17 +6,22 @@ import { DEFAULT_TICKETS_GRID_LAYOUT } from './ticketsDashboardGridLayout';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-const STORAGE_KEY = 'tickets-dashboard-grid-layout';
+const DEFAULT_STORAGE_KEY = 'tickets-dashboard-grid-layout';
 
 interface TicketsDashboardGridProps {
   children: React.ReactNode;
   className?: string;
+  storageKey?: string;
+  defaultLayout?: GridLayout.Layout[];
 }
 
-const mergeWithDefaults = (saved: GridLayout.Layout[]): GridLayout.Layout[] => {
+const mergeWithDefaults = (
+  saved: GridLayout.Layout[],
+  defaults: GridLayout.Layout[]
+): GridLayout.Layout[] => {
   const savedMap = new Map(saved.map((l) => [l.i, l]));
-  const defaultIds = new Set(DEFAULT_TICKETS_GRID_LAYOUT.map((l) => l.i));
-  const merged = DEFAULT_TICKETS_GRID_LAYOUT.map((d) => savedMap.get(d.i) ?? d);
+  const defaultIds = new Set(defaults.map((l) => l.i));
+  const merged = defaults.map((d) => savedMap.get(d.i) ?? d);
   for (const l of saved) {
     if (!defaultIds.has(l.i)) merged.push(l);
   }
@@ -24,24 +29,29 @@ const mergeWithDefaults = (saved: GridLayout.Layout[]): GridLayout.Layout[] => {
 };
 
 /** Shared draggable + resizable grid that wraps every card on the Tickets Dashboard. */
-export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({ children, className }) => {
+export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({
+  children,
+  className,
+  storageKey = DEFAULT_STORAGE_KEY,
+  defaultLayout = DEFAULT_TICKETS_GRID_LAYOUT,
+}) => {
   const [layouts, setLayouts] = useState<GridLayout.Layout[]>(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return mergeWithDefaults(JSON.parse(raw) as GridLayout.Layout[]);
+      const raw = localStorage.getItem(storageKey);
+      if (raw) return mergeWithDefaults(JSON.parse(raw) as GridLayout.Layout[], defaultLayout);
     } catch {
       // ignore corrupt storage
     }
-    return DEFAULT_TICKETS_GRID_LAYOUT;
+    return defaultLayout;
   });
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
+      localStorage.setItem(storageKey, JSON.stringify(layouts));
     } catch {
       // ignore quota errors
     }
-  }, [layouts]);
+  }, [layouts, storageKey]);
 
   const handleLayoutChange = useCallback((_current: GridLayout.Layout[], allLayouts: GridLayout.Layouts) => {
     setLayouts(allLayouts.lg ?? []);

@@ -133,3 +133,82 @@ export const SAMPLE_DELIVERY_VISITORS = [
 ];
 
 export const SAMPLE_CHECKLIST = { total: 500, completed: 410, pending: 90 };
+
+/** Sample visitor overview KPIs when live API is empty. */
+export const SAMPLE_VISITOR_OVERVIEW = {
+  total_visitors: 1284,
+  expected_visitors: 912,
+  unexpected_visitors: 372,
+  total_vehicles: 486,
+  goods_inwards: 214,
+  goods_outwards: 168,
+};
+
+/** Sample building-wise total visitors bar. */
+export const SAMPLE_VISITOR_BUILDING_WISE = [
+  { name: 'Tower A', value: 420 },
+  { name: 'Tower B', value: 310 },
+  { name: 'Tower C', value: 265 },
+  { name: 'Club House', value: 148 },
+  { name: 'Gate 1', value: 91 },
+  { name: 'Gate 2', value: 50 },
+];
+
+/** Sample goods-in period bar. */
+export const SAMPLE_GOODS_IN = [
+  { name: 'Week 1', value: 42 },
+  { name: 'Week 2', value: 55 },
+  { name: 'Week 3', value: 38 },
+  { name: 'Week 4', value: 49 },
+  { name: 'Week 5', value: 30 },
+];
+
+/** Sample goods-out period bar. */
+export const SAMPLE_GOODS_OUT = [
+  { name: 'Week 1', value: 28 },
+  { name: 'Week 2', value: 41 },
+  { name: 'Week 3', value: 33 },
+  { name: 'Week 4', value: 36 },
+  { name: 'Week 5', value: 30 },
+];
+
+/** Sample escalation overview (FM Open / Closed / Average ageing) when live API is empty. */
+export const SAMPLE_ESCALATION_OVERVIEW = {
+  open: 12,
+  closed: 8,
+  average_ageing: 4.5,
+};
+
+/** Sample executive escalation table rows. */
+export const SAMPLE_EXECUTIVE_ESCALATION = [
+  {
+    ticket_number: 'TCK-20451',
+    description: 'Water leakage in lobby — escalated to CH',
+    community_head: 'Anita Shah',
+    category: 'Plumbing',
+    sub_category: 'Leakage',
+    ticket_status: 'Open',
+    created_on: '2026-08-12',
+    flat: 'A-1204',
+  },
+  {
+    ticket_number: 'TCK-20422',
+    description: 'Lift not working — Tower B',
+    community_head: 'Rahul Mehta',
+    category: 'Electrical',
+    sub_category: 'Lift',
+    ticket_status: 'In Progress',
+    created_on: '2026-08-10',
+    flat: 'B-502',
+  },
+  {
+    ticket_number: 'TCK-20398',
+    description: 'Security gate access failure',
+    community_head: 'Anita Shah',
+    category: 'Security',
+    sub_category: 'Access',
+    ticket_status: 'Closed',
+    created_on: '2026-08-05',
+    flat: 'C-301',
+  },
+];
