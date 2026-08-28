@@ -410,26 +410,28 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                 InputProps={{ sx: fieldStyles }}
               />
 
-              {/* <div className="relative">
-                <Label
-                  htmlFor="rmUser"
-                  className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10"
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Rm User</InputLabel>
+                <MuiSelect
+                  value={formData.rmUser}
+                  onChange={(e) => onChange('rmUser', e.target.value)}
+                  displayEmpty
+                  label="Rm User"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  Rm User
-                </Label>
-                <Select value={formData.rmUser} onValueChange={(value) => onChange("rmUser", value)}>
-                  <SelectTrigger id="rmUser" className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus:border-[#C72030] focus:ring-0">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {
-                      rmUsers.map(user => (
-                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                      ))
-                    }
-                  </SelectContent>
-                </Select>
-              </div> */}
+                  <MenuItem value=""><em>Select</em></MenuItem>
+                  {rmUsers.length === 0 ? (
+                    <MenuItem value="no-rm-user" disabled><em>No Rm User Found</em></MenuItem>
+                  ) : (
+                    rmUsers.map((user: any) => (
+                      <MenuItem key={user.id} value={user.id.toString()}>
+                        {user.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </MuiSelect>
+              </MuiFormControl>
             </div>
 
             {/* Attachment Upload */}
@@ -490,7 +492,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               <Button
                 onClick={handleSubmit}
                 disabled={loading}
- className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"              >
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"              >
                 {loading ? "Updating..." : "Update"}
               </Button>
             </div>
