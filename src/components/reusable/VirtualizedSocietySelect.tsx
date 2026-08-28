@@ -21,6 +21,7 @@ interface VirtualizedSocietySelectProps {
     onChange: (value: string) => void;
     loading?: boolean;
     label?: string;
+    required?: boolean;
     sx?: SxProps<Theme>;
 }
 
@@ -39,6 +40,7 @@ const VirtualizedSocietySelect: React.FC<VirtualizedSocietySelectProps> = ({
     onChange,
     loading = false,
     label = "Society",
+    required = false,
     sx,
 }) => {
     const [open, setOpen] = useState(false);
@@ -72,11 +74,12 @@ const VirtualizedSocietySelect: React.FC<VirtualizedSocietySelectProps> = ({
     };
 
     return (
-        <FormControl fullWidth>
+        <FormControl fullWidth required={required}>
             <InputLabel shrink>{label}</InputLabel>
             <MuiSelect
                 value={value}
                 label={label}
+                required={required}
                 open={open}
                 onOpen={() => setOpen(true)}
                 onClose={() => {

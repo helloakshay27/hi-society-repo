@@ -62,7 +62,7 @@ export const MuiSearchableDropdown: React.FC<MuiSearchableDropdownProps> = ({
     const containsMatches: Option[] = [];
 
     options.forEach(option => {
-      const labelLower = option.label.toLowerCase();
+      const labelLower = (option.label ?? '').toLowerCase();
       
       if (labelLower === searchLower) {
         exactMatches.push(option);
@@ -176,7 +176,7 @@ export const MuiSearchableDropdown: React.FC<MuiSearchableDropdownProps> = ({
             {/* Highlight matching text */}
             {searchText ? (
               <Box>
-                {option.label.split(new RegExp(`(${searchText})`, 'gi')).map((part, index) =>
+                {(option.label ?? '').split(new RegExp(`(${searchText})`, 'gi')).map((part, index) =>
                   part.toLowerCase() === searchText.toLowerCase() ? (
                     <span key={index} style={{ backgroundColor: '#FFD700', fontWeight: 'bold' }}>
                       {part}
@@ -187,7 +187,7 @@ export const MuiSearchableDropdown: React.FC<MuiSearchableDropdownProps> = ({
                 )}
               </Box>
             ) : (
-              option.label
+              option.label ?? ''
             )}
           </MenuItem>
         ))}

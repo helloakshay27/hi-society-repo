@@ -71,6 +71,7 @@ const columns: ColumnConfig[] = [
   { key: "vehicle_number",   label: "Vehicle Number", sortable: true,  hideable: true,  draggable: true },
   { key: "name",             label: "Name",           sortable: true,  hideable: true,  draggable: true },
   { key: "visitor_type",     label: "Type",           sortable: true,  hideable: true,  draggable: true },
+  { key: "parking_slot",     label: "Parking Slot",   sortable: true,  hideable: true,  draggable: true },
   { key: "in_time",          label: "In Time",        sortable: true,  hideable: true,  draggable: true },
   { key: "out_time",         label: "Out Time",       sortable: true,  hideable: true,  draggable: true },
   { key: "service_provider", label: "Service",        sortable: true,  hideable: true,  draggable: true },
@@ -286,6 +287,9 @@ const SmartSecureVehiclesOut: React.FC = () => {
               {row.visitor_type === "H" ? "Host" : row.visitor_type === "G" ? "Guest" : (row.visitor_type || "--")}
             </span>
           );
+
+        case "parking_slot":
+          return <span className="text-sm text-gray-600">{row.visitor_slot_number || "--"}</span>;
 
         case "in_time":
           return <span className="text-sm text-gray-600">{formatDateTime(row.in_time)}</span>;
