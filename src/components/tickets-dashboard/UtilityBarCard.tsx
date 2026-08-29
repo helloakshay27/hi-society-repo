@@ -86,12 +86,10 @@ interface UtilityBarCardProps {
 /** Bar cards for full Utility Consumption menu from FM user-dashboard. */
 export const UtilityBarCard: React.FC<UtilityBarCardProps> = ({ metric, dateRange, className }) => {
   const [rows, setRows] = useState<{ name: string; value: number }[]>(SAMPLE_BY_METRIC[metric]);
-  const [loading, setLoading] = useState(true);
   const [isSample, setIsSample] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
     const sample = SAMPLE_BY_METRIC[metric];
 
@@ -111,9 +109,6 @@ export const UtilityBarCard: React.FC<UtilityBarCardProps> = ({ metric, dateRang
           setRows(sample);
           setIsSample(true);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
 
     return () => {
@@ -137,7 +132,6 @@ export const UtilityBarCard: React.FC<UtilityBarCardProps> = ({ metric, dateRang
       series={series}
       colorKey="color"
       orientation={meta.orientation}
-      loading={loading}
       isSample={isSample}
       className={className}
     />

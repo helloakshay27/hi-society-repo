@@ -54,12 +54,10 @@ interface VisitorBarCardProps {
 /** Bar-chart cards for the Visitor tab — Total Visitors, Goods In/Out, Delivery Visitors. */
 export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRange, className }) => {
   const [rows, setRows] = useState<{ name: string; value: number }[]>(SAMPLE_BY_METRIC[metric]);
-  const [loading, setLoading] = useState(true);
   const [isSample, setIsSample] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
     const sample = SAMPLE_BY_METRIC[metric];
 
@@ -88,9 +86,6 @@ export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRang
           setRows(sample);
           setIsSample(true);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
 
     return () => {
@@ -114,7 +109,6 @@ export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRang
       series={series}
       colorKey="color"
       orientation={meta.orientation}
-      loading={loading}
       isSample={isSample}
       className={className}
     />

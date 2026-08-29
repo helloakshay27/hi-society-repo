@@ -37,12 +37,10 @@ interface UtilityPieCardProps {
 /** Pie cards for Utility Consumption — Power, Water, Renewable (Top Management). */
 export const UtilityPieCard: React.FC<UtilityPieCardProps> = ({ metric, dateRange, className }) => {
   const [rows, setRows] = useState<{ name: string; value: number }[]>(SAMPLE_BY_METRIC[metric]);
-  const [loading, setLoading] = useState(true);
   const [isSample, setIsSample] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
     const sample = SAMPLE_BY_METRIC[metric];
     const fetcher =
@@ -68,9 +66,6 @@ export const UtilityPieCard: React.FC<UtilityPieCardProps> = ({ metric, dateRang
           setRows(sample);
           setIsSample(true);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
 
     return () => {
@@ -91,7 +86,6 @@ export const UtilityPieCard: React.FC<UtilityPieCardProps> = ({ metric, dateRang
       title={meta.title}
       subtitle={meta.subtitle}
       segments={segments}
-      loading={loading}
       isSample={isSample}
       className={className}
       maxVisibleSegments={6}

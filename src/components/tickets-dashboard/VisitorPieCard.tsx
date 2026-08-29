@@ -32,12 +32,10 @@ interface VisitorPieCardProps {
 export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRange, className }) => {
   const [overview, setOverview] = useState<VisitorOverviewResponse['response'] | null>(SAMPLE_VISITOR_OVERVIEW);
   const [delivery, setDelivery] = useState<{ name: string; value: number }[]>(SAMPLE_DELIVERY_VISITORS);
-  const [loading, setLoading] = useState(true);
   const [isSample, setIsSample] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
 
     if (metric === 'delivery-visitors') {
@@ -58,9 +56,6 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
             setDelivery(SAMPLE_DELIVERY_VISITORS);
             setIsSample(true);
           }
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
         });
     } else {
       visitorReportsAPI
@@ -87,9 +82,6 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
             setOverview(SAMPLE_VISITOR_OVERVIEW);
             setIsSample(true);
           }
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
         });
     }
 
@@ -130,7 +122,6 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
       title={meta.title}
       subtitle={meta.subtitle}
       segments={segments}
-      loading={loading}
       isSample={isSample}
       className={className}
       maxVisibleSegments={metric === 'delivery-visitors' ? 6 : undefined}
