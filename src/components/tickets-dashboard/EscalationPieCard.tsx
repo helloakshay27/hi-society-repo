@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
 import { escalationReportsAPI, EscalationOverviewResponse } from '@/services/escalationReportsAPI';
-import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR, PIE_CHART_PALETTE, getPieChartColor } from './colors';
+import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR, getPieChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
 import { SAMPLE_ESCALATION_OVERVIEW, SAMPLE_EXECUTIVE_ESCALATION } from './sampleData';
 
@@ -15,7 +15,6 @@ const PIE_METRIC_META: Record<
   EscalationPieMetric,
   { title: string; subtitle?: string; emptyMessage?: string; centerLabel?: string }
 > = {
-  // FM get-executive-escalation-pie-chart → { Open, Closed } — same shape as Tickets Open/Closed pie
   'open-escalation': { title: 'Open Escalation', subtitle: 'Open / Closed' },
   'close-escalation': { title: 'Close Escalation', subtitle: 'Open / Closed' },
   'average-escalation': {
@@ -31,6 +30,19 @@ const PIE_METRIC_META: Record<
   },
 };
 
+const buildStatusSegments = (rows: { ticket_status: string }[]): PieChartSegment[] => {
+  const counts = new Map<string, number>();
+  rows.forEach((row) => {
+    const status = row.ticket_status || 'Unknown';
+    counts.set(status, (counts.get(status) ?? 0) + 1);
+  });
+  return Array.from(counts.entries()).map(([name, value], i) => ({
+    name,
+    value,
+    color: getPieChartColor(i),
+  }));
+};
+
 interface EscalationPieCardProps {
   metric: EscalationPieMetric;
   dateRange: TicketsDashboardDateRange;
@@ -39,14 +51,15 @@ interface EscalationPieCardProps {
 
 /** Pie/donut cards for Escalation — Open, Close, Average, Executive (FM Count widgets). */
 export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, dateRange, className }) => {
-  const [overview, setOverview] = useState<EscalationOverviewResponse['response'] | null>(null);
-  const [statusSegments, setStatusSegments] = useState<PieChartSegment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSample, setIsSample] = useState(false);
+  const initialStatusSegments = useMemo(() => buildStatusSegments(SAMPLE_EXECUTIVE_ESCALATION), []);
+  const [overview, setOverview] = useState<EscalationOverviewResponse['response'] | null>(
+    SAMPLE_ESCALATION_OVERVIEW
+  );
+  const [statusSegments, setStatusSegments] = useState<PieChartSegment[]>(initialStatusSegments);
+  const [isSample, setIsSample] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
 
     if (metric === 'executive-escalation') {
@@ -56,36 +69,12 @@ export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, da
           if (cancelled) return;
           const rows = res.response.length > 0 ? res.response : SAMPLE_EXECUTIVE_ESCALATION;
           setIsSample(res.response.length === 0);
-          const counts = new Map<string, number>();
-          rows.forEach((row) => {
-            const status = row.ticket_status || 'Unknown';
-            counts.set(status, (counts.get(status) ?? 0) + 1);
-          });
-          setStatusSegments(
-            Array.from(counts.entries()).map(([name, value], i) => ({
-              name,
-              value,
-              color: getPieChartColor(i),
-            }))
-          );
+          setStatusSegments(buildStatusSegments(rows));
         })
         .catch(() => {
           if (cancelled) return;
           setIsSample(true);
-          const counts = new Map<string, number>();
-          SAMPLE_EXECUTIVE_ESCALATION.forEach((row) => {
-            counts.set(row.ticket_status, (counts.get(row.ticket_status) ?? 0) + 1);
-          });
-          setStatusSegments(
-            Array.from(counts.entries()).map(([name, value], i) => ({
-              name,
-              value,
-              color: getPieChartColor(i),
-            }))
-          );
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
+          setStatusSegments(buildStatusSegments(SAMPLE_EXECUTIVE_ESCALATION));
         });
     } else {
       escalationReportsAPI
@@ -107,9 +96,6 @@ export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, da
             setOverview(SAMPLE_ESCALATION_OVERVIEW);
             setIsSample(true);
           }
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
         });
     }
 
@@ -128,7 +114,6 @@ export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, da
   switch (metric) {
     case 'open-escalation':
     case 'close-escalation':
-      // Proper multi-segment pie (FM pie-chart API) — mirrors Tickets "Open / Closed"
       segments = [
         { name: 'Open', value: open, color: PIE_OPEN_COLOR },
         { name: 'Closed', value: closed, color: PIE_CLOSED_COLOR },
@@ -153,7 +138,6 @@ export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, da
       title={meta.title}
       subtitle={meta.subtitle}
       segments={segments}
-      loading={loading}
       isSample={isSample}
       emptyMessage={meta.emptyMessage}
       centerValue={centerValue}

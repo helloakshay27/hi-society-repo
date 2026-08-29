@@ -30,6 +30,7 @@ const ConditionalParkingPage = lazy(() => import("./pages/ConditionalParkingPage
 // Import existing pages
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const PublicSiteScheduleBooking = lazy(() => import("./pages/PublicSiteScheduleBooking"));
 
 // Import Invoice Approvals page
 const InvoiceApprovalsPage = lazy(() => import("./pages/InvoiceApprovalsPage").then(m => ({ default: m.InvoiceApprovalsPage })));
@@ -932,6 +933,7 @@ const FitoutRequests = lazy(() => import("./pages/FitoutRequests"));
 const FitoutRequestAdd = lazy(() => import("./pages/FitoutRequestAdd"));
 
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
+const PosthogRunwalDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalDashboard"));
 const ViewUserPage = lazy(() => import("./pages/ViewUserPage").then(m => ({ default: m.ViewUserPage })));
 const FioutMobileView = lazy(() => import("./pages/FioutMobileView"));
 const FitoutRequestDetailsPageMobile = lazy(() => import("./pages/FitoutRequestDetailsPageMobile"));
@@ -1561,6 +1563,12 @@ function App() {
                       element={<LockSubFunctionCreate />}
                     /> */}
                       </Route>
+
+                      {/* Standalone Posthog Runwal Dashboard (No HiSociety header/sidebar) */}
+                      <Route
+                        path="/posthog-runwal-dashboard"
+                        element={<PosthogRunwalDashboard />}
+                      />
 
                       {/* Login Route */}
                       <Route path="/thepdf" element={<AllContent />} />
@@ -7267,6 +7275,11 @@ function App() {
                       <Route
                         path="/fitout-category-approval-mobile/:id"
                         element={<FitoutRequestCategoryApprovalRequestMobile />}
+                      />
+                      {/* Public Site Schedule Request Booking Route */}
+                      <Route
+                        path="/site_schedule_requests/:encryptedId/schedule"
+                        element={<PublicSiteScheduleBooking />}
                       />
                     </Routes>
                   </Suspense>

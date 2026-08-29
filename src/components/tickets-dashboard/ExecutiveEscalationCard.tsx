@@ -25,13 +25,11 @@ export const ExecutiveEscalationCard: React.FC<ExecutiveEscalationCardProps> = (
   dateRange,
   className,
 }) => {
-  const [rows, setRows] = useState<ExecutiveEscalationRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSample, setIsSample] = useState(false);
+  const [rows, setRows] = useState<ExecutiveEscalationRow[]>(SAMPLE_EXECUTIVE_ESCALATION);
+  const [isSample, setIsSample] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     escalationReportsAPI
       .getExecutiveTable({ fromDate: dateRange.startDate, toDate: dateRange.endDate })
       .then((res) => {
@@ -49,9 +47,6 @@ export const ExecutiveEscalationCard: React.FC<ExecutiveEscalationCardProps> = (
           setRows(SAMPLE_EXECUTIVE_ESCALATION);
           setIsSample(true);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -62,7 +57,6 @@ export const ExecutiveEscalationCard: React.FC<ExecutiveEscalationCardProps> = (
     <ChartCardShell
       title="Executive Escalation"
       subtitle="Tickets under executive escalation"
-      loading={loading}
       rightSlot={isSample ? <SampleDataBadge /> : undefined}
       className={className}
     >

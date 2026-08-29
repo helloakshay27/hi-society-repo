@@ -160,7 +160,7 @@ export const ScheduleSetupPanel: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {/* Panel 1: Schedule Setup (D1 / D2 Days) */}
       <div className={panelClass}>
         <div className={panelTitleClass}>Schedule Setup</div>
@@ -267,72 +267,6 @@ export const ScheduleSetupPanel: React.FC = () => {
             {isSavingRMLimit && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
             <span>Save</span>
           </Button>
-        </div>
-      </div>
-
-      {/* Panel 3: Site Scheduler (Email) Logo */}
-      <div className={panelClass}>
-        <div className={panelTitleClass}>Site Scheduler (Email) Logo:</div>
-
-        <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-bg">
-          {logoPreview ? (
-            <img
-              src={logoPreview}
-              alt="Scheduler Logo"
-              className="max-h-full max-w-full object-contain p-1"
-            />
-          ) : (
-            <div className="flex flex-col items-center text-brand-text-light">
-              <ImageIcon className="mb-1 h-8 w-8" />
-              <span className="text-brand-caption">No Logo</span>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <span className={fieldLabelClass}>Select image</span>
-          <div className="flex flex-col gap-2">
-            <input type="file" accept="image/*" onChange={handleLogoFileChange} className={fileInputClass} />
-            <div>
-              <Button onClick={handleUploadLogo} disabled={isUploadingLogo} className={uploadButtonClass}>
-                {isUploadingLogo && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
-                <span>Upload</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Panel 4: Backdrop Image */}
-      <div className={panelClass}>
-        <div className={panelTitleClass}>Backdrop Image</div>
-
-        <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-bg">
-          {backdropPreview ? (
-            <img
-              src={backdropPreview}
-              alt="Backdrop"
-              className="max-h-full max-w-full object-contain p-1"
-            />
-          ) : (
-            <div className="flex flex-col items-center text-brand-text-light">
-              <ImageIcon className="mb-1 h-8 w-8" />
-              <span className="text-brand-caption">No Image</span>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <span className={fieldLabelClass}>Select image</span>
-          <div className="flex flex-col gap-2">
-            <input type="file" accept="image/*" onChange={handleBackdropFileChange} className={fileInputClass} />
-            <div>
-              <Button onClick={handleUploadBackdrop} disabled={isUploadingBackdrop} className={uploadButtonClass}>
-                {isUploadingBackdrop && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
-                <span>Upload</span>
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

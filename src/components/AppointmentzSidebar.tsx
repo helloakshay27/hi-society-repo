@@ -12,6 +12,7 @@ import {
   Calendar,
   Clock,
   CalendarDays,
+  Mail,
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -84,6 +85,12 @@ export const AppointmentzSidebar: React.FC = () => {
           label: "Block Days Configuration",
           icon: CalendarDays,
           path: "/appointmentz/block-days-config",
+        },
+        {
+          id: "email-config",
+          label: "Email Configuration",
+          icon: Mail,
+          path: "/appointmentz/email-config",
         },
       ],
     },
