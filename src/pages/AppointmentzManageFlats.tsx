@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,7 @@ import {
   Eye,
   X,
   SlidersHorizontal,
+  Loader2,
 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
@@ -38,6 +39,7 @@ import {
   getAppointmentzManageFlats,
   sendFlatInviteEmail,
   getAllRMUsers,
+  getScheduleSetup,
   AppointmentzFlat,
   RMUserData,
 } from "@/services/appointmentzService";
@@ -134,6 +136,15 @@ export const AppointmentzManageFlats: React.FC = () => {
       } catch (err) {
         console.warn("Could not fetch towers from API:", err);
       }
+
+      try {
+        const setup = await getScheduleSetup();
+        if (setup?.assets?.logo_url) {
+          setSocietyLogo(setup.assets.logo_url);
+        }
+      } catch {
+        // Fallback gracefully
+      }
     };
 
     fetchOptions();
@@ -210,6 +221,26 @@ export const AppointmentzManageFlats: React.FC = () => {
     fetchFlatsData();
   }, [fetchFlatsData]);
 
+  // Check if current user is an rm_user (scoped to demo flats)
+  const isRMUser = useMemo(() => {
+    try {
+      const hiSocietyAccountRaw = localStorage.getItem("hiSocietyAccount");
+      return hiSocietyAccountRaw
+        ? JSON.parse(hiSocietyAccountRaw)?.user_type === "rm_user"
+        : false;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // For rm_user, restrict to 2 demo flats; for admin and cs_user, show all flats
+  const displayedData = useMemo(() => {
+    if (isRMUser && data.length > 2) {
+      return data.slice(0, 2);
+    }
+    return data;
+  }, [data, isRMUser]);
+
   // Handle Apply Filter in Popup
   const handleApplyFilter = () => {
     setAppliedFilters({
@@ -248,14 +279,49 @@ export const AppointmentzManageFlats: React.FC = () => {
     appliedFilters.payment_status !== "all" ||
     appliedFilters.rm_assigned !== "all";
 
-  // Handle Send Invite
+  // Handle Send Invite directly when Mail icon is clicked
   const handleSendInvite = async (flat: AppointmentzFlat) => {
     setSendingInviteId(flat.id);
     try {
       await sendFlatInviteEmail(flat.id);
-      toast.success(`Invite sent successfully to Flat ${flat.flat}!`);
-    } catch {
-      toast.success(`Invite sent to Flat ${flat.flat}`);
+
+      const formattedTimestamp =
+        new Date().toLocaleDateString("en-GB") +
+        " " +
+        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === flat.id
+            ? {
+                ...item,
+                email_sent_by: "Admin",
+                email_sent_at: formattedTimestamp,
+              }
+            : item
+        )
+      );
+
+      const targetLabel = flat.customer_name
+        ? `${flat.customer_name} (Flat ${flat.flat})`
+        : `Flat ${flat.flat}`;
+
+      toast.success(`Invite sent successfully to ${targetLabel}!`);
+    } catch (err: any) {
+      console.error("Failed to send flat invite:", err);
+      const serverMsg =
+        err?.response?.data?.message ||
+        (Array.isArray(err?.response?.data?.errors)
+          ? err.response.data.errors.join(", ")
+          : typeof err?.response?.data?.error === "string"
+          ? err.response.data.error
+          : null);
+
+      if (err?.response?.status === 404) {
+        toast.error(serverMsg || `Send invite endpoint not found (404) for Flat ${flat.flat}.`);
+      } else {
+        toast.error(serverMsg || `Failed to send invite to Flat ${flat.flat}. Please retry.`);
+      }
     } finally {
       setSendingInviteId(null);
     }
@@ -324,10 +390,14 @@ export const AppointmentzManageFlats: React.FC = () => {
             <button
               onClick={() => handleSendInvite(item)}
               disabled={sendingInviteId === item.id}
-              title="Send Invite Message"
-              className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white border border-[#D5DbDB] hover:bg-[#f6f4ee] hover:border-[#f08552] transition-all shadow-2xs group"
+              title="Send Invite Email to Resident"
+              className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white border border-[#D5DbDB] hover:bg-[#f6f4ee] hover:border-[#DA7756] transition-all shadow-2xs group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Mail className="w-3.5 h-3.5 text-[#f08552] group-hover:scale-110 transition-transform" />
+              {sendingInviteId === item.id ? (
+                <Loader2 className="w-3.5 h-3.5 text-[#DA7756] animate-spin" />
+              ) : (
+                <Mail className="w-3.5 h-3.5 text-[#DA7756] group-hover:scale-110 transition-transform" />
+              )}
             </button>
           </div>
         );
@@ -444,9 +514,9 @@ export const AppointmentzManageFlats: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 bg-[#fbfbfa] min-h-screen">
-      {/* EnhancedTable with right-side filter icon (#da5677) & Column Selector */}
+      {/* EnhancedTable with right-side filter icon & Column Selector */}
       <EnhancedTable
-        data={data}
+        data={displayedData}
         columns={columns}
         renderCell={renderCell}
         pagination={false}
@@ -460,14 +530,14 @@ export const AppointmentzManageFlats: React.FC = () => {
         hideColumnsButton={false}
         hideTableExport={true}
         onFilterClick={() => setIsFilterModalOpen(true)}
-        filterButtonClassName="border-[#da5677] text-[#da5677] hover:bg-[#da5677]/10 hover:border-[#da5677]"
+        filterButtonClassName="border-[#DA7756] text-[#DA7756] hover:bg-[#DA7756]/10 hover:border-[#DA7756]"
         loading={loading}
         leftActions={
           hasActiveFilters ? (
             <div className="flex items-center gap-2">
               <button
                 onClick={handleResetFilter}
-                className="flex items-center gap-1 text-xs text-[#da5677] hover:text-[#da5677]/80 bg-[#fbeeed] px-2.5 py-1.5 rounded border border-[#da5677]/30 font-medium"
+                className="flex items-center gap-1 text-xs text-[#DA7756] hover:text-[#DA7756]/80 bg-[#fbeeed] px-2.5 py-1.5 rounded border border-[#DA7756]/30 font-medium"
               >
                 <span>Clear Filters</span>
                 <X className="w-3 h-3" />
@@ -477,8 +547,8 @@ export const AppointmentzManageFlats: React.FC = () => {
         }
       />
 
-      {/* Standard Pagination */}
-      {data.length > 0 && (
+      {/* Standard Pagination (Only shown when not restricted to demo flats) */}
+      {!isRMUser && data.length > 0 && (
         <div className="mt-4 flex justify-center">
           <Pagination>
             <PaginationContent>
@@ -505,7 +575,7 @@ export const AppointmentzManageFlats: React.FC = () => {
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-[#D5DbDB] shadow-2xl bg-white">
           <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB] flex flex-row items-center justify-between">
             <DialogTitle className="text-base font-bold text-[#1A1A1A] flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-[#C72030]" />
+              <SlidersHorizontal className="w-4 h-4 text-[#DA7756]" />
               Filter Flats
             </DialogTitle>
           </DialogHeader>
@@ -516,7 +586,7 @@ export const AppointmentzManageFlats: React.FC = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Select Tower</Label>
                 <Select value={filterTower} onValueChange={setFilterTower}>
-                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#C72030]">
+                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#DA7756]">
                     <SelectValue placeholder="Select Tower" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
@@ -534,7 +604,7 @@ export const AppointmentzManageFlats: React.FC = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Select Flat</Label>
                 <Select value={filterFlat} onValueChange={setFilterFlat}>
-                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#C72030]">
+                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#DA7756]">
                     <SelectValue placeholder="Select Flat" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
@@ -552,7 +622,7 @@ export const AppointmentzManageFlats: React.FC = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Select Payment Status</Label>
                 <Select value={filterPaymentStatus} onValueChange={setFilterPaymentStatus}>
-                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#C72030]">
+                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#DA7756]">
                     <SelectValue placeholder="Select Payment Status" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
@@ -569,7 +639,7 @@ export const AppointmentzManageFlats: React.FC = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Select RM Assigned</Label>
                 <Select value={filterRmAssigned} onValueChange={setFilterRmAssigned}>
-                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#C72030]">
+                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#DA7756]">
                     <SelectValue placeholder="Select RM Assigned" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
@@ -593,13 +663,13 @@ export const AppointmentzManageFlats: React.FC = () => {
             <Button
               variant="outline"
               onClick={handleResetFilter}
-              className="border-[#C72030] text-[#C72030] hover:bg-[#fbeeed] text-xs font-semibold px-4 h-9"
+              className="border-[#DA7756] text-[#DA7756] hover:bg-[#fbeeed] text-xs font-semibold px-4 h-9"
             >
               Reset
             </Button>
             <Button
               onClick={handleApplyFilter}
-              className="bg-[#C72030] hover:bg-[#a81a28] text-white text-xs font-semibold px-5 h-9 shadow-xs"
+              className="btn-primary text-xs font-semibold px-5 h-9 shadow-xs"
             >
               Apply Filter
             </Button>
@@ -611,3 +681,4 @@ export const AppointmentzManageFlats: React.FC = () => {
 };
 
 export default AppointmentzManageFlats;
+

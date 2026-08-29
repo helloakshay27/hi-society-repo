@@ -170,13 +170,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
 
     if (layoutMode === "hi-society") {
-      if (isCSUser) {
-        return <CSSidebar />;
-      }
+      // RM Users get the scoped RMSidebar
       if (isRMUser) {
         return <RMSidebar />;
       }
 
+      // CS Users + Admins get all access to full HiSocietySidebar
       if (isDevHiSocietySite) {
         return <HiSocietySidebar />;
       }

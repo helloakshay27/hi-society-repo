@@ -20,7 +20,9 @@ import { LoyaltyInventoryDetails } from "@/pages/LoyaltyInventoryDetails";
 import { CustomerPricingRuleList } from "@/pages/CustomerPricingRuleList";
 import { TicketDashboard } from "@/TicketDashboardbackup";
 const VendorSetupPage = lazy(() => import("@/pages/VendorSetupPage"));
-const VendorSetupDetailsPage = lazy(() => import("@/pages/VendorSetupDetailsPage"));
+const VendorSetupDetailsPage = lazy(
+  () => import("@/pages/VendorSetupDetailsPage")
+);
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
 // import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
 import { HiSocGroupsPage } from "@/pages/HiSocGroupsPage";
@@ -238,8 +240,12 @@ const HomeLoanRequestsList = lazy(() => import("@/pages/HomeLoanRequestsList"));
 const DemandNotesList = lazy(() => import("@/pages/DemandNotesList"));
 const OrdersList = lazy(() => import("@/pages/OrdersList"));
 const EncashList = lazy(() => import("@/pages/EncashList"));
-const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
-const AggregatorInventoryDetails = lazy(() => import("@/pages/AggregatorInventoryDetails"));
+const AggregatorInventorySection = lazy(
+  () => import("@/pages/AggregatorInventorySection")
+);
+const AggregatorInventoryDetails = lazy(
+  () => import("@/pages/AggregatorInventoryDetails")
+);
 const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
 
 // Add lazy imports for Billing, Redemption, Aggregator pages
@@ -265,12 +271,8 @@ const BMSDocumentsFlatRelated = lazy(
 const BMSDocumentsCommonFiles = lazy(
   () => import("@/pages/BMSDocumentsCommonFiles")
 );
-const BMSDocumentViewer = lazy(
-  () => import("@/pages/BMSDocumentViewer")
-);
-const BMSDocumentsUpload = lazy(
-  () => import("@/pages/BMSDocumentsUpload")
-);
+const BMSDocumentViewer = lazy(() => import("@/pages/BMSDocumentViewer"));
+const BMSDocumentsUpload = lazy(() => import("@/pages/BMSDocumentsUpload"));
 const BMSBusinessDirectorySetup = lazy(
   () => import("@/pages/BMSBusinessDirectorySetup")
 );
@@ -289,9 +291,21 @@ const BusinessDirectoryDetailsPage = lazy(
   () => import("@/pages/BusinessDirectoryDetailsPage")
 );
 
-const HelpdeskDashboard = lazy(() => import("@/pages/BMS/HelpdeskDashboard").then(module => ({ default: module.TicketDashboard })));
-const AddHelpdeskTicket = lazy(() => import("@/pages/BMS/AddHelpdeskTicket").then(module => ({ default: module.AddTicketDashboard })));
-const HelpdeskTicketDetails = lazy(() => import("@/pages/BMS/HelpdeskTicketDetails").then(module => ({ default: module.TicketDetailsPage })));
+const HelpdeskDashboard = lazy(() =>
+  import("@/pages/BMS/HelpdeskDashboard").then((module) => ({
+    default: module.TicketDashboard,
+  }))
+);
+const AddHelpdeskTicket = lazy(() =>
+  import("@/pages/BMS/AddHelpdeskTicket").then((module) => ({
+    default: module.AddTicketDashboard,
+  }))
+);
+const HelpdeskTicketDetails = lazy(() =>
+  import("@/pages/BMS/HelpdeskTicketDetails").then((module) => ({
+    default: module.TicketDetailsPage,
+  }))
+);
 
 // CMS Pages
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
@@ -383,7 +397,9 @@ const AccountingInvoiceCreation = lazy(
 const AccountingInvoiceDetails = lazy(
   () => import("@/pages/AccountingInvoiceDetails")
 );
-const AccountingInvoiceEdit = lazy(() => import("@/pages/AccountingInvoiceEdit"));
+const AccountingInvoiceEdit = lazy(
+  () => import("@/pages/AccountingInvoiceEdit")
+);
 const AccountingReceipts = lazy(() => import("@/pages/AccountingReceipts"));
 const AccountingCharges = lazy(() => import("@/pages/AccountingCharges"));
 const AccountingBillCycles = lazy(() => import("@/pages/AccountingBillCycles"));
@@ -510,7 +526,6 @@ const Petrolling = lazy(() => import("@/pages/Petrolling"));
 const ShiftPage = lazy(() => import("@/pages/ShiftPage"));
 const RosterPage = lazy(() => import("@/pages/RosterPage"));
 
-
 // Incidents Pages
 const IncidentsSetup = lazy(() => import("@/pages/IncidentsSetup"));
 const IncidentsIncidents = lazy(() => import("@/pages/IncidentsIncidents"));
@@ -541,8 +556,16 @@ const AppointmentzManageFlatDetails = lazy(
   () => import("@/pages/AppointmentzManageFlatDetails")
 );
 const EncashmentConfigPage = lazy(() => import("@/pages/EncashmentConfigPage"));
-const EncashmentRequestsPage = lazy(() => import("@/pages/EncashmentRequestsPage"));
+const EncashmentRequestsPage = lazy(
+  () => import("@/pages/EncashmentRequestsPage")
+);
 const KycRequestsPage = lazy(() => import("@/pages/KycRequestsPage"));
+const AppointmentzEmailConfig = lazy(
+  () => import("@/pages/AppointmentzEmailConfig")
+);
+const PublicSiteScheduleBooking = lazy(
+  () => import("@/pages/PublicSiteScheduleBooking")
+);
 
 // Wallet Topup Page
 const WalletTopup = lazy(() => import("@/pages/WalletTopup"));
@@ -558,7 +581,9 @@ const GenericCategories = lazy(() => import("@/pages/GenericCategories"));
 const WaysToEarnList = lazy(() => import("@/pages/WaysToEarnList"));
 
 // Brand Partners Config Page
-const BrandPartnersConfigList = lazy(() => import("@/pages/BrandPartnersConfigList"));
+const BrandPartnersConfigList = lazy(
+  () => import("@/pages/BrandPartnersConfigList")
+);
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -578,10 +603,15 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 
 export const setupMemberRoutes = (
   <>
-
     <Route path="/bms/helpdesk" element={withSuspense(HelpdeskDashboard)()} />
-    <Route path="/bms/helpdesk/add" element={withSuspense(AddHelpdeskTicket)()} />
-    <Route path="/bms/helpdesk/details/:id" element={withSuspense(HelpdeskTicketDetails)()} />
+    <Route
+      path="/bms/helpdesk/add"
+      element={withSuspense(AddHelpdeskTicket)()}
+    />
+    <Route
+      path="/bms/helpdesk/details/:id"
+      element={withSuspense(HelpdeskTicketDetails)()}
+    />
 
     {/* Amenities Routes */}
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboardNew />} />
@@ -601,11 +631,26 @@ export const setupMemberRoutes = (
       Component={withSuspense(KycRequestsPage)}
     />
     <Route path="/settings/wallet-topup" element={<WalletTopup />} />
-    <Route path="/settings/threshold-alerts" Component={withSuspense(ThresholdAlerts)} />
-    <Route path="/settings/threshold-alerts/:id" Component={withSuspense(ThresholdAlertDetail)} />
-    <Route path="/settings/generic-categories" Component={withSuspense(GenericCategories)} />
-    <Route path="/settings/ways-to-earn" Component={withSuspense(WaysToEarnList)} />
-    <Route path="/settings/brand-partners-config" Component={withSuspense(BrandPartnersConfigList)} />
+    <Route
+      path="/settings/threshold-alerts"
+      Component={withSuspense(ThresholdAlerts)}
+    />
+    <Route
+      path="/settings/threshold-alerts/:id"
+      Component={withSuspense(ThresholdAlertDetail)}
+    />
+    <Route
+      path="/settings/generic-categories"
+      Component={withSuspense(GenericCategories)}
+    />
+    <Route
+      path="/settings/ways-to-earn"
+      Component={withSuspense(WaysToEarnList)}
+    />
+    <Route
+      path="/settings/brand-partners-config"
+      Component={withSuspense(BrandPartnersConfigList)}
+    />
     <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
     <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
     <Route
@@ -779,13 +824,19 @@ export const setupMemberRoutes = (
       Component={withSuspense(LoyaltyEventCreate)}
     />
     {/* <Route path="/loyalty/event-details/:id" element={<EventDetails />} /> */}
-    <Route path="/loyalty/event-details/:id" element={<LoyaltyEventDetails />} />
+    <Route
+      path="/loyalty/event-details/:id"
+      element={<LoyaltyEventDetails />}
+    />
     <Route
       path="/loyalty/event-edit/:id"
       Component={withSuspense(LoyaltyEventEdit)}
     />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
-    <Route path="/loyalty/event-list" Component={withSuspense(LoyaltyEventList)} />
+    <Route
+      path="/loyalty/event-list"
+      Component={withSuspense(LoyaltyEventList)}
+    />
 
     <Route
       path="/maintenance/offers-list"
@@ -1222,7 +1273,10 @@ export const setupMemberRoutes = (
       Component={withSuspense(LoyaltyTiersList)}
     />
     <Route path="/loyalty/new-tier" Component={withSuspense(NewTier)} />
-    <Route path="/loyalty/tier-details/:id" Component={withSuspense(TierDetails)} />
+    <Route
+      path="/loyalty/tier-details/:id"
+      Component={withSuspense(TierDetails)}
+    />
     <Route
       path="/loyalty/rule-engine-list"
       Component={withSuspense(RuleEngineList)}
@@ -1262,10 +1316,7 @@ export const setupMemberRoutes = (
       Component={withSuspense(AggregatorInventoryDetails)}
     />
 
-    <Route
-      path="/loyalty/orders/:id"
-      Component={withSuspense(OrderDetails)}
-    />
+    <Route path="/loyalty/orders/:id" Component={withSuspense(OrderDetails)} />
 
     {/* Project Configuration Routes */}
     <Route
@@ -1314,10 +1365,7 @@ export const setupMemberRoutes = (
       path="/bms/hisoc-notice-details/:id"
       element={<HiSocNoticeDetails />}
     />
-    <Route
-      path="/bms/hisoc-notice-edit/:id"
-      element={<HiSocNoticeEdit />}
-    />
+    <Route path="/bms/hisoc-notice-edit/:id" element={<HiSocNoticeEdit />} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
@@ -1355,10 +1403,7 @@ export const setupMemberRoutes = (
       path="/business-directory/view/:id"
       Component={withSuspense(BusinessDirectoryDetailsPage)}
     />
-    <Route
-      path="/bms/call-directory"
-      Component={withSuspense(CallDirectory)}
-    />
+    <Route path="/bms/call-directory" Component={withSuspense(CallDirectory)} />
     <Route path="/bms/mis" Component={withSuspense(BMSMIS)} />
     <Route
       path="/bms/helpdesk-report"
@@ -1412,7 +1457,10 @@ export const setupMemberRoutes = (
       Component={withSuspense(CMSPaymentPlanSetupDetails)}
     />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
-    <Route path="/cms/club-members/view/:id" Component={withSuspense(CMSClubMembersDetails)} />
+    <Route
+      path="/cms/club-members/view/:id"
+      Component={withSuspense(CMSClubMembersDetails)}
+    />
     <Route
       path="/cms/club-members/add"
       Component={withSuspense(AddCMSClubMembers)}
@@ -1599,7 +1647,10 @@ export const setupMemberRoutes = (
     />
 
     {/* Fitout Routes */}
-    <Route path="/settings/approval-matrix" Component={withSuspense(ApprovalMatrixSetupPage)} />
+    <Route
+      path="/settings/approval-matrix"
+      Component={withSuspense(ApprovalMatrixSetupPage)}
+    />
     <Route path="/fitout/setup" Component={withSuspense(FitoutSetup)} />
     <Route path="/fitout/requests" Component={withSuspense(FitoutRequests)} />
     <Route
@@ -1673,14 +1724,8 @@ export const setupMemberRoutes = (
       path="/smartsecure/visitor-in/add"
       Component={withSuspense(AddVisitorPage)}
     />
-    <Route
-      path="/smartsecure/staff-all"
-      element={<StaffsDashboard />}
-    />
-    <Route
-      path="/smartsecure/staff/add"
-      element={<AddStaffPage />}
-    />
+    <Route path="/smartsecure/staff-all" element={<StaffsDashboard />} />
+    <Route path="/smartsecure/staff/add" element={<AddStaffPage />} />
     <Route path="/smartsecure/staff-in" element={<SmartSecureStaffsIn />} />
     <Route
       path="/smartsecure/staffs/in"
@@ -1750,26 +1795,14 @@ export const setupMemberRoutes = (
       path="/smartsecure/patrolling"
       Component={withSuspense(Petrolling)}
     />
-    <Route
-      path="/smartsecure/shift"
-      Component={withSuspense(ShiftPage)}
-    />
-    <Route
-      path="/smartsecure/roster"
-      Component={withSuspense(RosterPage)}
-    />
-    <Route
-      path="/smartsecure/roster/create"
-      element={<RosterCreatePage />}
-    />
+    <Route path="/smartsecure/shift" Component={withSuspense(ShiftPage)} />
+    <Route path="/smartsecure/roster" Component={withSuspense(RosterPage)} />
+    <Route path="/smartsecure/roster/create" element={<RosterCreatePage />} />
     <Route
       path="/smartsecure/roster/detail/:id"
       element={<RosterDetailPage />}
     />
-    <Route
-      path="/smartsecure/roster/edit/:id"
-      element={<RosterEditPage />}
-    />
+    <Route path="/smartsecure/roster/edit/:id" element={<RosterEditPage />} />
 
     {/* <Route
       path="/smartsecure/patrolling"
@@ -1783,8 +1816,14 @@ export const setupMemberRoutes = (
       path="/smartsecure/patrolling-info"
       element={<PatrollingDashboard />}
     />
-    <Route path="/smartsecure/patrolling-response" element={<PatrollingResponsePage />} />
-    <Route path="/smartsecure/patrolling/response" element={<PatrollingResponsePage />} />
+    <Route
+      path="/smartsecure/patrolling-response"
+      element={<PatrollingResponsePage />}
+    />
+    <Route
+      path="/smartsecure/patrolling/response"
+      element={<PatrollingResponsePage />}
+    />
     <Route path="/smartsecure/response" element={<PatrollingResponsePage />} />
     <Route
       path="/smartsecure/setup/general"
@@ -1848,19 +1887,42 @@ export const setupMemberRoutes = (
       path="/appointmentz/block-days-config"
       Component={withSuspense(AppointmentzBlockDaysConfig)}
     />
+    <Route
+      path="/appointmentz/email-config"
+      Component={withSuspense(AppointmentzEmailConfig)}
+    />
+    <Route
+      path="/site_schedule_requests/:encryptedId/schedule"
+      Component={withSuspense(PublicSiteScheduleBooking)}
+    />
 
     {/* Offers Routes */}
     <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
     <Route path="/bms/offers/add" Component={withSuspense(AddOffersPage)} />
-    <Route path="/bms/offers/edit/:id" Component={withSuspense(EditOffersPage)} />
-    <Route path="/bms/offers/view/:id" Component={withSuspense(BMSOfferViewPage)} />
+    <Route
+      path="/bms/offers/edit/:id"
+      Component={withSuspense(EditOffersPage)}
+    />
+    <Route
+      path="/bms/offers/view/:id"
+      Component={withSuspense(BMSOfferViewPage)}
+    />
     <Route path="/offer/add" Component={withSuspense(AddOfferPage)} />
     <Route path="/offer/add/:id" Component={withSuspense(AddOfferPage)} />
     <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
     {/* <Route path="/loyalty/offers/add" Component={withSuspense(AddOffersPage)} /> */}
-    <Route path="/loyalty/offer/add" Component={withSuspense(LoyaltyAddOfferPage)} />
-    <Route path="/loyalty/offer/add/:id" Component={withSuspense(LoyaltyAddOfferPage)} />
-    <Route path="/loyalty/offer/view/:id" Component={withSuspense(LoyaltyOfferViewPage)} />
+    <Route
+      path="/loyalty/offer/add"
+      Component={withSuspense(LoyaltyAddOfferPage)}
+    />
+    <Route
+      path="/loyalty/offer/add/:id"
+      Component={withSuspense(LoyaltyAddOfferPage)}
+    />
+    <Route
+      path="/loyalty/offer/view/:id"
+      Component={withSuspense(LoyaltyOfferViewPage)}
+    />
     <Route
       path="/bms/business-directory/add"
       Component={withSuspense(AddBusinessDirectoryPage)}

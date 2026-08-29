@@ -1079,6 +1079,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: SettingsIcon,
               path: "/appointmentz/block-days-config",
             },
+            {
+              id: "email-config",
+              label: "Email Configuration",
+              icon: SettingsIcon,
+              path: "/appointmentz/email-config",
+            },
           ],
         },
       ],

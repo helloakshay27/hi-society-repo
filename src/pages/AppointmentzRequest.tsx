@@ -35,14 +35,29 @@ import {
   CalendarX,
   CheckSquare,
   RefreshCw,
+  Clock,
+  Loader2,
 } from "lucide-react";
 import {
   getSiteScheduleRequests,
   exportSiteRequestsData,
   updateSiteScheduleRequest,
   getAllRMUsers,
+  getSiteScheduleDashboard,
+  getSocietyBlocks,
+  getSocietyFlatsByTower,
+  getBehalfOfUserScheduleData,
+  getSocietyFlatsByBlockId,
+  getSocietyFlatDetailsById,
+  getRMAvailableSlots,
+  createSiteScheduleVisit,
   RMUserData,
   SiteScheduleRequest,
+  SiteScheduleDashboardData,
+  SocietyBlockOption,
+  SocietyFlatOption,
+  SocietyFlatOptionItem,
+  RMAvailableSlotItem,
 } from "@/services/appointmentzService";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
@@ -78,6 +93,10 @@ export const AppointmentzRequest: React.FC = () => {
   const [selectedRequest, setSelectedRequest] =
     useState<AppointmentRequestRow | null>(null);
 
+  // Dashboard Stats State
+  const [dashboardData, setDashboardData] = useState<SiteScheduleDashboardData | null>(null);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
+
   // Status Filter from Top Cards
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
 
@@ -110,30 +129,70 @@ export const AppointmentzRequest: React.FC = () => {
   // RM Users list for dropdown
   const [rmUsers, setRmUsers] = useState<RMUserData[]>([]);
 
-  // Schedule Visit dialog state
-  const [isScheduleVisitOpen, setIsScheduleVisitOpen] = useState(false);
-  const [newVisitData, setNewVisitData] = useState({
-    tower: "",
-    flat: "",
-    owners: "",
-    scheduled_by: "",
-    scheduled_on: "",
-    selected_slot: "",
-    reason: "",
-  });
+  // Tower options from API
+  const [towerOptions, setTowerOptions] = useState<SocietyBlockOption[]>([]);
+  const [scheduleFlats, setScheduleFlats] = useState<SocietyFlatOption[]>([]);
+  const [isLoadingScheduleFlats, setIsLoadingScheduleFlats] = useState(false);
 
-  // Fetch RM users list for dropdown filter
+  // Schedule Visit 5-Step Workflow State
+  const [isScheduleVisitOpen, setIsScheduleVisitOpen] = useState(false);
+  const [isLoadingBehalfData, setIsLoadingBehalfData] = useState(false);
+  const [behalfTowers, setBehalfTowers] = useState<Array<{ id: number | string; name: string }>>([]);
+  const [bookingWindow, setBookingWindow] = useState<{ minDate?: string; maxDate?: string }>({});
+
+  const [selectedScheduleTowerId, setSelectedScheduleTowerId] = useState<string>("");
+  const [selectedScheduleTowerName, setSelectedScheduleTowerName] = useState<string>("");
+  const [scheduleFlatsList, setScheduleFlatsList] = useState<SocietyFlatOptionItem[]>([]);
+  const [isLoadingFlatsByTower, setIsLoadingFlatsByTower] = useState(false);
+
+  const [selectedScheduleFlatId, setSelectedScheduleFlatId] = useState<string>("");
+  const [selectedScheduleFlatNo, setSelectedScheduleFlatNo] = useState<string>("");
+  const [isLoadingFlatDetails, setIsLoadingFlatDetails] = useState(false);
+  const [scheduleOwnerName, setScheduleOwnerName] = useState<string>("");
+  const [scheduleScheduledBy, setScheduleScheduledBy] = useState<string>("");
+
+  const [scheduleVisitDate, setScheduleVisitDate] = useState<string>("");
+  const [scheduleAvailableSlots, setScheduleAvailableSlots] = useState<RMAvailableSlotItem[]>([]);
+  const [isLoadingAvailableSlots, setIsLoadingAvailableSlots] = useState(false);
+  const [selectedScheduleSlotId, setSelectedScheduleSlotId] = useState<string>("");
+  const [scheduleReason, setScheduleReason] = useState<string>("");
+  const [isSubmittingScheduleVisit, setIsSubmittingScheduleVisit] = useState(false);
+
+  // Fetch Dashboard Stats
+  const fetchDashboardData = useCallback(async () => {
+    setIsDashboardLoading(true);
+    try {
+      const resp = await getSiteScheduleDashboard();
+      if (resp) {
+        setDashboardData(resp);
+      }
+    } catch (err) {
+      console.warn("Could not fetch site schedule requests dashboard data:", err);
+    } finally {
+      setIsDashboardLoading(false);
+    }
+  }, []);
+
+  // Fetch RM users list and Tower blocks
   useEffect(() => {
-    const fetchRMUsers = async () => {
+    const fetchDropdownOptions = async () => {
       try {
         const users = await getAllRMUsers();
         setRmUsers(users || []);
       } catch (err) {
         console.warn("Could not fetch RM users for filter:", err);
       }
+
+      try {
+        const blocks = await getSocietyBlocks();
+        setTowerOptions(blocks || []);
+      } catch (err) {
+        console.warn("Could not fetch society blocks:", err);
+      }
     };
-    fetchRMUsers();
-  }, []);
+    fetchDropdownOptions();
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // Fetch real API data
   const fetchSiteScheduleRequests = useCallback(async () => {
@@ -206,30 +265,303 @@ export const AppointmentzRequest: React.FC = () => {
     return Array.from(flats);
   }, [data]);
 
-  // Dynamic status count summary
+  // Merge tower options from API and data
+  const allTowerOptions = useMemo(() => {
+    const map = new Map<string, { id: number | string; name: string }>();
+    towerOptions.forEach((t) => {
+      if (t.name) map.set(t.name.toLowerCase(), { id: t.id, name: t.name });
+    });
+    uniqueTowers.forEach((t) => {
+      if (t && t !== "-" && !map.has(t.toLowerCase())) {
+        map.set(t.toLowerCase(), { id: t, name: t });
+      }
+    });
+    return Array.from(map.values());
+  }, [towerOptions, uniqueTowers]);
+
+  // Format date helper (YYYY-MM-DD to DD/MM/YYYY)
+  const formatToDDMMYYYY = (isoDate: string): string => {
+    if (!isoDate) return "";
+    if (isoDate.includes("/")) return isoDate;
+    const parts = isoDate.split("-");
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+    }
+    return isoDate;
+  };
+
+  // Normalize date string (DD/MM/YYYY to YYYY-MM-DD)
+  const formatToYYYYMMDD = (dateStr: string): string => {
+    if (!dateStr) return "";
+    if (dateStr.includes("-")) return dateStr;
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
+    return dateStr;
+  };
+
+  // Step 4: Fetch available slots for given date
+  const fetchAvailableSlotsForDate = useCallback(async (dateIso: string) => {
+    if (!dateIso) {
+      setScheduleAvailableSlots([]);
+      return;
+    }
+    setIsLoadingAvailableSlots(true);
+    setSelectedScheduleSlotId("");
+    try {
+      const formattedDate = formatToDDMMYYYY(dateIso);
+      const res = await getRMAvailableSlots(formattedDate);
+      setScheduleAvailableSlots(res.slots || []);
+    } catch (err) {
+      console.warn("Could not fetch RM available slots:", err);
+      setScheduleAvailableSlots([]);
+    } finally {
+      setIsLoadingAvailableSlots(false);
+    }
+  }, []);
+
+  // Step 1: When modal opens, load RM info, towers, booking window
+  useEffect(() => {
+    if (isScheduleVisitOpen) {
+      setIsLoadingBehalfData(true);
+
+      // Fetch blocks & behalf of user schedule data
+      Promise.allSettled([getBehalfOfUserScheduleData(), getSocietyBlocks()])
+        .then(([behalfRes, blocksRes]) => {
+          if (blocksRes.status === "fulfilled" && Array.isArray(blocksRes.value)) {
+            setTowerOptions(blocksRes.value);
+          }
+
+          if (behalfRes.status === "fulfilled") {
+            const res = behalfRes.value;
+            const towers = res.society_blocks || res.towers || [];
+            if (towers.length > 0) {
+              setBehalfTowers(towers);
+            }
+
+            const rmName =
+              res.rm_user?.name ||
+              res.created_by?.firstname ||
+              res.created_by?.name ||
+              "";
+            if (rmName) {
+              setScheduleScheduledBy(rmName);
+            }
+
+            if (res.booking_window) {
+              const bw = res.booking_window;
+              let minD = "";
+              let maxD = "";
+              if (bw.start_date) {
+                minD = formatToYYYYMMDD(bw.start_date);
+                maxD = bw.end_date ? formatToYYYYMMDD(bw.end_date) : "";
+              } else {
+                const today = new Date();
+                const minObj = new Date(today);
+                minObj.setDate(today.getDate() + Number(bw.start_days || 0));
+                minD = minObj.toISOString().split("T")[0];
+
+                const maxObj = new Date(today);
+                maxObj.setDate(today.getDate() + Number(bw.max_days || 30) - 1);
+                maxD = maxObj.toISOString().split("T")[0];
+              }
+              setBookingWindow({ minDate: minD, maxDate: maxD });
+              setScheduleVisitDate(minD);
+              fetchAvailableSlotsForDate(minD);
+            }
+          }
+        })
+        .finally(() => {
+          setIsLoadingBehalfData(false);
+        });
+    } else {
+      // Reset state on close
+      setSelectedScheduleTowerId("");
+      setSelectedScheduleTowerName("");
+      setScheduleFlatsList([]);
+      setSelectedScheduleFlatId("");
+      setSelectedScheduleFlatNo("");
+      setScheduleOwnerName("");
+      setScheduleAvailableSlots([]);
+      setSelectedScheduleSlotId("");
+      setScheduleReason("");
+    }
+  }, [isScheduleVisitOpen, fetchAvailableSlotsForDate]);
+
+  // Step 2: Select Tower -> Fetch Flats
+  const handleScheduleTowerSelect = async (towerVal: string) => {
+    // Find tower by id or name across all lists
+    const foundTower =
+      behalfTowers.find((t) => String(t.id) === towerVal || t.name === towerVal) ||
+      towerOptions.find((t) => String(t.id) === towerVal || t.name === towerVal) ||
+      allTowerOptions.find((t) => String(t.id) === towerVal || t.name === towerVal);
+
+    const towerId = foundTower ? String(foundTower.id) : towerVal;
+    const towerName = foundTower ? foundTower.name : towerVal;
+
+    let numericTowerId = towerId;
+    if (isNaN(Number(towerId))) {
+      const matchInBlocks = towerOptions.find(
+        (b) => b.name?.toLowerCase() === towerName.toLowerCase()
+      );
+      if (matchInBlocks) numericTowerId = String(matchInBlocks.id);
+    }
+
+    setSelectedScheduleTowerId(numericTowerId);
+    setSelectedScheduleTowerName(towerName);
+    setSelectedScheduleFlatId("");
+    setSelectedScheduleFlatNo("");
+    setScheduleOwnerName("");
+    setScheduleFlatsList([]);
+    setIsLoadingFlatsByTower(true);
+
+    try {
+      const res = await getSocietyFlatsByBlockId(numericTowerId);
+      const list = Array.isArray(res)
+        ? res
+        : res.society_flats || res.flats || (res as any).data || [];
+      setScheduleFlatsList(list);
+    } catch (err) {
+      console.warn("Could not fetch flats for selected tower:", err);
+      toast.error("Failed to load flats for selected tower");
+    } finally {
+      setIsLoadingFlatsByTower(false);
+    }
+  };
+
+  // Step 3: Flat selected -> Owner name + Assigned RM
+  const handleScheduleFlatSelect = async (flatVal: string) => {
+    const foundFlat = scheduleFlatsList.find(
+      (f) => String(f.id) === flatVal || f.flat_no === flatVal || f.flat_new_str === flatVal
+    );
+    const flatId = foundFlat ? String(foundFlat.id) : flatVal;
+    const flatNo = foundFlat ? foundFlat.flat_no || foundFlat.flat_new_str || foundFlat.name || flatVal : flatVal;
+
+    setSelectedScheduleFlatId(flatId);
+    setSelectedScheduleFlatNo(flatNo);
+    setIsLoadingFlatDetails(true);
+
+    try {
+      const res = await getSocietyFlatDetailsById(flatId);
+      const ownerName =
+        res.customer_name ||
+        res.owner_name ||
+        res.bill_to_party ||
+        res.society_flat?.owner_name ||
+        res.society_flat?.customer_name ||
+        "";
+      if (ownerName) {
+        setScheduleOwnerName(ownerName);
+      }
+
+      const rmAssigned =
+        res.rm_user_name ||
+        (typeof res.rm_assigned === "object"
+          ? res.rm_assigned?.name || res.rm_assigned?.firstname
+          : res.rm_assigned) ||
+        res.rm_user?.name ||
+        "";
+      if (rmAssigned) {
+        setScheduleScheduledBy(rmAssigned);
+      }
+    } catch (err) {
+      console.warn("Could not fetch flat details:", err);
+    } finally {
+      setIsLoadingFlatDetails(false);
+    }
+  };
+
+  // Step 4: Date picked -> Fetch Available Slots
+  const handleScheduleDateChange = (dateVal: string) => {
+    setScheduleVisitDate(dateVal);
+    fetchAvailableSlotsForDate(dateVal);
+  };
+
+  // Step 5: Submit Site Schedule
+  const handleCreateScheduleVisit = async () => {
+    if (!selectedScheduleFlatId) {
+      toast.error("Please select a flat");
+      return;
+    }
+    if (!scheduleVisitDate) {
+      toast.error("Please select a scheduled date");
+      return;
+    }
+    if (!selectedScheduleSlotId) {
+      toast.error("Please select an available time slot");
+      return;
+    }
+
+    setIsSubmittingScheduleVisit(true);
+    const formattedDate = formatToDDMMYYYY(scheduleVisitDate);
+
+    try {
+      const res = await createSiteScheduleVisit({
+        society_flat_id: Number(selectedScheduleFlatId) || selectedScheduleFlatId,
+        site_schedule_request: {
+          scheduled_at: formattedDate,
+          site_schedule_id: Number(selectedScheduleSlotId) || selectedScheduleSlotId,
+          ...(scheduleReason ? { reason: scheduleReason } : {}),
+        },
+      });
+
+      if (res.code === 200 || res.message || res.site_schedule_request) {
+        toast.success(res.message || "Site visit successfully scheduled!");
+        setIsScheduleVisitOpen(false);
+        await Promise.all([fetchSiteScheduleRequests(), fetchDashboardData()]);
+      } else if (res.errors && res.errors.length > 0) {
+        toast.error(res.errors.join(", "));
+      } else {
+        toast.success("Site visit successfully scheduled!");
+        setIsScheduleVisitOpen(false);
+        await Promise.all([fetchSiteScheduleRequests(), fetchDashboardData()]);
+      }
+    } catch (err: any) {
+      console.error("Error creating site schedule visit:", err);
+      const errorData = err?.response?.data;
+      if (errorData?.errors && Array.isArray(errorData.errors)) {
+        toast.error(errorData.errors.join(", "));
+      } else if (errorData?.message) {
+        toast.error(errorData.message);
+      } else {
+        toast.error("Failed to schedule site visit. Please retry.");
+      }
+    } finally {
+      setIsSubmittingScheduleVisit(false);
+    }
+  };
+
+  // Dynamic status count summary as fallback
   const summaryCounts = useMemo(() => {
     return data.reduce(
       (acc, item) => {
         const st = (item.status || "").toLowerCase();
-        if (st.includes("schedul")) acc.scheduled++;
+        acc.total++;
+        if (st.includes("pend")) acc.pending++;
+        else if (st.includes("schedul")) acc.scheduled++;
         else if (st.includes("visit")) acc.siteVisited++;
         else if (st.includes("revisit")) acc.revisitRequested++;
+        else if (st.includes("close") || st.includes("handover") || st.includes("complete")) acc.closed++;
         else if (st.includes("cancel")) acc.cancelled++;
-        else if (st.includes("handover") || st.includes("complete")) acc.handoverCompleted++;
         return acc;
       },
-      { scheduled: 0, siteVisited: 0, revisitRequested: 0, cancelled: 0, handoverCompleted: 0 }
+      { total: 0, pending: 0, scheduled: 0, siteVisited: 0, revisitRequested: 0, closed: 0, cancelled: 0 }
     );
   }, [data]);
 
   // Client-side and applied filter logic
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      if (selectedStatusFilter) {
+      if (selectedStatusFilter && selectedStatusFilter !== "Total") {
         const st = item.status.toLowerCase();
+        if (selectedStatusFilter === "Pending" && !st.includes("pend")) return false;
         if (selectedStatusFilter === "Scheduled" && !st.includes("schedul")) return false;
         if (selectedStatusFilter === "Site Visited" && !st.includes("visit")) return false;
         if (selectedStatusFilter === "Revisit Requested" && !st.includes("revisit")) return false;
+        if (selectedStatusFilter === "Closed" && !st.includes("close") && !st.includes("handover") && !st.includes("complete")) return false;
         if (selectedStatusFilter === "Cancelled" && !st.includes("cancel")) return false;
         if (selectedStatusFilter === "Handover Completed" && !st.includes("handover") && !st.includes("complete")) return false;
       }
@@ -361,7 +693,7 @@ export const AppointmentzRequest: React.FC = () => {
       });
 
       if (response.success) {
-        await fetchSiteScheduleRequests();
+        await Promise.all([fetchSiteScheduleRequests(), fetchDashboardData()]);
         toast.success(
           response.message || `Request ${updatedData.token || selectedRequest.token} updated successfully`
         );
@@ -376,6 +708,7 @@ export const AppointmentzRequest: React.FC = () => {
             : item
         )
       );
+      fetchDashboardData();
       toast.success(`Request ${selectedRequest.token} status updated to ${updatedData.status}`);
       setIsEditModalOpen(false);
       setSelectedRequest(null);
@@ -389,43 +722,11 @@ export const AppointmentzRequest: React.FC = () => {
     window.print();
   };
 
-  const handleCreateScheduleVisit = () => {
-    if (!newVisitData.tower || !newVisitData.flat || !newVisitData.scheduled_on) {
-      toast.error("Please fill in required fields (Tower, Flat, Scheduled Date)");
-      return;
-    }
-    const newEntry: AppointmentRequestRow = {
-      id: Date.now(),
-      token: (Math.floor(Math.random() * 9000) + 1000).toString(),
-      tower: newVisitData.tower,
-      flat: newVisitData.flat,
-      owners: newVisitData.owners || "New Owner",
-      scheduled_by: newVisitData.scheduled_by || "Self",
-      scheduled_on: newVisitData.scheduled_on,
-      selected_slot: newVisitData.selected_slot || "10:00 AM To 11:00 AM",
-      booked_at: new Date().toLocaleDateString("en-GB") + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      created_at: new Date().toLocaleDateString("en-GB") + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: "Scheduled",
-      ndc_date: "-",
-      handover_date: "-",
-      can_edit: true,
-    };
-    setData([newEntry, ...data]);
-    toast.success(`Visit scheduled successfully with Token #${newEntry.token}`);
-    setIsScheduleVisitOpen(false);
-    setNewVisitData({
-      tower: "",
-      flat: "",
-      owners: "",
-      scheduled_by: "",
-      scheduled_on: "",
-      selected_slot: "",
-      reason: "",
-    });
-  };
-
   const getStatusBadgeStyle = (status: string) => {
     const st = (status || "").toLowerCase();
+    if (st.includes("pend")) {
+      return "bg-[#DBC2A9]/40 text-[#1A1A1A]";
+    }
     if (st.includes("schedul")) {
       return "bg-[#DBC2A9] text-[#1A1A1A]";
     }
@@ -438,7 +739,7 @@ export const AppointmentzRequest: React.FC = () => {
     if (st.includes("cancel")) {
       return "bg-[#D5DBDB] text-[#1A1A1A]";
     }
-    if (st.includes("handover") || st.includes("complete")) {
+    if (st.includes("close") || st.includes("handover") || st.includes("complete")) {
       return "bg-[#AAB9C5] text-[#1A1A1A]";
     }
     return "bg-[#f6f4ee] text-[#1A1A1A]";
@@ -520,11 +821,29 @@ export const AppointmentzRequest: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#fdfdfd] p-4 md:p-6 space-y-6">
-      {/* 5 Top Summary Cards Using Application Design Guidelines */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      {/* Top Summary Cards Integrated with Dashboard API */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+        <StatsCard
+          title="Total Requests"
+          value={dashboardData?.total ?? summaryCounts.total}
+          icon={<Building2 className="w-5 h-5 text-[#DA7756]" />}
+          selected={selectedStatusFilter === "Total"}
+          onClick={() => handleCardClick("Total")}
+          className="border border-[#D5DbDB]"
+        />
+
+        <StatsCard
+          title="Total Pending"
+          value={dashboardData?.pending ?? summaryCounts.pending}
+          icon={<Clock className="w-5 h-5 text-[#DA7756]" />}
+          selected={selectedStatusFilter === "Pending"}
+          onClick={() => handleCardClick("Pending")}
+          className="border border-[#D5DbDB]"
+        />
+
         <StatsCard
           title="Total Scheduled"
-          value={summaryCounts.scheduled}
+          value={dashboardData?.scheduled ?? summaryCounts.scheduled}
           icon={<CalendarCheck className="w-5 h-5 text-[#DA7756]" />}
           selected={selectedStatusFilter === "Scheduled"}
           onClick={() => handleCardClick("Scheduled")}
@@ -533,7 +852,7 @@ export const AppointmentzRequest: React.FC = () => {
 
         <StatsCard
           title="Total Site Visited"
-          value={summaryCounts.siteVisited}
+          value={dashboardData?.site_visited ?? summaryCounts.siteVisited}
           icon={<CheckCircle2 className="w-5 h-5 text-[#DA7756]" />}
           selected={selectedStatusFilter === "Site Visited"}
           onClick={() => handleCardClick("Site Visited")}
@@ -542,7 +861,7 @@ export const AppointmentzRequest: React.FC = () => {
 
         <StatsCard
           title="Total Revisit Requested"
-          value={summaryCounts.revisitRequested}
+          value={dashboardData?.revisit_requested ?? summaryCounts.revisitRequested}
           icon={<RefreshCw className="w-5 h-5 text-[#DA7756]" />}
           selected={selectedStatusFilter === "Revisit Requested"}
           onClick={() => handleCardClick("Revisit Requested")}
@@ -550,20 +869,20 @@ export const AppointmentzRequest: React.FC = () => {
         />
 
         <StatsCard
-          title="Total Cancelled"
-          value={summaryCounts.cancelled}
-          icon={<CalendarX className="w-5 h-5 text-[#DA7756]" />}
-          selected={selectedStatusFilter === "Cancelled"}
-          onClick={() => handleCardClick("Cancelled")}
+          title="Total Closed"
+          value={dashboardData?.closed ?? summaryCounts.closed}
+          icon={<CheckSquare className="w-5 h-5 text-[#DA7756]" />}
+          selected={selectedStatusFilter === "Closed"}
+          onClick={() => handleCardClick("Closed")}
           className="border border-[#D5DbDB]"
         />
 
         <StatsCard
-          title="Total Handover Completed"
-          value={summaryCounts.handoverCompleted}
-          icon={<CheckSquare className="w-5 h-5 text-[#DA7756]" />}
-          selected={selectedStatusFilter === "Handover Completed"}
-          onClick={() => handleCardClick("Handover Completed")}
+          title="Total Cancelled"
+          value={dashboardData?.cancelled ?? summaryCounts.cancelled}
+          icon={<CalendarX className="w-5 h-5 text-[#DA7756]" />}
+          selected={selectedStatusFilter === "Cancelled"}
+          onClick={() => handleCardClick("Cancelled")}
           className="border border-[#D5DbDB]"
         />
       </div>
@@ -572,7 +891,7 @@ export const AppointmentzRequest: React.FC = () => {
       {selectedStatusFilter && (
         <div className="flex items-center justify-between bg-[#f6f4ee] border border-[#D5DbDB] px-4 py-2 rounded-lg text-sm text-[#1A1A1A]">
           <span>
-            Filtering by status: <strong>{selectedStatusFilter}</strong> ({filteredData.length} results)
+            Filtering by: <strong>{selectedStatusFilter === "Total" ? "All Requests" : `Status: ${selectedStatusFilter}`}</strong> ({filteredData.length} results)
           </span>
           <Button
             variant="ghost"
@@ -656,17 +975,24 @@ export const AppointmentzRequest: React.FC = () => {
               {/* Tower */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Tower</Label>
-                <Select value={filterTower} onValueChange={setFilterTower}>
+                <Select
+                  value={filterTower || "all"}
+                  onValueChange={(val) => setFilterTower(val === "all" ? "" : val)}
+                >
                   <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
                     <SelectValue placeholder="Select Tower" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white z-50">
                     <SelectItem value="all">All Towers</SelectItem>
-                    {uniqueTowers.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
-                      </SelectItem>
-                    ))}
+                    {allTowerOptions.map((t) => {
+                      const val = t.name || String(t.id || "");
+                      if (!val) return null;
+                      return (
+                        <SelectItem key={String(t.id || t.name)} value={val}>
+                          {t.name || `Tower #${t.id}`}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -674,17 +1000,23 @@ export const AppointmentzRequest: React.FC = () => {
               {/* Flat */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Flat</Label>
-                <Select value={filterFlat} onValueChange={setFilterFlat}>
+                <Select
+                  value={filterFlat || "all"}
+                  onValueChange={(val) => setFilterFlat(val === "all" ? "" : val)}
+                >
                   <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
                     <SelectValue placeholder="Select Flat" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white z-50">
                     <SelectItem value="all">All Flats</SelectItem>
-                    {uniqueFlats.map((f) => (
-                      <SelectItem key={f} value={f}>
-                        {f}
-                      </SelectItem>
-                    ))}
+                    {uniqueFlats.map((f) => {
+                      if (!f || f === "-") return null;
+                      return (
+                        <SelectItem key={f} value={f}>
+                          {f}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -692,17 +1024,26 @@ export const AppointmentzRequest: React.FC = () => {
               {/* RM Assigned */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">RM Assigned</Label>
-                <Select value={filterRmAssigned} onValueChange={setFilterRmAssigned}>
+                <Select
+                  value={filterRmAssigned || "all"}
+                  onValueChange={(val) => setFilterRmAssigned(val === "all" ? "" : val)}
+                >
                   <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
                     <SelectValue placeholder="Select RM Assigned" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white z-50">
                     <SelectItem value="all">All RM Users</SelectItem>
-                    {rmUsers.map((u) => (
-                      <SelectItem key={u.id} value={u.full_name}>
-                        {u.full_name}
-                      </SelectItem>
-                    ))}
+                    {rmUsers.map((u) => {
+                      const name =
+                        u.full_name ||
+                        `${u.first_name || ""} ${u.last_name || ""}`.trim() ||
+                        `User #${u.id}`;
+                      return (
+                        <SelectItem key={String(u.id)} value={name}>
+                          {name}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -710,11 +1051,14 @@ export const AppointmentzRequest: React.FC = () => {
               {/* Status */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Status</Label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <Select
+                  value={filterStatus || "all"}
+                  onValueChange={(val) => setFilterStatus(val === "all" ? "" : val)}
+                >
                   <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white z-50">
                     <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="Scheduled">Scheduled</SelectItem>
                     <SelectItem value="Site Visited">Site Visited</SelectItem>
@@ -795,114 +1139,267 @@ export const AppointmentzRequest: React.FC = () => {
         />
       )}
 
-      {/* Schedule Visit Modal */}
+      {/* Schedule Visit Modal (5-Step API Integration) */}
       <Dialog open={isScheduleVisitOpen} onOpenChange={setIsScheduleVisitOpen}>
-        <DialogContent className="sm:max-w-[520px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
-          <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB]">
-            <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
+        <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl bg-white rounded-xl">
+          <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB] flex flex-row items-center justify-between">
+            <DialogTitle className="text-base font-bold text-[#1A1A1A] flex items-center gap-2">
               <Calendar className="w-5 h-5 text-[#DA7756]" />
               Schedule New Visit
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 p-6 bg-white">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-[#1A1A1A]">Tower *</Label>
-                <Input
-                  placeholder="e.g. D - WING"
-                  value={newVisitData.tower}
-                  onChange={(e) => setNewVisitData({ ...newVisitData, tower: e.target.value })}
-                  className="border-[#D5DbDB]"
-                />
+            {isLoadingBehalfData ? (
+              <div className="py-8 text-center space-y-2">
+                <Loader2 className="w-6 h-6 text-[#DA7756] animate-spin mx-auto" />
+                <p className="text-xs text-[#6B7280]">Loading visit setup configuration...</p>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-[#1A1A1A]">Flat No. *</Label>
-                <Input
-                  placeholder="e.g. D-3502"
-                  value={newVisitData.flat}
-                  onChange={(e) => setNewVisitData({ ...newVisitData, flat: e.target.value })}
-                  className="border-[#D5DbDB]"
-                />
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Step 1 & Step 2: Tower and Flat Selectors */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Step 1: Select Tower */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#1A1A1A]">
+                      Select Tower *
+                    </Label>
+                    <Select
+                      value={selectedScheduleTowerId || undefined}
+                      onValueChange={handleScheduleTowerSelect}
+                    >
+                      <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
+                        <SelectValue placeholder="Select Tower" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {(behalfTowers.length > 0 ? behalfTowers : (towerOptions.length > 0 ? towerOptions : allTowerOptions)).length === 0 ? (
+                          <SelectItem value="none" disabled className="text-xs text-gray-400">
+                            No towers available
+                          </SelectItem>
+                        ) : (
+                          (behalfTowers.length > 0 ? behalfTowers : (towerOptions.length > 0 ? towerOptions : allTowerOptions)).map((t) => {
+                            const val = String(t.id || t.name || "");
+                            if (!val) return null;
+                            return (
+                              <SelectItem
+                                key={val}
+                                value={val}
+                                className="text-xs"
+                              >
+                                {t.name || `Tower #${t.id}`}
+                              </SelectItem>
+                            );
+                          })
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-[#1A1A1A]">Owner Name</Label>
-                <Input
-                  placeholder="Owner Name"
-                  value={newVisitData.owners}
-                  onChange={(e) => setNewVisitData({ ...newVisitData, owners: e.target.value })}
-                  className="border-[#D5DbDB]"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-[#1A1A1A]">Scheduled By</Label>
-                <Input
-                  placeholder="Scheduled By"
-                  value={newVisitData.scheduled_by}
-                  onChange={(e) => setNewVisitData({ ...newVisitData, scheduled_by: e.target.value })}
-                  className="border-[#D5DbDB]"
-                />
-              </div>
-            </div>
+                  {/* Step 2: Select Flat */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#1A1A1A]">
+                      Select Flat *
+                    </Label>
+                    <Select
+                      value={selectedScheduleFlatId || undefined}
+                      onValueChange={handleScheduleFlatSelect}
+                      disabled={!selectedScheduleTowerId || isLoadingFlatsByTower}
+                    >
+                      <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
+                        <SelectValue
+                          placeholder={
+                            !selectedScheduleTowerId
+                              ? "Select Tower first"
+                              : isLoadingFlatsByTower
+                              ? "Loading flats..."
+                              : scheduleFlatsList.length === 0
+                              ? "No flats available"
+                              : "Select Flat No."
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {scheduleFlatsList.length === 0 ? (
+                          <SelectItem value="none" disabled className="text-xs text-gray-400">
+                            {isLoadingFlatsByTower ? "Loading flats..." : "No flats available"}
+                          </SelectItem>
+                        ) : (
+                          scheduleFlatsList.map((f) => {
+                            const val = String(f.id || "");
+                            if (!val) return null;
+                            return (
+                              <SelectItem
+                                key={val}
+                                value={val}
+                                className="text-xs"
+                              >
+                                {f.flat_no || f.flat_new_str || f.name || `Flat #${f.id}`}
+                              </SelectItem>
+                            );
+                          })
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-[#1A1A1A]">Scheduled Date *</Label>
-                <Input
-                  type="date"
-                  value={newVisitData.scheduled_on}
-                  onChange={(e) => setNewVisitData({ ...newVisitData, scheduled_on: e.target.value })}
-                  className="border-[#D5DbDB]"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-[#1A1A1A]">Slot</Label>
-                <Select
-                  value={newVisitData.selected_slot}
-                  onValueChange={(val) => setNewVisitData({ ...newVisitData, selected_slot: val })}
-                >
-                  <SelectTrigger className="border-[#D5DbDB]">
-                    <SelectValue placeholder="Select Slot" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10:00 AM To 11:00 AM">10:00 AM To 11:00 AM</SelectItem>
-                    <SelectItem value="11:00 AM To 12:00 PM">11:00 AM To 12:00 PM</SelectItem>
-                    <SelectItem value="12:00 PM To 01:00 PM">12:00 PM To 01:00 PM</SelectItem>
-                    <SelectItem value="02:00 PM To 03:00 PM">02:00 PM To 03:00 PM</SelectItem>
-                    <SelectItem value="04:00 PM To 05:00 PM">04:00 PM To 05:00 PM</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                {/* Step 3: Owner Name and Scheduled By (Auto-populated from flat details) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#1A1A1A]">
+                      Owner Name
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        placeholder="Owner Name"
+                        value={scheduleOwnerName}
+                        onChange={(e) => setScheduleOwnerName(e.target.value)}
+                        className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
+                      />
+                      {isLoadingFlatDetails && (
+                        <Loader2 className="w-3.5 h-3.5 text-[#DA7756] animate-spin absolute right-2.5 top-3" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#1A1A1A]">
+                      Scheduled By
+                    </Label>
+                    <Input
+                      placeholder="Relationship Manager"
+                      value={scheduleScheduledBy}
+                      onChange={(e) => setScheduleScheduledBy(e.target.value)}
+                      className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#1A1A1A]">Purpose / Reason</Label>
-              <Input
-                placeholder="Visit reason / notes..."
-                value={newVisitData.reason}
-                onChange={(e) => setNewVisitData({ ...newVisitData, reason: e.target.value })}
-                className="border-[#D5DbDB]"
-              />
-            </div>
+                {/* Step 4: Scheduled Date & Available Slot Dropdown */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#1A1A1A]">
+                      Scheduled Date *
+                    </Label>
+                    <Input
+                      type="date"
+                      min={bookingWindow.minDate || undefined}
+                      max={bookingWindow.maxDate || undefined}
+                      value={scheduleVisitDate || ""}
+                      onChange={(e) => handleScheduleDateChange(e.target.value)}
+                      className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756] cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#1A1A1A]">
+                      Select Time Slot *
+                    </Label>
+                    <Select
+                      value={selectedScheduleSlotId || undefined}
+                      onValueChange={(val) => {
+                        if (val !== "none") setSelectedScheduleSlotId(val);
+                      }}
+                      disabled={!scheduleVisitDate || isLoadingAvailableSlots}
+                    >
+                      <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
+                        <SelectValue
+                          placeholder={
+                            !scheduleVisitDate
+                              ? "Pick date first"
+                              : isLoadingAvailableSlots
+                              ? "Loading slots..."
+                              : scheduleAvailableSlots.length === 0
+                              ? "No slots available"
+                              : "Select Time Slot"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {scheduleAvailableSlots.length === 0 ? (
+                          <SelectItem value="none" disabled className="text-xs text-gray-400">
+                            {isLoadingAvailableSlots ? "Loading slots..." : "No slots available for date"}
+                          </SelectItem>
+                        ) : (
+                          scheduleAvailableSlots.map((slot) => {
+                            const val = String(slot.id || "");
+                            if (!val) return null;
+                            const isDisabled = slot.slot_disabled === true;
+                            const color = (slot.slot_color_code || "").toLowerCase();
+                            let statusLabel = "Available";
+                            let badgeBg = "bg-emerald-100 text-emerald-800";
+                            if (color.includes("yellow") || color === "yellow") {
+                              statusLabel = "Fast Filling";
+                              badgeBg = "bg-amber-100 text-amber-800";
+                            } else if (color.includes("red") || color === "red" || isDisabled) {
+                              statusLabel = "Not Available";
+                              badgeBg = "bg-red-100 text-red-700";
+                            }
+
+                            return (
+                              <SelectItem
+                                key={val}
+                                value={val}
+                                disabled={isDisabled}
+                                className="text-xs flex items-center justify-between"
+                              >
+                                <span>{slot.ampm_timing}</span>
+                                <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeBg}`}>
+                                  {statusLabel}
+                                </span>
+                              </SelectItem>
+                            );
+                          })
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Purpose / Reason */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-[#1A1A1A]">
+                    Purpose / Reason (Optional)
+                  </Label>
+                  <Input
+                    placeholder="Visit reason / notes..."
+                    value={scheduleReason}
+                    onChange={(e) => setScheduleReason(e.target.value)}
+                    className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
-          <DialogFooter className="bg-[#f6f4ee] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
+          {/* Dialog Footer */}
+          <DialogFooter className="bg-[#f6f4ee] px-6 py-3 border-t border-[#D5DbDB] flex items-center justify-between sm:justify-between">
             <Button
               variant="outline"
+              type="button"
               onClick={() => setIsScheduleVisitOpen(false)}
-              className="border-[#D5DbDB] hover:bg-[#DBC2A9]"
+              className="border-[#DA7756] text-[#DA7756] hover:bg-[#fbeeed] text-xs font-semibold px-4 h-9 cursor-pointer"
             >
               Cancel
             </Button>
             <Button
-              variant="ghost"
-              className="btn-primary"
+              type="button"
+              disabled={
+                !selectedScheduleFlatId ||
+                !scheduleVisitDate ||
+                !selectedScheduleSlotId ||
+                isSubmittingScheduleVisit
+              }
               onClick={handleCreateScheduleVisit}
+              className="btn-primary text-xs font-semibold px-6 h-9 shadow-xs cursor-pointer disabled:opacity-50"
             >
-              Schedule Visit
+              {isSubmittingScheduleVisit ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Scheduling...</span>
+                </div>
+              ) : (
+                "Schedule Visit"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

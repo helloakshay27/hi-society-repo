@@ -57,6 +57,41 @@ export interface UpdateSiteScheduleRequestResponse {
   message: string;
 }
 
+export interface SiteScheduleDashboardData {
+  code?: number;
+  total?: number;
+  pending?: number;
+  scheduled?: number;
+  site_visited?: number;
+  revisit_requested?: number;
+  closed?: number;
+  cancelled?: number;
+  [key: string]: any;
+}
+
+/**
+ * Fetch dashboard stats for site schedule requests
+ */
+export const getSiteScheduleDashboard = async (): Promise<SiteScheduleDashboardData> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = getToken();
+
+  const response = await axios.get(
+    `https://${baseUrl}/crm/admin/site_schedule_requests/dashboard`,
+    {
+      params: {
+        token,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
 /**
  * Fetch site schedule requests with pagination and optional filters
  */
@@ -206,6 +241,42 @@ export interface SocietyFlatOption {
   flat_no: string;
   [key: string]: unknown;
 }
+
+export interface SocietyBlockOption {
+  id: number | string;
+  name: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Fetch society blocks/towers
+ */
+export const getSocietyBlocks = async (): Promise<SocietyBlockOption[]> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = getToken();
+  const societyId = localStorage.getItem("selectedSocietyId");
+
+  try {
+    const response = await axios.get(
+      `https://${baseUrl}/crm/admin/society_blocks.json`,
+      {
+        params: {
+          token,
+          ...(societyId ? { society_id: societyId } : {}),
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data?.society_blocks || response.data?.blocks || [];
+  } catch (error) {
+    console.warn("Could not fetch society blocks:", error);
+    return [];
+  }
+};
 
 /**
  * Fetch flats for a given tower (society block) — used by the Virtual Requests
@@ -1056,29 +1127,64 @@ export const getAppointmentzFlatDetails = async (flatId: string | number): Promi
   return response.data;
 };
 
+export interface SendFlatInvitePayload {
+  scheduled_on?: string;
+  selected_slot?: string;
+  [key: string]: any;
+}
+
 /**
  * Send invite to flat
  */
-export const sendFlatInviteEmail = async (flatId: string | number): Promise<{ success: boolean; message: string }> => {
+export const sendFlatInviteEmail = async (
+  flatId: string | number,
+  payload?: SendFlatInvitePayload
+): Promise<any> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token") || "";
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+
+  const body = payload || {};
 
   try {
     const response = await axios.post(
       `https://${baseUrl}/crm/admin/society_flats/${flatId}/send_invite.json`,
-      {},
+      body,
       {
         params: { token },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers,
       }
     );
     return response.data;
-  } catch {
-    // Return friendly mock response if backend endpoint not active
-    return { success: true, message: `Invite sent successfully to flat #${flatId}` };
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      try {
+        const altResponse = await axios.post(
+          `https://${baseUrl}/crm/admin/society_flats/${flatId}/send_invite`,
+          body,
+          {
+            params: { token },
+            headers,
+          }
+        );
+        return altResponse.data;
+      } catch {
+        const siteReqResponse = await axios.post(
+          `https://${baseUrl}/site_schedule_requests/send_invite`,
+          { society_flat_id: flatId, ...body },
+          {
+            params: { token },
+            headers,
+          }
+        );
+        return siteReqResponse.data;
+      }
+    }
+    throw err;
   }
 };
 
@@ -1088,6 +1194,7 @@ export interface ScheduleSetupSettings {
   d2_start_days: number;
   d2_end_days: number;
   site_schedule_start_days: number;
+  email_template?: string;
 }
 
 export interface ScheduleSetupAssets {
@@ -1103,7 +1210,7 @@ export interface ScheduleSetupResponse {
 }
 
 /**
- * Fetch Schedule Setup screen data (D1/D2 days, RM slot-days limit, logo & backdrop URLs)
+ * Fetch Schedule Setup screen data (D1/D2 days, RM slot-days limit, email template, logo & backdrop URLs)
  */
 export const getScheduleSetup = async (): Promise<ScheduleSetupResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
@@ -1123,14 +1230,15 @@ export const getScheduleSetup = async (): Promise<ScheduleSetupResponse> => {
 };
 
 export interface UpdateScheduleSetupDaysPayload {
-  start_days: number | string;
-  end_days: number | string;
-  start_days2: number | string;
-  end_days2: number | string;
+  start_days?: number | string;
+  end_days?: number | string;
+  start_days2?: number | string;
+  end_days2?: number | string;
+  email_template?: string;
 }
 
 /**
- * Save the "Schedule Setup" panel (D1 + D2 start/end days)
+ * Save the "Schedule Setup" panel (D1 + D2 start/end days or email template)
  */
 export const updateScheduleSetupDays = async (
   payload: UpdateScheduleSetupDaysPayload
@@ -1141,6 +1249,31 @@ export const updateScheduleSetupDays = async (
   const response = await axios.put(
     `https://${baseUrl}/rm_users/site_schedules/update_system_constant`,
     payload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Save the Email Template string in system constants
+ */
+export const updateEmailTemplate = async (
+  emailTemplate: string
+): Promise<{ success: boolean; message?: string }> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = getToken();
+
+  const response = await axios.put(
+    `https://${baseUrl}/rm_users/site_schedules/update_system_constant`,
+    {
+      email_template: emailTemplate,
+    },
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1206,6 +1339,447 @@ export const uploadSiteSchedulerAsset = async (
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+// Public Customer Booking Interfaces & API Services
+export interface PublicSiteSchedulePageResponse {
+  code: number;
+  state: "cancelled" | "already_placed" | "bookable" | "reschedule" | string;
+  created_by?: {
+    id: number;
+    firstname: string;
+    [key: string]: any;
+  };
+  site_schedule_request?: {
+    id: number;
+    status: string;
+    scheduled_at: string | null;
+    [key: string]: any;
+  };
+  society_flat?: {
+    id: number;
+    flat_new_str: string;
+    [key: string]: any;
+  };
+  created_by_rm?: boolean;
+  booking_window?: {
+    start_date?: string;
+    end_date?: string;
+    start_days?: number;
+    max_days?: number;
+    [key: string]: any;
+  };
+  backdrop_url?: string | null;
+  message?: string;
+  [key: string]: any;
+}
+
+export interface PublicSiteSlot {
+  id: number;
+  ampm_timing: string;
+  slot_color_code: string;
+  slot_disabled: boolean;
+  [key: string]: any;
+}
+
+export interface PublicSiteSchedulesResponse {
+  slots?: PublicSiteSlot[];
+  [key: string]: any;
+}
+
+export interface BookPublicSiteSchedulePayload {
+  site_schedule_request: {
+    scheduled_at: string; // DD/MM/YYYY
+    site_schedule_id: number;
+  };
+}
+
+export interface BookPublicSiteScheduleResponse {
+  code: number;
+  message?: string;
+  site_schedule_request?: any;
+  errors?: string[];
+  [key: string]: any;
+}
+
+/**
+ * Step 2: Load public booking page by encryptedId and createdBy
+ */
+export const getPublicSiteSchedulePage = async (
+  encryptedId: string,
+  createdBy?: string,
+  type?: string
+): Promise<PublicSiteSchedulePageResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  const params: Record<string, any> = {};
+  if (createdBy) params.created_by = createdBy;
+  if (type) params.type = type;
+  if (token) params.token = token;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await axios.get(
+    `https://${baseUrl}/site_schedule_requests/${encryptedId}/schedule`,
+    {
+      params,
+      headers,
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Step 3: Fetch available site schedule slots for a given date in DD/MM/YYYY format
+ */
+export const getPublicSiteSchedulesForDate = async (
+  id: number | string,
+  dateStr: string // DD/MM/YYYY
+): Promise<PublicSiteSchedulesResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  const params: Record<string, any> = {
+    date: dateStr,
+  };
+  if (token) params.token = token;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await axios.get(
+    `https://${baseUrl}/site_schedule_requests/${id}/get_site_schedules`,
+    {
+      params,
+      headers,
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Step 4: Book site visit slot
+ */
+export const bookPublicSiteScheduleSlot = async (
+  id: number | string,
+  scheduledAt: string, // DD/MM/YYYY
+  siteScheduleId: number
+): Promise<BookPublicSiteScheduleResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  const params: Record<string, any> = {};
+  if (token) params.token = token;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const payload: BookPublicSiteSchedulePayload = {
+    site_schedule_request: {
+      scheduled_at: scheduledAt,
+      site_schedule_id: siteScheduleId,
+    },
+  };
+
+  const response = await axios.put(
+    `https://${baseUrl}/site_schedule_requests/${id}/book`,
+    payload,
+    {
+      params,
+      headers,
+    }
+  );
+
+  return response.data;
+};
+
+// Behalf of User Schedule Interfaces & APIs (Schedule Visit Modal)
+export interface BehalfOfUserScheduleResponse {
+  code?: number;
+  created_by?: {
+    id: number;
+    firstname?: string;
+    name?: string;
+    [key: string]: any;
+  };
+  rm_user?: {
+    id: number;
+    name?: string;
+    [key: string]: any;
+  };
+  society_blocks?: Array<{
+    id: number | string;
+    name: string;
+    [key: string]: any;
+  }>;
+  towers?: Array<{
+    id: number | string;
+    name: string;
+    [key: string]: any;
+  }>;
+  booking_window?: {
+    start_date?: string;
+    end_date?: string;
+    start_days?: number;
+    max_days?: number;
+    [key: string]: any;
+  };
+  backdrop_url?: string | null;
+  [key: string]: any;
+}
+
+export interface SocietyFlatOptionItem {
+  id: number | string;
+  flat_no?: string;
+  name?: string;
+  flat_new_str?: string;
+  [key: string]: any;
+}
+
+export interface SocietyFlatsByBlockResponse {
+  society_flats?: SocietyFlatOptionItem[];
+  flats?: SocietyFlatOptionItem[];
+  [key: string]: any;
+}
+
+export interface SocietyFlatDetailsResponse {
+  id?: number | string;
+  flat_no?: string;
+  flat_new_str?: string;
+  customer_name?: string;
+  owner_name?: string;
+  bill_to_party?: string;
+  rm_user_name?: string;
+  rm_assigned?: {
+    id?: number;
+    name?: string;
+    firstname?: string;
+    [key: string]: any;
+  } | string;
+  rm_user?: {
+    id?: number;
+    name?: string;
+    [key: string]: any;
+  };
+  society_flat?: any;
+  [key: string]: any;
+}
+
+export interface RMAvailableSlotItem {
+  id: number;
+  ampm_timing: string;
+  slot_color_code?: string;
+  slot_disabled?: boolean;
+  [key: string]: any;
+}
+
+export interface RMAvailableSlotsResponse {
+  slots?: RMAvailableSlotItem[];
+  [key: string]: any;
+}
+
+export interface CreateSiteSchedulePayload {
+  society_flat_id: number | string;
+  site_schedule_request: {
+    scheduled_at: string; // DD/MM/YYYY
+    site_schedule_id: number | string;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
+export interface CreateSiteScheduleResponse {
+  code?: number;
+  message?: string;
+  site_schedule_request?: any;
+  errors?: string[];
+  [key: string]: any;
+}
+
+/**
+ * Step 1: Page/Modal load (RM info, towers, booking window, backdrop)
+ * GET /site_schedule_requests/behalf_of_user_schedule
+ */
+export const getBehalfOfUserScheduleData = async (): Promise<BehalfOfUserScheduleResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  const response = await axios.get(
+    `https://${baseUrl}/site_schedule_requests/behalf_of_user_schedule`,
+    {
+      params: { token },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Step 2: Select Tower -> Select Flat
+ * GET /site_schedule_requests/society_flats.json?q[society_block_id_eq]={tower_id}&token={token}&rm_user_id={rm_user_id}
+ */
+export const getSocietyFlatsByBlockId = async (
+  towerId?: string | number,
+  rmUserId?: string | number
+): Promise<SocietyFlatsByBlockResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  let effectiveRmUserId = rmUserId;
+  if (!effectiveRmUserId) {
+    try {
+      const user = localStorage.getItem("user");
+      if (user) {
+        const parsed = JSON.parse(user);
+        if (parsed?.id) effectiveRmUserId = parsed.id;
+      }
+    } catch {}
+  }
+
+  const params: Record<string, any> = {
+    token,
+  };
+  if (towerId && towerId !== "all" && towerId !== "none") {
+    params["q[society_block_id_eq]"] = towerId;
+  }
+  if (effectiveRmUserId) {
+    params.rm_user_id = effectiveRmUserId;
+  }
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await axios.get(
+      `https://${baseUrl}/site_schedule_requests/society_flats.json`,
+      {
+        params,
+        headers,
+      }
+    );
+
+    if (Array.isArray(response.data)) {
+      return { society_flats: response.data };
+    }
+    return response.data;
+  } catch {
+    const fallbackResponse = await axios.get(
+      `https://${baseUrl}/site_schedule_requests/society_flats`,
+      {
+        params,
+        headers,
+      }
+    );
+
+    if (Array.isArray(fallbackResponse.data)) {
+      return { society_flats: fallbackResponse.data };
+    }
+    return fallbackResponse.data;
+  }
+};
+
+/**
+ * Step 3: Flat selected -> Owner name + Assigned RM
+ * GET /site_schedule_requests/society_flat_details?society_flat_id={id}
+ */
+export const getSocietyFlatDetailsById = async (
+  flatId: string | number
+): Promise<SocietyFlatDetailsResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  const response = await axios.get(
+    `https://${baseUrl}/site_schedule_requests/society_flat_details`,
+    {
+      params: {
+        token,
+        society_flat_id: flatId,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Step 4: Date picked -> Available slots
+ * GET /site_schedule_requests/rm_available_slots?date=DD/MM/YYYY
+ */
+export const getRMAvailableSlots = async (
+  dateStr: string // DD/MM/YYYY
+): Promise<RMAvailableSlotsResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  const response = await axios.get(
+    `https://${baseUrl}/site_schedule_requests/rm_available_slots`,
+    {
+      params: {
+        token,
+        date: dateStr,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Step 5: Submit Schedule Visit
+ * POST /create_site_schedules
+ */
+export const createSiteScheduleVisit = async (
+  payload: CreateSiteSchedulePayload
+): Promise<CreateSiteScheduleResponse> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token") || "";
+
+  const response = await axios.post(
+    `https://${baseUrl}/create_site_schedules`,
+    payload,
+    {
+      params: { token },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     }
   );

@@ -634,7 +634,18 @@ const AppointmentzRMConfig = () => {
           {isEditMode ? `Edit - ${editingUserName}` : "Add New User"}
         </MuiDialogTitle>
 
-        <MuiDialogContent className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 bg-white">
+        <MuiDialogContent
+          sx={{
+            paddingTop: "28px !important",
+            paddingBottom: "24px !important",
+            paddingLeft: "32px !important",
+            paddingRight: "32px !important",
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gap: "24px",
+            backgroundColor: "white",
+          }}
+        >
             <TextField
               label="First Name"
               name="firstName"
