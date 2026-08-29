@@ -172,6 +172,101 @@ export const SAMPLE_GOODS_OUT = [
   { name: 'Week 5', value: 30 },
 ];
 
+/** Sample utility overview KPIs from FM Utility Consumption menu. */
+export const SAMPLE_UTILITY_OVERVIEW = {
+  power_mains_kwh: 18420,
+  power_solar_kwh: 3120,
+  power_dg_kwh: 860,
+  diesel_liters: 420,
+  power_renewable_kwh: 3120,
+  water_total_kl: 2450,
+  water_domestic_kl: 1680,
+  water_flushing_kl: 310,
+  water_irrigation_kl: 280,
+  water_stp_kl: 180,
+  carbon_scope1: 42.5,
+  carbon_scope2: 118.2,
+  fuel_consumption: 420,
+  energy_intensity: 0.086,
+};
+
+/** Sample cumulative / sub-meter power sources pie. */
+export const SAMPLE_POWER_SOURCES = [
+  { name: 'HVAC', value: 6200 },
+  { name: 'Lighting', value: 4100 },
+  { name: 'Common Area', value: 2800 },
+  { name: 'Lifts', value: 1900 },
+  { name: 'Others', value: 1420 },
+];
+
+/** Sample renewable sources pie (Power Top Management). */
+export const SAMPLE_RENEWABLE_SOURCES = [
+  { name: 'Solar', value: 2100 },
+  { name: 'Wind', value: 620 },
+  { name: 'Other Renewable', value: 400 },
+];
+
+/** Sample water source pie. */
+export const SAMPLE_WATER_SOURCES = [
+  { name: 'Municipal', value: 980 },
+  { name: 'Borewell', value: 720 },
+  { name: 'Tanker', value: 410 },
+  { name: 'Recycled / STP', value: 340 },
+];
+
+/** Sample power consumption bar (site / period). */
+export const SAMPLE_POWER_BAR = [
+  { name: 'Week 1', value: 4200 },
+  { name: 'Week 2', value: 4550 },
+  { name: 'Week 3', value: 3980 },
+  { name: 'Week 4', value: 4780 },
+  { name: 'Week 5', value: 3890 },
+];
+
+/** Sample water consumption bar (site / period). */
+export const SAMPLE_WATER_BAR = [
+  { name: 'Week 1', value: 480 },
+  { name: 'Week 2', value: 520 },
+  { name: 'Week 3', value: 455 },
+  { name: 'Week 4', value: 540 },
+  { name: 'Week 5', value: 455 },
+];
+
+/** Sample Power Top Management month-wise bar. */
+export const SAMPLE_POWER_TOP_BAR = [
+  { name: 'Apr', value: 15200 },
+  { name: 'May', value: 16840 },
+  { name: 'Jun', value: 17420 },
+  { name: 'Jul', value: 18110 },
+  { name: 'Aug', value: 17650 },
+];
+
+/** Sample Water Top Management site-wise bar. */
+export const SAMPLE_WATER_TOP_BAR = [
+  { name: 'Site A', value: 820 },
+  { name: 'Site B', value: 640 },
+  { name: 'Site C', value: 510 },
+  { name: 'Site D', value: 480 },
+];
+
+/** Sample Site Wise Dry Segregation Data. */
+export const SAMPLE_DRY_SEGREGATION = [
+  { name: 'Site A', value: 62 },
+  { name: 'Site B', value: 55 },
+  { name: 'Site C', value: 48 },
+  { name: 'Site D', value: 71 },
+  { name: 'Site E', value: 39 },
+];
+
+/** Sample Site Wise EV Consumption. */
+export const SAMPLE_EV_CONSUMPTION = [
+  { name: 'Site A', value: 320 },
+  { name: 'Site B', value: 210 },
+  { name: 'Site C', value: 180 },
+  { name: 'Site D', value: 145 },
+  { name: 'Site E', value: 95 },
+];
+
 /** Sample escalation overview (FM Open / Closed / Average ageing) when live API is empty. */
 export const SAMPLE_ESCALATION_OVERVIEW = {
   open: 12,
