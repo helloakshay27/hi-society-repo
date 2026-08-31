@@ -1139,6 +1139,7 @@ import { OccupantUserDetailWrapper } from "./components/OccupantUserDetailWrappe
 import { LoginPageWrapper } from "./components/LoginPageWrapper";
 const ModulesManagement = lazy(() => import("./pages/settings/ModulesManagement"));
 const LoyaltyTDS = lazy(() => import("./pages/ops-console/admin/LoyaltyTDS").then(m => ({ default: m.LoyaltyTDS })));
+const AdminNewDashboard = lazy(() => import("./pages/ops-console/admin/AdminNewDashboard"));
 const SmartsecureIntegration = lazy(() => import("./pages/ops-console/admin/SmartsecureIntegration"));
 const AddSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/AddSmartsecureGatePage"));
 const EditSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/EditSmartsecureGatePage"));
@@ -1484,6 +1485,10 @@ function App() {
                         <Route
                           path="admin/loyalty-tds"
                           element={<LoyaltyTDS />}
+                        />
+                        <Route
+                          path="admin/new-dashboard"
+                          element={<AdminNewDashboard />}
                         />
                         <Route
                           path="admin/smartsecure-integration"

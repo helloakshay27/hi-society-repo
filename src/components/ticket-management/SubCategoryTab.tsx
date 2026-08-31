@@ -39,7 +39,12 @@ interface CategoryOption {
 export const SubCategoryTab: React.FC = () => {
   const [subCategories, setSubCategories] = useState<SubCategoryItem[]>([]);
   const [issueTypes, setIssueTypes] = useState<IssueType[]>([]);
+  // Category options are dependent on the selected issue type — kept separate
+  // for the Add and Edit dialogs so they don't stomp on each other.
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [editCategories, setEditCategories] = useState<CategoryOption[]>([]);
+  const [editCategoriesLoading, setEditCategoriesLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,14 +97,9 @@ export const SubCategoryTab: React.FC = () => {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const [issueTypesRes, categoriesRes] = await Promise.all([
-        fetch(getFullUrl('/dropdown/issue_types.json'), {
-          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-        }),
-        fetch(getFullUrl('/dropdown/categories.json'), {
-          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-        }),
-      ]);
+      const issueTypesRes = await fetch(getFullUrl('/dropdown/issue_types.json'), {
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+      });
 
       if (issueTypesRes.ok) {
         const data = await issueTypesRes.json();
@@ -109,25 +109,46 @@ export const SubCategoryTab: React.FC = () => {
             name: it.name,
           }))
         );
-      }
-
-      if (categoriesRes.ok) {
-        const data = await categoriesRes.json();
-        const cats = Array.isArray(data) ? data : (data.categories || []);
-        setCategories(
-          cats.map((cat: { id: number; name: string }) => ({
-            id: cat.id,
-            name: cat.name,
-          }))
-        );
-      }
-
-      if (!issueTypesRes.ok || !categoriesRes.ok) {
-        toast.error('Failed to fetch some data');
+      } else {
+        toast.error('Failed to fetch issue types');
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch data');
+    }
+  }, []);
+
+  // Category options depend on the selected issue type — fetch them
+  // per-target (add vs edit dialog) whenever that dialog's issue type changes.
+  const fetchCategoriesByIssueType = useCallback(async (issueTypeId: string, target: 'add' | 'edit') => {
+    const setLoading = target === 'add' ? setCategoriesLoading : setEditCategoriesLoading;
+    const setOptions = target === 'add' ? setCategories : setEditCategories;
+
+    if (!issueTypeId) {
+      setOptions([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        getFullUrl(`/dropdown/categories.json?q[issue_type_id_eq]=${issueTypeId}`),
+        { headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' } },
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const cats = Array.isArray(data) ? data : (data.categories || []);
+        setOptions(
+          cats.map((cat: { id: number; name: string }) => ({ id: cat.id, name: cat.name }))
+        );
+      } else {
+        setOptions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories by issue type:', error);
+      setOptions([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -202,6 +223,14 @@ export const SubCategoryTab: React.FC = () => {
     fetchAllData();
     fetchSubCategories(1);
   }, [fetchAllData, fetchSubCategories]);
+
+  useEffect(() => {
+    fetchCategoriesByIssueType(selectedIssueType, 'add');
+  }, [selectedIssueType, fetchCategoriesByIssueType]);
+
+  useEffect(() => {
+    fetchCategoriesByIssueType(editIssueType, 'edit');
+  }, [editIssueType, fetchCategoriesByIssueType]);
 
   // Handle create submit
   const handleCreateSubmit = async () => {
@@ -429,7 +458,10 @@ export const SubCategoryTab: React.FC = () => {
                 label="Select Issue Type *"
                 displayEmpty
                 value={selectedIssueType}
-                onChange={(e) => setSelectedIssueType(e.target.value)}
+                onChange={(e) => {
+                  setSelectedIssueType(e.target.value);
+                  setSelectedCategory('');
+                }}
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
@@ -439,7 +471,7 @@ export const SubCategoryTab: React.FC = () => {
                 ))}
               </MuiSelect>
             </FormControl>
-            <FormControl fullWidth variant="outlined">
+            <FormControl fullWidth variant="outlined" disabled={!selectedIssueType}>
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
                 Select Category <span style={{ color: '#da7756' }}>*</span>
               </InputLabel>
@@ -448,10 +480,19 @@ export const SubCategoryTab: React.FC = () => {
                 displayEmpty
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
+                disabled={!selectedIssueType || categoriesLoading}
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+                <MenuItem value="" disabled>
+                  <em>
+                    {!selectedIssueType
+                      ? 'Select Issue Type first'
+                      : categoriesLoading
+                      ? 'Loading categories...'
+                      : 'Select Category'}
+                  </em>
+                </MenuItem>
                 {categories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
                 ))}
@@ -554,7 +595,10 @@ variant="ghost"
                     label="Select Issue Type *"
                     displayEmpty
                     value={editIssueType}
-                    onChange={(e) => setEditIssueType(e.target.value)}
+                    onChange={(e) => {
+                      setEditIssueType(e.target.value);
+                      setEditCategory('');
+                    }}
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
@@ -566,7 +610,7 @@ variant="ghost"
                 </FormControl>
 
                 {/* Category Dropdown */}
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth variant="outlined" disabled={!editIssueType}>
                   <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
                     Select Category <span style={{ color: '#da7756' }}>*</span>
                   </InputLabel>
@@ -575,11 +619,20 @@ variant="ghost"
                     displayEmpty
                     value={editCategory}
                     onChange={(e) => setEditCategory(e.target.value)}
+                    disabled={!editIssueType || editCategoriesLoading}
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value="" disabled><em>Select Category</em></MenuItem>
-                    {categories.map((cat) => (
+                    <MenuItem value="" disabled>
+                      <em>
+                        {!editIssueType
+                          ? 'Select Issue Type first'
+                          : editCategoriesLoading
+                          ? 'Loading categories...'
+                          : 'Select Category'}
+                      </em>
+                    </MenuItem>
+                    {editCategories.map((cat) => (
                       <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
                     ))}
                   </MuiSelect>

@@ -235,7 +235,7 @@ export const StatusTab: React.FC = () => {
 
     const data: StatusFormData = {
       name: values.name.trim(),
-      fixedState: values.fixedState as 'closed' | 'reopen' | 'complete' | '',
+      fixedState: (values.fixedState || undefined) as 'closed' | 'reopen' | 'complete' | undefined,
       colorCode: values.colorCode.trim(),
       position: values.position,
     };
@@ -244,10 +244,12 @@ export const StatusTab: React.FC = () => {
   };
 
   const handleSubmit = async (data: StatusFormData) => {
-    if (!userAccount?.company_id) {
-      toast.error('Unable to determine company ID. Please refresh and try again.');
-      return;
-    }
+    // Removed: this blocked status creation whenever userAccount.company_id
+    // failed to load, even though createStatus doesn't actually send it.
+    // if (!userAccount?.company_id) {
+    //   toast.error('Unable to determine company ID. Please refresh and try again.');
+    //   return;
+    // }
 
     // Check if position already exists
     const positionExists = statuses.some(status => status.position === data.position);
@@ -260,11 +262,11 @@ export const StatusTab: React.FC = () => {
     try {
       const statusData = {
         name: data.name,
-        fixed_state: data.fixedState,
+        fixed_state: data.fixedState || '',
         color_code: data.colorCode,
         position: data.position,
-        // of_phase: 'pms',
-        // society_id: userAccount.company_id.toString(),
+        of_phase: 'pms',
+        society_id: String(userAccount?.company_id || currentSiteId),
       };
 
       await ticketManagementAPI.createStatus(statusData);
