@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Plus } from "lucide-react";
-import { AddChargeModal } from "@/components/AddChargeModal";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 
 interface ChargeSetup {
   id: number;
@@ -23,6 +23,7 @@ interface ChargeSetup {
 }
 
 const columns: ColumnConfig[] = [
+  { key: "actions", label: "Actions", sortable: false },
   { key: "name", label: "Name", sortable: true },
   { key: "charge_category", label: "Category", sortable: true },
   { key: "value", label: "Value", sortable: true },
@@ -42,9 +43,10 @@ const formatDateTime = (value?: string) => {
 };
 
 const AccountingCharges: React.FC = () => {
+  const navigate = useNavigate();
   const [charges, setCharges] = useState<ChargeSetup[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
   const fetchCharges = useCallback(async () => {
     setLoading(true);
@@ -52,6 +54,7 @@ const AccountingCharges: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const response = await axios.get(`${baseUrl}/account/charge_setups.json`, {
+        params: { lock_account_id: lockAccountId },
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });
       setCharges(Array.isArray(response.data?.charge_setups) ? response.data.charge_setups : []);
@@ -62,7 +65,7 @@ const AccountingCharges: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [lockAccountId]);
 
   useEffect(() => {
     fetchCharges();
@@ -72,6 +75,13 @@ const AccountingCharges: React.FC = () => {
 
   const renderCell = (item: ChargeSetup, columnKey: string) => {
     switch (columnKey) {
+      case "actions":
+        return (
+          <Pencil
+            className="h-4 w-4 cursor-pointer text-gray-600 hover:text-[#C72030]"
+            onClick={() => navigate(`/accounting/charges/${item.id}/edit`)}
+          />
+        );
       case "value":
         return item.value ?? "";
       case "gst_applicable":
@@ -89,6 +99,14 @@ const AccountingCharges: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      {/* <button
+        onClick={() => navigate("/accounting/dashboard")}
+        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Accounting
+      </button> */}
+
       <EnhancedTable
         data={rows}
         columns={columns}
@@ -100,18 +118,18 @@ const AccountingCharges: React.FC = () => {
         exportFileName="accounting-charges"
         storageKey="accounting-charges-table"
         leftActions={
-          <Button           
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"                   >
-                    <Plus className="w-4 h-4 mr-2" /> Add
+          <Button
+            onClick={() => navigate("/accounting/charges/add")}
+            variant="ghost"
+            className="btn-primary h-9 px-4 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add
           </Button>
         }
         loading={loading}
         loadingMessage="Loading charges..."
         emptyMessage="No matching records found"
       />
-
-      <AddChargeModal open={isAddOpen} onOpenChange={setIsAddOpen} onSaved={fetchCharges} />
     </div>
   );
 };

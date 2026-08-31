@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
@@ -356,6 +356,14 @@ const AccountingInvoiceCreation: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      <button
+        onClick={() => navigate("/accounting/invoices")}
+        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Invoices
+      </button>
+
       <div className="mb-6">
         <h1 className="text-brand-h2 font-semibold text-brand-text">Accounting Invoice Creation</h1>
       </div>

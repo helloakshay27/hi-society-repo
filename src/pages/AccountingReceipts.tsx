@@ -11,8 +11,9 @@ import {
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { FileText, Upload } from "lucide-react";
-import { AccountingReceiptImportDialog } from "@/components/AccountingReceiptImportDialog";
+import { FileText, Plus } from "lucide-react";
+import { CommonImportModal } from "@/components/CommonImportModal";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 
 interface BillPaymentAPI {
   formatted_number?: string;
@@ -92,7 +93,11 @@ const AccountingReceipts: React.FC = () => {
   const [payments, setPayments] = useState<LockPaymentAPI[]>([]);
   const [loading, setLoading] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isDownloadingSample, setIsDownloadingSample] = useState(false);
   const [previewRow, setPreviewRow] = useState<ReceiptRow | null>(null);
+  const [showActionPanel, setShowActionPanel] = useState(false);
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
@@ -101,15 +106,17 @@ const AccountingReceipts: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const url = `${baseUrl}/lock_payments.json?lock_account_id=${lockAccountId}`;
+      const url = `${baseUrl}/lock_account_bills/receipts.json`;
       const response = await axios.get(url, {
+        params: { lock_account_id: lockAccountId },
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
       const data = response.data;
-      setPayments(data?.lock_payments || data?.data || data || []);
+      setPayments(data?.receipts || data?.lock_payments || data?.data || data || []);
     } catch (error) {
       console.error("Error fetching receipts:", error);
       toast.error("Failed to fetch receipts");
@@ -125,22 +132,91 @@ const AccountingReceipts: React.FC = () => {
 
   const rows = useMemo(() => payments.map(toRow), [payments]);
 
-  const handleImport = async (file: File) => {
+  const handleImport = async () => {
+    if (!importFile) {
+      toast.error("Please select a file to import");
+      return;
+    }
+    setIsImporting(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("upl_file", importFile);
       await axios.post(
-        `${baseUrl}/lock_payments/import.json?lock_account_id=${lockAccountId}`,
+        `${baseUrl}/lock_account_bills/import_receipts`,
         formData,
-        { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
+        {
+          params: { lock_account_id: lockAccountId },
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
       );
       toast.success("Receipts imported successfully");
+      setIsImportOpen(false);
+      setImportFile(null);
       fetchReceipts();
     } catch (error) {
       console.error("Error importing receipts:", error);
       toast.error("Failed to import receipts");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleDownloadSample = async () => {
+    setIsDownloadingSample(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(`${baseUrl}/lock_account_bills/download_sample_receipts`, {
+        params: { lock_account_id: lockAccountId },
+        responseType: "blob",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const contentType = response.headers?.["content-type"] || "application/octet-stream";
+      const blob = new Blob([response.data], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "receipts-sample.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading sample file:", error);
+      toast.error("Failed to download sample file");
+    } finally {
+      setIsDownloadingSample(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/lock_account_bills/download_receipts_list.xlsx`,
+        {
+          params: { lock_account_id: lockAccountId },
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "receipts-list.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting receipts:", error);
+      toast.error("Failed to export receipts");
     }
   };
 
@@ -184,13 +260,15 @@ const AccountingReceipts: React.FC = () => {
         pagination
         pageSize={20}
         enableExport
-        exportFileName="accounting-receipts"
+        onExport={handleExportExcel}
         storageKey="accounting-receipts-table"
         leftActions={
           <Button
- className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"            onClick={() => setIsImportOpen(true)}
+            onClick={() => setShowActionPanel(true)}
+            variant="ghost"
+            className="btn-primary h-9 px-4 text-sm font-medium"
           >
-            <Upload className="mr-2 h-4 w-4" /> Import Receipts
+            <Plus className="mr-2 h-4 w-4" /> Action
           </Button>
         }
         loading={loading}
@@ -198,10 +276,31 @@ const AccountingReceipts: React.FC = () => {
         emptyMessage="No matching records found"
       />
 
-      <AccountingReceiptImportDialog
+      {showActionPanel && (
+        <SelectionPanel
+          className="selection-panel--end"
+          onImport={() => {
+            setShowActionPanel(false);
+            setIsImportOpen(true);
+          }}
+          onClearSelection={() => setShowActionPanel(false)}
+        />
+      )}
+
+      <CommonImportModal
+        selectedFile={importFile}
+        setSelectedFile={setImportFile}
         open={isImportOpen}
-        onOpenChange={setIsImportOpen}
+        onOpenChange={(open) => {
+          setIsImportOpen(open);
+          if (!open) setImportFile(null);
+        }}
+        title="Import Receipts"
+        entityType="Receipts"
         onImport={handleImport}
+        isUploading={isImporting}
+        onSampleDownload={handleDownloadSample}
+        isDownloading={isDownloadingSample}
       />
 
       <Dialog open={Boolean(previewRow)} onOpenChange={(open) => !open && setPreviewRow(null)}>

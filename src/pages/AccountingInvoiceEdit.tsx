@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
@@ -14,6 +14,7 @@ import { API_CONFIG } from "@/config/apiConfig";
 
 interface ChargeRow {
   key: string;
+  id?: string;
   ledgerId: string;
   description: string;
   chargeType: string;
@@ -161,6 +162,7 @@ const AccountingInvoiceEdit: React.FC = () => {
   const [acknowledgementDate, setAcknowledgementDate] = useState("");
   const [note, setNote] = useState("");
   const [charges, setCharges] = useState<ChargeRow[]>([emptyCharge()]);
+  const [deletedChargeIds, setDeletedChargeIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const [billCycleOptions, setBillCycleOptions] = useState<SelectOption[]>([]);
@@ -292,6 +294,7 @@ const AccountingInvoiceEdit: React.FC = () => {
           setCharges(
             existingCharges.map((charge: Record<string, unknown>) => ({
               key: Math.random().toString(36).slice(2),
+              id: charge.id !== undefined && charge.id !== null ? String(charge.id) : undefined,
               ledgerId: charge.ledger_id ? String(charge.ledger_id) : "",
               description: String(charge.description ?? charge.name ?? ""),
               chargeType: String(charge.charge_type ?? ""),
@@ -325,7 +328,14 @@ const AccountingInvoiceEdit: React.FC = () => {
   const addCharge = () => setCharges((prev) => [...prev, emptyCharge()]);
 
   const removeCharge = (key: string) => {
-    setCharges((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
+    setCharges((prev) => {
+      if (prev.length <= 1) return prev;
+      const removed = prev.find((row) => row.key === key);
+      if (removed?.id) {
+        setDeletedChargeIds((ids) => [...ids, removed.id as string]);
+      }
+      return prev.filter((row) => row.key !== key);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -367,11 +377,13 @@ const AccountingInvoiceEdit: React.FC = () => {
         acknowledgement_no: acknowledgementNo || undefined,
         acknowledgement_date: acknowledgementDate || undefined,
         note,
+        delete_charge_ids: deletedChargeIds.map((chargeId) => Number(chargeId)),
       },
       lock_account_bill_charges: validCharges.map((row) => {
         const { amount, igstAmount, cgstAmount, sgstAmount, totalAmount } =
           computeChargeAmounts(row);
         return {
+          id: row.id ? Number(row.id) : undefined,
           ledger_id: Number(row.ledgerId),
           description: row.description,
           quantity: Number(row.quantity) || 0,
@@ -392,7 +404,7 @@ const AccountingInvoiceEdit: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      await axios.patch(`${baseUrl}/lock_account_bills/${id}.json`, payload, {
+      await axios.put(`${baseUrl}/lock_account_bills/${id}.json`, payload, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -411,6 +423,14 @@ const AccountingInvoiceEdit: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      <button
+        onClick={() => navigate("/accounting/invoices")}
+        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Invoices
+      </button>
+
       <div className="mb-6">
         <h1 className="text-brand-h2 font-semibold text-brand-text">Editing Invoice</h1>
       </div>
@@ -716,7 +736,7 @@ const AccountingInvoiceEdit: React.FC = () => {
               disabled={submitting}
               className="btn-primary min-w-[140px] h-9 px-4 text-sm font-medium"
             >
-              {submitting ? "Submitting..." : "Submit"}
+              {submitting ? "Updating..." : "Update"}
             </Button>
             <Button
               type="button"
