@@ -7,6 +7,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import {
+  ArrowLeft,
   Eye,
   Pencil,
   Plus,
@@ -359,6 +360,14 @@ const AccountingInvoices: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      <button
+        onClick={() => navigate("/accounting/dashboard")}
+        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Accounting
+      </button>
+
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => {
           const Icon = card.icon;

@@ -402,6 +402,10 @@ const AccountingInvoiceEdit = lazy(
 );
 const AccountingReceipts = lazy(() => import("@/pages/AccountingReceipts"));
 const AccountingCharges = lazy(() => import("@/pages/AccountingCharges"));
+const AccountingChargeCreation = lazy(
+  () => import("@/pages/AccountingChargeCreation")
+);
+const AccountingChargeEdit = lazy(() => import("@/pages/AccountingChargeEdit"));
 const AccountingBillCycles = lazy(() => import("@/pages/AccountingBillCycles"));
 const AccountingUnitsBillCycleMapping = lazy(
   () => import("@/pages/AccountingUnitsBillCycleMapping")
@@ -1592,6 +1596,14 @@ export const setupMemberRoutes = (
     <Route
       path="/accounting/charges"
       Component={withSuspense(AccountingCharges)}
+    />
+    <Route
+      path="/accounting/charges/add"
+      Component={withSuspense(AccountingChargeCreation)}
+    />
+    <Route
+      path="/accounting/charges/:id/edit"
+      Component={withSuspense(AccountingChargeEdit)}
     />
     <Route
       path="/accounting/bill-cycles"
