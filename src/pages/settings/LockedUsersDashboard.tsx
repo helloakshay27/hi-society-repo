@@ -1,15 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Search,
   RefreshCw,
@@ -20,7 +12,6 @@ import {
   Mail,
   Phone,
   AlertCircle,
-  Check,
 } from "lucide-react";
 import {
   Dialog,
@@ -30,9 +21,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { API_CONFIG, getAuthHeader, getFullUrl } from "@/config/apiConfig";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 
 interface LockedUser {
   id: number;
@@ -52,6 +44,15 @@ interface LockedUsersResponse {
   locked_users: LockedUser[];
   total_count: number;
 }
+
+const columns: ColumnConfig[] = [
+  { key: "user", label: "User", sortable: false, hideable: false, draggable: false },
+  { key: "contact", label: "Contact", sortable: false, hideable: true, draggable: true },
+  { key: "department", label: "Department", sortable: false, hideable: true, draggable: true },
+  { key: "locked_at", label: "Locked At", sortable: false, hideable: true, draggable: true },
+  { key: "failed_attempts", label: "Failed Attempts", sortable: false, hideable: true, draggable: true },
+  { key: "reason", label: "Reason", sortable: false, hideable: true, draggable: true },
+];
 
 export const LockedUsersDashboard = () => {
   const [lockedUsers, setLockedUsers] = useState<LockedUser[]>([]);
@@ -177,7 +178,7 @@ export const LockedUsersDashboard = () => {
 
   // Format date
   const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleString("en-GB", {
       day: "2-digit",
@@ -186,27 +187,6 @@ export const LockedUsersDashboard = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
-
-  // Handle individual checkbox selection
-  const handleCheckboxChange = (userId: number) => {
-    const newSelectedIds = new Set(selectedIds);
-    if (newSelectedIds.has(userId)) {
-      newSelectedIds.delete(userId);
-    } else {
-      newSelectedIds.add(userId);
-    }
-    setSelectedIds(newSelectedIds);
-  };
-
-  // Handle select all checkbox
-  const handleSelectAll = () => {
-    if (selectedIds.size === filteredUsers.length) {
-      setSelectedIds(new Set());
-    } else {
-      const allIds = new Set(filteredUsers.map((user) => user.id));
-      setSelectedIds(allIds);
-    }
   };
 
   // Handle bulk unlock users
@@ -234,7 +214,6 @@ export const LockedUsersDashboard = () => {
         throw new Error(errorData.message || "Failed to unlock user accounts");
       }
 
-      const result = await response.json();
       toast.success(
         `Successfully unlocked ${selectedIds.size} user account${selectedIds.size > 1 ? "s" : ""}`
       );
@@ -259,40 +238,132 @@ export const LockedUsersDashboard = () => {
     }
   };
 
-  return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Locked Users</h1>
-          <p className="text-gray-500 mt-1">
-            Manage and unlock user accounts that have been locked
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {selectedIds.size > 0 && (
-            <Button
-              onClick={() => setBulkUnlockDialogOpen(true)}
-              disabled={bulkUnlocking}
-              className="!bg-green-600 hover:!bg-green-700 text-white"
+  const renderCell = (user: LockedUser, columnKey: string) => {
+    switch (columnKey) {
+      case "user":
+        return (
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "rgba(199, 32, 48, 0.12)" }}
             >
-              <UnlockIcon className="w-4 h-4 mr-2" />
-              Unlock ({selectedIds.size})
-            </Button>
-          )}
-          <Button
-            onClick={fetchLockedUsers}
-            disabled={loading}
-            className="bg-[#C72030] hover:bg-[#a81c29] text-white"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
+              <User className="w-5 h-5 text-[#C72030]" />
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">
+                {user.firstname} {user.lastname}
+              </div>
+              <div className="text-sm text-gray-500">ID: {user.id}</div>
+            </div>
+          </div>
+        );
+      case "contact":
+        return (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Mail className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{user.email}</span>
+            </div>
+            {user.mobile && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Phone className="w-4 h-4 flex-shrink-0" />
+                {user.country_code && `+${user.country_code} `}
+                {user.mobile}
+              </div>
+            )}
+          </div>
+        );
+      case "department":
+        return (
+          <div>
+            <div className="text-sm font-medium text-gray-900">
+              {user.department || "-"}
+            </div>
+            {/* <div className="text-sm text-gray-500">
+              {user.designation || "-"}
+            </div> */}
+          </div>
+        );
+      case "locked_at":
+        return (
+          <div className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
+            {/* <Calendar className="w-4 h-4 flex-shrink-0" /> */}
+            {formatDate(user.locked_at)}
+          </div>
+        );
+      case "failed_attempts":
+        return (
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#F2C8C4] px-2.5 py-1 text-xs font-semibold text-black">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            {user.failed_attempts || 0} attempts
+          </span>
+        );
+      case "reason":
+        return (
+          <span className="text-sm text-gray-600">
+            {user.lock_reason || "Multiple failed login attempts"}
+          </span>
+        );
+      default:
+        return "-";
+    }
+  };
+
+  const renderActions = (user: LockedUser) => (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="p-1"
+      onClick={() => openUnlockDialog(user)}
+      title="Unlock Account"
+    >
+      <UnlockIcon className="w-4 h-4 text-green-600" />
+    </Button>
+  );
+
+  const leftActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        onClick={fetchLockedUsers}
+        disabled={loading}
+        variant="outline"
+        className="px-4 py-2"
+      >
+        <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+        Refresh
+      </Button>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Input
+          placeholder="Search by name, email, mobile, department..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9 w-72 h-9"
+        />
+      </div>
+    </div>
+  );
+
+  const bulkActions = [
+    {
+      label: "Unlock Selected",
+      icon: UnlockIcon,
+      variant: "default" as const,
+      onClick: () => setBulkUnlockDialogOpen(true),
+    },
+  ];
+
+  return (
+    <div className="p-6">
+      <div className="mb-4">
+        <h1 className="text-2xl font-semibold text-[#1a1a1a]">Locked Users</h1>
+        <p className="text-sm text-gray-600 mt-1">
+          Manage and unlock user accounts that have been locked
+        </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -336,147 +407,36 @@ export const LockedUsersDashboard = () => {
         </Card>
       </div>
 
-      {/* Search Bar */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder="Search by name, email, mobile, department, or designation..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <Card>
-        <CardContent className="pt-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <RefreshCw className="w-8 h-8 animate-spin text-[#C72030]" />
-              <span className="ml-3 text-gray-600">Loading locked users...</span>
-            </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <UnlockIcon className="w-16 h-16 text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm ? "No matching users found" : "No locked users"}
-              </h3>
-              <p className="text-gray-500">
-                {searchTerm
-                  ? "Try adjusting your search criteria"
-                  : "All user accounts are currently unlocked"}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer ${selectedIds.size === filteredUsers.length && filteredUsers.length > 0
-                          ? "bg-[#C72030] border-[#C72030]"
-                          : "border-gray-300 hover:border-gray-400"
-                          }`}
-                        onClick={handleSelectAll}
-                      >
-                        {selectedIds.size > 0 && selectedIds.size === filteredUsers.length && (
-                          <Check className="w-4 h-4 text-white" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Locked At</TableHead>
-                    <TableHead>Failed Attempts</TableHead>
-                    <TableHead>Reason</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id} className={selectedIds.has(user.id) ? "bg-blue-50" : ""}>
-                      <TableCell>
-                        <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer ${selectedIds.has(user.id)
-                            ? "bg-[#C72030] border-[#C72030]"
-                            : "border-gray-300 hover:border-gray-400"
-                            }`}
-                          onClick={() => handleCheckboxChange(user.id)}
-                        >
-                          {selectedIds.has(user.id) && (
-                            <Check className="w-4 h-4 text-white" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#C72030] bg-opacity-10 flex items-center justify-center">
-                            <User className="w-5 h-5 text-[#C72030]" />
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {user.firstname} {user.lastname}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              ID: {user.id}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Mail className="w-4 h-4" />
-                            {user.email}
-                          </div>
-                          {user.mobile && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Phone className="w-4 h-4" />
-                              {user.country_code && `+${user.country_code} `}
-                              {user.mobile}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.department || "N/A"}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {user.designation || "N/A"}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          {formatDate(user.locked_at)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="destructive">
-                          {user.failed_attempts || 0} attempts
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-gray-600">
-                          {user.lock_reason || "Multiple failed login attempts"}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <EnhancedTable
+        data={filteredUsers}
+        columns={columns}
+        renderCell={renderCell}
+        renderActions={renderActions}
+        leftActions={leftActions}
+        loading={loading}
+        loadingMessage="Loading locked users..."
+        emptyMessage={
+          searchTerm ? "No matching users found" : "All user accounts are currently unlocked"
+        }
+        selectable
+        selectedItems={Array.from(selectedIds).map(String)}
+        onSelectAll={(checked) => {
+          setSelectedIds(checked ? new Set(filteredUsers.map((u) => u.id)) : new Set());
+        }}
+        onSelectItem={(itemId, checked) => {
+          const id = Number(itemId);
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (checked) next.add(id);
+            else next.delete(id);
+            return next;
+          });
+        }}
+        getItemId={(user) => user.id.toString()}
+        showBulkActions
+        bulkActions={bulkActions}
+        storageKey="locked-users-table"
+      />
 
       {/* Unlock Confirmation Dialog */}
       <Dialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>

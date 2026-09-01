@@ -79,6 +79,7 @@ export interface Society {
   allow_view_toggle?: boolean;
   attached_documents?: any[];
   // Additional fields from create API
+  organization_id?: number;
   company_id?: number;
   builder_id?: number;
   headquarter_id?: number;

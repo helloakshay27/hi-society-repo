@@ -294,7 +294,7 @@ export const SocietyDetailsPage: React.FC = () => {
             {error || "The requested society could not be found."}
           </p>
           <Button
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=society")}
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -312,7 +312,7 @@ export const SocietyDetailsPage: React.FC = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=society")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -626,6 +626,14 @@ export const SocietyDetailsPage: React.FC = () => {
                         <p className="text-gray-900">
                           {society.super_society.name || `ID: ${society.super_society.id}`}
                         </p>
+                      </div>
+                    )}
+                    {society.organization_id && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Organization ID
+                        </label>
+                        <p className="text-gray-900 font-mono">#{society.organization_id}</p>
                       </div>
                     )}
                     {society.company_id && (

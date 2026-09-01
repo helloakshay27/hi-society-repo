@@ -223,7 +223,7 @@ export const CompanyDetailsPage: React.FC = () => {
             {error || "The requested company could not be found."}
           </p>
           <Button
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=company")}
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -241,7 +241,7 @@ export const CompanyDetailsPage: React.FC = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=company")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

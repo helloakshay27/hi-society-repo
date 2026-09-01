@@ -28,7 +28,7 @@ const HeadquartersDetailsPage: React.FC = () => {
 
     useEffect(() => {
         if (!id) {
-            navigate('/ops-console/master/location/account');
+            navigate('/ops-console/master/location/account?tab=country');
             return;
         }
         fetchHeadquartersDetails();
@@ -56,7 +56,7 @@ const HeadquartersDetailsPage: React.FC = () => {
         } catch (error) {
             console.error('Error fetching headquarters details:', error);
             toast.error('Failed to load headquarters details');
-            navigate('/ops-console/master/location/account');
+            navigate('/ops-console/master/location/account?tab=country');
         } finally {
             setLoading(false);
         }
@@ -97,7 +97,7 @@ const HeadquartersDetailsPage: React.FC = () => {
                     <p className="text-gray-600">Headquarters not found</p>
                     <Button
                         variant="outline"
-                        onClick={() => navigate('/ops-console/master/location/account')}
+                        onClick={() => navigate('/ops-console/master/location/account?tab=country')}
                         className="mt-4"
                     >
                         Back to Account Management
@@ -114,7 +114,7 @@ const HeadquartersDetailsPage: React.FC = () => {
                 <div className="mb-6">
                     <Button
                         variant="outline"
-                        onClick={() => navigate('/ops-console/master/location/account')}
+                        onClick={() => navigate('/ops-console/master/location/account?tab=country')}
                         className="mb-4 flex items-center"
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" />
