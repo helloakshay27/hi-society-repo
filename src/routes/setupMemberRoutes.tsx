@@ -406,7 +406,17 @@ const AccountingChargeCreation = lazy(
   () => import("@/pages/AccountingChargeCreation")
 );
 const AccountingChargeEdit = lazy(() => import("@/pages/AccountingChargeEdit"));
+const AccountingChargeDetails = lazy(() => import("@/pages/AccountingChargeDetails"));
 const AccountingBillCycles = lazy(() => import("@/pages/AccountingBillCycles"));
+const AccountingBillCycleCreation = lazy(
+  () => import("@/pages/AccountingBillCycleCreation")
+);
+const AccountingBillCycleEdit = lazy(
+  () => import("@/pages/AccountingBillCycleEdit")
+);
+const AccountingBillCycleDetails = lazy(
+  () => import("@/pages/AccountingBillCycleDetails")
+);
 const AccountingUnitsBillCycleMapping = lazy(
   () => import("@/pages/AccountingUnitsBillCycleMapping")
 );
@@ -1606,8 +1616,24 @@ export const setupMemberRoutes = (
       Component={withSuspense(AccountingChargeEdit)}
     />
     <Route
+      path="/accounting/charges/:id"
+      Component={withSuspense(AccountingChargeDetails)}
+    />
+    <Route
       path="/accounting/bill-cycles"
       Component={withSuspense(AccountingBillCycles)}
+    />
+    <Route
+      path="/accounting/bill-cycles/add"
+      Component={withSuspense(AccountingBillCycleCreation)}
+    />
+    <Route
+      path="/accounting/bill-cycles/:id/edit"
+      Component={withSuspense(AccountingBillCycleEdit)}
+    />
+    <Route
+      path="/accounting/bill-cycles/:id"
+      Component={withSuspense(AccountingBillCycleDetails)}
     />
     <Route
       path="/accounting/units-bill-cycle-mapping"

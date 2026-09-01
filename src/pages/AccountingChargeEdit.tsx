@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Receipt } from "lucide-react";
+import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { menuProps } from "@/components/ticket-management/fieldStyles";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { API_CONFIG } from "@/config/apiConfig";
 
 interface ChargeCategoryOption {
@@ -32,21 +31,44 @@ const normalizeChargeTypeOptions = (data: unknown): ChargeCategoryOption[] => {
   }));
 };
 
-const FieldsetField: React.FC<{
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}> = ({ label, required, children, className }) => (
-  <fieldset
-    className={`rounded border border-[#ddd] px-3 pb-1 pt-0 focus-within:border-[#da7756] ${className || ""}`}
-  >
-    <legend className="px-1 text-sm font-medium text-gray-500">
-      {label}
-      {required ? <span className="text-red-500"> *</span> : null}
-    </legend>
-    {children}
-  </fieldset>
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
+    },
+  },
+};
+
+const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <span
+          className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+          style={{ backgroundColor: "#E5E0D3" }}
+        >
+          <Receipt size={16} color="var(--color-primary,#da7756)" />
+        </span>
+        {title}
+      </h2>
+    </div>
+    <div className="p-6 space-y-6">{children}</div>
+  </div>
 );
 
 const emptyForm = {
@@ -181,174 +203,176 @@ const AccountingChargeEdit: React.FC = () => {
   };
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+    <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden charge-form-page">
+      <style>{`.charge-form-page .MuiFormLabel-asterisk { color: #da7756 !important; }`}</style>
       <button
         onClick={() => navigate("/accounting/charges")}
-        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+        className="mb-6 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Charges
       </button>
 
-      <div className="mb-6">
-        <h1 className="text-brand-h2 font-semibold text-brand-text">Editing Charge</h1>
-      </div>
-
       {loadingCharge ? (
         <div className="py-10 text-center text-brand-text-light">Loading charge...</div>
       ) : (
-        <form onSubmit={handleSave}>
-          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 items-start">
-            <FieldsetField label="Charge Name" required>
-              <Input
+        <form onSubmit={handleSave} className="space-y-6">
+          <SectionCard title="Editing Charge">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 items-start">
+              <TextField
+                label="Charge Name"
+                required
                 placeholder="Enter Charge Name"
                 value={form.chargeName}
                 onChange={(e) => updateField("chargeName", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Description" className="row-span-2">
-              <Textarea
-                placeholder="Enter Description"
-                value={form.description}
-                onChange={(e) => updateField("description", e.target.value)}
-                rows={3}
-                className="border-0 px-0 shadow-none resize-none focus-visible:outline-none focus-visible:ring-0"
-              />
-            </FieldsetField>
-          </div>
+              <div>
+                <div className="relative">
+                  <textarea
+                    className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+                    rows={4}
+                    value={form.description}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 500) updateField("description", e.target.value);
+                    }}
+                    placeholder="Enter Description"
+                    maxLength={500}
+                  />
+                  <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
+                    Description
+                  </label>
+                </div>
+                <div className="mt-1 text-right text-xs text-gray-400">{form.description.length}/500</div>
+              </div>
+            </div>
 
-          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FieldsetField label="Value">
-              <Input
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TextField
+                label="Value"
                 type="number"
-                min={0}
                 placeholder="Enter Value"
                 value={form.value}
                 onChange={(e) => updateField("value", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="UOM">
-              <Input
+              <TextField
+                label="UOM"
                 placeholder="Enter UOM"
                 value={form.uom}
                 onChange={(e) => updateField("uom", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-          </div>
+            </div>
 
-          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <FieldsetField label="Igst Rate (%)">
-              <Input
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <TextField
+                label="Igst Rate (%)"
                 type="number"
-                min={0}
                 placeholder="Enter Igst Rate"
                 value={form.igstRate}
                 onChange={(e) => updateField("igstRate", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Cgst Rate (%)">
-              <Input
+              <TextField
+                label="Cgst Rate (%)"
                 type="number"
-                min={0}
                 placeholder="Enter Cgst Rate"
                 value={form.cgstRate}
                 onChange={(e) => updateField("cgstRate", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Sgst Rate (%)">
-              <Input
+              <TextField
+                label="Sgst Rate (%)"
                 type="number"
-                min={0}
                 placeholder="Enter Sgst Rate"
                 value={form.sgstRate}
                 onChange={(e) => updateField("sgstRate", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-          </div>
+            </div>
 
-          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 items-start">
-            <FieldsetField label="Basis">
-              <Input
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              <TextField
+                label="Basis"
                 placeholder="Enter Basis"
                 value={form.basis}
                 onChange={(e) => updateField("basis", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="HSN Code">
-              <Input
+              <TextField
+                label="HSN Code"
                 placeholder="Enter HSN Code"
                 value={form.hsnCode}
                 onChange={(e) => updateField("hsnCode", e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Charge Type" required>
-              <FormControl variant="standard" fullWidth>
+              <FormControl fullWidth required sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <InputLabel shrink>Charge Type</InputLabel>
                 <Select
                   value={form.chargeCategoryId}
                   onChange={(e) => updateField("chargeCategoryId", e.target.value as string)}
+                  label="Charge Type"
+                  notched
                   displayEmpty
-                  disableUnderline
-                  sx={{
-                    height: 36,
-                    outline: "none",
-                    "& .MuiSelect-select": {
-                      paddingLeft: 0,
-                      color: form.chargeCategoryId ? "#2c2c2c" : "#888780",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    },
-                    "& .MuiSelect-select:focus": { outline: "none", backgroundColor: "transparent" },
-                  }}
-                  MenuProps={{
-                    ...menuProps,
-                    PaperProps: {
-                      ...menuProps.PaperProps,
-                      style: { ...menuProps.PaperProps.style, maxHeight: 300, maxWidth: 260 },
-                    },
-                  }}
                 >
-                  <MenuItem value="" disabled>
-                    Select Charge Type
-                  </MenuItem>
+                  <MenuItem value="">Select Charge Type</MenuItem>
                   {categories.map((category) => (
-                    <MenuItem
-                      key={category.id}
-                      value={String(category.id)}
-                      sx={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                      title={category.category}
-                    >
+                    <MenuItem key={category.id} value={String(category.id)} title={category.category}>
                       {category.category}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-            </FieldsetField>
-          </div>
+            </div>
+          </SectionCard>
 
-          <div className="sticky bottom-0 -mx-2 sm:-mx-4 lg:-mx-6 flex justify-start gap-3 border-t border-brand-border bg-white px-2 py-4 sm:px-4 lg:px-6">
+          <div className="flex justify-start gap-3">
             <Button
               type="submit"
-              variant="ghost"
               disabled={submitting}
-              className="btn-primary min-w-[140px] h-9 px-4 text-sm font-medium"
+              className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#A01020]"
             >
               {submitting ? "Updating..." : "Update"}
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               disabled={submitting}
               onClick={() => navigate("/accounting/charges")}
-              className="h-9 !bg-white border !border-[#da7756] !text-[#da7756] px-4 text-sm font-medium"
+              className="min-w-[100px]"
             >
               Cancel
             </Button>
