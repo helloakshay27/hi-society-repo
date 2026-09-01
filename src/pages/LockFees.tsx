@@ -3,11 +3,22 @@ import { Button } from "@/components/ui/button"
 import { ColumnConfig } from "@/hooks/useEnhancedTable"
 import { Switch } from "@mui/material"
 import axios from "axios"
-import { Edit, Eye, Plus, RefreshCcw } from "lucide-react"
+import { Edit, Eye, Plus, RefreshCcw, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import {
+    AlertDialog,
+    AlertDialogTrigger,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 
 const columns: ColumnConfig[] = [
     {
@@ -323,6 +334,22 @@ const LockFees = () => {
         navigate(`/ops-console/admin/lock-fees/edit/${id}`);
     };
 
+    const handleDelete = async (id: number) => {
+        try {
+            await axios.delete(`https://${baseUrl}/admin/lock_fees/${id}.json`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            })
+            toast.success("Lock fee deleted successfully");
+            setLockFees(lockFees.filter((item) => item.id !== id))
+        } catch (error) {
+            console.error("Error deleting lock fee:", error);
+            const message = error.response?.data?.error || "Failed to delete lock fee";
+            toast.error(message);
+        }
+    };
+
     const renderActions = (item: any) => {
         return (
             <div className="flex gap-2">
@@ -344,6 +371,35 @@ const LockFees = () => {
                 >
                     <Edit className="w-4 h-4" />
                 </Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="p-1"
+                            title="Delete"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Lock Fee</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete this lock fee? This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-8"
+                                onClick={() => handleDelete(item.id)}
+                            >
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         )
     };
