@@ -1,19 +1,33 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  OrganizationTab, 
-  CompanyTab, 
-  CountryTab, 
-  RegionTab, 
-  ZoneTab, 
-  SiteTab, 
-  EntityTab, 
+import {
+  OrganizationTab,
+  CompanyTab,
+  CountryTab,
+  RegionTab,
+  ZoneTab,
+  SiteTab,
+  EntityTab,
   UserCategoryTab,
   SocietyTab
 } from '@/components/ops-account';
 
+const VALID_TABS = ['organization', 'company', 'country', 'region', 'zone', 'society', 'site'];
+
 export const OpsAccountPage = () => {
-  const [activeTab, setActiveTab] = useState('organization');
+  // The active tab lives in the URL (not just component state) so that
+  // navigating away to a details/edit page and back (e.g. via the page's
+  // "Back" button, which returns to this same base URL) restores the tab
+  // the user was actually on, instead of always resetting to Organization.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const activeTab = tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : 'organization';
+
+  const handleTabChange = (tab: string) => {
+    setSearchParams({ tab }, { replace: false });
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [entriesPerPage, setEntriesPerPage] = useState('25');
 
@@ -23,7 +37,7 @@ export const OpsAccountPage = () => {
         <h1 className="text-2xl font-bold text-[#1a1a1a]">ACCOUNT</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200">
           <TabsTrigger
             value="organization"

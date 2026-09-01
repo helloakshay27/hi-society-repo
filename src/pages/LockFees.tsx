@@ -39,9 +39,15 @@ const columns: ColumnConfig[] = [
         sortable: false,
         draggable: false
     },
+    // {
+    //     key: "society_id",
+    //     label: "Society ID",
+    //     sortable: false,
+    //     draggable: false
+    // },
     {
-        key: "society_id",
-        label: "Society ID",
+        key: "society_name",
+        label: "Society Name",
         sortable: false,
         draggable: false
     },
@@ -109,6 +115,7 @@ const LockFees = () => {
 
     const [lockFees, setLockFees] = useState([])
     const [loading, setLoading] = useState(false)
+    const [searchTerm, setSearchTerm] = useState("")
     const [pagination, setPagination] = useState({
         current_page: 1,
         total_entries: 0,
@@ -118,10 +125,16 @@ const LockFees = () => {
     // Get page from URL, default to 1
     const currentPageFromUrl = parseInt(searchParams.get("page") || "1", 10)
 
-    const fetchLockFees = async (page: number = 1) => {
+    const fetchLockFees = async (page: number = 1, search: string = "") => {
         setLoading(true)
         try {
-            const response = await axios.get(`https://${baseUrl}/admin/lock_fees.json?page=${page}`, {
+            const params = new URLSearchParams()
+            params.set("page", String(page))
+            if (search) {
+                params.set("q[search_all_fields_cont]", search)
+            }
+
+            const response = await axios.get(`https://${baseUrl}/admin/lock_fees.json?${params.toString()}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -139,8 +152,13 @@ const LockFees = () => {
     }
 
     useEffect(() => {
-        fetchLockFees(currentPageFromUrl)
-    }, [baseUrl, token, currentPageFromUrl])
+        fetchLockFees(currentPageFromUrl, searchTerm)
+    }, [baseUrl, token, currentPageFromUrl, searchTerm])
+
+    const handleGlobalSearch = (term: string) => {
+        setSearchTerm(term)
+        setSearchParams({ page: "1" })
+    }
 
     const handlePageChange = async (page: number) => {
         if (page < 1 || page > pagination.total_pages || page === pagination.current_page || loading) {
@@ -150,7 +168,7 @@ const LockFees = () => {
         try {
             // Update URL with new page number
             setSearchParams({ page: page.toString() })
-            await fetchLockFees(page);
+            await fetchLockFees(page, searchTerm);
         } catch (error) {
             console.error("Error changing page:", error);
             toast.error("Failed to load page data. Please try again.");
@@ -414,6 +432,8 @@ const LockFees = () => {
                 );
             case "society_id":
                 return item.fee_for_id || "-";
+            case "society_name":
+                return item.society_name || "-";
             case "convinience_charge_type":
                 return item.fee_type || "-";
             case "convinience_charge":
@@ -508,6 +528,10 @@ const LockFees = () => {
                 renderCell={renderCell}
                 leftActions={leftActions}
                 loading={loading}
+                enableGlobalSearch
+                onGlobalSearch={handleGlobalSearch}
+                disableClientSearch
+                searchPlaceholder="Search lock fees..."
             />
 
             <div className="flex justify-center mt-6">

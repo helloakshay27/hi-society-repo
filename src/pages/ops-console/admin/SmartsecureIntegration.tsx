@@ -23,6 +23,7 @@ import {
 import { Plus, Edit, Search, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ticketManagementAPI } from "@/services/ticketManagementAPI";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface SmartsecureGateRow {
   id: number;
@@ -45,13 +46,14 @@ const SmartsecureIntegration: React.FC = () => {
   const [gates, setGates] = useState<SmartsecureGateRow[]>([]);
   const [loadingGates, setLoadingGates] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchGates = useCallback(async (page: number = 1) => {
+  const fetchGates = useCallback(async (page: number = 1, search: string = "") => {
     try {
       setLoadingGates(true);
-      const response = await ticketManagementAPI.getSocietyGates(page, 20);
+      const response = await ticketManagementAPI.getSocietyGates(page, 20, search);
       const rawList = response?.smart_secure_society_gates || [];
       const filtered = rawList.filter(isSmartsecureGate);
       setGates(
@@ -79,9 +81,14 @@ const SmartsecureIntegration: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchGates(currentPage);
+    fetchGates(currentPage, debouncedSearchTerm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  }, [currentPage, debouncedSearchTerm]);
+
+  // Reset to page 1 whenever the search term changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
 
   const handleToggleActive = async (row: SmartsecureGateRow) => {
     const nextActive = !row.active;
@@ -101,15 +108,6 @@ const SmartsecureIntegration: React.FC = () => {
       );
     }
   };
-
-  const filteredGates = gates.filter(
-    (item) =>
-      item.societyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.societyBlockName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.gateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.gateDevice.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.userName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="p-6 min-h-screen space-y-6">
@@ -134,7 +132,7 @@ const SmartsecureIntegration: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <Button
-            onClick={() => fetchGates(currentPage)}
+            onClick={() => fetchGates(currentPage, debouncedSearchTerm)}
             disabled={loadingGates}
             variant="outline"
             size="sm"
@@ -178,14 +176,14 @@ const SmartsecureIntegration: React.FC = () => {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredGates.length === 0 ? (
+            ) : gates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                   No smartsecure gates found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredGates.map((item) => (
+              gates.map((item) => (
                 <TableRow key={item.id} className="hover:bg-gray-50">
                   <TableCell>
                     <button

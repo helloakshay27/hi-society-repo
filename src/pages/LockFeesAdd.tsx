@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Switch, FormControlLabel } from "@mui/material";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Switch, FormControlLabel, IconButton } from "@mui/material";
 import axios from "axios";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import { Plus, Trash2 } from "lucide-react";
 import VirtualizedSocietySelect from "@/components/reusable/VirtualizedSocietySelect";
 
 const fieldStyles = {
@@ -78,8 +79,6 @@ const LockFeesAdd = () => {
     const [societies, setSocieties] = useState<Society[]>([]);
     const [loadingSocieties, setLoadingSocieties] = useState(false);
     const [formData, setFormData] = useState({
-        module: "OSR",
-        display_name: "",
         fee_for: "society",
         fee_for_id: localStorage.getItem("selectedSocietyId") || "",
         cca_sub_account: "",
@@ -90,6 +89,10 @@ const LockFeesAdd = () => {
         rate: "",
         active: true,
     });
+    // Repeatable Module + Display Name rows — "+ Add Module" appends a new row.
+    const [moduleRows, setModuleRows] = useState<{ module: string; displayName: string }[]>([
+        { module: "", displayName: "" },
+    ]);
 
     useEffect(() => {
         const fetchSocieties = async () => {
@@ -128,17 +131,43 @@ const LockFeesAdd = () => {
         }));
     };
 
+    const handleAddModuleRow = () => {
+        setModuleRows((prev) => [...prev, { module: "", displayName: "" }]);
+    };
+
+    const handleRemoveModuleRow = (index: number) => {
+        setModuleRows((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleModuleRowChange = (index: number, field: "module" | "displayName", value: string) => {
+        setModuleRows((prev) =>
+            prev.map((row, i) => (i === index ? { ...row, [field]: value } : row))
+        );
+    };
+
+    // Modules already picked in another row, per row — so each dropdown hides
+    // choices already used elsewhere (except its own current value).
+    const usedModulesExcluding = (index: number) =>
+        new Set(moduleRows.filter((_, i) => i !== index).map((row) => row.module).filter(Boolean));
+
     const validateForm = () => {
         if (!formData.fee_for_id) {
             toast.error("Society is required");
             return false;
         }
-        if (!formData.module) {
-            toast.error("Module is required");
+        if (moduleRows.length === 0) {
+            toast.error("Please add at least one module");
             return false;
         }
-        if (!formData.display_name.trim()) {
-            toast.error("Display Name is required");
+        const incompleteRow = moduleRows.find((row) => !row.module || !row.displayName.trim());
+        if (incompleteRow) {
+            toast.error("Please select a module and enter a display name for every row");
+            return false;
+        }
+        const moduleValues = moduleRows.map((row) => row.module);
+        const hasDuplicates = new Set(moduleValues).size !== moduleValues.length;
+        if (hasDuplicates) {
+            toast.error("Each module can only be added once");
             return false;
         }
         return true;
@@ -154,20 +183,24 @@ const LockFeesAdd = () => {
         setLoading(true);
 
         try {
+            const sharedFields = {
+                fee_for: "society",
+                fee_for_id: formData.fee_for_id,
+                cca_sub_account: formData.cca_sub_account || null,
+                maxx: formData.maxx.trim() ? parseInt(formData.maxx) : null,
+                start_date: formData.start_date ? dayjs(formData.start_date).format("YYYY-MM-DD") : null,
+                end_date: formData.end_date ? dayjs(formData.end_date).format("YYYY-MM-DD") : null,
+                fee_type: formData.fee_type || null,
+                rate: formData.rate.trim() ? parseInt(formData.rate) : null,
+                active: formData.active,
+            };
+
             const payload = {
-                lock_fee: {
-                    module: formData.module,
-                    display_name: formData.display_name,
-                    fee_for: "society",
-                    fee_for_id: formData.fee_for_id,
-                    cca_sub_account: formData.cca_sub_account || null,
-                    maxx: formData.maxx.trim() ? parseInt(formData.maxx) : null,
-                    start_date: formData.start_date ? dayjs(formData.start_date).format("YYYY-MM-DD") : null,
-                    end_date: formData.end_date ? dayjs(formData.end_date).format("YYYY-MM-DD") : null,
-                    fee_type: formData.fee_type || null,
-                    rate: formData.rate.trim() ? parseInt(formData.rate) : null,
-                    active: formData.active,
-                }
+                lock_fees: moduleRows.map((row) => ({
+                    module: row.module,
+                    display_name: row.displayName.trim(),
+                    ...sharedFields,
+                })),
             };
 
             await axios.post(
@@ -181,7 +214,11 @@ const LockFeesAdd = () => {
                 }
             );
 
-            toast.success("Lock Fee created successfully!");
+            toast.success(
+                moduleRows.length > 1
+                    ? `${moduleRows.length} Lock Fees created successfully!`
+                    : "Lock Fee created successfully!"
+            );
             navigate(-1);
         } catch (error: any) {
             console.error("Error creating lock fee:", error);
@@ -241,44 +278,77 @@ const LockFeesAdd = () => {
                                     sx={fieldStyles}
                                 />
 
-                                {/* Module */}
-                                <FormControl fullWidth required>
-                                    <InputLabel shrink>Module</InputLabel>
+                                {/* Module + Display Name — repeatable rows, "+ Add Module" appends a new one */}
+                                <div className="md:col-span-2 space-y-3">
+                                    {moduleRows.map((row, index) => {
+                                        const usedModules = usedModulesExcluding(index);
+                                        return (
+                                            <div key={index} className="flex flex-col sm:flex-row gap-3 sm:items-start">
+                                                <FormControl fullWidth required>
+                                                    <InputLabel shrink>Module</InputLabel>
+                                                    <MuiSelect
+                                                        value={row.module}
+                                                        label="Module"
+                                                        required
+                                                        displayEmpty
+                                                        onChange={(e) => handleModuleRowChange(index, "module", e.target.value)}
+                                                        sx={fieldStyles}
+                                                    >
+                                                        <MenuItem value="" disabled>
+                                                            <em>Select Module</em>
+                                                        </MenuItem>
+                                                        {modules.map((module) => (
+                                                            <MenuItem
+                                                                key={module}
+                                                                value={module}
+                                                                disabled={usedModules.has(module)}
+                                                            >
+                                                                {module}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </MuiSelect>
+                                                </FormControl>
 
-                                    <MuiSelect
-                                        value={formData.module}
-                                        label="Module"
-                                        required
-                                        onChange={(e) => handleInputChange("module", e.target.value)}
-                                        displayEmpty
-                                        sx={fieldStyles}
+                                                <TextField
+                                                    fullWidth
+                                                    label="Display Name"
+                                                    required
+                                                    value={row.displayName}
+                                                    onChange={(e) => handleModuleRowChange(index, "displayName", e.target.value)}
+                                                    placeholder="Enter Display Name"
+                                                    variant="outlined"
+                                                    slotProps={{
+                                                        inputLabel: {
+                                                            shrink: true,
+                                                        },
+                                                    }}
+                                                    InputProps={{
+                                                        sx: fieldStyles,
+                                                    }}
+                                                />
+
+                                                <IconButton
+                                                    aria-label="Remove module"
+                                                    onClick={() => handleRemoveModuleRow(index)}
+                                                    disabled={moduleRows.length === 1}
+                                                    sx={{ flexShrink: 0, height: "45px", width: "45px", alignSelf: { xs: "flex-end", sm: "auto" } }}
+                                                >
+                                                    <Trash2 className="w-4 h-4 text-gray-500" />
+                                                </IconButton>
+                                            </div>
+                                        );
+                                    })}
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleAddModuleRow}
+                                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
                                     >
-                                        {modules.map((module) => (
-                                            <MenuItem key={module} value={module}>
-                                                {module}
-                                            </MenuItem>
-                                        ))}
-                                    </MuiSelect>
-                                </FormControl>
-
-                                {/* Display Name */}
-                                <TextField
-                                    fullWidth
-                                    label="Display Name"
-                                    required
-                                    value={formData.display_name}
-                                    onChange={(e) => handleInputChange("display_name", e.target.value)}
-                                    placeholder="Enter Display Name"
-                                    variant="outlined"
-                                    slotProps={{
-                                        inputLabel: {
-                                            shrink: true,
-                                        },
-                                    }}
-                                    InputProps={{
-                                        sx: fieldStyles,
-                                    }}
-                                />
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Module
+                                    </Button>
+                                </div>
 
                                 {/* CCA Sub Account */}
                                 <TextField

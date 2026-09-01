@@ -2,17 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Eye, Loader2, Search } from "lucide-react";
-import {
-  TextField,
-  FormControl,
-  InputLabel,
-  Select as MuiSelect,
-  MenuItem,
-} from "@mui/material";
+import { Plus, Eye, Search } from "lucide-react";
+import { TextField } from "@mui/material";
 import { toast } from "sonner";
 import { useApiConfig } from "@/hooks/useApiConfig";
-import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TicketPagination } from "@/components/TicketPagination";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -30,23 +24,6 @@ const fieldStyles = {
   },
 };
 
-const selectMenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: 224,
-      backgroundColor: "white",
-      border: "1px solid #e2e8f0",
-      borderRadius: "8px",
-      boxShadow:
-        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-      zIndex: 9999,
-    },
-  },
-  disablePortal: false,
-  disableAutoFocus: true,
-  disableEnforceFocus: true,
-};
-
 interface AdminUser {
   id: number;
   email: string;
@@ -59,6 +36,7 @@ interface AdminUser {
   created_at: string;
   updated_at: string;
   company_name?: string | null;
+  organization_name?: string | null;
   organization_id?: number | null;
   user_title?: string | null;
   [key: string]: any;
@@ -76,13 +54,6 @@ interface UsersApiResponse {
 
 // Column configuration
 const columns: ColumnConfig[] = [
-  {
-    key: "actions",
-    label: "Action",
-    sortable: false,
-    hideable: false,
-    draggable: false,
-  },
   {
     key: "fullname",
     label: "Name",
@@ -125,13 +96,13 @@ const columns: ColumnConfig[] = [
   //   hideable: true,
   //   draggable: true,
   // },
-  {
-    key: "user_type",
-    label: "User Type",
-    sortable: true,
-    hideable: true,
-    draggable: true,
-  },
+  // {
+  //   key: "user_type",
+  //   label: "User Type",
+  //   sortable: true,
+  //   hideable: true,
+  //   draggable: true,
+  // },
   {
     key: "status",
     label: "Status",
@@ -139,13 +110,13 @@ const columns: ColumnConfig[] = [
     hideable: true,
     draggable: true,
   },
-  {
-    key: "created_at",
-    label: "Created At",
-    sortable: true,
-    hideable: true,
-    draggable: true,
-  },
+  // {
+  //   key: "created_at",
+  //   label: "Created At",
+  //   sortable: true,
+  //   hideable: true,
+  //   draggable: true,
+  // },
 ];
 
 export const UsersManagementDashboard = () => {
@@ -237,15 +208,17 @@ export const UsersManagementDashboard = () => {
   ) => {
     try {
       const newStatus = !currentStatus;
-      const formData = new FormData();
-      formData.append("user[active]", newStatus.toString());
-
-      const response = await fetch(getFullUrl(`/admin/users_update?id=${userId}`), {
+      const response = await fetch(getFullUrl(`/pms/users/${userId}.json`), {
         method: "PUT",
         headers: {
           Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
         },
-        body: formData,
+        body: JSON.stringify({
+          user: {
+            active: newStatus,
+          },
+        }),
       });
 
       if (response.ok) {
@@ -308,171 +281,158 @@ export const UsersManagementDashboard = () => {
     return labels[userType] || userType;
   };
 
-  const renderRow = (user: AdminUser) => ({
-    actions: (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => handleViewUser(user.id)}
-          className="p-1.5 hover:bg-gray-100 rounded-md transition-colors"
-          title="View Details"
-        >
-          <Eye className="w-4 h-4 text-[#C72030]" />
-        </button>
-      </div>
-    ),
-    fullname: user.firstname && user.lastname 
-      ? `${user.firstname} ${user.lastname}` 
-      : user.firstname || user.lastname || user.email,
-    email: (
-      <a
-        href={`mailto:${user.email}`}
-        className="text-blue-600 hover:text-blue-800 hover:underline"
-      >
-        {user.email}
-      </a>
-    ),
-    mobile: user.mobile ? `+${user.country_code} ${user.mobile}` : "-",
-    user_organization_name: user.company_name || "-",
-    user_company_name: user.company_name || "-",
-    site_name: "-",
-    user_type: (
-      <span className="text-sm text-gray-700">
-        {getUserTypeLabel(user.user_type || "")}
-      </span>
-    ),
-    status: (
-      <div className="flex items-center gap-2">
-        <Switch
-          checked={user.active === true}
-          onCheckedChange={() => handleToggleUserStatus(user.id, user.active)}
-          className="data-[state=checked]:bg-[#C72030]"
-        />
-        <span
-          className={`text-sm ${
-            user.active === true
-              ? "text-green-600"
-              : user.active === false
-                ? "text-red-600"
-                : "text-gray-500"
-          }`}
-        >
-          {user.active === true
-            ? "Active"
-            : user.active === false
-              ? "Inactive"
-              : "Pending"}
-        </span>
-      </div>
-    ),
-    created_at: formatDate(user.created_at),
-  });
+  const renderActions = (user: AdminUser) => (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="p-1"
+      onClick={() => handleViewUser(user.id)}
+      title="View Details"
+    >
+      <Eye className="w-4 h-4 text-[#C72030]" />
+    </Button>
+  );
 
-  console.log("Users state:", users);
-  console.log("Users length:", users.length);
+  const renderCell = (user: AdminUser, columnKey: string) => {
+    switch (columnKey) {
+      case "fullname":
+        return user.firstname && user.lastname
+          ? `${user.firstname} ${user.lastname}`
+          : user.firstname || user.lastname || user.email;
+      case "email":
+        return (
+          <a
+            href={`mailto:${user.email}`}
+            className="text-black-600 hover:text-black-800 hover:underline"
+          >
+            {user.email}
+          </a>
+        );
+      case "mobile":
+        if (!user.mobile) return "-";
+        return user.country_code ? `+${user.country_code} ${user.mobile}` : user.mobile;
+      case "user_organization_name":
+        return user.organization_name || "-";
+      case "user_type":
+        return (
+          <span className="text-sm text-gray-700">
+            {getUserTypeLabel(user.user_type || "-")}
+          </span>
+        );
+      case "status":
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={user.active === true}
+              onCheckedChange={() => handleToggleUserStatus(user.id, user.active)}
+              className="data-[state=checked]:bg-[#C72030]"
+            />
+            <span
+              className={`text-sm ${
+                user.active === true
+                  ? "text-green-600"
+                  : user.active === false
+                    ? "text-red-600"
+                    : "text-gray-500"
+              }`}
+            >
+              {user.active === true
+                ? "Active"
+                : user.active === false
+                  ? "Inactive"
+                  : "Pending"}
+            </span>
+          </div>
+        );
+      case "created_at":
+        return formatDate(user.created_at);
+      default:
+        return user[columnKey] || "-";
+    }
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const handlePerPageChange = (value: string) => {
-    setPerPage(parseInt(value));
+  const handlePerPageChange = (value: number) => {
+    setPerPage(value);
     setCurrentPage(1);
   };
 
+  const leftActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        onClick={() => navigate("/ops-console/admin/create-admin-user")}
+        className="bg-[#C72030] hover:bg-[#A01020] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Plus className="w-4 h-4" />
+        Add
+      </Button>
+      <TextField
+        placeholder="Search by email..."
+        value={emailSearch}
+        onChange={(e) => setEmailSearch(e.target.value)}
+        variant="outlined"
+        className="w-56"
+        InputLabelProps={{ shrink: true }}
+        InputProps={{
+          sx: fieldStyles,
+          startAdornment: <Search className="text-gray-400 w-4 h-4 mr-2" />,
+        }}
+      />
+      <TextField
+        placeholder="Search by mobile..."
+        value={mobileSearch}
+        onChange={(e) => setMobileSearch(e.target.value)}
+        variant="outlined"
+        className="w-56"
+        InputLabelProps={{ shrink: true }}
+        InputProps={{
+          sx: fieldStyles,
+          startAdornment: <Search className="text-gray-400 w-4 h-4 mr-2" />,
+        }}
+      />
+    </div>
+  );
+
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-[#1a1a1a]">Admin Users</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage organization admin users and their permissions
-          </p>
-        </div>
-        <Button
-          onClick={() => navigate("/ops-console/admin/create-admin-user")}
-          className="bg-[#C72030] hover:bg-[#A01020] text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add
-        </Button>
+    <div className="p-6">
+      <div className="mb-4">
+        <h1 className="text-2xl font-semibold text-[#1a1a1a]">Admin Users</h1>
+        <p className="text-sm text-gray-600 mt-1">
+          Manage organization admin users and their permissions
+        </p>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <TextField
-              placeholder="Search by email..."
-              value={emailSearch}
-              onChange={(e) => setEmailSearch(e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                sx: fieldStyles,
-                startAdornment: <Search className="text-gray-400 w-4 h-4 mr-2" />,
-              }}
-            />
-          </div>
-          <div className="flex-1">
-            <TextField
-              placeholder="Search by mobile..."
-              value={mobileSearch}
-              onChange={(e) => setMobileSearch(e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                sx: fieldStyles,
-                startAdornment: <Search className="text-gray-400 w-4 h-4 mr-2" />,
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      <EnhancedTable
+        key={`users-table-${users.length}-${currentPage}`}
+        data={users}
+        columns={columns}
+        renderCell={renderCell}
+        renderActions={renderActions}
+        leftActions={leftActions}
+        loading={isLoading}
+        emptyMessage={
+          emailSearch || mobileSearch || statusFilter !== "all"
+            ? "No users found. Try adjusting your search or filter criteria."
+            : "No users found. Get started by creating a new admin user."
+        }
+        storageKey="admin-users-table"
+      />
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          </div>
-        ) : users.length === 0 ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-900">
-              No users found
-            </h3>
-            <p className="text-gray-500 mt-2">
-              {emailSearch || mobileSearch || statusFilter !== "all"
-                ? "Try adjusting your search or filter criteria."
-                : "Get started by creating a new admin user."}
-            </p>
-          </div>
-        ) : (
-          <>
-            <EnhancedTaskTable
-              key={`users-table-${users.length}-${currentPage}`}
-              columns={columns}
-              data={users}
-              renderRow={renderRow}
-              getItemId={(user) => user.id.toString()}
-              storageKey="admin-users-table"
-              emptyMessage="No users found"
-            />
-            <div className="border-t p-4">
-              <TicketPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                perPage={perPage.toString()}
-                onPerPageChange={handlePerPageChange}
-                totalCount={totalCount}
-              />
-            </div>
-          </>
-        )}
-      </div>
+      {users.length > 0 && (
+        <div className="mt-6">
+          <TicketPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            perPage={perPage}
+            onPerPageChange={handlePerPageChange}
+            totalCount={totalCount}
+          />
+        </div>
+      )}
     </div>
   );
 };

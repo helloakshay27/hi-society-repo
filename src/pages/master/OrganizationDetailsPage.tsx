@@ -99,7 +99,7 @@ export const OrganizationDetailsPage: React.FC = () => {
         toast.error("This organization is inactive and cannot be accessed", {
           duration: 5000,
         });
-        navigate("/ops-console/master/location/account");
+        navigate("/ops-console/master/location/account?tab=organization");
         return;
       }
 
@@ -161,7 +161,7 @@ export const OrganizationDetailsPage: React.FC = () => {
             {error || "The requested organization could not be found."}
           </p>
           <Button
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=organization")}
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -179,7 +179,7 @@ export const OrganizationDetailsPage: React.FC = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=organization")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

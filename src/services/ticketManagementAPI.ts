@@ -607,11 +607,14 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
-  async getSocietyGates(page: number = 1, perPage: number = 20) {
+  async getSocietyGates(page: number = 1, perPage: number = 20, search: string = '') {
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
     queryParams.append('per_page', perPage.toString());
-    
+    if (search) {
+      queryParams.append('q[search_all_fields_cont]', search);
+    }
+
     const url = `${ENDPOINTS.SOCIETY_GATES}?${queryParams.toString()}`;
     const response = await apiClient.get(url);
     return response.data;

@@ -265,7 +265,7 @@ export const StatusTab: React.FC = () => {
         fixed_state: data.fixedState || '',
         color_code: data.colorCode,
         position: data.position,
-        of_phase: 'pms',
+        // of_phase: 'post',
         society_id: String(userAccount?.company_id || currentSiteId),
       };
 
