@@ -175,7 +175,7 @@ export const getOrganizations = async (): Promise<{
       throw new Error("Authentication required");
     }
 
-    const url = `https://${baseUrl}/organizations.json`;
+    const url = `https://${baseUrl}/organizations.json?per_page=200`;
 
     const response = await fetch(url, {
       method: "GET",

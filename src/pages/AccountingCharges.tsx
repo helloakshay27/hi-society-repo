@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Edit, Eye, Plus } from "lucide-react";
 
 interface ChargeSetup {
   id: number;
@@ -77,10 +77,24 @@ const AccountingCharges: React.FC = () => {
     switch (columnKey) {
       case "actions":
         return (
-          <Pencil
-            className="h-4 w-4 cursor-pointer text-gray-600 hover:text-[#C72030]"
-            onClick={() => navigate(`/accounting/charges/${item.id}/edit`)}
-          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`/accounting/charges/${item.id}`)}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`/accounting/charges/${item.id}/edit`)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          </div>
         );
       case "value":
         return item.value ?? "";
@@ -98,7 +112,7 @@ const AccountingCharges: React.FC = () => {
   };
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+    <div className="bg-white p-2 sm:p-4 lg:p-6 max-w-full min-h-screen overflow-x-hidden">
       {/* <button
         onClick={() => navigate("/accounting/dashboard")}
         className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
