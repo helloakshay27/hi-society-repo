@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { ChartCardShell, SampleDataBadge } from './ChartCardShell';
+import { ChartCardShell } from './ChartCardShell';
 
 export interface PieChartSegment {
   name: string;
@@ -13,7 +13,6 @@ interface PieChartCardProps {
   subtitle?: string;
   segments: PieChartSegment[];
   loading?: boolean;
-  isSample?: boolean;
   emptyMessage?: string;
   className?: string;
   /** Overrides the donut center number (defaults to sum of segments). */
@@ -47,7 +46,6 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
   subtitle,
   segments,
   loading,
-  isSample,
   emptyMessage = 'No data for the selected date range.',
   className,
   centerValue,
@@ -67,7 +65,6 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
       title={title}
       subtitle={subtitle}
       loading={loading}
-      rightSlot={isSample ? <SampleDataBadge /> : undefined}
       className={className}
     >
       {total === 0 ? (

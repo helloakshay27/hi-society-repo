@@ -3,12 +3,6 @@ import { BarChartCard, BarChartSeries } from './BarChartCard';
 import { visitorReportsAPI } from '@/services/visitorReportsAPI';
 import { getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
-import {
-  SAMPLE_VISITOR_BUILDING_WISE,
-  SAMPLE_GOODS_IN,
-  SAMPLE_GOODS_OUT,
-  SAMPLE_DELIVERY_VISITORS,
-} from './sampleData';
 
 export type VisitorBarMetric = 'total-visitors' | 'goods-in' | 'goods-out' | 'delivery-visitors';
 
@@ -38,11 +32,14 @@ const BAR_METRIC_META: Record<
   },
 };
 
-const SAMPLE_BY_METRIC: Record<VisitorBarMetric, { name: string; value: number }[]> = {
-  'total-visitors': SAMPLE_VISITOR_BUILDING_WISE,
-  'goods-in': SAMPLE_GOODS_IN,
-  'goods-out': SAMPLE_GOODS_OUT,
-  'delivery-visitors': SAMPLE_DELIVERY_VISITORS,
+const FETCHER_BY_METRIC: Record<
+  VisitorBarMetric,
+  typeof visitorReportsAPI.getBuildingWise
+> = {
+  'total-visitors': visitorReportsAPI.getBuildingWise,
+  'goods-in': visitorReportsAPI.getGoodsIn,
+  'goods-out': visitorReportsAPI.getGoodsOut,
+  'delivery-visitors': visitorReportsAPI.getDelivery,
 };
 
 interface VisitorBarCardProps {
@@ -53,39 +50,23 @@ interface VisitorBarCardProps {
 
 /** Bar-chart cards for the Visitor tab — Total Visitors, Goods In/Out, Delivery Visitors. */
 export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRange, className }) => {
-  const [rows, setRows] = useState<{ name: string; value: number }[]>(SAMPLE_BY_METRIC[metric]);
-  const [isSample, setIsSample] = useState(true);
+  const [rows, setRows] = useState<{ name: string; value: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
-    const sample = SAMPLE_BY_METRIC[metric];
 
-    const fetcher =
-      metric === 'total-visitors'
-        ? visitorReportsAPI.getBuildingWise
-        : metric === 'goods-in'
-          ? visitorReportsAPI.getGoodsIn
-          : metric === 'goods-out'
-            ? visitorReportsAPI.getGoodsOut
-            : visitorReportsAPI.getDelivery;
-
-    fetcher(range)
+    FETCHER_BY_METRIC[metric](range)
       .then((res) => {
-        if (cancelled) return;
-        if (res.response.length > 0) {
-          setRows(res.response);
-          setIsSample(false);
-        } else {
-          setRows(sample);
-          setIsSample(true);
-        }
+        if (!cancelled) setRows(res.response);
       })
       .catch(() => {
-        if (!cancelled) {
-          setRows(sample);
-          setIsSample(true);
-        }
+        if (!cancelled) setRows([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
 
     return () => {
@@ -109,7 +90,7 @@ export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRang
       series={series}
       colorKey="color"
       orientation={meta.orientation}
-      isSample={isSample}
+      loading={loading}
       className={className}
     />
   );

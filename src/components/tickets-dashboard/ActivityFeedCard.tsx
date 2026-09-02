@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ChartCardShell, SampleDataBadge } from './ChartCardShell';
+import { ChartCardShell } from './ChartCardShell';
 import { ticketAnalyticsAPI, RecentTicket } from '@/services/ticketAnalyticsAPI';
-import { SAMPLE_RECENT_TICKETS } from './sampleData';
 
 interface ActivityFeedCardProps {
   className?: string;
@@ -10,7 +9,6 @@ interface ActivityFeedCardProps {
 export const ActivityFeedCard: React.FC<ActivityFeedCardProps> = ({ className }) => {
   const [tickets, setTickets] = useState<Partial<RecentTicket>[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSample, setIsSample] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,21 +16,10 @@ export const ActivityFeedCard: React.FC<ActivityFeedCardProps> = ({ className })
     ticketAnalyticsAPI
       .getRecentTickets()
       .then((res) => {
-        if (cancelled) return;
-        const list = res.complaints ?? [];
-        if (list.length > 0) {
-          setTickets(list);
-          setIsSample(false);
-        } else {
-          setTickets(SAMPLE_RECENT_TICKETS);
-          setIsSample(true);
-        }
+        if (!cancelled) setTickets(res.complaints ?? []);
       })
       .catch(() => {
-        if (!cancelled) {
-          setTickets(SAMPLE_RECENT_TICKETS);
-          setIsSample(true);
-        }
+        if (!cancelled) setTickets([]);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -47,9 +34,13 @@ export const ActivityFeedCard: React.FC<ActivityFeedCardProps> = ({ className })
       title="Activity Feed"
       subtitle="Most recently updated tickets"
       loading={loading}
-      rightSlot={isSample ? <SampleDataBadge /> : undefined}
       className={className}
     >
+      {tickets.length === 0 ? (
+        <div className="flex h-48 items-center justify-center text-brand-body-5 text-brand-text-light">
+          No recent tickets for the selected date range.
+        </div>
+      ) : (
       <div className="max-h-80 space-y-1 overflow-y-auto pr-1">
         {tickets.map((ticket) => (
           <div
@@ -74,6 +65,7 @@ export const ActivityFeedCard: React.FC<ActivityFeedCardProps> = ({ className })
           </div>
         ))}
       </div>
+      )}
     </ChartCardShell>
   );
 };

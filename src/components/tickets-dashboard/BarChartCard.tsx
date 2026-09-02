@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
-import { ChartCardShell, SampleDataBadge } from './ChartCardShell';
+import { ChartCardShell } from './ChartCardShell';
 
 export interface BarChartSeries {
   dataKey: string;
@@ -20,7 +20,6 @@ interface BarChartCardProps {
   /** 'horizontal' = bars extend sideways with categories on the Y axis (used for category comparisons). */
   orientation?: 'horizontal' | 'vertical';
   loading?: boolean;
-  isSample?: boolean;
   insight?: string;
   emptyMessage?: string;
   className?: string;
@@ -36,7 +35,6 @@ export const BarChartCard: React.FC<BarChartCardProps> = ({
   colorKey,
   orientation = 'horizontal',
   loading,
-  isSample,
   insight,
   emptyMessage = 'No data for the selected date range.',
   className,
@@ -49,7 +47,6 @@ export const BarChartCard: React.FC<BarChartCardProps> = ({
       title={title}
       subtitle={subtitle}
       loading={loading}
-      rightSlot={isSample ? <SampleDataBadge /> : undefined}
       className={className}
     >
       {data.length === 0 ? (

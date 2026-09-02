@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ChartCardShell, SampleDataBadge } from './ChartCardShell';
+import { ChartCardShell } from './ChartCardShell';
 import { escalationReportsAPI, ExecutiveEscalationRow } from '@/services/escalationReportsAPI';
 import { TicketsDashboardDateRange } from './types';
-import { SAMPLE_EXECUTIVE_ESCALATION } from './sampleData';
 
 interface ExecutiveEscalationCardProps {
   dateRange: TicketsDashboardDateRange;
@@ -25,28 +24,22 @@ export const ExecutiveEscalationCard: React.FC<ExecutiveEscalationCardProps> = (
   dateRange,
   className,
 }) => {
-  const [rows, setRows] = useState<ExecutiveEscalationRow[]>(SAMPLE_EXECUTIVE_ESCALATION);
-  const [isSample, setIsSample] = useState(true);
+  const [rows, setRows] = useState<ExecutiveEscalationRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     escalationReportsAPI
       .getExecutiveTable({ fromDate: dateRange.startDate, toDate: dateRange.endDate })
       .then((res) => {
-        if (cancelled) return;
-        if (res.response.length > 0) {
-          setRows(res.response);
-          setIsSample(false);
-        } else {
-          setRows(SAMPLE_EXECUTIVE_ESCALATION);
-          setIsSample(true);
-        }
+        if (!cancelled) setRows(res.response);
       })
       .catch(() => {
-        if (!cancelled) {
-          setRows(SAMPLE_EXECUTIVE_ESCALATION);
-          setIsSample(true);
-        }
+        if (!cancelled) setRows([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -57,7 +50,7 @@ export const ExecutiveEscalationCard: React.FC<ExecutiveEscalationCardProps> = (
     <ChartCardShell
       title="Executive Escalation"
       subtitle="Tickets under executive escalation"
-      rightSlot={isSample ? <SampleDataBadge /> : undefined}
+      loading={loading}
       className={className}
     >
       {rows.length === 0 ? (

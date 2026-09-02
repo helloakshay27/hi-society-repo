@@ -6,9 +6,9 @@ import {
   TicketDistributionResponse,
   TicketOverviewResponse,
 } from '@/services/ticketReportsAPI';
+import { visitorReportsAPI } from '@/services/visitorReportsAPI';
 import { REACTIVE_COLOR, PROACTIVE_COLOR, TAT_ACHIEVED_COLOR, TAT_BREACHED_COLOR, getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
-import { SAMPLE_DELIVERY_VISITORS } from './sampleData';
 
 export type TicketsBarMetric =
   | 'unit-category'
@@ -56,26 +56,30 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
   const [categoryBreakdown, setCategoryBreakdown] = useState<TicketCategoryBreakdownResponse['response'] | null>(null);
   const [distribution, setDistribution] = useState<TicketDistributionResponse['response'] | null>(null);
   const [overview, setOverview] = useState<TicketOverviewResponse['response'] | null>(null);
-  const [loading, setLoading] = useState(metric !== 'delivery-visitors');
+  const [delivery, setDelivery] = useState<{ name: string; value: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (metric === 'delivery-visitors') return;
-
     let cancelled = false;
     setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
 
-    const request = CATEGORY_ENDPOINT_METRICS.includes(metric)
-      ? ticketReportsAPI.getCategoryBreakdown(range).then((res) => {
-          if (!cancelled) setCategoryBreakdown(res.response);
-        })
-      : OVERVIEW_ENDPOINT_METRICS.includes(metric)
-        ? ticketReportsAPI.getOverview(range).then((res) => {
-            if (!cancelled) setOverview(res.response);
+    const request =
+      metric === 'delivery-visitors'
+        ? visitorReportsAPI.getDelivery(range).then((res) => {
+            if (!cancelled) setDelivery(res.response);
           })
-        : ticketReportsAPI.getDistribution(range).then((res) => {
-            if (!cancelled) setDistribution(res.response);
-          });
+        : CATEGORY_ENDPOINT_METRICS.includes(metric)
+          ? ticketReportsAPI.getCategoryBreakdown(range).then((res) => {
+              if (!cancelled) setCategoryBreakdown(res.response);
+            })
+          : OVERVIEW_ENDPOINT_METRICS.includes(metric)
+            ? ticketReportsAPI.getOverview(range).then((res) => {
+                if (!cancelled) setOverview(res.response);
+              })
+            : ticketReportsAPI.getDistribution(range).then((res) => {
+                if (!cancelled) setDistribution(res.response);
+              });
 
     request
       .catch(() => {
@@ -83,6 +87,7 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
           setCategoryBreakdown(null);
           setDistribution(null);
           setOverview(null);
+          setDelivery([]);
         }
       })
       .finally(() => {
@@ -163,7 +168,7 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
       break;
     }
     case 'delivery-visitors': {
-      data = SAMPLE_DELIVERY_VISITORS.map((visitor, i) => ({ ...visitor, color: getTicketsChartColor(i) }));
+      data = delivery.map((visitor, i) => ({ ...visitor, color: getTicketsChartColor(i) }));
       series = [{ dataKey: 'value', name: 'Visits', color: getTicketsChartColor(0) }];
       categoryKey = 'name';
       colorKey = 'color';
@@ -196,7 +201,6 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
       colorKey={colorKey}
       orientation={meta.orientation ?? 'horizontal'}
       loading={loading}
-      isSample={metric === 'delivery-visitors'}
       insight={insight}
       emptyMessage={emptyMessage}
       className={className}

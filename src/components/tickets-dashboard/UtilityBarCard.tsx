@@ -3,14 +3,6 @@ import { BarChartCard, BarChartSeries } from './BarChartCard';
 import { utilityReportsAPI } from '@/services/utilityReportsAPI';
 import { getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
-import {
-  SAMPLE_POWER_BAR,
-  SAMPLE_WATER_BAR,
-  SAMPLE_POWER_TOP_BAR,
-  SAMPLE_WATER_TOP_BAR,
-  SAMPLE_DRY_SEGREGATION,
-  SAMPLE_EV_CONSUMPTION,
-} from './sampleData';
 
 export type UtilityBarMetric =
   | 'power-bar'
@@ -56,15 +48,6 @@ const BAR_METRIC_META: Record<
   },
 };
 
-const SAMPLE_BY_METRIC: Record<UtilityBarMetric, { name: string; value: number }[]> = {
-  'power-bar': SAMPLE_POWER_BAR,
-  'water-bar': SAMPLE_WATER_BAR,
-  'power-top-bar': SAMPLE_POWER_TOP_BAR,
-  'water-top-bar': SAMPLE_WATER_TOP_BAR,
-  'dry-segregation': SAMPLE_DRY_SEGREGATION,
-  'ev-consumption': SAMPLE_EV_CONSUMPTION,
-};
-
 const FETCHER_BY_METRIC: Record<
   UtilityBarMetric,
   typeof utilityReportsAPI.getPowerBar
@@ -85,30 +68,23 @@ interface UtilityBarCardProps {
 
 /** Bar cards for full Utility Consumption menu from FM user-dashboard. */
 export const UtilityBarCard: React.FC<UtilityBarCardProps> = ({ metric, dateRange, className }) => {
-  const [rows, setRows] = useState<{ name: string; value: number }[]>(SAMPLE_BY_METRIC[metric]);
-  const [isSample, setIsSample] = useState(true);
+  const [rows, setRows] = useState<{ name: string; value: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
-    const sample = SAMPLE_BY_METRIC[metric];
 
     FETCHER_BY_METRIC[metric](range)
       .then((res) => {
-        if (cancelled) return;
-        if (res.response.length > 0) {
-          setRows(res.response);
-          setIsSample(false);
-        } else {
-          setRows(sample);
-          setIsSample(true);
-        }
+        if (!cancelled) setRows(res.response);
       })
       .catch(() => {
-        if (!cancelled) {
-          setRows(sample);
-          setIsSample(true);
-        }
+        if (!cancelled) setRows([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
 
     return () => {
@@ -132,7 +108,7 @@ export const UtilityBarCard: React.FC<UtilityBarCardProps> = ({ metric, dateRang
       series={series}
       colorKey="color"
       orientation={meta.orientation}
-      isSample={isSample}
+      loading={loading}
       className={className}
     />
   );
