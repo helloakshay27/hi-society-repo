@@ -1488,7 +1488,7 @@ function App() {
                         />
                         <Route
                           path="admin/new-dashboard"
-                          element={<AdminNewDashboard />}
+                          element={<Navigate to="/admin/new-dashboard" replace />}
                         />
                         <Route
                           path="admin/smartsecure-integration"
@@ -1573,6 +1573,16 @@ function App() {
                       <Route
                         path="/posthog-runwal-dashboard"
                         element={<PosthogRunwalDashboard />}
+                      />
+
+                      {/* Post Possession admin dashboard (standalone — own header/tabs) */}
+                      <Route
+                        path="/admin/new-dashboard"
+                        element={
+                          <ProtectedRoute>
+                            <AdminNewDashboard />
+                          </ProtectedRoute>
+                        }
                       />
 
                       {/* Login Route */}
