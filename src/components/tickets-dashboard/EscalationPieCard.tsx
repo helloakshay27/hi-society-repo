@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
 import { escalationReportsAPI, EscalationOverviewResponse } from '@/services/escalationReportsAPI';
 import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR, getPieChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
-import { SAMPLE_ESCALATION_OVERVIEW, SAMPLE_EXECUTIVE_ESCALATION } from './sampleData';
 
 export type EscalationPieMetric =
   | 'open-escalation'
@@ -51,51 +50,38 @@ interface EscalationPieCardProps {
 
 /** Pie/donut cards for Escalation — Open, Close, Average, Executive (FM Count widgets). */
 export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, dateRange, className }) => {
-  const initialStatusSegments = useMemo(() => buildStatusSegments(SAMPLE_EXECUTIVE_ESCALATION), []);
-  const [overview, setOverview] = useState<EscalationOverviewResponse['response'] | null>(
-    SAMPLE_ESCALATION_OVERVIEW
-  );
-  const [statusSegments, setStatusSegments] = useState<PieChartSegment[]>(initialStatusSegments);
-  const [isSample, setIsSample] = useState(true);
+  const [overview, setOverview] = useState<EscalationOverviewResponse['response'] | null>(null);
+  const [statusSegments, setStatusSegments] = useState<PieChartSegment[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
 
     if (metric === 'executive-escalation') {
       escalationReportsAPI
         .getExecutiveTable(range)
         .then((res) => {
-          if (cancelled) return;
-          const rows = res.response.length > 0 ? res.response : SAMPLE_EXECUTIVE_ESCALATION;
-          setIsSample(res.response.length === 0);
-          setStatusSegments(buildStatusSegments(rows));
+          if (!cancelled) setStatusSegments(buildStatusSegments(res.response));
         })
         .catch(() => {
-          if (cancelled) return;
-          setIsSample(true);
-          setStatusSegments(buildStatusSegments(SAMPLE_EXECUTIVE_ESCALATION));
+          if (!cancelled) setStatusSegments([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
         });
     } else {
       escalationReportsAPI
         .getOverview(range)
         .then((res) => {
-          if (cancelled) return;
-          const data = res.response;
-          const hasData = (data.open ?? 0) + (data.closed ?? 0) + (data.average_ageing ?? 0) > 0;
-          if (hasData) {
-            setOverview(data);
-            setIsSample(false);
-          } else {
-            setOverview(SAMPLE_ESCALATION_OVERVIEW);
-            setIsSample(true);
-          }
+          if (!cancelled) setOverview(res.response);
         })
         .catch(() => {
-          if (!cancelled) {
-            setOverview(SAMPLE_ESCALATION_OVERVIEW);
-            setIsSample(true);
-          }
+          if (!cancelled) setOverview(null);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
         });
     }
 
@@ -138,7 +124,7 @@ export const EscalationPieCard: React.FC<EscalationPieCardProps> = ({ metric, da
       title={meta.title}
       subtitle={meta.subtitle}
       segments={segments}
-      isSample={isSample}
+      loading={loading}
       emptyMessage={meta.emptyMessage}
       centerValue={centerValue}
       centerLabel={centerLabel ?? meta.centerLabel}

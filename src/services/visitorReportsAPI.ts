@@ -1,12 +1,16 @@
 import { apiClient } from '@/utils/apiClient';
 import type { TicketReportDateRange } from './ticketReportsAPI';
 
-// Mirrors FM dashboard visitor widgets:
-// - charts-*/get-visitor-card-* → totals / expected / unexpected / vehicles
-// - charts-*/get-goods-inward|outward → goods KPI totals
-// - charts-*/get-building-wise-visitors → Total Visitors bar
-// - charts-*/get-*-wise-goods-inward|outward → Goods In / Out bars
-// - charts-*/get-delivery-visitor-* → Delivery Visitors
+// Per FM-HI-SOCIETY-DASHBOARD-APIS.md § 1 "Visitors", the backend only exposes
+// two routes:
+//   GET /api-fm-report/hi-society/visitors/kpis       -> overview KPI totals
+//   GET /api-fm-report/hi-society/visitors/staff_kpi   -> staff-specific KPIs
+// There is NO documented per-building / goods-in / goods-out / delivery
+// breakdown route, so getBuildingWise/getGoodsIn/getGoodsOut/getDelivery below
+// have no real endpoint to call — they're left pointing at their previous
+// (already non-existent) paths and will keep falling back to sample data via
+// the card components, same as before this fix. See getStaffKpi for the one
+// extra route the doc does provide that isn't wired into any card yet.
 const BASE_PATH = '/api-fm-report/hi-society/visitors';
 
 export interface VisitorOverviewResponse {
@@ -27,6 +31,15 @@ export interface VisitorNamedCountsResponse {
   success: number;
   message: string;
   response: { name: string; value: number }[];
+  info?: string;
+}
+
+/** GET /visitors/staff_kpi — shape isn't documented beyond "staff KPIs", so
+ * this is left as a passthrough of whatever the backend returns. */
+export interface VisitorStaffKpiResponse {
+  success: number;
+  message: string;
+  response: Record<string, unknown>;
   info?: string;
 }
 
@@ -103,7 +116,7 @@ const normalizeNamedCounts = (raw: unknown): { name: string; value: number }[] =
 
 export const visitorReportsAPI = {
   async getOverview(range: TicketReportDateRange): Promise<VisitorOverviewResponse> {
-    const { data } = await apiClient.get(`${BASE_PATH}/overview`, { params: buildParams(range) });
+    const { data } = await apiClient.get(`${BASE_PATH}/kpis`, { params: buildParams(range) });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
@@ -112,6 +125,20 @@ export const visitorReportsAPI = {
     };
   },
 
+  /** GET /visitors/staff_kpi — documented but not wired into any card yet. */
+  async getStaffKpi(range: TicketReportDateRange): Promise<VisitorStaffKpiResponse> {
+    const { data } = await apiClient.get(`${BASE_PATH}/staff_kpi`, { params: buildParams(range) });
+    return {
+      success: data?.success ?? 1,
+      message: data?.message ?? '',
+      response: (data?.response ?? data ?? {}) as Record<string, unknown>,
+      info: data?.info,
+    };
+  },
+
+  // NOT AVAILABLE per FM-HI-SOCIETY-DASHBOARD-APIS.md — no per-building/goods/
+  // delivery breakdown route exists for Visitors. Kept calling this (non-existent)
+  // path so the card's existing sample-data fallback keeps working unchanged.
   async getBuildingWise(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/building-wise`, { params: buildParams(range) });
     return {
@@ -122,6 +149,7 @@ export const visitorReportsAPI = {
     };
   },
 
+  // NOT AVAILABLE per the doc — same as getBuildingWise above.
   async getGoodsIn(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/goods-in`, { params: buildParams(range) });
     return {
@@ -132,6 +160,7 @@ export const visitorReportsAPI = {
     };
   },
 
+  // NOT AVAILABLE per the doc — same as getBuildingWise above.
   async getGoodsOut(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/goods-out`, { params: buildParams(range) });
     return {
@@ -142,6 +171,7 @@ export const visitorReportsAPI = {
     };
   },
 
+  // NOT AVAILABLE per the doc — same as getBuildingWise above.
   async getDelivery(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/delivery`, { params: buildParams(range) });
     return {

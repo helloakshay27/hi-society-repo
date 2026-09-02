@@ -3,7 +3,6 @@ import { PieChartCard, PieChartSegment } from './PieChartCard';
 import { visitorReportsAPI, VisitorOverviewResponse } from '@/services/visitorReportsAPI';
 import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR } from './colors';
 import { TicketsDashboardDateRange } from './types';
-import { SAMPLE_VISITOR_OVERVIEW, SAMPLE_DELIVERY_VISITORS } from './sampleData';
 
 export type VisitorPieMetric = 'expected-unexpected' | 'goods-in-out' | 'delivery-visitors';
 
@@ -30,58 +29,38 @@ interface VisitorPieCardProps {
 
 /** Pie/donut cards for the Visitor tab — Expected/Unexpected, Goods In/Out, Delivery. */
 export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRange, className }) => {
-  const [overview, setOverview] = useState<VisitorOverviewResponse['response'] | null>(SAMPLE_VISITOR_OVERVIEW);
-  const [delivery, setDelivery] = useState<{ name: string; value: number }[]>(SAMPLE_DELIVERY_VISITORS);
-  const [isSample, setIsSample] = useState(true);
+  const [overview, setOverview] = useState<VisitorOverviewResponse['response'] | null>(null);
+  const [delivery, setDelivery] = useState<{ name: string; value: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
 
     if (metric === 'delivery-visitors') {
       visitorReportsAPI
         .getDelivery(range)
         .then((res) => {
-          if (cancelled) return;
-          if (res.response.length > 0) {
-            setDelivery(res.response);
-            setIsSample(false);
-          } else {
-            setDelivery(SAMPLE_DELIVERY_VISITORS);
-            setIsSample(true);
-          }
+          if (!cancelled) setDelivery(res.response);
         })
         .catch(() => {
-          if (!cancelled) {
-            setDelivery(SAMPLE_DELIVERY_VISITORS);
-            setIsSample(true);
-          }
+          if (!cancelled) setDelivery([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
         });
     } else {
       visitorReportsAPI
         .getOverview(range)
         .then((res) => {
-          if (cancelled) return;
-          const next = res.response;
-          const hasData =
-            (next.expected_visitors ?? 0) +
-              (next.unexpected_visitors ?? 0) +
-              (next.goods_inwards ?? 0) +
-              (next.goods_outwards ?? 0) >
-            0;
-          if (hasData) {
-            setOverview(next);
-            setIsSample(false);
-          } else {
-            setOverview(SAMPLE_VISITOR_OVERVIEW);
-            setIsSample(true);
-          }
+          if (!cancelled) setOverview(res.response);
         })
         .catch(() => {
-          if (!cancelled) {
-            setOverview(SAMPLE_VISITOR_OVERVIEW);
-            setIsSample(true);
-          }
+          if (!cancelled) setOverview(null);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
         });
     }
 
@@ -122,7 +101,7 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
       title={meta.title}
       subtitle={meta.subtitle}
       segments={segments}
-      isSample={isSample}
+      loading={loading}
       className={className}
       maxVisibleSegments={metric === 'delivery-visitors' ? 6 : undefined}
     />

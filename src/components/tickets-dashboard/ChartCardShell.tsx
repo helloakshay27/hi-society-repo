@@ -12,12 +12,6 @@ interface ChartCardShellProps {
   rightSlot?: React.ReactNode;
 }
 
-export const SampleDataBadge: React.FC = () => (
-  <span className="flex-shrink-0 whitespace-nowrap rounded-full bg-brand-warning-light px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8A5A00]">
-    Sample data
-  </span>
-);
-
 /** Chart card shell matching FM Matrix /dashboard-revamp white analytics cards. */
 export const ChartCardShell: React.FC<ChartCardShellProps> = ({
   title,

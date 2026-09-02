@@ -1,11 +1,12 @@
 import { apiClient } from '@/utils/apiClient';
 import type { TicketReportDateRange } from './ticketReportsAPI';
 
-// Mirrors FM dashboard Count widgets:
-// - charts-*/get-executive-escalation-pie-chart-* → Open / Closed
-// - charts-*/get-executive-escalation-average-ageing-* → Average
-// - charts-*/get-executive-escalation-table-* → Executive Escalation rows
-const BASE_PATH = '/api-fm-report/hi-society/escalations';
+// Per FM-HI-SOCIETY-DASHBOARD-APIS.md § 2 "Escalation":
+//   GET /api-fm-report/hi-society/escalation/escalation_kpi   -> open/closed/average_ageing
+//   GET /api-fm-report/hi-society/escalation/escalation_table -> paginated row list
+// Note the singular "escalation" segment (the old BASE_PATH used the plural
+// "escalations", which doesn't exist on the backend).
+const BASE_PATH = '/api-fm-report/hi-society/escalation';
 
 export interface EscalationOverviewResponse {
   success: number;
@@ -58,6 +59,11 @@ const buildParams = ({ fromDate, toDate }: TicketReportDateRange): Record<string
   to_date: formatDateForAPI(toDate),
 });
 
+// escalation_table is paginated server-side (default page=1, per_page=20, max 100).
+// The widget renders a single flat list, so request the max page size instead of
+// adding pagination UI.
+const ESCALATION_TABLE_PER_PAGE = 100;
+
 const normalizeOverview = (raw: Record<string, unknown>): EscalationOverviewResponse['response'] => {
   const response = (raw.response ?? raw) as Record<string, unknown>;
   const open = Number(response.open ?? response.Open ?? 0);
@@ -81,7 +87,12 @@ const cell = (row: unknown, index: number): string => {
 
 const normalizeTableRows = (raw: unknown): ExecutiveEscalationRow[] => {
   const payload = raw as Record<string, unknown>;
-  const list = (payload?.response ?? payload) as unknown;
+  const response = payload?.response as Record<string, unknown> | unknown[] | undefined;
+  // Accept a bare array, a `{ response: [...] }` envelope, or a paginated
+  // `{ response: { data: [...], pagination: {...} } }` envelope.
+  const list = (Array.isArray(response) ? response : (response as Record<string, unknown>)?.data)
+    ?? payload?.data
+    ?? payload;
   if (!Array.isArray(list)) return [];
 
   return list.map((item) => {
@@ -115,7 +126,7 @@ const normalizeTableRows = (raw: unknown): ExecutiveEscalationRow[] => {
 
 export const escalationReportsAPI = {
   async getOverview(range: TicketReportDateRange): Promise<EscalationOverviewResponse> {
-    const { data } = await apiClient.get(`${BASE_PATH}/overview`, { params: buildParams(range) });
+    const { data } = await apiClient.get(`${BASE_PATH}/escalation_kpi`, { params: buildParams(range) });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
@@ -125,7 +136,9 @@ export const escalationReportsAPI = {
   },
 
   async getExecutiveTable(range: TicketReportDateRange): Promise<ExecutiveEscalationTableResponse> {
-    const { data } = await apiClient.get(`${BASE_PATH}/executive-table`, { params: buildParams(range) });
+    const { data } = await apiClient.get(`${BASE_PATH}/escalation_table`, {
+      params: { ...buildParams(range), page: 1, per_page: ESCALATION_TABLE_PER_PAGE },
+    });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',

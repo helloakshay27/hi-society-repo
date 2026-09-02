@@ -1,4 +1,4 @@
-export { ChartCardShell, SampleDataBadge } from './ChartCardShell';
+export { ChartCardShell } from './ChartCardShell';
 export { TicketsDashboardGrid } from './TicketsDashboardGrid';
 export { DEFAULT_TICKETS_GRID_LAYOUT } from './ticketsDashboardGridLayout';
 export { PieChartCard, type PieChartSegment } from './PieChartCard';
