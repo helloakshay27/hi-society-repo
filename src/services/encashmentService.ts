@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getHiSocietyBaseUrl, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 // ─── Pagination helpers ─────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ export interface EncashmentConfig {
 /** GET /api/encashment/config — current encashment configuration */
 export const getEncashmentConfig = async (): Promise<EncashmentConfig> => {
   const response = await axios.get(
-    `${getHiSocietyBaseUrl()}/api/encashment/config`,
+    getFullUrl("/api/encashment/config"),
     { headers: { Authorization: getAuthHeader() } }
   );
   return response.data;
@@ -128,7 +128,7 @@ export const updateEncashmentSettings = async (
   });
 
   const response = await axios.post(
-    `${getHiSocietyBaseUrl()}/admin/encashment_settings/create_or_update`,
+    getFullUrl("/admin/encashment_settings/create_or_update"),
     body,
     {
       headers: {
@@ -180,7 +180,7 @@ export const getEncashRequests = async (
   perPage = DEFAULT_PAGE_SIZE
 ): Promise<{ items: EncashRequest[]; pagination: PaginationMeta }> => {
   const response = await axios.get(
-    `${getHiSocietyBaseUrl()}/admin/encash_requests`,
+    getFullUrl("/admin/encash_requests"),
     {
       params: { page, per_page: perPage },
       headers: { Authorization: getAuthHeader() },
@@ -197,7 +197,7 @@ export const getEncashRequests = async (
 /** PUT /admin/encash_requests/:id/start_processing — move a request into processing */
 export const startProcessingEncashRequest = async (id: number): Promise<void> => {
   await axios.put(
-    `${getHiSocietyBaseUrl()}/admin/encash_requests/${id}/start_processing`,
+    getFullUrl(`/admin/encash_requests/${id}/start_processing`),
     null,
     { headers: { Authorization: getAuthHeader() } }
   );
@@ -208,7 +208,7 @@ export const cancelEncashRequest = async (id: number, reason: string): Promise<v
   const body = new URLSearchParams();
   body.append("reason", reason);
   await axios.put(
-    `${getHiSocietyBaseUrl()}/admin/encash_requests/${id}/cancel`,
+    getFullUrl(`/admin/encash_requests/${id}/cancel`),
     body,
     {
       headers: {
@@ -224,7 +224,7 @@ export const markEncashRequestSuccessful = async (id: number, utrNumber: string)
   const body = new URLSearchParams();
   body.append("utr_number", utrNumber);
   await axios.put(
-    `${getHiSocietyBaseUrl()}/admin/encash_requests/${id}/mark_successful`,
+    getFullUrl(`/admin/encash_requests/${id}/mark_successful`),
     body,
     {
       headers: {
@@ -264,7 +264,7 @@ export const getUserKycVerifications = async (
   perPage = DEFAULT_PAGE_SIZE
 ): Promise<{ items: UserKycVerification[]; pagination: PaginationMeta }> => {
   const response = await axios.get(
-    `${getHiSocietyBaseUrl()}/admin/user_kyc_verifications`,
+    getFullUrl("/admin/user_kyc_verifications"),
     {
       params: { page, per_page: perPage },
       headers: { Authorization: getAuthHeader() },
@@ -281,7 +281,7 @@ export const getUserKycVerifications = async (
 /** PUT /admin/user_kyc_verifications/:id/verify — approve a KYC request */
 export const verifyKycRequest = async (id: number): Promise<void> => {
   await axios.put(
-    `${getHiSocietyBaseUrl()}/admin/user_kyc_verifications/${id}/verify`,
+    getFullUrl(`/admin/user_kyc_verifications/${id}/verify`),
     null,
     { headers: { Authorization: getAuthHeader() } }
   );
@@ -292,7 +292,7 @@ export const rejectKycRequest = async (id: number, reason: string): Promise<void
   const body = new URLSearchParams();
   body.append("reason", reason);
   await axios.put(
-    `${getHiSocietyBaseUrl()}/admin/user_kyc_verifications/${id}/reject`,
+    getFullUrl(`/admin/user_kyc_verifications/${id}/reject`),
     body,
     {
       headers: {

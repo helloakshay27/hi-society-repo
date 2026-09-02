@@ -113,6 +113,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
       <div className="tiles" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <KpiTile
           id="wfAdoption"
+          infoKey="F1"
           label="Workflow Adoption"
           val={fAdoptDisplay}
           dir={fAdoptDelta && fAdoptDelta > 0 ? 'up' : fAdoptDelta && fAdoptDelta < 0 ? 'dn' : 'flat'}
@@ -126,6 +127,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         />
         <KpiTile
           id="wfCompletion"
+          infoKey="F2"
           label="Completion Rate"
           val={fCompDisplay}
           dir={fCompDelta && fCompDelta > 0 ? 'up' : fCompDelta && fCompDelta < 0 ? 'dn' : 'flat'}
@@ -138,6 +140,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           isLoading={isWfLoading}
         />
         <KpiTile
+          infoKey="F3"
           label="Biggest Step Drop"
           val={fStepDisplay}
           dir="dn"
@@ -147,6 +150,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           isLoading={isWfLoading}
         />
         <KpiTile
+          infoKey="F4"
           label="Usage Volume"
           val={fVolDisplay}
           dir="up"
@@ -159,6 +163,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
 
       <Card
         id="card-wfFunnel"
+        infoKey="chart.funnel"
         eyebrow="Workflow funnel (real event sequence)"
         title={`${selectedModule || 'All Workflows'} — completion funnel`}
         purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented PostHog event sequences."
@@ -175,6 +180,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
 
       <Card
         id="card-allScreens"
+        infoKey="chart.screens"
         eyebrow="All screens & flows"
         title="Screen path flows"
         purpose="Every screen path inside this module with users, events, sessions and completion rate."
@@ -191,6 +197,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
 
       <Card
         id="card-entryScreens"
+        infoKey="chart.entries"
         eyebrow="Top entry screens"
         title="Session entry screens"
         purpose="The first screen property seen in each session — visitors, screen views, and bounce rate."

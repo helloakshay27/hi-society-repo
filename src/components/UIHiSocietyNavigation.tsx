@@ -9,6 +9,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useLayout } from "../contexts/LayoutContext";
+import { trackModuleSwitch } from "@/utils/posthogHelpers";
 
 interface NavigationItem {
   id: string;
@@ -171,6 +172,7 @@ export const UIHiSocietyNavigation: React.FC = () => {
   }, [location.pathname, isCMSDomain, location.state]);
 
   const handleNavClick = (item: NavigationItem) => {
+    trackModuleSwitch(item.label, item.path, activeNav, { module_id: item.id });
     setActiveNav(item.id);
     navigate(item.path);
   };

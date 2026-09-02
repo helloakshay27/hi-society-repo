@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { useLayout } from "../contexts/LayoutContext";
+import { trackSidebarClick } from "@/utils/posthogHelpers";
 import {
   ChevronRight,
   ChevronLeft,
@@ -493,6 +494,7 @@ export const ActionSidebar = () => {
   }
 
   const handleNavigation = (link: string, functionName: string) => {
+    trackSidebarClick(functionName, currentModule || 'Action Module', link);
     setCurrentFunction(functionName);
     navigate(link);
   };

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { KpiTileProps } from '../../types';
-import { KPI_INFO } from '../../data/constants';
+import { InfoButton } from './InfoButton';
 
 export const KpiTile: React.FC<KpiTileProps> = ({
   id,
@@ -16,25 +16,10 @@ export const KpiTile: React.FC<KpiTileProps> = ({
   benchmark,
   onBenchmarkChange,
   isLoading = false,
+  infoKey,
 }) => {
-  const [showInfo, setShowInfo] = useState(false);
-  const infoRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (infoRef.current && !infoRef.current.contains(event.target as Node)) {
-        setShowInfo(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const arrowSym = dir === 'up' ? '▲' : dir === 'dn' ? '▼' : '—';
-  const info = KPI_INFO[label] || {
-    f: 'Definition not yet finalized for this metric.',
-    m: 'Business meaning to be confirmed with product team.',
-  };
+  const resolvedInfoKey = infoKey || id || label;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!id || !onBenchmarkChange) return;
@@ -95,31 +80,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
     <div className="tile" data-raw={raw} data-goodup={goodUp}>
       <div className="tophead">
         <div className="lbl">{label}</div>
-        <span
-          className="info-wrap"
-          ref={infoRef}
-          onMouseEnter={() => setShowInfo(true)}
-          onMouseLeave={() => setShowInfo(false)}
-        >
-          <button
-            type="button"
-            className="info-btn"
-            onClick={() => setShowInfo(!showInfo)}
-            aria-label="KPI Info"
-          >
-            i
-          </button>
-          {showInfo && (
-            <div className="info-pop">
-              <b>Formula</b>
-              {info.f}
-              <div className="sep">
-                <b>Business meaning</b>
-                {info.m}
-              </div>
-            </div>
-          )}
-        </span>
+        {resolvedInfoKey && <InfoButton infoKey={resolvedInfoKey} />}
       </div>
 
       <div className="val">{val}</div>

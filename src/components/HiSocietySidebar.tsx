@@ -1,6 +1,7 @@
 import React, { useState, useEffect, startTransition } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLayout } from "../contexts/LayoutContext";
+import { trackSidebarClick } from "@/utils/posthogHelpers";
 import {
   Home,
   Settings as SettingsIcon,
@@ -1518,6 +1519,7 @@ export const HiSocietySidebar: React.FC = () => {
               if (hasSubItems) {
                 const firstSubItem = item.subItems![0];
                 if (firstSubItem.path) {
+                  trackSidebarClick(firstSubItem.label, currentConfig.title, firstSubItem.path, true, item.label);
                   handleNavigation(
                     firstSubItem.path,
                     isLoyaltyMaintenancePath(firstSubItem.path)
@@ -1526,6 +1528,7 @@ export const HiSocietySidebar: React.FC = () => {
                   );
                 }
               } else if (item.path) {
+                trackSidebarClick(item.label, currentConfig.title, item.path, false);
                 handleNavigation(
                   item.path,
                   isLoyaltyMaintenancePath(item.path)
@@ -1565,6 +1568,7 @@ export const HiSocietySidebar: React.FC = () => {
             if (hasSubItems) {
               toggleSection(item.id);
             } else if (item.path) {
+              trackSidebarClick(item.label, currentConfig.title, item.path, false);
               handleNavigation(
                 item.path,
                 isLoyaltyMaintenancePath(item.path)
@@ -1603,15 +1607,17 @@ export const HiSocietySidebar: React.FC = () => {
                 <button
                   key={subItem.id}
                   // inside sub-item click
-                  onClick={() =>
-                    subItem.path &&
-                    handleNavigation(
-                      subItem.path,
-                      isLoyaltyMaintenancePath(subItem.path)
-                        ? { fromSection: "loyalty" }
-                        : undefined
-                    )
-                  }
+                  onClick={() => {
+                    if (subItem.path) {
+                      trackSidebarClick(subItem.label, currentConfig.title, subItem.path, true, item.label);
+                      handleNavigation(
+                        subItem.path,
+                        isLoyaltyMaintenancePath(subItem.path)
+                          ? { fromSection: "loyalty" }
+                          : undefined
+                      );
+                    }
+                  }}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
                 >
                   {subActive && (

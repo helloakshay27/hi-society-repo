@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PageId, DevicePlatform } from './types';
 import { BM_DEFAULTS } from './data/constants';
+import { DashboardProvider } from './context/DashboardContext';
+import { InfoPopover } from './components/common/InfoPopover';
 import { TopBar } from './components/common/TopBar';
 import { SideBar } from './components/common/SideBar';
 import { FilterBar } from './components/common/FilterBar';
@@ -21,7 +23,7 @@ function dateRangeFor(days: number) {
   return { from: ymd(from), to: ymd(to) };
 }
 
-export const PosthogRunwalDashboard: React.FC = () => {
+function PosthogRunwalDashboardContent() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const saved = localStorage.getItem('runwal-theme');
@@ -337,12 +339,24 @@ export const PosthogRunwalDashboard: React.FC = () => {
 
           <div className="footer">
             <b>Live Analytics Integration.</b> Connected directly to PostHog Adoption Analytics (
-            <code>https://posthog-api.lockated.com</code>) and FM Matrix Backend endpoints. All metrics dynamically update based on selected sites, date ranges, and device platforms.
+            <code>https://posthog-api.lockated.com</code>) and Hi-Society Backend endpoints. All metrics dynamically update based on selected sites, date ranges, and device platforms.
           </div>
         </main>
       </div>
+
+      {/* Floating Info Popover for (i) Button */}
+      <InfoPopover />
     </div>
+  );
+}
+
+export const PosthogRunwalDashboard: React.FC = () => {
+  return (
+    <DashboardProvider>
+      <PosthogRunwalDashboardContent />
+    </DashboardProvider>
   );
 };
 
 export default PosthogRunwalDashboard;
+

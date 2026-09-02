@@ -109,7 +109,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       <span
         className="badge-live"
-        title="Live telemetry active from PostHog & FM Matrix API endpoints"
+        title="Live telemetry active from PostHog & Hi-Society API endpoints"
         style={{
           display: 'inline-flex',
           alignItems: 'center',

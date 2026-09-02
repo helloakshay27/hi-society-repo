@@ -311,6 +311,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <div className="tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginTop: '16px' }}>
         <KpiTile
           id="seatUtil"
+          infoKey="A1"
           label="Seat Utilisation"
           val={seatDisplay}
           dir={seatDelta.dir}
@@ -325,6 +326,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         />
         <KpiTile
           id="stickiness"
+          infoKey="A2"
           label="Stickiness"
           val={stickinessDisplay}
           dir={stickinessDelta.dir}
@@ -339,6 +341,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         />
         <KpiTile
           id="adoptionTrend"
+          infoKey="A3"
           label="Adoption Trend"
           val={adoptTrendDisplay}
           dir={adoptTrendVal && adoptTrendVal > 0 ? 'up' : adoptTrendVal && adoptTrendVal < 0 ? 'dn' : 'flat'}
@@ -349,6 +352,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         />
         <KpiTile
           id="activation14"
+          infoKey="A4"
           label="14-Day Activation"
           val={activationDisplay}
           dir={activationDelta.dir}
@@ -363,6 +367,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         />
         <KpiTile
           id="moduleBreadth2"
+          infoKey="A5"
           label="Module Breadth"
           val={moduleBreadthDisplay}
           dir="flat"
@@ -375,6 +380,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
       <Card
         id="card-adoptionTrend"
+        infoKey="chart.adoptionTrend"
         eyebrow="Trend · Live 8-week PostHog data"
         title="Adoption trend (weekly active users, last 8 weeks)"
         purpose="Weekly active users over the last 8 weeks from PostHog adoption_trend endpoint."
@@ -421,6 +427,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <div className="grid2">
         <Card
           id="card-growthAccounting"
+          infoKey="chart.growth"
           eyebrow="Growth accounting · Last 6 weeks"
           title="New · Returning · Resurrecting · Dormant"
           purpose="Breaks the active base into new signups, retained users, resurrected accounts, and dormant users."
@@ -468,6 +475,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
         <Card
           id="card-retentionCohort"
+          infoKey="chart.retention"
           eyebrow="Retention · Weekly cohorts"
           title="Cohort retention analysis"
           purpose="Percentage of users in each weekly signup cohort who remain active over subsequent weeks."
@@ -491,6 +499,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <div className="grid2">
         <Card
           id="card-roleSplit"
+          infoKey="chart.roles"
           eyebrow="Adoption by role / audience"
           title="User roles distribution"
           purpose="Active share and user counts by role from PostHog roles API."
@@ -535,6 +544,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
         <Card
           id="card-dormant"
+          infoKey="chart.dormant"
           eyebrow="Dormant users"
           title="Inactive account summary"
           purpose="Customers with no activity in the dormancy window from PostHog."
@@ -591,6 +601,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           <div className="grid2">
             <Card
               id="card-leaseOverview"
+              infoKey="crm.leases"
               eyebrow="FM Matrix CRM"
               title="Lease & Occupancy"
               purpose="Live lease metrics from /fm_dashboard/crm/lease_overview.json."
@@ -606,6 +617,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
             <Card
               id="card-eventsOverview"
+              infoKey="crm.events"
               eyebrow="FM Matrix CRM"
               title="Community Events"
               purpose="Live events overview from /fm_dashboard/crm/events_overview.json."
@@ -621,6 +633,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
             <Card
               id="card-broadcastOverview"
+              infoKey="crm.broadcasts"
               eyebrow="FM Matrix CRM"
               title="Broadcasts & Notices"
               purpose="Live broadcast reach from /fm_dashboard/crm/broadcast_overview.json."
@@ -636,6 +649,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
             <Card
               id="card-walletOverview"
+              infoKey="crm.wallets"
               eyebrow="FM Matrix CRM"
               title="Loyalty Wallet"
               purpose="Resident points balance from /fm_dashboard/crm/wallet_overview.json."
@@ -655,6 +669,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           <div className="grid2">
             <Card
               id="card-pendingVal"
+              infoKey="fin.requisition_value"
               eyebrow="FM Matrix Finance"
               title="Pending Requisition Value"
               purpose="Value of pending requisitions from /fm_dashboard/requisitions/pending_value.json."
@@ -670,6 +685,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
             <Card
               id="card-pendingApprovals"
+              infoKey="fin.approvals"
               eyebrow="FM Matrix Finance"
               title="Pending Approvals"
               purpose="Total items pending approval from /fm_dashboard/procurement/pending_approvals.json."
@@ -685,6 +701,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
             <Card
               id="card-prSrSplit"
+              infoKey="fin.pr_sr_split"
               eyebrow="FM Matrix Finance"
               title="PR vs SR Split"
               purpose="Material PR to Service Request ratio from /fm_dashboard/procurement/pr_sr_split.json."
@@ -700,6 +717,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
             <Card
               id="card-overdueInvoices"
+              infoKey="fin.overdue_invoices"
               eyebrow="FM Matrix Finance"
               title="Overdue Invoices"
               purpose="Aging invoices from /fm_dashboard/invoices/overdue_invoices.json."

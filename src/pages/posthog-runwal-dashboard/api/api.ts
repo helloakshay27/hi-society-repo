@@ -45,8 +45,9 @@ const POSTHOG_BASE_URL =
   'https://posthog-api.lockated.com';
 
 const POSTHOG_TENANT_URL =
-  (import.meta as any).env?.VITE_FM_ADOPTION_TENANT_URL ||
-  'fm-matrix.lockated.com';
+  (import.meta as any).env?.VITE_POSTHOG_TENANT_URL ||
+  (import.meta as any).env?.VITE_HI_SOCIETY_TENANT_URL ||
+  'hi-society.lockated.com';
 
 function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any> = {}): string {
   const parts: string[] = [];
