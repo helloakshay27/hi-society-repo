@@ -102,6 +102,8 @@ export interface EncashmentSettingsPayload {
   points_to_rupee_ratio: number | string;
   min_points_per_request?: number | string;
   max_points_per_request?: number | string;
+  terms_and_conditions?: string;
+  privacy_policy?: string;
 }
 
 export interface EncashmentSettings {
@@ -113,6 +115,8 @@ export interface EncashmentSettings {
   points_to_rupee_ratio: string;
   min_points_per_request: number | null;
   max_points_per_request: number | null;
+  terms_and_conditions: string | null;
+  privacy_policy: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -138,6 +142,30 @@ export const updateEncashmentSettings = async (
     }
   );
   return response.data;
+};
+
+/** GET /admin/encashment_settings — raw per-organization settings, including
+ * fields (points_to_rupee_ratio, processing_min_days/max_days,
+ * terms_and_conditions, privacy_policy) that /api/encashment/config doesn't
+ * return. Returns the entry matching organizationId, or the first one if no
+ * id is given / no match is found. */
+export const getEncashmentSettings = async (
+  organizationId?: number | string
+): Promise<EncashmentSettings | null> => {
+  const response = await axios.get(getFullUrl("/admin/encashment_settings.json"), {
+    headers: { Authorization: getAuthHeader() },
+  });
+  const list: EncashmentSettings[] = Array.isArray(response.data)
+    ? response.data
+    : Array.isArray(response.data?.encashment_settings)
+      ? response.data.encashment_settings
+      : [];
+
+  if (list.length === 0) return null;
+  if (organizationId === undefined) return list[0];
+
+  const match = list.find((entry) => String(entry.organization_id) === String(organizationId));
+  return match ?? list[0];
 };
 
 // ─── Encashment Requests ─────────────────────────────────────────────────────
