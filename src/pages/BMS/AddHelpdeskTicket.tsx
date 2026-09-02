@@ -314,6 +314,8 @@ const getUserProfileFromAlternativeAPI = async () => {
 
 export const AddTicketDashboard = () => {
   const navigate = useNavigate();
+  const orgId = localStorage.getItem('org_id');
+  const isSupervisorOrg = orgId === '10';
 
   // Form state
   const [onBehalfOf, setOnBehalfOf] = useState('self');
@@ -1309,7 +1311,7 @@ export const AddTicketDashboard = () => {
         return;
       }
 
-      if (!formData.assignedTo) {
+      if (isSupervisorOrg && !formData.assignedTo) {
         toast.error("Please select an assignee", { description: "Validation Error" });
         setIsSubmitting(false);
         return;
@@ -1547,7 +1549,7 @@ export const AddTicketDashboard = () => {
                       className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
                       style={{ accentColor: '#C72030' }}
                     />
-                    <label htmlFor="behalf-admin" className="text-sm font-medium">Admin</label>
+                    <label htmlFor="behalf-admin" className="text-sm font-medium">{isSupervisorOrg ? 'Supervisor' : 'Admin'}</label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
@@ -1768,31 +1770,33 @@ export const AddTicketDashboard = () => {
                     />
 
 
-                    <FormControl
-                      fullWidth
-                      variant="outlined"
-                      required
-                      sx={{ '& .MuiInputBase-root': fieldStyles }}
-                    >
-                      <InputLabel shrink>Assigned To</InputLabel>
-                      <MuiSelect
-                        value={formData.assignedTo}
-                        onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                        label="Assigned To"
-                        notched
-                        displayEmpty
-                        disabled={loadingEngineers}
+                    {isSupervisorOrg && (
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        required
+                        sx={{ '& .MuiInputBase-root': fieldStyles }}
                       >
-                        <MenuItem value="">
-                          {loadingEngineers ? "Loading..." : "Select engineer*"}
-                        </MenuItem>
-                        {engineers.map((engineer) => (
-                          <MenuItem key={engineer.id} value={engineer.id.toString()}>
-                            {engineer.full_name}
+                        <InputLabel shrink>Assigned To</InputLabel>
+                        <MuiSelect
+                          value={formData.assignedTo}
+                          onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                          label="Assigned To"
+                          notched
+                          displayEmpty
+                          disabled={loadingEngineers}
+                        >
+                          <MenuItem value="">
+                            {loadingEngineers ? "Loading..." : "Select engineer*"}
                           </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </FormControl>
+                          {engineers.map((engineer) => (
+                            <MenuItem key={engineer.id} value={engineer.id.toString()}>
+                              {engineer.full_name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                    )}
 
                     <FormControl
                       fullWidth
@@ -2047,31 +2051,33 @@ export const AddTicketDashboard = () => {
                       </MuiSelect>
                     </FormControl>
 
-                    <FormControl
-                      fullWidth
-                      variant="outlined"
-                      required
-                      sx={{ '& .MuiInputBase-root': fieldStyles }}
-                    >
-                      <InputLabel shrink>Assigned To</InputLabel>
-                      <MuiSelect
-                        value={formData.assignedTo}
-                        onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                        label="Assigned To"
-                        notched
-                        displayEmpty
-                        disabled={loadingEngineers}
+                    {isSupervisorOrg && (
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        required
+                        sx={{ '& .MuiInputBase-root': fieldStyles }}
                       >
-                        <MenuItem value="">
-                          {loadingEngineers ? "Loading..." : "Select engineer*"}
-                        </MenuItem>
-                        {engineers.map((engineer) => (
-                          <MenuItem key={engineer.id} value={engineer.id.toString()}>
-                            {engineer.full_name}
+                        <InputLabel shrink>Assigned To</InputLabel>
+                        <MuiSelect
+                          value={formData.assignedTo}
+                          onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                          label="Assigned To"
+                          notched
+                          displayEmpty
+                          disabled={loadingEngineers}
+                        >
+                          <MenuItem value="">
+                            {loadingEngineers ? "Loading..." : "Select engineer*"}
                           </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </FormControl>
+                          {engineers.map((engineer) => (
+                            <MenuItem key={engineer.id} value={engineer.id.toString()}>
+                              {engineer.full_name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                    )}
                   </div>
                 </>
               )}

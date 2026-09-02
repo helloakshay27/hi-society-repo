@@ -283,6 +283,8 @@ export const AddUserPage = () => {
   const { userId } = useParams<{ userId?: string }>();
   const location = useLocation();
   const isEdit = Boolean(userId);
+  const orgId = localStorage.getItem('org_id');
+  const isSupervisorOrg = orgId === '10';
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
   const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
@@ -478,6 +480,17 @@ export const AddUserPage = () => {
     }
     if (!formData.flat) {
       return "Please select a flat";
+    }
+    if (isSupervisorOrg && formData.residentType === "tenant") {
+      if (!formData.agreementStartDate) {
+        return "Agreement Start Date is required for tenants";
+      }
+      if (!formData.agreementExpireDate) {
+        return "Agreement Expire Date is required for tenants";
+      }
+      if (formData.existingDocuments.length === 0 && formData.agreementDocuments.length === 0) {
+        return "Please upload at least one attachment for tenants";
+      }
     }
     return null;
   };
@@ -1229,12 +1242,13 @@ export const AddUserPage = () => {
                           display: 'block',
                         }}
                       >
-                        Agreement Start Date
+                        Agreement Start Date{isSupervisorOrg && <span style={{ color: '#C72030' }}> *</span>}
                       </FormLabel>
                       <TextField
                         fullWidth
                         size="small"
                         type="date"
+                        required={isSupervisorOrg}
                         value={formData.agreementStartDate}
                         onChange={(e) => handleInputChange("agreementStartDate", e.target.value)}
                         sx={fieldStyles}
@@ -1251,12 +1265,13 @@ export const AddUserPage = () => {
                           display: 'block',
                         }}
                       >
-                        Agreement Expire Date
+                        Agreement Expire Date{isSupervisorOrg && <span style={{ color: '#C72030' }}> *</span>}
                       </FormLabel>
                       <TextField
                         fullWidth
                         size="small"
                         type="date"
+                        required={isSupervisorOrg}
                         value={formData.agreementExpireDate}
                         onChange={(e) => handleInputChange("agreementExpireDate", e.target.value)}
                         sx={fieldStyles}
@@ -1276,7 +1291,7 @@ export const AddUserPage = () => {
                         display: 'block',
                       }}
                     >
-                      Attachments
+                      Attachments{isSupervisorOrg && formData.residentType === "tenant" && <span style={{ color: '#C72030' }}> *</span>}
                     </FormLabel>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                       {/* Existing Documents */}
