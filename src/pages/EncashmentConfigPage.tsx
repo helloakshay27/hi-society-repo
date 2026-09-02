@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -11,13 +12,15 @@ import {
 } from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Percent, Clock, TrendingDown, TrendingUp, Loader2, Pencil, Settings } from "lucide-react";
+import { Percent, Clock, TrendingDown, TrendingUp, Loader2, Pencil, Settings, FileText, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   getEncashmentConfig,
+  getEncashmentSettings,
   updateEncashmentSettings,
   EncashmentConfig,
   EncashmentConfigStep,
+  EncashmentSettings,
 } from "@/services/encashmentService";
 
 const stepColumns: ColumnConfig[] = [
@@ -65,8 +68,8 @@ const getCurrentOrganizationId = (): string => {
 };
 
 /** The `processing_time_label` (e.g. "2-4 business days") is derived server-side
- * from processing_min_days/processing_max_days — there's no dedicated GET for
- * the raw settings, so this recovers a best-effort prefill from that label. */
+ * from processing_min_days/processing_max_days — used as a fallback prefill
+ * when the raw settings (getEncashmentSettings) haven't loaded yet. */
 const parseProcessingDays = (label: string | undefined): { min: string; max: string } => {
   const match = (label || "").match(/(\d+)\D+(\d+)/);
   if (!match) return { min: "", max: "" };
@@ -80,6 +83,8 @@ interface SettingsFormState {
   points_to_rupee_ratio: string;
   min_points_per_request: string;
   max_points_per_request: string;
+  terms_and_conditions: string;
+  privacy_policy: string;
 }
 
 const EMPTY_FORM: SettingsFormState = {
@@ -89,6 +94,8 @@ const EMPTY_FORM: SettingsFormState = {
   points_to_rupee_ratio: "1",
   min_points_per_request: "",
   max_points_per_request: "",
+  terms_and_conditions: "",
+  privacy_policy: "",
 };
 
 const fieldLabelClass = "text-xs font-semibold text-[#1A1A1A]";
@@ -96,6 +103,7 @@ const inputClass = "h-9 text-sm border-[#D5DbDB] bg-white";
 
 export const EncashmentConfigPage: React.FC = () => {
   const [config, setConfig] = useState<EncashmentConfig | null>(null);
+  const [settings, setSettings] = useState<EncashmentSettings | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -104,12 +112,21 @@ export const EncashmentConfigPage: React.FC = () => {
 
   const fetchConfig = () => {
     setLoading(true);
-    return getEncashmentConfig()
-      .then(setConfig)
-      .catch((err) => {
+    const organizationId = getCurrentOrganizationId();
+    return Promise.all([
+      getEncashmentConfig().catch((err) => {
         console.warn("Could not fetch encashment config:", err);
         toast.error("Failed to load encashment config");
-        setConfig(null);
+        return null;
+      }),
+      getEncashmentSettings(organizationId || undefined).catch((err) => {
+        console.warn("Could not fetch encashment settings:", err);
+        return null;
+      }),
+    ])
+      .then(([configResult, settingsResult]) => {
+        setConfig(configResult);
+        setSettings(settingsResult);
       })
       .finally(() => setLoading(false));
   };
@@ -122,14 +139,17 @@ export const EncashmentConfigPage: React.FC = () => {
     const { min, max } = parseProcessingDays(config?.processing_time_label);
     setForm({
       processing_fee_percent:
-        config?.processing_fee_percent != null ? String(config.processing_fee_percent) : "",
-      processing_min_days: min,
-      processing_max_days: max,
+        settings?.processing_fee_percent ??
+        (config?.processing_fee_percent != null ? String(config.processing_fee_percent) : ""),
+      processing_min_days: settings?.processing_min_days != null ? String(settings.processing_min_days) : min,
+      processing_max_days: settings?.processing_max_days != null ? String(settings.processing_max_days) : max,
       points_to_rupee_ratio: "1",
       min_points_per_request:
         config?.min_points_per_request != null ? String(config.min_points_per_request) : "",
       max_points_per_request:
         config?.max_points_per_request != null ? String(config.max_points_per_request) : "",
+      terms_and_conditions: settings?.terms_and_conditions || "",
+      privacy_policy: settings?.privacy_policy || "",
     });
     setIsModalOpen(true);
   };
@@ -160,6 +180,8 @@ export const EncashmentConfigPage: React.FC = () => {
         points_to_rupee_ratio: form.points_to_rupee_ratio,
         min_points_per_request: form.min_points_per_request,
         max_points_per_request: form.max_points_per_request,
+        terms_and_conditions: form.terms_and_conditions,
+        privacy_policy: form.privacy_policy,
       });
       toast.success("Encashment settings saved successfully");
       setIsModalOpen(false);
@@ -245,6 +267,28 @@ export const EncashmentConfigPage: React.FC = () => {
         />
       </div>
 
+      {/* Terms & Conditions / Privacy Policy */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className="bg-white rounded-lg border border-[#D5DbDB] p-5">
+          <h2 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2 mb-2">
+            <FileText className="w-4 h-4 text-[#C72030]" />
+            Terms &amp; Conditions
+          </h2>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+            {settings?.terms_and_conditions || "Not set"}
+          </p>
+        </div>
+        <div className="bg-white rounded-lg border border-[#D5DbDB] p-5">
+          <h2 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2 mb-2">
+            <ShieldCheck className="w-4 h-4 text-[#C72030]" />
+            Privacy Policy
+          </h2>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+            {settings?.privacy_policy || "Not set"}
+          </p>
+        </div>
+      </div>
+
       {/* Edit Settings Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
@@ -300,7 +344,7 @@ export const EncashmentConfigPage: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label className={fieldLabelClass}>Min Points / Request</Label>
+                <Label className={fieldLabelClass}>Min Points / Request (Keep blank for No Limit)</Label>
                 <Input
                   type="number"
                   className={inputClass}
@@ -311,13 +355,33 @@ export const EncashmentConfigPage: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label className={fieldLabelClass}>Max Points / Request</Label>
+                <Label className={fieldLabelClass}>Max Points / Request (Keep blank for No Limit)</Label>
                 <Input
                   type="number"
                   className={inputClass}
                   placeholder="No maximum"
                   value={form.max_points_per_request}
                   onChange={(e) => setForm((prev) => ({ ...prev, max_points_per_request: e.target.value }))}
+                />
+              </div>
+
+              <div className="col-span-2 space-y-1.5">
+                <Label className={fieldLabelClass}>Terms &amp; Conditions</Label>
+                <Textarea
+                  className="min-h-[90px] text-sm border-[#D5DbDB] bg-white"
+                  placeholder="Enter terms & conditions"
+                  value={form.terms_and_conditions}
+                  onChange={(e) => setForm((prev) => ({ ...prev, terms_and_conditions: e.target.value }))}
+                />
+              </div>
+
+              <div className="col-span-2 space-y-1.5">
+                <Label className={fieldLabelClass}>Privacy Policy</Label>
+                <Textarea
+                  className="min-h-[90px] text-sm border-[#D5DbDB] bg-white"
+                  placeholder="Enter privacy policy"
+                  value={form.privacy_policy}
+                  onChange={(e) => setForm((prev) => ({ ...prev, privacy_policy: e.target.value }))}
                 />
               </div>
             </div>
