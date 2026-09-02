@@ -1165,6 +1165,7 @@ const LockFeesDetail = lazy(() => import("./pages/LockFeesDetail"));
 const EditLockFeesPage = lazy(() => import("./pages/EditLockFeesPage"));
 const SocietyDetailsPage = lazy(() => import("./pages/master/SocietyDetailsPage"));
 const BlockDetailsPage = lazy(() => import("./pages/master/BlockDetailsPage"));
+const SmartSecureDashboardPage = lazy(() => import("./features/smartsecure-dashboard/SmartSecureDashboardPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1573,6 +1574,10 @@ function App() {
                       <Route
                         path="/posthog-runwal-dashboard"
                         element={<PosthogRunwalDashboard />}
+                      />
+                      <Route
+                        path="/smartsecure-dashboard"
+                        element={<SmartSecureDashboardPage />}
                       />
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}

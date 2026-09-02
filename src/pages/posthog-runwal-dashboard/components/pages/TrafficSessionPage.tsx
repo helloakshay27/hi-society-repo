@@ -186,6 +186,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
       <div className="tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
         <KpiTile
           id="activeUsers"
+          infoKey="U1"
           label="Active Users"
           val={tiles ? tiles.active_users.toLocaleString() : isTrafficLoading ? '...' : '0'}
           dir={activeUsersDelta.dir}
@@ -200,6 +201,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
         />
         <KpiTile
           id="screenViews"
+          infoKey="U2"
           label="Screen Views"
           val={tiles ? tiles.screen_views.toLocaleString() : isTrafficLoading ? '...' : '0'}
           dir={screenViewsDelta.dir}
@@ -211,6 +213,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
         />
         <KpiTile
           id="totalSessions"
+          infoKey="U3"
           label="Sessions"
           val={tiles ? tiles.sessions.toLocaleString() : isTrafficLoading ? '...' : '0'}
           dir={sessionsDelta.dir}
@@ -222,6 +225,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
         />
         <KpiTile
           id="avgSessionDur"
+          infoKey="U4"
           label="Session Duration"
           val={tiles ? formatSeconds(tiles.avg_session_seconds) : isTrafficLoading ? '...' : '—'}
           dir={avgSessionDelta.dir}
@@ -233,6 +237,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
         />
         <KpiTile
           id="bounceRate"
+          infoKey="U5"
           label="Bounce Rate"
           val={tiles ? `${Math.round(tiles.bounce_rate)}%` : isTrafficLoading ? '...' : '0%'}
           dir={bounceDelta.dir}
@@ -247,6 +252,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
         />
         <KpiTile
           id="recentlyOnline"
+          infoKey="U6"
           label="Recently Online"
           val={tiles ? tiles.recently_online.toLocaleString() : isTrafficLoading ? '...' : '0'}
           dir="flat"
@@ -260,6 +266,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
       <div className="grid2">
         <Card
           id="card-trafficActive"
+          infoKey="chart.usage"
           eyebrow="Usage over time · Live PostHog data"
           title="Usage over time"
           purpose="Visitors, screen views, and sessions over time, with previous period comparison from PostHog usage_and_distribution API."
@@ -384,6 +391,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
 
         <Card
           id="card-deviceSplit"
+          infoKey="chart.devices"
           eyebrow="Device / platform split"
           title="Device platform distribution"
           purpose="Share of sessions and active users by device_type from PostHog."

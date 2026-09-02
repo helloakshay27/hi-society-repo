@@ -35,6 +35,7 @@ export interface KpiTileProps {
   benchmark?: number | null;
   onBenchmarkChange?: (id: string, value: number | null) => void;
   isLoading?: boolean;
+  infoKey?: string;
 }
 
 
