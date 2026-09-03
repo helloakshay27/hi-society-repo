@@ -1,14 +1,10 @@
 import React, { useState } from "react";
+import TextField from "@mui/material/TextField";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,23 +38,65 @@ const defaultForm: DownloadForm = {
   format: "pdf",
 };
 
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
+    },
+  },
+};
+
+const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <span
+          className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+          style={{ backgroundColor: "#E5E0D3" }}
+        >
+          <Download size={16} color="var(--color-primary,#da7756)" />
+        </span>
+        {title}
+      </h2>
+    </div>
+    <div className="p-6 space-y-6">{children}</div>
+  </div>
+);
+
 const AccountingDownloadReport: React.FC = () => {
   const [form, setForm] = useState<DownloadForm>(defaultForm);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [downloading, setDownloading] = useState(false);
 
   const handleDownload = () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!form.reportType) newErrors.reportType = "Please select a report type";
-    if (!form.fromDate) newErrors.fromDate = "From date is required";
-    if (!form.toDate) newErrors.toDate = "To date is required";
-    if (form.fromDate && form.toDate && form.fromDate > form.toDate) {
-      newErrors.toDate = "To date must be after from date";
+    if (!form.reportType) {
+      toast.error("Please select a report type");
+      return;
     }
-
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      toast.error("Please fill all required fields.");
+    if (!form.fromDate) {
+      toast.error("From date is required");
+      return;
+    }
+    if (!form.toDate) {
+      toast.error("To date is required");
+      return;
+    }
+    if (form.fromDate > form.toDate) {
+      toast.error("To date must be after from date");
       return;
     }
 
@@ -74,115 +112,100 @@ const AccountingDownloadReport: React.FC = () => {
 
   const handleReset = () => {
     setForm(defaultForm);
-    setErrors({});
   };
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-      <div className="mb-4">
-        <h1 className="text-brand-h2 font-semibold text-brand-text">Download Report</h1>
-        <p className="mt-1 text-brand-body-4 text-brand-text-light">
-          Select a report, date range, and format to generate a download.
-        </p>
-      </div>
+    <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden download-report-page">
+      <style>{`.download-report-page .MuiFormLabel-asterisk { color: #da7756 !important; }`}</style>
 
-      <div className="rounded-lg border border-brand-card-border bg-brand-card p-6 shadow-brand-card">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="report-type">
-              Report Type <span className="text-brand-danger">*</span>
-            </Label>
-            <Select
-              value={form.reportType}
-              onValueChange={(value) => setForm((prev) => ({ ...prev, reportType: value }))}
-            >
-              <SelectTrigger
-                id="report-type"
-                className={errors.reportType ? "border-brand-danger" : ""}
+      <SectionCard title="Download Report">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <FormControl fullWidth required sx={{ "& .MuiInputBase-root": fieldStyles }}>
+              <InputLabel shrink>Report Type</InputLabel>
+              <Select
+                value={form.reportType}
+                onChange={(e) => setForm((prev) => ({ ...prev, reportType: e.target.value as string }))}
+                label="Report Type"
+                notched
+                displayEmpty
               >
-                <SelectValue placeholder="Select report type" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
+                <MenuItem value="">Select</MenuItem>
                 {REPORT_TYPES.map((report) => (
-                  <SelectItem key={report.value} value={report.value}>
+                  <MenuItem key={report.value} value={report.value}>
                     {report.label}
-                  </SelectItem>
+                  </MenuItem>
                 ))}
-              </SelectContent>
-            </Select>
-            {errors.reportType && (
-              <p className="text-xs text-brand-danger">{errors.reportType}</p>
-            )}
+              </Select>
+            </FormControl>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="from-date">
-              From Date <span className="text-brand-danger">*</span>
-            </Label>
-            <Input
-              id="from-date"
-              type="date"
-              value={form.fromDate}
-              onChange={(e) => setForm((prev) => ({ ...prev, fromDate: e.target.value }))}
-              className={errors.fromDate ? "border-brand-danger" : ""}
-            />
-            {errors.fromDate && <p className="text-xs text-brand-danger">{errors.fromDate}</p>}
-          </div>
+          <TextField
+            label="From Date"
+            required
+            type="date"
+            value={form.fromDate}
+            onChange={(e) => setForm((prev) => ({ ...prev, fromDate: e.target.value }))}
+            variant="outlined"
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ notched: true }}
+            sx={{ "& .MuiInputBase-root": fieldStyles }}
+          />
 
-          <div className="space-y-1.5">
-            <Label htmlFor="to-date">
-              To Date <span className="text-brand-danger">*</span>
-            </Label>
-            <Input
-              id="to-date"
-              type="date"
-              value={form.toDate}
-              onChange={(e) => setForm((prev) => ({ ...prev, toDate: e.target.value }))}
-              className={errors.toDate ? "border-brand-danger" : ""}
-            />
-            {errors.toDate && <p className="text-xs text-brand-danger">{errors.toDate}</p>}
-          </div>
-
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Format</Label>
-            <div className="flex flex-wrap gap-2">
-              {FORMATS.map((f) => (
-                <button
-                  key={f.value}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, format: f.value }))}
-                  className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
-                    form.format === f.value
-                      ? "border-brand bg-brand-light text-brand"
-                      : "border-brand-card-border text-brand-text-light hover:bg-brand-selected"
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <TextField
+            label="To Date"
+            required
+            type="date"
+            value={form.toDate}
+            onChange={(e) => setForm((prev) => ({ ...prev, toDate: e.target.value }))}
+            variant="outlined"
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ notched: true }}
+            sx={{ "& .MuiInputBase-root": fieldStyles }}
+          />
         </div>
 
-        <div className="mt-6 flex gap-3">
-          <Button
-            onClick={handleDownload}
-            disabled={downloading}
-           variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium" 
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {downloading ? "Preparing..." : "Download"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            disabled={downloading}
-            className="border-brand-card-border text-brand-text hover:bg-brand-selected"
-          >
-            Reset
-          </Button>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">Format</label>
+          <div className="flex flex-wrap gap-2">
+            {FORMATS.map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, format: f.value }))}
+                className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
+                  form.format === f.value
+                    ? "border-[#da7756] bg-[#da7756]/10 text-[#da7756]"
+                    : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
+      </SectionCard>
+
+      <div className="mt-6 flex gap-3">
+        <Button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#A01020]"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          {downloading ? "Preparing..." : "Download"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleReset}
+          disabled={downloading}
+          className="min-w-[100px]"
+        >
+          Reset
+        </Button>
       </div>
     </div>
   );

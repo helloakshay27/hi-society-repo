@@ -620,6 +620,19 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
+  async getSocietyGateEnquiries(page: number = 1, perPage: number = 20, search: string = '') {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('per_page', perPage.toString());
+    if (search) {
+      queryParams.append('q[search_all_fields_cont]', search);
+    }
+
+    const url = `${ENDPOINTS.SOCIETY_GATE_ENQUIRIES}?${queryParams.toString()}`;
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+
   // Tickets
   async getTickets(page: number = 1, perPage: number = 20, filters?: TicketFilters): Promise<TicketListResponse> {
     const queryParams = new URLSearchParams();

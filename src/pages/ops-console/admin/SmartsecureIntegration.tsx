@@ -1,29 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Plus, Edit, Search, RefreshCw } from "lucide-react";
+import { Plus, Edit, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ticketManagementAPI } from "@/services/ticketManagementAPI";
-import { useDebounce } from "@/hooks/useDebounce";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
 
 interface SmartsecureGateRow {
   id: number;
@@ -35,20 +19,56 @@ interface SmartsecureGateRow {
   active: boolean;
 }
 
+interface EnquiryRow {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  societyName: string;
+  message: string;
+  gateDevice: string;
+}
+
 // A gate created via the QuikGate flow always has a building attached;
 // Smartsecure gates use a society block instead, so we filter on that.
 const isSmartsecureGate = (gate: any) =>
   !gate.building_id && !gate.building?.id;
 
+const gateColumns: ColumnConfig[] = [
+  { key: "societyName", label: "Society", sortable: true, hideable: true, draggable: true },
+  { key: "societyBlockName", label: "Society Block", sortable: true, hideable: true, draggable: true },
+  { key: "userName", label: "User", sortable: true, hideable: true, draggable: true },
+  { key: "gateName", label: "Gate Name", sortable: true, hideable: true, draggable: true },
+  { key: "gateDevice", label: "Gate Device", sortable: true, hideable: true, draggable: true },
+  { key: "status", label: "Status", sortable: false, hideable: true, draggable: true },
+];
+
+const enquiryColumns: ColumnConfig[] = [
+  { key: "name", label: "Name", sortable: true, hideable: true, draggable: true },
+  { key: "email", label: "Email", sortable: true, hideable: true, draggable: true },
+  { key: "phone", label: "Phone", sortable: true, hideable: true, draggable: true },
+  { key: "societyName", label: "Society Name", sortable: true, hideable: true, draggable: true },
+  { key: "message", label: "Message", sortable: false, hideable: true, draggable: true },
+  { key: "gateDevice", label: "Gate Device", sortable: true, hideable: true, draggable: true },
+];
+
 const SmartsecureIntegration: React.FC = () => {
   const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState("integration");
 
   const [gates, setGates] = useState<SmartsecureGateRow[]>([]);
   const [loadingGates, setLoadingGates] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [enquiries, setEnquiries] = useState<EnquiryRow[]>([]);
+  const [loadingEnquiries, setLoadingEnquiries] = useState(false);
+  const [enquiryPage, setEnquiryPage] = useState(1);
+  const [enquiryTotalPages, setEnquiryTotalPages] = useState(1);
+  const [enquiryTotalEntries, setEnquiryTotalEntries] = useState(0);
+  const [enquirySearchTerm, setEnquirySearchTerm] = useState("");
 
   const fetchGates = useCallback(async (page: number = 1, search: string = "") => {
     try {
@@ -81,14 +101,57 @@ const SmartsecureIntegration: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchGates(currentPage, debouncedSearchTerm);
+    fetchGates(currentPage, searchTerm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, debouncedSearchTerm]);
+  }, [currentPage, searchTerm]);
 
-  // Reset to page 1 whenever the search term changes.
-  useEffect(() => {
+  const handleGateSearch = (term: string) => {
+    setSearchTerm(term);
     setCurrentPage(1);
-  }, [debouncedSearchTerm]);
+  };
+
+  const fetchEnquiries = useCallback(async (page: number = 1, search: string = "") => {
+    try {
+      setLoadingEnquiries(true);
+      const response = await ticketManagementAPI.getSocietyGateEnquiries(page, 20, search);
+      const rawList = response?.enquiries || [];
+      setEnquiries(
+        rawList.map((enquiry: any, index: number) => ({
+          id: (page - 1) * 20 + index + 1,
+          name: enquiry.name || "N/A",
+          email: enquiry.email || "N/A",
+          phone: enquiry.phone || "N/A",
+          societyName: enquiry.society_name || "N/A",
+          message: enquiry.message || "-",
+          gateDevice: enquiry.gate_device || "-",
+        }))
+      );
+      if (response?.pagination) {
+        setEnquiryPage(response.pagination.current_page || page);
+        setEnquiryTotalPages(response.pagination.total_pages || 1);
+        setEnquiryTotalEntries(response.pagination.total_entries || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching society gate enquiries:", error);
+      toast.error("Failed to load enquiries. Please try again.");
+      setEnquiries([]);
+    } finally {
+      setLoadingEnquiries(false);
+    }
+  }, []);
+
+  // Fetch enquiries lazily, only once the Enquiries tab is opened.
+  useEffect(() => {
+    if (activeTab === "enquiries") {
+      fetchEnquiries(enquiryPage, enquirySearchTerm);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, enquiryPage, enquirySearchTerm]);
+
+  const handleEnquirySearch = (term: string) => {
+    setEnquirySearchTerm(term);
+    setEnquiryPage(1);
+  };
 
   const handleToggleActive = async (row: SmartsecureGateRow) => {
     const nextActive = !row.active;
@@ -109,6 +172,64 @@ const SmartsecureIntegration: React.FC = () => {
     }
   };
 
+  const renderGateCell = (item: SmartsecureGateRow, columnKey: string) => {
+    switch (columnKey) {
+      case "societyName":
+        return item.societyName;
+      case "societyBlockName":
+        return item.societyBlockName;
+      case "userName":
+        return item.userName;
+      case "gateName":
+        return item.gateName;
+      case "gateDevice":
+        return <span className="font-mono text-sm">{item.gateDevice}</span>;
+      case "status":
+        return (
+          <Switch
+            checked={item.active}
+            onCheckedChange={() => handleToggleActive(item)}
+            className="data-[state=checked]:bg-green-500"
+          />
+        );
+      default:
+        return "-";
+    }
+  };
+
+  const renderGateActions = (item: SmartsecureGateRow) => (
+    <button
+      onClick={() => navigate(`/ops-console/admin/smartsecure-integration/edit/${item.id}`)}
+      className="p-1 hover:bg-gray-100 rounded"
+      title="Edit"
+    >
+      <Edit className="w-4 h-4 text-gray-600 hover:text-[#C72030]" />
+    </button>
+  );
+
+  const renderEnquiryCell = (item: EnquiryRow, columnKey: string) => {
+    switch (columnKey) {
+      case "name":
+        return item.name;
+      case "email":
+        return item.email;
+      case "phone":
+        return item.phone;
+      case "societyName":
+        return item.societyName;
+      case "message":
+        return (
+          <span className="block max-w-xs truncate" title={item.message}>
+            {item.message}
+          </span>
+        );
+      case "gateDevice":
+        return <span className="font-mono text-sm">{item.gateDevice}</span>;
+      default:
+        return "-";
+    }
+  };
+
   return (
     <div className="p-6 min-h-screen space-y-6">
       <header className="flex items-center justify-between">
@@ -120,131 +241,105 @@ const SmartsecureIntegration: React.FC = () => {
         </div>
       </header>
 
-      {/* Action Bar */}
-      <div className="flex items-center justify-between">
-        <Button
-          onClick={() => navigate("/ops-console/admin/smartsecure-integration/add")}
-          className="bg-[#C72030] hover:bg-[#A01928] text-white px-4 py-2"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add
-        </Button>
-
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => fetchGates(currentPage, debouncedSearchTerm)}
-            disabled={loadingGates}
-            variant="outline"
-            size="sm"
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="bg-white border border-gray-200">
+          <TabsTrigger
+            value="integration"
+            className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] font-semibold"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loadingGates ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-72"
-            />
-          </div>
-        </div>
-      </div>
+            Smartsecure Integration
+          </TabsTrigger>
+          <TabsTrigger
+            value="enquiries"
+            className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] font-semibold"
+          >
+            Enquiries
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-[#f6f4ee]">
-              <TableHead className="w-20">Actions</TableHead>
-              <TableHead className="min-w-[220px]">Society</TableHead>
-              <TableHead className="w-40">Society Block</TableHead>
-              <TableHead className="w-40">User</TableHead>
-              <TableHead className="w-32">Gate Name</TableHead>
-              <TableHead className="w-40">Gate Device</TableHead>
-              <TableHead className="w-24 text-center">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loadingGates ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <div className="flex items-center justify-center">
-                    <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-                    Loading gates...
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : gates.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                  No smartsecure gates found
-                </TableCell>
-              </TableRow>
-            ) : (
-              gates.map((item) => (
-                <TableRow key={item.id} className="hover:bg-gray-50">
-                  <TableCell>
-                    <button
-                      onClick={() =>
-                        navigate(`/ops-console/admin/smartsecure-integration/edit/${item.id}`)
-                      }
-                      className="p-1 hover:bg-gray-100 rounded"
-                      title="Edit"
-                    >
-                      <Edit className="w-4 h-4 text-gray-600 hover:text-[#C72030]" />
-                    </button>
-                  </TableCell>
-                  <TableCell>{item.societyName}</TableCell>
-                  <TableCell>{item.societyBlockName}</TableCell>
-                  <TableCell>{item.userName}</TableCell>
-                  <TableCell>{item.gateName}</TableCell>
-                  <TableCell className="font-mono text-sm">{item.gateDevice}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={item.active}
-                      onCheckedChange={() => handleToggleActive(item)}
-                      className="data-[state=checked]:bg-green-500"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+        <TabsContent value="integration" className="mt-4">
+          <EnhancedTable
+            data={gates}
+            columns={gateColumns}
+            renderCell={renderGateCell}
+            renderActions={renderGateActions}
+            getItemId={(item) => item.id.toString()}
+            leftActions={
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => navigate("/ops-console/admin/smartsecure-integration/add")}
+                  className="bg-[#C72030] hover:bg-[#A01928] text-white px-4 py-2"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add
+                </Button>
+                {/* <Button
+                  onClick={() => fetchGates(currentPage, searchTerm)}
+                  disabled={loadingGates}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${loadingGates ? "animate-spin" : ""}`} />
+                  Refresh
+                </Button> */}
+              </div>
+            }
+            loading={loadingGates}
+            loadingMessage="Loading gates..."
+            emptyMessage="No smartsecure gates found"
+            enableGlobalSearch
+            onGlobalSearch={handleGateSearch}
+            disableClientSearch
+            searchPlaceholder="Search"
+            pagination
+            manualPagination
+            pageSize={20}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            storageKey="smartsecure-gates-table"
+          />
+        </TabsContent>
 
-      {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page}>
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            {totalPages > 10 && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+        <TabsContent value="enquiries" className="mt-4">
+          <EnhancedTable
+            data={enquiries}
+            columns={enquiryColumns}
+            renderCell={renderEnquiryCell}
+            getItemId={(item) => item.id.toString()}
+            leftActions={
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-gray-600 whitespace-nowrap">
+                  {enquiryTotalEntries.toLocaleString()} enquir{enquiryTotalEntries === 1 ? "y" : "ies"} total
+                </p>
+                {/* <Button
+                  onClick={() => fetchEnquiries(enquiryPage, enquirySearchTerm)}
+                  disabled={loadingEnquiries}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${loadingEnquiries ? "animate-spin" : ""}`} />
+                  Refresh
+                </Button> */}
+              </div>
+            }
+            loading={loadingEnquiries}
+            loadingMessage="Loading enquiries..."
+            emptyMessage="No enquiries found"
+            enableGlobalSearch
+            onGlobalSearch={handleEnquirySearch}
+            disableClientSearch
+            searchPlaceholder="Search enquiries"
+            pagination
+            manualPagination
+            pageSize={20}
+            currentPage={enquiryPage}
+            totalPages={enquiryTotalPages}
+            onPageChange={setEnquiryPage}
+            storageKey="smartsecure-enquiries-table"
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
