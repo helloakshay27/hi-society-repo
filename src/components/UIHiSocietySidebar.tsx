@@ -414,6 +414,31 @@ export const UIHiSocietySidebar: React.FC = () => {
               path: "/loyalty/wallet-management",
             },
             {
+              id: "encashment",
+              label: "Encashment",
+              icon: DollarSign,
+              subItems: [
+                {
+                  id: "encashment-config",
+                  label: "Encashment Config",
+                  icon: SettingsIcon,
+                  path: "/loyalty/encashment/config",
+                },
+                {
+                  id: "encashment-requests",
+                  label: "Encashment Requests",
+                  icon: FileText,
+                  path: "/loyalty/encashment/requests",
+                },
+                {
+                  id: "encashment-kyc-requests",
+                  label: "KYC Requests",
+                  icon: UserCheck,
+                  path: "/loyalty/encashment/kyc-requests",
+                },
+              ],
+            },
+            {
               id: "loyalty-customers",
               label: "Customers",
               icon: Users,
@@ -1264,10 +1289,14 @@ export const UIHiSocietySidebar: React.FC = () => {
             ))}
         </button>
 
-        {/* Render sub-items */}
+        {/* Render sub-items (recursive, so a sub-item can itself have its own subItems) */}
         {hasSubItems && isExpanded && (
           <div className="ml-4 mt-1 space-y-1">
             {item.subItems!.map((subItem) => {
+              if (subItem.subItems && subItem.subItems.length > 0) {
+                return renderMenuItem(subItem, level + 1, false);
+              }
+
               const subActive = isActive(subItem.path);
               const SubIcon = subItem.icon;
 
