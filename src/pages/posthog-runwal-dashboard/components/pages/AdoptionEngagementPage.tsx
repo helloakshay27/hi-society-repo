@@ -549,7 +549,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       </div>
 
       {/* FM Matrix CRM & Operations Card Section */}
-      <div style={{ marginTop: '24px', marginBottom: '8px' }}>
+      {/* <div style={{ marginTop: '24px', marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>
             FM Matrix Operational Analytics
@@ -707,7 +707,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             </Card>
           </div>
         )}
-      </div>
+      </div> */}
     </section>
   );
 };

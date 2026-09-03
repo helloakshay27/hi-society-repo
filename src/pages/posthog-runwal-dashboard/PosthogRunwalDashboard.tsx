@@ -56,7 +56,7 @@ function PosthogRunwalDashboardContent() {
   // ?app_id=35 (read once — the query param isn't expected to change without
   // a page reload).
   const appId = useMemo(() => getAppIdFromUrl(), []);
-  const showResidentSegment = appId === '35';
+  const showResidentSegment = appId === '12';
   const [residentSegment, setResidentSegment] = useState<'all' | 'pre' | 'post'>('all');
 
   const initialRange = useMemo(() => dateRangeFor(30), []);

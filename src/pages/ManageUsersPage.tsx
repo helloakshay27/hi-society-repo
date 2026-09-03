@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit } from "lucide-react";
+import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit, Mail } from "lucide-react";
 import { FormControl, MenuItem, Select as MuiSelect, InputLabel, TextField, ListItemText, InputAdornment } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -9,6 +9,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { StatsCard } from "@/components/StatsCard";
 import { CommonImportModal } from "@/components/CommonImportModal";
+import { SendEmailModal } from "@/components/SendEmailModal";
 import {
   Dialog,
   DialogContent,
@@ -93,6 +94,7 @@ const ManageUsersPage = () => {
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showActionPanel, setShowActionPanel] = useState(false);
+  const [showSendEmail, setShowSendEmail] = useState(false);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
@@ -686,6 +688,26 @@ const ManageUsersPage = () => {
     }
   };
 
+  const clean = (v: string | undefined) => (v && v !== "-" ? v : undefined);
+  const getSelectedRecipients = () =>
+    users
+      .filter((u) => selectedUsers.includes(u.id))
+      .map((u) => ({
+        email: clean(u.email) || "",
+        name: clean(u.name),
+        mobile: clean(u.mobileNumber),
+        flat: clean(u.flat),
+        tower: clean(u.tower),
+      }));
+
+  const handleSendEmailAction = () => {
+    if (selectedUsers.length === 0) {
+      toast.error("Select at least one user to send an email.");
+      return;
+    }
+    setShowSendEmail(true);
+  };
+
   const handleSelectUser = (userId: string, checked: boolean) => {
     if (checked) {
       setSelectedUsers([...selectedUsers, userId]);
@@ -924,11 +946,17 @@ const ManageUsersPage = () => {
             onAdd={handleAddUser}
             onImport={handleImport}
             onClearSelection={() => setShowActionPanel(false)}
-          // actions={[
-          //   { label: 'Filters', icon: Filter, onClick: handleFilters }
-          // ]}
+            actions={[
+              { label: "Send Email", icon: Mail, onClick: handleSendEmailAction },
+            ]}
           />
         )}
+
+        <SendEmailModal
+          open={showSendEmail}
+          onOpenChange={setShowSendEmail}
+          recipients={getSelectedRecipients()}
+        />
 
         <Dialog modal={false} open={showFiltersDialog} onOpenChange={setShowFiltersDialog}>
           <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
@@ -1215,6 +1243,7 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
             columns={columns}
             data={users}
             renderCell={renderCell}
+            selectable={true}
             selectedItems={selectedUsers}
             onSelectAll={handleSelectAll}
             onSelectItem={handleSelectUser}
