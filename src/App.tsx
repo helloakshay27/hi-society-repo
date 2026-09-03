@@ -75,6 +75,8 @@ const DisposeAssetPage = lazy(() => import("./pages/DisposeAssetPage").then(m =>
 // Import Incident pages
 import { IncidentListDashboard } from "./pages/IncidentListDashboard";
 import { AddIncidentPage } from "./pages/AddIncidentPage";
+const NewAddIncidentPage = lazy(() => import("./pages/NewAddIncidentPage").then(m => ({ default: m.NewAddIncidentPage })));
+
 import { IncidentDetailsPage } from "./pages/IncidentDetailsPage";
 import { EditIncidentDetailsPage } from "./pages/EditIncidentDetailsPage";
 const PermissionsTestPage = lazy(() => import("./pages/PermissionsTestPage"));
@@ -739,7 +741,7 @@ const OSRSetupPage = lazy(() => import("./pages/setup/OSRSetupPage").then(m => (
 const PermitSetupDashboard = lazy(() => import("./pages/PermitSetupDashboard").then(m => ({ default: m.PermitSetupDashboard })));
 const IncidentSetupDashboard = lazy(() => import("./pages/IncidentSetupDashboard").then(m => ({ default: m.IncidentSetupDashboard })));
 const IncidentNewDetails = lazy(() => import("./pages/IncidentNewDetails").then(m => ({ default: m.IncidentNewDetails })));
-
+const NewIncidentDetailsPage = lazy(() => import("./pages/NewIncidentDetailsPage").then(m => ({ default: m.NewIncidentDetailsPage })));
 // Import Holiday Calendar page
 const SettingsHolidayCalendarPage = lazy(() => import("./pages/settings/HolidayCalendarPage").then(m => ({ default: m.HolidayCalendarPage })));
 const HolidayCalendarPage = lazy(() => import("./pages/HolidayCalendarPage").then(m => ({ default: m.HolidayCalendarPage })));
@@ -1159,6 +1161,9 @@ const AddVisitorPage = lazy(() => import("./pages/AddVisitorPage"));
 const SettingsGenericPage = lazy(() => import("./pages/SettingsGenericPage"));
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { NewIncidentListDashboard } from "./pages/NewIncidentListDashboard";
+import EditIncidentPage from "./pages/EditIncidentPage";
+import PosthogMyPiramalDashboard from "./pages/posthog-my-piramal-dashboard";
 const LockFees = lazy(() => import("./pages/LockFees"));
 const LockFeesAdd = lazy(() => import("./pages/LockFeesAdd"));
 const LockFeesDetail = lazy(() => import("./pages/LockFeesDetail"));
@@ -1576,6 +1581,10 @@ function App() {
                       <Route
                         path="/posthog-runwal-dashboard"
                         element={<PosthogRunwalDashboard />}
+                      />
+                         <Route
+                        path="/posthog-my-piramal-dashboard"
+                        element={<PosthogMyPiramalDashboard />}
                       />
                       <Route
                         path="/smartsecure-dashboard"
@@ -2438,8 +2447,21 @@ function App() {
                           element={<AddIncidentPage />}
                         />
                         <Route
+                          path="/safety/incident/new-add"
+                          element={<NewAddIncidentPage />}
+                        />
+                        <Route
                           path="/safety/incident/:id"
                           element={<IncidentDetailsPage />}
+                        />
+                        <Route
+                          path="/safety/incident/list"
+                          element={<NewIncidentListDashboard />}
+                        />
+
+                        <Route
+                          path="/safety/incident/view-new/:id"
+                          element={<NewIncidentDetailsPage />}
                         />
                         <Route
                           path="/safety/incident/new-details/:id"
@@ -4056,6 +4078,10 @@ function App() {
                         <Route
                           path="/safety/incident/new-details/:id"
                           element={<IncidentNewDetails />}
+                        />
+                        <Route
+                          path="/safety/incident/safety/edit/:id"
+                          element={<EditIncidentPage />}
                         />
                         <Route
                           path="/safety/incident/edit/:id"

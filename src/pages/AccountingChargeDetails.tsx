@@ -58,7 +58,7 @@ const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value
 const AccountingChargeDetails: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+  const lockAccountId = localStorage.getItem("lock_account_id");
   const [detail, setDetail] = useState<ChargeSetupDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +70,7 @@ const AccountingChargeDetails: React.FC = () => {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
         const response = await axios.get(`${baseUrl}/account/charge_setups/${id}.json`, {
-          params: { lock_account_id: lockAccountId },
+          params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
           headers: {
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),

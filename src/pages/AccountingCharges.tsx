@@ -46,7 +46,7 @@ const AccountingCharges: React.FC = () => {
   const navigate = useNavigate();
   const [charges, setCharges] = useState<ChargeSetup[]>([]);
   const [loading, setLoading] = useState(false);
-  const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+  const lockAccountId = localStorage.getItem("lock_account_id");
 
   const fetchCharges = useCallback(async () => {
     setLoading(true);
@@ -54,7 +54,7 @@ const AccountingCharges: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const response = await axios.get(`${baseUrl}/account/charge_setups.json`, {
-        params: { lock_account_id: lockAccountId },
+        params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });
       setCharges(Array.isArray(response.data?.charge_setups) ? response.data.charge_setups : []);
@@ -120,7 +120,11 @@ const AccountingCharges: React.FC = () => {
         <ArrowLeft className="h-4 w-4" />
         Back to Accounting
       </button> */}
-
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          Charges
+        </h1>
+      </div>
       <EnhancedTable
         data={rows}
         columns={columns}

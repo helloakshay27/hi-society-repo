@@ -326,6 +326,8 @@ export const API_CONFIG = {
     ICONS: "/pms/icons.json",
     // Society gates endpoint
     SOCIETY_GATES: "/admin/society_gates.json",
+    // Society gate enquiries endpoint
+    SOCIETY_GATE_ENQUIRIES: "/admin/society_gates/enquiries.json",
     // Society gate by ID endpoints
     SOCIETY_GATE_BY_ID: "/admin/society_gates", // Base path, will append /{id}.json
     UPDATE_SOCIETY_GATE: "/admin/society_gates", // Base path, will append /{id}.json

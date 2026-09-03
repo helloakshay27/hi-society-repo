@@ -10,6 +10,7 @@ import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import { TicketsFilterDialog } from '@/components/TicketsFilterDialog';
 import { TicketAnalyticsFilterDialog } from '@/components/TicketAnalyticsFilterDialog';
 import { EditStatusDialog } from '@/components/EditStatusDialog';
+import { HelpdeskExportDialog } from '@/components/HelpdeskExportDialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TicketSelector } from '@/components/TicketSelector';
@@ -243,7 +244,7 @@ export const TicketDashboard = () => {
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
   const [selectedTicketForEdit, setSelectedTicketForEdit] = useState<TicketResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const perPage = 20;
 
   // Drag and drop sensors
@@ -865,42 +866,8 @@ export const TicketDashboard = () => {
       sonnerToast.error("Failed to mark as golden ticket");
     }
   };
-  const handleExport = async () => {
-    console.log('TicketDashboard - Export action for tickets:', selectedTickets);
-
-    if (isExporting) {
-      return; // Prevent multiple simultaneous exports
-    }
-
-    setIsExporting(true);
-
-    // Show loading toast
-    const loadingToastId = sonnerToast.loading("Preparing export file...", {
-      duration: Infinity, // Keep it visible until we dismiss it
-    });
-
-    try {
-      const blob = await ticketManagementAPI.exportTicketsExcel(filters);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `tickets_${new Date().toISOString().split('T')[0]}.xlsx`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-
-      // Dismiss loading toast and show success
-      sonnerToast.dismiss(loadingToastId);
-      sonnerToast.success("Tickets exported successfully!");
-
-    } catch (error) {
-      console.error('Export failed:', error);
-
-      // Dismiss loading toast and show error
-      sonnerToast.dismiss(loadingToastId);
-      sonnerToast.error("Failed to export tickets. Please try again.");
-    } finally {
-      setIsExporting(false);
-    }
+  const handleExport = () => {
+    setIsExportDialogOpen(true);
   };
   const handleFilterApply = (newFilters: TicketFilters) => {
     setFilters(newFilters);
@@ -1898,6 +1865,12 @@ export const TicketDashboard = () => {
           onApplyFilters={handleAnalyticsFilterApply}
           currentStartDate={analyticsDateRange.startDate}
           currentEndDate={analyticsDateRange.endDate}
+        />
+
+        {/* Export Dialog */}
+        <HelpdeskExportDialog
+          isOpen={isExportDialogOpen}
+          onClose={() => setIsExportDialogOpen(false)}
         />
 
         {/* Ticket Selection Panel */}

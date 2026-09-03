@@ -86,7 +86,7 @@ const emptyForm = {
 
 const AccountingChargeCreation: React.FC = () => {
   const navigate = useNavigate();
-  const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+  const lockAccountId = localStorage.getItem("lock_account_id");
   const [categories, setCategories] = useState<ChargeCategoryOption[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
@@ -97,7 +97,7 @@ const AccountingChargeCreation: React.FC = () => {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
         const res = await axios.get(`${baseUrl}/account/charge_setups/charge_type_options.json`, {
-          params: { lock_account_id: lockAccountId },
+          params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
           headers: {
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -146,7 +146,7 @@ const AccountingChargeCreation: React.FC = () => {
         },
       };
       await axios.post(`${baseUrl}/account/charge_setups.json`, payload, {
-        params: { lock_account_id: lockAccountId },
+        params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",

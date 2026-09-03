@@ -1,156 +1,132 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { API_CONFIG } from "@/config/apiConfig";
+import { Eye, FileClock, Plus, Trash2 } from "lucide-react";
 
-interface LedgerOption {
+interface FlatChargeMapping {
   id: number;
-  name: string;
-  formatted_name?: string;
-  account_code?: string;
-  bill_cycle_id?: number | null;
-}
-
-interface BillCycleOption {
-  id: number;
-  name: string;
-}
-
-interface UnitRow {
-  id: number;
-  unitName: string;
-  accountCode: string;
-  billCycleId: string;
+  bill_cycle_name?: string;
+  tower_name?: string;
+  possession_status?: string;
+  flat_names?: string[];
+  created_at?: string;
 }
 
 const columns: ColumnConfig[] = [
-  { key: "unitName", label: "Unit / Ledger", sortable: true },
-  { key: "accountCode", label: "Account Code", sortable: true },
-  { key: "billCycle", label: "Bill Cycle", sortable: false },
+  { key: "actions", label: "Actions", sortable: false },
+  { key: "id", label: "ID", sortable: true },
+  { key: "bill_cycle_name", label: "Bill Cycle", sortable: true },
+  { key: "tower_name", label: "Tower", sortable: true },
+  { key: "possession_status", label: "Possession Status", sortable: true },
+  { key: "flat_names", label: "Flats", sortable: false },
+  { key: "created_at", label: "Created On", sortable: true },
 ];
 
+const formatDateTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${date.toLocaleDateString("en-GB")} ${date.toLocaleTimeString()}`;
+};
+
 const AccountingUnitsBillCycleMapping: React.FC = () => {
-  const [ledgers, setLedgers] = useState<LedgerOption[]>([]);
-  const [billCycles, setBillCycles] = useState<BillCycleOption[]>([]);
+  const navigate = useNavigate();
+  const [mappings, setMappings] = useState<FlatChargeMapping[]>([]);
   const [loading, setLoading] = useState(false);
-  const [savingId, setSavingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const lockAccountId = localStorage.getItem("lock_account_id") || "3";
-
-  const fetchData = useCallback(async () => {
+  const fetchMappings = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-
-      const [ledgerRes, cycleRes] = await Promise.all([
-        axios.get(`${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers.json`, {
-          headers,
-        }),
-        axios.get(`${baseUrl}/account/society_bill_cycles.json`, { headers }),
-      ]);
-
-      setLedgers(Array.isArray(ledgerRes.data) ? ledgerRes.data : []);
-      setBillCycles(cycleRes.data?.society_bill_cycles || []);
+      const response = await axios.get(`${baseUrl}/account/soc_flat_charges.json`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const data = response.data;
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.soc_flat_charges)
+          ? data.soc_flat_charges
+          : [];
+      setMappings(list);
     } catch (error) {
-      console.error("Error fetching units/bill cycles:", error);
-      toast.error("Failed to fetch units and bill cycles");
-      setLedgers([]);
-      setBillCycles([]);
+      console.error("Error fetching bill cycle mappings:", error);
+      toast.error("Failed to fetch bill cycle mappings");
+      setMappings([]);
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId]);
+  }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchMappings();
+  }, [fetchMappings]);
 
-  const rows: UnitRow[] = useMemo(
-    () =>
-      ledgers.map((ledger) => ({
-        id: ledger.id,
-        unitName: ledger.formatted_name || ledger.name,
-        accountCode: ledger.account_code || "",
-        billCycleId: ledger.bill_cycle_id ? String(ledger.bill_cycle_id) : "",
-      })),
-    [ledgers]
-  );
+  const rows = useMemo(() => mappings, [mappings]);
 
-  const handleAssign = async (unitId: number, billCycleId: string) => {
-    setSavingId(unitId);
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this bill cycle mapping?")) return;
+    setDeletingId(id);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      await axios.patch(
-        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/${unitId}.json`,
-        { lock_account_ledger: { bill_cycle_id: billCycleId || null } },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        }
-      );
-      toast.success("Bill cycle mapping updated");
-      setLedgers((prev) =>
-        prev.map((ledger) =>
-          ledger.id === unitId
-            ? { ...ledger, bill_cycle_id: billCycleId ? Number(billCycleId) : null }
-            : ledger
-        )
-      );
+      await axios.delete(`${baseUrl}/account/soc_flat_charges/${id}.json`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      toast.success("Mapping deleted successfully");
+      setMappings((prev) => prev.filter((m) => m.id !== id));
     } catch (error) {
-      console.error("Error updating bill cycle mapping:", error);
-      toast.error("Failed to update mapping");
+      console.error("Error deleting mapping:", error);
+      toast.error("Failed to delete mapping");
     } finally {
-      setSavingId(null);
+      setDeletingId(null);
     }
   };
 
-  const renderCell = (item: UnitRow, columnKey: string) => {
+  const renderCell = (item: FlatChargeMapping, columnKey: string) => {
     switch (columnKey) {
-      case "unitName":
-        return item.unitName;
-      case "accountCode":
-        return item.accountCode;
-      case "billCycle":
+      case "actions":
         return (
-          <Select
-            value={item.billCycleId || "none"}
-            onValueChange={(value) => handleAssign(item.id, value === "none" ? "" : value)}
-            disabled={savingId === item.id}
-          >
-            <SelectTrigger className="h-9 w-56">
-              <SelectValue placeholder="Select Bill Cycle" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Unassigned</SelectItem>
-              {billCycles.map((cycle) => (
-                <SelectItem key={cycle.id} value={String(cycle.id)}>
-                  {cycle.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`/accounting/units-bill-cycle-mapping/${item.id}`, { state: { mapping: item } })}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              disabled={deletingId === item.id}
+              onClick={() => handleDelete(item.id)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         );
+      case "flat_names":
+        return item.flat_names && item.flat_names.length > 0 ? item.flat_names.join(", ") : "";
+      case "created_at":
+        return formatDateTime(item.created_at);
       default:
-        return "";
+        return (item as any)[columnKey] ?? "";
     }
   };
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+    <div className="bg-white p-2 sm:p-4 lg:p-6 max-w-full min-h-screen overflow-x-hidden">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">Units &amp; Bill Cycle Mapping</h1>
+      </div>
       <EnhancedTable
         data={rows}
         columns={columns}
@@ -159,9 +135,27 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
         pagination
         pageSize={20}
         storageKey="units-bill-cycle-mapping-table"
+        leftActions={
+          <Button
+            variant="ghost"
+            className="btn-primary h-9 px-4 text-sm font-medium"
+            onClick={() => navigate("/accounting/units-bill-cycle-mapping/add")}
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add
+          </Button>
+        }
+        rightActions={
+          <Button
+            variant="outline"
+            className="h-9 px-4 text-sm font-medium"
+            onClick={() => navigate("/accounting/units-bill-cycle-mapping/log")}
+          >
+            <FileClock className="w-4 h-4 mr-2" /> Audit Log
+          </Button>
+        }
         loading={loading}
-        loadingMessage="Loading units..."
-        emptyMessage="No units found"
+        loadingMessage="Loading mappings..."
+        emptyMessage="No mappings found"
       />
     </div>
   );
