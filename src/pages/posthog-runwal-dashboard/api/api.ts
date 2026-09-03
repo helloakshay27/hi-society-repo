@@ -71,9 +71,7 @@ export function getDynamicTenantUrl(): string {
       if (cleaned.includes('-api.')) {
         cleaned = cleaned.replace('-api.', '.');
       }
-      if (cleaned.toLowerCase().includes('runwal')) {
-        return cleaned;
-      }
+      return cleaned;
     }
   } catch {}
 

@@ -89,10 +89,7 @@ function PosthogRunwalDashboardContent() {
         if (cleaned.includes('-api.')) {
           cleaned = cleaned.replace('-api.', '.');
         }
-        // If the backend URL belongs to Runwal, use it dynamically
-        if (cleaned.toLowerCase().includes('runwal')) {
-          return cleaned;
-        }
+        return cleaned;
       }
     } catch {}
 
