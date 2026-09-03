@@ -1127,7 +1127,9 @@ export const IncidentDashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() =>
-                  navigate(`/safety/incident/new-details/${item.id}`)
+                  // navigate(`/safety/incident/new-details/${item.id}`)
+                  navigate(`/safety/incident/view-new/${item.id}`)
+
                 }
               >
                 <Eye className="w-4 h-4" />

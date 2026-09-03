@@ -114,6 +114,7 @@ export interface Incident {
   logs: any[];
   incident_witnesses?: IncidentWitness[];
   incident_investigations?: IncidentInvestigation[];
+  investigator_details?: any[];
   probability?: number;
   inc_sub_sub_sub_category_id?: number;
   inc_sec_sub_sub_sub_category_id?: number;

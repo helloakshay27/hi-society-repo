@@ -193,6 +193,39 @@ export const IncidentNewDetails = () => {
     const [statusPreventiveAction, setStatusPreventiveAction] = useState('');
 
     // Fetch functions
+    // const fetchInternalUsers = useCallback(async () => {
+    //     try {
+    //         let baseUrl = localStorage.getItem('baseUrl') || '';
+    //         const token = localStorage.getItem('token') || '';
+
+    //         if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    //             baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
+    //         }
+
+    //         const response = await fetch(`${baseUrl}/users/get_escalate_to_users.json`, {
+    //             headers: {
+    //                 'Authorization': `Bearer ${token}`
+    //             }
+    //         });
+
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             if (Array.isArray(data)) {
+    //                 setInternalUsers(data);
+    //             } else if (data && typeof data === 'object' && data.users) {
+    //                 setInternalUsers(Array.isArray(data.users) ? data.users : []);
+    //             } else {
+    //                 setInternalUsers([]);
+    //             }
+    //         } else {
+    //             setInternalUsers([]);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching internal users:', error);
+    //         setInternalUsers([]);
+    //     }
+    // }, []);
+
     const fetchInternalUsers = useCallback(async () => {
         try {
             let baseUrl = localStorage.getItem('baseUrl') || '';
@@ -202,21 +235,22 @@ export const IncidentNewDetails = () => {
                 baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
             }
 
-            const response = await fetch(`${baseUrl}/users/get_escalate_to_users.json`, {
+            const response = await fetch(`${baseUrl}/incidence_tags/get_users.json`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
             if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    setInternalUsers(data);
-                } else if (data && typeof data === 'object' && data.users) {
-                    setInternalUsers(Array.isArray(data.users) ? data.users : []);
-                } else {
-                    setInternalUsers([]);
-                }
+                const payload = await response.json();
+                const users = Array.isArray(payload)
+                    ? payload
+                    : Array.isArray(payload?.data)
+                        ? payload.data
+                        : Array.isArray(payload?.users)
+                            ? payload.users
+                            : [];
+                setInternalUsers(users);
             } else {
                 setInternalUsers([]);
             }
@@ -225,7 +259,6 @@ export const IncidentNewDetails = () => {
             setInternalUsers([]);
         }
     }, []);
-
     const fetchPropertyDamageCategories = useCallback(async () => {
         try {
             let baseUrl = localStorage.getItem('baseUrl') || '';
