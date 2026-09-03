@@ -22,6 +22,10 @@ interface FilterBarProps {
   isFetching?: boolean;
   isError?: boolean;
   generatedAt?: string;
+  // Resident/sales-stage segment — only shown when the URL carries ?app_id=35.
+  showResidentSegment?: boolean;
+  residentSegment?: 'all' | 'pre' | 'post';
+  onSelectResidentSegment?: (segment: 'all' | 'pre' | 'post') => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -43,6 +47,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   isFetching,
   isError,
   generatedAt,
+  showResidentSegment = false,
+  residentSegment = 'all',
+  onSelectResidentSegment,
 }) => {
   const [isDateOpen, setIsDateOpen] = useState(false);
   const [customFrom, setCustomFrom] = useState(rangeFrom);
@@ -161,25 +168,31 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
 
-      <label className="ctrl">
-        <span className="ic">🏗</span>
-        <select
-          id="projectSel"
-          value={selectedSiteId}
-          onChange={(e) => onSelectSite(e.target.value)}
-          disabled={isSitesLoading}
-        >
-          <option value="all">
-            {isSitesLoading ? 'Loading sites...' : 'All Sites / Projects'}
-          </option>
-          {sites.map((s) => (
-            <option key={String(s.id)} value={String(s.id)}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <span className="chev">▾</span>
-      </label>
+      {showResidentSegment && (
+        <div className="devtoggle" id="residentToggle" title="Resident Segment">
+          <button
+            type="button"
+            className={residentSegment === 'all' ? 'on' : ''}
+            onClick={() => onSelectResidentSegment?.('all')}
+          >
+            All residents
+          </button>
+          <button
+            type="button"
+            className={residentSegment === 'pre' ? 'on' : ''}
+            onClick={() => onSelectResidentSegment?.('pre')}
+          >
+            Pre Sales
+          </button>
+          <button
+            type="button"
+            className={residentSegment === 'post' ? 'on' : ''}
+            onClick={() => onSelectResidentSegment?.('post')}
+          >
+            Post Sales
+          </button>
+        </div>
+      )}
 
       <div className="devtoggle" id="devToggle" title="Device Platform">
         <button
@@ -195,18 +208,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           data-dev="ios"
           className={dev === 'ios' ? 'on' : ''}
           onClick={() => onSelectDev('ios')}
-          title="Desktop / Web"
+          title="iOS"
         >
-          Desktop
+          iOS
         </button>
         <button
           type="button"
           data-dev="android"
           className={dev === 'android' ? 'on' : ''}
           onClick={() => onSelectDev('android')}
-          title="Mobile"
+          title="Android"
         >
-          Mobile
+          Android
         </button>
       </div>
 

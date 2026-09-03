@@ -10,6 +10,7 @@ import { TrafficSessionPage } from './components/pages/TrafficSessionPage';
 import { AdoptionEngagementPage } from './components/pages/AdoptionEngagementPage';
 import { WorkflowUsagePage } from './components/pages/WorkflowUsagePage';
 import { useDashboardSites, useTrafficSession } from './hooks/useDashboardAnalytics';
+import { getAppIdFromUrl } from './api/api';
 import { DashboardFilters } from './api/types';
 import { getToken, getBaseUrlDomain } from '../../utils/auth';
 import './styles/dashboard.css';
@@ -51,6 +52,13 @@ function PosthogRunwalDashboardContent() {
   const { sites, sitesSettled, allSiteIds, isLoading: isSitesLoading } = useDashboardSites();
   const [selectedSiteId, setSelectedSiteId] = useState<string>('all');
 
+  // The "All residents / Pre Sales / Post Sales" tab is only shown for
+  // ?app_id=35 (read once — the query param isn't expected to change without
+  // a page reload).
+  const appId = useMemo(() => getAppIdFromUrl(), []);
+  const showResidentSegment = appId === '35';
+  const [residentSegment, setResidentSegment] = useState<'all' | 'pre' | 'post'>('all');
+
   const initialRange = useMemo(() => dateRangeFor(30), []);
 
   const [activePage, setActivePage] = useState<PageId>('pgTraffic');
@@ -89,10 +97,7 @@ function PosthogRunwalDashboardContent() {
         if (cleaned.includes('-api.')) {
           cleaned = cleaned.replace('-api.', '.');
         }
-        // If the backend URL belongs to Runwal, use it dynamically
-        if (cleaned.toLowerCase().includes('runwal')) {
-          return cleaned;
-        }
+        return cleaned;
       }
     } catch {}
 
@@ -114,25 +119,30 @@ function PosthogRunwalDashboardContent() {
   const filters: DashboardFilters = useMemo(() => {
     // When "all" is selected, siteIds must be [] so PostHog returns tenant-wide aggregate live data
     const siteIds = selectedSiteId && selectedSiteId !== 'all' ? [selectedSiteId] : [];
-    const devices: ('Desktop' | 'Mobile')[] =
-      devPlatform === 'ios'
-        ? ['Desktop']
-        : devPlatform === 'android'
-        ? ['Mobile']
-        : [];
+
+    // display_view only applies for the app_id=35 tenant; "all" maps to both
+    // segments at once ("0,1"), Pre Sales -> "0", Post Sales -> "1".
+    const displayView = showResidentSegment
+      ? residentSegment === 'pre'
+        ? '0'
+        : residentSegment === 'post'
+        ? '1'
+        : '0,1'
+      : undefined;
 
     return {
       siteIds,
       from: rangeFrom,
       to: rangeTo,
       token: getToken() || localStorage.getItem('token') || '',
-      devices,
+      devPlatform,
       licensedSeats: null,
       module: null,
       subModule: null,
       url: dynamicTenantUrl,
+      displayView,
     };
-  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl]);
+  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl, showResidentSegment, residentSegment]);
 
   // Traffic Session query for global live counter & badge
   const {
@@ -347,6 +357,9 @@ function PosthogRunwalDashboardContent() {
             isSitesLoading={isSitesLoading}
             dev={devPlatform}
             onSelectDev={setDevPlatform}
+            showResidentSegment={showResidentSegment}
+            residentSegment={residentSegment}
+            onSelectResidentSegment={setResidentSegment}
             prev={showPrev}
             onTogglePrev={() => setShowPrev((p) => !p)}
             recentlyOnlineCount={recentlyOnlineCount}

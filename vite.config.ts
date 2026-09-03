@@ -17,6 +17,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 5173,
+    proxy: {
+      '/runwal-api': {
+        target: 'https://runwal-cp-api.lockated.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/runwal-api/, ''),
+      }
+    }
   },
   optimizeDeps: {
     include: runtimeDeps,

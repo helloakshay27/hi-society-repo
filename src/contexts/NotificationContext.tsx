@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import axios from "axios";
+import { getBaseUrl } from "@/utils/auth";
 
 export interface Notification {
   id: number;
@@ -33,16 +34,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [notificationCount, setNotificationCount] = useState(0);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  const baseUrl = localStorage.getItem("baseUrl") || "";
   const token = localStorage.getItem("token") || "";
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
+    const baseUrl = getBaseUrl();
     if (!baseUrl || !token) return;
 
     try {
       const response = await axios.get(
-        `https://${baseUrl}/user_notifications.json`,
+        `${baseUrl}/user_notifications.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -57,7 +58,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
-  }, [baseUrl, token]);
+  }, [token]);
 
   // Mark a single notification as read
   const markAsRead = useCallback((notificationId: number) => {
@@ -71,11 +72,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
+    const baseUrl = getBaseUrl();
     if (!baseUrl || !token) return;
 
     try {
       await axios.get(
-        `https://${baseUrl}/user_notifications/mark_all_as_read.json`,
+        `${baseUrl}/user_notifications/mark_all_as_read.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -91,7 +93,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
       setNotificationCount(0);
     }
-  }, [baseUrl, token]);
+  }, [token]);
 
   // Add a new notification
   const addNotification = useCallback((notification: Notification) => {
@@ -114,10 +116,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Handle notification click - navigate based on type
   const handleNotificationClick = useCallback(
     async (notification: Notification) => {
+      const baseUrl = getBaseUrl();
+      if (!baseUrl) return;
       try {
         // Mark as read via API
         await axios.get(
-          `https://${baseUrl}/user_notifications/${notification.id}/mark_as_read.json`,
+          `${baseUrl}/user_notifications/${notification.id}/mark_as_read.json`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -137,7 +141,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setIsNotificationOpen(false);
       }
     },
-    [baseUrl, token, markAsRead]
+    [token, markAsRead]
   );
 
   // Clear all notifications
