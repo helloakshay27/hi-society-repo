@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getBaseUrlDomain } from '@/utils/auth';
 
 /**
  * Dynamically resolves the PostHog Adoption Analytics API host.
@@ -15,55 +14,11 @@ export function getApiBaseUrl(): string {
 }
 
 /**
- * Dynamically resolves the tenant URL to query PostHog analytics for.
- * Priority order:
- * 1. Explicit environment variable
- * 2. Custom tenant URL in localStorage
- * 3. Base URL domain stored during login (via getBaseUrlDomain())
- * 4. Active browser hostname (if not localhost)
- * 5. Runwal/organization check
- * 6. Fallback default ('hi-society.lockated.com')
+ * Tenant URL to query PostHog analytics for — the org's baseUrl from localStorage.
  */
 export function getDynamicTenantUrl(): string {
-  // 1. Explicit environment variable override
-  const envTenant =
-    (import.meta.env.VITE_SMARTSECURE_TENANT_URL as string | undefined) ??
-    (import.meta.env.VITE_POSTHOG_TENANT_URL as string | undefined) ??
-    (import.meta.env.VITE_FM_ADOPTION_TENANT_URL as string | undefined);
-  if (envTenant) return envTenant.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-
-  // 2. Custom tenant stored in localStorage
-  const explicitTenant =
-    localStorage.getItem('posthog_tenant_url') ??
-    localStorage.getItem('tenant_url') ??
-    localStorage.getItem('selectedTenantUrl');
-  if (explicitTenant) {
-    return explicitTenant.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-  }
-
-  // 3. Stored baseUrl domain from authentication (e.g. "hi-society.lockated.com", "runwal-cp.lockated.com")
-  const storedDomain = getBaseUrlDomain();
-  if (storedDomain && storedDomain !== 'localhost' && storedDomain !== '127.0.0.1') {
-    return storedDomain.replace(/\/+$/, '');
-  }
-
-  // 4. Current browser hostname when on deployed domain
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    const host = window.location.hostname;
-    if (host !== 'localhost' && host !== '127.0.0.1') {
-      return host;
-    }
-  }
-
-  // 5. Active organization/company check
-  const org = localStorage.getItem('selectedOrg')?.toLowerCase() ?? '';
-  const comp = localStorage.getItem('selectedCompany')?.toLowerCase() ?? '';
-  if (org.includes('runwal') || comp.includes('runwal')) {
-    return 'runwal-cp.lockated.com';
-  }
-
-  // 6. Default fallback
-  return 'hi-society.lockated.com';
+  const baseUrl = localStorage.getItem('baseUrl') || '';
+  return baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 }
 
 const client = axios.create({ timeout: 60_000 });

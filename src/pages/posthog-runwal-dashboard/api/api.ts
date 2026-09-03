@@ -7,7 +7,7 @@
  * 3. Dynamic Site / Project Lookup
  */
 
-import { getBaseUrl, getBaseUrlDomain, getToken, getUser } from '../../../utils/auth';
+import { getBaseUrl, getToken, getUser } from '../../../utils/auth';
 import {
   DashboardFilters,
   TrafficSessionResponse,
@@ -50,44 +50,8 @@ function getPosthogApiBase(): string {
 }
 
 export function getDynamicTenantUrl(): string {
-  try {
-    // 1. Explicit override in localStorage if set
-    const explicit =
-      localStorage.getItem('runwal_tenant_url') ||
-      localStorage.getItem('tenant_url');
-    if (explicit) {
-      return explicit.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-    }
-
-    // 2. Primary: Read backend baseUrl stored during login from auth/organization backend
-    const backendUrl =
-      getBaseUrlDomain() ||
-      localStorage.getItem('baseUrl') ||
-      sessionStorage.getItem('baseUrl') ||
-      localStorage.getItem('base_url');
-
-    if (backendUrl) {
-      let cleaned = backendUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-      if (cleaned.includes('-api.')) {
-        cleaned = cleaned.replace('-api.', '.');
-      }
-      return cleaned;
-    }
-  } catch {}
-
-  // 3. Active browser window hostname (when on staging/production runwal domain)
-  if (
-    typeof window !== 'undefined' &&
-    window.location.hostname &&
-    window.location.hostname !== 'localhost' &&
-    window.location.hostname !== '127.0.0.1' &&
-    window.location.hostname.includes('runwal')
-  ) {
-    return window.location.hostname;
-  }
-
-  // 4. Default Runwal tenant domain tracked in PostHog
-  return 'runwal-cp.lockated.com';
+  const baseUrl = localStorage.getItem('baseUrl') || '';
+  return baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 }
 
 function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any> = {}): string {
@@ -336,7 +300,7 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
         }
       }
     } catch {}
-    return DEFAULT_SITES;
+    return DEFAULT_RUNWAL_SITES;
   }
 
   // 1. Try /pms/sites/allowed_sites.json
