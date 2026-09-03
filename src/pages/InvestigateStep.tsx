@@ -435,7 +435,7 @@ const InvestigateStep: React.FC<InvestigateStepProps> = ({
                     baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
                 }
 
-                const response = await fetch(`${baseUrl}/users/get_escalate_to_users.json`, {
+                const response = await fetch(`${baseUrl}/incidence_tags/get_users.json`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -444,8 +444,17 @@ const InvestigateStep: React.FC<InvestigateStepProps> = ({
                 if (!response.ok) {
                     throw new Error('Failed to fetch internal users');
                 }
-                const data = await response.json();
-                setInternalInjuryUsers(Array.isArray(data) ? data : data.users || data.data || []);
+
+                const payload = await response.json();
+                const users = Array.isArray(payload)
+                    ? payload
+                    : Array.isArray(payload?.data)
+                        ? payload.data
+                        : Array.isArray(payload?.users)
+                            ? payload.users
+                            : [];
+
+                setInternalInjuryUsers(users);
             } catch (err: any) {
                 console.error('Error fetching internal users:', err);
                 setErrorInternalUsers(err.message || 'Failed to load users');
