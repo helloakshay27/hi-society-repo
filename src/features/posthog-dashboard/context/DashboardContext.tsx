@@ -33,6 +33,7 @@ import {
 } from "../data/constants";
 import type { DateRange, Device, Tier } from "../data/constants";
 import type { DeviceType } from "../api/adoptionApi";
+import { getDynamicTenantUrl } from "../api/adoptionApi";
 import { getToken, saveToken } from '@/utils/auth';
 import {
   dateRangeFor,
@@ -230,6 +231,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     [scopedSites]
   );
 
+  const dynamicUrl = getDynamicTenantUrl();
+
   const filters = useMemo<QueryFilters>(
     () => ({
       enabled: sitesSettled,
@@ -241,8 +244,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       module: state.module,
       subModule: state.subModule,
       token,
+      url: dynamicUrl,
     }),
-    [sitesSettled, from, to, siteIds, state.dev, state.licensedSeats, state.module, state.subModule, token]
+    [sitesSettled, from, to, siteIds, state.dev, state.licensedSeats, state.module, state.subModule, token, dynamicUrl]
   );
 
   /** A disabled query reports isLoading=false, so treat "not started yet" as loading too. */

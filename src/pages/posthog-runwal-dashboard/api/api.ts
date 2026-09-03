@@ -7,7 +7,7 @@
  * 3. Dynamic Site / Project Lookup
  */
 
-import { getBaseUrl, getToken, getUser } from '../../../utils/auth';
+import { getBaseUrl, getBaseUrlDomain, getToken, getUser } from '../../../utils/auth';
 import {
   DashboardFilters,
   TrafficSessionResponse,
@@ -40,19 +40,63 @@ import {
 // 1. PostHog Adoption API Client
 // ==========================================
 
-const POSTHOG_BASE_URL =
-  (import.meta as any).env?.VITE_FM_ADOPTION_API_URL ||
-  'https://posthog-api.lockated.com';
+function getPosthogApiBase(): string {
+  return (
+    (import.meta as any).env?.VITE_FM_ADOPTION_API_URL ||
+    (import.meta as any).env?.VITE_POSTHOG_API_URL ||
+    localStorage.getItem('posthog_api_url') ||
+    'https://posthog-api.lockated.com'
+  );
+}
 
-const POSTHOG_TENANT_URL =
-  (import.meta as any).env?.VITE_POSTHOG_TENANT_URL ||
-  (import.meta as any).env?.VITE_HI_SOCIETY_TENANT_URL ||
-  'hi-society.lockated.com';
+export function getDynamicTenantUrl(): string {
+  try {
+    // 1. Explicit override in localStorage if set
+    const explicit =
+      localStorage.getItem('runwal_tenant_url') ||
+      localStorage.getItem('tenant_url');
+    if (explicit) {
+      return explicit.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    }
+
+    // 2. Primary: Read backend baseUrl stored during login from auth/organization backend
+    const backendUrl =
+      getBaseUrlDomain() ||
+      localStorage.getItem('baseUrl') ||
+      sessionStorage.getItem('baseUrl') ||
+      localStorage.getItem('base_url');
+
+    if (backendUrl) {
+      let cleaned = backendUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+      if (cleaned.includes('-api.')) {
+        cleaned = cleaned.replace('-api.', '.');
+      }
+      if (cleaned.toLowerCase().includes('runwal')) {
+        return cleaned;
+      }
+    }
+  } catch {}
+
+  // 3. Active browser window hostname (when on staging/production runwal domain)
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1' &&
+    window.location.hostname.includes('runwal')
+  ) {
+    return window.location.hostname;
+  }
+
+  // 4. Default Runwal tenant domain tracked in PostHog
+  return 'runwal-cp.lockated.com';
+}
 
 function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any> = {}): string {
   const parts: string[] = [];
 
-  parts.push(`url=${encodeURIComponent(POSTHOG_TENANT_URL)}`);
+  const tenantUrl = (filters.url || getDynamicTenantUrl()).replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  parts.push(`url=${encodeURIComponent(tenantUrl)}`);
 
   if (filters.from) parts.push(`from=${encodeURIComponent(filters.from)}`);
   if (filters.to) parts.push(`to=${encodeURIComponent(filters.to)}`);
@@ -75,9 +119,8 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
 }
 
 async function getPosthog<T>(endpoint: string, queryStr: string): Promise<T> {
-  const cleanBase = POSTHOG_BASE_URL.endsWith('/')
-    ? POSTHOG_BASE_URL.slice(0, -1)
-    : POSTHOG_BASE_URL;
+  const base = getPosthogApiBase();
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
   const url = `${cleanBase}/fm/adoption/${endpoint}?${queryStr}`;
 
   const response = await fetch(url, {
@@ -269,6 +312,33 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
   };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Frontend guard: on localhost, avoid failing 3 remote CORS preflights to runwal-cp-api
+  const isLocalDev =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (isLocalDev && cleanBase.includes('runwal-cp-api.lockated.com')) {
+    try {
+      const cached =
+        localStorage.getItem('sites') ||
+        localStorage.getItem('allowed_sites') ||
+        localStorage.getItem('hiSocietyApprovedSocieties');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const raw = Array.isArray(parsed) ? parsed : parsed.sites || parsed.user_societies || [];
+        if (Array.isArray(raw) && raw.length > 0) {
+          return raw.map((s: any) => ({
+            id: String(s.id_society || s.society?.id || s.id),
+            name: s.name || s.site_name || s.building_name || s.society?.building_name || `Site ${s.id}`,
+            organization_id: s.organization_id,
+            company_id: s.company_id,
+          }));
+        }
+      }
+    } catch {}
+    return DEFAULT_SITES;
   }
 
   // 1. Try /pms/sites/allowed_sites.json

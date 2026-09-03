@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { PageId, DevicePlatform } from './types';
-import { BM_DEFAULTS } from './data/constants';
-import { DashboardProvider } from './context/DashboardContext';
-import { InfoPopover } from './components/common/InfoPopover';
+// Everything below except TopBar/SideBar is brand-agnostic — reused directly
+// from the Runwal dashboard rather than duplicated, so chart/table/page logic
+// has a single source of truth across both dashboards.
+import { PageId, DevicePlatform } from '../posthog-runwal-dashboard/types';
+import { BM_DEFAULTS } from '../posthog-runwal-dashboard/data/constants';
+import { DashboardProvider } from '../posthog-runwal-dashboard/context/DashboardContext';
+import { InfoPopover } from '../posthog-runwal-dashboard/components/common/InfoPopover';
 import { TopBar } from './components/common/TopBar';
 import { SideBar } from './components/common/SideBar';
-import { FilterBar } from './components/common/FilterBar';
-import { TrafficSessionPage } from './components/pages/TrafficSessionPage';
-import { AdoptionEngagementPage } from './components/pages/AdoptionEngagementPage';
-import { WorkflowUsagePage } from './components/pages/WorkflowUsagePage';
-import { useDashboardSites, useTrafficSession } from './hooks/useDashboardAnalytics';
-import { DashboardFilters } from './api/types';
-import { getToken, getBaseUrlDomain } from '../../utils/auth';
-import './styles/dashboard.css';
+import { FilterBar } from '../posthog-runwal-dashboard/components/common/FilterBar';
+import { TrafficSessionPage } from '../posthog-runwal-dashboard/components/pages/TrafficSessionPage';
+import { AdoptionEngagementPage } from '../posthog-runwal-dashboard/components/pages/AdoptionEngagementPage';
+import { WorkflowUsagePage } from '../posthog-runwal-dashboard/components/pages/WorkflowUsagePage';
+import { useDashboardSites, useTrafficSession } from '../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
+import { DashboardFilters } from '../posthog-runwal-dashboard/api/types';
+import { getToken, getUser } from '../../utils/auth';
+import '../posthog-runwal-dashboard/styles/dashboard.css';
 
 function dateRangeFor(days: number) {
   const to = new Date();
@@ -23,10 +26,10 @@ function dateRangeFor(days: number) {
   return { from: ymd(from), to: ymd(to) };
 }
 
-function PosthogRunwalDashboardContent() {
+function PosthogMyPiramalDashboardContent() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
-      const saved = localStorage.getItem('runwal-theme');
+      const saved = localStorage.getItem('my-piramal-theme');
       if (saved === 'dark' || saved === 'light') return saved;
     } catch {}
     if (
@@ -41,7 +44,7 @@ function PosthogRunwalDashboardContent() {
 
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('runwal-nav') === 'collapsed';
+      return localStorage.getItem('my-piramal-nav') === 'collapsed';
     } catch {
       return false;
     }
@@ -65,52 +68,7 @@ function PosthogRunwalDashboardContent() {
     ...BM_DEFAULTS,
   });
 
-  // Centralized Filter State (tenant url from backend saved in localStorage)
-  const dynamicTenantUrl = useMemo(() => {
-    try {
-      // 1. Explicit override in localStorage if set
-      const explicit =
-        localStorage.getItem('runwal_tenant_url') ||
-        localStorage.getItem('tenant_url');
-      if (explicit) {
-        return explicit.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-      }
-
-      // 2. Primary: Get backend URL saved during login/auth
-      const backendUrl =
-        getBaseUrlDomain() ||
-        localStorage.getItem('baseUrl') ||
-        sessionStorage.getItem('baseUrl') ||
-        localStorage.getItem('base_url');
-
-      if (backendUrl) {
-        let cleaned = backendUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-        // Clean out API subdomain if backend returned -api URL (e.g. runwal-cp-api.lockated.com -> runwal-cp.lockated.com)
-        if (cleaned.includes('-api.')) {
-          cleaned = cleaned.replace('-api.', '.');
-        }
-        // If the backend URL belongs to Runwal, use it dynamically
-        if (cleaned.toLowerCase().includes('runwal')) {
-          return cleaned;
-        }
-      }
-    } catch {}
-
-    // 3. Active deployed browser hostname (when on staging/production runwal domain)
-    if (
-      typeof window !== 'undefined' &&
-      window.location.hostname &&
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1' &&
-      window.location.hostname.includes('runwal')
-    ) {
-      return window.location.hostname;
-    }
-
-    // 4. Default Runwal tenant domain tracked in PostHog
-    return 'runwal-cp.lockated.com';
-  }, []);
-
+  // Centralized Filter State
   const filters: DashboardFilters = useMemo(() => {
     // When "all" is selected, siteIds must be [] so PostHog returns tenant-wide aggregate live data
     const siteIds = selectedSiteId && selectedSiteId !== 'all' ? [selectedSiteId] : [];
@@ -130,9 +88,8 @@ function PosthogRunwalDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
-      url: dynamicTenantUrl,
     };
-  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl]);
+  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
 
   // Traffic Session query for global live counter & badge
   const {
@@ -148,7 +105,7 @@ function PosthogRunwalDashboardContent() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try {
-      localStorage.setItem('runwal-theme', theme);
+      localStorage.setItem('my-piramal-theme', theme);
     } catch {}
   }, [theme]);
 
@@ -163,7 +120,7 @@ function PosthogRunwalDashboardContent() {
       setIsNavCollapsed((prev) => {
         const next = !prev;
         try {
-          localStorage.setItem('runwal-nav', next ? 'collapsed' : 'open');
+          localStorage.setItem('my-piramal-nav', next ? 'collapsed' : 'open');
         } catch {}
         return next;
       });
@@ -181,7 +138,7 @@ function PosthogRunwalDashboardContent() {
     setIsNavCollapsed((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem('runwal-nav', next ? 'collapsed' : 'open');
+        localStorage.setItem('my-piramal-nav', next ? 'collapsed' : 'open');
       } catch {}
       return next;
     });
@@ -287,7 +244,7 @@ function PosthogRunwalDashboardContent() {
       const savedOrg = localStorage.getItem('org_name') || localStorage.getItem('organization_name');
       if (savedOrg) return savedOrg;
     } catch {}
-    return 'Runwal Group';
+    return 'My Piramal';
   }, []);
 
   const PAGE_TITLES: Record<PageId, string> = {
@@ -396,13 +353,13 @@ function PosthogRunwalDashboardContent() {
   );
 }
 
-export const PosthogRunwalDashboard: React.FC = () => {
+export const PosthogMyPiramalDashboard: React.FC = () => {
   return (
     <DashboardProvider>
-      <PosthogRunwalDashboardContent />
+      <PosthogMyPiramalDashboardContent />
     </DashboardProvider>
   );
 };
 
-export default PosthogRunwalDashboard;
+export default PosthogMyPiramalDashboard;
 

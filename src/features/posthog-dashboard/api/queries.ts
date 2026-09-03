@@ -47,6 +47,8 @@ export interface QueryFilters {
   requestId?: number;
   /** Auth token for FM API calls */
   token: string;
+  /** Dynamic tenant base URL passed to PostHog analytics */
+  url?: string;
 }
 
 function ymd(d: Date): string {
