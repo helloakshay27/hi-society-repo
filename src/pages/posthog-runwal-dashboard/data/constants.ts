@@ -236,7 +236,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.sitewise': {
     t: 'Project / Site-Wise Engagement',
-    f: 'Comparative table of Active Users, Sessions, Avg Duration, and Bounce Rate across individual Runwal residential projects.',
+    f: 'Comparative table of Active Users, Sessions, Avg Duration, and Bounce Rate across individual residential projects.',
     d: 'Identifies high-performing properties vs communities requiring local activation support.',
   },
   'chart.funnel': {
@@ -351,7 +351,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   A11: {
     t: 'Project / Site-Wise Engagement',
-    f: 'Comparative table of Active Users, Sessions, Avg Duration, and Bounce Rate across individual Runwal residential projects.',
+    f: 'Comparative table of Active Users, Sessions, Avg Duration, and Bounce Rate across individual residential projects.',
     d: 'Identifies high-performing properties vs communities requiring local activation support.',
   },
 };

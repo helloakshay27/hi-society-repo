@@ -1163,6 +1163,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { NewIncidentListDashboard } from "./pages/NewIncidentListDashboard";
 import EditIncidentPage from "./pages/EditIncidentPage";
+import PosthogMyPiramalDashboard from "./pages/posthog-my-piramal-dashboard";
 const LockFees = lazy(() => import("./pages/LockFees"));
 const LockFeesAdd = lazy(() => import("./pages/LockFeesAdd"));
 const LockFeesDetail = lazy(() => import("./pages/LockFeesDetail"));
@@ -1578,6 +1579,10 @@ function App() {
                       <Route
                         path="/posthog-runwal-dashboard"
                         element={<PosthogRunwalDashboard />}
+                      />
+                         <Route
+                        path="/posthog-my-piramal-dashboard"
+                        element={<PosthogMyPiramalDashboard />}
                       />
                       <Route
                         path="/smartsecure-dashboard"
