@@ -1022,7 +1022,12 @@ export const UIHiSocietySidebar: React.FC = () => {
           label: "Setup Member",
           icon: Users,
           subItems: [
-
+            {
+              id: "template-list",
+              label: "Email Templates",
+              icon: FileText,
+              path: "/settings/template-list",
+            },
             {
               id: "image-configuration-list",
               label: "Image Configuration",

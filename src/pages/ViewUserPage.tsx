@@ -5,6 +5,7 @@ import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileTex
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
+import { SendEmailModal } from "@/components/SendEmailModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
@@ -82,6 +83,7 @@ export const ViewUserPage = () => {
   const [tabValue, setTabValue] = useState(0);
   const [members, setMembers] = useState<any[]>([]);
   const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] = useState(false);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] = useState(false);
   const [clubFormData, setClubFormData] = useState({
     clubMembershipChecked: false,
@@ -363,7 +365,7 @@ export const ViewUserPage = () => {
           <Box sx={{ position: "absolute", top: 16, right: 16 }}>
             <Button
               size="sm"
-              className="px-8 border-0 bg-[#da7756] hover:bg-[#c06548] !text-white [&_svg]:!text-[#da7756] flex items-center gap-2"
+              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium [&_svg]:!text-[#da7756] flex items-center gap-2"
               onClick={() => navigate(`/settings/manage-users/edit/${userId}`)}
             >
               <Edit className="w-4 h-4 mr-1" />
@@ -452,17 +454,24 @@ export const ViewUserPage = () => {
           {/* Add to Another Flat Button */}
           <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3, gap: 2 }}>
             <Button
-              className="px-8 border-0 bg-[#da7756] hover:bg-[#c06548] !text-white flex items-center gap-2"
+              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2"
               onClick={() => setIsAddToAnotherFlatModalOpen(true)}
             >
               + Add to Another Flat
             </Button>
             <Button
-              className="px-8 border-0 bg-[#da7756] hover:bg-[#c06548] !text-white [&_svg]:!text-[#da7756] flex items-center gap-2"
+              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium [&_svg]:!text-[#da7756] flex items-center gap-2"
               onClick={() => setCreditDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-1" />
               Credit Wallet
+            </Button>
+            <Button
+              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2"
+              onClick={() => setSendEmailOpen(true)}
+            >
+              <Mail className="w-4 h-4 mr-1" />
+              Send Email
             </Button>
           </Box>
         </Box>
@@ -782,6 +791,26 @@ export const ViewUserPage = () => {
         isOpen={isAddToAnotherFlatModalOpen}
         onClose={() => setIsAddToAnotherFlatModalOpen(false)}
         userData={user}
+      />
+
+      {/* Send Email Modal */}
+      <SendEmailModal
+        open={sendEmailOpen}
+        onOpenChange={setSendEmailOpen}
+        recipients={[
+          {
+            email: user?.email || "",
+            name:
+              user?.full_name ||
+              [user?.firstname, user?.lastname].filter(Boolean).join(" ") ||
+              undefined,
+            first_name: user?.firstname || undefined,
+            last_name: user?.lastname || undefined,
+            mobile: user?.mobile || user?.mobile_number || undefined,
+            flat: user?.flat_no || undefined,
+            tower: user?.block_no || undefined,
+          },
+        ]}
       />
 
       {/* Configure Club Details Modal */}

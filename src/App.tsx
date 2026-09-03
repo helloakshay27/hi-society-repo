@@ -339,6 +339,7 @@ const OccupantUsersDashboard = lazy(() => import("./pages/setup/OccupantUsersDas
 const AddOccupantUserDashboard = lazy(() => import("./pages/setup/AddOccupantUserDashboard").then(m => ({ default: m.AddOccupantUserDashboard })));
 const AddUserPage = lazy(() => import("./pages/AddUserPage").then(m => ({ default: m.AddUserPage })));
 const ManageUsersPage = lazy(() => import("./pages/ManageUsersPage"));
+const EmailTemplatesPage = lazy(() => import("./pages/settings/EmailTemplatesPage").then(m => ({ default: m.EmailTemplatesPage })));
 const ViewManageUserPage = lazy(() => import("./pages/setup/ViewManageUserPage").then(m => ({ default: m.ViewManageUserPage })));
 const ManageFlatsPage = lazy(() => import("./pages/setup/ManageFlatsPage").then(m => ({ default: m.ManageFlatsPage })));
 const EditFlatPage = lazy(() => import("./pages/setup/EditFlatPage"));
@@ -2116,6 +2117,14 @@ function App() {
                         <Route
                           path="/settings/manage-users"
                           element={<ManageUsersPage />}
+                        />
+                        <Route
+                          path="/settings/template-list"
+                          element={<EmailTemplatesPage />}
+                        />
+                        <Route
+                          path="/settings/email-templates"
+                          element={<EmailTemplatesPage />}
                         />
                         <Route
                           path="/settings/manage-users/add"
