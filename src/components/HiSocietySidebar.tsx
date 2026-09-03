@@ -150,6 +150,7 @@ export const HiSocietySidebar: React.FC = () => {
       return "settings";
     }
 
+    if (path.startsWith("/hi-society-usage-dashboard")) return "usage-analytics";
     if (path.startsWith("/cms")) return "cms";
     if (
       path.startsWith("/maintenance/survey") ||
@@ -361,6 +362,12 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Press Releases",
           icon: FileText,
           path: "/maintenance/press-releases-list",
+        },
+        {
+          id: "usage-analytics",
+          label: "Usage Analytics",
+          icon: BarChart3,
+          path: "/hi-society-usage-dashboard",
         },
         {
           id: "faq",
@@ -1443,6 +1450,17 @@ export const HiSocietySidebar: React.FC = () => {
         },
       ],
     },
+    "usage-analytics": {
+      title: "Usage Analytics",
+      items: [
+        {
+          id: "usage-analytics-dashboard",
+          label: "Usage Analytics",
+          icon: BarChart3,
+          path: "/hi-society-usage-dashboard",
+        },
+      ],
+    },
   };
 
   // Get current menu items based on active section
@@ -1688,3 +1706,4 @@ export const HiSocietySidebar: React.FC = () => {
 };
 
 export default HiSocietySidebar;
+

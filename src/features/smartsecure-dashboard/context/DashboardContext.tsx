@@ -9,6 +9,7 @@ import {
   fetchRetention,
   fetchRoles,
   fetchWorkflowUsage,
+  getDynamicTenantUrl,
 } from '../api/adoptionApi';
 import { dateRangeFor } from '../api/queries';
 import { BM_DEFAULTS } from '../data/constants';
@@ -82,6 +83,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const dynamicUrl = getDynamicTenantUrl();
+
   const filters = useMemo(() => {
     const devices: ('Mobile' | 'Desktop')[] | undefined = state.dev === 'all' ? undefined : (state.dev === 'ios' || state.dev === 'android' ? ['Mobile'] : ['Desktop']);
     return {
@@ -89,8 +92,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       to: state.rangeTo,
       devices,
       siteIds: state.society === 'All Societies' ? undefined : [],
+      url: dynamicUrl,
     };
-  }, [state.rangeFrom, state.rangeTo, state.dev, state.society]);
+  }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl]);
 
   const trafficQ    = useQuery({ queryKey: ['ss-traffic',    filters], queryFn: () => fetchTrafficSession(filters),                                                                        staleTime: 5 * 60_000 });
   const usageQ      = useQuery({ queryKey: ['ss-usage',      filters], queryFn: () => fetchUsageAndDistribution(filters),                                                                   staleTime: 5 * 60_000 });

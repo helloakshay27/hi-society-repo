@@ -1166,6 +1166,8 @@ const EditLockFeesPage = lazy(() => import("./pages/EditLockFeesPage"));
 const SocietyDetailsPage = lazy(() => import("./pages/master/SocietyDetailsPage"));
 const BlockDetailsPage = lazy(() => import("./pages/master/BlockDetailsPage"));
 const SmartSecureDashboardPage = lazy(() => import("./features/smartsecure-dashboard/SmartSecureDashboardPage"));
+const HiSocietyUsageDashboard = lazy(() => import("./pages/HiSocietyUsageDashboard"));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1579,6 +1581,11 @@ function App() {
                         path="/smartsecure-dashboard"
                         element={<SmartSecureDashboardPage />}
                       />
+                      <Route
+                        path="/hi-society-usage-dashboard"
+                        element={<HiSocietyUsageDashboard />}
+                      />
+
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}
                       <Route
@@ -7330,3 +7337,5 @@ function App() {
 }
 
 export default App;
+
+ 

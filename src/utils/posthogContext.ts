@@ -33,6 +33,7 @@ const CLIENT_BY_HOST: [test: (h: string) => boolean, client: string][] = [
     'pulse-web',
   ],
   [(h) => h.includes('club.lockated.com') || h.includes('recess-club.panchshil.com'), 'club-web'],
+  [(h) => h.includes('runwal') || h === 'runwal-cp.lockated.com', 'runwal-web'],
   [
     (h) =>
       h.includes('hi-society') ||
@@ -110,8 +111,31 @@ function resolveClientCompany(): string | undefined {
   );
 }
 
+export const PROJECT_CODE_HS = 'HS-01';
+export const PROJECT_CODE_RUNWAL = 'RunwalCPS';
+
+export function resolveProjectCode(hostname: string = window.location.hostname): string {
+  // 1. Runwal identification (hostname, path, active company/org, or localStorage flag)
+  if (
+    hostname === 'runwal-cp.lockated.com' ||
+    hostname.includes('runwal') ||
+    window.location.pathname.includes('runwal') ||
+    localStorage.getItem('selectedOrg')?.toLowerCase().includes('runwal') ||
+    localStorage.getItem('selectedCompany')?.toLowerCase().includes('runwal') ||
+    localStorage.getItem('project_code') === 'RunwalCPS' ||
+    localStorage.getItem('project_code') === 'RPP-01' ||
+    localStorage.getItem('client')?.toLowerCase().includes('runwal')
+  ) {
+    return PROJECT_CODE_RUNWAL; // RunwalCPS
+  }
+
+  // 2. Default for Hi-Society & SmartSecure
+  return PROJECT_CODE_HS; // HS-01
+}
+
 export interface PostHogSuperProperties {
   client: string;
+  project_code: string;
   is_test: boolean;
   platform: 'web';
   release_version: string;
@@ -121,6 +145,7 @@ export interface PostHogSuperProperties {
 export function getPostHogSuperProperties(): PostHogSuperProperties {
   return {
     client: resolveClient(),
+    project_code: resolveProjectCode(),
     is_test: resolveIsTest(),
     platform: 'web',
     release_version: (import.meta.env.VITE_APP_VERSION as string) ?? 'dev',

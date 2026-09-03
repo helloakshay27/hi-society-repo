@@ -11,7 +11,7 @@ import { AdoptionEngagementPage } from './components/pages/AdoptionEngagementPag
 import { WorkflowUsagePage } from './components/pages/WorkflowUsagePage';
 import { useDashboardSites, useTrafficSession } from './hooks/useDashboardAnalytics';
 import { DashboardFilters } from './api/types';
-import { getToken } from '../../utils/auth';
+import { getToken, getBaseUrlDomain } from '../../utils/auth';
 import './styles/dashboard.css';
 
 function dateRangeFor(days: number) {
@@ -65,7 +65,52 @@ function PosthogRunwalDashboardContent() {
     ...BM_DEFAULTS,
   });
 
-  // Centralized Filter State
+  // Centralized Filter State (tenant url from backend saved in localStorage)
+  const dynamicTenantUrl = useMemo(() => {
+    try {
+      // 1. Explicit override in localStorage if set
+      const explicit =
+        localStorage.getItem('runwal_tenant_url') ||
+        localStorage.getItem('tenant_url');
+      if (explicit) {
+        return explicit.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+      }
+
+      // 2. Primary: Get backend URL saved during login/auth
+      const backendUrl =
+        getBaseUrlDomain() ||
+        localStorage.getItem('baseUrl') ||
+        sessionStorage.getItem('baseUrl') ||
+        localStorage.getItem('base_url');
+
+      if (backendUrl) {
+        let cleaned = backendUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+        // Clean out API subdomain if backend returned -api URL (e.g. runwal-cp-api.lockated.com -> runwal-cp.lockated.com)
+        if (cleaned.includes('-api.')) {
+          cleaned = cleaned.replace('-api.', '.');
+        }
+        // If the backend URL belongs to Runwal, use it dynamically
+        if (cleaned.toLowerCase().includes('runwal')) {
+          return cleaned;
+        }
+      }
+    } catch {}
+
+    // 3. Active deployed browser hostname (when on staging/production runwal domain)
+    if (
+      typeof window !== 'undefined' &&
+      window.location.hostname &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1' &&
+      window.location.hostname.includes('runwal')
+    ) {
+      return window.location.hostname;
+    }
+
+    // 4. Default Runwal tenant domain tracked in PostHog
+    return 'runwal-cp.lockated.com';
+  }, []);
+
   const filters: DashboardFilters = useMemo(() => {
     // When "all" is selected, siteIds must be [] so PostHog returns tenant-wide aggregate live data
     const siteIds = selectedSiteId && selectedSiteId !== 'all' ? [selectedSiteId] : [];
@@ -85,8 +130,9 @@ function PosthogRunwalDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
+      url: dynamicTenantUrl,
     };
-  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
+  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl]);
 
   // Traffic Session query for global live counter & badge
   const {

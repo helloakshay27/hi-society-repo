@@ -1,5 +1,6 @@
 import posthog from "posthog-js";
 import { getUser } from "@/utils/auth";
+import { resolveProjectCode } from "@/utils/posthogContext";
 
 const RELEASE_VERSION = (import.meta.env.VITE_APP_VERSION as string) ?? "dev";
 
@@ -29,7 +30,7 @@ export const capturePostHogEvent = (
     platform: "web",
     release_version: RELEASE_VERSION,
     project_id: "P-223",
-    project_code: "FM-01",
+    project_code: resolveProjectCode(),
     organization_id: orgIdNum,
     organization_name: localStorage.getItem("selectedOrg") ?? undefined,
     company_id: companyIdNum,
@@ -54,15 +55,13 @@ export const captureHelpdeskEvent = (
 };
 
 /**
- * Fire a Pulse (Panchshil Pulse) product-analytics event with standard
- * platform/release context. Use this for all custom events across the
- * Pulse module (carpool, community, SOS, amenities, etc).
+ * Fire a Runwal product-analytics event with static RunwalCPS project code.
  */
-export const capturePulseEvent = (
+export const captureRunwalEvent = (
   event: string,
   props: Record<string, unknown> = {}
 ) => {
-  capturePostHogEvent(event, { project_code: "PULSE-01", ...props });
+  capturePostHogEvent(event, { project_code: "RunwalCPS", ...props });
 };
 
 /**

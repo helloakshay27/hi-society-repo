@@ -66,6 +66,7 @@ export const CACHE_CONFIG = {
 };
 
 const commonKey = (f: DashboardFilters) => [
+  f.url || '',
   f.from,
   f.to,
   f.siteIds.join(','),
@@ -138,6 +139,7 @@ export function useAdoptionTrend(filters: DashboardFilters, enabled: boolean = t
     queryKey: [
       'fm-adoption',
       'adoption_trend',
+      filters.url || '',
       filters.to,
       filters.siteIds.join(','),
       filters.devices.join(','),
@@ -153,6 +155,7 @@ export function useGrowth(filters: DashboardFilters, enabled: boolean = true) {
     queryKey: [
       'fm-adoption',
       'growth',
+      filters.url || '',
       filters.to,
       filters.siteIds.join(','),
       filters.devices.join(','),
@@ -168,6 +171,7 @@ export function useRetention(filters: DashboardFilters, enabled: boolean = true)
     queryKey: [
       'fm-adoption',
       'retention',
+      filters.url || '',
       filters.to,
       filters.siteIds.join(','),
       filters.devices.join(','),

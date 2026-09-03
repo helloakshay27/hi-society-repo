@@ -374,6 +374,7 @@ export interface DashboardFilters {
   licensedSeats: number | null;
   module: string | null;
   subModule: string | null;
+  url?: string; // Dynamic tenant base URL from localStorage
 }
 
 export interface SiteLookupItem {

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { usePostHog } from "@posthog/react";
-import { getPostHogSuperProperties, normalizeRoute } from "@/utils/posthogContext";
+import { getPostHogSuperProperties, normalizeRoute, resolveProjectCode } from "@/utils/posthogContext";
 
 export function PostHogPageView() {
   const location = useLocation();
@@ -34,7 +34,7 @@ export function PostHogPageView() {
     posthog.capture("$pageview", {
       $current_url: window.location.href,
       project_id: "P-223",
-      project_code: "FM-01",
+      project_code: resolveProjectCode(),
       site_id: siteIdNum,
       site_name: localStorage.getItem("selectedSiteName") ?? undefined,
       company_id: companyIdNum,
