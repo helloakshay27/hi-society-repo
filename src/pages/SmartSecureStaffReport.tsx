@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -57,6 +58,7 @@ const SmartSecureStaffReport: React.FC = () => {
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
   const [downloading, setDownloading] = useState(false);
+  const pollTimeoutRef = useRef<number | null>(null);
 
   const [filters, setFilters] = useState<StaffFilters>({
     work_types: [],
@@ -97,6 +99,61 @@ const SmartSecureStaffReport: React.FC = () => {
     fetchFilters();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current) window.clearTimeout(pollTimeoutRef.current);
+    };
+  }, []);
+
+  const REPORT_STATUS_POLL_INTERVAL = 10000;
+  const REPORT_STATUS_MAX_ATTEMPTS = 60;
+
+  const pollReportStatus = (
+    reportId: number,
+    authHeader: string,
+    attempt: number = 1
+  ) => {
+    pollTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        const statusUrl = getFullUrl(`/st_report_status?report_id=${reportId}`);
+        const response = await axios.get(statusUrl, {
+          headers: { Authorization: authHeader },
+        });
+        const data = response.data;
+        const reportStatus = (data?.status || "").toLowerCase();
+
+        if (reportStatus === "completed") {
+          if (data.download_url) {
+            window.location.href = data.download_url;
+            toast.success("Staff Report downloaded successfully!");
+          } else {
+            toast.error("Report generation completed but no file was returned.");
+          }
+          setDownloading(false);
+          return;
+        }
+
+        if (reportStatus === "failed" || reportStatus === "error") {
+          toast.error(data?.message || "Failed to generate the staff report.");
+          setDownloading(false);
+          return;
+        }
+
+        if (attempt >= REPORT_STATUS_MAX_ATTEMPTS) {
+          toast.error("Report is taking longer than expected. Please try again later.");
+          setDownloading(false);
+          return;
+        }
+
+        pollReportStatus(reportId, authHeader, attempt + 1);
+      } catch (error) {
+        console.error("Error checking staff report status:", error);
+        toast.error("Failed to check staff report status.");
+        setDownloading(false);
+      }
+    }, REPORT_STATUS_POLL_INTERVAL);
+  };
+
   const handleDownload = async () => {
     if (!fromDate || !toDate) {
       toast.error("Please select both From Date and To Date");
@@ -133,37 +190,42 @@ const SmartSecureStaffReport: React.FC = () => {
       if (status && status.trim() !== "") body.status = status.trim();
 
       const url = getFullUrl("/st_reports.csv");
-      const response = await fetch(url, {
-        method: "POST",
+      const response = await axios.post(url, body, {
         headers: {
           Authorization: authHeader,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
       });
 
-      if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+      const data = response.data;
 
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `staff_report_${format(fromDate, "ddMMyyyy")}_to_${format(toDate, "ddMMyyyy")}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+      if (data?.status === "processing" && data?.report_id) {
+        toast.info(
+          data.message ||
+          "This report is too big to download right now. It is being generated and will download automatically in some time."
+        );
+        pollReportStatus(data.report_id, authHeader);
+        return;
+      }
+
+      if (data?.download_url) {
+        window.location.href = data.download_url;
+        toast.success("Staff Report downloaded successfully!");
+        setDownloading(false);
+        return;
+      }
 
       toast.success("Staff Report downloaded successfully!");
+      setDownloading(false);
     } catch (error) {
       console.error("Error downloading staff report:", error);
-      
+
       // Handle different types of errors
       if (error.response) {
         // API responded with error status
         const status = error.response.status;
         const message = error.response.data?.message || error.response.statusText || 'Unknown error';
-        
+
         if (status === 401) {
           toast.error("Authentication failed. Please log in again.");
         } else if (status === 403) {
@@ -180,7 +242,6 @@ const SmartSecureStaffReport: React.FC = () => {
         // Other error
         toast.error("Failed to download report. Please try again.");
       }
-    } finally {
       setDownloading(false);
     }
   };
