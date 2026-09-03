@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +14,7 @@ import { X } from "lucide-react";
 import { format } from "date-fns";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { API_CONFIG } from "@/config/apiConfig";
 
 interface InvoiceReportRow {
   sr: number;
@@ -34,23 +37,50 @@ interface InvoiceReportRow {
   ageing15: number | null;
 }
 
-const TOWERS = ["A", "B", "C", "D", "FM", "GL"];
-const FLATS = ["101", "102", "103", "104", "105", "Office", "Team"];
+const pick = (obj: Record<string, unknown>, keys: string[]): unknown => {
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return undefined;
+};
 
-const DUMMY_INVOICE_REPORT_ROWS: InvoiceReportRow[] = [
-  { sr: 1, tower: "C", flat: "101", partyName: "Deepak Gupta, Ani...", billNo: "283921", billPeriod: "NA", billDate: "17/11/2025", billAmt: 1180.0, dueDate: "2025-11-20", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 1180.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 1180.0 },
-  { sr: 2, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "test0010", billPeriod: "NA", billDate: "09/05/2025", billAmt: 1800.0, dueDate: "2025-12-30", paidAmount: 1800.0, paidDate: "02/09/2025", receiptNo: "", receiptDate: "02/09/2025", outstandingAmt: 0, ageing6: null, ageing9: 0, ageing12: null, ageing15: null },
-  { sr: 3, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "1001", billPeriod: "NA", billDate: "15/07/2024", billAmt: 0, dueDate: "2024-07-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 0, ageing6: 0, ageing9: null, ageing12: null, ageing15: null },
-  { sr: 4, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "0183", billPeriod: "NA", billDate: "11/04/2024", billAmt: 0, dueDate: "2024-02-13", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 0, ageing6: null, ageing9: 0, ageing12: null, ageing15: null },
-  { sr: 5, tower: "A", flat: "102", partyName: "Ankita Shah, Khar...", billNo: "562", billPeriod: "2022-11-01 to 202...", billDate: "10/09/2022", billAmt: 11.0, dueDate: "2022-11-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 11.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 11.0 },
-  { sr: 6, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "561", billPeriod: "2022-11-01 to 202...", billDate: "10/09/2022", billAmt: 22.0, dueDate: "2022-11-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 22.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 22.0 },
-  { sr: 7, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "560", billPeriod: "2022-11-01 to 202...", billDate: "10/09/2022", billAmt: 11.0, dueDate: "2022-11-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 11.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 11.0 },
-  { sr: 8, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "560", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 11.0, dueDate: "2022-11-16", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 11.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 11.0 },
-  { sr: 9, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "559", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 1.0, dueDate: "2022-11-16", paidAmount: 1.0, paidDate: "07/11/2022", receiptNo: "1003", receiptDate: "07/11/2022", outstandingAmt: 0, ageing6: null, ageing9: null, ageing12: null, ageing15: 0 },
-  { sr: 10, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "558", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 35543.0, dueDate: "2022-11-16", paidAmount: 35543.0, paidDate: "06/11/2022", receiptNo: "1002", receiptDate: "06/11/2022", outstandingAmt: 0, ageing6: null, ageing9: null, ageing12: null, ageing15: 0 },
-  { sr: 11, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "558", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 35543.0, dueDate: "2022-11-16", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 35543.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 35543.0 },
-  { sr: 12, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "558", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 35543.0, dueDate: "2022-11-16", paidAmount: 35543.0, paidDate: "07/11/2022", receiptNo: "1005", receiptDate: "07/11/2022", outstandingAmt: 0, ageing6: null, ageing9: null, ageing12: null, ageing15: 0 },
-];
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === undefined || value === null || value === "") return null;
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+};
+
+const normalizeInvoiceRow = (item: Record<string, unknown>, index: number): InvoiceReportRow => ({
+  sr: toNumberOrNull(pick(item, ["sr", "sr_no", "serial_no"])) ?? index + 1,
+  tower: String(pick(item, ["tower", "tower_name", "block_name", "wing_name"]) ?? ""),
+  flat: String(pick(item, ["flat", "flat_no", "flat_name", "unit_name"]) ?? ""),
+  partyName: String(pick(item, ["party_name", "member_name", "customer_name", "user_name"]) ?? ""),
+  billNo: String(pick(item, ["bill_no", "bill_number", "invoice_no", "invoice_number"]) ?? ""),
+  billPeriod: String(pick(item, ["bill_period", "period"]) ?? ""),
+  billDate: String(pick(item, ["bill_date", "invoice_date"]) ?? ""),
+  billAmt: toNumberOrNull(pick(item, ["bill_amt", "bill_amount", "amount", "total_amount"])) ?? 0,
+  dueDate: String(pick(item, ["due_date"]) ?? ""),
+  paidAmount: toNumberOrNull(pick(item, ["paid_amount", "amount_paid"])),
+  paidDate: String(pick(item, ["paid_date"]) ?? ""),
+  receiptNo: String(pick(item, ["receipt_no", "receipt_number"]) ?? ""),
+  receiptDate: String(pick(item, ["receipt_date"]) ?? ""),
+  outstandingAmt:
+    toNumberOrNull(pick(item, ["outstanding_amt", "outstanding_amount", "balance_amount", "balance"])) ?? 0,
+  ageing6: toNumberOrNull(pick(item, ["ageing_6", "ageing6", "ageing_6_months", "less_than_6_months"])),
+  ageing9: toNumberOrNull(pick(item, ["ageing_9", "ageing9", "ageing_9_months", "less_than_9_months"])),
+  ageing12: toNumberOrNull(pick(item, ["ageing_12", "ageing12", "ageing_12_months", "less_than_12_months"])),
+  ageing15: toNumberOrNull(
+    pick(item, ["ageing_15", "ageing15", "ageing_15_months", "less_than_15_months", "above_15_months"])
+  ),
+});
+
+const extractInvoiceReportList = (data: unknown): Record<string, unknown>[] => {
+  if (Array.isArray(data)) return data as Record<string, unknown>[];
+  const obj = data as Record<string, unknown>;
+  const candidate =
+    obj?.bills_invoice_report ?? obj?.data ?? obj?.report ?? obj?.invoices ?? obj?.rows;
+  return Array.isArray(candidate) ? (candidate as Record<string, unknown>[]) : [];
+};
 
 const columns: ColumnConfig[] = [
   { key: "sr", label: "Sr.", sortable: false, draggable: false, hideable: false },
@@ -83,7 +113,10 @@ interface FilterState {
 }
 
 const AccountingInvoicesReport: React.FC = () => {
+  const [rows, setRows] = useState<InvoiceReportRow[]>([]);
+  const [loading, setLoading] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+const lock_account_id = localStorage.getItem("lock_account_id") || "3";
 
   const [filterValues, setFilterValues] = useState<FilterState>({
     tower: "",
@@ -96,6 +129,44 @@ const AccountingInvoicesReport: React.FC = () => {
     flat: "",
     dueDate: undefined,
   });
+
+  const lockAccountId = localStorage.getItem("lock_account_id")|| "3";
+
+  const fetchInvoiceReport = useCallback(async () => {
+    setLoading(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(`${baseUrl}/bills_invoice_report.json`, {
+        params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const list = extractInvoiceReportList(response.data);
+      setRows(list.map(normalizeInvoiceRow));
+    } catch (error) {
+      console.error("Error fetching invoice report:", error);
+      toast.error("Failed to fetch invoice report");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [lockAccountId]);
+
+  useEffect(() => {
+    fetchInvoiceReport();
+  }, [fetchInvoiceReport]);
+
+  const towerOptions = useMemo(
+    () => Array.from(new Set(rows.map((row) => row.tower).filter(Boolean))).sort(),
+    [rows]
+  );
+  const flatOptions = useMemo(
+    () => Array.from(new Set(rows.map((row) => row.flat).filter(Boolean))).sort(),
+    [rows]
+  );
 
   const handleOpenFilter = () => setFilterDialogOpen(true);
   const handleCloseFilter = () => setFilterDialogOpen(false);
@@ -118,7 +189,7 @@ const AccountingInvoicesReport: React.FC = () => {
   };
 
   const filteredRows = useMemo(() => {
-    return DUMMY_INVOICE_REPORT_ROWS.filter((row) => {
+    return rows.filter((row) => {
       if (appliedFilters.tower && row.tower !== appliedFilters.tower) return false;
       if (appliedFilters.flat && row.flat !== appliedFilters.flat) return false;
       if (appliedFilters.dueDate) {
@@ -127,7 +198,7 @@ const AccountingInvoicesReport: React.FC = () => {
       }
       return true;
     });
-  }, [appliedFilters]);
+  }, [rows, appliedFilters]);
 
   const hasAppliedFilters = Boolean(
     appliedFilters.tower || appliedFilters.flat || appliedFilters.dueDate
@@ -189,10 +260,12 @@ const AccountingInvoicesReport: React.FC = () => {
         columns={columns}
         renderCell={renderCell}
         getItemId={(item) => String(item.sr)}
-        enableExport
+        // enableExport
         exportFileName="invoices-report"
         storageKey="accounting-invoices-report-table"
         emptyMessage="No invoices found"
+        loading={loading}
+        loadingMessage="Loading invoice report..."
         onFilterClick={handleOpenFilter}
       />
 
@@ -227,7 +300,7 @@ const AccountingInvoicesReport: React.FC = () => {
                   <MenuItem value="">
                     <em>All Towers</em>
                   </MenuItem>
-                  {TOWERS.map((tower) => (
+                  {towerOptions.map((tower) => (
                     <MenuItem key={tower} value={tower}>
                       {tower}
                     </MenuItem>
@@ -252,7 +325,7 @@ const AccountingInvoicesReport: React.FC = () => {
                   <MenuItem value="">
                     <em>All Flats</em>
                   </MenuItem>
-                  {FLATS.map((flat) => (
+                  {flatOptions.map((flat) => (
                     <MenuItem key={flat} value={flat}>
                       {flat}
                     </MenuItem>

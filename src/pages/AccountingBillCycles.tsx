@@ -84,14 +84,12 @@ const AccountingBillCycles: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      await axios.put(
-        `${baseUrl}/account/society_bill_cycles/${id}.json`,
-        { society_bill_cycle: { active: nextActive } },
+      await axios.post(
+        `${baseUrl}/account/update_society_bill_cycles`,
+        null,
         {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
+          params: { id, active: nextActive },
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         }
       );
       toast.success("Status updated successfully");
@@ -163,11 +161,11 @@ const AccountingBillCycles: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-       {/* <div className="mb-4 sm:mb-6"> */}
+       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
           Bill Cycles
         </h1>
-      {/* </div> */}
+      </div>
       <EnhancedTable
         data={rows}
         columns={columns}

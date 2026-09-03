@@ -715,12 +715,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: Database,
               path: "/accounting/units-bill-cycle-mapping",
             },
-            {
-              id: "charge-calculations",
-              label: "Charge Calculations",
-              icon: Database,
-              path: "/accounting/charge-calculations",
-            },
+            // {
+            //   id: "charge-calculations",
+            //   label: "Charge Calculations",
+            //   icon: Database,
+            //   path: "/accounting/charge-calculations",
+            // },
           ],
         },
         {

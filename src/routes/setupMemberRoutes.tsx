@@ -420,6 +420,15 @@ const AccountingBillCycleDetails = lazy(
 const AccountingUnitsBillCycleMapping = lazy(
   () => import("@/pages/AccountingUnitsBillCycleMapping")
 );
+const AccountingUnitsBillCycleMappingCreation = lazy(
+  () => import("@/pages/AccountingUnitsBillCycleMappingCreation")
+);
+const AccountingUnitsBillCycleMappingDetails = lazy(
+  () => import("@/pages/AccountingUnitsBillCycleMappingDetails")
+);
+const AccountingUnitsBillCycleMappingLog = lazy(
+  () => import("@/pages/AccountingUnitsBillCycleMappingLog")
+);
 const AccountingChargeCalculations = lazy(
   () => import("@/pages/AccountingChargeCalculations")
 );
@@ -1638,6 +1647,18 @@ export const setupMemberRoutes = (
     <Route
       path="/accounting/units-bill-cycle-mapping"
       Component={withSuspense(AccountingUnitsBillCycleMapping)}
+    />
+    <Route
+      path="/accounting/units-bill-cycle-mapping/add"
+      Component={withSuspense(AccountingUnitsBillCycleMappingCreation)}
+    />
+    <Route
+      path="/accounting/units-bill-cycle-mapping/log"
+      Component={withSuspense(AccountingUnitsBillCycleMappingLog)}
+    />
+    <Route
+      path="/accounting/units-bill-cycle-mapping/:id"
+      Component={withSuspense(AccountingUnitsBillCycleMappingDetails)}
     />
     <Route
       path="/accounting/charge-calculations"
