@@ -49,9 +49,25 @@ function getPosthogApiBase(): string {
   );
 }
 
+/** Read the `app_id` query param off the current URL (e.g. /posthog-runwal-dashboard?app_id=35). */
+export function getAppIdFromUrl(): string | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('app_id');
+  } catch {
+    return null;
+  }
+}
+
 export function getDynamicTenantUrl(): string {
   const baseUrl = localStorage.getItem('baseUrl') || '';
   return baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+}
+
+function getDeviceParams(dev: DashboardFilters['devPlatform']): Record<string, string> {
+  if (dev === 'ios') return { os: 'ios' };
+  if (dev === 'android') return { os: 'Android' };
+  return { device_type: 'Mobile' };
 }
 
 function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any> = {}): string {
@@ -67,9 +83,16 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
     parts.push(`site_id=${filters.siteIds.join(',')}`);
   }
 
-  if (filters.devices && filters.devices.length > 0) {
-    parts.push(`device_type=${filters.devices.join(',')}`);
+  for (const [k, v] of Object.entries(getDeviceParams(filters.devPlatform))) {
+    parts.push(`${k}=${encodeURIComponent(v)}`);
   }
+
+  const appId = getAppIdFromUrl();
+  if (appId) parts.push(`app_id=${encodeURIComponent(appId)}`);
+
+  // Sent unescaped (matches the site_id convention below) — the value is
+  // always a plain digit or comma-separated digits, e.g. "0,1".
+  if (filters.displayView) parts.push(`display_view=${filters.displayView}`);
 
   for (const [k, v] of Object.entries(extra)) {
     if (v !== undefined && v !== null && v !== '') {
@@ -176,6 +199,9 @@ async function getFm<T>(
       query.set(key, String(value));
     }
   }
+
+  const appId = getAppIdFromUrl();
+  if (appId) query.set('app_id', appId);
 
   const baseUrl = getApiBaseUrl();
   const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -309,6 +335,8 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
       const query = new URLSearchParams();
       if (token) query.set('token', token);
       query.set('user_id', String(userId));
+      const appIdAllowed = getAppIdFromUrl();
+      if (appIdAllowed) query.set('app_id', appIdAllowed);
 
       const res = await fetch(`${cleanBase}/pms/sites/allowed_sites.json?${query.toString()}`, {
         method: 'GET',
@@ -339,6 +367,8 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
       const query = new URLSearchParams();
       if (token) query.set('token', token);
       if (orgId) query.set('organization_id', orgId);
+      const appIdSites = getAppIdFromUrl();
+      if (appIdSites) query.set('app_id', appIdSites);
 
       const res = await fetch(`${cleanBase}/pms/sites.json?${query.toString()}`, {
         method: 'GET',
@@ -365,7 +395,11 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
   // 3. Fallback to /societies/user_approved_societies.json
   if (cleanBase && token) {
     try {
-      const res = await fetch(`${cleanBase}/societies/user_approved_societies.json?token=${encodeURIComponent(token)}`, {
+      const appIdSocieties = getAppIdFromUrl();
+      const societiesQuery = `token=${encodeURIComponent(token)}${
+        appIdSocieties ? `&app_id=${encodeURIComponent(appIdSocieties)}` : ''
+      }`;
+      const res = await fetch(`${cleanBase}/societies/user_approved_societies.json?${societiesQuery}`, {
         method: 'GET',
         headers,
       });

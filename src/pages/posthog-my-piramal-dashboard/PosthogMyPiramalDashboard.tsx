@@ -72,19 +72,13 @@ function PosthogMyPiramalDashboardContent() {
   const filters: DashboardFilters = useMemo(() => {
     // When "all" is selected, siteIds must be [] so PostHog returns tenant-wide aggregate live data
     const siteIds = selectedSiteId && selectedSiteId !== 'all' ? [selectedSiteId] : [];
-    const devices: ('Desktop' | 'Mobile')[] =
-      devPlatform === 'ios'
-        ? ['Desktop']
-        : devPlatform === 'android'
-        ? ['Mobile']
-        : [];
 
     return {
       siteIds,
       from: rangeFrom,
       to: rangeTo,
       token: getToken() || localStorage.getItem('token') || '',
-      devices,
+      devPlatform,
       licensedSeats: null,
       module: null,
       subModule: null,

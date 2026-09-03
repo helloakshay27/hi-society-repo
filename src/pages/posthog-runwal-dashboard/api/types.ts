@@ -370,11 +370,15 @@ export interface DashboardFilters {
   from: string; // YYYY-MM-DD
   to: string; // YYYY-MM-DD
   token: string; // FM API token
-  devices: ('Desktop' | 'Mobile')[];
+  devPlatform: 'all' | 'ios' | 'android';
   licensedSeats: number | null;
   module: string | null;
   subModule: string | null;
   url?: string; // Dynamic tenant base URL from localStorage
+  // Resident/sales-stage segment, only meaningful when the ?app_id=35 tab is
+  // shown. "0,1" (All), "0" (Pre Sales) or "1" (Post Sales) — sent verbatim
+  // (comma unescaped) as the display_view query param.
+  displayView?: string;
 }
 
 export interface SiteLookupItem {
