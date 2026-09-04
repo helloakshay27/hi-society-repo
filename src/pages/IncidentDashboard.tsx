@@ -673,6 +673,21 @@ export const IncidentDashboard = () => {
       draggable: true,
     },
     {
+      key: "sub_category_name",
+      label: "Sub Category",
+      sortable: true,
+      defaultVisible: true,
+      draggable: true,
+    },
+    {
+      key: "support_required",
+      label: "Support Required",
+      sortable: true,
+      defaultVisible: true,
+      draggable: true,
+
+    },
+    {
       key: "current_status",
       label: "Status",
       sortable: true,
@@ -1012,6 +1027,11 @@ export const IncidentDashboard = () => {
             {item.current_status}
           </Badge>
         );
+      case "support_required": {
+        const val = item.support_required as unknown;
+        const isYes = val === true || val === "true" || val === 1;
+        return <span>{isYes ? "Yes" : "No"}</span>;
+      }
       default:
         return <span>{String(item[columnKey as keyof Incident] ?? "-")}</span>;
     }
