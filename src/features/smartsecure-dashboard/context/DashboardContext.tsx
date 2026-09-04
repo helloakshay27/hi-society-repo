@@ -15,6 +15,8 @@ import { dateRangeFor } from '../api/queries';
 import { BM_DEFAULTS } from '../data/constants';
 import { buildTraffic, buildAdoption, buildFlows, type TrafficData, type AdoptData, type FlowsData } from '../data/metrics';
 import type { ActivePage, DashboardState, Device, DateRangeDays } from '../data/types';
+import type { Site } from '../data/constants';
+import { useAllSites } from '../api/queries';
 import { getToken } from '@/utils/auth';
 
 const initialRange = dateRangeFor(30);
@@ -58,11 +60,12 @@ interface DashboardContextValue {
   infoPopover: InfoPopoverState | null;
   openInfoPopover: (key: string, rect: DOMRect) => void;
   closeInfoPopover: () => void;
+  sites: Site[];
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-export function DashboardProvider({ children }: { children: ReactNode }) {
+export function DashboardProvider({ children, appId }: { children: ReactNode, appId?: string }) {
   const [state, setState] = useState<DashboardState>(DEFAULT_STATE);
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>({});
   const [infoPopover, setInfoPopover] = useState<InfoPopoverState | null>(null);
@@ -84,17 +87,30 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dynamicUrl = getDynamicTenantUrl();
+  const sitesQ = useAllSites();
+  const sites = useMemo(() => sitesQ.data ?? [], [sitesQ.data]);
+  const sitesSettled = sitesQ.isSuccess && sites.length > 0;
 
   const filters = useMemo(() => {
-    const devices: ('Mobile' | 'Desktop')[] | undefined = state.dev === 'all' ? undefined : (state.dev === 'ios' || state.dev === 'android' ? ['Mobile'] : ['Desktop']);
+    let devices: ('Mobile' | 'Desktop')[] | undefined;
+    let os: string | undefined;
+
+    if (state.dev === 'ios') os = 'ios';
+    else if (state.dev === 'android') os = 'Android';
+    else devices = ['Mobile'];
+
     return {
+      enabled: sitesSettled,
       from: state.rangeFrom,
       to: state.rangeTo,
       devices,
-      siteIds: state.society === 'All Societies' ? undefined : [],
+      os,
+      siteIds: state.society === 'All Societies' ? undefined : [state.society],
       url: dynamicUrl,
+      token: '', // Mock token, since it's required by QueryFilters in queries.ts but not used in smartsecure-dashboard yet? Wait, smartsecure queries use enabled: f.enabled. But wait, `QueryFilters` in `smartsecure-dashboard/api/queries.ts` requires it!
+      appId,
     };
-  }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl]);
+  }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl, sitesSettled, appId]);
 
   const trafficQ    = useQuery({ queryKey: ['ss-traffic',    filters], queryFn: () => fetchTrafficSession(filters),                                                                        staleTime: 5 * 60_000 });
   const usageQ      = useQuery({ queryKey: ['ss-usage',      filters], queryFn: () => fetchUsageAndDistribution(filters),                                                                   staleTime: 5 * 60_000 });
@@ -140,6 +156,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     infoPopover,
     openInfoPopover: (key, rect) => setInfoPopover({ key, rect }),
     closeInfoPopover: () => setInfoPopover(null),
+    sites,
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

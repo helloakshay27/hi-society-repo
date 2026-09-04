@@ -51,7 +51,7 @@ const toTowerOptions = (raw: unknown): TowerOption[] => {
   if (!Array.isArray(raw)) return [];
   return raw.map((item) => {
     const obj = item as Record<string, unknown>;
-    return { id: Number(obj.id), name: String(obj.name ?? obj.block_name ?? obj.label ?? obj.id ?? "") };
+    return { id: Number(obj.id), name: String(obj.name ?? "") };
   });
 };
 
@@ -139,7 +139,7 @@ const AccountingUnitsBillCycleMappingCreation: React.FC = () => {
         },
       });
       const data = (res.data || {}) as Record<string, unknown>;
-      setTowers(toTowerOptions(pickList(data, ["towers", "society_blocks", "blocks", "tower_options"])));
+      setTowers(toTowerOptions(pickList(data, ["towers"])));
     } catch (error) {
       console.error("Error fetching towers:", error);
       toast.error("Failed to load towers");

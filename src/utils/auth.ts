@@ -269,7 +269,10 @@ const isPulseSite = hostname === "pulse.lockated.com";
 const isPanchshilUatSite = hostname === "pulse-uat.panchshil.com";
 const isClubSite = hostname.includes("club.lockated.com");
 const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
-const isHiSocietyUiSite = hostname.includes("ui-hisociety.lockated.com") || hostname === "web.lockated.com";
+const isHiSocietyUiSite = hostname === "web.lockated.com";
+// UAT frontend (ui-hisociety.lockated.com) must resolve org lookups against
+// the UAT backend (uat-hi-society.lockated.com), not production.
+const isHiSocietyUatUiSite = hostname.includes("ui-hisociety.lockated.com");
 const isHiSocietySite =
   isLocalhost ||
   hostname.includes("web.hisociety.lockated.com");
@@ -292,6 +295,10 @@ export const getOrganizationsByEmail = async (
 
   if (isRunwalSite) {
     return fetchOrgs("https://runwal-cp-api.lockated.com", "Channel Partner");
+  }
+
+  if (isHiSocietyUatUiSite) {
+    return fetchOrgs("https://uat-hi-society.lockated.com", "Hi-Society");
   }
 
   if (isHiSocietyUiSite) {

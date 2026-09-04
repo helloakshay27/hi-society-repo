@@ -393,20 +393,20 @@ export function buildAdopt(
   const breadth = eng?.module_breadth;
 
   const tiles: TileSpec[] = [
-    {
-      id: 'A1',
-      label: 'Seat Utilisation (A1)',
-      disp: pctVal(seat?.value),
-      delta: deltaOf(seat?.delta_pct),
-      goodUp: true,
-      sub: seat
-        ? seat.licensed_seats
-          ? `${fmtC(seat.used_seats)} / ${fmtC(seat.licensed_seats)} seats`
-          : `${fmtC(seat.used_seats)} active · set licensed seats`
-        : 'no data',
-      raw: round1(seat?.value ?? 0),
-      unit: '%',
-    },
+    // {
+    //   id: 'A1',
+    //   label: 'Seat Utilisation (A1)',
+    //   disp: pctVal(seat?.value),
+    //   delta: deltaOf(seat?.delta_pct),
+    //   goodUp: true,
+    //   sub: seat
+    //     ? seat.licensed_seats
+    //       ? `${fmtC(seat.used_seats)} / ${fmtC(seat.licensed_seats)} seats`
+    //       : `${fmtC(seat.used_seats)} active · set licensed seats`
+    //     : 'no data',
+    //   raw: round1(seat?.value ?? 0),
+    //   unit: '%',
+    // },
     {
       id: 'A2',
       label: 'Stickiness (A2)',

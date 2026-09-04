@@ -1172,6 +1172,7 @@ const EditLockFeesPage = lazy(() => import("./pages/EditLockFeesPage"));
 const SocietyDetailsPage = lazy(() => import("./pages/master/SocietyDetailsPage"));
 const BlockDetailsPage = lazy(() => import("./pages/master/BlockDetailsPage"));
 const SmartSecureDashboardPage = lazy(() => import("./features/smartsecure-dashboard/SmartSecureDashboardPage"));
+const QuickgateDashboardPage = lazy(() => import("./features/smartsecure-dashboard/QuickgateDashboardPage"));
 const HiSocietyUsageDashboard = lazy(() => import("./pages/HiSocietyUsageDashboard"));
 
 
@@ -1590,6 +1591,10 @@ function App() {
                       <Route
                         path="/smartsecure-dashboard"
                         element={<SmartSecureDashboardPage />}
+                      />
+                      <Route
+                        path="/quickgate-dashboard"
+                        element={<QuickgateDashboardPage />}
                       />
                       <Route
                         path="/hi-society-usage-dashboard"
