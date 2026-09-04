@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { API_CONFIG } from "@/config/apiConfig";
 
 interface InvoiceReportRow {
   sr: number;
@@ -36,25 +39,79 @@ interface InvoiceReportRow {
   ageing15: number | null;
 }
 
-const TOWERS = ["A", "B", "C", "D", "FM", "GL"];
-const FLATS = ["101", "102", "103", "104", "105", "Office", "Team"];
+interface OptionItem {
+  id: number;
+  name: string;
+}
 
-// TODO: replace with a real fetch once the Invoice Report / Debtors Ageing
-// API endpoint is available; wire it the same way as AccountingBalanceSheet.
-const DUMMY_INVOICE_REPORT_ROWS: InvoiceReportRow[] = [
-  { sr: 1, tower: "C", flat: "101", partyName: "Deepak Gupta, Ani...", billNo: "283921", billPeriod: "NA", billDate: "17/11/2025", billAmt: 1180.0, dueDate: "2025-11-20", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 1180.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 1180.0 },
-  { sr: 2, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "test0010", billPeriod: "NA", billDate: "09/05/2025", billAmt: 1800.0, dueDate: "2025-12-30", paidAmount: 1800.0, paidDate: "02/09/2025", receiptNo: "", receiptDate: "02/09/2025", outstandingAmt: 0, ageing6: null, ageing9: 0, ageing12: null, ageing15: null },
-  { sr: 3, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "1001", billPeriod: "NA", billDate: "15/07/2024", billAmt: 0, dueDate: "2024-07-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 0, ageing6: 0, ageing9: null, ageing12: null, ageing15: null },
-  { sr: 4, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "0183", billPeriod: "NA", billDate: "11/04/2024", billAmt: 0, dueDate: "2024-02-13", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 0, ageing6: null, ageing9: 0, ageing12: null, ageing15: null },
-  { sr: 5, tower: "A", flat: "102", partyName: "Ankita Shah, Khar...", billNo: "562", billPeriod: "2022-11-01 to 202...", billDate: "10/09/2022", billAmt: 11.0, dueDate: "2022-11-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 11.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 11.0 },
-  { sr: 6, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "561", billPeriod: "2022-11-01 to 202...", billDate: "10/09/2022", billAmt: 22.0, dueDate: "2022-11-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 22.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 22.0 },
-  { sr: 7, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "560", billPeriod: "2022-11-01 to 202...", billDate: "10/09/2022", billAmt: 11.0, dueDate: "2022-11-25", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 11.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 11.0 },
-  { sr: 8, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "560", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 11.0, dueDate: "2022-11-16", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 11.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 11.0 },
-  { sr: 9, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "559", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 1.0, dueDate: "2022-11-16", paidAmount: 1.0, paidDate: "07/11/2022", receiptNo: "1003", receiptDate: "07/11/2022", outstandingAmt: 0, ageing6: null, ageing9: null, ageing12: null, ageing15: 0 },
-  { sr: 10, tower: "A", flat: "101", partyName: "Deepak Gupta", billNo: "558", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 35543.0, dueDate: "2022-11-16", paidAmount: 35543.0, paidDate: "06/11/2022", receiptNo: "1002", receiptDate: "06/11/2022", outstandingAmt: 0, ageing6: null, ageing9: null, ageing12: null, ageing15: 0 },
-  { sr: 11, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "558", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 35543.0, dueDate: "2022-11-16", paidAmount: null, paidDate: "", receiptNo: "", receiptDate: "", outstandingAmt: 35543.0, ageing6: null, ageing9: null, ageing12: null, ageing15: 35543.0 },
-  { sr: 12, tower: "FM", flat: "Office", partyName: "Ravi Sampat", billNo: "558", billPeriod: "2022-11-01 to 202...", billDate: "06/09/2022", billAmt: 35543.0, dueDate: "2022-11-16", paidAmount: 35543.0, paidDate: "07/11/2022", receiptNo: "1005", receiptDate: "07/11/2022", outstandingAmt: 0, ageing6: null, ageing9: null, ageing12: null, ageing15: 0 },
-];
+interface FilterState {
+  towerId: string;
+  towerName: string;
+  flatId: string;
+  flatName: string;
+  dueDate?: Date;
+}
+
+const pick = (obj: Record<string, unknown>, keys: string[]): unknown => {
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return undefined;
+};
+
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === undefined || value === null || value === "") return null;
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+};
+
+const pickList = (data: Record<string, unknown> | undefined, keys: string[]): unknown[] => {
+  if (!data) return [];
+  for (const key of keys) {
+    if (Array.isArray(data[key])) return data[key] as unknown[];
+  }
+  return [];
+};
+
+const toOptionList = (raw: unknown, nameKeys: string[]): OptionItem[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const obj = item as Record<string, unknown>;
+    return { id: Number(obj.id), name: String(pick(obj, nameKeys) ?? obj.id ?? "") };
+  });
+};
+
+const normalizeInvoiceRow = (item: Record<string, unknown>, index: number): InvoiceReportRow => ({
+  sr: toNumberOrNull(pick(item, ["sr", "sr_no", "serial_no"])) ?? index + 1,
+  tower: String(pick(item, ["tower", "tower_name", "block_name", "wing_name"]) ?? ""),
+  flat: String(pick(item, ["flat", "flat_no", "flat_name", "unit_name"]) ?? ""),
+  partyName: String(pick(item, ["party_name", "member_name", "customer_name", "user_name"]) ?? ""),
+  billNo: String(pick(item, ["bill_no", "bill_number", "invoice_no", "invoice_number"]) ?? ""),
+  billPeriod: String(pick(item, ["bill_period", "period"]) ?? ""),
+  billDate: String(pick(item, ["bill_date", "invoice_date"]) ?? ""),
+  billAmt: toNumberOrNull(pick(item, ["bill_amt", "bill_amount", "amount", "total_amount"])) ?? 0,
+  dueDate: String(pick(item, ["due_date"]) ?? ""),
+  paidAmount: toNumberOrNull(pick(item, ["paid_amount", "amount_paid"])),
+  paidDate: String(pick(item, ["paid_date"]) ?? ""),
+  receiptNo: String(pick(item, ["receipt_no", "receipt_number"]) ?? ""),
+  receiptDate: String(pick(item, ["receipt_date"]) ?? ""),
+  outstandingAmt:
+    toNumberOrNull(pick(item, ["outstanding_amt", "outstanding_amount", "balance_amount", "balance"])) ?? 0,
+  ageing6: toNumberOrNull(pick(item, ["ageing_6", "ageing6", "ageing_6_months", "less_than_6_months"])),
+  ageing9: toNumberOrNull(pick(item, ["ageing_9", "ageing9", "ageing_9_months", "less_than_9_months"])),
+  ageing12: toNumberOrNull(pick(item, ["ageing_12", "ageing12", "ageing_12_months", "less_than_12_months"])),
+  ageing15: toNumberOrNull(
+    pick(item, ["ageing_15", "ageing15", "ageing_15_months", "less_than_15_months", "above_15_months"])
+  ),
+});
+
+const extractInvoiceReportList = (data: unknown): Record<string, unknown>[] => {
+  if (Array.isArray(data)) return data as Record<string, unknown>[];
+  const obj = data as Record<string, unknown>;
+  const candidate =
+    obj?.bills_invoice_report ?? obj?.data ?? obj?.report ?? obj?.invoices ?? obj?.rows;
+  return Array.isArray(candidate) ? (candidate as Record<string, unknown>[]) : [];
+};
 
 const columns: ColumnConfig[] = [
   { key: "sr", label: "Sr.", sortable: false, draggable: false, hideable: false },
@@ -80,49 +137,150 @@ const columns: ColumnConfig[] = [
 const formatBillAmount = (value: number | null) => (value === null || value === undefined ? "" : value.toFixed(1));
 const formatOutstanding = (value: number | null) => (value === null || value === undefined ? "" : value.toFixed(2));
 
+const EMPTY_FILTERS: FilterState = { towerId: "", towerName: "", flatId: "", flatName: "", dueDate: undefined };
+
 const AccountingInvoiceReport: React.FC = () => {
+  const [towers, setTowers] = useState<OptionItem[]>([]);
+  const [flats, setFlats] = useState<OptionItem[]>([]);
+  const [flatsLoading, setFlatsLoading] = useState(false);
+
   const [selectedTower, setSelectedTower] = useState("");
   const [selectedFlat, setSelectedFlat] = useState("");
   const [dueDate, setDueDate] = useState<Date>();
 
-  const [appliedFilters, setAppliedFilters] = useState<{
-    tower: string;
-    flat: string;
-    dueDate?: Date;
-  }>({ tower: "", flat: "", dueDate: undefined });
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>(EMPTY_FILTERS);
+
+  const [rows, setRows] = useState<InvoiceReportRow[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchTowers = useCallback(async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const res = await axios.get(`${baseUrl}/account/soc_flat_charges/form_options.json`, {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const data = (res.data || {}) as Record<string, unknown>;
+      setTowers(toOptionList(pickList(data, ["towers"]), ["name"]));
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to load towers");
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTowers();
+  }, [fetchTowers]);
+
+  useEffect(() => {
+    setSelectedFlat("");
+    setFlats([]);
+    if (!selectedTower) return;
+
+    const fetchFlats = async () => {
+      setFlatsLoading(true);
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/crm/admin/society_flats.json`, {
+          params: {
+            "q[society_block_id_eq]": selectedTower,
+          },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list = Array.isArray(data) ? data : Array.isArray(data?.society_flats) ? data.society_flats : [];
+        setFlats(
+          list.map((item: Record<string, unknown>) => ({
+            id: Number(item.id),
+            name: String(item.flat_no ?? item.name ?? item.id ?? ""),
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching flats:", error);
+        toast.error("Failed to load flats for the selected tower");
+        setFlats([]);
+      } finally {
+        setFlatsLoading(false);
+      }
+    };
+    fetchFlats();
+  }, [selectedTower]);
+
+  const fetchInvoiceReport = useCallback(async (filters: FilterState) => {
+    setLoading(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const currentLockAccountId = localStorage.getItem("lock_account_id");
+      const params: Record<string, string> = {};
+      if (currentLockAccountId) params.lock_account_id = currentLockAccountId;
+      if (filters.towerId) params["q[society_block_id_eq]"] = filters.towerId;
+      if (filters.flatId) params["q[society_flat_id_eq]"] = filters.flatId;
+      if (filters.dueDate) params["q[due_date_eq]"] = format(filters.dueDate, "yyyy-MM-dd");
+
+      const response = await axios.get(`${baseUrl}/bills_invoice_report.json`, {
+        params,
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const list = extractInvoiceReportList(response.data);
+      setRows(list.map(normalizeInvoiceRow));
+    } catch (error) {
+      console.error("Error fetching invoice report:", error);
+      toast.error("Failed to fetch invoice report");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInvoiceReport(EMPTY_FILTERS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleApply = () => {
-    setAppliedFilters({ tower: selectedTower, flat: selectedFlat, dueDate });
+    const towerName = towers.find((t) => String(t.id) === selectedTower)?.name ?? "";
+    const flatName = flats.find((f) => String(f.id) === selectedFlat)?.name ?? "";
+    const next: FilterState = { towerId: selectedTower, towerName, flatId: selectedFlat, flatName, dueDate };
+    setAppliedFilters(next);
+    fetchInvoiceReport(next);
   };
 
   const handleReset = () => {
     setSelectedTower("");
     setSelectedFlat("");
     setDueDate(undefined);
-    setAppliedFilters({ tower: "", flat: "", dueDate: undefined });
+    setAppliedFilters(EMPTY_FILTERS);
+    fetchInvoiceReport(EMPTY_FILTERS);
   };
 
   const removeAppliedFilter = (key: "tower" | "flat" | "dueDate") => {
     if (key === "tower") setSelectedTower("");
     if (key === "flat") setSelectedFlat("");
     if (key === "dueDate") setDueDate(undefined);
-    setAppliedFilters((prev) => ({ ...prev, [key]: key === "dueDate" ? undefined : "" }));
+
+    const next: FilterState = {
+      ...appliedFilters,
+      ...(key === "tower" ? { towerId: "", towerName: "" } : {}),
+      ...(key === "flat" ? { flatId: "", flatName: "" } : {}),
+      ...(key === "dueDate" ? { dueDate: undefined } : {}),
+    };
+    setAppliedFilters(next);
+    fetchInvoiceReport(next);
   };
 
-  const filteredRows = useMemo(() => {
-    return DUMMY_INVOICE_REPORT_ROWS.filter((row) => {
-      if (appliedFilters.tower && row.tower !== appliedFilters.tower) return false;
-      if (appliedFilters.flat && row.flat !== appliedFilters.flat) return false;
-      if (appliedFilters.dueDate) {
-        const formatted = format(appliedFilters.dueDate, "yyyy-MM-dd");
-        if (row.dueDate !== formatted) return false;
-      }
-      return true;
-    });
-  }, [appliedFilters]);
-
   const hasAppliedFilters = Boolean(
-    appliedFilters.tower || appliedFilters.flat || appliedFilters.dueDate
+    appliedFilters.towerId || appliedFilters.flatId || appliedFilters.dueDate
   );
 
   const renderCell = (item: InvoiceReportRow, columnKey: string) => {
@@ -152,9 +310,9 @@ const AccountingInvoiceReport: React.FC = () => {
                 <SelectValue placeholder="Select Tower" />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 max-h-60">
-                {TOWERS.map((tower) => (
-                  <SelectItem key={tower} value={tower}>
-                    {tower}
+                {towers.map((tower) => (
+                  <SelectItem key={tower.id} value={String(tower.id)}>
+                    {tower.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -163,14 +321,14 @@ const AccountingInvoiceReport: React.FC = () => {
 
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">Select Flat</label>
-            <Select value={selectedFlat} onValueChange={setSelectedFlat}>
+            <Select value={selectedFlat} onValueChange={setSelectedFlat} disabled={!selectedTower || flatsLoading}>
               <SelectTrigger>
-                <SelectValue placeholder="Select Flat" />
+                <SelectValue placeholder={selectedTower ? "Select Flat" : "Select tower first"} />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 max-h-60">
-                {FLATS.map((flat) => (
-                  <SelectItem key={flat} value={flat}>
-                    {flat}
+                {flats.map((flat) => (
+                  <SelectItem key={flat.id} value={String(flat.id)}>
+                    {flat.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -212,18 +370,18 @@ const AccountingInvoiceReport: React.FC = () => {
           <p className="text-sm font-semibold text-gray-700 mb-2">Applied Filters</p>
           {hasAppliedFilters && (
             <div className="flex flex-wrap gap-2">
-              {appliedFilters.tower && (
+              {appliedFilters.towerId && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-gray-300 px-3 py-1 text-xs text-gray-700">
-                  Tower: {appliedFilters.tower}
+                  Tower: {appliedFilters.towerName}
                   <X
                     className="w-3 h-3 cursor-pointer"
                     onClick={() => removeAppliedFilter("tower")}
                   />
                 </span>
               )}
-              {appliedFilters.flat && (
+              {appliedFilters.flatId && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-gray-300 px-3 py-1 text-xs text-gray-700">
-                  Flat: {appliedFilters.flat}
+                  Flat: {appliedFilters.flatName}
                   <X
                     className="w-3 h-3 cursor-pointer"
                     onClick={() => removeAppliedFilter("flat")}
@@ -245,7 +403,7 @@ const AccountingInvoiceReport: React.FC = () => {
       </div>
 
       <EnhancedTable
-        data={filteredRows}
+        data={rows}
         columns={columns}
         renderCell={renderCell}
         getItemId={(item) => String(item.sr)}
@@ -254,6 +412,8 @@ const AccountingInvoiceReport: React.FC = () => {
         exportFileName="invoice-report"
         storageKey="accounting-invoice-report-table"
         emptyMessage="No invoices found"
+        loading={loading}
+        loadingMessage="Loading invoice report..."
       />
     </div>
   );
