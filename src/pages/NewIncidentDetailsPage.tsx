@@ -747,6 +747,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 // Adjust this import path to wherever incidentService actually lives in your project
 import { incidentService, Incident, IncidentAttachment } from '@/services/incidentService';
+import { ArrowLeft } from 'lucide-react';
 
 interface InjuryRow {
     injuryType: string;
@@ -1248,11 +1249,20 @@ export const NewIncidentDetailsPage = () => {
         <div className="p-6">
             {/* Breadcrumb */}
             <div className="mb-6">
+                <button
+                    type="button"
+                    onClick={() => navigate("/safety/incident")}
+                    aria-label="Back to Incident List"
+                    className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E7EB] bg-white shadow-sm hover:bg-gray-50"
+                >
+                    <ArrowLeft className="h-5 w-5 text-[#1A1A1A]" />
+                </button>
+
                 <nav className="flex items-center text-sm text-gray-600 mb-4">
                     <span>Home</span>
-                    <span className="mx-2">{'>'}</span>
+                    <span className="mx-2">{">"}</span>
                     <span>Safety</span>
-                    <span className="mx-2">{'>'}</span>
+                    <span className="mx-2">{">"}</span>
                     <span>Incident</span>
                 </nav>
 

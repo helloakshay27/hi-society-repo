@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { DevicePlatform } from '../../types';
 import { SiteLookupItem } from '../../api/types';
-import { LiveApiBadge } from './DashboardStates';
+// import { LiveApiBadge } from './DashboardStates';
 
 interface FilterBarProps {
   range: number;
@@ -234,11 +234,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="spacer"></div>
 
-      <LiveApiBadge
+      {/* <LiveApiBadge
         isFetching={isFetching}
         isError={isError}
         generatedAt={generatedAt}
-      />
+      /> */}
 
       <span className="pill">
         <span className="dot"></span>

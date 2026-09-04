@@ -184,7 +184,7 @@ export const IncidentSetupDashboard = () => {
   const [editCategoryAttachment, setEditCategoryAttachment] = useState<File | null>(null);
   const [editCategoryAttachmentPreview, setEditCategoryAttachmentPreview] = useState('');
   const [originalCategoryIconUrl, setOriginalCategoryIconUrl] = useState('');
-  const menuItems = ['Category', 'Sub Category', 'Sub Sub Category', 'Sub Sub Sub Category', 'Incidence status', 'Incidence level', 'Escalations', 'Approval Setup', 'Secondary Category', 'Secondary Sub Category', 'Secondary Sub Sub Category', 'Secondary Sub Sub Sub Category', 'Who got injured', 'Property Damage Category', 'RCA Category', 'Substandard Act', 'Substandard Condition', 'Preventive Action', 'Corrective Action'];
+  const menuItems = ['Category', 'Sub Category', 'Sub Sub Category', 'Sub Sub Sub Category', 'Incidence status', 'Incidence level', 'Escalations', 'Approval Setup', 'Secondary Category', 'Secondary Sub Category', 'Secondary Sub Sub Category', 'Secondary Sub Sub Sub Category', 'Who got injured', 'Property Damage Category', 'RCA Category'];
 
 
 

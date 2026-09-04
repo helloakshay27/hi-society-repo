@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Checkbox, FormControlLabel, Dialog, DialogContent, IconButton } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import { Heading } from '@/components/ui/heading';
@@ -691,14 +692,31 @@ export const EditIncidentPage = () => {
     return (
         <div className="p-6">
             <div className="mb-6">
-                <nav className="flex items-center text-sm text-gray-600 mb-4">
+                {/* Breadcrumb */}
+                <nav className="flex items-center text-sm text-gray-600 mb-8">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate(-1)}
+                        aria-label="Go back to previous page"
+                        className="!h-10 !w-10 !min-w-10 !rounded-full !p-0 !border !border-[#E5E7EB] !bg-white shadow-sm hover:!bg-[#F3F4F6] mr-1"
+                    >
+                        <ArrowBackIcon className="!text-[#E07856]" />
+                    </Button>
+
                     <span>Home</span>
-                    <span className="mx-2">{'>'}</span>
+                    <span className="mx-2 text-gray-400">{'>'}</span>
                     <span>Safety</span>
-                    <span className="mx-2">{'>'}</span>
+                    <span className="mx-2 text-gray-400">{'>'}</span>
                     <span>Incident</span>
                 </nav>
-                <Heading level="h1" variant="primary" spacing="none" className="text-[#C72030] font-semibold">
+
+                {/* Page Title */}
+                <Heading
+                    level="h1"
+                    variant="primary"
+                    spacing="none"
+                    className="text-[#E07856] font-semibold text-2xl"
+                >
                     EDIT INCIDENT (#{id})
                 </Heading>
             </div>
