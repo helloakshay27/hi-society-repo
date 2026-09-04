@@ -555,10 +555,11 @@ export const AddRolePage = () => {
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setActiveModuleTab(tab.id)}
                     className={`px-4 py-2 rounded border text-sm font-medium transition-colors whitespace-nowrap ${activeModuleTab === tab.id
-                      ? "bg-[#C72030] text-white border-[#C72030]"
-                      : "bg-white text-[#C72030] border-[#C72030] hover:bg-[#C72030]/10"
+                      ? "bg-brand text-white border-brand"
+                      : "bg-white text-brand border-brand hover:bg-brand-light"
                       }`}
                   >
                     {tab.name}
