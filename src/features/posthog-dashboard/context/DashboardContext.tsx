@@ -136,7 +136,13 @@ interface DashboardContextValue {
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-export function DashboardProvider({ children }: { children: ReactNode }) {
+interface DashboardProviderProps {
+  children: ReactNode;
+  projectCode?: string;
+  tenantUrl?: string;
+}
+
+export function DashboardProvider({ children, projectCode, tenantUrl }: DashboardProviderProps) {
   const [state, setState] = useState<DashboardState>(DEFAULT_STATE);
   const [token, setTokenState] = useState(() => getToken() ?? '');
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>(
@@ -231,7 +237,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     [scopedSites]
   );
 
-  const dynamicUrl = getDynamicTenantUrl();
+  const dynamicUrl = tenantUrl || getDynamicTenantUrl();
 
   const filters = useMemo<QueryFilters>(
     () => ({
@@ -245,8 +251,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       subModule: state.subModule,
       token,
       url: dynamicUrl,
+      projectCode,
     }),
-    [sitesSettled, from, to, siteIds, state.dev, state.licensedSeats, state.module, state.subModule, token, dynamicUrl]
+    [sitesSettled, from, to, siteIds, state.dev, state.licensedSeats, state.module, state.subModule, token, dynamicUrl, projectCode]
   );
 
   /** A disabled query reports isLoading=false, so treat "not started yet" as loading too. */

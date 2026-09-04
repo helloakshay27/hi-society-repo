@@ -47,6 +47,8 @@ export interface QueryFilters {
   requestId?: number;
   /** Auth token for FM API calls */
   token: string;
+  appId?: string;
+  os?: string;
 }
 
 function ymd(d: Date): string {
@@ -68,6 +70,8 @@ const range = (f: QueryFilters): RangeFilters => ({
   to: f.to,
   siteIds: f.siteIds,
   devices: f.devices,
+  appId: f.appId,
+  os: f.os,
 });
 
 /** Analytics is read-mostly and each call is a multi-second ClickHouse scan — cache generously. */
@@ -84,6 +88,8 @@ const keyBase = (f: QueryFilters) => [
   f.to,
   f.siteIds.join(','),
   f.devices.join(','),
+  f.os,
+  f.appId,
   f.requestId ?? 0,
 ];
 
@@ -171,6 +177,8 @@ export function useAdoptionTrend(f: QueryFilters) {
         weeks: TREND_WEEKS,
         siteIds: f.siteIds,
         devices: f.devices,
+        appId: f.appId,
+        os: f.os,
       }),
     enabled: f.enabled,
     ...CACHE,
@@ -181,7 +189,7 @@ export function useGrowth(f: QueryFilters) {
   return useQuery({
     queryKey: ['fm-adoption', 'growth', f.to, f.siteIds.join(','), f.devices.join(','), f.requestId ?? 0],
     queryFn: () =>
-      fetchGrowth({ to: f.to, weeks: GROWTH_WEEKS, siteIds: f.siteIds, devices: f.devices }),
+      fetchGrowth({ to: f.to, weeks: GROWTH_WEEKS, siteIds: f.siteIds, devices: f.devices, appId: f.appId, os: f.os }),
     enabled: f.enabled,
     ...CACHE,
   });
@@ -191,7 +199,7 @@ export function useRetention(f: QueryFilters) {
   return useQuery({
     queryKey: ['fm-adoption', 'retention', f.to, f.siteIds.join(','), f.devices.join(','), f.requestId ?? 0],
     queryFn: () =>
-      fetchRetention({ to: f.to, weeks: RETENTION_WEEKS, siteIds: f.siteIds, devices: f.devices }),
+      fetchRetention({ to: f.to, weeks: RETENTION_WEEKS, siteIds: f.siteIds, devices: f.devices, appId: f.appId, os: f.os }),
     enabled: f.enabled,
     ...CACHE,
   });
@@ -279,9 +287,9 @@ export function useSiteLeague(f: QueryFilters, siteIds: string[], enabled: boole
   // separately so the league table contains actual per-site values.
   const queries = useQueries({
     queries: siteIds.map((siteId) => ({
-      queryKey: ['fm-adoption', 'traffic_session', f.from, f.to, siteId, f.devices.join(','), f.requestId ?? 0],
+      queryKey: ['fm-adoption', 'traffic_session', f.from, f.to, siteId, f.devices.join(','), f.os, f.appId, f.requestId ?? 0],
       queryFn: () =>
-        fetchTrafficSession({ from: f.from, to: f.to, siteIds: [siteId], devices: f.devices }),
+        fetchTrafficSession({ from: f.from, to: f.to, siteIds: [siteId], devices: f.devices, appId: f.appId, os: f.os }),
       enabled: enabled && f.enabled,
       ...CACHE,
     })),

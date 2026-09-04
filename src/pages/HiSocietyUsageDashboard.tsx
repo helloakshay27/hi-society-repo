@@ -100,7 +100,7 @@ function DashboardLayout() {
 
 export function HiSocietyUsageDashboard() {
   return (
-    <DashboardProvider>
+    <DashboardProvider projectCode="HS-01">
       <CanvasProvider>
         <DashboardLayout />
       </CanvasProvider>
