@@ -73,8 +73,8 @@ function getDeviceParams(dev: DashboardFilters['devPlatform']): Record<string, s
 function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any> = {}): string {
   const parts: string[] = [];
 
-  const tenantUrl = (filters.url || getDynamicTenantUrl()).replace(/^https?:\/\//, '').replace(/\/+$/, '');
-  parts.push(`base_url=${encodeURIComponent(tenantUrl)}`);
+  // const tenantUrl = (filters.url || getDynamicTenantUrl()).replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  // parts.push(`base_url=${encodeURIComponent(tenantUrl)}`);
 
   if (filters.from) parts.push(`from=${encodeURIComponent(filters.from)}`);
   if (filters.to) parts.push(`to=${encodeURIComponent(filters.to)}`);
