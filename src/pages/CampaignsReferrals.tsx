@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   getCampaignReferrals,
@@ -23,9 +23,11 @@ import {
   InputLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const CampaignsReferrals: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -204,6 +206,7 @@ const CampaignsReferrals: React.FC = () => {
             data={filteredData}
             columns={columns}
             renderCell={renderCell}
+            loading={isLoading}
             pagination={true}
             pageSize={10}
             hideTableSearch={false}
@@ -216,12 +219,14 @@ const CampaignsReferrals: React.FC = () => {
             onFilterClick={() => setShowFilters(!showFilters)}
             leftActions={
               <div className="flex items-center gap-2">
+                {shouldShow("Referrals","create")&&(
                 <Button
-                  className="bg-[#F2EEE9] hover:bg-[#E5DDD6] text-[#BF213E] px-8"
-                  onClick={() => navigate("/campaigns/referrals/create")}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                   onClick={() => navigate("/campaigns/referrals/create")}
                 >
+                  <Plus className="w-4 h-4" />
                   Add
-                </Button>
+                </Button>)}
               </div>
             }
           />
@@ -337,17 +342,16 @@ const CampaignsReferrals: React.FC = () => {
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button
-                    className="flex-1"
-                    variant="outline"
-                    onClick={handleResetFilters}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    className="flex-1 bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white"
+                    className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleApplyFilters}
                   >
                     Apply
+                  </Button>
+                  <Button
+                    className="flex-1 !bg-white border border-[#C72030] text-[#C72030] px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleResetFilters}
+                  >
+                    Reset
                   </Button>
                 </div>
               </div>

@@ -2,12 +2,14 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock, XCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { toast } from "sonner";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { UnifiedDateRangeFilter } from "@/components/dashboard/UnifiedDateRangeFilter";
 
 interface FitoutRequestItem {
   id: number;
@@ -41,6 +43,11 @@ interface FitoutRequestItem {
   flat_no?: string;
 }
 
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
 interface FitoutCards {
   total: number;
   pending: number;
@@ -54,22 +61,53 @@ interface FitoutCards {
 
 const FitoutRequests: React.FC = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams] = useSearchParams();
+  const { shouldShow } = useDynamicPermissions();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q[search]") || "");
   const [allRequests, setAllRequests] = useState<FitoutRequestItem[]>([]);
   const [cards, setCards] = useState<FitoutCards | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalEntries, setTotalEntries] = useState(0);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(searchParams.get("status_filter"));
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const dateRangeParam = searchParams.get("q[date_range]");
+    if (dateRangeParam) {
+      const parts = dateRangeParam.split(" - ");
+      if (parts.length === 2) {
+        const [fromStr, toStr] = parts;
+        const [fromDay, fromMonth, fromYear] = fromStr.split("/").map(Number);
+        const [toDay, toMonth, toYear] = toStr.split("/").map(Number);
+        return {
+          from: new Date(fromYear, fromMonth - 1, fromDay),
+          to: new Date(toYear, toMonth - 1, toDay),
+        };
+      }
+    }
+    return undefined;
+  });
+  const perPage = 20;
 
-  const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null) => {
+  const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null, search: string = "", dateRangeValue?: DateRange) => {
     try {
       setLoading(true);
 
-      let url = `/crm/admin/fitout_requests.json?page=${page}`;
+      let url = `/crm/admin/fitout_requests.json?page=${page}&per_page=${perPage}`;
+      if (search) {
+        url += `&q[search]=${encodeURIComponent(search)}`;
+      }
       if (statusFilter) {
         url += `&status_filter=${encodeURIComponent(statusFilter)}`;
+      }
+      if (dateRangeValue?.from && dateRangeValue?.to) {
+        const formatDate = (date: Date) => {
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        };
+        url += `&q[date_range]=${encodeURIComponent(`${formatDate(dateRangeValue.from)} - ${formatDate(dateRangeValue.to)}`)}`;
       }
 
       const response = await axios.get(
@@ -115,17 +153,111 @@ const FitoutRequests: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchFitoutRequestsData(currentPage, activeFilter);
-  }, [fetchFitoutRequestsData, currentPage, activeFilter]);
+    fetchFitoutRequestsData(currentPage, activeFilter, searchTerm, dateRange);
+  }, [fetchFitoutRequestsData, currentPage, activeFilter, searchTerm, dateRange]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleCardFilter = (statusFilter: string | null) => {
@@ -402,10 +534,11 @@ const FitoutRequests: React.FC = () => {
     (item: FitoutRequestItem, columnKey: string, index: number) => {
       switch (columnKey) {
         case "sr_no":
-          return <span>{index + 1}</span>;
+          return <span>{(currentPage - 1) * perPage + index + 1}</span>;
         case "actions":
           return (
             <div className="flex justify-center items-center gap-2 mb-2">
+              {shouldShow("Fitout Requests", "show") && (
               <button
                 onClick={() => handleRowAction("View", item.id)}
                 className="p-1 text-black-600 hover:text-black-800"
@@ -413,6 +546,8 @@ const FitoutRequests: React.FC = () => {
               >
                 <Eye className="w-4 h-4" />
               </button>
+              )}
+              {shouldShow("Fitout Requests", "update") && (
               <button
                 onClick={() => handleRowAction("Edit", item.id)}
                 className="p-1 text-black-600 hover:text-black-800"
@@ -420,6 +555,7 @@ const FitoutRequests: React.FC = () => {
               >
                 <Edit className="w-4 h-4" />
               </button>
+              )}
             </div>
           );
         case "resend_email":
@@ -537,7 +673,7 @@ const FitoutRequests: React.FC = () => {
           );
       }
     },
-    [navigate, toast]
+    [navigate, toast, currentPage, perPage]
   );
 
   const filteredRequests = useMemo(() => {
@@ -622,6 +758,16 @@ const FitoutRequests: React.FC = () => {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
 
+      {/* Date Range Filter */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex-1 max-w-md">
+          <UnifiedDateRangeFilter
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+          />
+        </div>
+      </div>
+
       {/* Fitout Request Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-6">
         {statCards.map((item, i) => {
@@ -669,13 +815,15 @@ const FitoutRequests: React.FC = () => {
           pagination={false}
           leftActions={
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
+              {shouldShow("Fitout Requests", "create") && (
               <Button
                 onClick={handleAddRequest}
-                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
-              >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               >
                 <Plus className="w-4 h-4" />
                 Add
               </Button>
+              )}
               {/* <Button
                 onClick={() => navigate('/fitout/categories-subcategories')}
                 className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
@@ -688,50 +836,21 @@ const FitoutRequests: React.FC = () => {
           handleExport={handleExportRequests}
           loading={loading}
         />
-        {totalPages > 1 && (
+        {totalEntries > 0 && (
           <div className="mt-3 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
-                {(() => {
-                  const pages: number[] = [];
-                  const delta = 2;
-                  const left = Math.max(1, currentPage - delta);
-                  const right = Math.min(totalPages, currentPage + delta);
-                  if (left > 1) pages.push(1);
-                  if (left > 2) pages.push(-1); // ellipsis
-                  for (let p = left; p <= right; p++) pages.push(p);
-                  if (right < totalPages - 1) pages.push(-2); // ellipsis
-                  if (right < totalPages) pages.push(totalPages);
-                  return pages.map((page, idx) =>
-                    page < 0 ? (
-                      <PaginationItem key={`ellipsis-${idx}`}>
-                        <span className="px-2 text-gray-400">…</span>
-                      </PaginationItem>
-                    ) : (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  );
-                })()}
+                {renderPaginationItems()}
                 <PaginationItem>
                   <PaginationNext
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
               </PaginationContent>

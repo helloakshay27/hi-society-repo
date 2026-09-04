@@ -71,6 +71,8 @@ interface CompanyDetails {
   approved_by_id: number | null;
   email_sender_name: string | null;
   logo: string | null;
+  company_logo_url?: string;
+  company_banner_url?: string;
   backend_url: string;
   frontend_url: string | null;
   created_by: number;
@@ -221,7 +223,7 @@ export const CompanyDetailsPage: React.FC = () => {
             {error || "The requested company could not be found."}
           </p>
           <Button
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=company")}
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -239,7 +241,7 @@ export const CompanyDetailsPage: React.FC = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=company")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -252,7 +254,7 @@ export const CompanyDetailsPage: React.FC = () => {
                 {company.name}
               </h1>
               <div className="flex items-center gap-2 mt-3">
-                <span
+                {/* <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                     company.active
                       ? "bg-green-100 text-green-800"
@@ -260,12 +262,12 @@ export const CompanyDetailsPage: React.FC = () => {
                   }`}
                 >
                   {company.status || (company.active ? "Active" : "Inactive")}
-                </span>
-                {company.test && (
+                </span> */}
+                {/* {company.test && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                     Test Account
                   </span>
-                )}
+                )} */}
                 {company.white_label && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                     White Label
@@ -765,11 +767,9 @@ export const CompanyDetailsPage: React.FC = () => {
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="text-sm font-medium  mb-2">Company Logo</h3>
-                  {company &&
-                  company.company_logo &&
-                  company.company_logo.document_url ? (
+                  {company.company_logo_url ? (
                     <img
-                      src={company.company_logo.document_url}
+                      src={company.company_logo_url}
                       alt="Company Logo"
                       className="w-40 h-40 object-contain border rounded shadow bg-white"
                     />
@@ -779,11 +779,9 @@ export const CompanyDetailsPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium  mb-2">Company Banner</h3>
-                  {company &&
-                  company.company_banner &&
-                  company.company_banner.document_url ? (
+                  {company.company_banner_url ? (
                     <img
-                      src={company.company_banner.document_url}
+                      src={company.company_banner_url}
                       alt="Company Banner"
                       className="w-full max-w-lg h-40 object-contain border rounded shadow bg-white"
                     />

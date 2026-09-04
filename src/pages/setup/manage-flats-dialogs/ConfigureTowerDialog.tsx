@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SearchableSelect } from "@/components/SearchSelect";
 
 interface ConfigureTowerDialogProps {
   open: boolean;
@@ -26,33 +27,61 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
   editingTower,
   setEditingTower,
 }) => {
-  const baseUrl = localStorage.getItem('baseUrl')
-  const token = localStorage.getItem('token');
+  const savedUrl = localStorage.getItem("baseUrl");
+  const baseUrl = savedUrl
+    ? savedUrl.startsWith("http")
+      ? savedUrl
+      : `https://${savedUrl}`
+    : "";
+  const token = localStorage.getItem("token");
+
 
   const [towers, setTowers] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("");
   const [newTowerName, setNewTowerName] = useState("");
   const [newTowerAbbreviation, setNewTowerAbbreviation] = useState("");
-  const [editedTowerData, setEditedTowerData] = useState({ name: "", abbreviation: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editedTowerData, setEditedTowerData] = useState({ name: "", abbreviation: "", project_id: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchConfiguredTowers = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json`, {
+      const response = await axios.get(`${baseUrl}/crm/admin/society_blocks.json`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
-      })
+      });
 
-      setTowers(response.data?.society_blocks?.reverse())
+      setTowers(response.data?.society_blocks?.reverse() || []);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/crm/builder_projects/dropdown_projects.json`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const raw = response.data;
+      if (Array.isArray(raw?.builder_projects)) setProjects(raw.builder_projects);
+      else if (Array.isArray(raw)) setProjects(raw);
+      else if (Array.isArray(raw?.projects)) setProjects(raw.projects);
+      else setProjects([]);
+    } catch (error) {
+      console.log("Failed to fetch projects", error);
+    }
+  };
 
   useEffect(() => {
-    fetchConfiguredTowers()
-  }, [])
+    fetchConfiguredTowers();
+    fetchProjects();
+  }, []);
 
   const handleToggleTowerStatus = async (tower: any) => {
     const newStatus = !tower.status;
@@ -63,7 +92,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
     );
 
     try {
-      await axios.put(`https://${baseUrl}/crm/admin/society_blocks/${tower.id}.json`, {
+      await axios.put(`${baseUrl}/crm/admin/society_blocks/${tower.id}.json`, {
         society_block: {
           name: tower.name,
           description: tower.description,
@@ -93,10 +122,17 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
       return;
     }
 
+    const societyId = localStorage.getItem("selectedSocietyId");
+    const project = projects.find((p: any) => p.id.toString() === selectedProject);
+    const builderId = project?.builder?.id || project?.builder_id || project?.estate_builder_id;
+
     setIsSubmitting(true)
     try {
-      await axios.post(`https://${baseUrl}/crm/admin/society_blocks.json`, {
+      await axios.post(`${baseUrl}/crm/admin/society_blocks.json`, {
         society_block: {
+          project_id: selectedProject ? parseInt(selectedProject) : null,
+          society_id: societyId ? parseInt(societyId) : null,
+          estate_builder_id: builderId || null,
           name: newTowerName,
           description: newTowerAbbreviation,
           status: 1,
@@ -113,8 +149,9 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
       setNewTowerName("")
       setNewTowerAbbreviation("")
       fetchConfiguredTowers()
-    } catch (error) {
+    } catch (error: any) {
       console.log(error)
+      toast.error(error.response?.data?.message || "Failed to add tower");
     } finally {
       setIsSubmitting(false)
     }
@@ -126,9 +163,16 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
       return;
     }
 
+    const societyId = localStorage.getItem("selectedSocietyId");
+    const project = projects.find((p: any) => p.id.toString() === editedTowerData.project_id);
+    const builderId = project?.builder?.id || project?.builder_id || project?.estate_builder_id;
+
     try {
-      await axios.put(`https://${baseUrl}/crm/admin/society_blocks/${tower.id}.json`, {
+      await axios.put(`${baseUrl}/crm/admin/society_blocks/${tower.id}.json`, {
         society_block: {
+          // project_id: editedTowerData.project_id ? parseInt(editedTowerData.project_id) : null,
+          society_id: societyId ? parseInt(societyId) : null,
+          estate_builder_id: builderId || null,
           name: editedTowerData.name,
           description: editedTowerData.abbreviation,
           status: tower.status,
@@ -142,11 +186,11 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
 
       toast.success("Tower updated successfully!");
       setEditingTower(null);
-      setEditedTowerData({ name: "", abbreviation: "" });
+      setEditedTowerData({ name: "", abbreviation: "", project_id: "" });
       fetchConfiguredTowers();
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      toast.error("Failed to update tower");
+      toast.error(error.response?.data?.message || "Failed to update tower");
     }
   };
 
@@ -170,22 +214,50 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
         <div className="flex-1 overflow-y-auto py-6 space-y-6 px-6">
           {/* Add New Tower Form */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tower-name">Tower Name <span className="text-red-500">*</span></Label>
+            {/* <div className="space-y-2">
+              <Label>Project</Label>
+              <SearchableSelect
+                value={selectedProject}
+                onChange={setSelectedProject}
+                options={[
+                  { value: "", label: "Select Project" },
+                  ...projects.map((p: any) => ({
+                    value: p.id.toString(),
+                    label: p.name || p.project_name,
+                  })),
+                ]}
+                placeholder="Select Project"
+                className=""
+              />
+            </div> */}
+            <div className="relative">
+              <Label
+                htmlFor="tower-name"
+                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+              >
+                Tower Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="tower-name"
                 placeholder="Enter Tower Name"
                 value={newTowerName}
                 onChange={(e) => setNewTowerName(e.target.value)}
+                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="tower-abbreviation">Abbreviation <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Label
+                htmlFor="tower-abbreviation"
+                className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+              >
+                Abbreviation <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="tower-abbreviation"
                 placeholder="Enter Abbreviation"
                 value={newTowerAbbreviation}
                 onChange={(e) => setNewTowerAbbreviation(e.target.value)}
+                className="h-12 rounded-md border-gray-300 font-medium italic text-gray-800 focus-visible:border-[#C72030] focus-visible:ring-0"
               />
             </div>
           </div>
@@ -194,7 +266,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
             <Button
               onClick={handleSubmitTower}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
@@ -210,6 +282,9 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                       Id
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Project
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                       Tower
@@ -230,6 +305,30 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                     <tr key={tower.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {tower.id}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {editingTower === tower.id ? (
+                          <select
+                            value={editedTowerData.project_id}
+                            onChange={(e) =>
+                              setEditedTowerData({ ...editedTowerData, project_id: e.target.value })
+                            }
+                            className="w-full border rounded p-1"
+                          >
+                            <option value="">Select</option>
+                            {projects.map((p: any) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name || p.project_name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-gray-900 text-sm">
+                            {projects.find((p: any) => p.id === tower.project_id)?.name ||
+                              projects.find((p: any) => p.id === tower.project_id)?.project_name ||
+                              tower.project_id || "-"}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {editingTower === tower.id ? (
@@ -293,6 +392,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                               setEditedTowerData({
                                 name: tower.name,
                                 abbreviation: tower.description,
+                                project_id: tower.project_id ? tower.project_id.toString() : "",
                               });
                             }}
                             className="text-gray-600 hover:text-gray-800 inline-flex items-center justify-center"

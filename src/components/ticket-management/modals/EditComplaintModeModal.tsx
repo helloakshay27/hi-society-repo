@@ -9,17 +9,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { fetchComplaintModeById, updateComplaintMode, ComplaintMode } from '@/services/complaintModeAPI';
+import { TextField } from '@mui/material';
+import { fieldStyles } from '../fieldStyles';
 
 const complaintModeSchema = z.object({
   complaintMode: z.string().min(1, 'Complaint mode is required'),
@@ -142,7 +142,7 @@ export const EditComplaintModeModal: React.FC<EditComplaintModeModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} modal={false} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Complaint Mode</DialogTitle>
@@ -160,9 +160,18 @@ export const EditComplaintModeModal: React.FC<EditComplaintModeModalProps> = ({
                 name="complaintMode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Complaint Mode <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input id="edit-complaint-mode" placeholder="Enter complaint mode" {...field} />
+                      <TextField
+                        id="edit-complaint-mode"
+                        label={<>Complaint Mode <span style={{ color: 'red' }}>*</span></>}
+                        placeholder="Enter complaint mode"
+                        value={field.value}
+                        onChange={field.onChange}
+                        fullWidth
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

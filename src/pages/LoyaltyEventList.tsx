@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,6 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
-import { Switch } from "@mui/material";
 
 interface Event {
   id: number;
@@ -53,6 +53,7 @@ interface EventPermissions {
 
 const LoyaltyEventsList = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventPermissions, setEventPermissions] = useState<EventPermissions>(
@@ -207,7 +208,7 @@ const LoyaltyEventsList = () => {
       return null;
     }
     const items = [];
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
 
     if (showEllipsis) {
       items.push(
@@ -451,7 +452,7 @@ const LoyaltyEventsList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {/* {eventPermissions.show === "true" && ( */}
+            {shouldShow("Events List", "show") && (
             <Button
               variant="ghost"
               size="sm"
@@ -460,8 +461,8 @@ const LoyaltyEventsList = () => {
             >
               <Eye className="w-4 h-4" />
             </Button>
-            {/* )} */}
-            {/* {eventPermissions.update === "true" && ( */}
+            )}
+            {shouldShow("Events List", "update") && (
             <Button
               variant="ghost"
               size="sm"
@@ -470,7 +471,7 @@ const LoyaltyEventsList = () => {
             >
               <Pencil className="w-4 h-4" />
             </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case "id":
@@ -507,44 +508,36 @@ const LoyaltyEventsList = () => {
         return formatDateOnly(item.created_at);
       case "show_on_home":
         return (
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={item.show_on_home || false}
-              onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-              size="small"
-              sx={{
-                "& .MuiSwitch-switchBase.Mui-checked": {
-                  color: "#C72030",
-                },
-                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                  backgroundColor: "#C72030",
-                },
-              }}
-            />
-            <span className="text-sm font-medium">
-              {item.show_on_home ? "Yes" : "No"}
-            </span>
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.show_on_home ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.show_on_home ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       case "active":
         return (
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={item.active || false}
-              onChange={() => handleToggle(item.id, item.active)}
-              size="small"
-              sx={{
-                "& .MuiSwitch-switchBase.Mui-checked": {
-                  color: "#22c55e",
-                },
-                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                  backgroundColor: "#22c55e",
-                },
-              }}
-            />
-            <span className="text-sm font-medium">
-              {item.active ? "Active" : "Inactive"}
-            </span>
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       default:
@@ -554,6 +547,7 @@ const LoyaltyEventsList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
+      {shouldShow("Events List", "create") && (
       <Button
         onClick={handleAddEvent}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -561,6 +555,7 @@ const LoyaltyEventsList = () => {
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
       </Button>
+      )}
     </div>
   );
 
@@ -701,7 +696,7 @@ const LoyaltyEventsList = () => {
             isSearching ? "Searching events..." : "Loading events..."
           }
         />
-        {totalPages > 1 && (
+        {totalCount > 0 && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>

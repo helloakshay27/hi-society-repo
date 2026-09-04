@@ -642,16 +642,19 @@ const LoyaltyEventDetails = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-10 h-10 animate-spin text-[#C72030]" />
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading event details...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !eventData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-red-600">{error || "Event not found"}</div>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <p className="text-red-600">{error || "Event not found"}</p>
       </div>
     );
   }
@@ -1073,7 +1076,13 @@ const LoyaltyEventDetails = () => {
                             eventData.thumbnail_image_16_by_9,
                           ];
                           const images = groups
-                            .filter(Array.isArray)
+                            .map((g) =>
+                              Array.isArray(g)
+                                ? g
+                                : g && typeof g === "object"
+                                  ? [g]
+                                  : []
+                            )
                             .flat()
                             .filter((img) => img?.document_url);
                           return images.length > 0 ? (

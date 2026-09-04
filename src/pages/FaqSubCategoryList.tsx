@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface FaqSubCategory {
   id: number;
@@ -25,6 +26,7 @@ interface Permissions {
 }
 
 const FaqSubCategoryList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [subCategories, setSubCategories] = useState<FaqSubCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -185,32 +187,32 @@ const FaqSubCategoryList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEdit(item.id)}
-              title="Edit"
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            {shouldShow("FaqSubCategory", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit(item.id)}
+                title="Edit"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case 'active':
         return (
-          <div className="flex justify-center">
+          <div className="flex items-center justify-center">
             <button
               onClick={() => handleToggle(item.id, item.active)}
-              className="text-gray-600 hover:opacity-80 transition-opacity"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
             >
-              {item.active ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#28a745" viewBox="0 0 16 16">
-                  <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#6c757d" viewBox="0 0 16 16">
-                  <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                </svg>
-              )}
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
             </button>
           </div>
         );
@@ -223,15 +225,15 @@ const FaqSubCategoryList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {/* {permissions.create === 'true' && ( */}
+      {shouldShow("FaqSubCategory", "create") && (
         <Button
           onClick={handleAdd}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"        >
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Add
         </Button>
-      {/* )} */}
+      )}
     </div>
   );
 

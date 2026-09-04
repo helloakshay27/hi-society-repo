@@ -8,9 +8,6 @@ import {
   Paper,
   Container,
   InputAdornment,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Card,
   IconButton,
   Stack,
@@ -301,7 +298,7 @@ const AddPollPage = () => {
                       {formData.options.length > 2 && (
                         <IconButton
                           onClick={() => removeOption(index)}
-                          sx={{ color: 'error.main' }}
+                          sx={{ color: '#C72030' }}
                           size="small"
                         >
                           <Trash2 size={18} />
@@ -339,36 +336,41 @@ const AddPollPage = () => {
                 >
                   Share With
                 </Typography>
-                <RadioGroup
-                  row
-                  value={selectedShareWith}
-                  onChange={(e) => handleShareWithChange(e.target.value)}
-                  sx={{
-                    mb: 3,
-                    '& .MuiRadio-root': {
-                      color: 'rgba(199, 32, 48, 0.6)',
-                      '&.Mui-checked': {
-                        color: '#C72030'
-                      }
-                    }
-                  }}
-                >
-                  <FormControlLabel
-                    value="all"
-                    control={<Radio size="small" />}
-                    label="All"
-                  />
-                  <FormControlLabel
-                    value="individual"
-                    control={<Radio size="small" />}
-                    label="Individual"
-                  />
-                  <FormControlLabel
-                    value="group"
-                    control={<Radio size="small" />}
-                    label="Group"
-                  />
-                </RadioGroup>
+                <div className="flex gap-6 mb-6">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="shareWith"
+                        checked={selectedShareWith === 'all'}
+                        onChange={() => handleShareWithChange('all')}
+                        className="w-4 h-4"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">All</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="shareWith"
+                        checked={selectedShareWith === 'individual'}
+                        onChange={() => handleShareWithChange('individual')}
+                        className="w-4 h-4"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Individual</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="shareWith"
+                        checked={selectedShareWith === 'group'}
+                        onChange={() => handleShareWithChange('group')}
+                        className="w-4 h-4"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Group</span>
+                    </label>
+                  </div>
                 {selectedShareWith === 'individual' && (
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>

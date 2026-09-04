@@ -11,6 +11,7 @@ import {
   FileImage,
   Image,
   LampFloor,
+  Loader,
   MessageSquareX,
   NotepadText,
   ReceiptText,
@@ -253,6 +254,84 @@ export const AddBookingSetupClubPage = () => {
     } else if (!formData.cancellationText) {
       toast.error("Please enter Cancellation Policies");
       return false;
+    }
+
+    if (formData.addSubFacility) {
+      if (formData.subFacilities.length === 0) {
+        toast.error("Please add at least one sub-facility");
+        return false;
+      }
+
+      for (const [index, subFacility] of formData.subFacilities.entries()) {
+        if (!subFacility.name) {
+          toast.error(`Please enter name for Sub-Facility ${index + 1}`);
+          return false;
+        }
+
+        if (formData.isBookable) {
+          const { member, guest, nonMember, tenant } = subFacility.chargeSetup;
+          if (
+            !member.selected &&
+            !guest.selected &&
+            !nonMember.selected &&
+            !tenant.selected
+          ) {
+            toast.error(
+              `Please select at least one member type for Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+
+          if (member.selected && !member.adult && !member.child) {
+            toast.error(
+              `Please enter at least one charge for Member in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+          if (guest.selected && !guest.adult && !guest.child) {
+            toast.error(
+              `Please enter at least one charge for Guest in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+          if (nonMember.selected && !nonMember.adult && !nonMember.child) {
+            toast.error(
+              `Please enter at least one charge for Non-Member in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+          if (tenant.selected && !tenant.adult && !tenant.child) {
+            toast.error(
+              `Please enter at least one charge for Tenant in Sub-Facility: ${subFacility.name}`
+            );
+            return false;
+          }
+        }
+
+        if (!subFacility.minimumPersonAllowed) {
+          toast.error(
+            `Please enter Minimum Person Allowed for Sub-Facility: ${subFacility.name}`
+          );
+          return false;
+        }
+
+        if (!subFacility.maximumPersonAllowed) {
+          toast.error(
+            `Please enter Maximum Person Allowed for Sub-Facility: ${subFacility.name}`
+          );
+          return false;
+        }
+
+        if (
+          parseInt(subFacility.maximumPersonAllowed) <
+          parseInt(subFacility.minimumPersonAllowed)
+        ) {
+          toast.error(
+            `Maximum Person Allowed must be greater than or equal to Minimum Person Allowed for Sub-Facility: ${subFacility.name}`
+          );
+          return false;
+        }
+      }
     }
 
     // Validate slots
@@ -1191,7 +1270,7 @@ export const AddBookingSetupClubPage = () => {
                       // disabled={updatingStatus}
                       sx={{
                         "& .MuiSwitch-switchBase": {
-                          color: "#ef4444",
+                          color: "#d1d5db",
                           "&.Mui-checked": {
                             color: "#22c55e",
                           },
@@ -1200,7 +1279,8 @@ export const AddBookingSetupClubPage = () => {
                           },
                         },
                         "& .MuiSwitch-track": {
-                          backgroundColor: "#ef4444",
+                          backgroundColor: "#d1d5db",
+                          opacity: "1 !important",
                         },
                       }}
                     />
@@ -3237,8 +3317,11 @@ export const AddBookingSetupClubPage = () => {
                       style={{ width: "140px" }}
                     >
                       <MenuItem value="Select">Select</MenuItem>
-                      <MenuItem value="day">Day</MenuItem>
-                      <MenuItem value="week">Week</MenuItem>
+                      <MenuItem value="daily">Daily</MenuItem>
+                      <MenuItem value="weekly">Weekly</MenuItem>
+                      <MenuItem value="quarterly">Quarterly</MenuItem>
+                      <MenuItem value="half-yearly">Half-Yearly</MenuItem>
+                      <MenuItem value="annually">Annually</MenuItem>
                     </Select>
                     <span>by</span>
                     <Select
@@ -3260,7 +3343,7 @@ export const AddBookingSetupClubPage = () => {
                     </Select>
                     <Button
                       onClick={() => deleteFacilityBooking(booking.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white"
+                      className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2"
                       size="sm"
                     >
                       Remove
@@ -3270,7 +3353,7 @@ export const AddBookingSetupClubPage = () => {
                 <div className="mt-4">
                   <Button
                     onClick={addFacilityBooking}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Add
                   </Button>
@@ -3773,11 +3856,11 @@ export const AddBookingSetupClubPage = () => {
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-purple-600 hover:bg-purple-700 text-white w-full"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
               style={{ maxWidth: "90px" }}
             >
-              Save
+              {isSubmitting ? <Loader className="animate-spin" size={20} /> : "Save"}
             </Button>
           </div>
         </div>

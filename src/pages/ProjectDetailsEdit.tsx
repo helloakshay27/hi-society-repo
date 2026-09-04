@@ -18,7 +18,6 @@ import {
   InputLabel,
   Select as MUISelect,
   MenuItem,
-  Checkbox,
   Avatar,
   Switch,
 } from "@mui/material";
@@ -37,7 +36,6 @@ import {
 } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
-
 // Custom MultiValue component for react-select
 const CustomMultiValue = (props) => (
   <div
@@ -203,7 +201,7 @@ const ProjectDetailsEdit = () => {
     SFDC_Project_Id: "",
     Project_Construction_Status: "",
     Construction_Status_id: "",
-    Configuration_Type: [],
+    Configuration_Type: "",
     Project_Name: "",
     project_address: "",
     Project_Description: "",
@@ -219,7 +217,7 @@ const ProjectDetailsEdit = () => {
     Number_Of_Units: "",
     no_of_floors: "",
     Rera_Number_multiple: [],
-    Amenities: [],
+    Amenities: "",
     Specifications: [],
     Land_Area: "",
     land_uom: "",
@@ -1109,14 +1107,11 @@ const ProjectDetailsEdit = () => {
             "",
           Construction_Status_id:
             matchedStatus?.id || project.construction_status_id || "",
-          Configuration_Type: Array.isArray(project.configurations)
-            ? project.configurations.map((c) => ({
-                id: c.id,
-                name: c.name,
-              }))
-            : Array.isArray(project.configuration_type)
-              ? project.configuration_type
-              : [],
+          Configuration_Type: Array.isArray(project.configurations) && project.configurations.length > 0
+            ? project.configurations[0].id
+            : Array.isArray(project.configuration_type) && project.configuration_type.length > 0
+              ? project.configuration_type[0].id || project.configuration_type[0]
+              : "",
           Project_Name: project.project_name || "",
           project_address: project.project_address || "",
           Project_Description: project.project_description || "",
@@ -1132,13 +1127,9 @@ const ProjectDetailsEdit = () => {
           Number_Of_Units: project.no_of_apartments || "",
           show_on_home: project.show_on_home || false,
           no_of_floors: project.no_of_floors || "",
-          Amenities: Array.isArray(project.amenities)
-            ? project.amenities.map((a) => ({
-                id: a.amenity_id || a.id,
-                name: a.amenity_name || a.name,
-                association_id: a.id, // This is the project_amenity association ID for deletion
-              }))
-            : [],
+          Amenities: Array.isArray(project.amenities) && project.amenities.length > 0
+            ? project.amenities[0].amenity_id || project.amenities[0].id
+            : "",
           Specifications: project.specifications || [],
           Land_Area: project.land_area || "",
           land_uom: project.land_uom || "",
@@ -1245,10 +1236,10 @@ const ProjectDetailsEdit = () => {
             : [],
 
           // Banner images with different ratios
-          image_1_by_1: normalizeImageData(project.image_1_by_1),
-          image_16_by_9: normalizeImageData(project.image_16_by_9),
-          image_9_by_16: normalizeImageData(project.image_9_by_16),
-          image_3_by_2: normalizeImageData(project.image_3_by_2),
+          image_1_by_1: normalizeImageData(project.project_banners_1_by_1),
+          image_16_by_9: normalizeImageData(project.project_banners_16_by_9),
+          image_9_by_16: normalizeImageData(project.project_banners_9_by_16),
+          image_3_by_2: normalizeImageData(project.project_banners_3_by_2),
 
           // Cover images with different ratios
           cover_images_1_by_1: normalizeImageData(project.cover_images_1_by_1),
@@ -1445,44 +1436,6 @@ const ProjectDetailsEdit = () => {
   };
 
   // Handler to delete amenity via API
-  const handleDeleteAmenity = async (amenityToRemove) => {
-    // Find the amenity object that contains the association ID
-    const amenityObj = formData.Amenities.find(
-      (a) =>
-        (typeof a?.id === "string" ? parseInt(a.id, 10) : a?.id) ===
-        amenityToRemove.value
-    );
-
-    // If amenity has an association ID, delete it from the server
-    if (amenityObj && amenityObj.association_id) {
-      try {
-        await axios.delete(
-          getFullUrl(`/amenities/${amenityObj.association_id}.json`),
-          {
-            headers: {
-              Authorization: getAuthHeader(),
-            },
-          }
-        );
-        toast.success("Amenity removed successfully");
-      } catch (error) {
-        console.error("Error deleting amenity:", error);
-        toast.error("Failed to remove amenity", { description: "Error" });
-        return; // Don't update local state if API call failed
-      }
-    }
-
-    // Update local state - remove only the specific amenity
-    setFormData((prev) => ({
-      ...prev,
-      Amenities: prev.Amenities.filter(
-        (a) =>
-          (typeof a?.id === "string" ? parseInt(a.id, 10) : a?.id) !==
-          amenityToRemove.value
-      ),
-    }));
-  };
-
   const handlePropertyTypeChange = async (selectedOption) => {
     const { value, id } = selectedOption;
 
@@ -2082,7 +2035,6 @@ const ProjectDetailsEdit = () => {
           );
           return;
         }
-        if (!validateFile(file, MAX_SIZES[name])) return;
         validFiles.push(file);
       });
 
@@ -2715,31 +2667,19 @@ const ProjectDetailsEdit = () => {
             data.append("project[ProjectPPT]", file);
           }
         });
-      } else if (
-        key === "Amenities" &&
-        Array.isArray(value) &&
-        value.length > 0
-      ) {
-        // Convert array to comma-separated string of names for backend
-        const amenityNames = value
-          .map((amenity) => amenity?.name)
-          .filter(Boolean)
-          .join(",");
-        if (amenityNames) {
-          data.append("project[Amenities]", amenityNames);
+      } else if (key === "Amenities" && value) {
+        const amenity = amenities.find((a) => a.id === value);
+        if (amenity) {
+          data.append("project[Amenities]", amenity.name);
+        } else {
+          data.append("project[Amenities]", value);
         }
-      } else if (
-        key === "Configuration_Type" &&
-        Array.isArray(value) &&
-        value.length > 0
-      ) {
-        // Convert configuration objects array to comma-separated string of names
-        const configNames = value
-          .map((c) => c.name || c)
-          .filter((name) => name !== null && name !== undefined)
-          .join(",");
-        if (configNames) {
-          data.append("project[Configuration_Type]", configNames);
+      } else if (key === "Configuration_Type" && value) {
+        const config = configurations.find((c) => c.id === value);
+        if (config) {
+          data.append("project[Configuration_Type]", config.name);
+        } else {
+          data.append("project[Configuration_Type]", value);
         }
       } else if (
         key === "Specifications" &&
@@ -2757,7 +2697,7 @@ const ProjectDetailsEdit = () => {
         value.length > 0
       ) {
         value.forEach((img) => {
-          const backendField = key.replace("image", "project[image") + "]";
+          const backendField = `project[${key.replace("image_", "project_banners_")}]`;
           if (img.file instanceof File) {
             data.append(backendField, img.file);
           }
@@ -2910,7 +2850,10 @@ const ProjectDetailsEdit = () => {
   if (loading) {
     return (
       <div className="p-6 bg-gray-50 h-screen flex items-center justify-center">
-        <div className="text-lg">Loading project details...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading project details...</p>
+        </div>
       </div>
     );
   }
@@ -2986,7 +2929,7 @@ const ProjectDetailsEdit = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Basic Information
             </h2>
@@ -3086,80 +3029,42 @@ const ProjectDetailsEdit = () => {
                 </MUISelect>
               </FormControl>
 
-              <div className="w-full">
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                    Configuration Type
-                  </label>
-                  <Select
-                    isMulti
-                    value={
-                      Array.isArray(formData.Configuration_Type)
-                        ? formData.Configuration_Type.map((c) => ({
-                            value:
-                              typeof c?.id === "string"
-                                ? parseInt(c.id, 10)
-                                : c?.id,
-                            label: c?.name || "",
-                          })).filter((opt) => opt.value && opt.label)
-                        : []
+              <FormControl
+                fullWidth
+                variant="outlined"
+                required
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
+              >
+                <InputLabel shrink>Configuration Type</InputLabel>
+                <MUISelect
+                  value={formData.Configuration_Type}
+                  onChange={(e) => {
+                    const config = configurations.find(
+                      (c) => c.id === e.target.value
+                    );
+                    setFormData((prev) => ({
+                      ...prev,
+                      Configuration_Type: config ? config.id : e.target.value,
+                    }));
+                  }}
+                  label="Configuration Type"
+                  notched
+                  displayEmpty
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return <span style={{ color: "#999" }}>Select Configuration...</span>;
                     }
-                    onChange={(selected, actionMeta) => {
-                      // Handle adding new configurations
-                      if (actionMeta.action === "select-option") {
-                        const newConfig = actionMeta.option;
-                        const config = configurations.find(
-                          (c) => c.id === newConfig.value
-                        );
-                        if (config) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            Configuration_Type: [
-                              ...prev.Configuration_Type,
-                              { id: config.id, name: config.name },
-                            ],
-                          }));
-                        }
-                        return;
-                      }
-
-                      // Handle removal
-                      if (
-                        actionMeta.action === "remove-value" ||
-                        actionMeta.action === "pop-value"
-                      ) {
-                        setFormData((prev) => ({
-                          ...prev,
-                          Configuration_Type: prev.Configuration_Type.filter(
-                            (c) => c.id !== actionMeta.removedValue.value
-                          ),
-                        }));
-                        return;
-                      }
-
-                      // Handle clear all
-                      if (actionMeta.action === "clear") {
-                        setFormData((prev) => ({
-                          ...prev,
-                          Configuration_Type: [],
-                        }));
-                      }
-                    }}
-                    options={configurations.map((c) => ({
-                      value: c.id,
-                      label: c.name,
-                    }))}
-                    styles={customStyles}
-                    components={{
-                      MultiValue: CustomMultiValue,
-                    }}
-                    closeMenuOnSelect={false}
-                    placeholder="Select Configuration..."
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                </div>
-              </div>
+                    const config = configurations.find((c) => c.id === selected);
+                    return config ? config.name : selected;
+                  }}
+                >
+                  {configurations.map((config) => (
+                    <MenuItem key={config.id} value={config.id}>
+                      {config.name}
+                    </MenuItem>
+                  ))}
+                </MUISelect>
+              </FormControl>
               <TextField
                 label="Project Name"
                 placeholder="Enter Project Name"
@@ -3723,7 +3628,7 @@ const ProjectDetailsEdit = () => {
                   className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                   style={{ backgroundColor: "#E5E0D3" }}
                 >
-                  <FileText size={16} color="#C72030" />
+                  <FileText size={16} color="var(--color-primary,#da7756)" />
                 </span>
                 RERA Number
               </h2>
@@ -3917,10 +3822,9 @@ const ProjectDetailsEdit = () => {
                               .getElementById("qr-code-file-upload-0")
                               ?.click()
                           }
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                          style={{ backgroundColor: "#c4b89d59" }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
                         >
-                          <span className="font-medium text-sm text-gray-700">
+                          <span className="font-medium text-sm text-white">
                             Upload Files
                           </span>
                           <svg
@@ -3929,7 +3833,7 @@ const ProjectDetailsEdit = () => {
                             height="16"
                             viewBox="0 0 24 24"
                             fill="none"
-                            stroke="#C72030"
+                            stroke="#FFFFFF"
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -4230,10 +4134,9 @@ const ProjectDetailsEdit = () => {
                                       )
                                       ?.click()
                                   }
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                                  style={{ backgroundColor: "#c4b89d59" }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
                                 >
-                                  <span className="font-medium text-sm text-gray-700">
+                                  <span className="font-medium text-sm text-white">
                                     Upload Files
                                   </span>
                                   <svg
@@ -4242,7 +4145,7 @@ const ProjectDetailsEdit = () => {
                                     height="16"
                                     viewBox="0 0 24 24"
                                     fill="none"
-                                    stroke="#C72030"
+                                    stroke="#FFFFFF"
                                     strokeWidth="2"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -4264,10 +4167,9 @@ const ProjectDetailsEdit = () => {
                   <div className="flex justify-end mt-4">
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors bg-[#C72030] hover:bg-[#A01828]"
                       style={{
                         height: "45px",
-                        backgroundColor: "#C4B89D59",
                       }}
                       onClick={() => {
                         // Add empty section - data will be saved when typing in the fields
@@ -4320,7 +4222,7 @@ const ProjectDetailsEdit = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Amenities
             </h2>
@@ -4331,96 +4233,42 @@ const ProjectDetailsEdit = () => {
           >
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                    Amenities
-                  </label>
-                  <Select
-                    isMulti
-                    value={
-                      Array.isArray(formData.Amenities)
-                        ? formData.Amenities.map((a) => ({
-                            value:
-                              typeof a?.id === "string"
-                                ? parseInt(a.id, 10)
-                                : a?.id,
-                            label: a?.name || "",
-                          })).filter((opt) => opt.value && opt.label)
-                        : []
-                    }
-                    onChange={(selected, actionMeta) => {
-                      // Handle removal
-                      if (
-                        actionMeta.action === "remove-value" ||
-                        actionMeta.action === "pop-value"
-                      ) {
-                        handleDeleteAmenity(actionMeta.removedValue);
-                        return;
-                      }
-
-                      // Handle adding new amenities
-                      if (actionMeta.action === "select-option") {
-                        const newAmenity = actionMeta.option;
-                        const amenity = amenities.find(
-                          (a) => a.id === newAmenity.value
-                        );
-                        if (amenity) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            Amenities: [
-                              ...prev.Amenities,
-                              { id: amenity.id, name: amenity.name },
-                            ],
-                          }));
-                        }
-                        return;
-                      }
-
-                      // Handle clear all
-                      if (actionMeta.action === "clear") {
-                        // Delete all amenities
-                        const deletePromises = formData.Amenities.filter(
-                          (a) => a.association_id
-                        ).map((a) =>
-                          axios
-                            .delete(
-                              getFullUrl(`/amenities/${a.association_id}.json`),
-                              {
-                                headers: {
-                                  Authorization: getAuthHeader(),
-                                },
-                              }
-                            )
-                            .catch((err) =>
-                              console.error("Error deleting amenity:", err)
-                            )
-                        );
-
-                        Promise.all(deletePromises).then(() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            Amenities: [],
-                          }));
-                          toast.success("All amenities removed", {
-                            description: "Success",
-                          });
-                        });
-                      }
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ "& .MuiInputBase-root": fieldStyles }}
+                >
+                  <InputLabel shrink>Amenities</InputLabel>
+                  <MUISelect
+                    value={formData.Amenities}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        Amenities: e.target.value,
+                      }));
                     }}
-                    options={amenities.map((a) => ({
-                      value: a.id,
-                      label: a.name,
-                    }))}
-                    styles={customStyles}
-                    components={{
-                      MultiValue: CustomMultiValue,
+                    label="Amenities"
+                    notched
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected) {
+                        return (
+                          <span style={{ color: "#999" }}>
+                            Select Amenities...
+                          </span>
+                        );
+                      }
+                      const amenity = amenities.find((a) => a.id === selected);
+                      return amenity ? amenity.name : selected;
                     }}
-                    closeMenuOnSelect={false}
-                    placeholder="Select Amenities..."
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                </div>
+                  >
+                    {amenities.map((amenity) => (
+                      <MenuItem key={amenity.id} value={amenity.id}>
+                        {amenity.name}
+                      </MenuItem>
+                    ))}
+                  </MUISelect>
+                </FormControl>
               </div>
             </div>
           </div>
@@ -4437,7 +4285,7 @@ const ProjectDetailsEdit = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Connectivity
             </h2>
@@ -4860,12 +4708,7 @@ const ProjectDetailsEdit = () => {
               <button
                 type="button"
                 onClick={handleAddConnectivity}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md"
-                style={{
-                  backgroundColor: "#EDEAE3",
-                  border: "1px solid #C72030",
-                  color: "#C72030",
-                }}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition-colors"
               >
                 <span>Add</span>
               </button>
@@ -5199,7 +5042,7 @@ const ProjectDetailsEdit = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <FileUpload sx={{ fontSize: 16, color: "#C72030" }} />
+                <FileUpload sx={{ fontSize: 16, color: "var(--color-primary,#da7756)" }} />
               </span>
               File Uploads
             </h2>
@@ -5232,7 +5075,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowBannerModal(true)}
                   >
@@ -5335,7 +5178,7 @@ const ProjectDetailsEdit = () => {
                                 // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                <Trash2 className="w-4 h-4 text-gray-900" />
                               </button>
                             </td>
                           </tr>
@@ -5367,7 +5210,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -5481,7 +5324,7 @@ const ProjectDetailsEdit = () => {
                                   // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-gray-900" />
                                 </button>
                               </td>
                             </tr>
@@ -5530,7 +5373,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowGalleryModal(true)}
                   >
@@ -5698,7 +5541,7 @@ const ProjectDetailsEdit = () => {
                                   // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-gray-900" />
                                 </button>
                               </td>
                             </tr>
@@ -5732,7 +5575,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
@@ -5826,7 +5669,7 @@ const ProjectDetailsEdit = () => {
                                 // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                <Trash2 className="w-4 h-4 text-gray-900" />
                               </button>
                             </td>
                           </tr>
@@ -5850,7 +5693,7 @@ const ProjectDetailsEdit = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipBrochure && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 5 MB
+                          No file size limit
                         </span>
                       )}
                     </span>
@@ -5858,7 +5701,7 @@ const ProjectDetailsEdit = () => {
 
                   <button
                     type="button"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     onClick={() => document.getElementById("brochure").click()}
                   >
                     {/* <svg
@@ -5928,7 +5771,7 @@ const ProjectDetailsEdit = () => {
                                       handleDiscardFile("brochure", index)
                                     }
                                   >
-                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                    <Trash2 className="w-4 h-4 text-gray-900" />
                                   </button>
                                 </td>
                               </tr>
@@ -5963,7 +5806,7 @@ const ProjectDetailsEdit = () => {
 
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() =>
                             document.getElementById("project_ppt").click()
                           }
@@ -6017,7 +5860,7 @@ const ProjectDetailsEdit = () => {
                                       handleDiscardPpt("project_ppt", index)
                                     }
                                   >
-                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                    <Trash2 className="w-4 h-4 text-gray-900" />
                                   </button>
                                 </td>
                               </tr>
@@ -6046,7 +5889,7 @@ const ProjectDetailsEdit = () => {
 
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                       onClick={() =>
                         document.getElementById("project_layout").click()
                       }
@@ -6138,7 +5981,7 @@ const ProjectDetailsEdit = () => {
                                     handleDiscardFile("project_layout", index)
                                   }
                                 >
-                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-gray-900" />
                                 </button>
                               </td>
                             </tr>
@@ -6170,7 +6013,7 @@ const ProjectDetailsEdit = () => {
 
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() =>
                             document.getElementById("project_creatives").click()
                           }
@@ -6258,7 +6101,7 @@ const ProjectDetailsEdit = () => {
                                         )
                                       }
                                     >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                      <Trash2 className="w-4 h-4 text-gray-900" />
                                     </button>
                                   </td>
                                 </tr>
@@ -6288,7 +6131,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() =>
                             document
                               .getElementById("project_creative_generics")
@@ -6382,7 +6225,7 @@ const ProjectDetailsEdit = () => {
                                           )
                                         }
                                       >
-                                        <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                        <Trash2 className="w-4 h-4 text-gray-900" />
                                       </button>
                                     </td>
                                   </tr>
@@ -6413,7 +6256,7 @@ const ProjectDetailsEdit = () => {
                     </h5>
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                       onClick={() =>
                         document
                           .getElementById("project_creative_offers")
@@ -6523,7 +6366,7 @@ const ProjectDetailsEdit = () => {
                                     )
                                   }
                                 >
-                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-gray-900" />
                                 </button>
                               </td>
                             </tr>
@@ -6553,7 +6396,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() =>
                             document.getElementById("project_interiors").click()
                           }
@@ -6644,7 +6487,7 @@ const ProjectDetailsEdit = () => {
                                         )
                                       }
                                     >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                      <Trash2 className="w-4 h-4 text-gray-900" />
                                     </button>
                                   </td>
                                 </tr>
@@ -6674,7 +6517,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() =>
                             document.getElementById("project_exteriors").click()
                           }
@@ -6765,7 +6608,7 @@ const ProjectDetailsEdit = () => {
                                         )
                                       }
                                     >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                      <Trash2 className="w-4 h-4 text-gray-900" />
                                     </button>
                                   </td>
                                 </tr>
@@ -6795,7 +6638,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() =>
                             document
                               .getElementById("project_emailer_templetes")
@@ -6864,7 +6707,7 @@ const ProjectDetailsEdit = () => {
                                             )
                                           }
                                         >
-                                          <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                          <Trash2 className="w-4 h-4 text-gray-900" />
                                         </button>
                                       </td>
                                     </tr>
@@ -6895,7 +6738,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() =>
                             document
                               .getElementById("KnwYrApt_Technical")
@@ -6964,7 +6807,7 @@ const ProjectDetailsEdit = () => {
                                             )
                                           }
                                         >
-                                          <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                          <Trash2 className="w-4 h-4 text-gray-900" />
                                         </button>
                                       </td>
                                     </tr>
@@ -6995,7 +6838,7 @@ const ProjectDetailsEdit = () => {
                     </h5>
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                       onClick={() => document.getElementById("videos").click()}
                     >
                       {/* <svg
@@ -7098,7 +6941,7 @@ const ProjectDetailsEdit = () => {
                                     handleDiscardFile("videos", index)
                                   }
                                 >
-                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-gray-900" />
                                 </button>
                               </td>
                             </tr>
@@ -7151,7 +6994,7 @@ const ProjectDetailsEdit = () => {
               </h2>
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                 onClick={handleAddVirtualTour}
               >
                 {/* <svg
@@ -7338,7 +7181,7 @@ const ProjectDetailsEdit = () => {
                   mr: 1.5,
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "#C72030" }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "var(--color-primary,#da7756)" }} />
               </Avatar>
               Visibility
             </h2>
@@ -7546,15 +7389,14 @@ const ProjectDetailsEdit = () => {
             <button
               type="submit"
               disabled={isSubmitting || loading}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
             >
               {isSubmitting ? "Updating..." : "Update"}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-            >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"                 >
               Cancel
             </button>
           </div>

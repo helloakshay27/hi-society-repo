@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { BulkUploadModal } from '@/components/BulkUploadModal';
+import { BulkUploadDialog } from '@/components/BulkUploadDialog';
 import { ExportModal } from '@/components/ExportModal';
 import { PatrollingFilterModal, PatrollingFilters } from '@/components/PatrollingFilterModal';
 import { AddPatrollingModal } from '@/components/AddPatrollingModal';
@@ -17,6 +18,8 @@ import { toast } from 'sonner';
 import { EnhancedTaskTable } from '@/components/enhanced-table/EnhancedTaskTable';
 import { useDebounce } from '@/hooks/useDebounce';
 import { userService, User } from '@/services/userService';
+import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
+import { useLayout } from '@/contexts/LayoutContext';
 
 // Type definitions for the API response
 interface PatrollingItem {
@@ -114,19 +117,21 @@ const columns: ColumnConfig[] = [{
   sortable: true,
   hideable: true,
   draggable: true
-}, {
-  key: 'assignee',
-  label: 'Assignee',
-  sortable: true,
-  hideable: true,
-  draggable: true
-}, {
-  key: 'supervisor',
-  label: 'Supervisor',
-  sortable: true,
-  hideable: true,
-  draggable: true
-}, {
+}, 
+// {
+//   key: 'assignee',
+//   label: 'Assignee',
+//   sortable: true,
+//   hideable: true,
+//   draggable: true
+// }, {
+//   key: 'supervisor',
+//   label: 'Supervisor',
+//   sortable: true,
+//   hideable: true,
+//   draggable: true
+// }, 
+{
   key: 'grace_time',
   label: 'Grace Time',
   sortable: true,
@@ -140,13 +145,23 @@ const columns: ColumnConfig[] = [{
   draggable: true
 }];
 export const PatrollingDashboard = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+  const { setCurrentSection } = useLayout();
+
+  // Keep sidebar/navbar showing "Security" section
+  useEffect(() => {
+    setCurrentSection('Security');
+  }, [setCurrentSection]);
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showActionPanel, setShowActionPanel] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [selectedPatrollingId, setSelectedPatrollingId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -158,7 +173,7 @@ export const PatrollingDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState({
     current_page: 1,
-    per_page: 10,
+    per_page: 20,
     total_pages: 1,
     total_count: 0,
     has_next_page: false,
@@ -348,15 +363,19 @@ export const PatrollingDashboard = () => {
   // Render row function for enhanced table
   const renderRow = (patrol: PatrollingItem) => ({
     actions: <div className="flex items-center gap-2">
-      <button onClick={() => handleView(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="View">
-        <Eye className="w-4 h-4" />
-      </button>
-      <button onClick={() => handleEdit(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="Edit">
-        <Edit className="w-4 h-4" />
-      </button>
-      <button onClick={() => handleDelete(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="Delete">
+      {shouldShow("Patrolling Info", "show") && (
+        <button onClick={() => handleView(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="View">
+          <Eye className="w-4 h-4" />
+        </button>
+      )}
+      {shouldShow("Patrolling Info", "update") && (
+        <button onClick={() => handleEdit(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="Edit">
+          <Edit className="w-4 h-4" />
+        </button>
+      )}
+      {/* <button onClick={() => handleDelete(patrol.id)} className="p-1 text-black hover:bg-gray-100 rounded" title="Delete">
         <Trash2 className="w-4 h-4" />
-      </button>
+      </button> */}
     </div>,
     name: <div className="font-medium">{patrol.name}</div>,
     checkpoints: <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-black">
@@ -384,12 +403,17 @@ export const PatrollingDashboard = () => {
     </span>,
     shift_type: <div className="text-sm text-gray-600">{getShiftType(patrol.schedules)}</div>,
     grace_time: <span className="text-sm text-gray-600">{patrol.grace_period_minutes} min</span>,
-    status: <div className="flex items-center justify-center">
-      <Switch
-        checked={patrol.active}
-        onCheckedChange={() => handleToggleStatus(patrol.id, patrol.active)}
-      />
-    </div>
+    status: (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          patrol.active
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+        }`}
+      >
+        {patrol.active ? 'Active' : 'Inactive'}
+      </span>
+    ),
   });
   const handleView = (id: number) => {
     console.log('View patrolling:', id);
@@ -515,10 +539,44 @@ export const PatrollingDashboard = () => {
         onFilterClick={() => setIsFilterOpen(true)}
         loading={loading}
         leftActions={(
-          <Button className='bg-primary text-primary-foreground hover:bg-primary/90'  onClick={() => navigate('/security/patrolling/create')}>
-            <Plus className="w-4 h-4 mr-2" /> Add
-          </Button>
+          <div className="flex gap-2">
+            {shouldShow("Patrolling Info", "create") && (
+              <Button
+                className='bg-[#C72030] text-white hover:bg-[#C72030]/90'
+                onClick={() => setShowActionPanel((prev) => !prev)}
+              >
+                <Plus className="w-4 h-4 mr-2" /> Action
+              </Button>
+            )}
+          </div>
         )}
+      />
+
+      {showActionPanel && (
+        <SelectionPanel
+          onAdd={() => {
+            setShowActionPanel(false);
+            navigate('/security/patrolling/create');
+          }}
+          onImport={() => {
+            setShowActionPanel(false);
+            setShowImportModal(true);
+          }}
+          onClearSelection={() => setShowActionPanel(false)}
+        />
+      )}
+
+      <BulkUploadDialog
+        open={showImportModal}
+        onOpenChange={(open) => {
+          setShowImportModal(open);
+          // Refresh data when dialog closes (after successful upload)
+          if (!open) {
+            fetchPatrollingData(currentPage, perPage, debouncedSearchQuery, appliedFilters);
+          }
+        }}
+        title="Bulk Upload Patrolling Checkpoints"
+        context="patrolling"
       />
 
       {totalRecords > 0 && (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
@@ -8,7 +8,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Loader2,
   MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -89,6 +88,13 @@ const columns: ColumnConfig[] = [
     hideable: false,
     draggable: false,
   },
+  {
+    key: "srno",
+    label: "S.No.",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
 
   {
     key: "name",
@@ -97,13 +103,13 @@ const columns: ColumnConfig[] = [
     hideable: true,
     draggable: true,
   },
-  {
-    key: "code",
-    label: "Code",
-    sortable: true,
-    hideable: true,
-    draggable: true,
-  },
+  // {
+  //   key: "code",
+  //   label: "Code",
+  //   sortable: true,
+  //   hideable: true,
+  //   draggable: true,
+  // },
   {
     key: "location",
     label: "Location",
@@ -218,8 +224,10 @@ export const SiteTab: React.FC<SiteTabProps> = ({
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com", 
-"demo@lockated.com",
+      "sumitra.patil@lockated.com",
+      "komalshinde0101@lockated.com",
+      "demo@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEditSite(allowedEmails.includes(userEmail));
   }, [user.email]);
@@ -320,7 +328,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
   const fetchCompaniesDropdown = useCallback(async () => {
     try {
       const response = await fetch(
-        getFullUrl("/pms/company_setups/company_index.json"),
+        getFullUrl("/pms/company_setups/all_companies.json"),
         {
           headers: {
             Authorization: getAuthHeader(),
@@ -569,10 +577,14 @@ export const SiteTab: React.FC<SiteTabProps> = ({
   const totalPages = pagination.total_pages;
 
   // Use API data directly instead of client-side filtering
-  const displayedData = sites;
+  const displayedData = useMemo(
+    () => sites.map((s, i) => ({ ...s, srno: (currentPage - 1) * perPage + i + 1 })),
+    [sites, currentPage, perPage],
+  );
 
   // Render row function for enhanced table
-  const renderRow = (site: SiteItem) => ({
+  const renderRow = (site: SiteItem & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{site.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         <button
@@ -585,7 +597,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
         </button>
         <button
           onClick={() => site?.id && handleEdit(site.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-gray-900 hover:bg-gray-50 rounded"
           title="Edit"
           disabled={!canEditSite || !site?.id}
         >
@@ -819,15 +831,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
         <h1 className="text-2xl font-bold">Sites</h1>
       </header>
 
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">Loading sites...</span>
-        </div>
-      )}
-
-      {!loading && (
-        <>
+      <>
           <EnhancedTaskTable
             data={displayedData}
             columns={columns}
@@ -839,36 +843,37 @@ export const SiteTab: React.FC<SiteTabProps> = ({
             searchTerm={searchTerm}
             onSearchChange={handleSearch}
             onFilterClick={() => setIsFilterOpen(true)}
+            loading={loading}
             leftActions={
               <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={!canEditSite}
               >
                 <Plus className="w-4 h-4 mr-2" /> Add Site
               </Button>
             }
-            // rightActions={(
-            //   <div className="flex items-center gap-2">
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsBulkUploadOpen(true)}
-            //       disabled={!canEditSite}
-            //     >
-            //       <Upload className="w-4 h-4 mr-2" />
-            //       Bulk Upload
-            //     </Button>
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsExportOpen(true)}
-            //     >
-            //       <Download className="w-4 h-4 mr-2" />
-            //       Export
-            //     </Button>
-            //   </div>
-            // )}
+          // rightActions={(
+          //   <div className="flex items-center gap-2">
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsBulkUploadOpen(true)}
+          //       disabled={!canEditSite}
+          //     >
+          //       <Upload className="w-4 h-4 mr-2" />
+          //       Bulk Upload
+          //     </Button>
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsExportOpen(true)}
+          //     >
+          //       <Download className="w-4 h-4 mr-2" />
+          //       Export
+          //     </Button>
+          //   </div>
+          // )}
           />
 
           <TicketPagination
@@ -881,7 +886,6 @@ export const SiteTab: React.FC<SiteTabProps> = ({
             onPerPageChange={handlePerPageChange}
           />
         </>
-      )}
 
       {/* Modals */}
       <AddSiteModal

@@ -2,17 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { ArrowLeft, Tag, CheckSquare, AlertCircle, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles } from "@/components/ticket-management/fieldStyles";
 
 interface Organization {
   id: number;
@@ -250,44 +244,47 @@ const GenericCategories: React.FC = () => {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-2">
-              <Label htmlFor="org_select" className="text-[#1a1a1a]">
-                Organization <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={selectedOrgId}
-                onValueChange={(value) => {
-                  setSelectedOrgId(value);
-                  setError(null);
-                  setSuccess(null);
-                }}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                required
                 disabled={loadingOrgs}
+                sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
               >
-                <SelectTrigger
+                <InputLabel shrink>Organization</InputLabel>
+                <MuiSelect
                   id="org_select"
-                  className="border-[#e5e1d8] focus:border-[#C72030] focus:ring-[#C72030]"
+                  value={selectedOrgId}
+                  onChange={(e) => {
+                    setSelectedOrgId(e.target.value);
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                  label="Organization"
+                  notched
+                  displayEmpty
+                  disabled={loadingOrgs}
                 >
-                  <SelectValue
-                    placeholder={loadingOrgs ? "Loading..." : "Select organization"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
+                  <MenuItem value="">
+                    {loadingOrgs ? "Loading..." : "Select organization"}
+                  </MenuItem>
                   {loadingOrgs ? (
-                    <SelectItem value="loading" disabled>
+                    <MenuItem value="loading" disabled>
                       Loading organizations...
-                    </SelectItem>
+                    </MenuItem>
                   ) : organizations.length === 0 ? (
-                    <SelectItem value="empty" disabled>
+                    <MenuItem value="empty" disabled>
                       No organizations found
-                    </SelectItem>
+                    </MenuItem>
                   ) : (
                     organizations.map((org) => (
-                      <SelectItem key={org.id} value={org.id.toString()}>
+                      <MenuItem key={org.id} value={org.id.toString()}>
                         {org.name}
-                      </SelectItem>
+                      </MenuItem>
                     ))
                   )}
-                </SelectContent>
-              </Select>
+                </MuiSelect>
+              </FormControl>
             </div>
           </CardContent>
         </Card>
@@ -314,7 +311,7 @@ const GenericCategories: React.FC = () => {
                     <AlertDescription className="text-green-800">{success}</AlertDescription>
                   </Alert>
                 )}
-                {error && (
+                {!loadingCategories && error && (
                   <Alert className="bg-red-50 border-red-200">
                     <AlertCircle className="h-4 w-4 text-red-600" />
                     <AlertDescription className="text-red-800">{error}</AlertDescription>

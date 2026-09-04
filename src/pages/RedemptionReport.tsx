@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import TextField from "@mui/material/TextField";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { RedemptionReportFilterModal } from "@/components/RedemptionReportFilterModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -17,26 +17,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-// Use MUI TextField for date pickers
-const fieldStyles = {
-  minWidth: 180,
-  marginRight: 2,
-  background: 'transparent',
-  borderRadius: 0,
-  fontSize: 14,
-  height: 44,
-  '& .MuiInputBase-root': {
-    height: 44,
-    fontSize: 14,
-  },
-  '& .MuiOutlinedInput-input': {
-    padding: '10.5px 14px',
-  },
-  '& .MuiInputLabel-root': {
-    fontSize: 13,
-  },
-};
 
 // Define transaction type
 interface Transaction {
@@ -81,13 +61,16 @@ const RedemptionReport = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const fetchWalletData = async (page: number = 1) => {
+  const fetchWalletData = async (page: number = 1, filterStartDate?: string, filterEndDate?: string) => {
     setLoading(true);
     try {
       // const url = `https://${baseUrl}/organization_wallet/transactions?transaction_type=${transactionType}&token=${token}`;
       const token = API_CONFIG.TOKEN || "";
-      const url = getFullUrl(`/organization_wallet/transactions.json?transaction_type=${transactionType}&token=${token}&page=${page}${startDate ? `&start_date=${startDate}` : ''}${endDate ? `&end_date=${endDate}` : ''}`);
+      const sDate = filterStartDate !== undefined ? filterStartDate : startDate;
+      const eDate = filterEndDate !== undefined ? filterEndDate : endDate;
+      const url = getFullUrl(`/organization_wallet/transactions.json?transaction_type=${transactionType}&token=${token}&page=${page}${sDate ? `&start_date=${sDate}` : ''}${eDate ? `&end_date=${eDate}` : ''}`);
       const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
 
       setWalletData(response.data.wallet);
@@ -149,41 +132,12 @@ const RedemptionReport = () => {
     }
   };
 
-  const renderCustomActions = (
-    <div className="flex items-center justify-start w-full py-2">
-      <TextField
-        label="Start Date"
-        type="date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        InputLabelProps={{ shrink: true }}
-        variant="outlined"
-        size="small"
-        sx={fieldStyles}
-        placeholder="DD/MM/YYYY"
-        inputProps={{ placeholder: 'DD/MM/YYYY' }}
-      />
-      <TextField
-        label="End Date"
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        InputLabelProps={{ shrink: true }}
-        variant="outlined"
-        size="small"
-        sx={fieldStyles}
-        placeholder="DD/MM/YYYY"
-        inputProps={{ placeholder: 'DD/MM/YYYY' }}
-      />
-      <Button
-        className="bg-[#C72030] text-white px-5 text-xs h-11 font-medium"
-        style={{ minWidth: 60 }}
-        onClick={() => { setCurrentPage(1); fetchWalletData(1); }}
-      >
-        Go!
-      </Button>
-    </div>
-  );
+  const handleApplyFilter = (data: { startDate: string; endDate: string }) => {
+    setStartDate(data.startDate);
+    setEndDate(data.endDate);
+    setCurrentPage(1);
+    fetchWalletData(1, data.startDate, data.endDate);
+  };
 
   // Stats for wallet cards
   const stats = [
@@ -339,11 +293,10 @@ const RedemptionReport = () => {
           loading={loading}
           loadingMessage="Loading transactions..."
           emptyMessage="No transactions found"
-          leftActions={renderCustomActions}
           searchPlaceholder="Search transactions"
           enableGlobalSearch={true}
           onGlobalSearch={setSearch}
-          onFilterClick={() => { }}
+          onFilterClick={() => setIsFilterOpen(true)}
         />
         {totalPages > 1 && (
           <div className="flex flex-col items-center gap-2 mt-4">
@@ -370,6 +323,14 @@ const RedemptionReport = () => {
           </div>
         )}
       </div>
+
+      <RedemptionReportFilterModal
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        initialStartDate={startDate}
+        initialEndDate={endDate}
+        onApply={handleApplyFilter}
+      />
     </div>
   );
 };

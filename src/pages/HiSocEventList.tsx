@@ -6,18 +6,9 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Plus,
-  Edit,
-  Eye,
-  Settings,
-  Users,
-  UserCheck,
-  UserX,
-  Clock,
-  Pencil,
-} from "lucide-react";
+import { Plus, Edit, Eye, Settings, Users, UserCheck, UserX, Clock, Pencil, X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { EventFilterDialog, EventFilters } from "@/components/EventFilterDialog";
 import {
   Pagination,
   PaginationContent,
@@ -27,7 +18,7 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
-import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Event {
   id: number;
@@ -37,6 +28,7 @@ interface Event {
   to_time: string;
   active: boolean;
   show_on_home: boolean;
+  publish: number;
   created_at: string;
   updated_at: string;
 }
@@ -51,6 +43,7 @@ interface EventPermissions {
 
 const HiSocEventList = () => {
   const navigate = useNavigate();
+      const { shouldShow } = useDynamicPermissions();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventPermissions, setEventPermissions] = useState<EventPermissions>(
@@ -63,6 +56,8 @@ const HiSocEventList = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<EventFilters | null>(null);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [activeTab, setActiveTab] = useState("events");
 
@@ -102,15 +97,37 @@ const HiSocEventList = () => {
   }, []);
 
   const fetchEvents = useCallback(
-    async (page: number, search: string) => {
+    async (page: number, search: string, filters?: EventFilters | null) => {
       setLoading(true);
       setIsSearching(!!search);
       try {
-        const response = await axios.get(getFullUrl('/crm/admin/events.json'), {
-          headers: {
-            Authorization: getAuthHeader(),
-          },
-        });
+        // Build query params from active filters
+        const params = new URLSearchParams();
+        if (filters) {
+          filters.tower_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_society_block_id_in][]",
+              id
+            )
+          );
+          filters.flat_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_id_in][]",
+              id
+            )
+          );
+          if (filters.date_range) {
+            params.append("q[date_range]", filters.date_range);
+          }
+          filters.publish_in.forEach((v) =>
+            params.append("q[publish_in][]", v)
+          );
+        }
+        const qs = params.toString();
+        const response = await axios.get(
+          getFullUrl(`/crm/admin/events.json${qs ? `?${qs}` : ""}`),
+          { headers: { Authorization: getAuthHeader() } }
+        );
 
         const eventsData = response.data.classifieds || [];
 
@@ -160,11 +177,26 @@ const HiSocEventList = () => {
   );
 
   useEffect(() => {
-    fetchEvents(currentPage, searchTerm);
-  }, [currentPage, searchTerm, fetchEvents]);
+    fetchEvents(currentPage, searchTerm, activeFilters);
+  }, [currentPage, searchTerm, activeFilters, fetchEvents]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = (filters: EventFilters) => {
+    const hasFilters =
+      filters.tower_ids.length > 0 ||
+      filters.flat_ids.length > 0 ||
+      filters.date_range !== "" ||
+      filters.publish_in.length > 0;
+    setActiveFilters(hasFilters ? filters : null);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setActiveFilters(null);
     setCurrentPage(1);
   };
 
@@ -201,6 +233,37 @@ const HiSocEventList = () => {
     } catch (error) {
       console.error("Error toggling event status:", error);
       toast.error("Failed to update status.");
+    }
+  };
+
+  const handleTogglePublish = async (id: number, currentPublish: number) => {
+    toast.dismiss();
+    const newPublish = currentPublish === 1 ? 0 : 1;
+    try {
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event.id === id ? { ...event, publish: newPublish } : event
+        )
+      );
+      await axios.put(
+        getFullUrl(`/crm/admin/events/${id}.json`),
+        { event: { publish: newPublish } },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
+          },
+        }
+      );
+      toast.success(newPublish === 1 ? "Event published successfully!" : "Event rejected successfully!");
+    } catch (error) {
+      console.error("Error toggling publish status:", error);
+      toast.error("Failed to update publish status.");
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event.id === id ? { ...event, publish: currentPublish } : event
+        )
+      );
     }
   };
 
@@ -283,7 +346,8 @@ const HiSocEventList = () => {
     { key: "from_time", label: "Event Date", sortable: false },
     { key: "to_time", label: "Event Time", sortable: false },
     { key: "show_on_home", label: "Show on Home", sortable: false },
-    { key: "active", label: "Status", sortable: false },
+    { key: "publish", label: "Publish", sortable: false },
+    // { key: "active", label: "Status", sortable: false },
   ];
 
   const renderCell = (item: Event, columnKey: string, rowIndex?: number) => {
@@ -294,6 +358,7 @@ const HiSocEventList = () => {
         return (
           <div className="flex gap-1">
             {/* {eventPermissions.show === "true" && ( */}
+            {shouldShow("Events","show")&&(
             <Button
               variant="ghost"
               size="sm"
@@ -301,9 +366,10 @@ const HiSocEventList = () => {
               title="View"
             >
               <Eye className="w-4 h-4" />
-            </Button>
+            </Button>)}
             {/* )} */}
             {/* {eventPermissions.update === "true" && ( */}
+            {shouldShow("Events","update")&&(
             <Button
               variant="ghost"
               size="sm"
@@ -311,7 +377,7 @@ const HiSocEventList = () => {
               title="Edit"
             >
               <Pencil className="w-4 h-4" />
-            </Button>
+            </Button>)}
             {/* )} */}
           </div>
         );
@@ -331,33 +397,54 @@ const HiSocEventList = () => {
         return formatTimeOnly(item.from_time);
       case "show_on_home":
         return (
-          <Switch
-            checked={item.show_on_home || false}
-            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.show_on_home ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.show_on_home ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        );
+      case "publish":
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleTogglePublish(item.id, item.publish)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.publish === 1 ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.publish === 1 ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case "active":
         return (
-          <Switch
-            checked={item.active || false}
-            onChange={() => handleToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       default:
         return (item[columnKey as keyof Event] as React.ReactNode) ?? "-";
@@ -366,20 +453,21 @@ const HiSocEventList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
+      {shouldShow("Events","create")&&(
       <Button
         onClick={handleAddEvent}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
+        variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"      >
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
-      </Button>
+      </Button>)}
     </div>
   );
 
   const renderListTab = () => (
     <div className="space-y-4">
       {/* Event Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
         {[
           {
             label: "Total Invited CPs",
@@ -434,7 +522,7 @@ const HiSocEventList = () => {
             </div>
           );
         })}
-      </div>
+      </div> */}
 
       {/* {showActionPanel && (
         <SelectionPanel
@@ -454,7 +542,21 @@ const HiSocEventList = () => {
           enableGlobalSearch={true}
           onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search events..."
-          leftActions={renderCustomActions()}
+        leftActions={renderCustomActions()}
+          rightActions={
+            activeFilters ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-8 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                title="Clear filters"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            ) : undefined
+          }
+          onFilterClick={() => setIsFilterOpen(true)}
           loading={isSearching || loading}
           loadingMessage={
             isSearching ? "Searching events..." : "Loading events..."
@@ -604,6 +706,11 @@ const HiSocEventList = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <EventFilterDialog
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApplyFilters={handleApplyFilters}
+      />
     </div>
   );
 };

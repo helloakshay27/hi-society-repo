@@ -1,31 +1,110 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, RefreshCw, Loader2, Car, MapPin } from "lucide-react";
+import {
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  RefreshCw,
+  Loader2,
+  Car,
+  MapPin,
+  ChevronDown,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import {
+  ParkingFilterDialog,
+  ParkingFilters,
+} from "@/components/ParkingFilterDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import ReactSelect from "react-select";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
+import type { MenuProps } from "@mui/material";
+import { menuProps } from "@/components/ticket-management/fieldStyles";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { CommonImportModal } from "@/components/CommonImportModal";
 
-const reactSelectStyles = {
-  control: (base: object) => ({
-    ...base,
-    minHeight: '40px',
-    border: '1px solid #d1d5db',
-    boxShadow: 'none',
-    borderRadius: '4px',
-    '&:hover': { border: '1px solid #cbd5e1' },
-  }),
-  option: (base: object, state: { isSelected: boolean; isFocused: boolean }) => ({
-    ...base,
-    backgroundColor: state.isSelected ? '#dbeafe' : state.isFocused ? '#f0f9ff' : 'white',
-    color: state.isSelected ? '#1e40af' : '#374151',
-  }),
+const clickableMenuProps: Partial<MenuProps> = {
+  ...menuProps,
+  PaperProps: {
+    ...menuProps.PaperProps,
+    className: "disable-mui-select-search",
+    style: {
+      ...(menuProps.PaperProps?.style || {}),
+      maxHeight: 280,
+      overflowY: "auto",
+      pointerEvents: "auto" as const,
+      zIndex: 10050,
+    },
+    onWheel: (e: React.WheelEvent) => {
+      e.stopPropagation();
+    },
+  },
+  MenuListProps: {
+    className: "disable-mui-select-search",
+    style: {
+      maxHeight: 280,
+      overflowY: "auto",
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
+    onWheel: (e: React.WheelEvent) => {
+      e.stopPropagation();
+    },
+  },
+};
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
+    },
+  },
 };
 
 interface FlatParking {
@@ -83,6 +162,7 @@ const emptyForm = {
 
 const BMSParking: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -95,6 +175,7 @@ const BMSParking: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ ...emptyForm });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slotNameError, setSlotNameError] = useState(false);
 
   // Dropdown data
   const [blocks, setBlocks] = useState<SocietyBlock[]>([]);
@@ -106,28 +187,84 @@ const BMSParking: React.FC = () => {
 
   const societyId = localStorage.getItem("selectedSocietyId") || "";
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [parkingFilters, setParkingFilters] = useState<ParkingFilters>({});
+  const [showActionPanel, setShowActionPanel] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isDownloadingSample, setIsDownloadingSample] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Debounce search query → reset page and update debouncedSearch
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // ── Fetch parking list ──────────────────────────────────────────────────────
-  const fetchParkingList = useCallback(async (page = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        getFullUrl(`/crm/admin/configure-parking.json?page=${page}`),
-        { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setParkingList(data.flat_parkings || []);
-        setTotalPages(data.pagination?.total_pages || 1);
-        setTotalCount(data.pagination?.total_count || 0);
-      } else {
+  const fetchParkingList = useCallback(
+    async (page = 1, filters: ParkingFilters = parkingFilters) => {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams({ page: page.toString() });
+        if (debouncedSearch.trim()) {
+          params.append(
+            "q[parking_slot_slot_name_or_vehicle_number_cont]",
+            debouncedSearch.trim()
+          );
+        }
+        if (filters.society_flat_society_block_id_eq)
+          params.append(
+            "q[society_flat_society_block_id_eq]",
+            filters.society_flat_society_block_id_eq
+          );
+        if (filters.society_flat_id_eq)
+          params.append("q[society_flat_id_eq]", filters.society_flat_id_eq);
+        if (filters.parking_slot_slot_name_cont)
+          params.append(
+            "q[parking_slot_slot_name_cont]",
+            filters.parking_slot_slot_name_cont
+          );
+        if (filters.parking_slot_sticker_number_cont)
+          params.append(
+            "q[parking_slot_sticker_number_cont]",
+            filters.parking_slot_sticker_number_cont
+          );
+        if (filters.vehicle_number_in?.length) {
+          filters.vehicle_number_in.forEach((v) =>
+            params.append("q[vehicle_number_in][]", v)
+          );
+        }
+        const response = await fetch(
+          getFullUrl(`/crm/admin/configure-parking.json?${params.toString()}`),
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setParkingList(data.flat_parkings || []);
+          setTotalPages(data.pagination?.total_pages || 1);
+          setTotalCount(data.pagination?.total_count || 0);
+        } else {
+          toast.error("Failed to load parking data");
+        }
+      } catch {
         toast.error("Failed to load parking data");
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      toast.error("Failed to load parking data");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [parkingFilters, debouncedSearch]
+  );
 
   useEffect(() => {
     fetchParkingList(currentPage);
@@ -140,7 +277,12 @@ const BMSParking: React.FC = () => {
     try {
       const response = await fetch(
         getFullUrl(`/get_society_blocks.json?society_id=${societyId}`),
-        { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -154,24 +296,34 @@ const BMSParking: React.FC = () => {
   }, [societyId]);
 
   // ── Fetch flats by block ────────────────────────────────────────────────────
-  const fetchFlats = useCallback(async (blockId: string) => {
-    if (!societyId || !blockId) return;
-    setLoadingFlats(true);
-    try {
-      const response = await fetch(
-        getFullUrl(`/get_society_flats.json?society_id=${societyId}&society_block_id=${blockId}`),
-        { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setFlats(data.society_flats || []);
+  const fetchFlats = useCallback(
+    async (blockId: string) => {
+      if (!societyId || !blockId) return;
+      setLoadingFlats(true);
+      try {
+        const response = await fetch(
+          getFullUrl(
+            `/get_society_flats.json?society_id=${societyId}&society_block_id=${blockId}`
+          ),
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setFlats(data.society_flats || []);
+        }
+      } catch {
+        toast.error("Failed to load flats");
+      } finally {
+        setLoadingFlats(false);
       }
-    } catch {
-      toast.error("Failed to load flats");
-    } finally {
-      setLoadingFlats(false);
-    }
-  }, [societyId]);
+    },
+    [societyId]
+  );
 
   // ── Fetch charge options ────────────────────────────────────────────────────
   const fetchChargeOptions = useCallback(async () => {
@@ -179,7 +331,12 @@ const BMSParking: React.FC = () => {
     try {
       const response = await fetch(
         getFullUrl("/crm/admin/parking_charges.json"),
-        { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -196,6 +353,7 @@ const BMSParking: React.FC = () => {
   const handleAddParking = () => {
     setFormData({ ...emptyForm });
     setFlats([]);
+    setSlotNameError(false);
     fetchBlocks();
     fetchChargeOptions();
     setIsAddModalOpen(true);
@@ -203,7 +361,7 @@ const BMSParking: React.FC = () => {
 
   // ── Open Edit modal ─────────────────────────────────────────────────────────
   const handleEditParking = async (item: FlatParking) => {
-    setEditingId(item.parking_slot?.id ?? item.id);  // use parking_slot.id for PUT URL
+    setEditingId(item.parking_slot?.id ?? item.id); // use parking_slot.id for PUT URL
     // Pre-fill known values immediately so modal can open
     setFormData({
       slotName: item.parking_slot?.slot_name || "",
@@ -214,7 +372,9 @@ const BMSParking: React.FC = () => {
       towerId: "",
       flatId: "",
       vehicleNumber: item.vehicle_number || "",
-      chargeSetupId: item.charge_setup_id ? item.charge_setup_id.toString() : "",
+      chargeSetupId: item.charge_setup_id
+        ? item.charge_setup_id.toString()
+        : "",
     });
     setFlats([]);
     fetchChargeOptions();
@@ -226,7 +386,12 @@ const BMSParking: React.FC = () => {
     try {
       const res = await fetch(
         getFullUrl(`/get_society_blocks.json?society_id=${societyId}`),
-        { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (res.ok) {
         const data = await res.json();
@@ -239,14 +404,25 @@ const BMSParking: React.FC = () => {
         );
         if (matchedBlock) {
           const blockIdStr = matchedBlock.id.toString();
-          setFormData((prev) => ({ ...prev, towerId: blockIdStr, tower: matchedBlock.name }));
+          setFormData((prev) => ({
+            ...prev,
+            towerId: blockIdStr,
+            tower: matchedBlock.name,
+          }));
 
           // Now fetch flats for this block
           setLoadingFlats(true);
           try {
             const flatRes = await fetch(
-              getFullUrl(`/get_society_flats.json?society_id=${societyId}&society_block_id=${blockIdStr}`),
-              { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
+              getFullUrl(
+                `/get_society_flats.json?society_id=${societyId}&society_block_id=${blockIdStr}`
+              ),
+              {
+                headers: {
+                  Authorization: getAuthHeader(),
+                  "Content-Type": "application/json",
+                },
+              }
             );
             if (flatRes.ok) {
               const flatData = await flatRes.json();
@@ -254,12 +430,18 @@ const BMSParking: React.FC = () => {
               setFlats(fetchedFlats);
 
               // Match flat by flat_no or by society_flat_id
-              const flatIdFromItem = item.society_flat?.id || item.society_flat_id;
+              const flatIdFromItem =
+                item.society_flat?.id || item.society_flat_id;
               const matchedFlat = flatIdFromItem
                 ? fetchedFlats.find((f) => f.id === flatIdFromItem)
-                : fetchedFlats.find((f) => f.flat_no === item.society_flat?.flat_no);
+                : fetchedFlats.find(
+                  (f) => f.flat_no === item.society_flat?.flat_no
+                );
               if (matchedFlat) {
-                setFormData((prev) => ({ ...prev, flatId: matchedFlat.id.toString() }));
+                setFormData((prev) => ({
+                  ...prev,
+                  flatId: matchedFlat.id.toString(),
+                }));
               }
             }
           } catch {
@@ -282,18 +464,170 @@ const BMSParking: React.FC = () => {
     setEditingId(null);
     setFormData({ ...emptyForm });
     setFlats([]);
+    setSlotNameError(false);
+  };
+
+  // ── Export ──────────────────────────────────────────────────────────────────
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (parkingFilters.society_flat_society_block_id_eq)
+        params.append(
+          "q[society_flat_society_block_id_eq]",
+          parkingFilters.society_flat_society_block_id_eq
+        );
+      if (parkingFilters.society_flat_id_eq)
+        params.append(
+          "q[society_flat_id_eq]",
+          parkingFilters.society_flat_id_eq
+        );
+      if (parkingFilters.parking_slot_slot_name_cont)
+        params.append(
+          "q[parking_slot_slot_name_cont]",
+          parkingFilters.parking_slot_slot_name_cont
+        );
+      if (parkingFilters.parking_slot_sticker_number_cont)
+        params.append(
+          "q[parking_slot_sticker_number_cont]",
+          parkingFilters.parking_slot_sticker_number_cont
+        );
+      if (parkingFilters.vehicle_number_in?.length) {
+        parkingFilters.vehicle_number_in.forEach((v) =>
+          params.append("q[vehicle_number_in][]", v)
+        );
+      }
+      const qs = params.toString();
+      const response = await fetch(
+        getFullUrl(
+          `/parkings/vehicle_category_details_report.xlsx${qs ? `?${qs}` : ""}`
+        ),
+        { headers: { Authorization: getAuthHeader() } }
+      );
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `parking_report_${new Date().toISOString().split("T")[0]}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        toast.success("Parking report exported successfully!");
+      } else {
+        toast.error("Failed to export report");
+      }
+    } catch {
+      toast.error("Failed to export report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // ── Sample Download ──────────────────────────────────────────────────────────
+  const handleSampleDownload = async () => {
+    setIsDownloadingSample(true);
+    try {
+      const response = await fetch(getFullUrl("/sample_parking.xlsx"), {
+        headers: { Authorization: getAuthHeader() },
+      });
+      if (!response.ok) throw new Error("Failed to download sample file");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "sample_parking.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Sample file downloaded successfully.");
+    } catch {
+      toast.error("Failed to download sample file.");
+    } finally {
+      setIsDownloadingSample(false);
+    }
+  };
+
+  // ── Import ──────────────────────────────────────────────────────────────────
+  const handleImport = async () => {
+    if (!importFile) {
+      toast.error("Please select a file to import");
+      return;
+    }
+    setIsImporting(true);
+    try {
+      const fd = new FormData();
+      fd.append("product_import[file]", importFile);
+      if (societyId) fd.append("society_id", societyId);
+      const response = await fetch(
+        getFullUrl("/crm/admin/upload_parking_slots"),
+        {
+          method: "POST",
+          headers: { Authorization: getAuthHeader() },
+          body: fd,
+        }
+      );
+      const data = await response.json().catch(() => null);
+
+      if (response.ok && data?.success !== false) {
+        toast.success("Parking slots imported successfully!");
+        setIsImportOpen(false);
+        setImportFile(null);
+      } else {
+        const rows: Array<{ row_number?: number; status?: string; error?: string }> =
+          Array.isArray(data?.rows) ? data.rows : [];
+        const failedRows = rows.filter((row) => row.status === "failed" || row.error);
+        const summary = data?.summary as
+          | { total?: number; created?: number; failed?: number }
+          | undefined;
+
+        if (failedRows.length > 0) {
+          const errorMessages = failedRows
+            .map(
+              (row) =>
+                `Row ${row.row_number ?? "Unknown"}: ${row.error ?? "Unknown error"}`
+            )
+            .join("\n");
+          toast.error(
+            summary
+              ? `Import completed: ${summary.created ?? 0}/${summary.total ?? rows.length} created, ${summary.failed ?? failedRows.length} failed`
+              : "Import completed with errors",
+            { description: errorMessages, duration: 10000 }
+          );
+        } else {
+          toast.error(data?.message || "Failed to import parking slots");
+        }
+      }
+      setCurrentPage(1);
+      fetchParkingList(1);
+    } catch {
+      toast.error("Something went wrong during import");
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   // ── Handle tower change → load flats ───────────────────────────────────────
   const handleTowerChange = (blockId: string) => {
     const block = blocks.find((b) => b.id.toString() === blockId);
-    setFormData((prev) => ({ ...prev, towerId: blockId, tower: block?.name || "", flatId: "" }));
+    setFormData((prev) => ({
+      ...prev,
+      towerId: blockId,
+      tower: block?.name || "",
+      flatId: "",
+    }));
     fetchFlats(blockId);
   };
 
   // ── Submit Add ──────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.slotName.trim()) {
+      setSlotNameError(true);
+      return;
+    }
+    setSlotNameError(false);
     setIsSubmitting(true);
     try {
       const body = {
@@ -305,8 +639,12 @@ const BMSParking: React.FC = () => {
           active: 1,
         },
         flat_parking: {
-          society_flat_id: formData.flatId ? parseInt(formData.flatId) : undefined,
-          charge_setup_id: formData.chargeSetupId ? parseInt(formData.chargeSetupId) : undefined,
+          society_flat_id: formData.flatId
+            ? parseInt(formData.flatId)
+            : undefined,
+          charge_setup_id: formData.chargeSetupId
+            ? parseInt(formData.chargeSetupId)
+            : undefined,
           vehicle_number: formData.vehicleNumber,
         },
       };
@@ -319,17 +657,29 @@ const BMSParking: React.FC = () => {
 
       const response = await fetch(url, {
         method,
-        headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       });
 
       if (response.ok) {
-        toast.success(isEdit ? "Parking slot updated successfully!" : "Parking slot added successfully!");
+        toast.success(
+          isEdit
+            ? "Parking slot updated successfully!"
+            : "Parking slot added successfully!"
+        );
         handleCloseModal();
         fetchParkingList(currentPage);
       } else {
         const err = await response.json().catch(() => null);
-        toast.error(err?.message || (isEdit ? "Failed to update parking slot" : "Failed to add parking slot"));
+        toast.error(
+          err?.message ||
+          (isEdit
+            ? "Failed to update parking slot"
+            : "Failed to add parking slot")
+        );
       }
     } catch {
       toast.error("Something went wrong");
@@ -344,7 +694,13 @@ const BMSParking: React.FC = () => {
     try {
       const response = await fetch(
         getFullUrl(`/crm/admin/configure-parking/${item.id}.json`),
-        { method: "DELETE", headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } }
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.ok) {
         toast.success("Parking slot deleted successfully!");
@@ -378,8 +734,13 @@ const BMSParking: React.FC = () => {
             {/* <Button size="sm" variant="ghost" onClick={() => navigate(`/parking/view/${item.id}`)} className="h-8 w-8 p-0 hover:bg-[#DBC2A9]">
               <Eye className="h-4 w-4" />
             </Button> */}
-            <Button size="sm" variant="ghost" onClick={() => handleEditParking(item)} className="h-8 w-8 p-0 hover:bg-[#DBC2A9]">
-              <Edit className="h-4 w-4 text-[#C72030]" />
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleEditParking(item)}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-4 w-4" />
             </Button>
             {/* <Button size="sm" variant="ghost" onClick={() => handleDeleteParking(item)} className="h-8 w-8 p-0 hover:bg-red-100 text-red-600">
               <Trash2 className="h-4 w-4 text-[#C72030]" />
@@ -394,11 +755,19 @@ const BMSParking: React.FC = () => {
           </span>
         );
       case "blockName":
-        return <span className="font-medium">{item.society_flat?.block_name || "--"}</span>;
+        return (
+          <span className="font-medium">
+            {item.society_flat?.block_name || "--"}
+          </span>
+        );
       case "flatNo":
         return <span>{item.society_flat?.flat_no || "--"}</span>;
       case "vehicleNumber":
-        return <span className="font-mono text-sm">{item.vehicle_number || "--"}</span>;
+        return (
+          <span className="font-mono text-sm">
+            {item.vehicle_number || "--"}
+          </span>
+        );
       case "vehicleType":
         return (
           <span className="flex items-center gap-1">
@@ -413,10 +782,21 @@ const BMSParking: React.FC = () => {
           </Badge>
         );
       case "stickerNumber":
-        return <span className="text-sm">{item.parking_slot?.sticker_number || "--"}</span>;
+        return (
+          <span className="text-sm">
+            {item.parking_slot?.sticker_number || "--"}
+          </span>
+        );
       case "status":
         return (
-          <Badge variant="outline" className={item.status === "Active" ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-700 border-gray-200"}>
+          <Badge
+            variant="outline"
+            className={
+              item.status === "Active"
+                ? "bg-green-100 text-green-700 border-green-200"
+                : "bg-gray-100 text-gray-700 border-gray-200"
+            }
+          >
             {item.status}
           </Badge>
         );
@@ -429,35 +809,65 @@ const BMSParking: React.FC = () => {
 
   const renderPaginationItems = () => {
     const items = [];
-    const maxVisiblePages = 7;
+    const maxVisiblePages = 5;
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         items.push(
           <PaginationItem key={i} className="cursor-pointer">
-            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
           </PaginationItem>
         );
       }
     } else {
       items.push(
         <PaginationItem key={1} className="cursor-pointer">
-          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+          >
+            1
+          </PaginationLink>
         </PaginationItem>
       );
-      if (currentPage > 3) items.push(<PaginationItem key="e1"><span className="px-4">...</span></PaginationItem>);
+      if (currentPage > 3)
+        items.push(
+          <PaginationItem key="e1">
+            <span className="px-4">...</span>
+          </PaginationItem>
+        );
       const startPage = Math.max(2, currentPage - 1);
       const endPage = Math.min(totalPages - 1, currentPage + 1);
       for (let i = startPage; i <= endPage; i++) {
         items.push(
           <PaginationItem key={i} className="cursor-pointer">
-            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
           </PaginationItem>
         );
       }
-      if (currentPage < totalPages - 2) items.push(<PaginationItem key="e2"><span className="px-4">...</span></PaginationItem>);
+      if (currentPage < totalPages - 2)
+        items.push(
+          <PaginationItem key="e2">
+            <span className="px-4">...</span>
+          </PaginationItem>
+        );
       items.push(
         <PaginationItem key={totalPages} className="cursor-pointer">
-          <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          <PaginationLink
+            onClick={() => handlePageChange(totalPages)}
+            isActive={currentPage === totalPages}
+          >
+            {totalPages}
+          </PaginationLink>
         </PaginationItem>
       );
     }
@@ -469,127 +879,260 @@ const BMSParking: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-6 py-2">
       {/* Parking Slot Details */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Parking Slot Details</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Parking Slot Details
+        </p>
         <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Slot Name</Label>
-            <Input
-              placeholder="Enter slot name"
-              value={formData.slotName}
-              onChange={(e) => setFormData((p) => ({ ...p, slotName: e.target.value }))}
-              className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
-              style={{ borderRadius: '4px' }}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Vehicle Type</Label>
-            <ReactSelect
-              options={[
-                ...vehicleTypes.map((t) => ({ value: t, label: t })),
-                ...(formData.vehicleType && !vehicleTypes.includes(formData.vehicleType)
-                  ? [{ value: formData.vehicleType, label: formData.vehicleType }]
-                  : []),
-              ]}
-              value={formData.vehicleType ? { value: formData.vehicleType, label: formData.vehicleType } : null}
-              onChange={(selected) => setFormData((p) => ({ ...p, vehicleType: selected ? selected.value : '' }))}
-              placeholder="Select Vehicle Type"
-              isClearable
-              styles={reactSelectStyles}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Parking Type</Label>
-            <ReactSelect
-              options={[
-                ...parkingTypes.map((t) => ({ value: t, label: t })),
-                ...(formData.parkingType && !parkingTypes.includes(formData.parkingType)
-                  ? [{ value: formData.parkingType, label: formData.parkingType }]
-                  : []),
-              ]}
-              value={formData.parkingType ? { value: formData.parkingType, label: formData.parkingType } : null}
-              onChange={(selected) => setFormData((p) => ({ ...p, parkingType: selected ? selected.value : '' }))}
-              placeholder="Select Parking Type"
-              isClearable
-              styles={reactSelectStyles}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Sticker Number</Label>
-            <Input
-              placeholder="Enter sticker number"
-              value={formData.stickerNumber}
-              onChange={(e) => setFormData((p) => ({ ...p, stickerNumber: e.target.value }))}
-              className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
-              style={{ borderRadius: '4px' }}
-            />
-          </div>
+          <TextField
+            label={<>Slot Name <span style={{ color: "#C72030" }}>*</span></>}
+            placeholder="Enter slot name"
+            value={formData.slotName}
+            onChange={(e) => {
+              setFormData((p) => ({ ...p, slotName: e.target.value }));
+              if (e.target.value.trim()) setSlotNameError(false);
+            }}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              sx: {
+                ...fieldStyles,
+                ...(slotNameError
+                  ? {
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#ef4444 !important",
+                      },
+                    }
+                  : {}),
+              },
+            }}
+            error={slotNameError}
+            helperText={slotNameError ? "Slot name is required" : ""}
+          />
+
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Vehicle Type
+            </InputLabel>
+            <MuiSelect
+              value={formData.vehicleType || ""}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  vehicleType: e.target.value as string,
+                }))
+              }
+              label="Vehicle Type"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>Select Vehicle Type</em>
+              </MenuItem>
+              {vehicleTypes.map((t) => (
+                <MenuItem key={t} value={t}>
+                  {t}
+                </MenuItem>
+              ))}
+              {formData.vehicleType &&
+                !vehicleTypes.includes(formData.vehicleType) && (
+                  <MenuItem value={formData.vehicleType}>
+                    {formData.vehicleType}
+                  </MenuItem>
+                )}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Parking Type
+            </InputLabel>
+            <MuiSelect
+              value={formData.parkingType || ""}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  parkingType: e.target.value as string,
+                }))
+              }
+              label="Parking Type"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>Select Parking Type</em>
+              </MenuItem>
+              {parkingTypes.map((t) => (
+                <MenuItem key={t} value={t}>
+                  {t}
+                </MenuItem>
+              ))}
+              {formData.parkingType &&
+                !parkingTypes.includes(formData.parkingType) && (
+                  <MenuItem value={formData.parkingType}>
+                    {formData.parkingType}
+                  </MenuItem>
+                )}
+            </MuiSelect>
+          </FormControl>
+
+          <TextField
+            label="Sticker Number"
+            placeholder="Enter sticker number"
+            value={formData.stickerNumber}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, stickerNumber: e.target.value }))
+            }
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
         </div>
       </div>
 
       {/* Associate With Flat */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Associate With Flat</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Associate With Flat
+        </p>
         <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Tower / Block</Label>
-            <ReactSelect
-              options={blocks.map((b) => ({ value: b.id.toString(), label: b.name }))}
-              value={formData.towerId ? { value: formData.towerId, label: blocks.find((b) => b.id.toString() === formData.towerId)?.name || formData.tower } : null}
-              onChange={(selected) => handleTowerChange(selected ? selected.value : '')}
-              placeholder={loadingBlocks ? 'Loading...' : 'Select Tower / Block'}
-              isLoading={loadingBlocks}
-              isDisabled={loadingBlocks}
-              isClearable
-              styles={reactSelectStyles}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Select Flat</Label>
-            <ReactSelect
-              options={flats.map((f) => ({ value: f.id.toString(), label: f.flat_str || (f.block_name && f.flat_no ? `${f.block_name} - ${f.flat_no}` : f.flat_no || f.id.toString()) }))}
-              value={formData.flatId ? (() => { const f = flats.find((f) => f.id.toString() === formData.flatId); return f ? { value: f.id.toString(), label: f.flat_str || (f.block_name && f.flat_no ? `${f.block_name} - ${f.flat_no}` : f.flat_no || f.id.toString()) } : { value: formData.flatId, label: formData.flatId }; })() : null}
-              onChange={(selected) => setFormData((p) => ({ ...p, flatId: selected ? selected.value : '' }))}
-              placeholder={loadingFlats ? 'Loading...' : !formData.towerId ? 'Select tower first' : 'Select Flat'}
-              isLoading={loadingFlats}
-              isDisabled={loadingFlats || !formData.towerId}
-              isClearable
-              styles={reactSelectStyles}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Vehicle Number</Label>
-            <Input
-              placeholder="Enter vehicle number"
-              value={formData.vehicleNumber}
-              onChange={(e) => setFormData((p) => ({ ...p, vehicleNumber: e.target.value }))}
-              className="h-10 border-gray-300 focus:border-gray-500 focus:ring-0"
-              style={{ borderRadius: '4px' }}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Charge Applicable</Label>
-            <ReactSelect
-              options={chargeOptions.map((c) => ({ value: c.id.toString(), label: c.name }))}
-              value={formData.chargeSetupId ? { value: formData.chargeSetupId, label: chargeOptions.find((c) => c.id.toString() === formData.chargeSetupId)?.name || formData.chargeSetupId } : null}
-              onChange={(selected) => setFormData((p) => ({ ...p, chargeSetupId: selected ? selected.value : '' }))}
-              placeholder={loadingCharges ? 'Loading...' : 'Select Charge'}
-              isLoading={loadingCharges}
-              isDisabled={loadingCharges}
-              isClearable
-              styles={reactSelectStyles}
-            />
-          </div>
+          <FormControl fullWidth variant="outlined" disabled={loadingBlocks}>
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Tower / Block
+            </InputLabel>
+            <MuiSelect
+              value={formData.towerId || ""}
+              onChange={(e) => handleTowerChange(e.target.value as string)}
+              label="Tower / Block"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>
+                  {loadingBlocks ? "Loading..." : "Select Tower / Block"}
+                </em>
+              </MenuItem>
+              {blocks.map((b) => (
+                <MenuItem key={b.id} value={b.id.toString()}>
+                  {b.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl
+            fullWidth
+            variant="outlined"
+            disabled={loadingFlats || !formData.towerId}
+          >
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Select Flat
+            </InputLabel>
+            <MuiSelect
+              value={formData.flatId || ""}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  flatId: e.target.value as string,
+                }))
+              }
+              label="Select Flat"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>
+                  {loadingFlats
+                    ? "Loading..."
+                    : !formData.towerId
+                      ? "Select tower first"
+                      : "Select Flat"}
+                </em>
+              </MenuItem>
+              {flats.map((f) => (
+                <MenuItem key={f.id} value={f.id.toString()}>
+                  {f.flat_str ||
+                    (f.block_name && f.flat_no
+                      ? `${f.block_name} - ${f.flat_no}`
+                      : f.flat_no || f.id.toString())}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
+
+          <TextField
+            label="Vehicle Number"
+            placeholder="Enter vehicle number"
+            value={formData.vehicleNumber}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, vehicleNumber: e.target.value }))
+            }
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{ sx: fieldStyles }}
+          />
+
+          <FormControl fullWidth variant="outlined" disabled={loadingCharges}>
+            <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+              Charge Applicable
+            </InputLabel>
+            <MuiSelect
+              value={formData.chargeSetupId || ""}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  chargeSetupId: e.target.value as string,
+                }))
+              }
+              label="Charge Applicable"
+              displayEmpty
+              sx={fieldStyles}
+              MenuProps={clickableMenuProps}
+            >
+              <MenuItem value="">
+                <em>{loadingCharges ? "Loading..." : "Select Charge"}</em>
+              </MenuItem>
+              {chargeOptions.map((c) => (
+                <MenuItem key={c.id} value={c.id.toString()}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
         </div>
       </div>
 
       <div className="flex justify-end pt-3 border-t">
-        <Button type="button" variant="outline" onClick={handleCloseModal} disabled={isSubmitting} className="mr-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCloseModal}
+          disabled={isSubmitting}
+          className="mr-3"
+        >
           Cancel
         </Button>
-        <Button type="submit" className="bg-[#C72030] hover:bg-[#a01828] text-white px-8" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{isEdit ? 'Updating...' : 'Saving...'}</> : isEdit ? 'Update' : 'Save'}
+        <Button
+          type="submit"
+          className="bg-[#C72030] hover:bg-[#a01828] text-white px-8"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isEdit ? "Updating..." : "Saving..."}
+            </>
+          ) : isEdit ? (
+            "Update"
+          ) : (
+            "Save"
+          )}
         </Button>
       </div>
     </form>
@@ -598,7 +1141,9 @@ const BMSParking: React.FC = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">Parking Management</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          Parking Management
+        </h1>
       </div>
 
       <EnhancedTable
@@ -606,14 +1151,43 @@ const BMSParking: React.FC = () => {
         columns={columns}
         renderCell={renderCell}
         enableExport={true}
+        handleExport={handleExport}
         onSearchChange={(q) => setSearchQuery(q)}
         searchPlaceholder="Search by slot, vehicle number..."
         enableSearch={true}
+        onFilterClick={() => setIsFilterOpen(true)}
         leftActions={
-          <Button onClick={handleAddParking} className="bg-[#C72030] hover:bg-[#a01828] text-white h-9 px-4 text-sm font-medium">
-            <Plus className="w-4 h-4 mr-2" />
-            Add
-          </Button>
+          shouldShow("Parking", "create") && (
+            <Button
+              onClick={() => setShowActionPanel(true)}
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Action
+            </Button>
+          )
+        }
+        rightActions={
+          Object.values(parkingFilters).some(
+            (v) =>
+              v !== undefined &&
+              v !== null &&
+              (Array.isArray(v) ? v.length > 0 : v !== "")
+          ) ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setParkingFilters({});
+                setCurrentPage(1);
+              }}
+              className="h-8 px-2 text-xs text-gray-500 hover:text-red-600"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Clear Filters
+            </Button>
+          ) : undefined
         }
         emptyMessage="No parking slots found"
         loading={isLoading}
@@ -621,48 +1195,105 @@ const BMSParking: React.FC = () => {
         storageKey="bms-parking-table"
       />
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 || isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              {renderPaginationItems()}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages || isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+      {/* Action Panel */}
+      {showActionPanel && (
+        <SelectionPanel
+          className="selection-panel--end"
+          onAdd={() => {
+            setShowActionPanel(false);
+            handleAddParking();
+          }}
+          onImport={() => {
+            setShowActionPanel(false);
+            setIsImportOpen(true);
+          }}
+          onClearSelection={() => setShowActionPanel(false)}
+          addLabel="Add Parking"
+        />
       )}
 
+      {/* Pagination */}
+      <div className="flex justify-center mt-6">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                className={
+                  currentPage === 1 || isLoading
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  handlePageChange(Math.min(totalPages, currentPage + 1))
+                }
+                className={
+                  currentPage === totalPages || isLoading
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+
       {/* Add Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      <Dialog open={isAddModalOpen} modal={false} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Add Parking Slot</DialogTitle>
+            <DialogTitle className="text-base font-semibold">
+              Add Parking Slot
+            </DialogTitle>
           </DialogHeader>
           {renderModalForm(false)}
         </DialogContent>
       </Dialog>
 
       {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Edit Parking Slot</DialogTitle>
+            <DialogTitle className="text-base font-semibold">
+              Edit Parking Slot
+            </DialogTitle>
           </DialogHeader>
           {renderModalForm(true)}
         </DialogContent>
       </Dialog>
+
+      {/* Import Modal */}
+      <CommonImportModal
+        selectedFile={importFile}
+        setSelectedFile={setImportFile}
+        open={isImportOpen}
+        onOpenChange={(open) => {
+          setIsImportOpen(open);
+          if (!open) setImportFile(null);
+        }}
+        title="Import Parking Slots"
+        entityType="Parking Slots"
+        onImport={handleImport}
+        isUploading={isImporting}
+        onSampleDownload={handleSampleDownload}
+        isDownloading={isDownloadingSample}
+      />
+
+      {/* Filter Dialog */}
+      <ParkingFilterDialog
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApplyFilters={(filters) => {
+          setParkingFilters(filters);
+          setCurrentPage(1);
+        }}
+        initialFilters={parkingFilters}
+      />
     </div>
   );
 };

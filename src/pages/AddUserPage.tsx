@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { countries } from "country-data";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Camera, User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile } from "lucide-react";
+import { User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video, Check, ShieldCheck, ShieldAlert } from "lucide-react";
 import {
   Box,
   Paper,
@@ -23,6 +23,7 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { getFullUrl } from "@/config/apiConfig";
 import axios from "axios";
+import { toast } from "sonner";
 
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
@@ -44,7 +45,7 @@ const SectionHeader = styled(Box)(({ theme }) => ({
 
 const RedIcon = styled(Box)(({ theme }) => ({
   color: 'white',
-  backgroundColor: '#C72030',
+  backgroundColor: '#da7756',
   borderRadius: '50%',
   padding: '8px',
   display: 'flex',
@@ -55,14 +56,21 @@ const RedIcon = styled(Box)(({ theme }) => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: '#E7E3D9',
-  color: '#C72030',
+  backgroundColor: '#DA7756 !important',
+  color: 'white !important',
   borderRadius: 0,
   textTransform: 'none',
   padding: '8px 16px',
   fontFamily: 'Work Sans, sans-serif',
   fontWeight: 500,
   boxShadow: 'none',
+  '&:hover': {
+    opacity: 1,
+  },
+  '&.Mui-disabled': {
+    backgroundColor: '#e3ae9f !important',
+    color: 'white !important',
+  }
 }));
 
 const DraftButton = styled(MuiButton)(({ theme }) => ({
@@ -98,15 +106,18 @@ const fieldStyles = {
       color: '#C72030',
     },
   },
+  '& .MuiFormLabel-asterisk': {
+    color: '#da7756',
+  },
 };
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   width: 128,
   height: 128,
-  backgroundColor: '#fff', // white background
+  backgroundColor: '#fff',
   fontSize: '48px',
-  color: '#C72030', // icon color matches SVG color
-  border: '2px solid #C72030',
+  color: '#da7756',
+  border: '2px solid #da7756',
 }));
 
 const CameraButton = styled(IconButton)(({ theme }) => ({
@@ -121,6 +132,35 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
     backgroundColor: '#a01828',
   },
 }));
+
+// Password policy per the organization's Information Security policy:
+// >= 8 alphanumeric characters, mixed case, at least one digit, and not a
+// common/dictionary password. Checked live as the user types, and again
+// before submit, so a weak password can never reach the create request.
+const PASSWORD_REQUIREMENTS: {
+  key: string;
+  label: string;
+  test: (pwd: string) => boolean;
+}[] = [
+    { key: "length", label: "At least 8 characters", test: (p) => p.length >= 8 },
+    { key: "upper", label: "At least one uppercase letter (A-Z)", test: (p) => /[A-Z]/.test(p) },
+    { key: "lower", label: "At least one lowercase letter (a-z)", test: (p) => /[a-z]/.test(p) },
+    { key: "number", label: "At least one number (0-9)", test: (p) => /[0-9]/.test(p) },
+    {
+      key: "notCommon",
+      label: "Not a common or easily guessable password",
+      test: (p) => !COMMON_PASSWORDS.has(p.toLowerCase()),
+    },
+  ];
+
+// A small set of the most common/dictionary passwords — best-effort check for
+// the "must not contain dictionary words" requirement (a full dictionary
+// lookup isn't practical client-side).
+const COMMON_PASSWORDS = new Set([
+  "password", "password1", "password123", "12345678", "123456789",
+  "welcome1", "admin1234", "iloveyou1", "1234567890",
+  "abc123456", "passw0rd", "welcome123",
+]);
 
 const getCreateApiUrl = () => {
   const baseUrl = localStorage.getItem('baseUrl') || '';
@@ -138,7 +178,7 @@ const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_
   // Find the flat name from flatOptions using the flat ID
   const selectedFlat = flatOptions.find(f => f.id.toString() === formData.flat.toString());
   const flatName = selectedFlat ? selectedFlat.flat_no : formData.flat;
-  
+
   const payload: any = {
     email: formData.email,
     mobile: formData.mobile,
@@ -156,13 +196,13 @@ const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_
     flat_no: flatName,
     society_block_id: formData.tower,
     resident_type: formData.residentType,
-    lives_here: formData.livesHere === "Yes",
+    lives_here: formData.livesHere === "Yes" ? "yes" : "no",
     allow_fitout: formData.allowFitout === "Yes",
     intercom_number: formData.intercomNumber,
     landline_number: formData.landlineNumber,
     agreement_start_date: formData.agreementStartDate || "",
     agreement_expire_date: formData.agreementExpireDate || "",
-    approve: formData.status === "1",
+    approve: formData.status === "1" ? true : (formData.status === "0" ? false : null),
     is_primary: formData.membershipType === "Primary" ? 1 : 0,
     birthday: formData.birthDate,
     anniversary: formData.anniversary,
@@ -215,26 +255,67 @@ const defaultFormData = {
   agreementStartDate: "",
   agreementExpireDate: "",
   agreementDocuments: [] as File[],
+  existingDocuments: [] as { id: number; document_url: string }[]
 };
 
 const todayStr = new Date().toISOString().split('T')[0];
+
+// Helper function to detect file type from URL
+const getFileType = (url: string): string => {
+  const lowercaseUrl = url.toLowerCase();
+  if (lowercaseUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) return "image";
+  if (lowercaseUrl.match(/\.pdf$/i)) return "pdf";
+  if (lowercaseUrl.match(/\.(doc|docx)$/i)) return "doc";
+  if (lowercaseUrl.match(/\.(xls|xlsx|csv)$/i)) return "sheet";
+  return "file";
+};
+
+// Helper function to get filename from URL
+const getFilenameFromUrl = (url: string): string => {
+  const urlParts = url.split("/");
+  const filename = urlParts[urlParts.length - 1];
+  // Remove query parameters if any
+  return filename?.split("?")[0] || "Attachment";
+};
 
 export const AddUserPage = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
   const location = useLocation();
   const isEdit = Boolean(userId);
+  const orgId = localStorage.getItem('org_id');
+  const isSupervisorOrg = orgId === '10';
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
   const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
   const [flatOptions, setFlatOptions] = useState<{ id: number; flat_no: string }[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
+  const passwordChecks = useMemo(
+    () =>
+      PASSWORD_REQUIREMENTS.map((req) => ({
+        ...req,
+        passed: req.test(formData.password),
+      })),
+    [formData.password]
+  );
+  const isPasswordStrong = passwordChecks.every((check) => check.passed);
+
+  // Camera capture state
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCamera, setSelectedCamera] = useState<string | undefined>(undefined);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
   // Get society_id from localStorage (set by header)
   const getSocietyId = () => {
-    return localStorage.getItem('selectedUserSociety') || '';
+    return localStorage.getItem('selectedSocietyId') || '';
   };
 
   // Fetch flats when tower changes
@@ -307,22 +388,22 @@ export const AddUserPage = () => {
             mobile: user.mobile_number || "",
             password: "", // don't prefill password
             phase: user.display_view || "",
-            status: user.approved ? "1" : "",
+            status: user.approved === true ? "1" : (user.approved === false ? "0" : "null"),
             tower: user.society_block_id ? user.society_block_id.toString() : "",
             flat: user.society_flat_id || "",
             category: user.user_category_id || "",
             alternateAddress: user.alternate_address || "",
             residentType: user.resident_type || "Owner",
             membershipType: user.is_primary === 1 ? "Primary" : "Secondary",
-            livesHere: user.user_flat?.lives_here === "true" ? "Yes" : "No",
+            livesHere: user.user_flat?.lives_here === "yes" ? "Yes" : "No",
             allowFitout: user.user_flat?.allow_fitout ? "Yes" : "No",
             birthDate: user.birthday || "",
             anniversary: user.anniversary || "",
             spouseBirthDate: user.spouse_birthday || "",
             alternateEmail1: user.alternate_email_1 || "",
             alternateEmail2: user.alternate_email_2 || "",
-            landlineNumber: user.landline_number || "",
-            intercomNumber: user.intercom_number || "",
+            landlineNumber: user.user_flat?.landline || "",
+            intercomNumber: user.intercom || "",
             gstNumber: user.gst_number || "",
             panNumber: user.pan_number || "",
             evConnection: user.ev_connection ? "Yes" : "No",
@@ -334,6 +415,7 @@ export const AddUserPage = () => {
             agreementStartDate: user.user_flat?.agreement_start_date?.split("T")[0] || "",
             agreementExpireDate: user.user_flat?.agreement_expire_date?.split("T")[0] || "",
             agreementDocuments: [], // Set appropriately if editing
+            existingDocuments: user.user_flat_documents || [],
           };
           setFormData(formDataState);
 
@@ -342,24 +424,21 @@ export const AddUserPage = () => {
             fetchFlats(parseInt(formDataState.tower));
           }
         })
-        .catch(() => setError("Failed to load user data."))
+        .catch(() => toast.error("Failed to load user data."))
         .finally(() => setLoading(false));
     }
   }, [isEdit, userId]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (error) setError(null);
   };
 
   const handleFileChange = (files: File[]) => {
     setFormData((prev) => ({ ...prev, agreementDocuments: files }));
-    if (error) setError(null);
   };
 
   const validateForm = (): string | null => {
-    if (!formData.title) {
+    if (!isEdit && !formData.title) {
       return "Please select a title";
     }
     if (!formData.firstName.trim()) {
@@ -387,8 +466,8 @@ export const AddUserPage = () => {
     if (!isEdit && !formData.password.trim()) {
       return "Password is required";
     }
-    if (!isEdit && formData.password.length < 6) {
-      return "Password must be at least 6 characters";
+    if (!isEdit && !isPasswordStrong) {
+      return "Please satisfy all password requirements listed below.";
     }
     if (!formData.phase) {
       return "Please select a phase";
@@ -402,8 +481,16 @@ export const AddUserPage = () => {
     if (!formData.flat) {
       return "Please select a flat";
     }
-    if (!formData.category) {
-      return "Please select a category";
+    if (isSupervisorOrg && formData.residentType === "tenant") {
+      if (!formData.agreementStartDate) {
+        return "Agreement Start Date is required for tenants";
+      }
+      if (!formData.agreementExpireDate) {
+        return "Agreement Expire Date is required for tenants";
+      }
+      if (formData.existingDocuments.length === 0 && formData.agreementDocuments.length === 0) {
+        return "Please upload at least one attachment for tenants";
+      }
     }
     return null;
   };
@@ -412,12 +499,11 @@ export const AddUserPage = () => {
     // Validate form before submission
     const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
     setLoading(true);
-    setError(null);
     const payload = mapFormDataToApiPayload(formData, flatOptions);
     const url = isEdit && userId ? getEditApiUrl(userId) : getCreateApiUrl();
     const method = isEdit ? "patch" : "post";
@@ -431,6 +517,11 @@ export const AddUserPage = () => {
         formDataToSubmit.append(key, typeof value === 'boolean' ? String(value) : value);
       }
     });
+
+    // Append profile image if selected
+    if (profileImageFile) {
+      formDataToSubmit.append("profile_image", profileImageFile);
+    }
 
     // Append multiple agreement documents
     if (formData.agreementDocuments && formData.agreementDocuments.length > 0) {
@@ -451,7 +542,7 @@ export const AddUserPage = () => {
       navigate("/settings/manage-users");
     } catch (e) {
       console.error("Submission error:", e);
-      setError("Failed to submit. Please try again.");
+      toast.error("Failed to submit. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -463,10 +554,108 @@ export const AddUserPage = () => {
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Handle image upload logic here
-      console.log("Image uploaded:", file);
+    if (file && file.type.startsWith('image/')) {
+      const previewUrl = URL.createObjectURL(file);
+      setProfileImage(previewUrl);
+      setProfileImageFile(file);
+    } else if (file) {
+      toast.error("Please select a valid image file");
     }
+  };
+
+  // Camera functions
+  const stopCameraStream = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  const startCamera = async (deviceId?: string) => {
+    try {
+      stopCameraStream();
+      const constraints = {
+        video: deviceId ? { deviceId: { exact: deviceId } } : true,
+        audio: false,
+      };
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setCameraStream(newStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        videoRef.current.onloadedmetadata = () => {
+          setIsVideoReady(true);
+          videoRef.current?.play().catch(console.error);
+        };
+      }
+    } catch (error) {
+      console.error("Error starting camera:", error);
+      toast.error("Failed to access camera. Please check permissions.");
+    }
+  };
+
+  const initializeCamera = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter((d) => d.kind === "videoinput");
+      setCameras(videoDevices);
+      if (videoDevices.length > 0) {
+        const defaultCamera = videoDevices[0].deviceId;
+        setSelectedCamera(defaultCamera);
+        await startCamera(defaultCamera);
+      } else {
+        toast.error("No camera devices found.");
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast.error("Camera permission denied. Please allow camera access.");
+    }
+  };
+
+  const handleOpenCamera = () => {
+    setIsVideoReady(false);
+    setShowCameraModal(true);
+    initializeCamera();
+  };
+
+  const handleCapturePhoto = () => {
+    if (videoRef.current && canvasRef.current && cameraStream) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/jpeg", 0.8);
+        // Convert base64 to File for the same profileImageFile parameter
+        fetch(imageData)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+            setProfileImage(imageData);
+            setProfileImageFile(file);
+          });
+        stopCameraStream();
+        setShowCameraModal(false);
+        toast.success("Photo captured successfully!");
+      } else {
+        toast.error("Failed to capture photo. Please try again.");
+      }
+    } else {
+      toast.error("Camera not ready. Please try again.");
+    }
+  };
+
+  const handleCameraChange = (deviceId: string) => {
+    setSelectedCamera(deviceId);
+    setIsVideoReady(false);
+    startCamera(deviceId);
+  };
+
+  const closeCameraModal = () => {
+    stopCameraStream();
+    setShowCameraModal(false);
   };
   const countryCodes = countries.all
     .map((country) => ({
@@ -475,6 +664,17 @@ export const AddUserPage = () => {
     }))
     .filter((c) => c.code);
 
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading user details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Box
@@ -508,9 +708,6 @@ export const AddUserPage = () => {
             {isEdit ? "Edit User" : "Add User"}
           </h1>
         </Paper>
-        {error && (
-          <Box sx={{ color: "#C72030", mb: 2, fontWeight: 500 }}>{error}</Box>
-        )}
         {/* Primary Details Section */}
         <SectionCard>
           <SectionHeader>
@@ -536,28 +733,179 @@ export const AddUserPage = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                 <Box sx={{ position: 'relative' }}>
                   <ProfileAvatar>
-                    <UserIcon size={64} />
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="profile"
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <UserIcon size={64} />
+                    )}
                   </ProfileAvatar>
                   <input
                     type="file"
                     accept="image/*"
                     style={{ display: 'none' }}
                     id="profile-upload"
+                    title="Upload profile image"
                     onChange={handleImageUpload}
                   />
-                  <label htmlFor="profile-upload" style={{ cursor: 'pointer' }}>
-                    <CameraButton>
-                      <Camera size={16} />
-                    </CameraButton>
-                  </label>
+                  {profileImage && (
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: '-8px',
+                        left: '-8px',
+                        backgroundColor: '#C72030',
+                        color: 'white',
+                        width: '24px',
+                        height: '24px',
+                        '&:hover': {
+                          backgroundColor: '#a01828',
+                        },
+                      }}
+                      onClick={() => {
+                        setProfileImage(null);
+                        setProfileImageFile(null);
+                        const input = document.getElementById('profile-upload') as HTMLInputElement;
+                        if (input) input.value = '';
+                      }}
+                    >
+                      <X size={14} />
+                    </IconButton>
+                  )}
+                </Box>
+                {/* Camera & Upload Buttons */}
+                <Box sx={{ display: 'flex', gap: '8px', mt: '4px' }}>
+                  <IconButton
+                    size="small"
+                    title="Capture from camera"
+                    onClick={handleOpenCamera}
+                    sx={{
+                      backgroundColor: '#da7756',
+                      color: 'white',
+                      width: '36px',
+                      height: '36px',
+                      '&:hover': { backgroundColor: '#c06548' },
+                    }}
+                  >
+                    <Video size={18} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    title="Upload image"
+                    onClick={() => {
+                      const input = document.getElementById('profile-upload') as HTMLInputElement;
+                      input?.click();
+                    }}
+                    sx={{
+                      backgroundColor: '#da7756',
+                      color: 'white',
+                      width: '36px',
+                      height: '36px',
+                      '&:hover': { backgroundColor: '#c06548' },
+                    }}
+                  >
+                    <Upload size={18} />
+                  </IconButton>
                 </Box>
               </Box>
+
+              {/* Camera Modal */}
+              {showCameraModal && (
+                <Box
+                  sx={{
+                    position: 'fixed',
+                    top: '80px',
+                    left: '24px',
+                    zIndex: 1300,
+                    width: '340px',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                    border: '1px solid #e5e7eb',
+                    p: 2,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Camera</h3>
+                    <IconButton size="small" onClick={closeCameraModal}>
+                      <X size={16} />
+                    </IconButton>
+                  </Box>
+
+                  <Box sx={{ position: 'relative', mb: 2, backgroundColor: '#111', borderRadius: '8px', overflow: 'hidden' }}>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    />
+                    <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+                      <span style={{
+                        backgroundColor: '#f97316', color: 'white', padding: '2px 8px',
+                        borderRadius: '4px', fontSize: '12px', fontWeight: 500
+                      }}>
+                        📹 Preview
+                      </span>
+                    </Box>
+                  </Box>
+
+                  {cameras.length > 1 && (
+                    <FormControl fullWidth size="small" sx={{ mb: 2, ...fieldStyles }}>
+                      <InputLabel>Select Camera</InputLabel>
+                      <Select
+                        value={selectedCamera || ''}
+                        onChange={(e) => handleCameraChange(e.target.value)}
+                        label="Select Camera"
+                      >
+                        {cameras.map((cam) => (
+                          <MenuItem key={cam.deviceId} value={cam.deviceId}>
+                            {cam.label || `Camera ${cameras.indexOf(cam) + 1}`}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <MuiButton
+                      fullWidth
+                      variant="contained"
+                      onClick={handleCapturePhoto}
+                      disabled={!cameraStream || !isVideoReady}
+                      sx={{
+                        backgroundColor: '#C72030',
+                        borderRadius: '20px',
+                        textTransform: 'none',
+                        '&:hover': { backgroundColor: '#a01828' },
+                        '&.Mui-disabled': { backgroundColor: '#e5e7eb' },
+                      }}
+                    >
+                      {!isVideoReady ? 'Loading Camera...' : 'Capture Photo'}
+                    </MuiButton>
+                    <MuiButton
+                      fullWidth
+                      variant="outlined"
+                      onClick={closeCameraModal}
+                      sx={{ borderRadius: '20px', textTransform: 'none' }}
+                    >
+                      Close
+                    </MuiButton>
+                  </Box>
+
+                  <canvas ref={canvasRef} style={{ display: 'none' }} />
+                </Box>
+              )}
 
               {/* Form Fields */}
               <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '16px' }}>
                 {/* Title */}
                 <FormControl fullWidth size="small" sx={fieldStyles}>
-                  <InputLabel required>Select Title</InputLabel>
+                  <InputLabel required={!isEdit}>Select Title</InputLabel>
                   <Select
                     value={formData.title}
                     label="Select Title"
@@ -660,6 +1008,40 @@ export const AddUserPage = () => {
                   }}
                 />
 
+                {/* Password Requirements — live-checked as the user types; spans the full
+                    row so it doesn't stretch the height of the Email/Mobile cells beside it */}
+                {formData.password && (
+                  <Box sx={{ gridColumn: 'span 3', mt: '-8px' }}>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg border">
+                      <div
+                        className={`flex items-center gap-2 mb-2 text-xs font-medium ${isPasswordStrong ? "text-green-700" : "text-amber-700"
+                          }`}
+                      >
+                        {isPasswordStrong ? (
+                          <ShieldCheck size={14} />
+                        ) : (
+                          <ShieldAlert size={14} />
+                        )}
+                        {isPasswordStrong
+                          ? "Meets password policy"
+                          : "Does not meet password policy yet"}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                        {passwordChecks.map((check) => (
+                          <div
+                            key={check.key}
+                            className={`flex items-center gap-2 text-xs ${check.passed ? "text-green-600" : "text-gray-400"
+                              }`}
+                          >
+                            {check.passed ? <Check size={12} /> : <X size={12} />}
+                            {check.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Box>
+                )}
+
                 {/* Phase */}
                 <FormControl fullWidth required size="small" sx={fieldStyles}>
                   <InputLabel>Select Phase</InputLabel>
@@ -682,7 +1064,9 @@ export const AddUserPage = () => {
                     label="Select Status"
                     onChange={(e) => handleInputChange("status", e.target.value)}
                   >
-                    <MenuItem value="1">Approved</MenuItem>
+                    <MenuItem value="null">Pending</MenuItem>
+                    <MenuItem value="1">Approve</MenuItem>
+                    <MenuItem value="0">Reject</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -726,7 +1110,7 @@ export const AddUserPage = () => {
                 </FormControl>
 
                 {/* Category */}
-                <FormControl fullWidth required size="small" sx={fieldStyles}>
+                <FormControl fullWidth size="small" sx={fieldStyles}>
                   <InputLabel>Select Category</InputLabel>
                   <Select
                     value={formData.category}
@@ -773,8 +1157,8 @@ export const AddUserPage = () => {
                     value={formData.residentType}
                     onChange={(e) => handleInputChange("residentType", e.target.value)}
                   >
-                    <FormControlLabel value="Owner" control={<Radio size="small" />} label="Owner" />
-                    <FormControlLabel value="Tenant" control={<Radio size="small" />} label="Tenant" />
+                    <FormControlLabel value="owner" control={<Radio size="small" />} label="Owner" />
+                    <FormControlLabel value="tenant" control={<Radio size="small" />} label="Tenant" />
                   </RadioGroup>
                 </FormControl>
 
@@ -847,7 +1231,7 @@ export const AddUserPage = () => {
                   </RadioGroup>
                 </FormControl>
 
-                {formData.residentType === "Tenant" && (
+                {formData.residentType === "tenant" && (
                   <>
                     <Box sx={{ gridColumn: { md: 'span 1' } }}>
                       <FormLabel
@@ -858,12 +1242,13 @@ export const AddUserPage = () => {
                           display: 'block',
                         }}
                       >
-                        Agreement Start Date
+                        Agreement Start Date{isSupervisorOrg && <span style={{ color: '#C72030' }}> *</span>}
                       </FormLabel>
                       <TextField
                         fullWidth
                         size="small"
                         type="date"
+                        required={isSupervisorOrg}
                         value={formData.agreementStartDate}
                         onChange={(e) => handleInputChange("agreementStartDate", e.target.value)}
                         sx={fieldStyles}
@@ -880,127 +1265,197 @@ export const AddUserPage = () => {
                           display: 'block',
                         }}
                       >
-                        Agreement Expire Date
+                        Agreement Expire Date{isSupervisorOrg && <span style={{ color: '#C72030' }}> *</span>}
                       </FormLabel>
                       <TextField
                         fullWidth
                         size="small"
                         type="date"
+                        required={isSupervisorOrg}
                         value={formData.agreementExpireDate}
                         onChange={(e) => handleInputChange("agreementExpireDate", e.target.value)}
                         sx={fieldStyles}
                         InputLabelProps={{ shrink: true }}
                       />
                     </Box>
+                  </>
+                )}
 
-                    <Box sx={{ gridColumn: 'span 3', mt: 2 }}>
-                      <FormLabel
-                        sx={{
-                          fontSize: '14px',
-                          color: 'rgba(0, 0, 0, 0.6)',
-                          marginBottom: '8px',
-                          display: 'block',
-                        }}
-                      >
-                        Document
-                      </FormLabel>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                        {formData.agreementDocuments.map((file, index) => {
-                          const isImage = file.type.startsWith('image/');
-                          const isExcel = file.name.includes('.xls') || file.name.includes('.xlsx') || file.name.includes('.csv');
-                          const isPDF = file.name.includes('.pdf');
+                {(formData.residentType === "tenant" || formData.existingDocuments.length > 0 || formData.agreementDocuments.length > 0) && (
+                  <Box sx={{ gridColumn: 'span 3', mt: 2 }}>
+                    <FormLabel
+                      sx={{
+                        fontSize: '14px',
+                        color: 'rgba(0, 0, 0, 0.6)',
+                        marginBottom: '8px',
+                        display: 'block',
+                      }}
+                    >
+                      Attachments{isSupervisorOrg && formData.residentType === "tenant" && <span style={{ color: '#C72030' }}> *</span>}
+                    </FormLabel>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                      {/* Existing Documents */}
+                      {formData.existingDocuments.map((doc, index) => {
+                        const fileType = getFileType(doc.document_url);
+                        const isImage = fileType === "image";
+                        const isExcel = fileType === "sheet";
+                        const isPDF = fileType === "pdf";
+                        const filename = getFilenameFromUrl(doc.document_url);
 
-                          return (
-                            <Box
-                              key={index}
+                        return (
+                          <Box
+                            key={`existing-${doc.id || index}`}
+                            sx={{
+                              width: '80px',
+                              height: '80px',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              position: 'relative',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: '#fff',
+                              overflow: 'hidden',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => window.open(doc.document_url, '_blank')}
+                            title={filename}
+                          >
+                            <IconButton
+                              size="small"
                               sx={{
-                                width: '80px',
-                                height: '80px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                position: 'relative',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
                                 backgroundColor: '#fff',
-                                overflow: 'hidden',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                padding: '2px',
+                                '&:hover': { backgroundColor: '#f5f5f5' },
+                                zIndex: 1,
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newExisting = [...formData.existingDocuments];
+                                newExisting.splice(index, 1);
+                                setFormData(prev => ({ ...prev, existingDocuments: newExisting }));
                               }}
                             >
-                              <IconButton
-                                size="small"
-                                sx={{
-                                  position: 'absolute',
-                                  top: 0,
-                                  right: 0,
-                                  backgroundColor: '#fff',
-                                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                  padding: '2px',
-                                  '&:hover': { backgroundColor: '#f5f5f5' },
-                                  zIndex: 1,
-                                }}
-                                onClick={() => {
-                                  const newDocs = [...formData.agreementDocuments];
-                                  newDocs.splice(index, 1);
-                                  handleFileChange(newDocs);
-                                }}
-                              >
-                                <X size={12} color="#C72030" />
-                              </IconButton>
+                              <X size={12} color="#C72030" />
+                            </IconButton>
 
-                              {isImage ? (
-                                <img
-                                  src={URL.createObjectURL(file)}
-                                  alt="preview"
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                />
-                              ) : isExcel ? (
-                                <FileSpreadsheet size={32} color="#1D6F42" />
-                              ) : isPDF ? (
-                                <FileText size={32} color="#C72030" />
-                              ) : (
-                                <GenericFile size={32} color="#666" />
-                              )}
-                            </Box>
-                          );
-                        })}
+                            {isImage ? (
+                              <img
+                                src={doc.document_url}
+                                alt="preview"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : isExcel ? (
+                              <FileSpreadsheet size={32} color="#1D6F42" />
+                            ) : isPDF ? (
+                              <FileText size={32} color="#C72030" />
+                            ) : (
+                              <GenericFile size={32} color="#666" />
+                            )}
+                          </Box>
+                        );
+                      })}
 
-                        <Box
-                          sx={{
-                            width: '80px',
-                            height: '80px',
-                            border: '1px dashed #ccc',
-                            borderRadius: '4px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            backgroundColor: '#fff',
-                            '&:hover': {
-                              borderColor: '#C72030',
-                              backgroundColor: '#fafafa',
-                            },
-                          }}
-                          onClick={() => document.getElementById('agreement-document-upload').click()}
-                        >
-                          <Plus size={24} color="#666" />
-                        </Box>
-                      </Box>
-                      <input
-                        type="file"
-                        id="agreement-document-upload"
-                        style={{ display: 'none' }}
-                        multiple
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          if (files.length > 0) {
-                            handleFileChange([...formData.agreementDocuments, ...files]);
-                          }
-                          // Reset input so same file can be selected again if removed
-                          e.target.value = '';
+                      {/* New Agreement Documents */}
+                      {formData.agreementDocuments.map((file, index) => {
+                        const isImage = file.type.startsWith('image/');
+                        const isExcel = file.name.includes('.xls') || file.name.includes('.xlsx') || file.name.includes('.csv');
+                        const isPDF = file.name.includes('.pdf');
+
+                        return (
+                          <Box
+                            key={`new-${index}`}
+                            sx={{
+                              width: '80px',
+                              height: '80px',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              position: 'relative',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: '#fff',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <IconButton
+                              size="small"
+                              sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                backgroundColor: '#fff',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                padding: '2px',
+                                '&:hover': { backgroundColor: '#f5f5f5' },
+                                zIndex: 1,
+                              }}
+                              onClick={() => {
+                                const newDocs = [...formData.agreementDocuments];
+                                newDocs.splice(index, 1);
+                                handleFileChange(newDocs);
+                              }}
+                            >
+                              <X size={12} color="#C72030" />
+                            </IconButton>
+
+                            {isImage ? (
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt="preview"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : isExcel ? (
+                              <FileSpreadsheet size={32} color="#1D6F42" />
+                            ) : isPDF ? (
+                              <FileText size={32} color="#C72030" />
+                            ) : (
+                              <GenericFile size={32} color="#666" />
+                            )}
+                          </Box>
+                        );
+                      })}
+
+                      <Box
+                        sx={{
+                          width: '80px',
+                          height: '80px',
+                          border: '1px dashed #ccc',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          backgroundColor: '#fff',
+                          '&:hover': {
+                            borderColor: '#C72030',
+                            backgroundColor: '#fafafa',
+                          },
                         }}
-                      />
+                        onClick={() => document.getElementById('agreement-document-upload').click()}
+                      >
+                        <Plus size={24} color="#666" />
+                      </Box>
                     </Box>
-                  </>
+                    <input
+                      type="file"
+                      id="agreement-document-upload"
+                      style={{ display: 'none' }}
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          handleFileChange([...formData.agreementDocuments, ...files]);
+                        }
+                        // Reset input so same file can be selected again if removed
+                        e.target.value = '';
+                      }}
+                    />
+                  </Box>
                 )}
               </Box>
             </Box>
@@ -1214,7 +1669,10 @@ export const AddUserPage = () => {
             <RedButton onClick={handleSubmit} disabled={loading}>
               {loading ? (isEdit ? "Saving..." : "Submitting...") : (isEdit ? "Save" : "Submit")}
             </RedButton>
-            <DraftButton onClick={handleCancel} disabled={loading}>Cancel</DraftButton>
+            <DraftButton
+             onClick={handleCancel}
+             variant="outlined"
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"             disabled={loading}>Cancel</DraftButton>
           </Box>
         </SectionCard>
       </Box>

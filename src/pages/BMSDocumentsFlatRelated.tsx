@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   ChevronRight,
@@ -9,7 +9,6 @@ import {
   FileText,
   Upload,
   RefreshCw,
-  Loader2,
   Download,
   Search,
   FileVideo,
@@ -21,7 +20,11 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import {
+  ENDPOINTS,
+  getCrmAdminRequestConfig,
+  getFullUrl,
+} from "@/config/apiConfig";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -48,6 +51,9 @@ interface DocumentNode {
 const getExtension = (name: string | null | undefined): string =>
   name ? (name.split(".").pop()?.toLowerCase() ?? "") : "";
 
+const FILE_EXTENSION_PATTERN =
+  /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
+
 const inferFileType = (name: string | null | undefined): string => {
   const ext = getExtension(name);
   if (["mp4", "mov", "avi", "mkv", "webm"].includes(ext)) return "video";
@@ -58,24 +64,87 @@ const inferFileType = (name: string | null | undefined): string => {
   return "file";
 };
 
-const isFile = (node: ApiNode): boolean =>
-  String(node.id).startsWith("documents_");
+const isFile = (node: ApiNode): boolean => {
+  const id = String(node.id);
+  // Root-level nodes are flat folders (FM-101, T1-201, etc.)
+  if (String(node.parent) === "#") return false;
+  if (id.startsWith("documents_")) return true;
+  const href = node.a_attr?.href ?? "";
+  if (href && !href.includes("/society_flats/")) return true;
+  return FILE_EXTENSION_PATTERN.test(node.text ?? "");
+};
+
+const digitsOnly = (value: string): string => value.replace(/\D/g, "");
+
+/** jsTree flat ids (e.g. "j1_5") vs API parent ids (e.g. "5") */
+const lastUnderscoreSegment = (value: string): string => {
+  const idx = value.lastIndexOf("_");
+  return idx >= 0 ? value.slice(idx + 1) : "";
+};
+
+const resolveFolderParent = (
+  parentKey: string,
+  map: Map<string, DocumentNode>,
+  folderLookup: Map<string, DocumentNode>
+): DocumentNode | undefined => {
+  const direct = map.get(parentKey);
+  if (direct?.type === "folder") return direct;
+
+  const parentLookupKeys = [
+    parentKey,
+    lastUnderscoreSegment(parentKey),
+    digitsOnly(parentKey),
+  ].filter(Boolean);
+
+  for (const lookupKey of parentLookupKeys) {
+    const fromLookup = folderLookup.get(lookupKey);
+    if (fromLookup) return fromLookup;
+  }
+
+  for (const [folderId, folder] of map) {
+    if (folder.type !== "folder") continue;
+    if (
+      parentLookupKeys.includes(folderId) ||
+      parentLookupKeys.includes(lastUnderscoreSegment(folderId)) ||
+      parentLookupKeys.includes(digitsOnly(folderId)) ||
+      folderId.endsWith(`_${parentKey}`)
+    ) {
+      return folder;
+    }
+  }
+
+  return undefined;
+};
 
 /** Transform flat jstree array into nested DocumentNode[] */
 const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
   const map = new Map<string, DocumentNode>();
+  const folderLookup = new Map<string, DocumentNode>();
 
   // First pass: create all nodes
   for (const n of nodes) {
     const key = String(n.id);
     const file = isFile(n);
-    map.set(key, {
+    const node: DocumentNode = {
       id: key,
       name: n.text ?? "",
       type: file ? "file" : "folder",
       fileType: file ? inferFileType(n.text) : undefined,
       children: file ? undefined : [],
-    });
+    };
+    map.set(key, node);
+    if (!file) {
+      const register = (lookupKey: string) => {
+        if (lookupKey && !folderLookup.has(lookupKey)) {
+          folderLookup.set(lookupKey, node);
+        }
+      };
+      register(key);
+      const suffix = lastUnderscoreSegment(key);
+      if (suffix) register(suffix);
+      // Avoid j1_5 → "15" polluting lookup; only register when id is numeric
+      if (/^\d+$/.test(key)) register(key);
+    }
   }
 
   // Second pass: wire parent-child
@@ -83,17 +152,45 @@ const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
   for (const n of nodes) {
     const key = String(n.id);
     const node = map.get(key)!;
-    if (n.parent === "#") {
+    const parentKey = String(n.parent);
+
+    if (parentKey === "#") {
       roots.push(node);
-    } else {
-      const parentNode = map.get(String(n.parent));
-      if (parentNode && parentNode.children) {
-        parentNode.children.push(node);
+      continue;
+    }
+
+    const parentNode = resolveFolderParent(parentKey, map, folderLookup);
+
+    if (parentNode?.children) {
+      parentNode.children.push(node);
+    } else if (node.type === "file") {
+      const flatRoot = roots.find(
+        (root) =>
+          root.type === "folder" &&
+          (root.id === parentKey ||
+            lastUnderscoreSegment(root.id) === parentKey ||
+            root.id.endsWith(`_${parentKey}`))
+      );
+      if (flatRoot?.children) {
+        flatRoot.children.push(node);
+      } else {
+        roots.push(node);
       }
     }
   }
 
   return roots;
+};
+
+const normalizeAttachmentNodes = (data: unknown): ApiNode[] => {
+  if (Array.isArray(data)) return data as ApiNode[];
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+    for (const key of ["data", "attachments", "nodes", "tree"]) {
+      if (Array.isArray(record[key])) return record[key] as ApiNode[];
+    }
+  }
+  return [];
 };
 
 /** Recursive search filter */
@@ -136,6 +233,7 @@ const FileIcon = ({ fileType }: { fileType?: string }) => {
 
 const BMSDocumentsFlatRelated: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -148,18 +246,54 @@ const BMSDocumentsFlatRelated: React.FC = () => {
   } = useQuery<ApiNode[]>({
     queryKey: ["flat-related-documents"],
     queryFn: async () => {
-      const { data } = await axios.get(getFullUrl("/crm/admin/attachments.json"), {
-        headers: { Authorization: getAuthHeader() },
-      });
-      return data;
+      const { data } = await axios.get(
+        getFullUrl(ENDPOINTS.ATTACHMENTS),
+        getCrmAdminRequestConfig()
+      );
+      return normalizeAttachmentNodes(data);
     },
     retry: 2,
-    staleTime: 30000,
+    staleTime: 0,
     gcTime: 60000,
+    refetchOnMount: "always",
   });
 
-  const allDocuments: DocumentNode[] = rawNodes ? buildTree(rawNodes) : [];
+  const allDocuments = useMemo(
+    () => (rawNodes ? buildTree(rawNodes) : []),
+    [rawNodes]
+  );
   const documents = filterTree(allDocuments, searchQuery);
+
+  const fileHrefById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const node of rawNodes ?? []) {
+      const href = node.a_attr?.href;
+      if (href) map.set(String(node.id), href);
+    }
+    return map;
+  }, [rawNodes]);
+
+  useEffect(() => {
+    if (!allDocuments.length) return;
+
+    const nextExpanded = new Set<string>();
+    const walk = (nodes: DocumentNode[]) => {
+      for (const node of nodes) {
+        if (node.type === "folder" && (node.children?.length ?? 0) > 0) {
+          nextExpanded.add(node.id);
+          walk(node.children ?? []);
+        }
+      }
+    };
+    walk(allDocuments);
+
+    const fromUpload = (
+      location.state as { expandFlatIds?: string[] } | null
+    )?.expandFlatIds;
+    fromUpload?.forEach((id) => nextExpanded.add(String(id)));
+
+    setExpandedFolders(nextExpanded);
+  }, [allDocuments, location.state]);
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
@@ -174,13 +308,22 @@ const BMSDocumentsFlatRelated: React.FC = () => {
   };
 
   const handleUpload = () => {
-    navigate("/bms/documents/upload-flat", { 
-      state: { returnPath: "/bms/documents/flat-related" } 
+    navigate("/bms/documents/upload-flat", {
+      state: {
+        returnPath: "/bms/documents/flat-related",
+        fromFlatRelated: true,
+      },
     });
   };
 
-  const handleDownload = (fileName: string) => {
-    toast.success(`Downloading ${fileName}...`);
+  const handleDownload = (nodeId: string, fileName: string) => {
+    const href = fileHrefById.get(nodeId);
+    if (href) {
+      window.open(href, "_blank", "noopener,noreferrer");
+      toast.success(`Opening ${fileName}...`);
+      return;
+    }
+    toast.error("Unable to open file. Please try again.");
   };
 
   const handleRefresh = () => {
@@ -201,14 +344,10 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             style={{ paddingLeft: `${level * 24 + 12}px` }}
             onClick={() => toggleFolder(node.id)}
           >
-            {hasChildren ? (
-              isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-gray-500" />
-              )
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4 text-gray-500" />
             ) : (
-              <div className="w-4" />
+              <ChevronRight className="w-4 h-4 text-gray-500" />
             )}
             {isExpanded ? (
               <FolderOpen className="w-5 h-5 text-yellow-500" />
@@ -220,9 +359,18 @@ const BMSDocumentsFlatRelated: React.FC = () => {
               <span className="ml-auto text-xs text-gray-400">{childCount}</span>
             )}
           </div>
-          {isExpanded && hasChildren && (
+          {isExpanded && (
             <div>
-              {node.children!.map((child) => renderNode(child, level + 1))}
+              {hasChildren ? (
+                node.children!.map((child) => renderNode(child, level + 1))
+              ) : (
+                <p
+                  className="py-2 text-xs text-gray-400 italic"
+                  style={{ paddingLeft: `${(level + 1) * 24 + 36}px` }}
+                >
+                  No documents in this flat
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -240,7 +388,7 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             size="sm"
             variant="ghost"
             className="opacity-0 group-hover:opacity-100 transition-opacity h-7 px-2"
-            onClick={() => handleDownload(node.name)}
+            onClick={() => handleDownload(node.id, node.name)}
           >
             <Download className="w-4 h-4" />
           </Button>
@@ -248,6 +396,17 @@ const BMSDocumentsFlatRelated: React.FC = () => {
       );
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading documents...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -260,14 +419,14 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="h-9"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button
             onClick={handleUpload}
-            className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Document
@@ -293,18 +452,13 @@ const BMSDocumentsFlatRelated: React.FC = () => {
 
         {/* Content */}
         <div className="p-4 max-h-[600px] overflow-y-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
-            </div>
-          ) : isError ? (
+          {isError ? (
             <div className="text-center py-12">
               <p className="text-red-600 font-medium">Error loading documents</p>
               <p className="text-sm text-gray-500 mt-1">
                 {(error as Error)?.message || "Please try again"}
               </p>
-              <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
+              <Button onClick={() => refetch()} size="sm" className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Retry
               </Button>

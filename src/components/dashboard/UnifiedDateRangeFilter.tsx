@@ -135,14 +135,10 @@ export const UnifiedDateRangeFilter: React.FC<UnifiedDateRangeFilterProps> = ({
   return (
     <>
       <Button
-        variant="outline"
         onClick={() => setIsOpen(true)}
-        className={cn(
-          'h-10 min-w-0 flex-1 justify-start text-left font-normal border-gray-300 hover:bg-gray-50',
-          !dateRange?.from && 'text-gray-500'
-        )}
+        className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+        <CalendarIcon className="mr-2 h-4 w-4" />
         <span className="truncate">{formatDateRange()}</span>
       </Button>
 

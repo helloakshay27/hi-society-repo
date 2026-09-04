@@ -1,5 +1,6 @@
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
+import { format } from 'date-fns';
 export interface PaginationInfo {
   current_page: number;
   total_count: number;
@@ -43,7 +44,7 @@ export interface BookingData {
   facilityType: string;
   scheduledDate: string;
   scheduledTime: string;
-  bookingStatus: 'Confirmed' | 'Pending' | 'Cancelled';
+  bookingStatus: 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected';
   createdOn: string;
   source: string;
   subFacilityName: string;
@@ -101,13 +102,13 @@ const transformBookingData = (apiData: FacilityBookingResponse): BookingData => 
     facilityType: safeValue(apiData.fac_type),
     scheduledDate: formatDate(apiData.startdate),
     scheduledTime: safeValue(apiData.show_schedule),
-    createdOn: formatDate(apiData.created_at),
+    createdOn: format(apiData?.created_at, 'dd MMMM yyyy, hh:mm a'),
     totalAmount: safeValue(apiData.amount_full),
     refundableAmount: safeValue(apiData.refunded_amount),
     gst: safeValue(apiData.gst),
     amountPaid: safeValue(apiData.amount_paid),
     paymentStatus: safeValue(apiData.pg_state),
-    bookingStatus: (apiData.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+    bookingStatus: (apiData.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
     member: safeValue(apiData.member_count),
     nonMember: safeValue(apiData.non_member_count),
     guest: safeValue(apiData.guest_count),

@@ -9,10 +9,11 @@ import { CommonImportModal } from "@/components/CommonImportModal";
 import { AddFlatDialog } from "./manage-flats-dialogs/AddFlatDialog";
 import { EditFlatDialog } from "./manage-flats-dialogs/EditFlatDialog";
 import { ConfigureTowerDialog } from "./manage-flats-dialogs/ConfigureTowerDialog";
+import { ConfigureWingDialog } from "./manage-flats-dialogs/ConfigureWingDialog";
 import { ConfigureFloorDialog } from "./manage-flats-dialogs/ConfigureFloorDialog";
 import { ConfigureFlatTypeDialog } from "./manage-flats-dialogs/ConfigureFlatTypeDialog";
 import { FiltersDialog } from "./manage-flats-dialogs/FiltersDialog";
-import { ActionsModal } from "./manage-flats-dialogs/ActionsModal";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { toast } from "sonner";
 import { getFullUrl } from "@/config/apiConfig";
 import {
@@ -74,8 +75,9 @@ export const ManageFlatsPage = () => {
   const [showEditFlatDialog, setShowEditFlatDialog] = useState(false);
   const [editingFlatId, setEditingFlatId] = useState<string | null>(null);
 
-  // Configure Tower Dialog states
+  // Configure Tower/Wing/Floor Dialog states
   const [showConfigureTowerDialog, setShowConfigureTowerDialog] = useState(false);
+  const [showConfigureWingDialog, setShowConfigureWingDialog] = useState(false);
   const [showConfigureFloorDialog, setShowConfigureFloorDialog] = useState(false);
   const [editingTower, setEditingTower] = useState<number | null>(null);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
@@ -133,8 +135,8 @@ export const ManageFlatsPage = () => {
       )}`;
 
       if (filters.tower.length > 0) {
-        filters.tower.forEach((tId: string) => {
-          url += `&society_block_id=${tId.value}`;
+        filters.tower.forEach((tId) => {
+          url += `&society_block_id=${tId}`;
         });
       }
 
@@ -160,19 +162,18 @@ export const ManageFlatsPage = () => {
       // Append filters to URL using Ransack format
       if (currentFilters.tower.length > 0) {
         currentFilters.tower.forEach((tId: any) => {
-          url += `&q[society_block_id_in][]=${tId.value}`;
+          url += `&q[society_block_id_in][]=${tId}`;
         });
       }
       if (currentFilters.flatType.length > 0) {
         currentFilters.flatType.forEach((ftId: any) => {
-          url += `&q[society_flat_type_id_in][]=${ftId.value}`;
+          url += `&q[society_flat_type_id_in][]=${ftId}`;
         });
       }
       if (currentFilters.status.length > 0) {
         currentFilters.status.forEach((s: any) => {
-          // Map "active" to true, "inactive" to false if applicable
-          const val = s.value === "active" ? true : s.value === "inactive" ? false : s.value;
-          url += `&q[approve_in][]=${val}`;
+          // Values come from FiltersDialog as "true"/"false" strings
+          url += `&q[approve_in][]=${s}`;
         });
       }
       if (currentFilters.occupancy) {
@@ -180,11 +181,11 @@ export const ManageFlatsPage = () => {
       }
       if (currentFilters.flat.length > 0) {
         currentFilters.flat.forEach((f: any) => {
-          url += `&q[id_in][]=${f.value}`;
+          url += `&q[id_in][]=${f}`;
         });
       }
       if (searchTerm) {
-        url += `&q[flat_no_cont]=${searchTerm}`;
+        url += `&q[search_all_fields_cont]=${searchTerm}`;
       }
 
       const response = await axios.get(url, {
@@ -242,6 +243,11 @@ export const ManageFlatsPage = () => {
     setShowActionPanel(false);
   };
 
+  const handleAddWing = () => {
+    setShowConfigureWingDialog(true);
+    setShowActionPanel(false);
+  };
+
   const handleAddFloor = () => {
     setShowConfigureFloorDialog(true);
     setShowActionPanel(false);
@@ -284,8 +290,29 @@ export const ManageFlatsPage = () => {
     setShowEditFlatDialog(true);
   };
 
-  const handleToggleStatus = (flatId: string) => {
-    toast.success("Status updated successfully!");
+  const handleToggleStatus = async (flatId: string, status: boolean) => {
+    try {
+      await axios.put(`https://${baseUrl}/crm/admin/society_flats/${flatId}.json`, {
+        society_flat: {
+          approve: !status,
+        }
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      toast.success("Status updated successfully!");
+      setFlats((prev) =>
+        prev.map((flat) =>
+          String(flat.id) === String(flatId)
+            ? { ...flat, approve: !status }
+            : flat
+        )
+      );
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to update status")
+    }
   };
 
   const handleExport = async () => {
@@ -411,22 +438,20 @@ export const ManageFlatsPage = () => {
           </div>
         );
       case "status":
-        const isActive = flat.approve || null;
+        const isActive = flat.approve || false;
+
         return (
           <div className="flex items-center justify-center">
             <button
-              onClick={() => handleToggleStatus(flat.id)}
-              style={{
-                backgroundColor: isActive ? "#22c55e" : "#ef4444",
-              }}
-              className={`relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isActive ? "focus:ring-green-300" : "focus:ring-red-300"
-                }`}
-              role="switch"
-              aria-checked={isActive}
+              onClick={() => handleToggleStatus(flat.id, isActive)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isActive ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
             >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${isActive ? "translate-x-5" : "translate-x-0.5"
-                  }`}
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isActive ? "translate-x-6" : "translate-x-1"
+                }`}
               />
             </button>
           </div>
@@ -438,11 +463,18 @@ export const ManageFlatsPage = () => {
           </div>
         );
       case "sold":
+        return (
+          <div className="text-center">
+            <span className="text-sm text-gray-900">
+              {flat[columnKey]}
+            </span>
+          </div>
+        );
       case "possession":
         return (
           <div className="text-center">
             <span className="text-sm text-gray-900">
-              {flat[columnKey] ? "Yes" : "No"}
+              {flat[columnKey]}
             </span>
           </div>
         );
@@ -469,7 +501,7 @@ export const ManageFlatsPage = () => {
     const items = [];
     const totalPages = pagination.total_pages;
     const currentPage = pagination.current_page;
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
 
     if (showEllipsis) {
       items.push(
@@ -607,7 +639,7 @@ export const ManageFlatsPage = () => {
                 <Button
                   size="sm"
                   onClick={() => setShowActionDropdown(true)}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Action
@@ -617,7 +649,7 @@ export const ManageFlatsPage = () => {
                 <Button
                   size="sm"
                   onClick={handleAddUnit}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Unit Type
@@ -625,15 +657,23 @@ export const ManageFlatsPage = () => {
                 <Button
                   size="sm"
                   onClick={handleAddTower}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Tower
                 </Button>
+                {/* <Button
+                  size="sm"
+                  onClick={handleAddWing}
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Wing
+                </Button> */}
                 <Button
                   size="sm"
                   onClick={handleAddFloor}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Floor
@@ -644,7 +684,7 @@ export const ManageFlatsPage = () => {
           />
         </div>
 
-        {pagination.total_pages > 1 && (
+        {pagination.total_count > 0 && (
           <div className="flex justify-center mt-6">
             <Pagination>
               <PaginationContent>
@@ -676,11 +716,11 @@ export const ManageFlatsPage = () => {
           </div>
         )}
 
-        {pagination.total_count > 0 && (
+        {/* {pagination.total_count > 0 && (
           <div className="text-center text-sm text-gray-500 mt-2">
             Showing {Math.min((pagination.current_page - 1) * pagination.per_page + 1, pagination.total_count)}–{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
           </div>
-        )}
+        )} */}
 
         {/* Add Flat Dialog */}
         <AddFlatDialog
@@ -703,6 +743,12 @@ export const ManageFlatsPage = () => {
           onOpenChange={setShowConfigureTowerDialog}
           editingTower={editingTower}
           setEditingTower={setEditingTower}
+        />
+
+        {/* Configure Wing Dialog */}
+        <ConfigureWingDialog
+          open={showConfigureWingDialog}
+          onOpenChange={setShowConfigureWingDialog}
         />
 
         {/* Configure Floor Dialog */}
@@ -730,13 +776,16 @@ export const ManageFlatsPage = () => {
           flatOptions={flatOptions}
         />
 
-        {/* Actions Modal */}
-        <ActionsModal
-          show={showActionDropdown}
-          onClose={() => setShowActionDropdown(false)}
-          onAdd={handleAddFlat}
-          onImport={handleImport}
-        />
+        {/* Actions Panel */}
+        {showActionDropdown && (
+          <SelectionPanel
+            className="selection-panel--end"
+            onAdd={handleAddFlat}
+            onImport={handleImport}
+            onClearSelection={() => setShowActionDropdown(false)}
+            addLabel="Add Flat"
+          />
+        )}
 
         <CommonImportModal
           open={showImportModal}

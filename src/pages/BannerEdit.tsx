@@ -822,6 +822,17 @@ const BannerEdit = () => {
     "3x2": formData.banner_video_3_by_2
   });
   
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading banner data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -853,11 +864,6 @@ const BannerEdit = () => {
             </h2>
           </div>
           <div className="p-6 space-y-6">
-            {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading banner data...</p>
-              </div>
-            ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Title Input */}
@@ -935,8 +941,7 @@ const BannerEdit = () => {
 
                     <button
                       type="button"
-                      className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                      onClick={() => setShowUploader(true)}
+           className="btn-primary h-9 px-4 text-sm font-medium"                       onClick={() => setShowUploader(true)}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1086,7 +1091,6 @@ const BannerEdit = () => {
                   )}
                 </div>
               </>
-            )}
           </div>
         </div>
       </form>
@@ -1097,15 +1101,13 @@ const BannerEdit = () => {
           type="submit"
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-        >
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
           {loading ? 'Submitting...' : 'Submit'}
         </button>
         <button
           type="button"
           onClick={handleCancel}
-          className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-        >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"     >
           Cancel
         </button>
       </div>

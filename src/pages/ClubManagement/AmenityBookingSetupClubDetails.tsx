@@ -38,6 +38,9 @@ import { QRCodeModal } from "@/components/QRCodeModal";
 import axios from "axios";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { format } from "date-fns";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -103,6 +106,7 @@ const muiTheme = createTheme({
 export const BookingSetupDetailClubPage = () => {
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
+  const { shouldShow } = useDynamicPermissions()
   const { id } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -119,7 +123,6 @@ export const BookingSetupDetailClubPage = () => {
   const [isPremiumSlots, setIsPremiumSlots] = useState<{ [key: string]: boolean }>({});
   const [inventories, setInventories] = useState<any[]>([]);
   const [loadingInventories, setLoadingInventories] = useState(false);
-  const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>({});
   const [formData, setFormData] = useState({
     facilityName: "",
     shareable: "",
@@ -127,7 +130,7 @@ export const BookingSetupDetailClubPage = () => {
     minGuarantee: "",
     isBookable: true,
     isRequest: false,
-    active: "1",
+    active: 1,
     addSubFacility: false,
     department: "",
     appKey: "",
@@ -201,6 +204,8 @@ export const BookingSetupDetailClubPage = () => {
       dayType: string;
       blockReason: string;
       selectedSlots: string[];
+      slots: Array<{ id: number; ampm: string }>;
+      selectedDays: string[];
     }>,
   });
   const [departments, setDepartments] = useState([]);
@@ -225,6 +230,55 @@ export const BookingSetupDetailClubPage = () => {
       deduction: "",
     },
   ]);
+
+  // Helper function to format facility booking rules dynamically
+  const getDurationUnitLabel = (unit: string): string => {
+    const unitMap: Record<string, string> = {
+      daily: "Day",
+      weekly: "Week",
+      monthly: "Month",
+      quarterly: "Quarter",
+      "half-yearly": "Half-Year",
+      annually: "Year",
+      yearly: "Year",
+      "half_yearly": "Half-Year",
+    };
+    return unitMap[unit?.toLowerCase()] || unit;
+  };
+
+  const formatFacilityBookingRules = (rules: any[]): string => {
+    if (!rules || !Array.isArray(rules) || rules.length === 0) {
+      return "-";
+    }
+
+    try {
+      // Extract facility_booking_rule from each item
+      const ruleData = rules
+        .map((item) => {
+          const rule = item.facility_booking_rule || item;
+          return {
+            enumerator: rule.enumerator || 0,
+            duration_unit: rule.duration_unit?.toLowerCase() || "day",
+            active: rule.active,
+          };
+        })
+        .filter((rule) => rule.active !== false); // Only show active rules
+
+      if (ruleData.length === 0) return "-";
+
+      // Format each rule as "X per Y" where Y is readable format
+      const formattedRules = ruleData.map((rule) => {
+        const { enumerator, duration_unit } = rule;
+        const readableUnit = getDurationUnitLabel(duration_unit);
+        return `${enumerator} per ${readableUnit}`;
+      });
+
+      return formattedRules.join(" | ");
+    } catch (error) {
+      console.error("Error formatting facility booking rules:", error);
+      return "-";
+    }
+  };
 
   const handleDownloadQr = async () => {
     try {
@@ -255,38 +309,6 @@ export const BookingSetupDetailClubPage = () => {
 
   const handleAdditionalOpen = () => {
     setAdditionalOpen(!additionalOpen);
-  };
-
-  const fetchBlockDaySlots = async (facilityId: string, date: string, blockIndex: number) => {
-    try {
-      const formattedDate = date.replace(/-/g, '/');
-      const response = await axios.get(
-        `https://${baseUrl}/crm/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          params: {
-            on_date: formattedDate,
-          }
-        }
-      );
-
-      if (response.data && response.data.slots) {
-        console.log(`Slots fetched for block day ${blockIndex}:`, response.data.slots);
-        setBlockDaySlots(prev => ({
-          ...prev,
-          [blockIndex]: response.data.slots
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching block day slots:', error);
-      setBlockDaySlots(prev => ({
-        ...prev,
-        [blockIndex]: []
-      }));
-    }
   };
 
   const fetchDepartments = async () => {
@@ -367,7 +389,7 @@ export const BookingSetupDetailClubPage = () => {
         minGuarantee: response.min_guarantee || "",
         isBookable: response.fac_type === "bookable" ? true : false,
         isRequest: response.fac_type === "request" ? true : false,
-        active: response.active || "1",
+        active: response.active,
         addSubFacility: response.sub_facility_enabled,
         department: response.department_id ?? "",
         appKey: response.app_key,
@@ -396,7 +418,7 @@ export const BookingSetupDetailClubPage = () => {
         },
         allowMultipleSlots: response.multi_slot,
         maximumSlots: response.max_slots,
-        facilityBookedTimes: response.booking_limit,
+        facilityBookedTimes: formatFacilityBookingRules(response.facility_booking_rules),
         description: response.description,
         termsConditions: response.terms,
         cancellationText: response.cancellation_policy,
@@ -483,10 +505,15 @@ export const BookingSetupDetailClubPage = () => {
         blockDays: response?.facility_blockings?.map((blocking: any) => ({
           id: blocking.facility_blocking?.id,
           startDate: blocking.facility_blocking?.ondate || "",
-          endDate: "",
+          endDate: blocking.facility_blocking?.ondate || "",
           dayType: blocking.facility_blocking?.block_slot && blocking.facility_blocking?.block_slot.length > 0 ? "selectedSlots" : "entireDay",
           blockReason: blocking.facility_blocking?.reason || "",
           selectedSlots: blocking.facility_blocking?.block_slot || [],
+          slots: blocking.facility_blocking?.block_slot_details?.map((detail: any) => ({
+            id: detail.id,
+            ampm: detail.label
+          })) || [],
+          selectedDays: blocking.facility_blocking?.days || [],
         })) || [],
       });
 
@@ -501,19 +528,6 @@ export const BookingSetupDetailClubPage = () => {
         selectedSlots: blocking.facility_blocking?.block_slot,
       })));
       console.log('======================');
-
-      // Fetch slots for ALL block days (so we can display them in the UI)
-      response?.facility_blockings?.forEach((blocking: any, index: number) => {
-        const ondate = blocking.facility_blocking?.ondate;
-
-        if (ondate) {
-          console.log(`Fetching slots for block day ${index}:`, {
-            date: ondate,
-            blockSlotIds: blocking.facility_blocking?.block_slot
-          });
-          fetchBlockDaySlots(id!, ondate, index);
-        }
-      });
 
       const transformedRules = response.cancellation_rules?.map((rule: any) => ({
         description: rule.description,
@@ -620,6 +634,49 @@ export const BookingSetupDetailClubPage = () => {
     fetchFacilityBookingDetails();
   }, []);
 
+  const blockDayColumns = [
+    { key: "srNo", label: "Sr. No.", sortable: false },
+    { key: "date", label: "Date", sortable: false },
+    { key: "type", label: "Type", sortable: false },
+    { key: "slots", label: "Slots", sortable: false },
+    { key: "days", label: "Days", sortable: false },
+    { key: "reason", label: "Reason", sortable: false },
+  ];
+
+  const renderBlockDayCell = (
+    item: (typeof formData.blockDays)[number],
+    columnKey: string,
+    index: number
+  ) => {
+    switch (columnKey) {
+      case "srNo":
+        return index + 1;
+      case "date":
+        if (!item.startDate) return "-";
+        if (item.endDate && item.endDate !== item.startDate) {
+          return `${format(new Date(item.startDate), "MM/dd/yyyy")} - ${format(
+            new Date(item.endDate),
+            "MM/dd/yyyy"
+          )}`;
+        }
+        return format(new Date(item.startDate), "MM/dd/yyyy");
+      case "type":
+        return item.dayType === "selectedSlots" ? "Selected Slots" : "Entire Day";
+      case "slots":
+        return item.dayType === "selectedSlots"
+          ? item.slots?.map((s) => s.ampm).join(", ") || "-"
+          : "-";
+      case "days":
+        return item.selectedDays && item.selectedDays.length > 0
+          ? item.selectedDays.join(", ")
+          : "Every day";
+      case "reason":
+        return item.blockReason || "-";
+      default:
+        return null;
+    }
+  };
+
   return (
     <ThemeProvider theme={muiTheme}>
       <div className="p-6 bg-white">
@@ -637,14 +694,16 @@ export const BookingSetupDetailClubPage = () => {
               Back to Booking List
             </Button>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleEditClick(id)}
-                className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-              >
-                Edit
-              </Button>
-              <Button
+              {
+                shouldShow("Facility Setup", "update") && <Button
+                  onClick={() => handleEditClick(id)}
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                >
+                  Edit
+                </Button>
+              }
+
+              {/* <Button
                 onClick={() => setShowQr(true)}
                 className="bg-[#1e40af] hover:bg-[#1e40af]/90 text-white px-4 py-2"
               >
@@ -661,14 +720,14 @@ export const BookingSetupDetailClubPage = () => {
                   />
                 </svg>
                 View QR
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
         <div className="space-y-6">
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <User className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -692,10 +751,10 @@ export const BookingSetupDetailClubPage = () => {
                 </span>
               </div>
               <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Active</span>
+                <span className="text-gray-500 min-w-[140px]">Status</span>
                 <span className="text-gray-500 mx-2">:</span>
                 <span className="text-gray-900 font-medium">
-                  {formData.active === "1" ? "Yes" : "No"}
+                  {formData.active === 1 ? "Active" : "Inactive"}
                 </span>
               </div>
               <div className="flex items-start">
@@ -733,7 +792,7 @@ export const BookingSetupDetailClubPage = () => {
           {formData.facilityBookings && formData.facilityBookings.length > 0 && (
             <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <Settings className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -774,7 +833,7 @@ export const BookingSetupDetailClubPage = () => {
           {formData.addSubFacility && formData.subFacilities && formData.subFacilities.length > 0 && (
             <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <FileCog className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">SUB-FACILITIES</h3>
@@ -896,7 +955,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Charge Setup Card */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <DollarSign className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -1006,7 +1065,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Configure Slot */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE SLOT</h3>
@@ -1031,7 +1090,7 @@ export const BookingSetupDetailClubPage = () => {
                         {String(slot.endTime.hour).padStart(2, '0')}:{String(slot.endTime.minute).padStart(2, '0')}
                       </span>
                     </div>
-                    <div className="flex items-start">
+                    {/* <div className="flex items-start">
                       <span className="text-gray-500 min-w-[140px]">Break Time Start</span>
                       <span className="text-gray-500 mx-2">:</span>
                       <span className="text-gray-900 font-medium">
@@ -1044,7 +1103,7 @@ export const BookingSetupDetailClubPage = () => {
                       <span className="text-gray-900 font-medium">
                         {String(slot.breakTimeEnd.hour).padStart(2, '0')}:{String(slot.breakTimeEnd.minute).padStart(2, '0')}
                       </span>
-                    </div>
+                    </div> */}
                     <div className="flex items-start">
                       <span className="text-gray-500 min-w-[140px]">Concurrent Slots</span>
                       <span className="text-gray-500 mx-2">:</span>
@@ -1085,21 +1144,33 @@ export const BookingSetupDetailClubPage = () => {
                     <span className="text-gray-500 min-w-[160px]">Booking Allowed Before</span>
                     <span className="text-gray-500 mx-2">:</span>
                     <span className="text-gray-900 font-medium">
-                      {formData.bookingAllowedBefore.day}d {formData.bookingAllowedBefore.hour}h {formData.bookingAllowedBefore.minute}m
+                      {formData?.bookingAllowedBefore?.day ||
+                        formData?.bookingAllowedBefore?.hour ||
+                        formData?.bookingAllowedBefore?.minute
+                        ? `${formData.bookingAllowedBefore.day || 0}d ${formData.bookingAllowedBefore.hour || 0}h ${formData.bookingAllowedBefore.minute || 0}m`
+                        : "-"}
                     </span>
                   </div>
                   <div className="flex items-start">
                     <span className="text-gray-500 min-w-[160px]">Advance Booking</span>
                     <span className="text-gray-500 mx-2">:</span>
                     <span className="text-gray-900 font-medium">
-                      {formData.advanceBooking.day}d {formData.advanceBooking.hour}h {formData.advanceBooking.minute}m
+                      {formData?.advanceBooking?.day ||
+                        formData?.advanceBooking?.hour ||
+                        formData?.advanceBooking?.minute
+                        ? `${formData.advanceBooking.day || 0}d ${formData.advanceBooking.hour || 0}h ${formData.advanceBooking.minute || 0}m`
+                        : "-"}
                     </span>
                   </div>
                   <div className="flex items-start">
                     <span className="text-gray-500 min-w-[160px]">Can Cancel Before</span>
                     <span className="text-gray-500 mx-2">:</span>
                     <span className="text-gray-900 font-medium">
-                      {formData.canCancelBefore.day}d {formData.canCancelBefore.hour}h {formData.canCancelBefore.minute}m
+                      {formData?.canCancelBefore?.day ||
+                        formData?.canCancelBefore?.hour ||
+                        formData?.canCancelBefore?.minute
+                        ? `${formData.canCancelBefore.day || 0}d ${formData.canCancelBefore.hour || 0}h ${formData.canCancelBefore.minute || 0}m`
+                        : "-"}
                     </span>
                   </div>
                   <div className="flex items-start">
@@ -1119,7 +1190,7 @@ export const BookingSetupDetailClubPage = () => {
                     </div>
                   )}
                   <div className="flex items-start">
-                    <span className="text-gray-500 min-w-[160px]">Facility Booked Times Per Day</span>
+                    <span className="text-gray-500 min-w-[160px]">Facility Booked Times</span>
                     <span className="text-gray-500 mx-2">:</span>
                     <span className="text-gray-900 font-medium">
                       {formData.facilityBookedTimes || "-"}
@@ -1132,7 +1203,7 @@ export const BookingSetupDetailClubPage = () => {
 
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3 -mb-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">SLOTS CONFIGURED</h3>
@@ -1265,110 +1336,29 @@ export const BookingSetupDetailClubPage = () => {
           </div>
 
           {/* Block Days Section */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="bg-white rounded-lg border-2 p-6 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Block Days</h3>
             </div>
 
-            {formData.blockDays.length > 0 ? (
-              <div className="space-y-6">
-                {formData.blockDays.map((blockDay, index) => (
-                  <div key={blockDay.id || index} className="p-4 border rounded-lg space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-700">Block Day {index + 1}</h4>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <TextField
-                        label="Date"
-                        type="date"
-                        value={blockDay.startDate}
-                        variant="outlined"
-                        InputProps={{ readOnly: true }}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex gap-6 px-1">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={`entireDay-${index}`}
-                          name={`dayType-${index}`}
-                          checked={blockDay.dayType === "entireDay"}
-                          disabled
-                          className="text-blue-600"
-                        />
-                        <label htmlFor={`entireDay-${index}`}>Entire Day</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={`selectedSlots-${index}`}
-                          name={`dayType-${index}`}
-                          checked={blockDay.dayType === "selectedSlots"}
-                          disabled
-                          className="text-blue-600"
-                        />
-                        <label htmlFor={`selectedSlots-${index}`}>Selected Slots</label>
-                      </div>
-                    </div>
-
-                    {blockDay.dayType === "selectedSlots" && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Select Slots to Block</label>
-                        {blockDaySlots[index]?.length > 0 ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {blockDaySlots[index].map((slot: any) => {
-                              const isBlocked = blockDay.selectedSlots.includes(slot.id.toString());
-                              return (
-                                <div key={slot.id} className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
-                                  <input
-                                    type="checkbox"
-                                    id={`block-slot-${index}-${slot.id}`}
-                                    checked={isBlocked}
-                                    disabled
-                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-not-allowed"
-                                  />
-                                  <label
-                                    htmlFor={`block-slot-${index}-${slot.id}`}
-                                    className="text-sm font-medium cursor-not-allowed"
-                                  >
-                                    {slot.ampm}
-                                  </label>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="text-gray-500 text-sm">Loading slots...</div>
-                        )}
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Block Reason</label>
-                      <Textarea
-                        value={blockDay.blockReason}
-                        className="min-h-[100px]"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No block days configured</p>
-            )}
+            <EnhancedTable
+              data={formData.blockDays}
+              columns={blockDayColumns}
+              renderCell={renderBlockDayCell}
+              pagination={false}
+              emptyMessage="No block days configured"
+              hideColumnsButton={true}
+              hideTableSearch={true}
+            />
           </div>
 
           {/* Configure Payment */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CreditCard className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -1376,7 +1366,15 @@ export const BookingSetupDetailClubPage = () => {
               </h3>
             </div>
 
-            <div className="flex flex-wrap gap-6 mb-4">
+            {/* <div className="flex flex-wrap gap-6 mb-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="postpaid"
+                  checked={!!formData.postpaid}
+                  disabled
+                />
+                <label htmlFor="postpaid">Postpaid</label>
+              </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="prepaid"
@@ -1401,7 +1399,7 @@ export const BookingSetupDetailClubPage = () => {
                 />
                 <label htmlFor="complimentary">Complimentary</label>
               </div>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="flex items-start">
@@ -1460,7 +1458,7 @@ export const BookingSetupDetailClubPage = () => {
           <div className="flex items-start justify-between gap-4">
             <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
               <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <FileImage className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">COVER IMAGE</h3>
@@ -1483,7 +1481,7 @@ export const BookingSetupDetailClubPage = () => {
             </div>
             <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
               <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <Image className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Booking Summary Image</h3>
@@ -1512,7 +1510,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Description */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <NotepadText className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">DESCRIPTION</h3>
@@ -1530,7 +1528,7 @@ export const BookingSetupDetailClubPage = () => {
           <div className="grid  gap-6">
             <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <ReceiptText className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">TERMS & CONDITIONS*</h3>
@@ -1548,7 +1546,7 @@ export const BookingSetupDetailClubPage = () => {
           {/* Rule Setup */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <Settings className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">RULE SETUP</h3>

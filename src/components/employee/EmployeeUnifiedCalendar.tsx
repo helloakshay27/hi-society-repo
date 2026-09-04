@@ -16,6 +16,7 @@ import {
   Users,
   Briefcase,
   Ticket,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
@@ -26,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getUser } from "@/utils/auth";
 
 interface UnifiedCalendarEvent {
   id: string;
@@ -145,96 +147,99 @@ export const EmployeeUnifiedCalendar: React.FC<
   const userId = localStorage.getItem("userId") || "87989";
 
   // Fetch calendar data from API
-  useEffect(() => {
-    const fetchCalendarData = async () => {
-      setIsLoading(true);
-      try {
-        const token = API_CONFIG.TOKEN;
-        const baseUrl = API_CONFIG.BASE_URL;
+  const fetchCalendarData = async () => {
+    setIsLoading(true);
+    try {
+      const token = API_CONFIG.TOKEN;
+      const baseUrl = API_CONFIG.BASE_URL;
 
-        // Build API URL with date filter parameters
-        let apiUrl = `${baseUrl}/user_calendars.json?access_token=${token}&id=${userId}`;
+      // Build API URL with date filter parameters
+      let apiUrl = `${baseUrl}/user_calendars.json?access_token=${token}&id=${userId}`;
 
-        // Add date filters to API call
-        if (activeFilters.dateFrom) {
-          apiUrl += `&date_from=${activeFilters.dateFrom}`;
-        }
-        if (activeFilters.dateTo) {
-          apiUrl += `&date_to=${activeFilters.dateTo}`;
-        }
-
-        console.log("📅 Fetching calendar data with filters:", {
-          dateFrom: activeFilters.dateFrom,
-          dateTo: activeFilters.dateTo,
-          apiUrl,
-        });
-
-        const response = await fetch(apiUrl);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch calendar data");
-        }
-
-        const data = await response.json();
-
-        // Map API data to calendar event format
-        const mappedEvents = (data.user_calendars || []).map((item: any) => {
-          // Map calendarable_type to internal event types
-          let eventType = "Todo"; // Default
-
-          switch (item.calendarable_type) {
-            case "Todo":
-              eventType = "Todo";
-              break;
-            case "GoogleCalendarEvent":
-              eventType = "Google Calendar";
-              break;
-            case "Meeting":
-              eventType = "Meeting";
-              break;
-            case "FacilityBooking":
-            case "Facility Booking":
-              eventType = "Facility";
-              break;
-            case "TaskManagement":
-            case "Task Management":
-            case "Task":
-              eventType = "Task";
-              break;
-            case "Ticket":
-              eventType = "Ticket";
-              break;
-            case "Issue":
-              eventType = "Issue";
-              break;
-            default:
-              eventType = "Todo";
-          }
-
-          return {
-            id: item.id.toString(),
-            title: item.title || "Untitled Event",
-            start: item.start_at,
-            end: item.end_at,
-            type: eventType,
-            status: item.status,
-            description: item.description,
-            color: item.color || getColorForType(eventType),
-            location: item.location,
-            redirectUrl: item.redirect_url,
-          };
-        });
-
-        setEvents(mappedEvents);
-        console.log("✅ Fetched events:", mappedEvents.length);
-      } catch (error) {
-        console.error("Error fetching calendar data:", error);
-        toast.error("Failed to load calendar events");
-      } finally {
-        setIsLoading(false);
+      // Add date filters to API call
+      if (activeFilters.dateFrom) {
+        apiUrl += `&date_from=${activeFilters.dateFrom}`;
       }
-    };
+      if (activeFilters.dateTo) {
+        apiUrl += `&date_to=${activeFilters.dateTo}`;
+      }
 
+      console.log("📅 Fetching calendar data with filters:", {
+        dateFrom: activeFilters.dateFrom,
+        dateTo: activeFilters.dateTo,
+        apiUrl,
+      });
+
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch calendar data");
+      }
+
+      const data = await response.json();
+
+      // Map API data to calendar event format
+      const mappedEvents = (data.user_calendars || []).map((item: any) => {
+        // Map calendarable_type to internal event types
+        let eventType = "Todo"; // Default
+
+        switch (item.calendarable_type) {
+          case "Todo":
+            eventType = "Todo";
+            break;
+          case "GoogleCalendarEvent":
+            eventType = "Google Calendar";
+            break;
+          case "Meeting":
+            eventType = "Meeting";
+            break;
+          case "FacilityBooking":
+          case "Facility Booking":
+            eventType = "Facility";
+            break;
+          case "TaskManagement":
+          case "Task Management":
+          case "TaskAllocationTime":
+          case "Task":
+            eventType = "Task";
+            break;
+          case "Ticket":
+            eventType = "Ticket";
+            break;
+          case "IssueAllocationTime":
+          case "Issue":
+            eventType = "Issue";
+            break;
+          default:
+            eventType = "Todo";
+        }
+
+        return {
+          id: item.id.toString(),
+          title: item.title || "Untitled Event",
+          start: item.start_at,
+          end: item.end_at,
+          type: eventType,
+          status: item.status,
+          description: item.description,
+          color: item.color || getColorForType(eventType),
+          location: item.location,
+          redirectUrl: item.redirect_url,
+        };
+      });
+
+      setEvents(mappedEvents);
+      console.log("✅ Fetched events:", mappedEvents.length);
+    } catch (error) {
+      console.error("Error fetching calendar data:", error);
+      toast.error("Failed to load calendar events");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch calendar data on mount and when filters change
+  useEffect(() => {
     fetchCalendarData();
   }, [userId, activeFilters.dateFrom, activeFilters.dateTo]);
 
@@ -708,18 +713,94 @@ export const EmployeeUnifiedCalendar: React.FC<
           </div>
         </div>
 
-        <Button
-          onClick={() => setIsFilterModalOpen(true)}
-          variant="outline"
-          className="flex items-center gap-2 px-4 py-2 h-10"
-        >
-          <Filter className="h-4 w-4" />
-          {activeFilterCount > 0 && (
-            <span className="ml-1 px-2 py-1 text-xs bg-red-600 text-white rounded-full">
-              {activeFilterCount}
-            </span>
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={async () => {
+              const user = getUser();
+              // Try multiple sources for email
+              const email =
+                user?.email ||
+                localStorage.getItem("userEmail") ||
+                localStorage.getItem("email");
+
+              console.log("User object:", user);
+              console.log("Email found:", email);
+
+              if (email) {
+                try {
+                  toast.info("Checking Google Calendar connection...");
+                  const baseUrl = "lockated-api.gophygital.work";
+
+                  // Step 1: Check connection status
+                  const statusUrl = `https://${baseUrl}/google_calander/status?email=${encodeURIComponent(email)}`;
+                  console.log("Status URL:", statusUrl);
+
+                  const statusResponse = await fetch(statusUrl, {
+                    method: "GET",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  });
+
+                  if (!statusResponse.ok) {
+                    throw new Error("Failed to check Google Calendar status");
+                  }
+
+                  const statusData = await statusResponse.json();
+                  console.log("Google Calendar status:", statusData);
+
+                  if (statusData.connected === true) {
+                    // Step 2a: If connected, call sync API
+                    toast.info("Syncing Google Calendar events...");
+                    const syncUrl = `https://${baseUrl}/google_calander/sync?email=${encodeURIComponent(email)}`;
+                    console.log("Sync URL:", syncUrl);
+
+                    const syncResponse = await fetch(syncUrl);
+
+                    if (syncResponse.ok) {
+                      toast.success("Google Calendar synced successfully!");
+                      // Refresh calendar data
+                      fetchCalendarData();
+                    } else {
+                      toast.error("Failed to sync Google Calendar");
+                    }
+                  } else {
+                    // Step 2b: If not connected, open connect URL in new tab
+                    toast.info("Opening Google Calendar connection...");
+                    const connectUrl = `https://${baseUrl}/google_oauth/connect?email=${encodeURIComponent(email)}`;
+                    console.log("Connect URL:", connectUrl);
+
+                    // Open in new tab directly
+                    window.open(connectUrl, "_blank");
+                  }
+                } catch (error) {
+                  console.error("Error with Google Calendar:", error);
+                  toast.error("Failed to process Google Calendar request");
+                }
+              } else {
+                toast.error("User email not found. Please log in again.");
+                console.error("No email found in user object or localStorage");
+              }
+            }}
+            variant="outline"
+            className="flex items-center gap-2 px-4 py-2 h-10"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Sync Google Calendar
+          </Button>
+          <Button
+            onClick={() => setIsFilterModalOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2 px-4 py-2 h-10"
+          >
+            <Filter className="h-4 w-4" />
+            {activeFilterCount > 0 && (
+              <span className="ml-1 px-2 py-1 text-xs bg-red-600 text-white rounded-full">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Legends */}

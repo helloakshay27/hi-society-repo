@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +8,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 interface AgingRule {
   id: number;
@@ -115,6 +109,10 @@ export const AgingRuleTab: React.FC = () => {
   const [editingRule, setEditingRule] = useState<AgingRule | null>(null);
   const [editColor, setEditColor] = useState('#00C853');
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch aging rules
   const fetchAgingRules = useCallback(async () => {
@@ -188,6 +186,7 @@ export const AgingRuleTab: React.FC = () => {
       if (response.ok) {
         toast.success('Aging rule created successfully!');
         setForm(defaultForm);
+        setAddDialogOpen(false);
         fetchAgingRules();
       } else {
         const errorData = await response.json().catch(() => null);
@@ -288,8 +287,92 @@ export const AgingRuleTab: React.FC = () => {
     { key: 'color', label: 'Color', sortable: false },
   ];
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const filteredAgingRules = agingRules.filter((item) => {
+    if (!searchTerm) return true;
+    const query = searchTerm.toLowerCase();
+    return Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query));
+  });
+
+  const totalCount = filteredAgingRules.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAgingRules = filteredAgingRules.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   const renderCell = (item: AgingRule, columnKey: string) => {
-    const index = agingRules.findIndex(r => r.id === item.id);
+    const index = filteredAgingRules.findIndex(r => r.id === item.id);
 
     switch (columnKey) {
       case 'srno':
@@ -324,7 +407,7 @@ export const AgingRuleTab: React.FC = () => {
         <Edit className="h-4 w-4" />
       </Button>
       <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4 text-red-500" />
+        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
       </Button>
     </div>
   );
@@ -333,8 +416,137 @@ export const AgingRuleTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Edit Color Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      {/* Add Aging Rule Dialog */}
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) setForm(defaultForm);
+      }}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Aging Rule</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-wrap gap-4 py-4">
+            <div className="flex-1 min-w-[140px]">
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Rule Type</InputLabel>
+                <MuiSelect
+                  value={form.rule_type}
+                  onChange={(e) => updateForm('rule_type', e.target.value)}
+                  displayEmpty
+                  label="Rule Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="" disabled><em>Select Rule Type</em></MenuItem>
+                  {ruleTypeOptions.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
+            </div>
+            <div className="flex-1 min-w-[160px]">
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Rule Unit</InputLabel>
+                <MuiSelect
+                  value={form.rule_unit}
+                  onChange={(e) => updateForm('rule_unit', e.target.value)}
+                  displayEmpty
+                  label="Rule Unit"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="" disabled><em>Select Rule Unit</em></MenuItem>
+                  {ruleUnitOptions.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </MuiFormControl>
+            </div>
+            {showBetween ? (
+              <>
+                <div className="flex-1 min-w-[100px]">
+                  <TextField
+                    label="From"
+                    type="number"
+                    placeholder="From"
+                    value={form.from}
+                    onChange={(e) => updateForm('from', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+                </div>
+                <div className="flex-1 min-w-[100px]">
+                  <TextField
+                    label="To"
+                    type="number"
+                    placeholder="To"
+                    value={form.to}
+                    onChange={(e) => updateForm('to', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 min-w-[120px]">
+                <TextField
+                  label="Value"
+                  type="number"
+                  placeholder="Enter value"
+                  value={form.value}
+                  onChange={(e) => updateForm('value', e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
+              </div>
+            )}
+            <div className="w-full">
+              <label className="block text-sm font-medium mb-1">Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.color_code}
+                  onChange={(e) => updateForm('color_code', e.target.value)}
+                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                  title="Choose color"
+                />
+                <div className="flex gap-1 flex-wrap">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => updateForm('color_code', color)}
+                      className={`w-6 h-6 rounded border-2 transition-all ${
+                        form.color_code === color ? 'border-gray-800 scale-110' : 'border-gray-300 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setAddDialogOpen(false); setForm(defaultForm); }} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isSubmitting ? 'Adding...' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={editDialogOpen} modal={false} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Aging Rule</DialogTitle>
@@ -394,146 +606,45 @@ export const AgingRuleTab: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Aging Rule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3 flex-wrap">
-            {/* Rule Type */}
-            <div className="flex-1 min-w-[140px]">
-              <label className="block text-sm font-medium mb-1">Rule Type</label>
-              <Select value={form.rule_type} onValueChange={(v) => updateForm('rule_type', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Rule Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ruleTypeOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Rule Unit */}
-            <div className="flex-1 min-w-[160px]">
-              <label className="block text-sm font-medium mb-1">Rule Unit</label>
-              <Select value={form.rule_unit} onValueChange={(v) => updateForm('rule_unit', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Rule Unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ruleUnitOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Value or From/To */}
-            {showBetween ? (
-              <>
-                <div className="flex-1 min-w-[100px]">
-                  <label className="block text-sm font-medium mb-1">From</label>
-                  <Input
-                    type="number"
-                    placeholder="From"
-                    value={form.from}
-                    onChange={(e) => updateForm('from', e.target.value)}
-                  />
-                </div>
-                <div className="flex-1 min-w-[100px]">
-                  <label className="block text-sm font-medium mb-1">To</label>
-                  <Input
-                    type="number"
-                    placeholder="To"
-                    value={form.to}
-                    onChange={(e) => updateForm('to', e.target.value)}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-sm font-medium mb-1">Value</label>
-                <Input
-                  type="number"
-                  placeholder="Enter value"
-                  value={form.value}
-                  onChange={(e) => updateForm('value', e.target.value)}
-                />
-              </div>
-            )}
-
-            {/* Color Picker */}
-            <div className="flex-1 min-w-[220px]">
-              <label className="block text-sm font-medium mb-1">Color</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={form.color_code}
-                  onChange={(e) => updateForm('color_code', e.target.value)}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
-                  title="Choose color"
-                />
-                <div className="flex gap-1 flex-wrap">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => updateForm('color_code', color)}
-                      className={`w-6 h-6 rounded border-2 transition-all ${
-                        form.color_code === color
-                          ? 'border-gray-800 scale-110'
-                          : 'border-gray-300 hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Add Button */}
-            <div className="flex items-end">
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="bg-green-600 hover:bg-green-700 text-white px-8"
-              >
-                {isSubmitting ? 'Adding...' : 'Add'}
-              </Button>
-            </div>
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={paginatedAgingRules}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="aging-rules-table"
+          pagination={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
+          searchPlaceholder="Search aging rules..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+            variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Aging Rules</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading aging rules...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={agingRules}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="aging-rules-table"
-              enableSearch={true}
-              searchPlaceholder="Search aging rules..."
-            />
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </div>
   );
 };

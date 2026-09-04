@@ -11,7 +11,9 @@ import {
   saveUser,
   saveToken,
   saveBaseUrl,
+  fetchLockAccount,
   Organization,
+  getUser,
 } from "@/utils/auth";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
@@ -19,27 +21,6 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
-// Fetch Hi-Society data function (from HiSocietyHeader)
-const fetchHiSocietyData = async (token: string) => {
-  try {
-    const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
-    if (!accountResponse.ok) throw new Error('Failed to fetch account data');
-    const accountData = await accountResponse.json();
-
-    const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
-    if (!societiesResponse.ok) throw new Error('Failed to fetch societies');
-    const societiesData = await societiesResponse.json();
-
-    // Store account and societies data
-    localStorage.setItem('hiSocietyAccount', JSON.stringify(accountData));
-    localStorage.setItem('hiSocietySocieties', JSON.stringify(societiesData));
-
-    return { accountData, societiesData };
-  } catch (error) {
-    console.error('Error fetching Hi-Society data:', error);
-    throw error;
-  }
-};
 
 const muiFieldStyles = {
   width: "100%",
@@ -101,8 +82,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   // Check if it's Hi-Society site
   const isHiSocietySite = hostname === "web.hisociety.lockated.com";
 
-    const isUIHiSocietySite =
-    hostname.includes("ui-hisociety.lockated.com") || org_id ==="9" ;
+  const isUIHiSocietySite =
+    hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
 
 
   // Check if it's Runwal site
@@ -169,23 +150,22 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   };
 
-  // Fetch Hi-Society specific data after login
+  // Fetch Hi-Society specific data after login using the org's backend_url
   const fetchHiSocietyData = async (token: string) => {
     try {
-      // Fetch account data
-      const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
+      const savedBase = localStorage.getItem("baseUrl") || "";
+      const base = savedBase.startsWith("http") ? savedBase : `https://${savedBase}`;
+
+      const accountResponse = await fetch(`${base}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
       if (accountResponse.ok) {
         const accountData = await accountResponse.json();
-
-        console.log(accountData)
         localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         localStorage.setItem("selectedUserSociety", accountData?.society?.id?.toString() || "");
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         sessionStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
       }
 
-      // Fetch user approved societies
-      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+      const societiesResponse = await fetch(`${base}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
       if (societiesResponse.ok) {
         const societiesData = await societiesResponse.json();
         const societies = societiesData.user_societies || [];
@@ -194,7 +174,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       }
     } catch (error) {
       console.error("Failed to fetch Hi-Society data:", error);
-      // Don't block login if this fails
     }
   };
 
@@ -243,14 +222,44 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return { isValid: true, message: "Password is valid." };
   };
 
-  const handleEmailSubmit = async () => {
-    if (!email) {
-      toast.error("Please enter your email address.");
-      return;
+  // Smart validator — accepts a valid email OR a mobile number (7-15 digits, optional leading +)
+  const validateEmailOrMobile = (
+    value: string
+  ): { isValid: boolean; message: string } => {
+    const trimmed = value.trim();
+    if (!trimmed)
+      return {
+        isValid: false,
+        message: "Please enter your email or mobile number.",
+      };
+
+    const looksLikeEmail = trimmed.includes("@");
+    if (looksLikeEmail) {
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+      return valid
+        ? { isValid: true, message: "" }
+        : {
+            isValid: false,
+            message:
+              "Please enter a valid email address (e.g. name@example.com).",
+          };
     }
 
-    if (!validateEmail(email)) {
-      toast.error("Please enter a valid email address.");
+    // Treat as mobile: strip spaces/dashes, allow optional leading +
+    const digits = trimmed.replace(/[\s\-().]/g, "");
+    const valid = /^\+?[0-9]{7,15}$/.test(digits);
+    return valid
+      ? { isValid: true, message: "" }
+      : {
+          isValid: false,
+          message: "Please enter a valid mobile number (7–15 digits).",
+        };
+  };
+
+  const handleEmailSubmit = async () => {
+    const validation = validateEmailOrMobile(email);
+    if (!validation.isValid) {
+      toast.error(validation.message);
       return;
     }
 
@@ -270,18 +279,22 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   };
 
   const handleOrganizationSelect = (org: Organization) => {
+    const baseUrl = org.backend_url || `${org.sub_domain}.${org.domain}`;
+
+    // Save org details
     localStorage.setItem("selectedOrg", org.name);
-    localStorage.setItem("baseUrl", `${org.sub_domain}.${org.domain}`);
     localStorage.setItem("org_id", org.id.toString());
+
+    // Use saveBaseUrl for normalized URL storage
+    saveBaseUrl(baseUrl);
+
     //Session Storage For App-Level
     sessionStorage.setItem("selectedOrg", org.name);
-    sessionStorage.setItem("baseUrl", `${org.sub_domain}.${org.domain}`);
+    sessionStorage.setItem("baseUrl", baseUrl); // Session storage doesn't need normalization
     sessionStorage.setItem("org_id", org.id.toString());
-    setBaseUrl(`${org.sub_domain}.${org.domain}`);
+
+    setBaseUrl(baseUrl);
     setSelectedOrganization(org);
-    // Save the base URL in the format: sub_domain.domain
-    const baseUrl = `${org.sub_domain}.${org.domain}`;
-    saveBaseUrl(baseUrl);
     setCurrentStep(3);
   };
 
@@ -299,22 +312,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
     setLoginLoading(true);
     try {
-      // Check if it's Hi Society site
-      const isHiSocietySiteLogin =
-        hostname.includes("localhost") ||
-        hostname.includes("ui-hisociety.lockated.com") ||
-        hostname.includes("web.hisociety.lockated.com");
-
-      // Determine base URL based on hostname
-      let baseUrl: string;
-      if (isRunwalSite) {
-        baseUrl = 'runwal-cp-api.lockated.com';
-      } else if (isHiSocietySiteLogin) {
-        baseUrl = localStorage.getItem("baseUrl") || "";
-      } else {
-        // Use HI_SOCIETY_CONFIG for other environments
-        baseUrl = HI_SOCIETY_CONFIG.BASE_URL.replace(/^https?:\/\//, '');
-      }
+      // Always use the backend_url saved when the user selected their organisation
+      const baseUrl = localStorage.getItem("baseUrl") || "";
       const response = await loginUser(email, password, baseUrl);
 
       if (!response || !response.access_token) {
@@ -449,7 +448,24 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       sessionStorage.setItem("userType", "admin"); // Force admin view only
       sessionStorage.setItem("userId", response.id.toString());
 
+      // RM (Relationship Manager) / CS (Customer Service) users only have
+      // access to the site visit scheduling module — send them straight there.
+      if (response.user_type === "rm_user" || response.user_type === "cs_user") {
+        await fetchHiSocietyData(response.spree_api_key);
+
+        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
+
+        setTimeout(() => {
+          navigate("/appointmentz/site-scheduling", { replace: true });
+        }, 500);
+        return;
+      }
+
       if (isHiSocietySite || isUIHiSocietySite) {
+        const from =
+          (location.state as { from?: Location })?.from?.pathname +
+          (location.state as { from?: Location })?.from?.search ||
+          "/maintenance/survey/mapping";
         // Hi Society specific logic - fetch additional data
         // Fetch Hi-Society specific data
         await fetchHiSocietyData(response.spree_api_key);
@@ -457,7 +473,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
         // Navigate based on site type
-        const redirectPath = isUIHiSocietySite ? "/loyalty/dashboard" : "/maintenance/project-details-list";
+        const redirectPath = from ? from : isUIHiSocietySite ? "/loyalty/dashboard" : "/maintenance/project-details-list";
         setTimeout(() => {
           navigate(redirectPath, { replace: true });
         }, 500);
@@ -467,12 +483,19 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         const from =
           (location.state as { from?: Location })?.from?.pathname +
           (location.state as { from?: Location })?.from?.search ||
-          "/maintenance/asset";
+          "/maintenance/survey/mapping";
 
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
         // Add a slight delay for better UX, then redirect to dashboard
         setTimeout(() => {
+          // Hi-Society layout — always go to helpdesk
+          const layoutMode = localStorage.getItem("layoutMode");
+          if (layoutMode === "hi-society") {
+            navigate("/bms/helpdesk", { replace: true });
+            return;
+          }
+
           const userType = localStorage.getItem("userType");
           const isLocalhost =
             hostname.includes("lockated.gophygital.work") ||
@@ -576,13 +599,12 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         {[1, 2, 3].map((step) => (
           <div
             key={step}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all transform ${
-              step === currentStep
-                ? "bg-[#C72030] text-white shadow-lg scale-110"
-                : step < currentStep
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-100 text-gray-400"
-            }`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all transform ${step === currentStep
+              ? "bg-[#C72030] text-white shadow-lg scale-110"
+              : step < currentStep
+                ? "bg-green-500 text-white"
+                : "bg-gray-100 text-gray-400"
+              }`}
           >
             {step < currentStep ? (
               <Check className="w-5 h-5 stroke-[2.5]" />
@@ -594,19 +616,16 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       </div>
       <div className="flex justify-center items-center gap-2">
         <div
-          className={`h-1 w-16 rounded-full transition-all ${
-            currentStep >= 1 ? "bg-[#C72030]" : "bg-gray-200"
-          }`}
+          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 1 ? "bg-[#C72030]" : "bg-gray-200"
+            }`}
         ></div>
         <div
-          className={`h-1 w-16 rounded-full transition-all ${
-            currentStep >= 2 ? "bg-[#C72030]" : "bg-gray-200"
-          }`}
+          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 2 ? "bg-[#C72030]" : "bg-gray-200"
+            }`}
         ></div>
         <div
-          className={`h-1 w-16 rounded-full transition-all ${
-            currentStep >= 3 ? "bg-[#C72030]" : "bg-gray-200"
-          }`}
+          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 3 ? "bg-[#C72030]" : "bg-gray-200"
+            }`}
         ></div>
       </div>
       <p className="text-gray-400 text-sm mt-3 font-medium">
@@ -623,14 +642,14 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           htmlFor="email"
           className="text-gray-700 font-medium text-base block mb-2"
         >
-          Email Address
+          Email Address or Mobile Number
         </Label>
 
         {/* Input Field */}
         <TextField
           variant="outlined"
-          placeholder="Enter your email address"
-          type="email"
+          placeholder="Enter email or mobile number"
+          type="text"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && handleEmailSubmit()}
@@ -663,7 +682,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       >
         {isLoading ? (
           <div className="flex items-center justify-center">
-            <span className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+            <span className="animate-spin mr-2 h-5 w-5 border-2 border-[#da7756] border-t-transparent rounded-full" />
             <span>Finding Organizations...</span>
           </div>
         ) : (
@@ -697,7 +716,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         )}
       </div>
       <p className="text-grey-300 text-sm mb-6 ">
-        Email: <span className="text-grey-500 font-bold">{email}</span>
+        Email / Mobile: <span className="text-grey-500 font-bold">{email}</span>
       </p>
 
       <p className="text-gray-500 text-sm">
@@ -834,7 +853,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       >
         {loginLoading ? (
           <div className="flex items-center justify-center">
-            <span className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+            <span className="animate-spin mr-2 h-5 w-5 border-2 border-[#da7756] border-t-transparent rounded-full" />
             <span>Logging in...</span>
           </div>
         ) : (
@@ -875,9 +894,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           <div className=" rounded-2xl  p-8 sm:p-10 relative z-10 animate-fade-in">
             {/* Logo */}
             <div
-              className={`text-center mb-5 flex flex-col items-center space-y-2 ${
-                isViSite ? "-mt-4" : ""
-              }`}
+              className={`text-center mb-5 flex flex-col items-center space-y-2 ${isViSite ? "-mt-4" : ""
+                }`}
             >
               {isOmanSite ? (
                 <svg
@@ -997,11 +1015,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
               )}
 
               <p
-                className={`${
-                  isViSite
-                    ? "text-gray-800 text-base sm:text-lg font-semibold tracking-tight"
-                    : "text-gray-600 text-sm font-medium"
-                }`}
+                className={`${isViSite
+                  ? "text-gray-800 text-base sm:text-lg font-semibold tracking-tight"
+                  : "text-gray-600 text-sm font-medium"
+                  }`}
               >
                 Sign in to your account
               </p>

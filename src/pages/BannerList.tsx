@@ -10,13 +10,14 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationPrevious,
   PaginationLink,
   PaginationNext,
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
-import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Banner {
   id: number;
@@ -47,6 +48,7 @@ interface BannerPermissions {
 }
 
 const BannerList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,6 +161,96 @@ const BannerList = () => {
     }
   };
 
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   const handleAddBanner = () => navigate("/maintenance/banner-add");
   const handleEditBanner = (id: number) =>
     navigate(`/maintenance/banner-edit/${id}`);
@@ -209,16 +301,16 @@ const BannerList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {/* {bannerPermissions.update === "true" && ( */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEditBanner(item.id)}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-            {/* )} */}
+            {shouldShow("Banner", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEditBanner(item.id)}
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "id":
@@ -280,18 +372,20 @@ const BannerList = () => {
         );
       case "status":
         return (
-          <Switch
-            checked={item.active}
-            onChange={() => onToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => onToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       default:
         return (item[columnKey as keyof Banner] as React.ReactNode) ?? "-";
@@ -300,13 +394,15 @@ const BannerList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      <Button
-        onClick={handleAddBanner}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        Add
-      </Button>
+      {shouldShow("Banner", "create") && (
+        <Button
+          onClick={handleAddBanner}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          Add
+        </Button>
+      )}
     </div>
   );
 
@@ -336,50 +432,21 @@ const BannerList = () => {
             isSearching ? "Searching banners..." : "Loading banners..."
           }
         />
-        {!searchTerm && totalPages > 1 && (
+        {totalCount > 0 && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }}
-                    className={
-                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
-                    }
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(page);
-                        }}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
+                {renderPaginationItems()}
                 <PaginationItem>
                   <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }}
-                    className={
-                      currentPage === totalPages
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
               </PaginationContent>

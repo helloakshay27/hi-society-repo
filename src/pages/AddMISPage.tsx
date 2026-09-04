@@ -32,7 +32,7 @@ const SectionHeader = styled(Box)(({ theme }) => ({
 }));
 
 const IconWrapper = styled(Box)(({ theme }) => ({
-  color: "#C72030",
+  color: "var(--color-primary, #da7756)",
   backgroundColor: "#E5E0D3",
   borderRadius: "50%",
   padding: "8px",
@@ -81,8 +81,8 @@ const CancelButton = styled(MuiButton)(({ theme }) => ({
 }));
 
 const AddButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C4B89D59",
-  color: "#C72030",
+  backgroundColor: "#C72030",
+  color: "#fff",
   borderRadius: "4px",
   textTransform: "none",
   padding: "8px 16px",
@@ -91,7 +91,7 @@ const AddButton = styled(MuiButton)(({ theme }) => ({
   fontSize: "14px",
   boxShadow: "none",
   "&:hover": {
-    backgroundColor: "#C4B89D80",
+    backgroundColor: "#A01828",
     boxShadow: "none",
   },
 }));
@@ -114,15 +114,15 @@ const fieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#da7756',
     },
   },
 };
@@ -135,15 +135,15 @@ const multilineFieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#da7756',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#da7756',
     },
   },
 };
@@ -527,8 +527,8 @@ const AddMISPage: React.FC = () => {
     type="submit"
     disabled={isSubmitting}
     onClick={handleSubmit}
-    className="bg-red-600 hover:bg-red-700 text-white px-8 py-2"
-  >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"  >
     {isSubmitting ? "Submitting..." : "Submit"}
   </Button>
 
@@ -536,8 +536,7 @@ const AddMISPage: React.FC = () => {
     type="button"
     variant="outline"
     onClick={handleCancel}
-    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
-  >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">
     Cancel
   </Button>
 </div>

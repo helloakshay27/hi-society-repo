@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -101,9 +100,6 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
   const [flats, setFlats] = useState<FlatOption[]>([]);
   const [issueTypes, setIssueTypes] = useState<IssueTypeOption[]>([]);
   const [complaintModes, setComplaintModes] = useState<ComplaintModeOption[]>([]);
-
-  // Common field styles
-  const commonFieldStyles = "h-10 rounded-md border border-[hsl(var(--analytics-border))] bg-white";
 
   // Load data when dialog opens
   useEffect(() => {
@@ -407,7 +403,7 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
         <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
           <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">FILTER BY</DialogTitle>
@@ -421,30 +417,26 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">Date Range</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="dateFrom" className="text-sm font-medium text-[hsl(var(--analytics-text))]">
-                  Date From
-                </Label>
-                <Input
-                  id="dateFrom"
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className={commonFieldStyles}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dateTo" className="text-sm font-medium text-[hsl(var(--analytics-text))]">
-                  Date To
-                </Label>
-                <Input
-                  id="dateTo"
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className={commonFieldStyles}
-                />
-              </div>
+              <TextField
+                label="Date From"
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Date To"
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
           </div>
 
@@ -453,236 +445,265 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
             <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">Filter Options</h3>
             <div className="grid grid-cols-2 gap-4">
               {/* Ticket Number */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Ticket Number</Label>
-                <Input
-                  type="text"
-                  placeholder="Select Ticket"
-                  value={ticketNumber}
-                  onChange={(e) => setTicketNumber(e.target.value)}
-                  className={commonFieldStyles}
-                />
-              </div>
+              <TextField
+                label="Ticket Number"
+                placeholder="Select Ticket"
+                value={ticketNumber}
+                onChange={(e) => setTicketNumber(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Issue Type */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Issue Type</Label>
-                <Select value={issueType} onValueChange={setIssueType}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Issue Type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {issueTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+                <MuiSelect
+                  value={issueType}
+                  onChange={(e) => setIssueType(e.target.value)}
+                  displayEmpty
+                  label="Issue Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Issue Type</em></MenuItem>
+                  {issueTypes.map((type) => (
+                    <MenuItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Category */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Category</Label>
-                <Select value={category} onValueChange={(value) => {
-                  setCategory(value);
-                  setSubCategory(''); // Reset subcategory when category changes
-                }}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category</InputLabel>
+                <MuiSelect
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setSubCategory(''); // Reset subcategory when category changes
+                  }}
+                  displayEmpty
+                  label="Category"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Category</em></MenuItem>
+                  {categories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Assign to */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Assign to</Label>
-                <Select value={assignedUser} onValueChange={setAssignedUser}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Assignee" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {users.length === 0 ? (
-                      <SelectItem value="no-users" disabled>
-                        No users available
-                      </SelectItem>
-                    ) : (
-                      users.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Assign to</InputLabel>
+                <MuiSelect
+                  value={assignedUser}
+                  onChange={(e) => setAssignedUser(e.target.value)}
+                  displayEmpty
+                  label="Assign to"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Assignee</em></MenuItem>
+                  {users.length === 0 ? (
+                    <MenuItem value="no-users" disabled>
+                      No users available
+                    </MenuItem>
+                  ) : (
+                    users.map((user) => (
+                      <MenuItem key={user.id} value={user.id.toString()}>
+                        {user.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </MuiSelect>
+              </FormControl>
 
               {/* Tower */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Tower</Label>
-                <Select value={tower} onValueChange={(value) => {
-                  setTower(value);
-                  setFlat(''); // Reset flat when tower changes
-                }}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Tower" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {towers.map((towerItem) => (
-                      <SelectItem key={towerItem.id} value={towerItem.id.toString()}>
-                        {towerItem.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower</InputLabel>
+                <MuiSelect
+                  value={tower}
+                  onChange={(e) => {
+                    setTower(e.target.value);
+                    setFlat(''); // Reset flat when tower changes
+                  }}
+                  displayEmpty
+                  label="Tower"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Tower</em></MenuItem>
+                  {towers.map((towerItem) => (
+                    <MenuItem key={towerItem.id} value={towerItem.id.toString()}>
+                      {towerItem.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Flat */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Flat</Label>
-                <Select value={flat} onValueChange={setFlat} disabled={!tower}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Flat" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {flats.map((flatItem) => (
-                      <SelectItem key={flatItem.id} value={flatItem.id.toString()}>
-                        {flatItem.flat_no}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined" disabled={!tower}>
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat</InputLabel>
+                <MuiSelect
+                  value={flat}
+                  onChange={(e) => setFlat(e.target.value)}
+                  displayEmpty
+                  label="Flat"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Flat</em></MenuItem>
+                  {flats.map((flatItem) => (
+                    <MenuItem key={flatItem.id} value={flatItem.id.toString()}>
+                      {flatItem.flat_no}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Complaint Mode */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Complaint Mode</Label>
-                <Select value={complaintMode} onValueChange={setComplaintMode}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Complaint Mode" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {complaintModes.map((mode) => (
-                      <SelectItem key={mode.id} value={mode.id.toString()}>
-                        {mode.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Complaint Mode</InputLabel>
+                <MuiSelect
+                  value={complaintMode}
+                  onChange={(e) => setComplaintMode(e.target.value)}
+                  displayEmpty
+                  label="Complaint Mode"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Complaint Mode</em></MenuItem>
+                  {complaintModes.map((mode) => (
+                    <MenuItem key={mode.id} value={mode.id.toString()}>
+                      {mode.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Ticket Type */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Ticket Type</Label>
-                <Select value={ticketType} onValueChange={setTicketType}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Ticket Type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {ticketTypeOptions.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Ticket Type</InputLabel>
+                <MuiSelect
+                  value={ticketType}
+                  onChange={(e) => setTicketType(e.target.value)}
+                  displayEmpty
+                  label="Ticket Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Ticket Type</em></MenuItem>
+                  {ticketTypeOptions.map((type) => (
+                    <MenuItem key={type.value} value={type.value}>
+                      {type.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Issue Related To */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Issue Related To</Label>
-                <Select value={issueRelatedTo} onValueChange={setIssueRelatedTo}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Issue Related To" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    <SelectItem value="fm">FM</SelectItem>
-                    <SelectItem value="project">Project</SelectItem>
-                    {issueTypes.map((type) => (
-                      <SelectItem key={`related-${type.id}`} value={type.id.toString()}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Related To</InputLabel>
+                <MuiSelect
+                  value={issueRelatedTo}
+                  onChange={(e) => setIssueRelatedTo(e.target.value)}
+                  displayEmpty
+                  label="Issue Related To"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Issue Related To</em></MenuItem>
+                  <MenuItem value="fm">FM</MenuItem>
+                  <MenuItem value="project">Project</MenuItem>
+                  {issueTypes.map((type) => (
+                    <MenuItem key={`related-${type.id}`} value={type.id.toString()}>
+                      {type.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Date Range */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Date Range</Label>
-                <Input
-                  type="text"
-                  placeholder="Select Date Range"
-                  value={dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : ''}
-                  readOnly
-                  className={commonFieldStyles}
-                />
-              </div>
+              <TextField
+                label="Date Range"
+                placeholder="Select Date Range"
+                value={dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : ''}
+                InputProps={{ readOnly: true, sx: fieldStyles }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+              />
 
               {/* Status */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Status</Label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {statuses.map((statusItem) => (
-                      <SelectItem key={statusItem.id} value={statusItem.id.toString()}>
-                        {statusItem.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+                <MuiSelect
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  displayEmpty
+                  label="Status"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Status</em></MenuItem>
+                  {statuses.map((statusItem) => (
+                    <MenuItem key={statusItem.id} value={statusItem.id.toString()}>
+                      {statusItem.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Priority */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Priority</Label>
-                <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Priority" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {priorityOptions.map((priorityItem) => (
-                      <SelectItem key={priorityItem.value} value={priorityItem.value}>
-                        {priorityItem.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Priority</InputLabel>
+                <MuiSelect
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  displayEmpty
+                  label="Priority"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>Select Priority</em></MenuItem>
+                  {priorityOptions.map((priorityItem) => (
+                    <MenuItem key={priorityItem.value} value={priorityItem.value}>
+                      {priorityItem.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Escalation */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Escalation</Label>
-                <Input
-                  type="text"
-                  placeholder="Escalation"
-                  value={escalation}
-                  onChange={(e) => setEscalation(e.target.value)}
-                  className={commonFieldStyles}
-                />
-              </div>
+              <TextField
+                label="Escalation"
+                placeholder="Escalation"
+                value={escalation}
+                onChange={(e) => setEscalation(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Rating */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Rating</Label>
-                <Input
-                  type="text"
-                  placeholder="Rating"
-                  value={rating}
-                  onChange={(e) => setRating(e.target.value)}
-                  className={commonFieldStyles}
-                />
-              </div>
+              <TextField
+                label="Rating"
+                placeholder="Rating"
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
           </div>
 
@@ -697,7 +718,7 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
             </Button>
             <Button 
               onClick={handleSubmit}
-              className="bg-[hsl(var(--analytics-primary))] hover:bg-[hsl(var(--analytics-primary))]/90 text-white"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Apply Filters
             </Button>

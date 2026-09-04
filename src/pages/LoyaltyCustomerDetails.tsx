@@ -10,9 +10,21 @@ import {
     Eye,
     Gift,
     Banknote,
+    Plus,
+    Download,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { Button } from "@/components/ui/button";
+import SelectBox from "@/components/ui/select-box";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const LoyaltyCustomerDetails = () => {
     const { id } = useParams();
@@ -24,6 +36,14 @@ const LoyaltyCustomerDetails = () => {
     const [customerData, setCustomerData] = useState<any | null>(null);
     const [walletTransactions, setWalletTransactions] = useState<any[]>([]);
     const [orders, setOrders] = useState<any[]>([]);
+
+    // Credit Wallet Dialog State
+    const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+    const [creditAmount, setCreditAmount] = useState("");
+    const [creditRemarks, setCreditRemarks] = useState("");
+    const [creditPaymentMode, setCreditPaymentMode] = useState("cash");
+    const [creditLoading, setCreditLoading] = useState(false);
+    const [exportLoading, setExportLoading] = useState(false);
 
     // Mock data for Vouchers
     const vouchers = [
@@ -121,6 +141,8 @@ const LoyaltyCustomerDetails = () => {
                 }
                 setCustomerData({
                     id: data.id,
+                    user_id: data.customer_code,
+                    customer_code: data.customer_code,
                     fullName: `${data.firstname || ""} ${data.lasttname || ""}`.trim(),
                     email: data.email || "-",
                     phoneNo: data.mobile || "-",
@@ -149,6 +171,7 @@ const LoyaltyCustomerDetails = () => {
                             resource_type: t.resource_type || "-",
                             created_at: t.created_at || "-",
                             amount: t.amount ?? "-",
+                            remaining_points: t.remaining_points ?? "-",
                             remarks: t.remarks || "-",
                         }))
                         : []
@@ -175,6 +198,95 @@ const LoyaltyCustomerDetails = () => {
         };
         fetchDetails();
     }, [id]);
+
+    const handleCreditWallet = async () => {
+        if (!creditAmount || parseFloat(creditAmount) <= 0) {
+            toast.error("Please enter a valid amount");
+            return;
+        }
+        if (!creditRemarks.trim()) {
+            toast.error("Please enter remarks");
+            return;
+        }
+        if (!customerData?.customer_code) {
+            toast.error("Customer code not available for this member");
+            return;
+        }
+
+        setCreditLoading(true);
+        try {
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/loyalty/members/credit_wallet.json?token=${token}`);
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    Authorization: getAuthHeader(),
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    customer_code: customerData?.customer_code,
+                    amount: parseFloat(creditAmount),
+                    remarks: creditRemarks.trim(),
+                    payment_mode: creditPaymentMode,
+                    topup_by: "admin",
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                toast.success("Wallet credited successfully");
+                setCreditDialogOpen(false);
+                setCreditAmount("");
+                setCreditRemarks("");
+                setCreditPaymentMode("cash");
+                // Refresh customer data
+                window.location.reload();
+            } else {
+                toast.error(result.message || "Failed to credit wallet");
+            }
+        } catch (error) {
+            console.error("Error crediting wallet:", error);
+            toast.error("Failed to credit wallet. Please try again.");
+        } finally {
+            setCreditLoading(false);
+        }
+    };
+
+    const handleExportTransactions = async () => {
+        if (!id) {
+            toast.error("Member ID not available");
+            return;
+        }
+
+        setExportLoading(true);
+        try {
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/loyalty/members/${id}/export_transactions.xlsx?token=${token}`);
+            const response = await fetch(url, {
+                headers: { Authorization: getAuthHeader() },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to export transactions");
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.setAttribute("download", `wallet_transactions_${id}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error("Error exporting wallet transactions:", error);
+            toast.error("Failed to export transactions. Please try again.");
+        } finally {
+            setExportLoading(false);
+        }
+    };
 
     const toggleFieldExpansion = (fieldKey: string) => {
         setExpandedFields((prev) => {
@@ -220,6 +332,7 @@ const LoyaltyCustomerDetails = () => {
         { key: "transactionType", label: "Type", sortable: true },
         { key: "resourceType", label: "Resource Type", sortable: false },
         { key: "amount", label: "Points", sortable: true },
+        { key: "remaining_points", label: "Available Points", sortable: true },
         { key: "createdAt", label: "Date", sortable: true },
         { key: "remarks", label: "Remarks", sortable: false },
     ];
@@ -274,6 +387,8 @@ const LoyaltyCustomerDetails = () => {
                 return <span>{isNaN(d.getTime()) ? item.created_at : d.toLocaleString()}</span>;
             case "amount":
                 return <span>{item.amount}</span>;
+            case "remaining_points":
+                return <span>{item.remaining_points}</span>;
             case "remarks":
                 return <span>{item.remarks}</span>;
             default:
@@ -459,6 +574,17 @@ const LoyaltyCustomerDetails = () => {
                 />
             </div>
 
+            {/* Credit Wallet Button */}
+            <div className="flex justify-end">
+                <Button
+                    onClick={() => setCreditDialogOpen(true)}
+                    className="flex items-center gap-2 bg-[#00A651] hover:bg-[#008C44] text-white"
+                >
+                    <Plus className="w-4 h-4 text-[#C72030]" />
+                    Credit Wallet
+                </Button>
+            </div>
+
             {/* Personal Details Card (Always visible) */}
             <div className="w-full bg-white rounded-lg shadow-sm border mb-4">
                 <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
@@ -630,6 +756,16 @@ const LoyaltyCustomerDetails = () => {
                                     Wallet Transactions
                                 </h3>
                             </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleExportTransactions}
+                                disabled={exportLoading}
+                                className="gap-2"
+                            >
+                                <Download className="w-4 h-4" />
+                                {exportLoading ? "Exporting..." : "Export"}
+                            </Button>
                         </div>
                         <div className="bg-[#FBFBFA]">
                             <EnhancedTable
@@ -740,6 +876,92 @@ const LoyaltyCustomerDetails = () => {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            {/* Credit Wallet Dialog */}
+            <Dialog open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
+                <DialogContent className="sm:max-w-[480px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-gray-900">
+                            Credit Wallet
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Customer Code
+                            </label>
+                            <input
+                                type="text"
+                                value={customerData?.user_id || customerData?.id || id || ""}
+                                disabled
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Amount <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="number"
+                                value={creditAmount}
+                                onChange={(e) => setCreditAmount(e.target.value)}
+                                placeholder="Enter amount"
+                                min="1"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00A651] focus:border-transparent"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Payment Mode <span className="text-red-500">*</span>
+                            </label>
+                            <SelectBox
+                                options={[
+                                    { value: "cash", label: "Cash" },
+                                    { value: "online", label: "Online" },
+                                    { value: "bank_transfer", label: "Bank Transfer" },
+                                    { value: "upi", label: "UPI" },
+                                ]}
+                                defaultValue={creditPaymentMode}
+                                onChange={(value: string) => setCreditPaymentMode(value)}
+                                menuPortalTarget={undefined}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Remarks <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                value={creditRemarks}
+                                onChange={(e) => setCreditRemarks(e.target.value)}
+                                placeholder="Enter remarks"
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00A651] focus:border-transparent resize-none"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setCreditDialogOpen(false);
+                                setCreditAmount("");
+                                setCreditRemarks("");
+                                setCreditPaymentMode("cash");
+                            }}
+                            disabled={creditLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleCreditWallet}
+                            disabled={creditLoading}
+                            className="bg-[#00A651] hover:bg-[#008C44] text-white"
+                        >
+                            {creditLoading ? "Crediting..." : "Credit Points"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

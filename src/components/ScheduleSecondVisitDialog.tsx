@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MaterialDatePicker } from '@/components/ui/material-date-picker';
+import { TextField } from '@mui/material';
 import { X } from 'lucide-react';
 
 interface ScheduleSecondVisitDialogProps {
@@ -26,7 +26,7 @@ export const ScheduleSecondVisitDialog = ({ open, onOpenChange, onSubmit }: Sche
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} modal={false} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="flex flex-row items-center justify-between pb-0">
           <DialogTitle className="text-lg font-semibold">Schedule Second Visit</DialogTitle>
@@ -50,24 +50,21 @@ export const ScheduleSecondVisitDialog = ({ open, onOpenChange, onSubmit }: Sche
             />
           </div>
 
-          <div>
-            <Label htmlFor="availableSlot" className="text-sm font-medium mb-2 block">
-              Available Slot
-            </Label>
-            <Input
-              id="availableSlot"
-              placeholder="Enter available slot"
-              value={availableSlot}
-              onChange={(e) => setAvailableSlot(e.target.value)}
-              className="w-full"
-            />
-          </div>
+          <TextField
+            label="Available Slot"
+            placeholder="Enter available slot"
+            value={availableSlot}
+            onChange={(e) => setAvailableSlot(e.target.value)}
+            fullWidth
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
         </div>
 
         <div className="flex justify-center pt-4">
           <Button 
             onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-700 text-white px-8"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit
           </Button>

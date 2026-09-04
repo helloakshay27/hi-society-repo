@@ -1,19 +1,33 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  OrganizationTab, 
-  CompanyTab, 
-  CountryTab, 
-  RegionTab, 
-  ZoneTab, 
-  SiteTab, 
-  EntityTab, 
+import {
+  OrganizationTab,
+  CompanyTab,
+  CountryTab,
+  RegionTab,
+  ZoneTab,
+  SiteTab,
+  EntityTab,
   UserCategoryTab,
   SocietyTab
 } from '@/components/ops-account';
 
+const VALID_TABS = ['organization', 'company', 'country', 'region', 'zone', 'society', 'site'];
+
 export const OpsAccountPage = () => {
-  const [activeTab, setActiveTab] = useState('organization');
+  // The active tab lives in the URL (not just component state) so that
+  // navigating away to a details/edit page and back (e.g. via the page's
+  // "Back" button, which returns to this same base URL) restores the tab
+  // the user was actually on, instead of always resetting to Organization.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const activeTab = tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : 'organization';
+
+  const handleTabChange = (tab: string) => {
+    setSearchParams({ tab }, { replace: false });
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [entriesPerPage, setEntriesPerPage] = useState('25');
 
@@ -23,17 +37,50 @@ export const OpsAccountPage = () => {
         <h1 className="text-2xl font-bold text-[#1a1a1a]">ACCOUNT</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-9 mb-6">
-          <TabsTrigger value="organization">Organization</TabsTrigger>
-          <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="country">Country</TabsTrigger>
-          <TabsTrigger value="region">Region</TabsTrigger>
-          <TabsTrigger value="society">Society</TabsTrigger>
-          {/* <TabsTrigger value="zone">Zone</TabsTrigger> */}
-          <TabsTrigger value="site">Site</TabsTrigger>
-          {/* <TabsTrigger value="entity">Entity</TabsTrigger>
-          <TabsTrigger value="user-category">User Category</TabsTrigger> */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200">
+          <TabsTrigger
+            value="organization"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Organization
+          </TabsTrigger>
+          <TabsTrigger
+            value="company"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Company
+          </TabsTrigger>
+          <TabsTrigger
+            value="country"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Headquarter
+          </TabsTrigger>
+          <TabsTrigger
+            value="region"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Region
+          </TabsTrigger>
+          <TabsTrigger
+            value="zone"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Zone
+          </TabsTrigger>
+          <TabsTrigger
+            value="society"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Society
+          </TabsTrigger>
+          <TabsTrigger
+            value="site"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Site
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="organization" className="space-y-4">
@@ -81,14 +128,14 @@ export const OpsAccountPage = () => {
         </TabsContent>
 
         
-        {/* <TabsContent value="zone" className="space-y-4">
+        <TabsContent value="zone" className="space-y-4">
           <ZoneTab
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             entriesPerPage={entriesPerPage}
             setEntriesPerPage={setEntriesPerPage}
           />
-        </TabsContent> */}
+        </TabsContent>
 
         <TabsContent value="site" className="space-y-4">
           <SiteTab

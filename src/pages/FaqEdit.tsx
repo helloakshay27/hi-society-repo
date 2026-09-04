@@ -38,7 +38,7 @@ const FaqEdit = () => {
   const [selectedSiteId, setSelectedSiteId] = useState("");
   const [faqTag, setFaqTag] = useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
   const [sitesLoading, setSitesLoading] = useState(false);
@@ -260,6 +260,8 @@ const FaqEdit = () => {
       }
     }
     fetchFaqData();
+  } else {
+    setLoading(false);
   }
 }, [faqId, hasFetched]);
 
@@ -468,6 +470,17 @@ const FaqEdit = () => {
   }
 };
 
+  if (loading) {
+    return (
+      <div className="h-full bg-gray-50 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading FAQ details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full bg-gray-50">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
@@ -608,7 +621,7 @@ const FaqEdit = () => {
             <button
               type="submit"
               disabled={loading || formData.faqs.length === 0}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Update' : 'Update'}
             </button>
@@ -616,8 +629,7 @@ const FaqEdit = () => {
               type="button"
               onClick={() => navigate("/maintenance/faq-list")}
               disabled={loading}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-            >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"            >
               Cancel
             </button>
           </div>

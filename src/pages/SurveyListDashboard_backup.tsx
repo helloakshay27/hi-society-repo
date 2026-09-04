@@ -376,7 +376,7 @@ export const SurveyListDashboard = () => {
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
               <Button 
                 onClick={handleAddSurvey}
-                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
+                className="flex items-center gap-2 border-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 <Plus className="w-4 h-4" />
                 Add

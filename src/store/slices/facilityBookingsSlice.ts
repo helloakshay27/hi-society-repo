@@ -147,7 +147,7 @@ export const editFacilityBookingSetup = createAsyncThunk(
   async ({ baseUrl, token, id, data }: any, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `https://${baseUrl}/pms/admin/facility_setups/${id}.json`,
+        `https://${baseUrl}/crm/admin/facility_setups/${id}.json`,
         data,
         {
           headers: {

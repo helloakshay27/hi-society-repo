@@ -122,6 +122,16 @@ const textareaStyles = {
   },
 };
 
+const parseApiBoolean = (value: unknown): boolean => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1";
+  }
+  return false;
+};
+
 export const EditSurveyPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -137,11 +147,11 @@ export const EditSurveyPage = () => {
   const [ticketSubCategory, setTicketSubCategory] = useState("");
   const [assignTo, setAssignTo] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [ticketCategories, setTicketCategories] = useState<CategoryResponse[]>(
-    []
-  );
+  const [ticketCategories, setTicketCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
   const [ticketSubCategories, setTicketSubCategories] = useState<
-    SubCategoryResponse[]
+    { id: number; name: string; category_id: number }[]
   >([]);
   const [fmUsers, setFmUsers] = useState<
     { id: number; firstname: string; lastname: string; email?: string }[]
@@ -167,6 +177,7 @@ export const EditSurveyPage = () => {
   // Emoji and rating constants
   const EMOJIS = ["😁", "😊", "😐", "😟", "😞"];
   const RATING_STARS = ["1-star", "2-star", "3-star", "4-star", "5-star"];
+  const NUMERIC_VALUES = ["0","1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
   useEffect(() => {
     fetchCategories();
@@ -181,9 +192,8 @@ export const EditSurveyPage = () => {
 
     setLoadingTicketCategories(true);
     try {
-      const response = await ticketManagementAPI.getCategories();
-      setTicketCategories(response.helpdesk_categories || []);
-      console.log("Ticket categories loaded:", response.helpdesk_categories);
+      const response = await apiClient.get("/dropdown/categories.json");
+      setTicketCategories(response.data?.categories || []);
     } catch (error) {
       console.error("Error loading ticket categories:", error);
     } finally {
@@ -195,14 +205,26 @@ export const EditSurveyPage = () => {
   const loadTicketSubCategories = useCallback(async (categoryId: number) => {
     setLoadingTicketSubCategories(true);
     try {
-      const subcats =
-        await ticketManagementAPI.getSubCategoriesByCategory(categoryId);
-      setTicketSubCategories(subcats);
-      console.log("Ticket subcategories loaded:", subcats);
-      return subcats; // Return the loaded subcategories
+      const response = await apiClient.get(
+        "/crm/admin/helpdesk_sub_categories.json"
+      );
+      const allSubcats = response.data?.helpdesk_sub_categories || [];
+      const filtered = allSubcats
+        .filter((s: { category_id: number }) => s.category_id === categoryId)
+        .map(
+          (s: { id: number; sub_category: string | null; category_id: number }) =>
+            ({
+              id: s.id,
+              name: s.sub_category || "",
+              category_id: s.category_id,
+            })
+        )
+        .filter((s: { name: string }) => !!s.name);
+      setTicketSubCategories(filtered);
+      return filtered;
     } catch (error) {
       console.error("Error loading ticket subcategories:", error);
-      return []; // Return empty array on error
+      return [];
     } finally {
       setLoadingTicketSubCategories(false);
     }
@@ -282,7 +304,7 @@ export const EditSurveyPage = () => {
       setCheckType(mappedCheckType);
 
       // Set form view flag
-      setFormView(surveyData.form_view || false);
+      setFormView(parseApiBoolean(surveyData.form_view));
 
       // Check if ticket creation is enabled based on existing data
       const hasTicketConfig =
@@ -294,10 +316,11 @@ export const EditSurveyPage = () => {
         console.log("Processing ticket config:", ticketConfig);
         // First, load all ticket categories for the dropdowns
         try {
-          const categoriesResponse = await ticketManagementAPI.getCategories();
-          const allCategories = categoriesResponse.helpdesk_categories || [];
+          const categoriesResponse = await apiClient.get(
+            "/dropdown/categories.json"
+          );
+          const allCategories = categoriesResponse.data?.categories || [];
           setTicketCategories(allCategories);
-          console.log("All ticket categories loaded:", allCategories);
         } catch (error) {
           console.error("Error loading ticket categories:", error);
         }
@@ -347,49 +370,24 @@ export const EditSurveyPage = () => {
             subcategoryId
           );
           try {
-            const allSubCategoriesResponse =
-              await ticketManagementAPI.getSubCategories();
+            const allSubCategoriesResponse = await apiClient.get(
+              "/crm/admin/helpdesk_sub_categories.json"
+            );
             const allSubCategories =
-              allSubCategoriesResponse.sub_categories ||
-              allSubCategoriesResponse ||
-              [];
-            console.log("All subcategories loaded:", allSubCategories);
+              allSubCategoriesResponse.data?.helpdesk_sub_categories || [];
 
             const matchingSubCategory = allSubCategories.find(
-              (subCat: SubCategoryResponse) => subCat.id === subcategoryId
+              (subCat: { id: number }) => subCat.id === subcategoryId
             );
 
-            if (
-              matchingSubCategory &&
-              matchingSubCategory.helpdesk_category_id
-            ) {
-              console.log(
-                "Found parent category:",
-                matchingSubCategory.helpdesk_category_id
-              );
-              setTicketCategoryId(
-                matchingSubCategory.helpdesk_category_id.toString()
-              );
+            if (matchingSubCategory && matchingSubCategory.category_id) {
+              setTicketCategoryId(matchingSubCategory.category_id.toString());
 
               // Load subcategories for the parent category
-              const loadedSubcats = await loadTicketSubCategories(
-                matchingSubCategory.helpdesk_category_id
-              );
+              await loadTicketSubCategories(matchingSubCategory.category_id);
 
               // Set subcategory immediately after loading
               setTicketSubCategory(subcategoryId.toString());
-              console.log(
-                "Set subcategory ID from reverse lookup:",
-                subcategoryId
-              );
-
-              const foundSubcat = loadedSubcats?.find(
-                (s) => s.id === subcategoryId
-              );
-              console.log(
-                "Verified subcategory from reverse lookup:",
-                foundSubcat
-              );
             }
           } catch (error) {
             console.error(
@@ -450,11 +448,13 @@ export const EditSurveyPage = () => {
                       ? "rating"
                       : q.qtype === "emoji"
                         ? "emojis"
-                        : q.qtype === "text"
-                          ? "input-box"
-                          : q.qtype === "description"
-                            ? "description"
-                            : "description",
+                        : q.qtype === "numeric"
+                          ? "numeric"
+                          : q.qtype === "text"
+                            ? "input-box"
+                            : q.qtype === "description"
+                              ? "description"
+                              : "description",
             mandatory: q.quest_mandatory,
             answerOptions:
               q.snag_quest_options?.map((option: any) => ({
@@ -626,16 +626,24 @@ export const EditSurveyPage = () => {
           const updatedQuestion = { ...q, [field]: value };
           if (
             field === "answerType" &&
-            ["multiple-choice", "rating", "emojis"].includes(value as string) &&
+            ["multiple-choice", "rating", "emojis", "numeric"].includes(value as string) &&
             !updatedQuestion.answerOptions
           ) {
-            updatedQuestion.answerOptions = [
-              { text: "", type: "P" },
-              { text: "", type: "P" },
-            ];
+            // For numeric, auto-populate all 10 options (0-10)
+            if (value === "numeric") {
+              updatedQuestion.answerOptions = NUMERIC_VALUES.map((val) => ({
+                text: val,
+                type: "P",
+              }));
+            } else {
+              updatedQuestion.answerOptions = [
+                { text: "", type: "P" },
+                { text: "", type: "P" },
+              ];
+            }
           } else if (
             field === "answerType" &&
-            !["multiple-choice", "rating", "emojis"].includes(value as string)
+            !["multiple-choice", "rating", "emojis", "numeric"].includes(value as string)
           ) {
             updatedQuestion.answerOptions = undefined;
           }
@@ -682,7 +690,20 @@ export const EditSurveyPage = () => {
     if (!question) return;
 
     const currentOptionsCount = question.answerOptions?.length || 0;
-    if (currentOptionsCount >= 5) return; // Limit to 5 options
+
+    // Different limits based on answer type
+    if (question.answerType === "numeric") {
+      // Numeric questions must have exactly 11 options (0-10), prevent adding more
+      if (currentOptionsCount >= 11) {
+        toast.error("Maximum Options Reached", {
+          description: "Numeric questions must have exactly 11 options (0-10). You cannot add more options.",
+          duration: 3000,
+        });
+        return;
+      }
+    } else if (currentOptionsCount >= 5) {
+      return; // Limit to 5 options for other types
+    }
 
     setQuestions(
       questions.map((q) =>
@@ -973,9 +994,9 @@ export const EditSurveyPage = () => {
         return;
       }
 
-      // Check if multiple choice, rating, or emojis have at least one option with text
+      // Check if multiple choice, rating, emojis, or numeric have at least one option with text
       if (
-        ["multiple-choice", "rating", "emojis"].includes(question.answerType)
+        ["multiple-choice", "rating", "emojis", "numeric"].includes(question.answerType)
       ) {
         if (!question.answerOptions || question.answerOptions.length === 0) {
           toast.error("Validation Error", {
@@ -984,6 +1005,18 @@ export const EditSurveyPage = () => {
           });
           return;
         }
+
+        // Special validation for numeric - must have exactly 11 options (0-10)
+        if (question.answerType === "numeric") {
+          if (question.answerOptions.length !== 11) {
+            toast.error("Validation Error", {
+              description: `Numeric questions must have exactly 11 options (0-10) for Question ${displayIndex}. Currently has ${question.answerOptions.length}.`,
+              duration: 3000,
+            });
+            return;
+          }
+        }
+
         // Check if all options have text
         for (let j = 0; j < question.answerOptions.length; j++) {
           if (!question.answerOptions[j].text.trim()) {
@@ -1109,7 +1142,9 @@ export const EditSurveyPage = () => {
                 ? "rating"
                 : question.answerType === "emojis"
                   ? "emoji"
-                  : "description";
+                  : question.answerType === "numeric"
+                    ? "numeric"
+                    : "description";
 
         formData.append(`question[][qtype]`, qtype);
         formData.append(
@@ -1163,9 +1198,9 @@ export const EditSurveyPage = () => {
           });
         }
 
-        // Add multiple choice, rating, and emoji options with proper structure
+        // Add multiple choice, rating, emoji, and numeric options with proper structure
         if (
-          ["multiple-choice", "rating", "emojis"].includes(
+          ["multiple-choice", "rating", "emojis", "numeric"].includes(
             question.answerType
           ) &&
           question.answerOptions
@@ -1247,7 +1282,7 @@ export const EditSurveyPage = () => {
         duration: 4000,
       });
 
-      navigate("/master/survey/list");
+      navigate("/settings/survey/list");
     } catch (error) {
       console.error("Error updating Question:", error);
 
@@ -1283,9 +1318,10 @@ export const EditSurveyPage = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="flex items-center justify-center h-96">
-          <div>Loading Question Bank data...</div>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading survey data...</p>
         </div>
       </div>
     );
@@ -1299,7 +1335,7 @@ export const EditSurveyPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/master/survey/list")}
+            onClick={() => navigate("/settings/survey/list")}
             className="p-2"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -1511,7 +1547,7 @@ export const EditSurveyPage = () => {
                       onClick={() => setSurveyImage(null)}
                       variant="ghost"
                       size="sm"
-                      className="text-gray-400 hover:text-red-500 p-2"
+                      className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                       disabled={isSubmitting}
                     >
                       <X className="w-4 h-4" />
@@ -1587,7 +1623,7 @@ export const EditSurveyPage = () => {
                       size="sm"
                       variant="ghost"
                       onClick={handleAddQuestion}
-                      className="p-1 h-6 w-6"
+                      className="p-1 h-6 w-6 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -1719,12 +1755,13 @@ export const EditSurveyPage = () => {
                             <SelectItem value="rating">Rating</SelectItem>
                             <SelectItem value="emojis">Emojis</SelectItem>
                             <SelectItem value="input-box">Input Box</SelectItem>
+                            <SelectItem value="numeric">Numeric</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      {/* Multiple Choice, Rating, and Emoji Options */}
-                      {["multiple-choice", "rating", "emojis"].includes(
+                      {/* Multiple Choice, Rating, Emoji, and Numeric Options */}
+                      {["multiple-choice", "rating", "emojis", "numeric"].includes(
                         question.answerType
                       ) && (
                         <div className="space-y-3 pt-2">
@@ -1733,7 +1770,9 @@ export const EditSurveyPage = () => {
                               ? "Rating Options"
                               : question.answerType === "emojis"
                                 ? "Emoji Options"
-                                : "Answer Options"}
+                                : question.answerType === "numeric"
+                                  ? "Numeric Values"
+                                  : "Answer Options"}
                           </Label>
                           {(question.answerOptions || []).map(
                             (option, optionIndex) => (
@@ -1751,6 +1790,12 @@ export const EditSurveyPage = () => {
                                   <div className="flex items-center justify-center w-28 h-12">
                                     <span className="text-base">
                                       {RATING_STARS[optionIndex]}
+                                    </span>
+                                  </div>
+                                ) : question.answerType === "numeric" ? (
+                                  <div className="flex items-center justify-center w-12 h-12">
+                                    <span className="text-base font-semibold text-gray-700">
+                                      {NUMERIC_VALUES[optionIndex]}
                                     </span>
                                   </div>
                                 ) : (
@@ -1823,7 +1868,7 @@ export const EditSurveyPage = () => {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleAddAnswerOption(question.id!)}
-                            className="p-0 h-auto font-medium text-red-600 hover:text-red-700 flex items-center"
+                            className="p-0 h-auto font-medium flex items-center bg-[#C72030] text-white hover:bg-[#C72030]/90"
                           >
                             <Plus className="w-4 h-4 mr-1" />
                             Add Option
@@ -2008,7 +2053,7 @@ export const EditSurveyPage = () => {
                                               fieldIndex
                                             )
                                           }
-                                          className="p-2 text-red-500 hover:text-red-700"
+                                          className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                                         >
                                           <X className="w-4 h-4" />
                                         </Button>
@@ -2180,7 +2225,7 @@ export const EditSurveyPage = () => {
                                 onClick={() =>
                                   handleAddAdditionalField(question.id!)
                                 }
-                                className="p-0 h-auto font-medium text-red-600 hover:text-red-700 flex items-center"
+                                className="p-0 h-auto font-medium flex items-center bg-[#C72030] text-white hover:bg-[#C72030]/90"
                               >
                                 <Plus className="w-4 h-4 mr-1" /> Add Additional
                                 Field
@@ -2197,7 +2242,7 @@ export const EditSurveyPage = () => {
                 <Button
                   onClick={handleAddQuestion}
                   variant="outline"
-                  className="border-dashed border-red-400 text-red-600 hover:bg-red-50"
+                  className="border-dashed border-red-400 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add More Questions
@@ -2208,15 +2253,13 @@ export const EditSurveyPage = () => {
                 <Button
                   onClick={handleUpdateQuestion}
                   disabled={loading || isSubmitting}
-                  className="bg-red-600 hover:bg-red-700 text-white px-8"
+                  className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   {loading || isSubmitting ? "Updating..." : "Update Question"}
                 </Button>
                 <Button
-                  onClick={() => navigate("/master/survey/list")}
-                  variant="outline"
-                  className="border-red-600 text-red-600 hover:bg-red-50 px-8"
-                >
+                  onClick={() => navigate("/settings/survey/list")}
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"                >
                   Cancel
                 </Button>
               </div>

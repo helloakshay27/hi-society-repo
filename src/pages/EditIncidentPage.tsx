@@ -1,0 +1,1467 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Checkbox, FormControlLabel, Dialog, DialogContent, IconButton } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import { Heading } from '@/components/ui/heading';
+
+const fieldStyles = {
+    height: {
+        xs: 28,
+        sm: 36,
+        md: 45
+    },
+    '& .MuiInputBase-input, & .MuiSelect-select': {
+        padding: {
+            xs: '8px',
+            sm: '10px',
+            md: '12px'
+        }
+    },
+    '& .MuiOutlinedInput-root': {
+        borderRadius: '8px',
+        backgroundColor: 'white',
+        '& fieldset': {
+            borderColor: '#e5e7eb',
+        },
+        '&:hover fieldset': {
+            borderColor: '#9ca3af',
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: '#C72030',
+        },
+    },
+    '& .MuiInputLabel-root': {
+        color: '#6b7280',
+        '&.Mui-focused': {
+            color: '#C72030',
+        },
+    },
+};
+
+const menuProps = {
+    PaperProps: {
+        style: {
+            maxHeight: 300,
+            zIndex: 9999,
+            backgroundColor: 'white',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        },
+    },
+    MenuListProps: {
+        style: {
+            padding: 0,
+        },
+    },
+    anchorOrigin: {
+        vertical: 'bottom' as const,
+        horizontal: 'left' as const,
+    },
+    transformOrigin: {
+        vertical: 'top' as const,
+        horizontal: 'left' as const,
+    },
+};
+
+const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Helper function to get current date/time values as strings (fallback only,
+// used if the incident being edited has no inci_date_time / inc_time set)
+const getCurrentDateTime = () => {
+    const now = new Date();
+    return {
+        year: now.getFullYear().toString(),
+        month: monthNames[now.getMonth()],
+        day: now.getDate().toString(),
+        hour: now.getHours().toString(),
+        minute: now.getMinutes().toString()
+    };
+};
+
+// Normalizes booleans / "Yes"/"No" strings / true-ish strings coming back
+// from the API into the 'true' | 'false' string values this form's
+// dropdowns use.
+const toTrueFalseString = (value: unknown): string => {
+    if (value === null || value === undefined || value === '') return '';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    const v = String(value).trim().toLowerCase();
+    if (v === 'true' || v === '1' || v === 'yes') return 'true';
+    if (v === 'false' || v === '0' || v === 'no') return 'false';
+    return String(value);
+};
+
+interface ExistingAttachment {
+    id: number;
+    url: string;
+    doctype: string;
+}
+
+export const EditIncidentPage = () => {
+    const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const currentDateTime = getCurrentDateTime();
+
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    const [incidentData, setIncidentData] = useState({
+        year: currentDateTime.year,
+        month: currentDateTime.month,
+        day: currentDateTime.day,
+        hour: currentDateTime.hour,
+        minute: currentDateTime.minute,
+        tower: '',
+        // Primary hierarchy
+        primaryCategory: '',
+        subCategory: '',
+        subSubCategory: '',
+        subSubSubCategory: '',
+        // Secondary hierarchy
+        secondaryCategory: '',
+        secondarySubCategory: '',
+        secondarySubSubCategory: '',
+        secondarySubSubSubCategory: '',
+        // Computed/selected
+        incidentLevel: '',
+        // Others
+        description: '',
+        supportRequired: false,
+        factsCorrect: false,
+        attachments: [] as File[],
+        // Additional fields
+        workRelatedInjury: '',
+        propertyDamage: '',
+        propertyDamageId: '',
+        damageEvaluation: '',
+        damageCoveredInsurance: '',
+        damagedRecovered: '',
+        insuredBy: '',
+        rca: '',
+        rcaCategoryId: '',
+        correctiveAction: '',
+        preventiveAction: ''
+    });
+
+    // Attachments that already exist on the incident (fetched from the API).
+    // Kept separate from newly-chosen files so we know what to keep vs upload.
+    const [existingAttachments, setExistingAttachments] = useState<ExistingAttachment[]>([]);
+    const [previewAttachment, setPreviewAttachment] = useState<{ url: string; fileName: string } | null>(null);
+
+    // State for towers
+    const [towers, setTowers] = useState<{ id: number; name: string }[]>([]);
+    // Category hierarchy states
+    const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+    const [subCategories, setSubCategories] = useState<any[]>([]);
+    const [subSubCategories, setSubSubCategories] = useState<any[]>([]);
+    const [subSubSubCategories, setSubSubSubCategories] = useState<any[]>([]);
+    // Secondary hierarchy
+    const [secondaryCategories, setSecondaryCategories] = useState<{ id: number; name: string }[]>([]);
+    const [secondarySubCategories, setSecondarySubCategories] = useState<any[]>([]);
+    const [secondarySubSubCategories, setSecondarySubSubCategories] = useState<any[]>([]);
+    const [secondarySubSubSubCategories, setSecondarySubSubSubCategories] = useState<any[]>([]);
+    // Incident levels
+    const [incidentLevels, setIncidentLevels] = useState<{ id: number; name: string }[]>([]);
+    const [propertyDamageCategories, setPropertyDamageCategories] = useState<{ id: number; name: string }[]>([]);
+    const [rcaCategories, setRcaCategories] = useState<{ id: number; name: string }[]>([]);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Get baseUrl and token from localStorage
+    const getBaseUrl = () => {
+        let baseUrl = localStorage.getItem('baseUrl') || '';
+        const token = localStorage.getItem('token') || '';
+        if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+            baseUrl = 'https://' + baseUrl.replace(/^\/\/+/, '');
+        }
+        return { baseUrl, token };
+    };
+
+    // Helper function to fetch data by tag type with optional parent_id filter
+    const fetchByTagType = async (tagType: string, parentId?: string | number) => {
+        const { baseUrl, token } = getBaseUrl();
+        try {
+            let url = `${baseUrl}/incidence_tags.json?q[tag_type_eq]=${tagType}`;
+            if (parentId) {
+                url += `&q[parent_id_eq]=${parentId}`;
+            }
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error(`Failed to fetch ${tagType}`);
+            const result = await response.json();
+            return result.data || [];
+        } catch (e) {
+            console.error(`Error fetching ${tagType}:`, e);
+            return [];
+        }
+    };
+
+    // Individual fetch functions
+    const fetchCategories = async () => {
+        try {
+            const data = await fetchByTagType('IncidenceCategory', null);
+            const filtered = data.filter((item: any) => item.parent_id === null);
+            setCategories(filtered.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSubCategories = async (parentId: string | number) => {
+        try {
+            const data = await fetchByTagType('IncidenceSubCategory', parentId);
+            setSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSubSubCategories = async (parentId: string | number) => {
+        try {
+            const data = await fetchByTagType('IncidenceSubSubCategory', parentId);
+            setSubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSubSubSubCategories = async (parentId: string | number) => {
+        try {
+            const data = await fetchByTagType('IncidenceSubSubSubCategory', parentId);
+            setSubSubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSecondaryCategories = async () => {
+        try {
+            const data = await fetchByTagType('IncidenceSecondaryCategory', null);
+            const filtered = data.filter((item: any) => item.parent_id === null);
+            setSecondaryCategories(filtered.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSecondarySubCategories = async (parentId: string | number) => {
+        try {
+            const data = await fetchByTagType('IncidenceSecondarySubCategory', parentId);
+            setSecondarySubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSecondarySubSubCategories = async (parentId: string | number) => {
+        try {
+            const data = await fetchByTagType('IncidenceSecondarySubSubCategory', parentId);
+            setSecondarySubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSecondarySubSubSubCategories = async (parentId: string | number) => {
+        try {
+            const data = await fetchByTagType('IncidenceSecondarySubSubSubCategory', parentId);
+            setSecondarySubSubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchIncidentLevels = async () => {
+        try {
+            const data = await fetchByTagType('IncidenceLevel');
+            setIncidentLevels(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchPropertyDamageCategories = async () => {
+        try {
+            const data = await fetchByTagType('PropertyDamageCategory');
+            setPropertyDamageCategories(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchRcaCategories = async () => {
+        try {
+            const data = await fetchByTagType('RCACategory');
+            setRcaCategories(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchTowers = async () => {
+        const { token } = getBaseUrl();
+        const societyId = localStorage.getItem('selectedSocietyId') || '';
+
+        try {
+            const response = await fetch(
+                `https://hi-society.lockated.com/get_society_blocks.json?society_id=${societyId}`,
+                {
+                    headers: {
+                        'Accept': 'application/json, text/plain, */*',
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch towers');
+            const result = await response.json();
+
+            const list =
+                (Array.isArray(result) && result) ||
+                result.blocks ||
+                result.society_blocks ||
+                result.data ||
+                [];
+
+            const normalized = list.map((item: any) => ({
+                id: item.id ?? item.block_id ?? item.tower_id,
+                name: item.name ?? item.block_name ?? item.tower_name ?? ''
+            }));
+
+            setTowers(normalized);
+        } catch (e) {
+            console.error('Error fetching towers:', e);
+            setTowers([]);
+        }
+    };
+
+    // ---------------------------------------------------------------------
+    // Fetch the incident being edited and prefill the form
+    // ---------------------------------------------------------------------
+    const fetchIncident = async () => {
+        if (!id) {
+            setLoadError('No incident id was provided in the URL.');
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        setLoadError(null);
+
+        try {
+            const { baseUrl, token } = getBaseUrl();
+            const response = await fetch(`${baseUrl}/incidents/${id}.json`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const incident = await response.json();
+
+            // Parse the incident's date/time (prefer inci_date_time, fall back to inc_time)
+            const rawDate = incident.inci_date_time || incident.inc_time;
+            let dateParts = currentDateTime;
+            if (rawDate) {
+                const parsed = new Date(rawDate);
+                if (!Number.isNaN(parsed.getTime())) {
+                    dateParts = {
+                        year: String(parsed.getFullYear()),
+                        month: monthNames[parsed.getMonth()],
+                        day: String(parsed.getDate()),
+                        hour: String(parsed.getHours()),
+                        minute: String(parsed.getMinutes())
+                    };
+                }
+            }
+
+            setIncidentData(prev => ({
+                ...prev,
+                year: dateParts.year,
+                month: dateParts.month,
+                day: dateParts.day,
+                hour: dateParts.hour,
+                minute: dateParts.minute,
+                tower: incident.tower_id ? String(incident.tower_id) : '',
+                primaryCategory: incident.inc_category_id ? String(incident.inc_category_id) : '',
+                subCategory: incident.inc_sub_category_id ? String(incident.inc_sub_category_id) : '',
+                subSubCategory: incident.inc_sub_sub_category_id ? String(incident.inc_sub_sub_category_id) : '',
+                subSubSubCategory: incident.inc_sub_sub_sub_category_id ? String(incident.inc_sub_sub_sub_category_id) : '',
+                secondaryCategory: incident.inc_sec_category_id ? String(incident.inc_sec_category_id) : '',
+                secondarySubCategory: incident.inc_sec_sub_category_id ? String(incident.inc_sec_sub_category_id) : '',
+                secondarySubSubCategory: incident.inc_sec_sub_sub_category_id ? String(incident.inc_sec_sub_sub_category_id) : '',
+                secondarySubSubSubCategory: incident.inc_sec_sub_sub_sub_category_id ? String(incident.inc_sec_sub_sub_sub_category_id) : '',
+                incidentLevel: incident.inc_level_id ? String(incident.inc_level_id) : '',
+                description: incident.description ?? '',
+                supportRequired: Boolean(incident.support_required),
+                factsCorrect: Boolean(incident.disclaimer),
+                workRelatedInjury: toTrueFalseString(incident.work_related_injury),
+                propertyDamage: toTrueFalseString(incident.property_damage),
+                propertyDamageId: incident.property_damage_id ? String(incident.property_damage_id) : '',
+                damageEvaluation: incident.damage_evaluation != null ? String(incident.damage_evaluation) : '',
+                damageCoveredInsurance: toTrueFalseString(incident.damage_covered_insurance),
+                damagedRecovered: incident.damaged_recovered ?? '',
+                insuredBy: incident.insured_by ?? '',
+                rca: incident.rca ?? '',
+                rcaCategoryId: incident.rca_category_id ? String(incident.rca_category_id) : '',
+                correctiveAction: incident.corrective_action ?? '',
+                preventiveAction: incident.preventive_action ?? ''
+            }));
+
+            setExistingAttachments(
+                Array.isArray(incident.attachments)
+                    ? incident.attachments
+                        .filter((a: any) => a.active !== 0)
+                        .map((a: any) => ({ id: a.id, url: a.url, doctype: a.doctype }))
+                    : []
+            );
+        } catch (err) {
+            console.error('Failed to fetch incident for edit:', err);
+            setLoadError('Failed to load incident details. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch initial dropdown data + the incident to edit on mount
+    useEffect(() => {
+        fetchTowers();
+        fetchCategories();
+        fetchSecondaryCategories();
+        fetchIncidentLevels();
+        fetchPropertyDamageCategories();
+        fetchRcaCategories();
+        fetchIncident();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
+
+    // Fetch subcategories when category is selected (including on prefill)
+    useEffect(() => {
+        if (incidentData.primaryCategory) {
+            fetchSubCategories(incidentData.primaryCategory);
+        }
+    }, [incidentData.primaryCategory]);
+
+    // Fetch sub-subcategories when subcategory is selected (including on prefill)
+    useEffect(() => {
+        if (incidentData.subCategory) {
+            fetchSubSubCategories(incidentData.subCategory);
+        }
+    }, [incidentData.subCategory]);
+
+    // Fetch sub-sub-subcategories when sub-subcategory is selected (including on prefill)
+    useEffect(() => {
+        if (incidentData.subSubCategory) {
+            fetchSubSubSubCategories(incidentData.subSubCategory);
+        }
+    }, [incidentData.subSubCategory]);
+
+    // Fetch secondary subcategories when secondary category is selected (including on prefill)
+    useEffect(() => {
+        if (incidentData.secondaryCategory) {
+            fetchSecondarySubCategories(incidentData.secondaryCategory);
+        }
+    }, [incidentData.secondaryCategory]);
+
+    // Fetch secondary sub-subcategories when secondary subcategory is selected (including on prefill)
+    useEffect(() => {
+        if (incidentData.secondarySubCategory) {
+            fetchSecondarySubSubCategories(incidentData.secondarySubCategory);
+        }
+    }, [incidentData.secondarySubCategory]);
+
+    // Fetch secondary sub-sub-subcategories when secondary sub-subcategory is selected (including on prefill)
+    useEffect(() => {
+        if (incidentData.secondarySubSubCategory) {
+            fetchSecondarySubSubSubCategories(incidentData.secondarySubSubCategory);
+        }
+    }, [incidentData.secondarySubSubCategory]);
+
+    const handleInputChange = (field: string, value: string) => {
+        // Character limit for description field
+        if (field === 'description' && value.length > 240) {
+            return; // Don't update state if exceeds 240 characters
+        }
+        setIncidentData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            const newFiles = Array.from(files);
+            setIncidentData(prev => ({
+                ...prev,
+                attachments: [...prev.attachments, ...newFiles]
+            }));
+            toast.success(`${newFiles.length} file(s) uploaded successfully`);
+            // Reset the input so the same file can be selected again if removed and re-added
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    const removeFile = (index: number) => {
+        setIncidentData(prev => ({
+            ...prev,
+            attachments: prev.attachments.filter((_, i) => i !== index)
+        }));
+        toast.success('File removed');
+    };
+
+    const handleCheckboxChange = (field: string, checked: boolean) => {
+        setIncidentData(prev => ({
+            ...prev,
+            [field]: checked
+        }));
+    };
+
+    // Helper: convert month name to number (1-12)
+    const monthNameToNumber = (name: string) => {
+        const months = [
+            'january', 'february', 'march', 'april', 'may', 'june',
+            'july', 'august', 'september', 'october', 'november', 'december'
+        ];
+        const idx = months.indexOf((name || '').toLowerCase());
+        return idx === -1 ? '' : String(idx + 1);
+    };
+
+    // Derived names / UI visibility helpers
+    const primaryName = categories.find(c => String(c.id) === incidentData.primaryCategory)?.name;
+    const secondaryName = secondaryCategories.find(c => String(c.id) === incidentData.secondaryCategory)?.name;
+    const subName = subCategories.find(c => String(c.id) === incidentData.subCategory)?.name;
+    const secondarySubName = secondarySubCategories.find(c => String(c.id) === incidentData.secondarySubCategory)?.name;
+
+    const showWorkRelated = (subName === 'Injury or Illness' || secondarySubName === 'Injury or Illness');
+    const isBuildingDamageCategory = (primaryName === 'Building structure and property damage' || secondaryName === 'Building structure and property damage');
+
+    const handleSubmit = async () => {
+        if (!id) {
+            toast.error('Missing incident id');
+            return;
+        }
+
+        // Time validation
+        if (!incidentData.year || !incidentData.month || !incidentData.day) {
+            toast.error('Please select complete date (day, month, year)');
+            return;
+        }
+
+        if (!incidentData.hour || !incidentData.minute) {
+            toast.error('Please select both hour and minute');
+            return;
+        }
+
+        // Tower validation
+        if (!incidentData.tower) {
+            toast.error('Please select a tower');
+            return;
+        }
+
+        // Primary category hierarchy validation
+        if (!incidentData.primaryCategory) {
+            toast.error('Please select primary category');
+            return;
+        }
+        if (!incidentData.subCategory) {
+            toast.error('Please select sub category');
+            return;
+        }
+        if (!incidentData.subSubCategory) {
+            toast.error('Please select sub sub category');
+            return;
+        }
+
+        if (!incidentData.incidentLevel) {
+            toast.error('Please select incident level');
+            return;
+        }
+
+        // Description validation
+        if (!incidentData.description || incidentData.description.trim() === '') {
+            toast.error('Please enter a description');
+            return;
+        }
+
+        // Disclaimer validation
+        if (!incidentData.factsCorrect) {
+            toast.error('Please confirm the disclaimer');
+            return;
+        }
+
+        setSubmitting(true);
+
+        try {
+            const { baseUrl, token } = getBaseUrl();
+
+            const form = new FormData();
+
+            // Time fields
+            form.append('incident[inc_time(1i)]', incidentData.year);
+            form.append('incident[inc_time(2i)]', monthNameToNumber(incidentData.month));
+            form.append('incident[inc_time(3i)]', incidentData.day);
+            form.append('incident[inc_time(4i)]', incidentData.hour);
+            form.append('incident[inc_time(5i)]', incidentData.minute);
+
+            // Tower
+            form.append('incident[tower_id]', incidentData.tower);
+
+            // Primary hierarchy
+            form.append('incident[inc_category_id]', incidentData.primaryCategory);
+            form.append('incident[inc_sub_category_id]', incidentData.subCategory);
+            form.append('incident[inc_sub_sub_category_id]', incidentData.subSubCategory);
+            form.append('incident[inc_sub_sub_sub_category_id]', incidentData.subSubSubCategory);
+
+            // Secondary hierarchy (only append if values exist)
+            if (incidentData.secondaryCategory) {
+                form.append('incident[inc_sec_category_id]', incidentData.secondaryCategory);
+            }
+            if (incidentData.secondarySubCategory) {
+                form.append('incident[inc_sec_sub_category_id]', incidentData.secondarySubCategory);
+            }
+            if (incidentData.secondarySubSubCategory) {
+                form.append('incident[inc_sec_sub_sub_category_id]', incidentData.secondarySubSubCategory);
+            }
+            if (incidentData.secondarySubSubSubCategory) {
+                form.append('incident[inc_sec_sub_sub_sub_category_id]', incidentData.secondarySubSubSubCategory);
+            }
+
+            // Incident Level
+            form.append('incident[inc_level_id]', incidentData.incidentLevel);
+
+            // Description
+            form.append('incident[description]', incidentData.description);
+
+            // Work related injury
+            if (incidentData.workRelatedInjury) form.append('incident[work_related_injury]', incidentData.workRelatedInjury);
+
+            // Property damage and related fields
+            if (incidentData.propertyDamage) form.append('incident[property_damage]', incidentData.propertyDamage);
+            if (incidentData.propertyDamageId) form.append('incident[property_damage_id]', incidentData.propertyDamageId);
+            if (incidentData.damageEvaluation) form.append('incident[damage_evaluation]', incidentData.damageEvaluation);
+            if (incidentData.damageCoveredInsurance) form.append('incident[damage_covered_insurance]', incidentData.damageCoveredInsurance);
+            if (incidentData.damagedRecovered) form.append('incident[damaged_recovered]', incidentData.damagedRecovered);
+            if (incidentData.insuredBy) form.append('incident[insured_by]', incidentData.insuredBy);
+
+            // RCA and actions
+            if (incidentData.rca) form.append('incident[rca]', incidentData.rca);
+            if (incidentData.rcaCategoryId) form.append('incident[rca_category_id]', incidentData.rcaCategoryId);
+            if (incidentData.correctiveAction) form.append('incident[corrective_action]', incidentData.correctiveAction);
+            if (incidentData.preventiveAction) form.append('incident[preventive_action]', incidentData.preventiveAction);
+
+            // Disclaimer and support required
+            form.append('incident[support_required]', incidentData.supportRequired ? 'true' : 'false');
+            form.append('incident[disclaimer]', incidentData.factsCorrect ? 'true' : 'false');
+
+            // New attachments only (existing ones stay on the incident unless removed via a dedicated delete endpoint)
+            if (incidentData.attachments && incidentData.attachments.length > 0) {
+                incidentData.attachments.forEach(file => {
+                    form.append('noticeboard[files_attached][]', file);
+                });
+            }
+
+            const resp = await fetch(`${baseUrl}/incidents/${id}.json`, {
+                method: 'PUT',
+                headers: { Authorization: `Bearer ${token}` },
+                body: form
+            });
+
+            if (!resp.ok) {
+                const errText = await resp.text();
+                throw new Error(errText || 'Failed to update incident');
+            }
+
+            toast.success('Incident updated successfully!');
+            navigate(`/safety/incident/view-new/${id}`);
+        } catch (err: any) {
+            console.error('Incident PUT failed:', err);
+            toast.error('Failed to update incident');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="p-6">
+                <p className="text-sm text-gray-500">Loading incident for editing…</p>
+            </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <div className="p-6">
+                <p className="text-sm text-red-600 mb-4">{loadError}</p>
+                <Button
+                    onClick={fetchIncident}
+                    className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white"
+                >
+                    Retry
+                </Button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-6">
+            <div className="mb-6">
+                {/* Breadcrumb */}
+                <nav className="flex items-center text-sm text-gray-600 mb-8">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate(-1)}
+                        aria-label="Go back to previous page"
+                        className="!h-10 !w-10 !min-w-10 !rounded-full !p-0 !border !border-[#E5E7EB] !bg-white shadow-sm hover:!bg-[#F3F4F6] mr-1"
+                    >
+                        <ArrowBackIcon className="!text-[#E07856]" />
+                    </Button>
+
+                    <span>Home</span>
+                    <span className="mx-2 text-gray-400">{'>'}</span>
+                    <span>Safety</span>
+                    <span className="mx-2 text-gray-400">{'>'}</span>
+                    <span>Incident</span>
+                </nav>
+
+                {/* Page Title */}
+                <Heading
+                    level="h1"
+                    variant="primary"
+                    spacing="none"
+                    className="text-[#E07856] font-semibold text-2xl"
+                >
+                    EDIT INCIDENT (#{id})
+                </Heading>
+            </div>
+
+            {/* Basic Details */}
+            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
+                <CardHeader className='bg-[#F6F4EE] mb-4'>
+                    <CardTitle className="text-lg text-black flex items-center">
+                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">1</span>
+                        INCIDENT DETAILS
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 bg-white">
+                    {/* Time & Date Section */}
+                    <div className="mb-6">
+                        <h3 className="text-sm font-medium mb-3">Time & Date <span style={{ color: '#C72030' }}>*</span></h3>
+                        <div className="grid grid-cols-5 gap-2">
+                            <FormControl fullWidth variant="outlined">
+                                <InputLabel shrink>Year <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                                <MuiSelect
+                                    label="Year *"
+                                    value={incidentData.year}
+                                    onChange={e => handleInputChange('year', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>Select Year</em></MenuItem>
+                                    {Array.from({ length: new Date().getFullYear() + 50 - 2010 + 1 }, (_, i) => {
+                                        const year = new Date().getFullYear() + 50 - i;
+                                        return (
+                                            <MenuItem key={year} value={String(year)}>
+                                                {year}
+                                            </MenuItem>
+                                        );
+                                    })}
+                                </MuiSelect>
+                            </FormControl>
+
+                            <FormControl fullWidth variant="outlined">
+                                <InputLabel shrink>Month <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                                <MuiSelect
+                                    label="Month *"
+                                    value={incidentData.month}
+                                    onChange={e => handleInputChange('month', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>Select Month</em></MenuItem>
+                                    {monthNames.map(m => (
+                                        <MenuItem key={m} value={m}>{m}</MenuItem>
+                                    ))}
+                                </MuiSelect>
+                            </FormControl>
+
+                            <FormControl fullWidth variant="outlined">
+                                <InputLabel shrink>Day <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                                <MuiSelect
+                                    label="Day *"
+                                    value={incidentData.day}
+                                    onChange={e => handleInputChange('day', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>Select Day</em></MenuItem>
+                                    {Array.from({ length: 31 }, (_, i) => (
+                                        <MenuItem key={i + 1} value={String(i + 1)}>{i + 1}</MenuItem>
+                                    ))}
+                                </MuiSelect>
+                            </FormControl>
+
+                            <FormControl fullWidth variant="outlined">
+                                <InputLabel shrink>Hour <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                                <MuiSelect
+                                    label="Hour *"
+                                    value={incidentData.hour}
+                                    onChange={e => handleInputChange('hour', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>Select Hour</em></MenuItem>
+                                    {Array.from({ length: 24 }, (_, i) => (
+                                        <MenuItem key={i} value={String(i)}>{i}</MenuItem>
+                                    ))}
+                                </MuiSelect>
+                            </FormControl>
+
+                            <FormControl fullWidth variant="outlined">
+                                <InputLabel shrink>Minute <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                                <MuiSelect
+                                    label="Minute *"
+                                    value={incidentData.minute}
+                                    onChange={e => handleInputChange('minute', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>Select Minute</em></MenuItem>
+                                    {Array.from({ length: 60 }, (_, i) => (
+                                        <MenuItem key={i} value={String(i)}>{i}</MenuItem>
+                                    ))}
+                                </MuiSelect>
+                            </FormControl>
+                        </div>
+                    </div>
+
+                    {/* Building and Categories Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        {/* Tower Dropdown */}
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                            <InputLabel shrink>Tower <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Tower *"
+                                value={incidentData.tower}
+                                onChange={e => handleInputChange('tower', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Tower</em></MenuItem>
+                                {towers.map(t => (
+                                    <MenuItem key={t.id} value={String(t.id)}>{t.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        {/* PRIMARY CATEGORY HIERARCHY */}
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                            <InputLabel shrink>Primary Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Primary Category *"
+                                value={incidentData.primaryCategory}
+                                onChange={e => handleInputChange('primaryCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Primary Category</em></MenuItem>
+                                {categories.map(cat => (
+                                    <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.primaryCategory}>
+                            <InputLabel shrink>Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Sub Category *"
+                                value={incidentData.subCategory}
+                                onChange={e => handleInputChange('subCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Sub Category</em></MenuItem>
+                                {subCategories.filter(sub => String(sub.parent_id) === incidentData.primaryCategory).map(sub => (
+                                    <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subCategory}>
+                            <InputLabel shrink>Sub Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Sub Sub Category *"
+                                value={incidentData.subSubCategory}
+                                onChange={e => handleInputChange('subSubCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Sub Sub Category</em></MenuItem>
+                                {subSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.subCategory).map(subsub => (
+                                    <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subSubCategory}>
+                            <InputLabel shrink>Sub Sub Sub Category </InputLabel>
+                            <MuiSelect
+                                label="Sub Sub Sub Category "
+                                value={incidentData.subSubSubCategory}
+                                onChange={e => handleInputChange('subSubSubCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Sub Sub Sub Category</em></MenuItem>
+                                {subSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.subSubCategory).map(subsubsub => (
+                                    <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        {/* SECONDARY CATEGORY HIERARCHY */}
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                            <InputLabel shrink>Secondary Category</InputLabel>
+                            <MuiSelect
+                                label="Secondary Category *"
+                                value={incidentData.secondaryCategory}
+                                onChange={e => handleInputChange('secondaryCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Secondary Category</em></MenuItem>
+                                {secondaryCategories.map(cat => (
+                                    <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondaryCategory}>
+                            <InputLabel shrink>Secondary Sub Category</InputLabel>
+                            <MuiSelect
+                                label="Secondary Sub Category *"
+                                value={incidentData.secondarySubCategory}
+                                onChange={e => handleInputChange('secondarySubCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Secondary Sub Category</em></MenuItem>
+                                {secondarySubCategories.filter(sub => String(sub.parent_id) === incidentData.secondaryCategory).map(sub => (
+                                    <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubCategory}>
+                            <InputLabel shrink>Secondary Sub Sub Category</InputLabel>
+                            <MuiSelect
+                                label="Secondary Sub Sub Category *"
+                                value={incidentData.secondarySubSubCategory}
+                                onChange={e => handleInputChange('secondarySubSubCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Secondary Sub Sub Category</em></MenuItem>
+                                {secondarySubSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.secondarySubCategory).map(subsub => (
+                                    <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubSubCategory}>
+                            <InputLabel shrink>Secondary Sub Sub Sub Category</InputLabel>
+                            <MuiSelect
+                                label="Secondary Sub Sub Sub Category *"
+                                value={incidentData.secondarySubSubSubCategory}
+                                onChange={e => handleInputChange('secondarySubSubSubCategory', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Secondary Sub Sub Sub Category</em></MenuItem>
+                                {secondarySubSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.secondarySubSubCategory).map(subsubsub => (
+                                    <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                            <InputLabel shrink>Incident level <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Incident level *"
+                                value={incidentData.incidentLevel}
+                                onChange={e => handleInputChange('incidentLevel', e.target.value)}
+                                displayEmpty
+                                sx={{
+                                    ...fieldStyles,
+                                    '& .MuiInputBase-input.Mui-disabled': {
+                                        WebkitTextFillColor: '#000',
+                                        backgroundColor: '#f5f5f5'
+                                    }
+                                }}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Level</em></MenuItem>
+                                {incidentLevels.map(level => (
+                                    <MenuItem key={level.id} value={String(level.id)}>{level.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        {/* Work related injury (show when subcategory indicates injury) */}
+                        {showWorkRelated && (
+                            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                <InputLabel shrink>Work Related Injury</InputLabel>
+                                <MuiSelect
+                                    label="Work Related Injury"
+                                    value={incidentData.workRelatedInjury}
+                                    onChange={e => handleInputChange('workRelatedInjury', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>select</em></MenuItem>
+                                    <MenuItem value="false">No</MenuItem>
+                                    <MenuItem value="true">Yes</MenuItem>
+                                </MuiSelect>
+                            </FormControl>
+                        )}
+
+                        {/* Property damage selection */}
+                        {!isBuildingDamageCategory && (
+                            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                <InputLabel shrink>Has Any Property Damage Happened In The Incident? <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                                <MuiSelect
+                                    label="Property Damage"
+                                    value={incidentData.propertyDamage}
+                                    onChange={e => handleInputChange('propertyDamage', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>select</em></MenuItem>
+                                    <MenuItem value="false">No</MenuItem>
+                                    <MenuItem value="true">Yes</MenuItem>
+                                </MuiSelect>
+                            </FormControl>
+                        )}
+
+                        {(isBuildingDamageCategory || incidentData.propertyDamage === 'true') && (
+                            <>
+                                <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                    <InputLabel shrink>Property damage category</InputLabel>
+                                    <MuiSelect
+                                        label="Property damage category"
+                                        value={incidentData.propertyDamageId}
+                                        onChange={e => handleInputChange('propertyDamageId', e.target.value)}
+                                        displayEmpty
+                                        sx={fieldStyles}
+                                        MenuProps={menuProps}
+                                    >
+                                        <MenuItem value=""><em>Select</em></MenuItem>
+                                        {propertyDamageCategories.map(cat => (
+                                            <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                                        ))}
+                                    </MuiSelect>
+                                </FormControl>
+
+                                <TextField
+                                    label="Damage Evaluation (INR)"
+                                    value={incidentData.damageEvaluation}
+                                    onChange={e => handleInputChange('damageEvaluation', e.target.value)}
+                                    fullWidth
+                                    variant="outlined"
+                                    sx={{ mt: 1 }}
+                                />
+
+                                <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                    <InputLabel shrink>Damage covered under insurance</InputLabel>
+                                    <MuiSelect
+                                        label="Damage covered under insurance"
+                                        value={incidentData.damageCoveredInsurance}
+                                        onChange={e => handleInputChange('damageCoveredInsurance', e.target.value)}
+                                        displayEmpty
+                                        sx={fieldStyles}
+                                        MenuProps={menuProps}
+                                    >
+                                        <MenuItem value=""><em>select</em></MenuItem>
+                                        <MenuItem value="false">No</MenuItem>
+                                        <MenuItem value="true">Yes</MenuItem>
+                                    </MuiSelect>
+                                </FormControl>
+
+                                {Number(incidentData.damageEvaluation) > 0 && (
+                                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                        <InputLabel shrink>Whether damaged was recovered</InputLabel>
+                                        <MuiSelect
+                                            label="Whether damaged was recovered"
+                                            value={incidentData.damagedRecovered}
+                                            onChange={e => handleInputChange('damagedRecovered', e.target.value)}
+                                            displayEmpty
+                                            sx={fieldStyles}
+                                            MenuProps={menuProps}
+                                        >
+                                            <MenuItem value=""><em>select</em></MenuItem>
+                                            <MenuItem value="Yes, from the insurance agency">Yes, from the insurance agency</MenuItem>
+                                            <MenuItem value="Yes, from the involved party in the incident">Yes, from the involved party in the incident</MenuItem>
+                                            <MenuItem value="Not recovered.">Not recovered.</MenuItem>
+                                        </MuiSelect>
+                                    </FormControl>
+                                )}
+
+                                {incidentData.damageCoveredInsurance === 'true' && (
+                                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                        <InputLabel shrink>Insured by</InputLabel>
+                                        <MuiSelect
+                                            label="Insured by"
+                                            value={incidentData.insuredBy}
+                                            onChange={e => handleInputChange('insuredBy', e.target.value)}
+                                            displayEmpty
+                                            sx={fieldStyles}
+                                            MenuProps={menuProps}
+                                        >
+                                            <MenuItem value=""><em>select</em></MenuItem>
+                                            <MenuItem value="Building insurance">Building insurance</MenuItem>
+                                            <MenuItem value="Private/ individual insurance">Private/ individual insurance</MenuItem>
+                                            <MenuItem value="Others">Others</MenuItem>
+                                        </MuiSelect>
+                                    </FormControl>
+                                )}
+                            </>
+                        )}
+
+                        {/* RCA and action fields */}
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                            <InputLabel shrink>RCA</InputLabel>
+                            <TextField
+                                value={incidentData.rca}
+                                onChange={e => handleInputChange('rca', e.target.value)}
+                                fullWidth
+                                variant="outlined"
+                                sx={{ mt: 1 }}
+                            />
+                        </FormControl>
+
+                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                            <InputLabel shrink>Primary root cause category</InputLabel>
+                            <MuiSelect
+                                label="Primary root cause category"
+                                value={incidentData.rcaCategoryId}
+                                onChange={e => handleInputChange('rcaCategoryId', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select</em></MenuItem>
+                                {rcaCategories.map(cat => (
+                                    <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
+
+                        <TextField
+                            label="Corrective action"
+                            value={incidentData.correctiveAction}
+                            onChange={e => handleInputChange('correctiveAction', e.target.value)}
+                            fullWidth
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                        />
+
+                        <TextField
+                            label="Preventive action"
+                            value={incidentData.preventiveAction}
+                            onChange={e => handleInputChange('preventiveAction', e.target.value)}
+                            fullWidth
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                        />
+                    </div>
+
+                    {/* Description */}
+                    <div className="mt-6">
+                        <TextField
+                            label={<>Description<span style={{ color: '#C72030' }}>*</span></>}
+                            value={incidentData.description}
+                            onChange={e => handleInputChange('description', e.target.value)}
+                            fullWidth
+                            variant="outlined"
+                            multiline
+                            rows={4}
+                            InputLabelProps={{
+                                shrink: true
+                            }}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    height: "auto !important",
+                                    padding: "2px !important",
+                                    display: "flex",
+                                },
+                                "& .MuiInputBase-input[aria-hidden='true']": {
+                                    flex: 0,
+                                    width: 0,
+                                    height: 0,
+                                    padding: "0 !important",
+                                    margin: 0,
+                                    display: "none",
+                                },
+                                "& .MuiInputBase-input": {
+                                    resize: "none !important",
+                                },
+                            }}
+                        />
+                        <div className="mt-2 text-sm text-gray-600">
+                            {incidentData.description.length} / 240
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Support and Disclaimer */}
+            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
+                <CardHeader className='bg-[#F6F4EE] mb-4'>
+                    <CardTitle className="text-lg text-black flex items-center">
+                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">2</span>
+                        SUPPORT & DISCLAIMER
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 bg-white">
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="text-lg font-medium mb-3">Support</h3>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={incidentData.supportRequired}
+                                        onChange={(e) => handleCheckboxChange('supportRequired', e.target.checked)}
+                                        sx={{
+                                            color: '#C72030',
+                                            '&.Mui-checked': {
+                                                color: '#C72030',
+                                            },
+                                        }}
+                                    />
+                                }
+                                label="Support required"
+                            />
+                        </div>
+
+                        <div>
+                            <h3 className="text-lg font-medium mb-3">Disclaimer <span style={{ color: '#C72030' }}>*</span></h3>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={incidentData.factsCorrect}
+                                        onChange={(e) => handleCheckboxChange('factsCorrect', e.target.checked)}
+                                        sx={{
+                                            color: '#C72030',
+                                            '&.Mui-checked': {
+                                                color: '#C72030',
+                                            },
+                                        }}
+                                    />
+                                }
+                                label={<>I have correctly stated all the facts related to the incident. </>}
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Attachments */}
+            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
+                <CardHeader className='bg-[#F6F4EE] mb-4'>
+                    <CardTitle className="text-lg text-black flex items-center">
+                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">3</span>
+                        ATTACHMENTS
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 bg-white">
+                    <div className="space-y-4">
+                        {/* Existing attachments already on the incident */}
+                        {existingAttachments.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-gray-700">Existing Attachments:</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                    {existingAttachments.map((attachment) => {
+                                        const isImage = String(attachment.doctype || '').startsWith('image/');
+                                        return (
+                                            <div key={attachment.id} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                                                <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
+                                                    {isImage ? (
+                                                        // show image thumbnail
+                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                        <img src={attachment.url} alt={attachment.doctype || `Attachment ${attachment.id}`} className="w-full h-full object-contain" />
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center text-gray-400">
+                                                            <svg className="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l5-5 5 5" />
+                                                            </svg>
+                                                            <span className="text-xs text-gray-600 truncate">{attachment.doctype || `Attachment ${attachment.id}`}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="p-2 bg-white border-t border-gray-100">
+                                                    <p className="text-xs text-gray-600 truncate" title={attachment.doctype || `Attachment ${attachment.id}`}>
+                                                        {attachment.doctype || `Attachment ${attachment.id}`}
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => isImage && setPreviewAttachment({ url: attachment.url, fileName: attachment.doctype || `Attachment_${attachment.id}` })}
+                                                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity"
+                                                    aria-label={`Preview ${attachment.doctype || `Attachment ${attachment.id}`}`}
+                                                >
+                                                    <ZoomInIcon style={{ color: '#fff' }} />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    id="file-upload"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                    multiple
+                                />
+                                <label htmlFor="file-upload" className="cursor-pointer">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="flex items-center gap-2 !bg-white !text-[#C72030] !border !border-[#C72030] hover:!bg-[#F6F4EE] hover:!text-[#C72030]"
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        Choose Files
+                                    </Button>
+                                </label>
+                                <span className="text-sm text-gray-500">
+                                    {incidentData.attachments.length > 0
+                                        ? `${incidentData.attachments.length} file(s) selected`
+                                        : 'No files chosen'}
+                                </span>
+                            </div>
+
+                            {/* Display newly selected files with preview thumbnails */}
+                            {incidentData.attachments.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-gray-700">New Files To Upload:</p>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {incidentData.attachments.map((file, index) => {
+                                            const isImage = file.type.startsWith('image/');
+                                            const fileUrl = URL.createObjectURL(file);
+
+                                            return (
+                                                <div key={index} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                                                    <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
+                                                        {isImage ? (
+                                                            <img
+                                                                src={fileUrl}
+                                                                alt={file.name}
+                                                                className="w-full h-full object-contain"
+                                                                onLoad={() => URL.revokeObjectURL(fileUrl)}
+                                                            />
+                                                        ) : (
+                                                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                                                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                                </svg>
+                                                                <span className="text-xs font-medium uppercase">
+                                                                    {file.name.split('.').pop()}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="p-2 bg-white border-t border-gray-100">
+                                                        <p className="text-xs text-gray-600 truncate" title={file.name}>
+                                                            {file.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400">
+                                                            {(file.size / 1024).toFixed(1)} KB
+                                                        </p>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => removeFile(index)}
+                                                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Remove file"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Submit Button */}
+            <Dialog
+                open={!!previewAttachment}
+                onClose={() => setPreviewAttachment(null)}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogContent sx={{ p: 0, position: 'relative', backgroundColor: '#000' }}>
+                    <IconButton
+                        onClick={() => setPreviewAttachment(null)}
+                        sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            color: '#fff',
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' },
+                            zIndex: 1,
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                    {previewAttachment && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={previewAttachment.url}
+                            alt={previewAttachment.fileName}
+                            style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain', display: 'block' }}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+            <div className="flex justify-center gap-4 pt-6">
+                <Button
+                    variant="outline"
+                    onClick={() => navigate(-1)}
+                    disabled={submitting}
+                    className="!border-[#C72030] !text-[#C72030] px-8 py-3 text-[18px]"
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8 py-3 text-[18px]"
+                >
+                    {submitting ? 'Updating…' : 'Update Incident'}
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+export default EditIncidentPage;

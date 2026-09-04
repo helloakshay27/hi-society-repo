@@ -4,6 +4,7 @@ export interface User {
   id: number;
   email: string;
   firstname: string;
+
   lastname: string;
   mobile?: string;
   phone?: string;
@@ -113,18 +114,80 @@ export const getToken = (): string | null => {
   return localStorage.getItem(AUTH_KEYS.TOKEN);
 };
 
-// Save base URL to localStorage
-export const saveBaseUrl = (baseUrl: string): void => {
-  localStorage.setItem(AUTH_KEYS.BASE_URL, baseUrl);
+/**
+ * Normalize a base URL - removes duplicate protocols and ensures clean format
+ * Handles cases like:
+ * - "https://https//domain.com" -> "https://domain.com"
+ * - "https://domain.com" -> "https://domain.com"
+ * - "domain.com" -> "https://domain.com"
+ * - "http://domain.com" -> "https://domain.com"
+ */
+export const normalizeBaseUrl = (url: string): string => {
+  if (!url) return "";
+
+  // Remove any leading/trailing whitespace
+  let normalized = url.trim();
+
+  // Remove any duplicate https:// or http:// patterns (e.g., "https://https//")
+  normalized = normalized.replace(/^(https?:\/\/)+/gi, "");
+
+  // Also handle cases like "https//" (missing colon)
+  normalized = normalized.replace(/^https\/\//gi, "");
+  normalized = normalized.replace(/^http\/\//gi, "");
+
+  // Remove any remaining leading slashes
+  normalized = normalized.replace(/^\/+/, "");
+
+  // Ensure https:// prefix
+  return `https://${normalized}`;
 };
 
-// Get base URL from localStorage
+/**
+ * Strip protocol from URL - returns just the domain
+ * Used for localStorage compatibility with legacy code that adds https:// manually
+ */
+export const stripProtocol = (url: string): string => {
+  if (!url) return "";
+  return url
+    .trim()
+    .replace(/^(https?:\/\/)+/gi, "")
+    .replace(/^\/+/, "");
+};
+
+// Save base URL to localStorage (WITHOUT protocol for backward compatibility)
+// Many existing files read from localStorage and add https:// manually
+export const saveBaseUrl = (baseUrl: string): void => {
+  // Store without protocol so legacy code that adds https:// won't double it
+  const domainOnly = stripProtocol(normalizeBaseUrl(baseUrl));
+  localStorage.setItem(AUTH_KEYS.BASE_URL, domainOnly);
+};
+
+// Get base URL from localStorage WITH https:// prefix
+// Use this for new code that expects full URL
 export const getBaseUrl = (): string | null => {
   const savedUrl = localStorage.getItem(AUTH_KEYS.BASE_URL);
   if (!savedUrl) return null;
 
-  // Ensure the URL includes the protocol
+  // Use local Vite proxy for runwal API to bypass CORS during development
+  if (
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
+    savedUrl.includes("runwal-cp-api.lockated.com")
+  ) {
+    return "/runwal-api";
+  }
+
+  // Add https:// prefix if not present
   return savedUrl.startsWith("http") ? savedUrl : `https://${savedUrl}`;
+};
+
+/**
+ * Get base URL from localStorage WITHOUT protocol
+ * For compatibility with code that adds https:// manually
+ */
+export const getBaseUrlDomain = (): string | null => {
+  const savedUrl = localStorage.getItem(AUTH_KEYS.BASE_URL);
+  if (!savedUrl) return null;
+  return stripProtocol(savedUrl);
 };
 
 // Check if user is authenticated
@@ -134,7 +197,34 @@ export const isAuthenticated = (): boolean => {
   return !!(user && token);
 };
 
-// Clear all auth data
+// Fetch lock account and store lock_account_id in localStorage
+export const fetchLockAccount = async (): Promise<void> => {
+  try {
+    const baseUrl = localStorage.getItem(AUTH_KEYS.BASE_URL);
+    const token = localStorage.getItem(AUTH_KEYS.TOKEN);
+
+    if (!baseUrl || !token) return;
+
+    const base = normalizeBaseUrl(baseUrl);
+    const url = `${base.replace(/\/+$/, "")}/get_lock_account.json`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (data?.lock_account?.id) {
+      localStorage.setItem("lock_account_id", String(data.lock_account.id));
+    }
+  } catch {
+    // Silently fail - lock_account_id is not critical for app to function
+  }
+};
 
 // Clear all auth data
 export const clearAuth = (): void => {
@@ -179,7 +269,7 @@ const isPulseSite = hostname === "pulse.lockated.com";
 const isPanchshilUatSite = hostname === "pulse-uat.panchshil.com";
 const isClubSite = hostname.includes("club.lockated.com");
 const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
-const isHiSocietyUiSite = hostname.includes("ui-hisociety.lockated.com")
+const isHiSocietyUiSite = hostname.includes("ui-hisociety.lockated.com") || hostname === "web.lockated.com";
 const isHiSocietySite =
   isLocalhost ||
   hostname.includes("web.hisociety.lockated.com");
@@ -189,117 +279,55 @@ const isHiSocietySite =
 export const getOrganizationsByEmail = async (
   email: string
 ): Promise<Organization[]> => {
-  if (isRunwalSite) {
+  const fetchOrgs = async (baseApiUrl: string, productName: string) => {
     const response = await fetch(
-      `https://runwal-cp-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+      `${baseApiUrl}/api/users/get_organizations_by_email.json?email=${email}&product_name=${encodeURIComponent(productName)}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch organizations");
     }
     const data = await response.json();
     return data.organizations || [];
+  };
+
+  if (isRunwalSite) {
+    return fetchOrgs("https://runwal-cp-api.lockated.com", "Channel Partner");
   }
 
   if (isHiSocietyUiSite) {
-    const response = await fetch(
-      `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://hi-society.lockated.com", "Hi-Society");
   }
 
-  // For Hi-Society sites (localhost or production), use Hi-Society API
   if (isHiSocietySite) {
-    const apiUrl = isLocalhost
-      ? `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-      : `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
-
-    const response = await fetch(`${apiUrl}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://hi-society.lockated.com", "Hi-Society");
   }
 
   if (isOmanSite || isFmSite) {
-    const response = await fetch(
-      `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://uat.lockated.com", "FM Matrix");
   }
 
   if (isViSite) {
-    const response = await fetch(
-      `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://live-api.gophygital.work", "FM Matrix");
   }
 
   if (isDevSite) {
-    const response = await fetch(
-      `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://dev-api.lockated.com", "FM Matrix");
   }
 
   if (isPulseSite) {
-    const response = await fetch(
-      `https://pulse-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://pulse-api.lockated.com", "Hi-Society");
   }
 
   if (isClubSite) {
-    const response = await fetch(
-      `https://club-uat-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://club-uat-api.lockated.com", "Hi-Society");
   }
 
   if (isPanchshilUatSite) {
-    const response = await fetch(
-      `https://pulse-uat-api.panchshil.com/api/users/get_organizations_by_email.json?email=${email}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch organizations");
-    }
-    const data = await response.json();
-    return data.organizations || [];
+    return fetchOrgs("https://pulse-uat-api.panchshil.com", "Hi-Society");
   }
 
-  // Default fallback for other sites
-  const response = await fetch(
-    `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch organizations");
-  }
-  const data = await response.json();
-  return data.organizations || [];
+  // Default fallback
+  return fetchOrgs("https://uat-hi-society.lockated.com", "Hi-Society");
 };
 
 // Asset module access restrictions for specific users
@@ -307,10 +335,12 @@ const ASSET_RESTRICTED_EMAILS = [
   "reception1@gmail.com",
   "reception.pune@zycus.com",
   "reception.blr@zycus.com",
-  "Reception@zycusitis.onmicrosoft.com"
+  "Reception@zycusitis.onmicrosoft.com",
 ].map((email) => email.toLowerCase());
 
-export const isAssetRestrictedUser = (user: User | null | undefined): boolean => {
+export const isAssetRestrictedUser = (
+  user: User | null | undefined
+): boolean => {
   if (!user?.email) return false;
   return ASSET_RESTRICTED_EMAILS.includes(user.email.toLowerCase());
 };
@@ -409,7 +439,7 @@ export const verifyOTP = async (otp: string): Promise<LoginResponse> => {
   const email = localStorage.getItem("temp_email");
   const otptoken = localStorage.getItem("temp_token");
   const baseUrl = getBaseUrl();
-  // const token = getToken();
+  const token = getToken();
 
   if (!email) {
     throw new Error(
@@ -417,9 +447,9 @@ export const verifyOTP = async (otp: string): Promise<LoginResponse> => {
     );
   }
 
-  // if (!baseUrl) {
-  //   throw new Error("Base URL not found. Please login again.");
-  // }
+  if (!baseUrl) {
+    throw new Error("Base URL not found. Please login again.");
+  }
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -432,10 +462,14 @@ export const verifyOTP = async (otp: string): Promise<LoginResponse> => {
 
   // https://pulse-api.lockated.com/get_otps/verify_otp.json?email=sumitra.patil@lockated.com&otp=999999
   const response = await fetch(
-    `https://pulse-api.lockated.com/get_otps/verify_otp.json?email=${email}&otp=${otp}`,
+    `https://live-api.gophygital.work/verify_code.json`,
     {
-      method: "GET",
+      method: "POST",
       headers,
+      body: JSON.stringify({
+        email: email,
+        otp: otp,
+      }),
     }
   );
 

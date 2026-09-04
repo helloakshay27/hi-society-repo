@@ -1,313 +1,308 @@
-import { API_CONFIG } from '@/config/apiConfig';
+import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 
-export interface SupportStaffCategoryRequest {
-  support_staff_category: {
-    name: string;
-    estimated_time: number; // in minutes
-    resource_id: number;
-    resource_type: string;
-    active: boolean;
-    icon_id?: number; // Add icon_id as optional parameter
-  };
-}
+// ---- Interfaces ----
 
-export interface SupportStaffCategoryCreateResponse {
+export interface SupportStaffCategoryRaw {
   id: number;
-  resource_id: number;
-  resource_type: string;
+  society_id: number | null;
   name: string;
+  estimated_time: string;
+  created_by: string;
   active: number;
   created_at: string;
   updated_at: string;
-  estimated_time: string;
-  support_staff_estimated_time_hash: {
-    mt: number;
-    dd: number;
-    hh: number;
-    mm: number;
-  };
-  icon: string | null;
-}
-
-export interface SupportStaffCategoryResponse {
-  id: number;
   resource_id: number;
   resource_type: string;
-  name: string;
-  active: number;
-  created_at: string;
-  updated_at: string;
-  estimated_time: string;
   support_staff_estimated_time_hash: {
-    mt: number;
-    dd: number;
-    hh: number;
-    mm: number;
+    mt: number | null;
+    dd: number | null;
+    hh: number | null;
+    mm: number | null;
   };
-  icon: string | null;
-  icon_id?: number;
-  icon_image_url?: string;
+  estimated_value: number;
+  created_by_id: number;
+  icon_url: string | null;
 }
 
-export interface SupportStaffCategoriesGetResponse {
-  support_staff_categories: SupportStaffCategoryResponse[];
+export interface DeliveryServiceProviderRaw {
+  id: number;
+  name: string;
+  active: boolean;
+  created_by_id: number;
+  created_at: string;
+  updated_at: string;
+  provider_type: string | null;
+  created_by: string;
+  icon_url: string | null;
+}
+
+export interface IconItem {
+  id: number;
+  icon_type: string;
+  active: boolean;
+  image_url: string | null;
+}
+
+export interface SupportStaffSetupResponse {
+  support_staff_category: SupportStaffCategoryRaw[];
+  delivery_service_provider: DeliveryServiceProviderRaw[];
+  staff_category_icons: IconItem[];
+  delivery_service_provider_icons: IconItem[];
 }
 
 export interface SupportStaffCategory {
   id: number;
   name: string;
+  estimatedTime: string;
+  createdOn: string;
+  createdBy: string;
+  active: boolean;
+  iconUrl: string | null;
+  // Legacy snake_case fields for SupportStaffPage.tsx compatibility
   estimated_time: string;
   created_on: string;
   created_by: string;
-  active: boolean;
-  icon_id?: number; // Add icon_id to track the associated icon
-  icon_image_url?: string; // Add icon_image_url for displaying icons
+  icon_id?: number;
+  icon_image_url?: string | null;
 }
 
-// Single support staff category response interface (for GET by ID)
-export interface SupportStaffCategoryDetailResponse {
+export interface DeliveryServiceProvider {
   id: number;
-  icon_id: number;
-  resource_id: number;
-  resource_type: string;
   name: string;
-  active: number;
-  created_at: string;
-  updated_at: string;
-  estimated_time: string;
-  support_staff_estimated_time_hash: {
-    mt: number;
-    dd: number;
-    hh: number;
-    mm: number;
-  };
-  icon_image_url: string;
-  created_by: {
-    id: number | null;
-    name: string | null;
-  };
+  providerType: string | null;
+  active: boolean;
+  createdOn: string;
+  createdBy: string;
+  iconUrl: string | null;
 }
 
-// Create a new support staff category
-export const createSupportStaffCategory = async (
-  categoryData: {
-    name: string;
-    days: number;
-    hours: number;
-    minutes: number;
-    iconId?: number; // Add iconId parameter
-  }
-): Promise<SupportStaffCategoryCreateResponse> => {
-  const { BASE_URL, TOKEN } = API_CONFIG;
-  
-  if (!TOKEN) {
-    throw new Error('Authentication token is required');
-  }
+// ---- Helpers ----
 
-  // Calculate total estimated time in minutes
-  const totalMinutes = (categoryData.days * 24 * 60) + (categoryData.hours * 60) + categoryData.minutes;
+const authHeaders = (): Record<string, string> => ({
+  Authorization: getAuthHeader(),
+  'Content-Type': 'application/json',
+});
 
-  const requestBody: SupportStaffCategoryRequest = {
-    support_staff_category: {
-      name: categoryData.name,
-      estimated_time: totalMinutes,
-      resource_id: 2189, // This should ideally come from user context/site selection
-      resource_type: "Pms::Site",
-      active: true,
-      ...(categoryData.iconId && { icon_id: categoryData.iconId }) // Include icon_id if provided
-    }
-  };
-
-  console.log('Creating support staff category:', requestBody);
-
-  const response = await fetch(`${BASE_URL}${API_CONFIG.ENDPOINTS.SUPPORT_STAFF_CATEGORIES}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Failed to create support staff category:', {
-      status: response.status,
-      statusText: response.statusText,
-      error: errorData
-    });
-    throw new Error(`Failed to create support staff category: ${response.status} ${response.statusText}`);
-  }
-
-  const data: SupportStaffCategoryCreateResponse = await response.json();
-  console.log('Support staff category created successfully:', data);
-  return data;
-};
-
-// Update an existing support staff category
-export const updateSupportStaffCategory = async (
-  categoryId: number,
-  categoryData: {
-    name: string;
-    days: number;
-    hours: number;
-    minutes: number;
-    iconId?: number; // Add iconId parameter
-  }
-): Promise<SupportStaffCategoryCreateResponse> => {
-  const { BASE_URL, TOKEN } = API_CONFIG;
-  
-  if (!TOKEN) {
-    throw new Error('Authentication token is required');
-  }
-
-  // Calculate total estimated time in minutes
-  const totalMinutes = (categoryData.days * 24 * 60) + (categoryData.hours * 60) + categoryData.minutes;
-
-  const requestBody: SupportStaffCategoryRequest = {
-    support_staff_category: {
-      name: categoryData.name,
-      estimated_time: totalMinutes,
-      resource_id: 2189, // This should ideally come from user context/site selection
-      resource_type: "Pms::Site",
-      active: true,
-      ...(categoryData.iconId && { icon_id: categoryData.iconId }) // Include icon_id if provided
-    }
-  };
-
-  console.log('Updating support staff category:', categoryId, requestBody);
-
-  // Use PATCH method for updates, endpoint would be like /pms/admin/support_staff_categories/1930.json
-  const response = await fetch(`${BASE_URL}/pms/admin/support_staff_categories/${categoryId}.json`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Failed to update support staff category:', {
-      status: response.status,
-      statusText: response.statusText,
-      error: errorData
-    });
-    throw new Error(`Failed to update support staff category: ${response.status} ${response.statusText}`);
-  }
-
-  const data: SupportStaffCategoryCreateResponse = await response.json();
-  console.log('Support staff category updated successfully:', data);
-  return data;
-};
-
-// Fetch a single support staff category by ID
-export const fetchSupportStaffCategoryById = async (id: number): Promise<SupportStaffCategoryDetailResponse> => {
-  const { BASE_URL, TOKEN } = API_CONFIG;
-  
-  if (!TOKEN) {
-    throw new Error('Authentication token is required');
-  }
-
-  console.log(`Fetching support staff category with ID: ${id}`);
-
-  const response = await fetch(`${BASE_URL}/pms/admin/support_staff_categories/${id}.json`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json',
-    }
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Failed to fetch support staff category:', {
-      status: response.status,
-      statusText: response.statusText,
-      error: errorData
-    });
-    throw new Error(`Failed to fetch support staff category: ${response.status} ${response.statusText}`);
-  }
-
-  const data: SupportStaffCategoryDetailResponse = await response.json();
-  console.log('Support staff category fetched successfully:', data);
-  return data;
-};
-
-// Fetch all support staff categories
-export const fetchSupportStaffCategories = async (): Promise<SupportStaffCategory[]> => {
-  const { BASE_URL, TOKEN } = API_CONFIG;
-  
-  if (!TOKEN) {
-    throw new Error('Authentication token is required');
-  }
-
-  console.log('Fetching support staff categories...');
-
-  const response = await fetch(`${BASE_URL}${API_CONFIG.ENDPOINTS.SUPPORT_STAFF_CATEGORIES}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json',
-    }
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Failed to fetch support staff categories:', {
-      status: response.status,
-      statusText: response.statusText,
-      error: errorData
-    });
-    throw new Error(`Failed to fetch support staff categories: ${response.status} ${response.statusText}`);
-  }
-
-  const data: SupportStaffCategoriesGetResponse = await response.json();
-  
-  // Transform the API response to match the component's expected format
-  const transformedData: SupportStaffCategory[] = data.support_staff_categories.map((item) => ({
-    id: item.id,
-    name: item.name,
-    estimated_time: item.estimated_time.trim(),
-    created_on: new Date(item.created_at).toLocaleString('en-GB', {
+const formatDate = (dateStr: string): string => {
+  try {
+    return new Date(dateStr).toLocaleString('en-GB', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
-    }),
-    created_by: 'Admin', // This should come from API if available in future
-    active: item.active === 1,
-    icon_id: item.icon_id,
-    icon_image_url: item.icon_image_url
-  }));
-
-  console.log('Support staff categories fetched successfully:', transformedData);
-  return transformedData;
+      hour12: true,
+    });
+  } catch {
+    return dateStr;
+  }
 };
 
-// Helper function to parse estimated time string back to components
+// ---- Fetch all setup data (list + icons) ----
+
+export const fetchSupportStaffSetup = async (): Promise<SupportStaffSetupResponse> => {
+  const url = getFullUrl(API_CONFIG.ENDPOINTS.SUPPORT_STAFF_CATEGORIES);
+  const response = await fetch(url, { headers: authHeaders() });
+  if (!response.ok) throw new Error(`Failed to fetch support staff setup: ${response.status}`);
+  const data = await response.json();
+  return {
+    support_staff_category: data.support_staff_category || [],
+    delivery_service_provider: data.delivery_service_provider || [],
+    staff_category_icons: data.staff_category_icons || [],
+    delivery_service_provider_icons: data.delivery_service_provider_icons || [],
+  };
+};
+
+// ---- Transform helpers ----
+
+export const mapStaffCategory = (item: SupportStaffCategoryRaw): SupportStaffCategory => ({
+  id: item.id,
+  name: item.name,
+  estimatedTime: item.estimated_time || '',
+  createdOn: formatDate(item.created_at),
+  createdBy: item.created_by || '-',
+  active: item.active === 1,
+  iconUrl: item.icon_url,
+  // Legacy fields
+  estimated_time: item.estimated_time || '',
+  created_on: formatDate(item.created_at),
+  created_by: item.created_by || '-',
+  icon_id: undefined,
+  icon_image_url: item.icon_url,
+});
+
+export const mapDeliveryProvider = (item: DeliveryServiceProviderRaw): DeliveryServiceProvider => ({
+  id: item.id,
+  name: item.name,
+  providerType: item.provider_type,
+  active: item.active,
+  createdOn: formatDate(item.created_at),
+  createdBy: item.created_by || '-',
+  iconUrl: item.icon_url,
+});
+
+// ---- Support Staff Category CRUD ----
+
+export const createSupportStaffCategory = async (data: {
+  name: string;
+  estimatedTime: number;
+  active: boolean;
+  iconId?: number;
+}) => {
+  const url = getFullUrl(API_CONFIG.ENDPOINTS.SUPPORT_STAFF_CATEGORIES);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      support_staff_category: {
+        name: data.name,
+        estimated_time: data.estimatedTime,
+        active: data.active ? 1 : 0,
+      },
+      ...(data.iconId && { icon_id: data.iconId }),
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create staff category: ${response.status} - ${errorText}`);
+  }
+  return response.json();
+};
+
+export const updateSupportStaffCategory = async (
+  id: number,
+  data: {
+    name: string;
+    estimatedTime: number;
+    active: boolean;
+    iconId?: number;
+  }
+) => {
+  const url = getFullUrl(`${API_CONFIG.ENDPOINTS.SUPPORT_STAFF_CATEGORY_DETAILS}/${id}.json`);
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      support_staff_category: {
+        name: data.name,
+        estimated_time: data.estimatedTime,
+        active: data.active ? 1 : 0,
+      },
+      ...(data.iconId && { icon_id: data.iconId }),
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to update staff category: ${response.status} - ${errorText}`);
+  }
+  return response.json();
+};
+
+export const fetchSupportStaffCategoryById = async (id: number) => {
+  const url = getFullUrl(`${API_CONFIG.ENDPOINTS.SUPPORT_STAFF_CATEGORY_DETAILS}/${id}.json`);
+  const response = await fetch(url, { headers: authHeaders() });
+  if (!response.ok) throw new Error(`Failed to fetch staff category: ${response.status}`);
+  return response.json();
+};
+
+// ---- Delivery Service Provider CRUD ----
+
+export const fetchDeliveryServiceProviders = async (): Promise<DeliveryServiceProviderRaw[]> => {
+  const url = getFullUrl(API_CONFIG.ENDPOINTS.DELIVERY_SERVICE_PROVIDERS);
+  const response = await fetch(url, { headers: authHeaders() });
+  if (!response.ok) throw new Error(`Failed to fetch delivery providers: ${response.status}`);
+  const data = await response.json();
+  return data.delivery_service_providers || [];
+};
+
+export const createDeliveryServiceProvider = async (data: {
+  name: string;
+  providerType: string;
+  active: boolean;
+  iconId?: number;
+}) => {
+  const url = getFullUrl(API_CONFIG.ENDPOINTS.DELIVERY_SERVICE_PROVIDERS);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      delivery_service_provider: {
+        name: data.name,
+        provider_type: data.providerType,
+        active: data.active,
+      },
+      ...(data.iconId && { icon_id: data.iconId }),
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create delivery provider: ${response.status} - ${errorText}`);
+  }
+  return response.json();
+};
+
+export const updateDeliveryServiceProvider = async (
+  id: number,
+  data: {
+    name: string;
+    providerType: string;
+    active: boolean;
+    iconId?: number;
+  }
+) => {
+  const url = getFullUrl(`${API_CONFIG.ENDPOINTS.DELIVERY_SERVICE_PROVIDER_DETAILS}/${id}.json`);
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      delivery_service_provider: {
+        name: data.name,
+        provider_type: data.providerType,
+        active: data.active,
+      },
+      ...(data.iconId && { icon_id: data.iconId }),
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to update delivery provider: ${response.status} - ${errorText}`);
+  }
+  return response.json();
+};
+
+export const fetchDeliveryServiceProviderById = async (id: number) => {
+  const url = getFullUrl(`${API_CONFIG.ENDPOINTS.DELIVERY_SERVICE_PROVIDER_DETAILS}/${id}.json`);
+  const response = await fetch(url, { headers: authHeaders() });
+  if (!response.ok) throw new Error(`Failed to fetch delivery provider: ${response.status}`);
+  return response.json();
+};
+
+// ---- Legacy-compatible fetch for SupportStaffPage.tsx ----
+
+export const fetchSupportStaffCategories = async (): Promise<SupportStaffCategory[]> => {
+  const setupData = await fetchSupportStaffSetup();
+  return setupData.support_staff_category.map(mapStaffCategory);
+};
+
+// ---- Helper for estimated time ----
+
+export const calculateEstimatedTimeMinutes = (days: number, hours: number, minutes: number): number => {
+  return (days * 24 * 60) + (hours * 60) + minutes;
+};
+
 export const parseEstimatedTime = (estimatedTimeString: string): { days: number; hours: number; minutes: number } => {
-  const timeHash = estimatedTimeString.match(/(\d+)\s*(days?|hours?|hrs?|minutes?|mins?)/gi);
-  
   let days = 0;
   let hours = 0;
   let minutes = 0;
 
-  if (timeHash) {
-    timeHash.forEach(match => {
+  const timeMatches = estimatedTimeString.match(/(\d+)\s*(days?|hours?|hrs?|minutes?|mins?)/gi);
+  if (timeMatches) {
+    timeMatches.forEach((match) => {
       const value = parseInt(match.match(/\d+/)?.[0] || '0');
       const unit = match.match(/(days?|hours?|hrs?|minutes?|mins?)/i)?.[0].toLowerCase();
-      
-      if (unit?.includes('day')) {
-        days = value;
-      } else if (unit?.includes('hour') || unit?.includes('hr')) {
-        hours = value;
-      } else if (unit?.includes('minute') || unit?.includes('min')) {
-        minutes = value;
-      }
+      if (unit?.includes('day')) days = value;
+      else if (unit?.includes('hour') || unit?.includes('hr')) hours = value;
+      else if (unit?.includes('minute') || unit?.includes('min')) minutes = value;
     });
   }
 

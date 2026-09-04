@@ -158,7 +158,7 @@ const columns: ColumnConfig[] = [
     sortable: true,
     defaultVisible: true,
   },
-    {
+  {
     key: "gl_account",
     label: "GL Account",
     sortable: true,
@@ -224,9 +224,11 @@ export const MaterialPRDetailsPage = () => {
   const [wbsCodes, setWbsCodes] = useState([]);
   const [openDeletionModal, setOpenDeletionModal] = useState(false)
   const [printing, setPrinting] = useState(false)
+  const [testRunLoading, setTestRunLoading] = useState(false)
+  const [sapPushDisabled, setSapPushDisabled] = useState(false)
   const [updatedWbsCodes, setUpdatedWbsCodes] = useState<{
     [key: string]: string;
-  }>({});
+  }>({})
   const [buttonCondition, setButtonCondition] = useState({
     showSap: false,
     editWbsCode: false,
@@ -261,8 +263,9 @@ export const MaterialPRDetailsPage = () => {
           editWbsCode: response.can_edit_wbs_codes,
         });
         // Set external API calls if available
-        if (response.external_api_calls && Array.isArray(response.external_api_calls)) {
-          setExternalApiCalls(response.external_api_calls);
+        if (response.api_calls && Array.isArray(response.api_calls)) {
+          setExternalApiCalls(response.api_calls);
+          console.log("API Calls set in state:", response.api_calls);
         }
         // Initialize updatedWbsCodes with current WBS codes
         const initialWbsCodes = response.pms_pr_inventories?.reduce(
@@ -460,8 +463,9 @@ export const MaterialPRDetailsPage = () => {
       toast.error("Missing required configuration");
       return;
     }
-
+    setSapPushDisabled(true);
     try {
+      // Step 1: Push to SAP
       const response = await axios.get<{ message: string }>(
         `https://${baseUrl}/pms/purchase_orders/${id}.json?send_sap=yes`,
         {
@@ -469,10 +473,96 @@ export const MaterialPRDetailsPage = () => {
         }
       );
       toast.success(response.data.message);
+
+      // Wait for SAP to process
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Step 2: Fetch the updated details after SAP push
+      try {
+        const detailsResponse = await dispatch(
+          getMaterialPRById({ baseUrl, token, id })
+        ).unwrap();
+        setPR(detailsResponse);
+        setButtonCondition({
+          showSap: detailsResponse.show_send_sap_yes,
+          editWbsCode: detailsResponse.can_edit_wbs_codes,
+        });
+        if (detailsResponse.api_calls && Array.isArray(detailsResponse.api_calls)) {
+          setExternalApiCalls(detailsResponse.api_calls);
+        }
+        toast.info("Details updated successfully");
+      } catch (detailsError) {
+        console.error("Error loading updated details:", detailsError);
+        toast.error("Failed to load updated details");
+      }
+
+      // Disable the button after successful push
+      
     } catch (error: any) {
-      toast.error(error.message || "Failed to send to SAP");
+      toast.error(error.message || "Failed to push to SAP");
     }
-  }, [id]);
+  }, [id, baseUrl, token, dispatch]);
+
+  // Handle test run
+  const handleTestRun = useCallback(async () => {
+    if (!baseUrl || !token || !id) {
+      toast.error("Missing required configuration");
+      return;
+    }
+
+    try {
+      setTestRunLoading(true);
+      // Step 1: Run the test
+      const response = await axios.get<{ message: string }>(
+        `https://${baseUrl}/pms/purchase_orders/test_run.json?id=${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success(response.data.message || "test run completed successfully");
+
+      // Wait for results to be ready
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Step 2: Fetch the updated details after test run
+      try {
+        const detailsResponse = await dispatch(
+          getMaterialPRById({ baseUrl, token, id })
+        ).unwrap();
+        setPR(detailsResponse);
+        setButtonCondition({
+          showSap: detailsResponse.show_send_sap_yes,
+          editWbsCode: detailsResponse.can_edit_wbs_codes,
+        });
+        if (detailsResponse.api_calls && Array.isArray(detailsResponse.api_calls)) {
+          setExternalApiCalls(detailsResponse.api_calls);
+        }
+        toast.info("Test results loaded successfully");
+      } catch (detailsError) {
+        console.error("Error loading test results:", detailsError);
+        toast.error("Failed to load test results");
+      }
+
+      // Step 3: Push to SAP
+      try {
+        const sapResponse = await axios.get<{ message: string }>(
+          `https://${baseUrl}/pms/purchase_orders/${id}.json?send_sap=yes`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        toast.success(sapResponse.data.message || "Pushed to SAP successfully");
+      } catch (sapError: any) {
+        console.error("Error pushing to SAP:", sapError);
+        toast.error(sapError.message || "Failed to push to SAP");
+      }
+
+    } catch (error: any) {
+      toast.error(error.message || "Failed to run test run");
+    } finally {
+      setTestRunLoading(false);
+    }
+  }, [id, baseUrl, token, dispatch]);
 
   const handleDelete = async () => {
     const payload = {
@@ -622,15 +712,35 @@ export const MaterialPRDetailsPage = () => {
                 </Button>
               </>
             ) : (
+
               <>
+                {!buttonCondition.showSap && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-gray-300 bg-blue-600 text-white"
+                    onClick={handleTestRun}
+                    disabled={testRunLoading}
+                  >
+                    {testRunLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Running...
+                      </>
+                    ) : (
+                      "Test run"
+                    )}
+                  </Button>
+                )}
                 {buttonCondition.showSap && (
                   <Button
                     size="sm"
                     variant="outline"
                     className="border-gray-300 bg-purple-600 text-white"
                     onClick={handleSendToSap}
+                    disabled={sapPushDisabled}
                   >
-                    Send To SAP Team
+                    Push To SAP
                   </Button>
                 )}
                 {
@@ -1218,25 +1328,25 @@ export const MaterialPRDetailsPage = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 font-semibold">Response Status Code</p>
-                      <p className={`text-sm font-medium ${
-                        apiCall.response_status === 200 ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <p className={`text-sm font-medium ${apiCall.response_status === 200 ? 'text-green-600' : 'text-red-600'
+                        }`}>
                         {apiCall.response_status || '-'}
                       </p>
                     </div>
                     <div className="md:col-span-2">
                       <p className="text-sm text-gray-600 font-semibold">Message</p>
                       <p className="text-sm bg-white p-2 rounded border border-gray-200 mt-1 font-mono whitespace-pre-wrap break-words">
-                        {apiCall.eval_status && apiCall.eval_status.trim() 
-                          ? apiCall.eval_status 
-                          : (apiCall.response_string ? JSON.stringify(JSON.parse(apiCall.response_string), null, 2) : '-')}
+                        {apiCall.message || '-'}
                       </p>
                     </div>
-                    <div className="md:col-span-2">
-                      <p className="text-xs text-gray-500">
-                        Created: {apiCall.created_at ? new Date(apiCall.created_at).toLocaleString() : '-'}
-                      </p>
-                    </div>
+
+                    {apiCall.created_at && (
+                      <div className="md:col-span-2">
+                        <p className="text-xs text-gray-500">
+                          Created: {new Date(apiCall.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

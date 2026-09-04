@@ -21,6 +21,7 @@
 // };
 
 import React, { useState } from "react";
+import { Download } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
@@ -49,16 +50,33 @@ export const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   return (
     <div
-      className={`rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-lg transition-shadow flex items-start gap-2 sm:gap-3 cursor-pointer 
+      className={`rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-lg transition-shadow flex items-start gap-2 sm:gap-3 relative cursor-pointer 
       ${selected ? "bg-[rgb(230_226_218_/_1)]" : "bg-[#f6f4ee]"} ${className}`}
       onClick={() => onClick?.(title)}
     >
-      <div className={`w-9 h-9 sm:w-10 sm:h-10 bg-[#C4B89D54] flex items-center justify-center flex-shrink-0 mt-0.5 ${iconRounded ? 'rounded-full' : ''}`}>
-        {icon}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className={`text-lg sm:text-xl font-semibold truncate ${valueColor ? valueColor : 'text-[#1A1A1A]'}`}>{value}</p>
-        <p className="text-xs sm:text-sm font-medium text-[#1A1A1A] leading-tight break-words">{title}</p>
+      {/* Download Button */}
+      {onDownload && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDownload();
+          }}
+          className="absolute top-3 right-3"
+          title="Download"
+        >
+          <Download className="w-3 h-3 text-gray-600" />
+        </button>
+      )}
+
+      {/* Main Content */}
+      <div className="flex items-start gap-2 sm:gap-3">
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 bg-[#C4B89D54] flex items-center justify-center flex-shrink-0 mt-0.5 ${iconRounded ? 'rounded-full' : ''}`}>
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={`text-lg sm:text-xl font-semibold truncate ${valueColor ? valueColor : 'text-[#1A1A1A]'}`}>{value}</p>
+          <p className="text-xs  font-medium text-[#1A1A1A] leading-tight break-words">{title}</p>
+        </div>
       </div>
     </div>
   );

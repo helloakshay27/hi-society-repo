@@ -3,13 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, Download } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, Download, Search } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import axios from "axios";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import type { ColumnConfig } from "@/hooks/useEnhancedTable";
 
 interface ReportField {
   id: string;
@@ -29,7 +31,7 @@ const FitoutReport: React.FC = () => {
     { id: "Tower", label: "Tower" },
     { id: "Flat", label: "Flat" },
     { id: "Flat Type", label: "Flat Type" },
-    { id: "Category", label: "Category" },
+    { id: "Annexure", label: "Annexure" },
     { id: "Description", label: "Description" },
     { id: "Request Date", label: "Request Date" },
     { id: "Fitout Status", label: "Fitout Status" },
@@ -83,48 +85,89 @@ const FitoutReport: React.FC = () => {
     setSelectedFields([]);
   };
 
-  const handleExport = async () => {
-    if (selectedFields.length === 0) {
-      toast.error("Please select at least one field to export");
-      return;
-    }
+  // Fetched report data (dynamic columns driven by selectedFields)
+  const [reportData, setReportData] = useState<Record<string, any>[]>([]);
+  const [isFetchingReport, setIsFetchingReport] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
+  // API expects dates as MM/DD/YYYY, e.g. "02/01/2026 - 07/31/2026"
+  const formatDate = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
+  const validateSelection = () => {
+    if (selectedFields.length === 0) {
+      toast.error("Please select at least one field");
+      return false;
+    }
     if (!dateRange.from || !dateRange.to) {
       toast.error("Please select a date range");
-      return;
+      return false;
     }
+    return true;
+  };
 
+  // Shared { q: { date_range, to } } JSON body for both the JSON view and the export
+  const buildReportPayload = () => {
+    const dateRangeParam = `${formatDate(dateRange.from as Date)} - ${formatDate(dateRange.to as Date)}`;
+    return {
+      q: {
+        date_range: dateRangeParam,
+        to: selectedFields.map((field) => field.id),
+      },
+    };
+  };
+
+  // Case/format-insensitive lookup so we can match whatever key shape the API returns
+  const normalizeKey = (key: string) => key.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const getFieldValue = (row: Record<string, any>, fieldId: string) => {
+    if (!row) return undefined;
+    if (row[fieldId] !== undefined) return row[fieldId];
+    const target = normalizeKey(fieldId);
+    const matchKey = Object.keys(row).find((key) => normalizeKey(key) === target);
+    return matchKey ? row[matchKey] : undefined;
+  };
+
+  const fetchReportData = async () => {
+    if (!validateSelection()) return;
+
+    setIsFetchingReport(true);
+    setHasSearched(true);
     try {
-      // Format dates as DD/MM/YYYY
-      const formatDate = (date: Date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-      };
-
-      const fromDate = formatDate(dateRange.from);
-      const toDate = formatDate(dateRange.to);
-      const dateRangeParam = `${fromDate} - ${toDate}`;
-
-      // Build query parameters
-      const params = new URLSearchParams();
-      params.append('commit', 'export');
-      params.append('q[date_range]', dateRangeParam);
-
-      // Add selected fields as q[to][] parameters
-      selectedFields.forEach((field) => {
-        params.append('q[to][]', field.id);
+      const response = await axios.post(getFullUrl('/ft_reports.json'), buildReportPayload(), {
+        headers: { Authorization: getAuthHeader(), 'Content-Type': 'application/json' },
       });
 
-      // Get dynamic base URL
-      const baseURL = API_CONFIG.baseURL || localStorage.getItem('apiBaseURL') || '';
+      const data = response.data;
+      const rows = Array.isArray(data)
+        ? data
+        : data?.ft_reports || data?.fitout_reports || data?.report || data?.data || data?.results || [];
 
-      // Make API call to download the file
-      const response = await axios.post(`${baseURL}/ft_reports`, {
-        params: params,
-        headers: getAuthHeader(),
-        responseType: 'blob', // Important for file download
+      setReportData(Array.isArray(rows) ? rows : []);
+    } catch (error) {
+      console.error("Fetch report error:", error);
+      toast.error("Failed to load report data");
+      setReportData([]);
+    } finally {
+      setIsFetchingReport(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!validateSelection()) return;
+
+    setIsExporting(true);
+    try {
+      const payload = { ...buildReportPayload(), commit: 'export' };
+
+      const response = await axios.post(getFullUrl('/ft_reports'), payload, {
+        headers: { Authorization: getAuthHeader(), 'Content-Type': 'application/json' },
+        responseType: 'blob',
       });
 
       // Create a blob URL and trigger download
@@ -134,7 +177,7 @@ const FitoutReport: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       // Extract filename from content-disposition header or use default
       const contentDisposition = response.headers['content-disposition'];
       let filename = 'fitout_report.xlsx';
@@ -144,7 +187,7 @@ const FitoutReport: React.FC = () => {
           filename = filenameMatch[1];
         }
       }
-      
+
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
@@ -155,7 +198,19 @@ const FitoutReport: React.FC = () => {
     } catch (error) {
       toast.error("Failed to export report");
       console.error("Export error:", error);
+    } finally {
+      setIsExporting(false);
     }
+  };
+
+  const reportColumns: ColumnConfig[] = selectedFields.map((field) => ({
+    key: field.id,
+    label: field.label,
+  }));
+
+  const renderReportCell = (row: Record<string, any>, columnKey: string) => {
+    const value = getFieldValue(row, columnKey);
+    return value === undefined || value === null || value === "" ? "-" : String(value);
   };
 
   const formatDateRange = () => {
@@ -180,10 +235,8 @@ const FitoutReport: React.FC = () => {
         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
-              variant="outline"
               className={cn(
-                "w-full md:w-[400px] justify-start text-left font-normal h-11",
-                !dateRange.from && !dateRange.to && "text-muted-foreground"
+                "bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -246,7 +299,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move all to selected"
               >
-                <ChevronsRight className="h-4 w-4" />
+                <ChevronsRight className="h-4 w-4 text-[#C72030]" />
               </Button>
               <Button
                 variant="outline"
@@ -260,7 +313,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move to selected"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 text-[#C72030]" />
               </Button>
               <Button
                 variant="outline"
@@ -274,7 +327,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move to available"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 text-[#C72030]" />
               </Button>
               <Button
                 variant="outline"
@@ -284,7 +337,7 @@ const FitoutReport: React.FC = () => {
                 className="h-9 w-9"
                 title="Move all to available"
               >
-                <ChevronsLeft className="h-4 w-4" />
+                <ChevronsLeft className="h-4 w-4 text-[#C72030]" />
               </Button>
             </div>
 
@@ -310,18 +363,48 @@ const FitoutReport: React.FC = () => {
             </div>
           </div>
 
-          {/* Export Button */}
-          <div className="mt-6 flex justify-start">
+          {/* Action Buttons */}
+          <div className="mt-6 flex justify-start gap-3">
+            {/* <Button
+              onClick={fetchReportData}
+              disabled={isFetchingReport}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              {isFetchingReport ? "Loading..." : "View Report"}
+            </Button> */}
             <Button
               onClick={handleExport}
-              className="bg-[#4A5568] hover:bg-[#4A5568]/90 text-white h-10 px-6"
+              disabled={isExporting}
+              variant="outline"
+               className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4 mr-2" />
-              Export
+              {isExporting ? "Exporting..." : "Export"}
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Report Data */}
+      {hasSearched && (
+        <Card className="border border-gray-200 bg-white shadow-sm">
+          <CardContent className="p-6">
+            <EnhancedTable
+              data={reportData}
+              columns={reportColumns}
+              renderCell={renderReportCell}
+              loading={isFetchingReport}
+              loadingMessage="Loading report..."
+              emptyMessage="No records found for the selected date range and fields"
+              pagination
+              pageSize={20}
+              storageKey="fitout-report-table"
+              getItemId={(item) => String(getFieldValue(item, "Id") ?? reportData.indexOf(item))}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

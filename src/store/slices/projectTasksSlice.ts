@@ -29,13 +29,90 @@ export const fetchProjectTasks = createAsyncThunk(
 export const fetchKanbanTasksOfProject = createAsyncThunk(
     'fetchKanbanTasks',
     async (
-        { baseUrl, token, id }: { baseUrl: string; token: string; id?: string },
+        {
+            baseUrl,
+            token,
+            id,
+            responsible_person_id,
+            selectedFilterOption,
+            selectedStatuses,
+            selectedWorkflowStatus,
+            selectedResponsible,
+            selectedCreators,
+            selectedProjects,
+            dates
+        }: {
+            baseUrl: string;
+            token: string;
+            id?: string;
+            responsible_person_id?: string;
+            selectedFilterOption?: string;
+            selectedStatuses?: string[];
+            selectedWorkflowStatus?: string[];
+            selectedResponsible?: number[];
+            selectedCreators?: number[];
+            selectedProjects?: number[];
+            dates?: { startDate: string; endDate: string };
+        },
         { rejectWithValue }
     ) => {
         try {
-            const endpoint = id
-                ? `/task_managements/kanban.json?q[project_management_id_eq]=${id}`
-                : `/task_managements/kanban.json`;
+            let endpoint = `/task_managements/kanban.json`;
+            const params = new URLSearchParams();
+
+            if (id) {
+                params.append('q[project_management_id_eq]', id);
+            }
+            if (responsible_person_id) {
+                params.append('q[responsible_person_id_eq]', responsible_person_id);
+            }
+
+            // Apply filters
+            if (selectedFilterOption && selectedFilterOption !== "all") {
+                params.append('q[status_eq]', selectedFilterOption);
+            }
+
+            if (selectedStatuses && selectedStatuses.length > 0) {
+                selectedStatuses.forEach(status => {
+                    params.append('q[status_in][]', status);
+                });
+            }
+
+            if (selectedWorkflowStatus && selectedWorkflowStatus.length > 0) {
+                selectedWorkflowStatus.forEach(status => {
+                    params.append('q[project_status_id_in][]', status);
+                });
+            }
+
+            if (selectedResponsible && selectedResponsible.length > 0) {
+                selectedResponsible.forEach(id => {
+                    params.append('q[responsible_person_id_in][]', id.toString());
+                });
+            }
+
+            if (selectedCreators && selectedCreators.length > 0) {
+                selectedCreators.forEach(id => {
+                    params.append('q[created_by_id_in][]', id.toString());
+                });
+            }
+
+            if (selectedProjects && selectedProjects.length > 0) {
+                selectedProjects.forEach(projectId => {
+                    params.append('q[project_management_id_in][]', projectId.toString());
+                });
+            }
+
+            if (dates?.startDate) {
+                params.append('q[start_date_eq]', dates.startDate);
+            }
+
+            if (dates?.endDate) {
+                params.append('q[end_date_eq]', dates.endDate);
+            }
+
+            if (params.toString()) {
+                endpoint += `?${params.toString()}`;
+            }
 
             const response = baseUrl
                 ? await axios.get(`https://${baseUrl}${endpoint}`, {
@@ -307,3 +384,6 @@ export const createTaskDependencyReducer = createTaskDependencySlice.reducer
 export const updateTaskDependencyReducer = updateTaskDependencySlice.reducer
 export const deleteTaskDependencyReducer = deleteTaskDependencySlice.reducer
 export const fetchKanbanTasksOfProjectReducer = fetchKanbanTasksOfProjectSlice.reducer
+
+// Export the reset action explicitly
+export const resetUserAvailability = fetchUserAvailabilitySlice.actions.reset;

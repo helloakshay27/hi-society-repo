@@ -24,15 +24,43 @@ const SettingsGenericPage: React.FC = () => {
     }
   };
 
+  const handleSyncOrganizations = async () => {
+    try {
+      const token = localStorage.getItem("token") || "";
+      const url = getFullUrl(`/crm/admin/sync_user_organizations.json?token=${token}`);
+      const options = getAuthenticatedFetchOptions("GET");
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error("Failed to sync");
+      }
+      const data = await response.json();
+      toast.success("SYNC Organizations to User Success", {
+        description: JSON.stringify(data),
+      });
+    } catch (error) {
+      toast.error("SYNC Organizations to User Failed", {
+        description: String(error),
+      });
+    }
+  };
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
-      <button
-        className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        onClick={handleSync}
-      >
-        SYNC Visitor Allow
-      </button>
+      <div className="flex flex-wrap gap-4">
+        <button
+          className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleSync}
+        >
+          SYNC Visitor Allow
+        </button>
+        <button
+          className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleSyncOrganizations}
+        >
+          SYNC Organizations to User
+        </button>
+      </div>
     </div>
   );
 };

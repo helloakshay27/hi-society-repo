@@ -5,6 +5,18 @@ import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions"
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination"
+
+const ITEMS_PER_PAGE = 10
 
 interface UserContestReward {
     id: number
@@ -106,9 +118,11 @@ const columns: ColumnConfig[] = [
 
 const Claims = () => {
     const navigate = useNavigate();
+    const { shouldShow } = useDynamicPermissions();
 
     const [claims, setClaims] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [currentPage, setCurrentPage] = useState(1)
 
     const fetchClaims = async () => {
         setLoading(true)
@@ -151,6 +165,7 @@ const Claims = () => {
             }))
 
             setClaims(transformedData)
+            setCurrentPage(1)
         } catch (error) {
             console.error("Error fetching claims:", error)
         } finally {
@@ -169,15 +184,117 @@ const Claims = () => {
         }
     }
 
+    const totalPages = Math.ceil(claims.length / ITEMS_PER_PAGE) || 1
+    const paginatedClaims = claims.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    )
+
+    const handlePageChange = (page: number) => {
+        if (page > 0 && page <= totalPages) {
+            setCurrentPage(page)
+        }
+    }
+
+    const renderPaginationItems = () => {
+        if (!totalPages || totalPages <= 0) return null
+        const items = []
+        const showEllipsis = totalPages > 5
+
+        if (showEllipsis) {
+            items.push(
+                <PaginationItem key={1} className="cursor-pointer">
+                    <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+                        1
+                    </PaginationLink>
+                </PaginationItem>
+            )
+
+            if (currentPage > 4) {
+                items.push(
+                    <PaginationItem key="ellipsis1">
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                )
+            } else {
+                for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+                    items.push(
+                        <PaginationItem key={i} className="cursor-pointer">
+                            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                                {i}
+                            </PaginationLink>
+                        </PaginationItem>
+                    )
+                }
+            }
+
+            if (currentPage > 3 && currentPage < totalPages - 2) {
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    items.push(
+                        <PaginationItem key={i} className="cursor-pointer">
+                            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                                {i}
+                            </PaginationLink>
+                        </PaginationItem>
+                    )
+                }
+            }
+
+            if (currentPage < totalPages - 3) {
+                items.push(
+                    <PaginationItem key="ellipsis2">
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                )
+            } else {
+                for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+                    if (!items.find((item) => item.key === i.toString())) {
+                        items.push(
+                            <PaginationItem key={i} className="cursor-pointer">
+                                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                                    {i}
+                                </PaginationLink>
+                            </PaginationItem>
+                        )
+                    }
+                }
+            }
+
+            if (totalPages > 1) {
+                items.push(
+                    <PaginationItem key={totalPages} className="cursor-pointer">
+                        <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+                            {totalPages}
+                        </PaginationLink>
+                    </PaginationItem>
+                )
+            }
+        } else {
+            for (let i = 1; i <= totalPages; i++) {
+                items.push(
+                    <PaginationItem key={i} className="cursor-pointer">
+                        <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                            {i}
+                        </PaginationLink>
+                    </PaginationItem>
+                )
+            }
+        }
+
+        return items
+    }
+
     const renderActions = (row: any) => {
         return (
             <div className="flex items-center gap-2">
+                {shouldShow("Claims", "show") && (
                 <Button
                     variant="ghost" size="sm"
                     onClick={() => navigate(`/claims/${row.id}`)}
                 >
                     <Eye className="h-4 w-4" />
                 </Button>
+                )}
             </div>
         )
     }
@@ -191,12 +308,32 @@ const Claims = () => {
                 </p>
             </div>
             <EnhancedTable
-                data={claims}
+                data={paginatedClaims}
                 columns={columns}
                 renderCell={renderCell}
                 renderActions={renderActions}
                 loading={loading}
+                pagination={false}
             />
+            <div className="mt-6 flex justify-center">
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                        </PaginationItem>
+                        {renderPaginationItems()}
+                        <PaginationItem>
+                            <PaginationNext
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
         </div>
     )
 }

@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, CheckCircle, XCircle, Edit, Trash2, List, MapPin, QrCode, Shield, Clock, Users, Calendar, Eye, Info, Download, Star, ChevronDown, FileText, LogsIcon, File, FileIcon, Radio } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Edit, Trash2, List, MapPin, QrCode, Shield, Clock, Users, Calendar, Eye, Info, Download, Star, ChevronDown, FileText, LogsIcon, File, FileIcon, Radio } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { apiClient } from '@/utils/apiClient';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
@@ -64,6 +64,11 @@ interface SurveyMapping {
   area_name: string | null;
   room_name: string | null;
   qr_code_url: string;
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
+  location: string;
 }
 
 interface QuestionOption {
@@ -114,6 +119,11 @@ interface LocationTableItem {
   created_at: string;
   active: boolean;
   survey_id: number;
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
+  location: string;
 }
 
 export const SurveyMappingDetailsPage = () => {
@@ -140,8 +150,8 @@ export const SurveyMappingDetailsPage = () => {
         setMapping(null);
       }
     } catch (error: unknown) {
-      console.error("Error fetching survey mapping details:", error);
-      toast.error("Failed to fetch survey mapping details");
+      console.error("Error fetching survey configuration details:", error);
+      toast.error("Failed to fetch survey configuration details");
       setMapping(null);
     } finally {
       setLoading(false);
@@ -258,86 +268,141 @@ export const SurveyMappingDetailsPage = () => {
   };
 
   const handleMoveAssets = () => {
-    // Implement move assets logic
-    console.log("Moving assets for:", selectedLocations);
+    // Move assets logic not implemented
   };
 
-  const handlePrintQR = () => {
-    // Implement print QR logic
-    console.log("Printing QR codes for:", selectedLocations);
+  const handlePrintQR = async () => {
+    if (selectedLocations.length === 0) return;
+    try {
+      const surveyMappingIds = selectedLocations.join(",");
+      const apiUrl = getFullUrl(
+        `/survey_mappings/print_qr_codes?survey_mapping_ids=${surveyMappingIds}`
+      );
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to print QR codes: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `qr_codes_${surveyMappingIds}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success(
+        `QR codes downloaded for ${selectedLocations.length} location(s).`
+      );
+    } catch (error) {
+      console.error("Error printing QR codes:", error);
+      toast.error("Failed to download QR codes. Please try again.");
+    }
   };
 
   const handleDownload = () => {
-    // Implement download logic
-    console.log("Downloading for:", selectedLocations);
+    // Download logic not implemented
   };
 
   const handleDispose = () => {
-    // Implement dispose logic
-    console.log("Disposing:", selectedLocations);
+    // Dispose logic not implemented
   };
 
   const locationTableColumns: ColumnConfig[] = [
     {
       key: "mapping_id",
       label: "Mapping ID",
-      sortable: false,
+      sortable: true,
+      draggable: false,
+      defaultVisible: true,
+    },
+    {
+      key: "society_name",
+      label: "Society",
+      sortable: true,
+      draggable: false,
+      defaultVisible: true,
+    },
+    {
+      key: "tower_name",
+      label: "Tower",
+      sortable: true,
+      draggable: false,
+      defaultVisible: true,
+    },
+    {
+      key: "flat_no",
+      label: "Flat",
+      sortable: true,
+      draggable: false,
+      defaultVisible: true,
+    },
+    {
+      key: "user_name",
+      label: "Customer",
+      sortable: true,
       draggable: false,
       defaultVisible: true,
     },
     // {
     //   key: "site",
     //   label: "Site",
-    //   sortable: false,
+    //   sortable: true,
+    //   draggable: false,
+    //   defaultVisible: true,
+    // },
+    // {
+    //   key: "building",
+    //   label: "Building",
+    //   sortable: true,
+    //   draggable: false,
+    //   defaultVisible: true,
+    // },
+    // {
+    //   key: "wing",
+    //   label: "Wing",
+    //   sortable: true,
+    //   draggable: false,
+    //   defaultVisible: true,
+    // },
+    // {
+    //   key: "floor",
+    //   label: "Floor",
+    //   sortable: true,
+    //   draggable: false,
+    //   defaultVisible: true,
+    // },
+    // {
+    //   key: "area",
+    //   label: "Area",
+    //   sortable: true,
+    //   draggable: false,
+    //   defaultVisible: true,
+    // },
+    // {
+    //   key: "room",
+    //   label: "Room",
+    //   sortable: true,
     //   draggable: false,
     //   defaultVisible: true,
     // },
     {
-      key: "building",
-      label: "Building",
-      sortable: false,
-      draggable: false,
-      defaultVisible: true,
-    },
-    {
-      key: "wing",
-      label: "Wing",
-      sortable: false,
-      draggable: false,
-      defaultVisible: true,
-    },
-    {
-      key: "floor",
-      label: "Floor",
-      sortable: false,
-      draggable: false,
-      defaultVisible: true,
-    },
-    {
-      key: "area",
-      label: "Area",
-      sortable: false,
-      draggable: false,
-      defaultVisible: true,
-    },
-    {
-      key: "room",
-      label: "Room",
-      sortable: false,
-      draggable: false,
-      defaultVisible: true,
-    },
-    {
       key: "created_by",
       label: "Created By",
-      sortable: false,
+      sortable: true,
       draggable: false,
       defaultVisible: true,
     },
     {
       key: "created_at",
       label: "Created Date",
-      sortable: false,
+      sortable: true,
       draggable: false,
       defaultVisible: true,
     },
@@ -374,6 +439,11 @@ export const SurveyMappingDetailsPage = () => {
       created_at: mappingItem.created_at,
       active: mappingItem.active,
       survey_id: mappingItem.survey_id,
+      society_name: mappingItem.society_name,
+      tower_name: mappingItem.tower_name,
+      flat_no: mappingItem.flat_no,
+      user_name: mappingItem.user_name,
+      location: mappingItem.location,
     }));
   }, [mapping]);
 
@@ -467,7 +537,7 @@ export const SurveyMappingDetailsPage = () => {
           <div className="flex items-center justify-center">
             <button
               onClick={() => handleQuestionStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-500" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-[#C72030]" : "bg-gray-300"
                 }`}
             >
               <div
@@ -599,6 +669,30 @@ export const SurveyMappingDetailsPage = () => {
         ) : (
           <span className="text-gray-400">—</span>
         );
+      case "society_name":
+        return item.society_name ? (
+          <span>{item.society_name}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      case "tower_name":
+        return item.tower_name ? (
+          <span>{item.tower_name}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      case "flat_no":
+        return item.flat_no ? (
+          <span>{item.flat_no}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      case "user_name":
+        return item.user_name ? (
+          <span>{item.user_name}</span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
       case "qr_code":
         return item.qr_code ? (
           <div className="flex items-center gap-2">
@@ -610,9 +704,34 @@ export const SurveyMappingDetailsPage = () => {
               title="Click to view full size"
             />
             <span
-              onClick={() =>
-                handleDownloadQRCode(item.qr_code!, item.mapping_id)
-              }
+              onClick={async () => {
+                try {
+                  const apiUrl = getFullUrl(
+                    `/survey_mappings/print_qr_codes?survey_mapping_ids=${item.mapping_id}`
+                  );
+                  const response = await fetch(apiUrl, {
+                    method: "GET",
+                    headers: {
+                      Authorization: getAuthHeader(),
+                      "Content-Type": "application/json",
+                    },
+                  });
+                  if (!response.ok) throw new Error(`Failed: ${response.status}`);
+                  const blob = await response.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = `qr_code_${item.mapping_id}.pdf`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  window.URL.revokeObjectURL(url);
+                  toast.success("QR code downloaded successfully.");
+                } catch (error) {
+                  console.error("Error downloading QR code:", error);
+                  toast.error("Failed to download QR code. Please try again.");
+                }
+              }}
               className="text-xs px-2 py-1 text-black cursor-pointer hover:underline"
               title="Download QR Code"
             >
@@ -631,7 +750,7 @@ export const SurveyMappingDetailsPage = () => {
           <div className="flex items-center justify-center">
             <button
               onClick={() => handleStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-green-500" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-[#C72030]" : "bg-gray-300"
                 }`}
             >
               <div
@@ -689,6 +808,11 @@ export const SurveyMappingDetailsPage = () => {
     // Handle input_box type
     if (question.qtype === "input_box") {
       return <span className="text-sm text-gray-600">Text Input</span>;
+    }
+
+    // Handle numeric type
+    if (question.qtype === "numeric") {
+      return <span className="text-sm text-gray-600">Numeric</span>;
     }
 
     // Existing logic for other types
@@ -919,12 +1043,10 @@ export const SurveyMappingDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">
-            Loading survey mapping details...
-          </span>
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading survey configuration details...</p>
         </div>
       </div>
     );
@@ -935,16 +1057,16 @@ export const SurveyMappingDetailsPage = () => {
       <div className="p-6">
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-gray-900">
-            Survey Mapping not found
+            Survey Configuration not found
           </h2>
           <p className="text-gray-600 mt-2">
-            The requested survey mapping could not be found.
+            The requested survey configuration could not be found.
           </p>
           <Button
             onClick={() => navigate("/maintenance/survey/mapping")}
             className="mt-4"
           >
-            Back to Survey Mapping List
+            Back to Survey configuration List
           </Button>
         </div>
       </div>
@@ -952,35 +1074,35 @@ export const SurveyMappingDetailsPage = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="mb-6">
         <Button variant="ghost" onClick={handleBack} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Survey Mapping List
+          <span className="hidden sm:inline">Back to Survey configuration List</span>
+          <span className="sm:hidden">Back</span>
         </Button>
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[#1a1a1a]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] break-words">
             {/* Survey Details -  */}
             {mapping.name}
           </h1>
           <div className="flex gap-2">
-            <Badge
-              variant={mapping.active ? "default" : "secondary"}
-              className="mr-2 rounded-none flex items-center"
+            <button
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
             >
               {mapping.active ? (
                 <>
-                  <CheckCircle className="w-3 h-3 mr-1" />
+                  <CheckCircle className="w-3 h-3" />
                   Active
                 </>
               ) : (
                 <>
-                  <XCircle className="w-3 h-3 mr-1" />
+                  <XCircle className="w-3 h-3" />
                   Inactive
                 </>
               )}
-              <ChevronDown className="w-3 h-3 ml-1" />
-            </Badge>
+              <ChevronDown className="w-3 h-3" />
+            </button>
 
             <Button
               onClick={handleEdit}
@@ -1020,7 +1142,7 @@ export const SurveyMappingDetailsPage = () => {
               </TabsTrigger>
             ))}
           </TabsList> */}
-          <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200">
+          <TabsList className="flex w-full overflow-x-auto bg-white border border-gray-200">
             {[
               {
                 label: "Survey Information",
@@ -1060,7 +1182,7 @@ export const SurveyMappingDetailsPage = () => {
                 // ),
               },
               {
-                label: "Location Details",
+                label: "Survey QRs",
                 value: "location-details",
                 // icon: (
                 //   <svg
@@ -1085,17 +1207,17 @@ export const SurveyMappingDetailsPage = () => {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="group flex items-center gap-2 border-none font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=inactive]:bg-white data-[state=inactive]:text-black"
+                className="group flex items-center gap-1 sm:gap-2 border-none font-semibold text-xs sm:text-sm data-[state=active]:bg-[#EDEAE3] data-[state=inactive]:bg-white data-[state=inactive]:text-black px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap flex-shrink-0"
               >
                 {tab.icon}
-                {tab.label}
+                <span>{tab.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
 
           {/* Survey Information */}
           <TabsContent value="survey-information" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
               <Card className="bg-[#F6F4EE]">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3">
@@ -1633,7 +1755,7 @@ export const SurveyMappingDetailsPage = () => {
                       No QR Codes Available
                     </h3>
                     <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                      No QR codes have been generated for this survey mapping
+                      No QR codes have been generated for this survey configuration
                       yet.
                     </p>
                   </div>

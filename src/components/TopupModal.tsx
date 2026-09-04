@@ -16,7 +16,6 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { fetchCustomers, topupWallet } from "@/store/slices/walletListSlice";
 import axios from "axios";
 import { toast } from "sonner";
-
 interface Customer {
     id: number;
     name: string;

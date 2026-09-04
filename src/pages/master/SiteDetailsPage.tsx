@@ -91,6 +91,7 @@ export const SiteDetailsPage: React.FC = () => {
   const [site, setSite] = useState<SiteDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>("");
 
   const fetchSiteDetails = async (siteId: number) => {
     setLoading(true);
@@ -120,11 +121,35 @@ export const SiteDetailsPage: React.FC = () => {
         toast.error("This site is inactive and cannot be accessed", {
           duration: 5000,
         });
-        navigate("/ops-console/master/location/account");
+        navigate("/ops-console/master/location/account?tab=site");
         return;
       }
 
       setSite(siteData);
+
+      // Fetch company name
+      if (siteData.company_id) {
+        try {
+          const compRes = await fetch(
+            getFullUrl("/pms/company_setups/all_companies.json"),
+            {
+              headers: { Authorization: getAuthHeader() },
+            }
+          );
+          if (compRes.ok) {
+            const compData = await compRes.json();
+            const compList = compData.companies || compData;
+            if (Array.isArray(compList)) {
+              const match = compList.find(
+                (c: any) => c.id === siteData.company_id
+              );
+              if (match) setCompanyName(match.name);
+            }
+          }
+        } catch {
+          // company name is optional
+        }
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -194,7 +219,7 @@ export const SiteDetailsPage: React.FC = () => {
             {error || "The requested site could not be found."}
           </p>
           <Button
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=site")}
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -212,7 +237,7 @@ export const SiteDetailsPage: React.FC = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=site")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -305,7 +330,7 @@ export const SiteDetailsPage: React.FC = () => {
                       Company Name
                     </label>
                     <p className="text-gray-900 font-mono">
-                      {site?.company_name}
+                      {companyName || `Company #${site.company_id}`}
                     </p>
                   </div>
                 </div>
@@ -315,7 +340,7 @@ export const SiteDetailsPage: React.FC = () => {
                       Region
                     </label>
                     <p className="text-gray-900">
-                      {site.region_name || "Not specified"}
+                      {site.pms_region?.name || "Not specified"}
                     </p>
                   </div>
                   <div>
@@ -323,7 +348,7 @@ export const SiteDetailsPage: React.FC = () => {
                       Zone
                     </label>
                     <p className="text-gray-900">
-                      {site?.name_with_zone || "Not specified"}
+                      {site.pms_zone?.name || "Not specified"}
                     </p>
                   </div>
                 </div>
@@ -332,7 +357,7 @@ export const SiteDetailsPage: React.FC = () => {
                     Headquarters
                   </label>
                   <p className="text-gray-900">
-                    {site?.headquarter_name || "Not specified"}
+                    {site.pms_region?.headquarter?.name || "Not specified"}
                   </p>
                 </div>
               </div>

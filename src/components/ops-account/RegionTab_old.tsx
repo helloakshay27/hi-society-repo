@@ -88,7 +88,8 @@ export const RegionTab: React.FC<RegionTabProps> = ({
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com", 
+      "sumitra.patil@lockated.com",
+"komalshinde0101@lockated.com", 
 "demo@lockated.com",
     ];
     setCanEditRegion(allowedEmails.includes(userEmail));

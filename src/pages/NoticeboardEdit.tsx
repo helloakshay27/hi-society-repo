@@ -50,7 +50,7 @@ const NoticeboardEdit = () => {
     broadcast_images_16_by_9: [],
   });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
@@ -418,11 +418,15 @@ const NoticeboardEdit = () => {
       } catch (error) {
         console.error("Error fetching noticeboard:", error);
         toast.error("Failed to fetch broadcast details");
+      } finally {
+        setLoading(false);
       }
     };
 
     if (id) {
       fetchNoticeboard();
+    } else {
+      setLoading(false);
     }
   }, [id, baseURL]);
 
@@ -484,6 +488,17 @@ const NoticeboardEdit = () => {
       fetchGroups();
     }
   }, [formData.shared, baseURL, groups.length]);
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading noticeboard details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">
@@ -868,7 +883,7 @@ const NoticeboardEdit = () => {
                 <button
                   type="button"
                   onClick={() => document.getElementById('editCoverImageInput')?.click()}
-                  className="text-sm text-[#C72030] hover:underline font-medium"
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
                 >
                   + Upload
                 </button>
@@ -980,7 +995,7 @@ const NoticeboardEdit = () => {
                 <button
                   type="button"
                   onClick={() => document.getElementById('editBroadcastAttachmentInput')?.click()}
-                  className="text-sm text-[#C72030] hover:underline font-medium"
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
                 >
                   + Upload
                 </button>
@@ -1057,15 +1072,14 @@ const NoticeboardEdit = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
-            {loading ? 'Updating...' : 'Update'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 h-10"
+            >
+              Update
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"          >
             Cancel
           </button>
         </div>

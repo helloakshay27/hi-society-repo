@@ -17,6 +17,7 @@ import {
   ChartArea,
   ChartAreaIcon,
   Shield,
+  Menu,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -39,7 +40,7 @@ import {
   changeSite,
   clearSites,
 } from "@/store/slices/siteSlice";
-import { getUser, clearAuth } from "@/utils/auth";
+import { getUser, saveUser, clearAuth, fetchLockAccount } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
@@ -48,6 +49,7 @@ import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import axios from "axios";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
+import { useNotification } from "@/contexts/NotificationContext";
 
 export interface Company {
   id: number;
@@ -60,8 +62,8 @@ export interface Site {
 }
 
 export interface HiSocietySociety {
-  id: number;
-  id_society: string;
+  id: number;               // user_society.id (the user_society_id)
+  id_society: string;      // society_id as string
   society: {
     id: number;
     building_name: string;
@@ -69,7 +71,22 @@ export interface HiSocietySociety {
   user_flat?: {
     id: number;
     flat: string;
-    block: string;
+    block: string | null;
+  };
+}
+
+interface AccountResidence {
+  id: number;
+  society_id: number;
+  flat: string;
+  block: string | null;
+  user_society?: {
+    id: number;
+    approve: boolean | null;
+  };
+  society?: {
+    id: number;
+    building_name: string;
   };
 }
 
@@ -94,6 +111,19 @@ export const Header = () => {
   const { layoutMode, toggleLayoutMode } = useLayout();
   console.log("layoutMode:-", layoutMode);
 
+
+  const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
+
+  // Use Notification Context
+  const {
+    notifications,
+    notificationCount,
+    isNotificationOpen,
+    setIsNotificationOpen,
+    markAsRead,
+    markAllAsRead,
+    handleNotificationClick: handleNotificationClickContext,
+  } = useNotification();
 
   const currentPath = window.location.pathname;
 
@@ -131,10 +161,8 @@ export const Header = () => {
     hostname.includes("localhost") ||
     hostname.includes("lockated.gophygital.work") ||
     hostname.includes("fm-matrix.lockated.com");
+
   const navigate = useNavigate();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
-  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     if (selectedSite) {
@@ -151,7 +179,10 @@ export const Header = () => {
   };
   const userId = user.id;
   const isRestrictedUser =
-    user?.email === "karan.balsara@zycus.com" || org_id === "90" || isPulseSite; // Example condition for restricted user
+    user?.email === "karan.balsara@zycus.com" ||
+    org_id === "90" ||
+    isPulseSite ||
+    isClubSite; // Example condition for restricted user
 
   const assetSuggestions = [
     "sdcdsc",
@@ -219,27 +250,78 @@ export const Header = () => {
             role_name: data?.role_name,
           });
         })
-        .catch(() => { });
+        .catch(() => {});
     } catch {
       /* no-op */
     }
   }, [isViSite]);
 
-  // Load Hi-Society data from localStorage
+  // Load Hi-Society data: build society list from account.json residences
   useEffect(() => {
-    const loadHiSocietyData = () => {
-      const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
-      const selectedUserSociety = localStorage.getItem("selectedUserSociety");
+    const loadHiSocietyData = async () => {
+      const currentUser = getUser();
+      if (!currentUser?.spree_api_key) return;
 
-      if (societiesData) {
-        const societies: HiSocietySociety[] = JSON.parse(societiesData);
-        setHiSocietySocieties(societies);
+      try {
+        const accountUrl = `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${currentUser.spree_api_key}`;
+        const res = await fetch(accountUrl);
+        if (!res.ok) return;
+        const accountData = await res.json();
 
-        // Find and set selected society
-        if (selectedUserSociety) {
-          const selected = societies.find(s => s.id.toString() === selectedUserSociety);
+        const residences: AccountResidence[] = accountData?.residences || [];
+        const selectedUserSocietyId: number = accountData?.selected_user_society;
+
+        // Map residences → HiSocietySociety shape
+        const societies: HiSocietySociety[] = residences
+          .filter((r) => r.user_society?.approve === true)
+          .map((r) => ({
+            id: r.user_society?.id,           // user_society.id = the user_society_id
+            id_society: String(r.society_id),
+            society: {
+              id: r.society?.id,
+              building_name: r.society?.building_name || "Unknown",
+            },
+            user_flat: {
+              id: r.id,
+              flat: r.flat || "",
+              block: r.block || null,
+            },
+          }));
+
+        // Deduplicate by society id (keep first occurrence per society)
+        const seen = new Set<number>();
+        const uniqueSocieties = societies.filter((s) => {
+          if (seen.has(s.society.id)) return false;
+          seen.add(s.society.id);
+          return true;
+        });
+
+        setHiSocietySocieties(uniqueSocieties);
+        localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(uniqueSocieties));
+
+        // Set the currently selected society based on selected_user_society
+        if (selectedUserSocietyId) {
+          const selected = uniqueSocieties.find(
+            (s) => s.id === selectedUserSocietyId
+          );
           if (selected) {
             setSelectedSociety(selected);
+            localStorage.setItem("selectedUserSociety", String(selectedUserSocietyId));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load Hi-Society data", err);
+        // Fallback to localStorage cache
+        const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
+        const selectedUserSociety = localStorage.getItem("selectedUserSociety");
+        if (societiesData) {
+          const societies: HiSocietySociety[] = JSON.parse(societiesData);
+          setHiSocietySocieties(societies);
+          if (selectedUserSociety) {
+            const selected = societies.find(
+              (s) => s.id.toString() === selectedUserSociety
+            );
+            if (selected) setSelectedSociety(selected);
           }
         }
       }
@@ -252,7 +334,7 @@ export const Header = () => {
     if (selectedCompany) {
       // setCompany(selectedCompany.name)
       localStorage.setItem("selectedCompany", selectedCompany.name);
-      localStorage.setItem("selectedCompanyId", selectedCompany.id.toString());
+      localStorage.setItem("selectedCompanyId", selectedCompany?.id?.toString());
     }
   }, [selectedCompany]);
 
@@ -264,31 +346,75 @@ export const Header = () => {
   const handleSocietyChange = async (societyId: number) => {
     setHiSocietyLoading(true);
     try {
-      const user = getUser();
-      if (!user?.spree_api_key) {
+      const currentUser = getUser();
+      if (!currentUser?.spree_api_key) {
         console.error("No token found");
         return;
       }
 
-      const response = await fetch(
-        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.CHANGE_USER_SOCIETY}?token=${user.spree_api_key}&user_society_id=${societyId}`
+      // Step 1: Call change_user_society
+      const changeRes = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.CHANGE_USER_SOCIETY}?token=${currentUser.spree_api_key}&user_society_id=${societyId}`
       );
-
-      if (!response.ok) {
+      if (!changeRes.ok) {
         throw new Error("Failed to change society");
       }
 
-      const data = await response.json();
+      // Step 2: Fetch fresh account data
+      const accountRes = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${currentUser.spree_api_key}`
+      );
+      if (!accountRes.ok) {
+        throw new Error("Failed to fetch account data");
+      }
+      const accountData = await accountRes.json();
 
-      // Update selected society
-      const selected = hiSocietySocieties.find(s => s.id === societyId);
+      // Step 3: Save updated user to localStorage
+      saveUser({ ...currentUser, ...accountData });
+
+      // Step 4: Rebuild societies from residences
+      const residences: AccountResidence[] = accountData?.residences || [];
+      const selectedUserSocietyId: number = accountData?.selected_user_society;
+
+      const societies: HiSocietySociety[] = residences
+        .filter((r) => r.user_society?.approve === true)
+        .map((r) => ({
+          id: r.user_society?.id,
+          id_society: String(r.society_id),
+          society: {
+            id: r.society?.id,
+            building_name: r.society?.building_name || "Unknown",
+          },
+          user_flat: {
+            id: r.id,
+            flat: r.flat || "",
+            block: r.block || null,
+          },
+        }));
+
+      // Deduplicate by society id
+      const seen = new Set<number>();
+      const uniqueSocieties = societies.filter((s) => {
+        if (seen.has(s.society.id)) return false;
+        seen.add(s.society.id);
+        return true;
+      });
+
+      setHiSocietySocieties(uniqueSocieties);
+      localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(uniqueSocieties));
+
+      // Step 5: Find and set the newly selected society
+      const selected = uniqueSocieties.find(
+        (s) => s.id === selectedUserSocietyId
+      ) || uniqueSocieties.find((s) => s.id === societyId);
+
       if (selected) {
         setSelectedSociety(selected);
-        localStorage.setItem("selectedUserSociety", societyId.toString());
-        sessionStorage.setItem("selectedUserSociety", societyId.toString());
+        localStorage.setItem("selectedUserSociety", String(selected.id));
+        sessionStorage.setItem("selectedUserSociety", String(selected.id));
       }
 
-      // Reload page to reflect changes
+      // Step 6: Reload to reflect all context changes
       window.location.reload();
     } catch (error) {
       console.error("Failed to change society:", error);
@@ -323,6 +449,9 @@ export const Header = () => {
   const handleCompanyChange = async (companyId: number) => {
     try {
       const response = await dispatch(changeCompany(companyId)).unwrap();
+      // Re-fetch lock_account_id for the new company
+      localStorage.removeItem("lock_account_id");
+      await fetchLockAccount();
       // Reload page smoothly after successful company change
       window.location.reload();
     } catch (error) {
@@ -330,56 +459,39 @@ export const Header = () => {
     }
   };
 
+  const handleNotificationClick = async (notification: any) => {
+    await handleNotificationClickContext(notification);
+
+    // Navigate based on notification type
+    if (notification.ntype === "conversation") {
+      navigate(
+        `/vas/channels/messages/${notification.payload.conversation_id}`
+      );
+    }
+    if (notification.ntype === "projectspace") {
+      navigate(`/vas/channels/groups/${notification.payload.project_space_id}`);
+    }
+    if (notification.payload.ntype === "newtaskmanagement") {
+      navigate(`/vas/tasks/${notification.payload.task_management_id}`);
+    }
+    if (notification.payload.ntype === "newissue") {
+      navigate(`/vas/issues/${notification.payload.issue_id}`);
+    }
+  };
+
   // Handle site change
   const handleSiteChange = async (siteId: number) => {
     try {
       await dispatch(changeSite(siteId)).unwrap();
+      // Re-fetch lock_account_id for the new site
+      localStorage.removeItem("lock_account_id");
+      await fetchLockAccount();
       // Reload page smoothly after successful site change
       window.location.reload();
     } catch (error) {
       console.error("Failed to change site:", error);
     }
   };
-
-  const fetchNotifications = async () => {
-    try {
-      // Mock notifications - replace with actual API call
-      const userNotifications = await axios.get(
-        `https://${localStorage.getItem("baseUrl")}/user_notifications.json`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      setNotifications(userNotifications.data.unread_notifications);
-      setNotificationCount(userNotifications.data.unread_notifications.length);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  };
-
-  const markAsRead = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-    setNotificationCount((prev) => Math.max(0, prev - 1));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
-    setNotificationCount(0);
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    // const interval = setInterval(fetchNotifications, 30000);
-    // return () => clearInterval(interval);
-  }, []);
 
   // Compute profile display name (prefer VI account when available)
   const profileDisplayName =
@@ -414,9 +526,17 @@ export const Header = () => {
   const tempSwitchToEmployee = tempType === "pms_organization_admin";
 
   return (
-    <header className="h-16 bg-white border-b border-[#D5DbDB] fixed top-0 right-0 left-0 z-20 w-full shadow-sm">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="flex align-items-center gap-14">
+    <header className="h-16 bg-white border-b border-[#D5DbDB] fixed top-0 right-0 left-0 z-50 w-full shadow-sm">
+      <div className="flex items-center justify-between h-full px-4 md:px-6">
+        <div className="flex items-center gap-3 md:gap-14">
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 text-[#1a1a1a]"
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           {isOmanSite ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -707,7 +827,7 @@ export const Header = () => {
 
           {/* Dashboard Button */}
           {!isRestrictedUser && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               {!isViSite && (
                 <button
                   onClick={() => (window.location.href = "/dashboard")}
@@ -729,7 +849,7 @@ export const Header = () => {
                 </button>
               )}
 
-              {isViSite && selectedCompany?.id !== 294 && (
+              {isViSite && selectedCompany?.id !== 294 && !isWebSite && (
                 <button
                   onClick={() => navigate("/msafedashboard")}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
@@ -739,7 +859,7 @@ export const Header = () => {
                 </button>
               )}
 
-              {isWebSite && !isViSite && selectedCompany?.id !== 294 && (
+              {!isViSite && selectedCompany?.id !== 294 && !isWebSite && (
                 <button
                   onClick={() =>
                     window.open(
@@ -759,71 +879,71 @@ export const Header = () => {
           {/* Project Dropdown */}
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Layout Mode Toggle Button - Only available on localhost for development */}
-          {/* {(hostname.includes("localhost") || hostname.includes("dev-hisociety.lockated.com")) && ( */}
+        <div className="flex items-center gap-1 sm:gap-3">
+          {/* Layout Mode Toggle Button */}
           <Button
             onClick={() => {
-              // Set base URL BEFORE toggling mode to ensure proper API routing
               if (layoutMode === 'hi-society') {
-                // Switching to FM Matrix - set FM Matrix base URL
-                localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
                 toggleLayoutMode();
-                // Use React Router navigate for client-side navigation (preserves auth)
                 navigate('/maintenance/asset');
               } else {
-                // Switching to Hi-Society - set Hi-Society base URL
-                localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
                 toggleLayoutMode();
-                // Use React Router navigate for client-side navigation (preserves auth)
                 navigate('/maintenance/project-details-list');
               }
             }}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors"
+            className="flex items-center gap-1 sm:gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors px-2 sm:px-3"
           >
             {layoutMode === 'fm-matrix' ? (
               <>
-                <Building2 className="w-3.5 h-3.5" />
-                Switch to Hi-Society
+                <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">Switch to Hi-Society</span>
               </>
             ) : (
               <>
-                <Home className="w-3.5 h-3.5" />
-                Switch to FM Matrix
+                <Home className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">Switch to FM Matrix</span>
               </>
             )}
           </Button>
-          {/* )} */}
 
           {/* Hi-Society Mode: Society Dropdown */}
           {layoutMode === 'hi-society' && (
             <>
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
-                  <Building2 className="w-4 h-4" />
+                <DropdownMenuTrigger className="flex items-center gap-1 sm:gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
+                  <Building2 className="w-4 h-4 flex-shrink-0" />
                   {hiSocietyLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <span className="text-sm font-medium">
+                    <span className="hidden sm:inline text-sm font-medium">
                       {selectedSociety?.society?.building_name || "Select Society"}
                     </span>
                   )}
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown className="w-3 h-3 flex-shrink-0" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
+                <DropdownMenuContent className="w-56 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
                   {hiSocietySocieties.map((society) => (
                     <DropdownMenuItem
                       key={society.id}
                       onClick={() => handleSocietyChange(society.id)}
                       className={
-                        selectedSociety?.id === society.id
-                          ? "bg-[#f6f4ee] text-[#C72030]"
-                          : ""
+                        `flex flex-col items-start gap-0.5 py-2 ${
+                          selectedSociety?.id === society.id
+                            ? "bg-[#f6f4ee] text-[#C72030]"
+                            : ""
+                        }`
                       }
                     >
-                      {society.society.building_name}
+                      <span className="font-medium text-sm">{society.society.building_name}</span>
+                      {society.user_flat && (
+                        <span className="text-xs text-gray-500">
+                          {society.user_flat.block
+                            ? `${society.user_flat.block} - ${society.user_flat.flat}`
+                            : society.user_flat.flat}
+                        </span>
+                      )}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -834,8 +954,9 @@ export const Header = () => {
                 <div className="flex items-center gap-2 text-[#1a1a1a]">
                   <Home className="w-4 h-4" />
                   <span className="text-sm font-medium">
-                    {selectedSociety.user_flat.block && `${selectedSociety.user_flat.block} - `}
-                    {selectedSociety.user_flat.flat}
+                    {selectedSociety.user_flat.block
+                      ? `${selectedSociety.user_flat.block} - ${selectedSociety.user_flat.flat}`
+                      : selectedSociety.user_flat.flat}
                   </span>
                 </div>
               )}
@@ -1148,7 +1269,7 @@ export const Header = () => {
                 <p className="text-sm font-semibold text-gray-900">
                   {isViSite && viAccount
                     ? `${viAccount.firstname || ""} ${viAccount.lastname || ""}`.trim() ||
-                    "User"
+                      "User"
                     : `${user.firstname} ${user.lastname}`}
                 </p>
                 <div className="flex items-center text-gray-600 text-xs mt-0.5">

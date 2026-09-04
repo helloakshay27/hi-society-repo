@@ -6,10 +6,9 @@ import { toast } from "sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import {
     Pagination,
     PaginationContent,
@@ -21,9 +20,11 @@ import {
 } from "@/components/ui/pagination";
 import { Switch as MuiSwitch, Dialog as MuiDialog, DialogTitle as MuiDialogTitle, DialogContent as MuiDialogContent, DialogActions as MuiDialogActions, TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 export const LoyaltyInventorySection = () => {
     const navigate = useNavigate();
+    const { shouldShow } = useDynamicPermissions();
     const [loading, setLoading] = useState(false);
 
     // Tab and category data for product categories (Runwal API)
@@ -351,6 +352,7 @@ export const LoyaltyInventorySection = () => {
                             }}
                             className="w-4 h-4 cursor-pointer"
                         />
+                        {shouldShow("Inventory Section", "show") && (
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -360,6 +362,7 @@ export const LoyaltyInventorySection = () => {
                         >
                             <Eye className="w-4 h-4" />
                         </button>
+                        )}
                     </div>
                 );
             case "image":
@@ -696,13 +699,15 @@ export const LoyaltyInventorySection = () => {
 
     const renderLeftActions = () => (
         <div className="flex items-center gap-3">
+            {shouldShow("Inventory Section", "create") && (
             <Button
                 onClick={handleAddItem}
-                className="bg-[#C72030] hover:bg-[#A01828] text-white"
-            >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Item
             </Button>
+            )}
         </div>
     );
 
@@ -871,7 +876,7 @@ export const LoyaltyInventorySection = () => {
                         <TabsTrigger
                             key={category.value}
                             value={category.value}
-                            className="data-[state=active]:bg-[#C72030] data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-700 border border-gray-300 rounded-md px-4 py-2"
+                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent  px-4 py-2"
                         >
                             {category.label}
                         </TabsTrigger>
@@ -882,32 +887,32 @@ export const LoyaltyInventorySection = () => {
                 {productCategories.map((category) => (
                     <TabsContent key={category.value} value={category.value} className="space-y-4 mt-6">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                            <div className="bg-[#F6F4EE] p-6 rounded-lg shadow hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                                     <Package className="w-6 h-6 text-[#C72030]" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.totalItems}</div>
+                                    <div className="text-2xl font-semibold text-[#1A1A1A]">{stats.totalItems}</div>
                                     <div className="text-sm text-gray-600">Total Items</div>
                                 </div>
                             </div>
 
-                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                            <div className="bg-[#F6F4EE] p-6 rounded-lg shadow hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                                     <CheckCircle className="w-6 h-6 text-[#C72030]" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.inStock}</div>
+                                    <div className="text-2xl font-semibold text-[#1A1A1A]">{stats.inStock}</div>
                                     <div className="text-sm text-gray-600">Active</div>
                                 </div>
                             </div>
 
-                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                            <div className="bg-[#F6F4EE] p-6 rounded-lg shadow hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                                     <AlertCircle className="w-6 h-6 text-[#C72030]" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.outOfStock}</div>
+                                    <div className="text-2xl font-semibold text-[#1A1A1A]">{stats.outOfStock}</div>
                                     <div className="text-sm text-gray-600">Inactive</div>
                                 </div>
                             </div>
@@ -986,6 +991,7 @@ export const LoyaltyInventorySection = () => {
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-1 px-2">
+                            {shouldShow("Inventory Section", "update") && (
                             <button
                                 onClick={() => handleToggleActive(true)}
                                 disabled={isUpdatingStatus}
@@ -994,6 +1000,8 @@ export const LoyaltyInventorySection = () => {
                                 <Upload className="w-5 h-5 text-gray-900" strokeWidth={3} />
                                 <span className="text-sm mt-2 font-medium text-gray-900">Activate</span>
                             </button>
+                            )}
+                            {shouldShow("Inventory Section", "update") && (
                             <button
                                 onClick={() => handleToggleActive(false)}
                                 disabled={isUpdatingStatus}
@@ -1005,6 +1013,8 @@ export const LoyaltyInventorySection = () => {
                                 </svg>
                                 <span className="text-sm mt-2 font-medium text-gray-900">Deactivate</span>
                             </button>
+                            )}
+                            {shouldShow("Inventory Section", "update") && (
                             <button
                                 onClick={handleRemoveFromStore}
                                 disabled={loading}
@@ -1018,6 +1028,7 @@ export const LoyaltyInventorySection = () => {
                                 </svg>
                                 <span className="text-sm mt-2 font-medium text-red-600">Remove</span>
                             </button>
+                            )}
                         </div>
 
                         {/* Divider + Close */}
@@ -1036,7 +1047,7 @@ export const LoyaltyInventorySection = () => {
             }
 
             {/* Add Item Modal */}
-            <Dialog open={isAddItemModalOpen} onOpenChange={setIsAddItemModalOpen}>
+            <Dialog open={isAddItemModalOpen} modal={false} onOpenChange={setIsAddItemModalOpen}>
                 <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
 
                     <DialogHeader>
@@ -1092,41 +1103,40 @@ export const LoyaltyInventorySection = () => {
                         </div>
 
                         {/* Category */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-[#1A1A1A]">
-                                Category <span className="text-red-500">*</span>
-                            </Label>
-                            <Select value={category} onValueChange={setCategory}>
-                                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.length === 0 ? (
-                                        <div className="px-3 py-2 text-gray-400">No categories found</div>
-                                    ) : (
-                                        categories.map((cat) => (
-                                            <SelectItem key={cat.id} value={cat.id.toString()}>
-                                                {cat.name}
-                                            </SelectItem>
-                                        ))
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category <span style={{ color: 'red' }}>*</span></InputLabel>
+                            <MuiSelect
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                displayEmpty
+                                label="Category *"
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value="" disabled><em>Select a category</em></MenuItem>
+                                {categories.length === 0 ? (
+                                    <MenuItem value="" disabled>No categories found</MenuItem>
+                                ) : (
+                                    categories.map((cat) => (
+                                        <MenuItem key={cat.id} value={cat.id.toString()}>
+                                            {cat.name}
+                                        </MenuItem>
+                                    ))
+                                )}
+                            </MuiSelect>
+                        </FormControl>
 
                         {/* SKU Code */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-[#1A1A1A]">
-                                SKU Code <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                                type="text"
-                                value={skuCode}
-                                onChange={(e) => setSkuCode(e.target.value)}
-                                className="bg-gray-50 border-[#e5e1d8] p-4 h-16 text-lg" // Increased height and font size
-                                placeholder="e.g., ELEC-PH-IP15-001"
-                            />
-                        </div>
+                        <TextField
+                            label={<>SKU Code <span style={{ color: 'red' }}>*</span></>}
+                            placeholder="e.g., ELEC-PH-IP15-001"
+                            value={skuCode}
+                            onChange={(e) => setSkuCode(e.target.value)}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
+                        />
 
                         {/* Pricing Details */}
                         <div className="border-t border-gray-200 pt-4">
@@ -1134,44 +1144,43 @@ export const LoyaltyInventorySection = () => {
                                 Pricing Details
                             </h3>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-[#1A1A1A]">
-                                        MRP <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                        type="number"
-                                        value={mrp}
-                                        onChange={(e) => setMrp(e.target.value)}
-                                        className="bg-gray-50 border-[#e5e1d8]"
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-[#1A1A1A]">
-                                        Client Price <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                        type="number"
-                                        value={clientPrice}
-                                        onChange={(e) => setClientPrice(e.target.value)}
-                                        className="bg-gray-50 border-[#e5e1d8]"
-                                        placeholder="0"
-                                    />
-                                </div>
+                                <TextField
+                                    label={<>MRP <span style={{ color: 'red' }}>*</span></>}
+                                    type="number"
+                                    placeholder="0"
+                                    value={mrp}
+                                    onChange={(e) => setMrp(e.target.value)}
+                                    fullWidth
+                                    variant="outlined"
+                                    InputLabelProps={{ shrink: true }}
+                                    InputProps={{ sx: fieldStyles }}
+                                />
+                                <TextField
+                                    label={<>Client Price <span style={{ color: 'red' }}>*</span></>}
+                                    type="number"
+                                    placeholder="0"
+                                    value={clientPrice}
+                                    onChange={(e) => setClientPrice(e.target.value)}
+                                    fullWidth
+                                    variant="outlined"
+                                    InputLabelProps={{ shrink: true }}
+                                    InputProps={{ sx: fieldStyles }}
+                                />
                             </div>
                         </div>
 
                         {/* Points Required */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-[#1A1A1A]">
-                                Points Required <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
+                        <div className="space-y-1">
+                            <TextField
+                                label={<>Points Required <span style={{ color: 'red' }}>*</span></>}
                                 type="number"
+                                placeholder="0"
                                 value={pointsRequired}
                                 onChange={(e) => setPointsRequired(e.target.value)}
-                                className="bg-gray-50 border-[#e5e1d8]"
-                                placeholder="0"
+                                fullWidth
+                                variant="outlined"
+                                InputLabelProps={{ shrink: true }}
+                                InputProps={{ sx: fieldStyles }}
                             />
                             <p className="text-xs text-gray-500">
                                 Number of loyalty points needed for redemption
@@ -1179,18 +1188,17 @@ export const LoyaltyInventorySection = () => {
                         </div>
 
                         {/* Initial Quantity */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-[#1A1A1A]">
-                                Initial Quantity
-                            </Label>
-                            <Input
-                                type="number"
-                                value={initialQuantity}
-                                onChange={(e) => setInitialQuantity(e.target.value)}
-                                className="bg-gray-50 border-[#e5e1d8]"
-                                placeholder="0"
-                            />
-                        </div>
+                        <TextField
+                            label="Initial Quantity"
+                            type="number"
+                            placeholder="0"
+                            value={initialQuantity}
+                            onChange={(e) => setInitialQuantity(e.target.value)}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
+                        />
 
                         {/* Submit Button */}
                         <div className="flex justify-center pt-4">
@@ -1212,35 +1220,17 @@ export const LoyaltyInventorySection = () => {
                 </MuiDialogTitle>
                 <MuiDialogContent dividers sx={{ display: "flex", flexDirection: "column", gap: 3, py: 3 }}>
                     {/* Sub Category Filter */}
-                    <FormControl fullWidth size="small">
-                        <InputLabel id="filter-subcategory-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
-                            Sub Category
-                        </InputLabel>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Sub Category</InputLabel>
                         <MuiSelect
-                            labelId="filter-subcategory-label"
-                            id="filter-subcategory"
                             value={filterSubCategory}
                             onChange={(e) => setFilterSubCategory(e.target.value)}
+                            displayEmpty
                             label="Sub Category"
-                            sx={{
-                                backgroundColor: "white",
-                                "& .MuiOutlinedInput-root": {
-                                    "& fieldset": {
-                                        borderColor: "#e5e1d8",
-                                    },
-                                    "&:hover fieldset": {
-                                        borderColor: "#d4cfc6",
-                                    },
-                                    "&.Mui-focused fieldset": {
-                                        borderColor: "#C72030",
-                                    },
-                                },
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "#C72030",
-                                },
-                            }}
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
                         >
-                            <MenuItem value="">All Sub Categories</MenuItem>
+                            <MenuItem value=""><em>All Sub Categories</em></MenuItem>
                             {subCategories.map((cat) => (
                                 <MenuItem key={cat.value} value={cat.value.toString()}>
                                     {cat.label}
@@ -1250,13 +1240,9 @@ export const LoyaltyInventorySection = () => {
                     </FormControl>
 
                     {/* Discount Filter */}
-                    <FormControl fullWidth size="small">
-                        <InputLabel id="filter-discount-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
-                            Discount Range
-                        </InputLabel>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Discount Range</InputLabel>
                         <MuiSelect
-                            labelId="filter-discount-label"
-                            id="filter-discount"
                             value={filterMinDiscount ? `${filterMinDiscount}-${filterMaxDiscount}` : ""}
                             onChange={(e) => {
                                 const val = e.target.value as string;
@@ -1265,26 +1251,12 @@ export const LoyaltyInventorySection = () => {
                                 setFilterMinDiscount(min || "");
                                 setFilterMaxDiscount(max || "");
                             }}
+                            displayEmpty
                             label="Discount Range"
-                            sx={{
-                                backgroundColor: "white",
-                                "& .MuiOutlinedInput-root": {
-                                    "& fieldset": {
-                                        borderColor: "#e5e1d8",
-                                    },
-                                    "&:hover fieldset": {
-                                        borderColor: "#d4cfc6",
-                                    },
-                                    "&.Mui-focused fieldset": {
-                                        borderColor: "#C72030",
-                                    },
-                                },
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "#C72030",
-                                },
-                            }}
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
                         >
-                            <MenuItem value="">Any Discount</MenuItem>
+                            <MenuItem value=""><em>Any Discount</em></MenuItem>
                             <MenuItem value="0-5">0% - 5%</MenuItem>
                             <MenuItem value="5-10">5% - 10%</MenuItem>
                             <MenuItem value="10-15">10% - 15%</MenuItem>
@@ -1293,13 +1265,9 @@ export const LoyaltyInventorySection = () => {
                     </FormControl>
 
                     {/* Price Filter */}
-                    <FormControl fullWidth size="small">
-                        <InputLabel id="filter-price-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
-                            Price Range
-                        </InputLabel>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Price Range</InputLabel>
                         <MuiSelect
-                            labelId="filter-price-label"
-                            id="filter-price"
                             value={filterMinPrice ? `${filterMinPrice}-${filterMaxPrice}` : ""}
                             onChange={(e) => {
                                 const val = e.target.value as string;
@@ -1308,26 +1276,12 @@ export const LoyaltyInventorySection = () => {
                                 setFilterMinPrice(min || "");
                                 setFilterMaxPrice(max || "");
                             }}
+                            displayEmpty
                             label="Price Range"
-                            sx={{
-                                backgroundColor: "white",
-                                "& .MuiOutlinedInput-root": {
-                                    "& fieldset": {
-                                        borderColor: "#e5e1d8",
-                                    },
-                                    "&:hover fieldset": {
-                                        borderColor: "#d4cfc6",
-                                    },
-                                    "&.Mui-focused fieldset": {
-                                        borderColor: "#C72030",
-                                    },
-                                },
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "#C72030",
-                                },
-                            }}
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
                         >
-                            <MenuItem value="">Any Price</MenuItem>
+                            <MenuItem value=""><em>Any Price</em></MenuItem>
                             <MenuItem value="0-100">₹0 - ₹100</MenuItem>
                             <MenuItem value="100-500">₹100 - ₹500</MenuItem>
                             <MenuItem value="500-1000">₹500 - ₹1000</MenuItem>

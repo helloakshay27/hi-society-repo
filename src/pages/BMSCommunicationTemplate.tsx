@@ -8,6 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface CommunicationTemplate {
   id: number;
@@ -71,6 +80,11 @@ const BMSCommunicationTemplate: React.FC = () => {
   };
 
   const totalCount = templates.length;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const paginatedTemplates = templates.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -79,6 +93,96 @@ const BMSCommunicationTemplate: React.FC = () => {
     }, 500);
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
@@ -266,7 +370,7 @@ const BMSCommunicationTemplate: React.FC = () => {
           {/* <Button size="sm" variant="ghost" onClick={() => handleViewTemplate(item)} className="h-8 w-8 p-0 hover:bg-[#DBC2A9]">
             <Eye className="h-4 w-4" />
           </Button> */}
-          <Button size="sm" variant="ghost" onClick={() => handleEditTemplate(item)} className="h-8 w-8 p-0 hover:bg-[#DBC2A9]">
+          <Button size="sm" variant="ghost" onClick={() => handleEditTemplate(item)} className="h-8 w-8 p-0">
             <Edit className="h-4 w-4" />
           </Button>
           {/* <Button size="sm" variant="ghost" onClick={() => handleDeleteTemplate(item)} className="h-8 w-8 p-0 hover:bg-red-100 text-red-600">
@@ -304,9 +408,13 @@ const BMSCommunicationTemplate: React.FC = () => {
 
   // Render custom actions (Add button) for EnhancedTable leftActions
   const renderCustomActions = () => (
-    <Button onClick={handleAddTemplate} className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium">
+    <button
+      type="button"
+      onClick={handleAddTemplate}
+      className="bg-[#C72030] hover:bg-[#A01828] text-white h-9 px-4 text-sm font-medium flex items-center"
+    >
       <Plus className="w-4 h-4 mr-2" /> Add
-    </Button>
+    </button>
   );
 
   // Add Template Form
@@ -385,16 +493,15 @@ const BMSCommunicationTemplate: React.FC = () => {
           variant="outline"
           onClick={handleCancel}
           disabled={isSubmitting}
-          className="px-6"
-        >
-          Cancel
+ className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">       
+    Cancel
         </Button>
         <Button 
           type="button" 
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="bg-[#2e7d32] hover:bg-[#1b5e20] px-6"
-        >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"        >
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -425,20 +532,38 @@ const BMSCommunicationTemplate: React.FC = () => {
       {showForm ? (
         renderAddTemplateForm()
       ) : (
-        <EnhancedTable
-          data={templates}
-          columns={columns}
-          renderCell={renderCell}
-          onSearchChange={handleSearchChange}
-          searchPlaceholder="Search templates"
-          leftActions={renderCustomActions()}
-          emptyMessage="No Communication Templates Found"
-          isLoading={isLoading}
-          currentPage={currentPage}
-          totalPages={Math.ceil(totalCount / pageSize)}
-          onPageChange={handlePageChange}
-          totalCount={totalCount}
-        />
+        <>
+          <EnhancedTable
+            data={paginatedTemplates}
+            columns={columns}
+            renderCell={renderCell}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search templates"
+            leftActions={renderCustomActions()}
+            emptyMessage="No Communication Templates Found"
+            loading={isLoading}
+            pagination={false}
+          />
+          <div className="mt-6 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </>
       )}
     </div>
   );

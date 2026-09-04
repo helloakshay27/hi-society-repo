@@ -218,7 +218,8 @@ const PressReleasesCreate = () => {
   ];
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 press-releases-create-page">
+      <style>{`.press-releases-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
         {/* Header */}
         <div className="mb-8">
@@ -375,11 +376,11 @@ const PressReleasesCreate = () => {
                         </span>
                       )}
                     </span>
-                    <span className="text-red-500 ml-1">*</span>
+                    <span style={{ color: 'var(--color-primary, #da7756)', marginLeft: '4px' }}>*</span>
                   </h5>
 
                   <button
-                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                    className="bg-[#C72030] text-white hover:bg-[#A01828] h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -502,15 +503,14 @@ const PressReleasesCreate = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
             >
               {loading ? 'Submit' : 'Submit'}
             </button>
             <button
               type="button"
               onClick={() => navigate("/maintenance/press-releases-list")}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-            >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"            >
               Cancel
             </button>
           </div>

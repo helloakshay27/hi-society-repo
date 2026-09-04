@@ -1,15 +1,31 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Upload, X, FileImage } from "lucide-react";
 import { createReferralSetup } from "@/services/referralService";
 
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+};
+
 const CampaignsReferralSetupCreate: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const horizontalFileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -17,7 +33,13 @@ const CampaignsReferralSetupCreate: React.FC = () => {
     referralBannerEnabled: false,
     projectName: "",
     projectReferenceId: "",
+    title: "",
+    description: "",
+    geoLink: "",
+    details: "",
+    mobileNo: "",
     banner: null as File | null,
+    horizontalBanners: [] as File[],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,8 +54,14 @@ const CampaignsReferralSetupCreate: React.FC = () => {
           project_reference_id: parseInt(formData.projectReferenceId, 10) || 0,
           active: formData.bannerEnabled ? "on" : "off",
           is_referral: formData.referralBannerEnabled ? "on" : "off",
+          title: formData.title,
+          description: formData.description,
+          geo_link: formData.geoLink,
+          details: formData.details,
+          mobile_no: formData.mobileNo,
           banner: formData.banner,
         },
+        attachments: formData.horizontalBanners,
       };
 
       await createReferralSetup(payload);
@@ -72,6 +100,30 @@ const CampaignsReferralSetupCreate: React.FC = () => {
     fileInputRef.current?.click();
   };
 
+  const handleHorizontalFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        horizontalBanners: [...prev.horizontalBanners, ...files],
+      }));
+    }
+    if (horizontalFileInputRef.current) {
+      horizontalFileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveHorizontalFile = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      horizontalBanners: prev.horizontalBanners.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleHorizontalBrowseClick = () => {
+    horizontalFileInputRef.current?.click();
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="mx-auto">
@@ -95,28 +147,24 @@ const CampaignsReferralSetupCreate: React.FC = () => {
             {/* Toggle Switches Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Banner */}
-              <div className="space-y-2">
-                <Label htmlFor="banner" className="text-gray-600 text-sm">
-                  Banner
-                </Label>
-                <div className="flex items-center space-x-3">
-                  <Switch
-                    id="banner"
-                    checked={formData.bannerEnabled}
-                    onCheckedChange={(checked) =>
-                      handleToggleChange("bannerEnabled", checked)
-                    }
-                    className={
-                      formData.bannerEnabled
-                        ? "data-[state=checked]:bg-green-500"
-                        : "data-[state=unchecked]:bg-red-500"
-                    }
-                  />
-                  <span className="text-sm text-gray-600">
-                    {formData.bannerEnabled ? "Enabled" : "Disabled"}
-                  </span>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="banner" className="text-gray-600 text-sm">
+                Banner
+              </Label>
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="banner"
+                  checked={formData.bannerEnabled}
+                  onCheckedChange={(checked) =>
+                    handleToggleChange("bannerEnabled", checked)
+                  }
+                  className="data-[state=checked]:!bg-[#da7756] data-[state=unchecked]:!bg-gray-300"
+                />
+                <span className="text-sm text-gray-600">
+                  {formData.bannerEnabled ? "Enabled" : "Disabled"}
+                </span>
               </div>
+            </div>
 
               {/* Referral Banner */}
               <div className="space-y-2">
@@ -133,11 +181,7 @@ const CampaignsReferralSetupCreate: React.FC = () => {
                     onCheckedChange={(checked) =>
                       handleToggleChange("referralBannerEnabled", checked)
                     }
-                    className={
-                      formData.referralBannerEnabled
-                        ? "data-[state=checked]:bg-green-500"
-                        : "data-[state=unchecked]:bg-red-500"
-                    }
+                    className="data-[state=checked]:!bg-[#da7756] data-[state=unchecked]:!bg-gray-300"
                   />
                   <span className="text-sm text-gray-600">
                     {formData.referralBannerEnabled ? "Enabled" : "Disabled"}
@@ -149,41 +193,131 @@ const CampaignsReferralSetupCreate: React.FC = () => {
             {/* Text Inputs Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Project Name */}
-              <div className="space-y-2">
-                <Label htmlFor="projectName" className="text-gray-600 text-sm">
-                  Project Name
-                </Label>
-                <Input
-                  id="projectName"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.projectName}
-                  onChange={(e) =>
-                    handleInputChange("projectName", e.target.value)
-                  }
-                />
-              </div>
+              <TextField
+                label="Project Name"
+                placeholder="Enter project name"
+                value={formData.projectName}
+                onChange={(e) => handleInputChange("projectName", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* Project Reference Id */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="projectReferenceId"
-                  className="text-gray-600 text-sm"
-                >
-                  Project Reference Id
-                </Label>
-                <Input
-                  id="projectReferenceId"
-                  type="text"
-                  placeholder=""
-                  className="bg-white"
-                  value={formData.projectReferenceId}
+              <TextField
+                label="Project Reference Id"
+                placeholder="Enter project reference id"
+                value={formData.projectReferenceId}
+                onChange={(e) =>
+                  handleInputChange("projectReferenceId", e.target.value)
+                }
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+
+            {/* Additional Text Inputs Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Title */}
+              <TextField
+                label="Title"
+                placeholder="Enter title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
+
+              {/* Description */}
+              <div className="relative w-full md:col-span-2">
+                <textarea
+                  id="description"
+                  value={formData.description}
                   onChange={(e) =>
-                    handleInputChange("projectReferenceId", e.target.value)
+                    handleInputChange("description", e.target.value)
                   }
+                  name="description"
+                  rows={3}
+                  placeholder=" "
+                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+      focus:outline-none
+      focus:border-[2px]
+      focus:border-[rgb(25,118,210)]
+      resize-vertical"
                 />
+                <label
+                  htmlFor="description"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+      peer-placeholder-shown:top-4
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-focus:-top-[10px]
+      peer-focus:text-sm
+      peer-focus:text-[rgb(25,118,210)]"
+                >
+                  Description
+                </label>
               </div>
+
+              {/* Geo Link */}
+              <TextField
+                label="Geo Link"
+                placeholder="Enter geo link"
+                value={formData.geoLink}
+                onChange={(e) => handleInputChange("geoLink", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
+
+              {/* Details */}
+              <div className="relative w-full md:col-span-2">
+                <textarea
+                  id="details"
+                  value={formData.details}
+                  onChange={(e) =>
+                    handleInputChange("details", e.target.value)
+                  }
+                  name="details"
+                  rows={3}
+                  placeholder=" "
+                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+      focus:outline-none
+      focus:border-[2px]
+      focus:border-[rgb(25,118,210)]
+      resize-vertical"
+                />
+                <label
+                  htmlFor="details"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+      peer-placeholder-shown:top-4
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-focus:-top-[10px]
+      peer-focus:text-sm
+      peer-focus:text-[rgb(25,118,210)]"
+                >
+                  Details
+                </label>
+              </div>
+
+              {/* Mobile No */}
+              <TextField
+                label="Mobile No"
+                placeholder="Enter mobile no"
+                value={formData.mobileNo}
+                onChange={(e) => handleInputChange("mobileNo", e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
 
             {/* Banner Upload */}
@@ -215,24 +349,76 @@ const CampaignsReferralSetupCreate: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    <Input
-                      type="text"
-                      placeholder="No file selected"
-                      readOnly
-                      className="bg-gray-50 cursor-default"
-                    />
+                    <div className="h-[45px] flex items-center px-3 bg-white border border-[#ddd] rounded text-sm text-gray-400">
+                      No file selected
+                    </div>
                   )}
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleBrowseClick}
-                  className="flex items-center gap-2"
+                  className="bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                 >
                   <Upload className="w-4 h-4" />
                   Browse
                 </Button>
               </div>
+            </div>
+
+            {/* Horizontal Banner Upload */}
+            <div className="space-y-2 mb-6">
+              <Label htmlFor="horizontalBanner" className="text-gray-600 text-sm">
+                Horizontal Banner
+              </Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  ref={horizontalFileInputRef}
+                  onChange={handleHorizontalFileSelect}
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                />
+                <div className="flex-1">
+                  {formData.horizontalBanners.length === 0 && (
+                    <div className="h-[45px] flex items-center px-3 bg-white border border-[#ddd] rounded text-sm text-gray-400">
+                      No file selected
+                    </div>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleHorizontalBrowseClick}
+                  className="bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Browse
+                </Button>
+              </div>
+              {formData.horizontalBanners.length > 0 && (
+                <div className="space-y-2">
+                  {formData.horizontalBanners.map((file, index) => (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md"
+                    >
+                      <FileImage className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-700 flex-1 truncate">
+                        {file.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHorizontalFile(index)}
+                        className="p-1 hover:bg-gray-200 rounded"
+                      >
+                        <X className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -243,7 +429,8 @@ const CampaignsReferralSetupCreate: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-[#10b981] hover:bg-[#059669] text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outline"
+                className="bg-[#C72030] hover:bg-[#A01828] !text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Submitting..." : "Submit"}
               </Button>

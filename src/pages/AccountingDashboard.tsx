@@ -29,7 +29,7 @@ const AccountingDashboard = () => {
   
   // State management
   const [accountingRecords, setAccountingRecords] = useState<AccountingData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -550,9 +550,9 @@ const AccountingDashboard = () => {
           </div>
 
           {/* Page Info */}
-          <div className="ml-4 text-sm text-gray-600">
+          {/* <div className="ml-4 text-sm text-gray-600">
             Page {currentPage} of {totalPages}
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

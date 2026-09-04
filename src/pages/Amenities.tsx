@@ -157,7 +157,7 @@ const Amenities = () => {
                 onChange={(e) => setName(e.target.value)}
                 fullWidth
                 variant="outlined"
-                slotProps={{ inputLabel: { shrink: true } }}
+                slotProps={{ inputLabel: { shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } } }}
                 InputProps={{ sx: fieldStyles }}
                 required
               />
@@ -332,8 +332,9 @@ const Amenities = () => {
           <Button
             type="button"
             // variant="outline"
+            variant="outline"
             onClick={handleGoBack}
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            className="px-8 py-2"
             disabled={loading}
           >
             Cancel

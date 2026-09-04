@@ -1,32 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit } from "lucide-react";
+import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit, Mail } from "lucide-react";
+import { FormControl, MenuItem, Select as MuiSelect, InputLabel, TextField, ListItemText, InputAdornment } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { StatsCard } from "@/components/StatsCard";
 import { CommonImportModal } from "@/components/CommonImportModal";
+import { SendEmailModal } from "@/components/SendEmailModal";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import MultiSelectBox from "@/components/ui/multi-selector";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 import axios from "axios";
+import { debounce } from "lodash";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -36,7 +30,7 @@ const columns: ColumnConfig[] = [
   { key: "tower", label: "Tower", sortable: true, draggable: true },
   { key: "flat", label: "Flat", sortable: true, draggable: true },
   { key: "occupancy", label: "Occupancy", sortable: true, draggable: true },
-  { key: "title", label: "Title", sortable: true, draggable: true },
+  // { key: "title", label: "Title", sortable: true, draggable: true },
   { key: "name", label: "Name", sortable: true, draggable: true },
   { key: "mobileNumber", label: "Mobile Number", sortable: true, draggable: true },
   { key: "email", label: "Email", sortable: true, draggable: true },
@@ -45,14 +39,14 @@ const columns: ColumnConfig[] = [
   { key: "livesHere", label: "Lives Here", sortable: true, draggable: true },
   { key: "membership_type", label: "Membership Type", sortable: true, draggable: true },
   { key: "status", label: "Status", sortable: true, draggable: true },
-  { key: "staff", label: "Staff", sortable: true, draggable: true },
-  { key: "vehicle", label: "Vehicle", sortable: true, draggable: true },
+  // { key: "staff", label: "Staff", sortable: true, draggable: true },
+  // { key: "vehicle", label: "Vehicle", sortable: true, draggable: true },
   { key: "appDownloaded", label: "App Downloaded", sortable: true, draggable: true },
-  { key: "alternateEmail1", label: "Alternate Email -1", sortable: true, draggable: true },
-  { key: "alternateEmail2", label: "Alternate Email -2", sortable: true, draggable: true },
-  { key: "alternateAddress", label: "Alternate Address", sortable: true, draggable: true },
-  { key: "landlineNumber", label: "Landline Number", sortable: true, draggable: true },
-  { key: "intercomNumber", label: "Intercom Number", sortable: true, draggable: true },
+  // { key: "alternateEmail1", label: "Alternate Email -1", sortable: true, draggable: true },
+  // { key: "alternateEmail2", label: "Alternate Email -2", sortable: true, draggable: true },
+  // { key: "alternateAddress", label: "Alternate Address", sortable: true, draggable: true },
+  // { key: "landlineNumber", label: "Landline Number", sortable: true, draggable: true },
+  // { key: "intercomNumber", label: "Intercom Number", sortable: true, draggable: true },
   { key: "gstNumber", label: "GST Number", sortable: true, draggable: true },
   { key: "panNumber", label: "PAN Number", sortable: true, draggable: true },
   { key: "clubMembership", label: "Club Membership", sortable: true, draggable: true },
@@ -73,8 +67,8 @@ const formattedResponse = (data) => {
     email: item.email || "-",
     residentType: item.resident_type || "-",
     phase: item.display_view || "-",
-    livesHere: (item.lives_here === "1" || item.lives_here === "true") ? "Yes" : "No",
-    membershipType: item?.membership_type || "-",
+    livesHere: item.lives_here ? item.lives_here.charAt(0).toUpperCase() + item.lives_here.slice(1) : "-",
+    membershipType: item?.is_primary ? "Primary" : "Secondary",
     status: item.approve ? "Approved" : item.approve === false ? "Rejected" : "Pending",
     staff: item.staff || "-",
     vehicle: item.vehicle || "-",
@@ -100,10 +94,13 @@ const ManageUsersPage = () => {
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showActionPanel, setShowActionPanel] = useState(false);
+  const [showSendEmail, setShowSendEmail] = useState(false);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [importId, setImportId] = useState<number | null>(null);
+  const importPollRef = useRef<number | null>(null);
   const [isDownloadingSample, setIsDownloadingSample] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -148,7 +145,7 @@ const ManageUsersPage = () => {
   const [flatOptions, setFlatOptions] = useState<{ label: string; value: string }[]>([]);
 
   const getSocietyId = () => {
-    return localStorage.getItem('selectedUserSociety') || '';
+    return localStorage.getItem('selectedSocietyId') || '';
   };
 
   const fetchTowers = async () => {
@@ -166,6 +163,8 @@ const ManageUsersPage = () => {
       setTowerOptions([]);
     }
   };
+
+  console.log(towerOptions)
 
   const fetchFlats = async (blockId: number) => {
     if (isNaN(blockId)) {
@@ -228,6 +227,70 @@ const ManageUsersPage = () => {
     fetchTowers();
   }, []);
 
+  useEffect(() => {
+    return () => clearImportStatusPolling();
+  }, []);
+
+  const clearImportStatusPolling = () => {
+    if (importPollRef.current) {
+      window.clearInterval(importPollRef.current);
+      importPollRef.current = null;
+    }
+  };
+
+  const checkImportStatus = async (id: number) => {
+    try {
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/upload_user_societies_status?import_id=${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const importData = response.data?.import || response.data;
+      const statusInfo = {
+        status: importData?.status,
+        import_id: importData?.id,
+        filename: importData?.filename,
+        total_rows: importData?.total_rows,
+        success_count: importData?.success_count,
+        error_count: importData?.error_count,
+      };
+
+      if (statusInfo.status === "completed") {
+        clearImportStatusPolling();
+        toast.success(
+          `Import completed: ${statusInfo.filename} — ${statusInfo.success_count}/${statusInfo.total_rows} succeeded, ${statusInfo.error_count} failed`
+        );
+        setIsImporting(false);
+        setImportId(null);
+        fetchUsers(1);
+        setShowImportModal(false);
+        setSelectedImportFile(null);
+      } else if (statusInfo.status === "failed") {
+        clearImportStatusPolling();
+        toast.error(`Import failed: ${statusInfo.filename || ""}`);
+        setIsImporting(false);
+        setImportId(null);
+      } else {
+        toast(
+          `Import ${statusInfo.status}: ${statusInfo.filename} — ${statusInfo.success_count}/${statusInfo.total_rows} processed`
+        );
+      }
+    } catch (error) {
+      console.error("Error checking import status:", error);
+    }
+  };
+
+  const startImportStatusPolling = (id: number) => {
+    clearImportStatusPolling();
+    importPollRef.current = window.setInterval(() => {
+      checkImportStatus(id);
+    }, 5000);
+  };
+
   const handleViewUser = (userId: string) => {
     navigate(`/settings/manage-users/${userId}`);
   };
@@ -289,6 +352,36 @@ const ManageUsersPage = () => {
     }
   };
 
+  const handleDownloadUsers = async (endpoint: string, fileName: string) => {
+    try {
+      if (!baseUrl || !token) {
+        toast.error('Missing authentication details. Please login again.');
+        return;
+      }
+
+      const response = await axios.get(`https://${baseUrl}${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`${fileName} downloaded successfully.`);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file. Please try again.');
+    }
+  };
+
   const handleImportUsers = async () => {
     if (!selectedImportFile) {
       toast.error('Please select a file to import.');
@@ -300,6 +393,7 @@ const ManageUsersPage = () => {
 
       if (!baseUrl || !token) {
         toast.error('Missing authentication details. Please login again.');
+        setIsImporting(false);
         return;
       }
 
@@ -315,7 +409,16 @@ const ManageUsersPage = () => {
 
       if (response.data?.[0]?.error) {
         toast.error(response.data?.[0]?.error)
+        setIsImporting(false);
         return
+      }
+
+      if (response.data?.status === 'queued' && response.data?.import_id) {
+        toast.success(response.data?.message || 'Import queued. Processing...');
+        setImportId(response.data.import_id);
+        startImportStatusPolling(response.data.import_id);
+        // isImporting stays true until the polled status is completed/failed
+        return;
       }
 
       toast.success('Users imported successfully.');
@@ -324,6 +427,7 @@ const ManageUsersPage = () => {
       fetchUsers(1);
       setShowImportModal(false);
       setSelectedImportFile(null);
+      setIsImporting(false);
     } catch (error) {
       console.error('Error importing users:', error);
       const errorMessage = error?.response?.data?.message || 'Failed to import users. Please try again.';
@@ -336,14 +440,47 @@ const ManageUsersPage = () => {
           border: 'none',
         },
       });
-    } finally {
       setIsImporting(false);
     }
   };
 
+  const buildFilterParams = () => {
+    const filterParams: any = {};
+    if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
+    if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
+    if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
+    if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
+    if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
+    if (filters.flat && filters.flat.length > 0) {
+      filterParams["q[user_society_user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
+    }
+    if (filters.status && filters.status.length > 0) {
+      filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
+    }
+    if (filters.residentType && filters.residentType.length > 0) {
+      filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
+    }
+    if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
+    if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
+    if (filters.startDate && filters.endDate) {
+      filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
+    }
+    if (searchTerm) filterParams.search = searchTerm;
+    return filterParams;
+  };
+
   const handleExport = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.xlsx`, {
+      const queryParams = new URLSearchParams();
+      Object.entries(buildFilterParams()).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => queryParams.append(key, v));
+        } else if (value !== undefined && value !== null) {
+          queryParams.append(key, value as string);
+        }
+      });
+
+      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.xlsx?${queryParams}`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -371,28 +508,7 @@ const ManageUsersPage = () => {
   const handleApplyFilters = () => {
     console.log("Applying filters:", filters);
     setPagination((prev) => ({ ...prev, current_page: 1 }));
-    const filterParams: any = {};
-    if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
-    if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
-    if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
-    if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
-    if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
-    if (filters.flat && filters.flat.length > 0) {
-      filterParams["q[user_society_user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
-    }
-    if (filters.status && filters.status.length > 0) {
-      filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
-    }
-    if (filters.residentType && filters.residentType.length > 0) {
-      filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
-    }
-    if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
-    if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
-    if (filters.startDate && filters.endDate) {
-      filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
-    }
-
-    fetchUsers(1, filterParams);
+    fetchUsers(1, buildFilterParams());
     setShowFiltersDialog(false);
   };
 
@@ -422,30 +538,8 @@ const ManageUsersPage = () => {
     }
 
     try {
-      const filterParams: any = {};
-      if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
-      if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
-      if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
-      if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
-      if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
-      if (filters.flat && filters.flat.length > 0) {
-        filterParams["q[user_society_user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
-      }
-      if (filters.status && filters.status.length > 0) {
-        filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
-      }
-      if (filters.residentType && filters.residentType.length > 0) {
-        filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
-      }
-      if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
-      if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
-      if (filters.startDate && filters.endDate) {
-        filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
-      }
-      if (searchTerm) filterParams.search = searchTerm;
-
       setPagination((prev) => ({ ...prev, current_page: page }));
-      await fetchUsers(page, filterParams);
+      await fetchUsers(page, buildFilterParams());
     } catch (error) {
       console.error("Error changing page:", error);
       toast.error("Failed to load page data. Please try again.");
@@ -459,7 +553,7 @@ const ManageUsersPage = () => {
     const items = [];
     const totalPages = pagination.total_pages;
     const currentPage = pagination.current_page;
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
 
     if (showEllipsis) {
       items.push(
@@ -574,12 +668,44 @@ const ManageUsersPage = () => {
     return items;
   };
 
+  const debouncedSearch = useCallback(
+    debounce(async (searchQuery: string) => {
+      fetchUsers(1, { "q[user_firstname_or_user_lastname_or_user_email_or_user_mobile_cont]": searchQuery });
+    }, 500),
+    [baseUrl, token, pagination.current_page]
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    debouncedSearch(value);
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedUsers(users.map((u) => u.id));
     } else {
       setSelectedUsers([]);
     }
+  };
+
+  const clean = (v: string | undefined) => (v && v !== "-" ? v : undefined);
+  const getSelectedRecipients = () =>
+    users
+      .filter((u) => selectedUsers.includes(u.id))
+      .map((u) => ({
+        email: clean(u.email) || "",
+        name: clean(u.name),
+        mobile: clean(u.mobileNumber),
+        flat: clean(u.flat),
+        tower: clean(u.tower),
+      }));
+
+  const handleSendEmailAction = () => {
+    if (selectedUsers.length === 0) {
+      toast.error("Select at least one user to send an email.");
+      return;
+    }
+    setShowSendEmail(true);
   };
 
   const handleSelectUser = (userId: string, checked: boolean) => {
@@ -593,6 +719,51 @@ const ManageUsersPage = () => {
   const handleActionClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowActionPanel(true);
+  };
+
+  const handleUpdateUserStatus = async (userId: string, newStatus: string) => {
+    try {
+      if (!baseUrl || !token) {
+        toast.error('Missing authentication details. Please login again.');
+        return;
+      }
+
+      // Convert status display value to API value
+      const statusMap: { [key: string]: boolean | null } = {
+        'Approved': true,
+        'Rejected': false,
+        'Pending': null,
+      };
+
+      const approve = statusMap[newStatus];
+      const payload = { approve };
+
+      const response = await axios.patch(
+        `https://${baseUrl}/crm/admin/user_societies/${userId}.json`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data) {
+        toast.success(`User status updated to ${newStatus}`);
+        // Update the local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === userId ? { ...user, status: newStatus } : user
+          )
+        );
+        // Refresh dashboard data
+        // fetchUsers(pagination.current_page);
+      }
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast.error('Failed to update user status. Please try again.');
+    }
   };
 
   // Render cell content based on column key
@@ -619,20 +790,70 @@ const ManageUsersPage = () => {
               className="p-1 hover:bg-gray-100 rounded"
               title="Edit"
             >
-              <Edit className="w-4 h-4 text-[#C72030]" />
+              <Edit className="w-4 h-4 !text-[#1A1A1A]" />
             </button>
           </div>
         );
       case "flat":
         return <span className="text-sm">{user.flat}</span>;
       case "tower":
-        return <span className="text-sm">{user.block_no}</span>;
-      case "status":
+        return <span className="text-sm">{user.tower}</span>;
+      case "status": {
+        const statusColorMap = {
+          Pending: { dot: "bg-amber-500" },
+          Approved: { dot: "bg-emerald-600" },
+          Rejected: { dot: "bg-red-500" },
+        };
+
+        const colors = statusColorMap[user.status as keyof typeof statusColorMap] || statusColorMap.Pending;
+
         return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded">
-            {user.status}
-          </span>
+          <FormControl
+            variant="standard"
+            sx={{
+              minWidth: 120,
+            }}
+          >
+            <MuiSelect
+              value={user.status ?? ""}
+              onChange={(e) =>
+                handleUpdateUserStatus(user.id, e.target.value as string)
+              }
+              disableUnderline
+              renderValue={(value) => (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className={`inline-block w-2 h-2 rounded-full ${colors.dot}`}></span>
+                  <span>{value}</span>
+                </div>
+              )}
+              sx={{
+                fontSize: "0.875rem",
+                cursor: "pointer",
+                "& .MuiSelect-select": {
+                  padding: "4px 0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                },
+              }}
+            >
+              {["Pending", "Approved", "Rejected"].map((status) => {
+                const statusColors = statusColorMap[status as keyof typeof statusColorMap];
+                return (
+                  <MenuItem key={status} value={status} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className={`inline-block w-2 h-2 rounded-full ${statusColors?.dot || "bg-gray-500"}`}></span>
+                    <span>{status}</span>
+                  </MenuItem>
+                );
+              })}
+            </MuiSelect>
+          </FormControl>
         );
+      }
+      case "membership_type":
+        return user.membershipType;
+      case "phase":
+        return user.phase === "Pre Sales" ? "Post Sales" : user.phase === "Post Sales" ? "Post Possession" : "-"
       default:
         return <span className="text-sm">{user[columnKey] || "-"}</span>;
     }
@@ -648,30 +869,35 @@ const ManageUsersPage = () => {
             value={dashboardData.total_users.toString()}
             icon={<Users className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx', 'total_users.xlsx')}
           />
           <StatsCard
             title="Pending Users"
             value={dashboardData.pending_users.toString()}
             icon={<Clock className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=null', 'pending_users.xlsx')}
           />
           <StatsCard
             title="Approved Users"
             value={dashboardData.approved_users.toString()}
             icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=true', 'approved_users.xlsx')}
           />
           <StatsCard
             title="Rejected Users"
             value={dashboardData.rejected_users.toString()}
             icon={<UserX className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=false', 'rejected_users.xlsx')}
           />
           <StatsCard
             title="Total No. Of Downloads"
             value={dashboardData.app_downloads.toString()}
             icon={<MonitorSmartphone className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?app_download=yes', 'app_downloaded.xlsx')}
           />
         </div>
 
@@ -682,30 +908,35 @@ const ManageUsersPage = () => {
             value={dashboardData.total_flat_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?app_download=no', 'not_downloaded.xlsx')}
           />
           <StatsCard
             title="Total No. Of Owners Downloads"
             value={dashboardData.total_owner_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=owner', 'owners.xlsx')}
           />
           <StatsCard
             title="Total No. Of Tenants Downloads"
             value={dashboardData.total_tenant_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=tenant', 'tenants.xlsx')}
           />
           <StatsCard
             title="Post Sale Downloads"
             value={dashboardData.post_sale_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[display_view_eq]=Pre Sales', 'pre_sales.xlsx')}
           />
           <StatsCard
             title="Post Possession Downloads"
             value={dashboardData.post_possession_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[display_view_eq]=Post Sales', 'post_sales.xlsx')}
           />
         </div>
 
@@ -715,16 +946,22 @@ const ManageUsersPage = () => {
             onAdd={handleAddUser}
             onImport={handleImport}
             onClearSelection={() => setShowActionPanel(false)}
-          // actions={[
-          //   { label: 'Filters', icon: Filter, onClick: handleFilters }
-          // ]}
+            actions={[
+              { label: "Send Email", icon: Mail, onClick: handleSendEmailAction },
+            ]}
           />
         )}
 
-        <Dialog open={showFiltersDialog} onOpenChange={setShowFiltersDialog}>
+        <SendEmailModal
+          open={showSendEmail}
+          onOpenChange={setShowSendEmail}
+          recipients={getSelectedRecipients()}
+        />
+
+        <Dialog modal={false} open={showFiltersDialog} onOpenChange={setShowFiltersDialog}>
           <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between shrink-0">
-              <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">Advance Filter</DialogTitle>
+            <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between shrink-0">
+              <DialogTitle className="text-base font-bold text-white text-center w-full">Advance Filter</DialogTitle>
               <button
                 onClick={() => setShowFiltersDialog(false)}
                 className="text-red-500 hover:text-red-700 transition-colors absolute right-4"
@@ -736,193 +973,249 @@ const ManageUsersPage = () => {
             <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
               <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                 {/* First Name */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">First Name</Label>
-                  <Input
-                    placeholder="Enter First Name"
-                    value={filters.firstName}
-                    onChange={(e) => setFilters({ ...filters, firstName: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="First Name"
+                  placeholder="Enter First Name"
+                  value={filters.firstName}
+                  onChange={(e) => setFilters({ ...filters, firstName: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Last Name */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Last Name</Label>
-                  <Input
-                    placeholder="Enter Last Name"
-                    value={filters.lastName}
-                    onChange={(e) => setFilters({ ...filters, lastName: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="Last Name"
+                  placeholder="Enter Last Name"
+                  value={filters.lastName}
+                  onChange={(e) => setFilters({ ...filters, lastName: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Email ID */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Email ID</Label>
-                  <Input
-                    placeholder="Enter Email ID"
-                    value={filters.email}
-                    onChange={(e) => setFilters({ ...filters, email: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="Email ID"
+                  placeholder="Enter Email ID"
+                  value={filters.email}
+                  onChange={(e) => setFilters({ ...filters, email: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Mobile */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Mobile</Label>
-                  <Input
-                    placeholder="Enter Mobile"
-                    value={filters.mobile}
-                    onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
-                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm"
-                  />
-                </div>
+                <TextField
+                  label="Mobile"
+                  placeholder="Enter Mobile"
+                  value={filters.mobile}
+                  onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Resident Type */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Resident Type</Label>
-                  <MultiSelectBox
-                    options={[
-                      { label: "Owner", value: "Owner" },
-                      { label: "Tenant", value: "Tenant" },
-                    ]}
-                    value={filters.residentType}
-                    onChange={(selected: any) => setFilters({ ...filters, residentType: selected || [] })}
-                    placeholder="Select Resident Type"
-                  />
-                </div>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Resident Type</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={filters.residentType.map((r: any) => r.value)}
+                    onChange={(e) => {
+                      const values = e.target.value as string[];
+                      const options = [{ label: "Owner", value: "Owner" }, { label: "Tenant", value: "Tenant" }];
+                      setFilters({ ...filters, residentType: options.filter((o) => values.includes(o.value)) });
+                    }}
+                    displayEmpty
+                    label="Resident Type"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                    renderValue={(selected: string[]) =>
+                      selected.length ? selected.join(', ') : <em>Select Resident Type</em>
+                    }
+                  >
+                    {[{ label: "Owner", value: "Owner" }, { label: "Tenant", value: "Tenant" }].map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <ListItemText primary={opt.label} />
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Tower */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Tower</Label>
-                  <Select
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower</InputLabel>
+                  <MuiSelect
                     value={filters.tower}
-                    onValueChange={(value) => {
+                    onChange={(e) => {
+                      const value = e.target.value;
                       setFilters({ ...filters, tower: value, flat: [] });
                       fetchFlats(parseInt(value));
                     }}
+                    displayEmpty
+                    label="Tower"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
                   >
-                    <SelectTrigger className="h-9 border-gray-300 text-gray-500 text-sm">
-                      <SelectValue placeholder="Select Tower" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Select Tower</SelectItem>
-                      {towerOptions.map((tower) => (
-                        <SelectItem key={tower.id} value={tower.id.toString()}>
-                          {tower.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <MenuItem value="" disabled><em>Select Tower</em></MenuItem>
+                    {towerOptions.map((tower) => (
+                      <MenuItem key={tower.id} value={tower.id.toString()}>{tower.name}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Flat Number */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Flat Number</Label>
-                  <MultiSelectBox
-                    options={flatOptions}
-                    value={filters.flat}
-                    onChange={(selected: any) => setFilters({ ...filters, flat: selected || [] })}
-                    placeholder="Select Flat Number"
-                  />
-                </div>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat Number</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={filters.flat.map((f: any) => f.value)}
+                    onChange={(e) => {
+                      const values = e.target.value as string[];
+                      setFilters({ ...filters, flat: flatOptions.filter((o) => values.includes(o.value)) });
+                    }}
+                    displayEmpty
+                    label="Flat Number"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                    renderValue={(selected: string[]) =>
+                      selected.length
+                        ? flatOptions.filter((o) => selected.includes(o.value)).map((o) => o.label).join(', ')
+                        : <em>Select Flat Number</em>
+                    }
+                  >
+                    {flatOptions.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <ListItemText primary={opt.label} />
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Lives Here */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Lives Here</Label>
-                  <Select
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Lives Here</InputLabel>
+                  <MuiSelect
                     value={filters.livesHere}
-                    onValueChange={(value) => setFilters({ ...filters, livesHere: value })}
+                    onChange={(e) => setFilters({ ...filters, livesHere: e.target.value })}
+                    displayEmpty
+                    label="Lives Here"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
                   >
-                    <SelectTrigger className="h-9 border-gray-300 text-gray-500 text-sm">
-                      <SelectValue placeholder="Select Lives Here" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <MenuItem value=""><em>Select Lives Here</em></MenuItem>
+                    <MenuItem value="Yes">Yes</MenuItem>
+                    <MenuItem value="No">No</MenuItem>
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Status */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Status</Label>
-                  <MultiSelectBox
-                    options={[
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={filters.status.map((s: any) => s.value)}
+                    onChange={(e) => {
+                      const values = e.target.value as string[];
+                      const options = [
+                        { label: "Approved", value: "1" },
+                        { label: "Rejected", value: "0" },
+                        { label: "Pending", value: "null" },
+                      ];
+                      setFilters({ ...filters, status: options.filter((o) => values.includes(o.value)) });
+                    }}
+                    displayEmpty
+                    label="Status"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                    renderValue={(selected: string[]) =>
+                      selected.length ? selected.join(', ') : <em>Select Status</em>
+                    }
+                  >
+                    {[
                       { label: "Approved", value: "1" },
                       { label: "Rejected", value: "0" },
                       { label: "Pending", value: "null" },
-                    ]}
-                    value={filters.status}
-                    onChange={(selected: any) => setFilters({ ...filters, status: selected || [] })}
-                    placeholder="Select Status"
-                  />
-                </div>
+                    ].map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <ListItemText primary={opt.label} />
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Membership Type */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Membership Type</Label>
-                  <Select
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Membership Type</InputLabel>
+                  <MuiSelect
                     value={filters.membershipType}
-                    onValueChange={(value) => setFilters({ ...filters, membershipType: value })}
+                    onChange={(e) => setFilters({ ...filters, membershipType: e.target.value })}
+                    displayEmpty
+                    label="Membership Type"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
                   >
-                    <SelectTrigger className="h-9 border-gray-300 text-gray-500 text-sm">
-                      <SelectValue placeholder="Select Membership" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Primary</SelectItem>
-                      <SelectItem value="0">Secondary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <MenuItem value=""><em>Select Membership</em></MenuItem>
+                    <MenuItem value="1">Primary</MenuItem>
+                    <MenuItem value="0">Secondary</MenuItem>
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Start Date */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">Start Date</Label>
-                  <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden">
-                    <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
-                      <Calendar className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <Input
-                      type="date"
-                      value={filters.startDate}
-                      onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                      className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
-                    />
-                  </div>
-                </div>
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    sx: fieldStyles,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
                 {/* End Date */}
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-600">End Date</Label>
-                  <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden">
-                    <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
-                      <Calendar className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <Input
-                      type="date"
-                      value={filters.endDate}
-                      onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                      className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
-                    />
-                  </div>
-                </div>
+                <TextField
+                  label="End Date"
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    sx: fieldStyles,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </div>
 
               {/* Action Buttons */}
               <div className="flex justify-center gap-4 pt-2">
                 <Button
                   onClick={handleResetFilters}
-                  variant="outline"
-                  className="px-8 h-9 border-[#00A65A] text-[#00A65A] hover:bg-[#00A65A]/10 font-semibold text-sm rounded shadow-sm"
+                  className="!bg-[#C72030]  !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Reset
                 </Button>
                 <Button
                   onClick={handleApplyFilters}
-                  className="px-8 h-9 bg-[#00A65A] hover:bg-[#008D4C] text-white font-semibold text-sm rounded shadow-sm"
-                >
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"                >
                   Apply
                 </Button>
               </div>
@@ -949,8 +1242,8 @@ const ManageUsersPage = () => {
           <EnhancedTable
             columns={columns}
             data={users}
-            onRowClick={(user) => console.log("Row clicked:", user)}
             renderCell={renderCell}
+            selectable={true}
             selectedItems={selectedUsers}
             onSelectAll={handleSelectAll}
             onSelectItem={handleSelectUser}
@@ -959,13 +1252,13 @@ const ManageUsersPage = () => {
             enableExport={true}
             handleExport={handleExport}
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={handleSearchChange}
             searchPlaceholder="Search users..."
             leftActions={
               <Button
                 size="sm"
-                className="mr-2"
-                onClick={handleActionClick}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                 onClick={handleActionClick}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Action
@@ -976,32 +1269,34 @@ const ManageUsersPage = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
-                  className={pagination.current_page === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              {renderPaginationItems()}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))}
-                  className={pagination.current_page === pagination.total_pages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-
-        {/* Record Count */}
         {pagination.total_count > 0 && (
-          <div className="text-center text-sm text-gray-500 mt-2">
-            Showing {Math.min((pagination.current_page - 1) * pagination.per_page + 1, pagination.total_count)}–{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
+          <div className="flex justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
+                    className={pagination.current_page === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))}
+                    className={pagination.current_page === pagination.total_pages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
+
+        {/* Record Count */}
+        {/* {pagination.total_count > 0 && (
+          // <div className="text-center text-sm text-gray-500 mt-2">
+          //   Showing {Math.min((pagination.current_page - 1) * pagination.per_page + 1, pagination.total_count)}–{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
+          // </div>
+        )} */}
       </div>
     </div>
   );

@@ -63,8 +63,11 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
 
   // Track if error toast has been shown to prevent duplicate toasts
   const errorShownRef = useRef<string | null>(null);
+  // Use a ref so the callback never needs userRole as a dependency
+  const userRoleRef = useRef<UserRoleResponse | null>(null);
+  userRoleRef.current = userRole;
 
-  const fetchUserPermissions = useCallback(async () => {
+  const fetchUserPermissions = useCallback(async (forceRefresh = false) => {
     // Don't fetch permissions if user is not authenticated
     if (!isAuthenticated()) {
       setUserRole(null);
@@ -72,13 +75,22 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
       return;
     }
 
-    // Don't fetch permissions if in Hi-Society mode (permissions are FM Matrix specific)
-    const layoutMode = localStorage.getItem("layoutMode");
-    if (layoutMode === "hi-society") {
-      console.log("Skipping permission fetch in Hi-Society mode");
-      setUserRole(null);
-      setLoading(false);
-      return;
+    // Use cached permissions if still fresh and not forcing a refresh
+    if (!forceRefresh) {
+      const cached = permissionCache.get();
+      if (cached) {
+        // If we already have userRole in state, no need to even parse cache again
+        if (userRoleRef.current) return;
+        // Reconstruct a minimal UserRoleResponse from cache so state is populated
+        const cachedRole = localStorage.getItem("cached_user_role");
+        if (cachedRole) {
+          try {
+            const parsed = JSON.parse(cachedRole) as UserRoleResponse;
+            setUserRole(parsed);
+            return;
+          } catch { /* fall through to API */ }
+        }
+      }
     }
 
     setLoading(true);
@@ -123,21 +135,21 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
     }
   }, []);
 
-  // Refresh permissions on every route change (page navigation)
-  useEffect(() => {
-    const layoutMode = localStorage.getItem("layoutMode");
-    if (isAuthenticated() && layoutMode !== "hi-society") {
-      fetchUserPermissions();
-    }
-  }, [location.pathname, fetchUserPermissions]);
-
-  // Initial load of permissions
+  // Initial load — use cache if fresh, otherwise fetch
   useEffect(() => {
     fetchUserPermissions();
   }, [fetchUserPermissions]);
 
+  // Route change — only fetch if cache is stale (no extra API call on navigation)
+  useEffect(() => {
+    if (isAuthenticated()) {
+      fetchUserPermissions();
+    }
+  }, [location.pathname, fetchUserPermissions]);
+
+  // Force refresh (called explicitly after login/role change)
   const refreshPermissions = useCallback(async () => {
-    await fetchUserPermissions();
+    await fetchUserPermissions(true);
   }, [fetchUserPermissions]);
 
   const isModuleEnabled = useCallback(

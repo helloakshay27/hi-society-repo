@@ -1,0 +1,2060 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { format } from "date-fns";
+import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  ArrowLeft,
+  FileText,
+  Package,
+  Calendar,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Edit,
+  Trash2,
+  Download,
+  Printer,
+  Send,
+  Copy,
+  Share2,
+  ShoppingCart,
+  DollarSign,
+  CirclePlus,
+  ClipboardList,
+  Eye,
+  X,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { toast as sonnerToast } from "sonner";
+import {
+  TextField,
+  FormControl,
+  Select as MuiSelect,
+  MenuItem,
+  InputAdornment,
+} from "@mui/material";
+import axios from "axios";
+import { CloudUpload } from "@mui/icons-material";
+// Types
+interface SalesOrderItem {
+  id: number;
+  name: string;
+  description: string;
+  quantity: number;
+  rate: number;
+  discount: number;
+  discountType: string;
+  tax: string;
+  taxRate: number;
+  amount: number;
+}
+
+interface SalesOrderAttachment {
+  name: string;
+  size: number;
+}
+
+interface TransactionRecord {
+  id: number;
+  ledger_id: number;
+  ledger_name: string;
+  tr_type: "dr" | "cr";
+  amount: number;
+}
+
+interface LockAccountTransaction {
+  id: number;
+  transaction_date: string;
+  transaction_type: string;
+  description: string;
+  transaction_records: TransactionRecord[];
+}
+
+interface Supplier {
+  id: number;
+  name?: string;
+  company_name?: string;
+  pan_number?: string;
+}
+
+interface Ledger {
+  id: number;
+  name: string;
+}
+
+// interface SalesOrder {
+//     id: string;
+//     customer: {
+//         name: string;
+//         email: string;
+//         phone: string;
+//         billingAddress: string;
+//         shippingAddress: string;
+//     };
+//     orderDetails: {
+//         orderNumber: string;
+//         referenceNumber: string;
+//         orderDate: string;
+//         expectedShipmentDate: string;
+//         paymentTerms: string;
+//         deliveryMethod: string;
+//         salesperson: string;
+//         status: string;
+//     };
+//     items: SalesOrderItem[];
+//     pricing: {
+//         subTotal: number;
+//         discount: number;
+//         taxAmount: number;
+//         adjustment: number;
+//         total: number;
+//     };
+//     customerNotes: string;
+//     termsAndConditions: string;
+//     attachments: SalesOrderAttachment[];
+//     createdAt: string;
+//     updatedAt: string;
+// }
+
+interface SalesOrder {
+  id: number;
+  sale_order_number: string;
+  reference_number: string;
+  date: string;
+  shipment_date: string;
+  delivery_method: string;
+  sales_person_name: string;
+  customer_name: string;
+  total_amount: number;
+  discount_per: number | null;
+  discount_amount: number | null;
+  charge_amount: number;
+  charge_type: string;
+  tax_type: string;
+  status: string;
+  customer_notes: string;
+  terms_and_conditions: string;
+  pms_supplier_id?: number;
+  supplier_id?: number;
+  vendor_id?: number;
+  vendor_name?: string;
+  bill_number?: string;
+  bill_date?: string;
+  due_date?: string;
+  order_number?: string;
+  source_of_supply?: string;
+  destination_of_supply?: string;
+  payment_term?: string;
+  subject?: string;
+  note?: string;
+  balance_due?: number;
+  created_at: string;
+  updated_at: string;
+  item_details: {
+    id: number;
+    item_name: string;
+    description: string;
+    quantity: number;
+    rate: number;
+    total_amount: number;
+    item_unit: string;
+  }[];
+  attachments: any[];
+  lock_account_transactions?: LockAccountTransaction[];
+}
+
+// Mock sales order data
+const mockSalesOrder = {
+  id: "SO-00001",
+  customer: {
+    name: "Acme Corporation",
+    email: "contact@acme.com",
+    phone: "+91 98765 43210",
+    billingAddress: "123 Business Park, Sector 15, Noida, UP 201301",
+    shippingAddress: "123 Business Park, Sector 15, Noida, UP 201301",
+  },
+  orderDetails: {
+    orderNumber: "SO-00001",
+    referenceNumber: "REF-2024-001",
+    orderDate: "2024-01-15",
+    expectedShipmentDate: "2024-01-20",
+    paymentTerms: "Net 30",
+    deliveryMethod: "Standard Shipping",
+    salesperson: "John Doe",
+    status: "confirmed",
+  },
+  items: [
+    {
+      id: 1,
+      name: "Product A",
+      description: "High quality product",
+      quantity: 10,
+      rate: 500,
+      discount: 10,
+      discountType: "percentage",
+      tax: "GST 18%",
+      taxRate: 18,
+      amount: 5310,
+    },
+    {
+      id: 2,
+      name: "Product B",
+      description: "Premium quality",
+      quantity: 5,
+      rate: 1000,
+      discount: 500,
+      discountType: "amount",
+      tax: "GST 18%",
+      taxRate: 18,
+      amount: 5310,
+    },
+  ],
+  pricing: {
+    subTotal: 9500,
+    discount: 450,
+    taxAmount: 1629,
+    adjustment: 0,
+    total: 10679,
+  },
+  customerNotes: "Please ensure timely delivery",
+  termsAndConditions: "Payment due within 30 days",
+  attachments: [
+    { name: "Purchase Order.pdf", size: 245000 },
+    { name: "Specifications.pdf", size: 128000 },
+  ],
+  createdAt: "2024-01-15T10:30:00",
+  updatedAt: "2024-01-15T14:45:00",
+};
+
+export const BillDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [salesOrder, setSalesOrder] = useState<SalesOrder>(mockSalesOrder);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("order-details");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showApprovalLog, setShowApprovalLog] = useState(false);
+  const [transactionRecords, setTransactionRecords] = useState<
+    TransactionRecord[]
+  >([]);
+
+  const [hasSaleOrderApproval, setHasSaleOrderApproval] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showConvertMenu, setShowConvertMenu] = useState(false);
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+  const [supplierList, setSupplierList] = useState<Supplier[]>([]);
+  const [ledgerList, setLedgerList] = useState<Ledger[]>([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const [paymentDate, setPaymentDate] = useState(
+    format(new Date(), "yyyy-MM-dd")
+  );
+  const [paymentNumber, setPaymentNumber] = useState("");
+  const [paidAmount, setPaidAmount] = useState("");
+  const [paymentMode, setPaymentMode] = useState("Cash");
+  const [paidFromLedgerId, setPaidFromLedgerId] = useState("");
+  const [reference, setReference] = useState("");
+  const [notes, setNotes] = useState("");
+  const [paymentAttachments, setPaymentAttachments] = useState<File[]>([]);
+  const baseUrl = localStorage.getItem("baseUrl");
+  const token = localStorage.getItem("token");
+  const lock_account_id = localStorage.getItem("lock_account_id");
+
+  const PAYMENT_MODES = [
+    "Bank Remittance",
+    "Bank Transfer",
+    "Cash",
+    "Cheque",
+    "Credit Card",
+    "UPI",
+  ];
+
+  const fetchSalesOrder = useCallback(async () => {
+    setLoading(true);
+    try {
+      const apiUrl = `https://${baseUrl}/lock_account_bills/${id}.json?lock_account_id=${lock_account_id}&show=true`;
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+      });
+      setSalesOrder(response.data);
+
+      if (response.data?.lock_account_transactions?.length > 0) {
+        const allRecords = response.data.lock_account_transactions.flatMap(
+          (txn: LockAccountTransaction) => txn.transaction_records || []
+        );
+        setTransactionRecords(allRecords);
+      } else {
+        setTransactionRecords([]);
+      }
+    } catch (error) {
+      sonnerToast.error("Failed to fetch bill details");
+    } finally {
+      setLoading(false);
+    }
+  }, [baseUrl, id, lock_account_id, token]);
+
+  useEffect(() => {
+    if (id) fetchSalesOrder();
+  }, [id, fetchSalesOrder]);
+
+  useEffect(() => {
+    if (!baseUrl || !token || !lock_account_id) return;
+    const headers = { Authorization: `Bearer ${token}` };
+
+    axios
+      .get(`https://${baseUrl}/pms/suppliers.json`, { headers })
+      .then((res) => {
+        const data = res.data;
+        setSupplierList(
+          Array.isArray(data)
+            ? data
+            : (data?.suppliers ?? data?.pms_suppliers ?? [])
+        );
+      })
+      .catch(() => setSupplierList([]));
+
+    axios
+      .get(
+        `https://${baseUrl}/lock_accounts/${lock_account_id}/lock_account_ledgers.json`,
+        { headers }
+      )
+      .then((res) => setLedgerList(res.data?.data || res.data || []))
+      .catch(() => setLedgerList([]));
+  }, [baseUrl, token, lock_account_id]);
+
+  useEffect(() => {
+    if (!salesOrder) return;
+    const supplierId =
+      salesOrder.pms_supplier_id ||
+      salesOrder.supplier_id ||
+      salesOrder.vendor_id ||
+      "";
+    setSelectedSupplierId(String(supplierId || ""));
+    setPaymentNumber(
+      String(salesOrder.order_number || salesOrder.bill_number || "")
+    );
+    setPaidAmount(
+      Number(salesOrder.balance_due ?? salesOrder.total_amount ?? 0).toFixed(2)
+    );
+    setReference(String(salesOrder.order_number || ""));
+  }, [salesOrder]);
+
+  useEffect(() => {
+    const fetchLockAccount = async () => {
+      try {
+        const response = await axios.get(
+          `https://${baseUrl}/get_lock_account.json`,
+          {
+            headers: { Authorization: token ? `Bearer ${token}` : undefined },
+          }
+        );
+        const hasApproval =
+          Array.isArray(response.data?.approvals) &&
+          response.data.approvals.some(
+            (a: any) => a.approval_type === "bill" && a.active
+          );
+        setHasSaleOrderApproval(hasApproval);
+      } catch (e) {
+        console.error("Failed to fetch lock account", e);
+      }
+    };
+    if (baseUrl && token) fetchLockAccount();
+  }, []);
+
+  // Close convert dropdown on outside click
+  useEffect(() => {
+    const handler = () => setShowConvertMenu(false);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const updateStatus = async (status: string) => {
+    try {
+      setActionLoading(true);
+      const response = await axios.patch(
+        `https://${baseUrl}/lock_account_bills/${id}.json`,
+        { lock_account_bill: { status } },
+        {
+          headers: { Authorization: token ? `Bearer ${token}` : undefined },
+          validateStatus: () => true,
+        }
+      );
+      if (response.status === 422) {
+        const { message, errors } = response.data;
+        const msg =
+          Array.isArray(errors) && errors.length > 0
+            ? errors.map((e: any) => `${e.id}: ${e.message}`).join(", ")
+            : message || "Failed to update status";
+        sonnerToast.error(msg);
+        return;
+      }
+      sonnerToast.success(
+        `Sales order ${status.replace("_", " ")} successfully`
+      );
+      fetchSalesOrder();
+    } catch (error) {
+      sonnerToast.error("Failed to update status");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const updateApprovalStatus = async (status: string) => {
+    try {
+      setActionLoading(true);
+      await axios.post(
+        `https://${baseUrl}/lock_account_bills/${id}/update_approval_status.json`,
+        { status, comment: "" },
+        { headers: { Authorization: token ? `Bearer ${token}` : undefined } }
+      );
+      sonnerToast.success(
+        `Sales order ${status.replace("_", " ")} successfully`
+      );
+      fetchSalesOrder();
+    } catch (error) {
+      sonnerToast.error("Failed to update approval status");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const selectedSupplier = supplierList.find(
+    (supplier) => String(supplier.id) === String(selectedSupplierId)
+  );
+  // const isBillOverdue = String(salesOrder?.status || "")
+  //   .trim()
+  //   .toLowerCase()
+  //   .startsWith("overdue");
+  // const formatBillDate = (date?: string | null) => {
+  //   if (!date) return "-";
+  //   const parsedDate = new Date(date);
+  //   if (Number.isNaN(parsedDate.getTime())) return "-";
+
+  //   return parsedDate.toLocaleDateString("en-IN");
+  // };
+
+
+  const status = String(salesOrder?.status || "")
+    .trim()
+    .toLowerCase();
+
+  // ✅ Check for both "overdue" OR "open"
+  const isBillOverdue = ["overdue", "open"].some(s =>
+    status.startsWith(s)
+  );
+
+  // (Optional) If you still want separate flags
+  const isBillOverdue2 = status.startsWith("overdue");
+  const isBillOpen = status.startsWith("open");
+
+  // Date formatter (unchanged - already correct)
+  const formatBillDate = (date?: string | null) => {
+    if (!date) return "-";
+
+    const parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) return "-";
+
+    return parsedDate.toLocaleDateString("en-IN");
+  };
+
+  console.log("overdue", { isBillOverdue, isBillOpen })
+  useEffect(() => {
+    if (!isBillOverdue && activeTab === "record-payment") {
+      setActiveTab("order-details");
+    }
+  }, [activeTab, isBillOverdue]);
+
+  const handleRecordPayment = async () => {
+    if (!isBillOverdue) {
+      sonnerToast.error("Payment can be recorded only for overdue bills.");
+      return;
+    }
+    if (!selectedSupplierId) {
+      sonnerToast.error("Supplier is not available for this bill.");
+      return;
+    }
+    if (!paidAmount || Number(paidAmount) <= 0) {
+      sonnerToast.error("Paid amount should be greater than 0.");
+      return;
+    }
+    if (!paymentMode) {
+      sonnerToast.error("Please select payment mode.");
+      return;
+    }
+    if (!paidFromLedgerId) {
+      sonnerToast.error("Please select Paid From ledger.");
+      return;
+    }
+
+    setPaymentSubmitting(true);
+    try {
+      const formattedPaymentDate = format(new Date(paymentDate), "dd/MM/yyyy");
+      const payload = {
+        payment_of: "Pms::Supplier",
+        payment_of_id: Number(selectedSupplierId),
+        paid_amount: Number(paidAmount) || 0,
+        payment_date: formattedPaymentDate,
+        payment_mode: paymentMode,
+        paid_from_ledger_id: Number(paidFromLedgerId),
+        order_number: reference || paymentNumber || "",
+        notes,
+        payment_made: true,
+        payment_status: "paid",
+        lock_bill_payments_attributes: [
+          {
+            resource_id: Number(id),
+            resource_type: "LockAccountBill",
+            amount: Number(paidAmount) || 0,
+            payment_date: formattedPaymentDate,
+          },
+        ],
+      };
+      const formData = new FormData();
+      formData.append("lock_payment[payment_of]", payload.payment_of);
+      formData.append(
+        "lock_payment[payment_of_id]",
+        String(payload.payment_of_id)
+      );
+      formData.append("lock_payment[paid_amount]", String(payload.paid_amount));
+      formData.append("lock_payment[payment_date]", payload.payment_date);
+      formData.append("lock_payment[payment_mode]", payload.payment_mode);
+      formData.append(
+        "lock_payment[paid_from_ledger_id]",
+        String(payload.paid_from_ledger_id)
+      );
+      formData.append("lock_payment[order_number]", payload.order_number);
+      formData.append("lock_payment[notes]", payload.notes || "");
+      formData.append(
+        "lock_payment[payment_made]",
+        String(payload.payment_made)
+      );
+      formData.append("lock_payment[payment_status]", payload.payment_status);
+      payload.lock_bill_payments_attributes.forEach((row, index) => {
+        formData.append(
+          `lock_payment[lock_bill_payments_attributes][${index}][resource_id]`,
+          String(row.resource_id)
+        );
+        formData.append(
+          `lock_payment[lock_bill_payments_attributes][${index}][resource_type]`,
+          row.resource_type
+        );
+        formData.append(
+          `lock_payment[lock_bill_payments_attributes][${index}][amount]`,
+          String(row.amount)
+        );
+        formData.append(
+          `lock_payment[lock_bill_payments_attributes][${index}][payment_date]`,
+          row.payment_date
+        );
+      });
+      paymentAttachments.forEach((file, index) => {
+        formData.append(
+          `lock_payment[attachments_attributes][${index}][document]`,
+          file,
+          file.name
+        );
+        formData.append(
+          `lock_payment[attachments_attributes][${index}][active]`,
+          "true"
+        );
+      });
+
+      await axios.post(
+        `https://${baseUrl}/lock_payments.json?lock_account_id=${lock_account_id}`,
+        formData,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
+      );
+      sonnerToast.success("Payment recorded successfully.");
+      setActiveTab("order-details");
+      fetchSalesOrder();
+    } catch (error) {
+      sonnerToast.error("Failed to record payment.");
+    } finally {
+      setPaymentSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!salesOrder) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center text-muted-foreground">
+          Sales order not found.
+        </div>
+      </div>
+    );
+  }
+
+  const selectMenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: 224,
+        backgroundColor: "white",
+        border: "1px solid #e2e8f0",
+        borderRadius: "8px",
+        boxShadow:
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        zIndex: 9999,
+      },
+    },
+    disablePortal: true,
+    container: document.body,
+  };
+
+  const fieldStyles = {
+    height: { xs: 28, sm: 36, md: 45 },
+    "& .MuiInputBase-input, & .MuiSelect-select": {
+      padding: { xs: "8px", sm: "10px", md: "12px" },
+    },
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: { [key: string]: string } = {
+      draft: "bg-gray-100 text-gray-800 border-gray-200",
+      confirmed: "bg-blue-100 text-blue-800 border-blue-200",
+      processing: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      shipped: "bg-purple-100 text-purple-800 border-purple-200",
+      delivered: "bg-green-100 text-green-800 border-green-200",
+      cancelled: "bg-red-100 text-red-800 border-red-200",
+    };
+    return colors[status] || colors.draft;
+  };
+
+  const getApprovalStatusBadge = (status: any) => {
+    const s = String(status || "").toLowerCase();
+    if (s === "approved") return "bg-green-100 text-green-800";
+    if (s === "rejected") return "bg-red-100 text-red-800";
+    return "bg-yellow-100 text-yellow-800";
+  };
+
+  const handleEdit = () => {
+    navigate(`/accounting/sales-order/edit/${id}`);
+  };
+
+  const handleDelete = async () => {
+    try {
+      // API call to delete sales order
+      sonnerToast.success("Sales order deleted successfully");
+      navigate("/accounting/sales-order");
+    } catch (error) {
+      sonnerToast.error("Failed to delete sales order");
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownload = () => {
+    sonnerToast.success("Downloading sales order PDF...");
+  };
+
+  const handleSendEmail = () => {
+    sonnerToast.success("Email sent successfully");
+  };
+
+  const handleClone = () => {
+    sonnerToast.success("Sales order cloned successfully");
+    navigate("/accounting/sales-order/create");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const taxBreakdown: Record<string, { rate: number; amount: number }> = {};
+  salesOrder?.item_details?.forEach((item) => {
+    if (item.tax_type === "tax_group" && item.tax_group?.tax_rates) {
+      // Maharashtra: tax_group has multiple tax_rates
+      item.tax_group.tax_rates.forEach((tax) => {
+        const taxAmount = (item.total_amount * tax.rate) / 100;
+        if (!taxBreakdown[tax.name]) {
+          taxBreakdown[tax.name] = { rate: tax.rate, amount: 0 };
+        }
+        taxBreakdown[tax.name].amount += taxAmount;
+      });
+    } else if (item.tax_type === "tax_rate" && item.tax_group) {
+      // Non-Maharashtra: tax_group is actually a single tax rate object
+      const rate = item.tax_group.rate ?? 0;
+      const name = item.tax_group.name ?? "Tax";
+      const taxAmount = (item.total_amount * rate) / 100;
+      if (!taxBreakdown[name]) {
+        taxBreakdown[name] = { rate, amount: 0 };
+      }
+      taxBreakdown[name].amount += taxAmount;
+    }
+  });
+  const taxRows = Object.entries(taxBreakdown);
+
+
+  // const reverseChargeData = salesOrder?.item_details?.map((item: any) => {
+  //   const rate = item?.tax_group?.rate || 0;
+  //   const name = item?.tax_group?.name || "Tax";
+
+  //   const taxAmount = (item.total_amount * rate) / 100;
+
+  //   return {
+  //     name,
+  //     rate,
+  //     amount: taxAmount,
+  //   };
+  // }) || [];
+
+  // const groupedReverseTax: any[] = [];
+
+  // reverseChargeData.forEach((tax) => {
+  //   const existing = groupedReverseTax.find(t => t.name === tax.name);
+
+  //   if (existing) {
+  //     existing.amount += tax.amount;
+  //   } else {
+  //     groupedReverseTax.push({ ...tax });
+  //   }
+  // });
+  // const totalReverseTax = groupedReverseTax.reduce(
+  //   (sum, t) => sum + t.amount,
+  //   0
+  // );
+
+
+  const reverseChargeData: any[] = [];
+
+salesOrder?.item_details?.forEach((item: any) => {
+
+  // ✅ Case 1: Maharashtra → tax_group with multiple tax_rates
+  if (item.tax_type === "tax_group" && item.tax_group?.tax_rates) {
+    item.tax_group.tax_rates.forEach((tax: any) => {
+      const taxAmount = (item.total_amount * tax.rate) / 100;
+
+      reverseChargeData.push({
+        name: tax.name,
+        rate: tax.rate,
+        amount: taxAmount,
+      });
+    });
+  }
+
+  // ✅ Case 2: Inter-state → single tax rate (IGST)
+  else if (item.tax_type === "tax_rate" && item.tax_group) {
+    const rate = item.tax_group.rate || 0;
+    const name = item.tax_group.name || "Tax";
+
+    const taxAmount = (item.total_amount * rate) / 100;
+
+    reverseChargeData.push({
+      name,
+      rate,
+      amount: taxAmount,
+    });
+  }
+});
+
+ 
+
+  const groupedReverseTax: any[] = [];
+
+reverseChargeData.forEach((tax) => {
+  const existing = groupedReverseTax.find(t => t.name === tax.name);
+
+  if (existing) {
+    existing.amount += tax.amount;
+  } else {
+    groupedReverseTax.push({ ...tax });
+  }
+});
+
+// ✅ ADD THIS HERE
+const totalReverseTax = groupedReverseTax.reduce(
+  (sum, t) => sum + t.amount,
+  0
+);
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/accounting/bills")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-3">
+                <ShoppingCart className="h-6 w-6 text-primary" />
+                Bill #{salesOrder?.bill_number}
+                {/* Created on {new Date(salesOrder.created_at).toLocaleDateString()} */}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Created on{" "}
+                {new Date(salesOrder.created_at).toLocaleDateString("en-IN")}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* <Badge className={`${getStatusColor(salesOrder.status)} border`}>
+              {salesOrder.status.toUpperCase()}
+            </Badge> */}
+            <Badge className={`${getStatusColor(salesOrder.status)} border`}>
+              {salesOrder.status?.replace(/_/g, " ").toUpperCase()}
+            </Badge>
+            {(salesOrder as any)?.approval_status?.approval_levels?.length >
+              0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowApprovalLog(true)}
+                  className="gap-2"
+                >
+                  <ClipboardList className="h-4 w-4" />
+                  Approval Log
+                </Button>
+              )}
+
+            {/* ── WITHOUT APPROVAL ── */}
+            {!hasSaleOrderApproval && (
+              <>
+                {/* Draft → Mark as Confirmed */}
+                {salesOrder.status === "draft" && (
+                  <Button
+                    size="sm"
+                    className="bg-green-600 text-white hover:bg-green-700"
+                    disabled={actionLoading}
+                    onClick={() => updateStatus("open")}
+                  >
+                    Mark as Open
+                  </Button>
+                )}
+
+                {/* Confirmed → Convert to Invoice */}
+                {/* {salesOrder.status === "confirmed" && (
+                  <Button
+                    size="sm"
+                    className="bg-[#C72030] text-white hover:bg-[#a81a28]"
+                    disabled={actionLoading}
+                    onClick={() => navigate("/accounting/invoices/add", { state: { saleOrderId: salesOrder?.id || id } })}
+                  >
+                    Convert to Invoice
+                  </Button>
+                )} */}
+              </>
+            )}
+
+            {/* ── WITH APPROVAL ── */}
+            {hasSaleOrderApproval && (
+              <>
+                {/* Draft → Submit for Approval */}
+                {salesOrder.status === "draft" && (
+                  <Button
+                    size="sm"
+                    className="bg-[#C72030] text-white hover:bg-[#a81a28]"
+                    disabled={actionLoading}
+                    onClick={() => updateStatus("pending_approval")}
+                  >
+                    Submit for Approval
+                  </Button>
+                )}
+
+                {/* Pending Approval + can_approve → Approve / Reject */}
+                {salesOrder.status === "pending_approval" &&
+                  (salesOrder as any).can_approve && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 text-white hover:bg-green-700"
+                        disabled={actionLoading}
+                        onClick={() => updateApprovalStatus("approved")}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-red-600 text-white hover:bg-red-700"
+                        disabled={actionLoading}
+                        onClick={() => updateApprovalStatus("rejected")}
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+
+                {/* Approved → Mark as Confirmed */}
+                {salesOrder.status === "approved" && (
+                  <Button
+                    size="sm"
+                    className="bg-green-600 text-white hover:bg-green-700"
+                    disabled={actionLoading}
+                    onClick={() => updateStatus("open")}
+                  >
+                    Mark as Open
+                  </Button>
+                )}
+
+                {/* Confirmed → Convert to Invoice */}
+                {/* {salesOrder.status === "confirmed" && (
+                  <Button
+                    size="sm"
+                    className="bg-[#C72030] text-white hover:bg-[#a81a28]"
+                    disabled={actionLoading}
+                    onClick={() => navigate("/accounting/invoices/add", { state: { saleOrderId: salesOrder?.id || id } })}
+                  >
+                    Convert to Invoice
+                  </Button>
+                )} */}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        {/* <Card>
+                    <CardContent className="p-4">
+                        <div className="flex flex-wrap gap-2">
+                            <Button variant="default" onClick={handleEdit}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                            </Button>
+                            <Button variant="outline" onClick={handlePrint}>
+                                <Printer className="h-4 w-4 mr-2" />
+                                Print
+                            </Button>
+                            <Button variant="outline" onClick={handleDownload}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF
+                            </Button>
+                            <Button variant="outline" onClick={handleSendEmail}>
+                                <Send className="h-4 w-4 mr-2" />
+                                Send Email
+                            </Button>
+                            <Button variant="outline" onClick={handleClone}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Clone
+                            </Button>
+                            <Button variant="outline">
+                                <Share2 className="h-4 w-4 mr-2" />
+                                Share
+                            </Button>
+                            <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card> */}
+
+        {/* Tabs */}
+        <div
+          className="rounded-lg border-r border-b border-gray-200 shadow-sm"
+          style={{
+            borderTop: "none",
+            borderLeft: "none",
+            backgroundColor: "rgba(250, 250, 250, 1)",
+          }}
+        >
+          <style>{`
+                        .bill-detail-tabs button[data-state="active"] {
+                            background-color: rgba(237, 234, 227, 1) !important;
+                            color: rgba(199, 32, 48, 1) !important;
+                        }
+                    `}</style>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList
+              className="bill-detail-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto mb-4"
+              style={{
+                gap: "0",
+                padding: "0",
+                backgroundColor: "rgba(246, 247, 247, 1)",
+                height: "50px",
+                marginBottom: "16px",
+                justifyContent: "flex-start",
+              }}
+            >
+              {[
+                { label: "Bill Details", value: "order-details" },
+                ...(isBillOverdue
+                  ? [{ label: "Record Payment", value: "record-payment" }]
+                  : []),
+                { label: "Vendor Info", value: "customer-info" },
+                { label: "History", value: "history" },
+                { label: "Activity Logs", value: "activity-logs" },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
+                  style={{
+                    width: "230px",
+                    height: "36px",
+                    paddingTop: "10px",
+                    paddingRight: "20px",
+                    paddingBottom: "10px",
+                    paddingLeft: "20px",
+                    borderRadius: "0",
+                    border: "none",
+                    margin: "0",
+                    fontFamily: "Work Sans",
+                    fontWeight: 500,
+                    fontSize: "14px",
+                    lineHeight: "100%",
+                    letterSpacing: "0%",
+                    color: "rgba(26, 26, 26, 1)",
+                    backgroundColor: "rgba(246, 247, 247, 1)",
+                  }}
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {/* Order Details Tab */}
+            <TabsContent
+              value="order-details"
+              className="p-3 sm:p-6 space-y-6"
+              style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+            >
+
+              {salesOrder?.reverse_charge && groupedReverseTax.length > 0 && (
+                <div className="mt-6 border rounded-md overflow-hidden">
+
+                  <div className="bg-gray-100 px-4 py-2 font-semibold">
+                    Reverse Charge Summary
+                  </div>
+
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-gray-600">
+                      <tr>
+                        <th className="text-left px-4 py-2">Reverse Charge Rate</th>
+                        <th className="text-right px-4 py-2">Tax Amount</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {groupedReverseTax.map((tax, index) => (
+                        <tr key={index} className="border-t">
+                          <td className="px-4 py-2">
+                            {tax.name} ({tax.rate}%)
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            ₹{tax.amount.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+
+                      <tr className="border-t font-semibold bg-gray-50">
+                        <td className="px-4 py-2">Total</td>
+                        <td className="px-4 py-2 text-right">
+                          ₹{totalReverseTax.toFixed(2)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {/* Order Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Bill Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Vendor Name
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {salesOrder?.vendor_name}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Source of Supply
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {salesOrder?.source_of_supply}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Destination of Supply
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {salesOrder?.destination_of_supply}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Bill Number
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {salesOrder?.bill_number}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Order Number
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {salesOrder?.order_number}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Bill Date
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {formatBillDate(salesOrder?.bill_date)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Due Date
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {formatBillDate(salesOrder?.due_date)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Payment Terms
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {salesOrder?.payment_term}
+                      </p>
+                    </div>
+                    {/* <div>
+                                        <p className="text-sm font-medium text-muted-foreground">Delivery Method</p>
+                                        <p className="text-base font-semibold mt-1">{salesOrder?.delivery_method}</p>
+                                    </div> */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Subject
+                      </p>
+                      <p className="text-base font-semibold mt-1">
+                        {salesOrder?.subject}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={
+                          salesOrder?.reverse_charge === true ||
+                          salesOrder?.reverse_charge === "true"
+                        }
+                        readOnly
+                        className="h-4 w-4 accent-[#bf213e] cursor-not-allowed"
+                      />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        This transaction is applicable for reverse charge
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Items Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-primary" />
+                    Item Table
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>Item Details</TableHead>
+                          <TableHead className="text-right">Account</TableHead>
+                          <TableHead className="text-right">Quantity</TableHead>
+                          <TableHead className="text-right">Rate</TableHead>
+                          <TableHead className="text-right">Tax</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+
+                      <TableBody>
+                        {salesOrder?.item_details?.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-semibold">
+                                  {item.item_name}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.account || "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.quantity} {item.item_unit}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              ₹{Number(item.rate).toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.tax_type === "tax_group" ||
+                                item.tax_type === "tax_rate"
+                                ? (item.tax_group?.name ?? "-")
+                                : item.tax_type === "non_taxable"
+                                  ? "Non Taxable"
+                                  : item.tax_type === "out_of_scope"
+                                    ? "Out of Scope"
+                                    : item.tax_type === "non_gst_supply"
+                                      ? "Non GST Supply"
+                                      : "-"}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              ₹{Number(item.total_amount).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Pricing Summary */}
+                  <div className="mt-6 flex justify-end">
+                    <div className="w-full max-w-md space-y-3 bg-muted/30 p-4 rounded-lg">
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Sub Total
+                        </span>
+                        <span className="font-semibold text-base">
+                          ₹{salesOrder?.sub_total_amount?.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Discount ({salesOrder?.discount_per}%)
+                        </span>
+                        <span className="font-semibold text-base text-red-600">
+                          -₹{salesOrder?.discount_amount?.toFixed(2)}
+                        </span>
+                      </div>
+                      {/* {taxRows.map(([name, tax], index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center py-2"
+                        >
+                          <span className="text-sm font-medium text-muted-foreground">
+                            {name} ({tax.rate}%)
+                          </span>
+                          <span className="font-semibold text-base">
+                            ₹{tax.amount.toFixed(2)}
+                          </span>
+                        </div>
+                      ))} */}
+
+                      {!(
+                        salesOrder?.reverse_charge === true ||
+                        salesOrder?.reverse_charge === "true"
+                      ) &&
+                        taxRows.map(([name, tax], index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center py-2"
+                          >
+                            <span className="text-sm font-medium text-muted-foreground">
+                              {name} ({tax.rate}%)
+                            </span>
+                            <span className="font-semibold text-base">
+                              ₹{tax.amount.toFixed(2)}
+                            </span>
+                          </div>
+                        ))
+                      }
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {salesOrder?.tax_type?.toUpperCase()}
+                        </span>
+                        <span className="font-semibold text-base text-red-600">
+                          -₹{salesOrder?.lock_account_tax_amount?.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {salesOrder?.charge_name || "Adjustment"}
+                        </span>
+                        <span className="font-semibold text-base">
+                          ₹{salesOrder?.charge_amount?.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-3 bg-primary/5 px-4 rounded-lg">
+                        <span className="font-bold text-base">Total ( ₹ )</span>
+                        <span className="font-bold text-primary text-2xl">
+                          ₹{salesOrder?.total_amount?.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Notes and Terms */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {salesOrder.customerNotes && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base"> Notes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        {salesOrder.customerNotes}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {salesOrder.termsAndConditions && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">
+                        Terms & Conditions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        {salesOrder.termsAndConditions}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Attachments */}
+              {salesOrder.attachments && salesOrder.attachments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Attachments</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {salesOrder.attachments.map(
+                        (file: SalesOrderAttachment, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-5 w-5 text-muted-foreground" />
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {file?.document_file_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {(file?.document_file_size / 1024).toFixed(2)}{" "}
+                                  KB
+                                </p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm">
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Journal Entries */}
+              {transactionRecords.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Journal
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead>Account</TableHead>
+                            <TableHead className="text-right">Debit</TableHead>
+                            <TableHead className="text-right">Credit</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {transactionRecords.map((rec) => {
+                            const absAmount = Math.abs(rec.amount);
+                            const formatted = `₹${absAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                            return (
+                              <TableRow key={rec.id}>
+                                <TableCell>
+                                  {rec.ledger_id ? (
+                                    <span
+                                      className="text-black-600 cursor-pointer hover:underline"
+                                    // onClick={() => navigate(`/accounting/reports/balance-sheet/details/${rec.ledger_id}`)}
+                                    >
+                                      {rec.ledger_name}
+                                    </span>
+                                  ) : (
+                                    rec.ledger_name
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {rec.tr_type === "dr" ? formatted : "0.00"}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {rec.tr_type === "cr" ? formatted : "0.00"}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                          <TableRow className="font-semibold bg-muted/30">
+                            <TableCell>Total</TableCell>
+                            <TableCell className="text-right">
+                              ₹
+                              {transactionRecords
+                                .filter((r) => r.tr_type === "dr")
+                                .reduce((sum, r) => sum + Math.abs(r.amount), 0)
+                                .toLocaleString("en-IN", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              ₹
+                              {transactionRecords
+                                .filter((r) => r.tr_type === "cr")
+                                .reduce((sum, r) => sum + Math.abs(r.amount), 0)
+                                .toLocaleString("en-IN", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent
+              value="record-payment"
+              className="p-3 sm:p-6 space-y-6"
+              style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                    Payment for : Bill {salesOrder?.bill_number || "-"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-sm font-medium mb-2">
+                        Vendor Name<span className="text-red-500">*</span>
+                      </p>
+                      <FormControl fullWidth>
+                        <MuiSelect
+                          value={selectedSupplierId}
+                          disabled
+                          displayEmpty
+                          sx={fieldStyles}
+                          MenuProps={selectMenuProps}
+                        >
+                          <MenuItem value="" disabled>
+                            {salesOrder?.vendor_name || "Vendor not available"}
+                          </MenuItem>
+                          {(selectedSupplier || selectedSupplierId) && (
+                            <MenuItem value={selectedSupplierId}>
+                              {selectedSupplier?.company_name ||
+                                selectedSupplier?.name ||
+                                salesOrder?.vendor_name ||
+                                selectedSupplierId}
+                            </MenuItem>
+                          )}
+                        </MuiSelect>
+                      </FormControl>
+                      {selectedSupplier?.pan_number && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          PAN:{" "}
+                          <span className="text-blue-600">
+                            {selectedSupplier.pan_number}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium mb-2">Payment #</p>
+                      <TextField
+                        fullWidth
+                        value={paymentNumber}
+                        onChange={(e) => setPaymentNumber(e.target.value)}
+                        sx={fieldStyles}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-sm font-medium mb-2">
+                        Paid Amount (INR)<span className="text-red-500">*</span>
+                      </p>
+                      <TextField
+                        fullWidth
+                        type="number"
+                        value={paidAmount}
+                        onChange={(e) => setPaidAmount(e.target.value)}
+                        sx={fieldStyles}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              INR
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium mb-2">
+                        Payment Date<span className="text-red-500">*</span>
+                      </p>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        value={paymentDate}
+                        onChange={(e) => setPaymentDate(e.target.value)}
+                        sx={fieldStyles}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-sm font-medium mb-2">Payment Mode</p>
+                      <FormControl fullWidth>
+                        <MuiSelect
+                          value={paymentMode}
+                          onChange={(e) =>
+                            setPaymentMode(String(e.target.value))
+                          }
+                          displayEmpty
+                          sx={fieldStyles}
+                          MenuProps={selectMenuProps}
+                        >
+                          <MenuItem value="" disabled>
+                            Select payment mode
+                          </MenuItem>
+                          {PAYMENT_MODES.map((mode) => (
+                            <MenuItem key={mode} value={mode}>
+                              {mode}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium mb-2">
+                        Paid From<span className="text-red-500">*</span>
+                      </p>
+                      <FormControl fullWidth>
+                        <MuiSelect
+                          value={paidFromLedgerId}
+                          onChange={(e) =>
+                            setPaidFromLedgerId(String(e.target.value))
+                          }
+                          displayEmpty
+                          sx={fieldStyles}
+                          MenuProps={selectMenuProps}
+                        >
+                          <MenuItem value="" disabled>
+                            Select ledger
+                          </MenuItem>
+                          {ledgerList.map((ledger) => (
+                            <MenuItem key={ledger.id} value={String(ledger.id)}>
+                              {ledger.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-sm font-medium mb-2">Order Number</p>
+                      <TextField
+                        fullWidth
+                        value={reference}
+                        onChange={(e) => setReference(e.target.value)}
+                        sx={fieldStyles}
+                      />
+                    </div>
+                    {/* <div>
+                      <p className="text-sm font-medium mb-2">Notes</p>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                      />
+                    </div> */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Notes
+                      </label>
+
+                      <textarea
+                        className="w-full border border-gray-300 rounded-md p-3 mt-1 focus:outline-none focus:ring-1 focus:ring-[#bf213e] focus:border-[#bf213e] resize-y"
+                        rows={3}
+                        maxLength={500}
+                        value={notes}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 500) {
+                            setNotes(e.target.value);
+                          }
+                        }}
+                        placeholder="Enter any notes..."
+                      />
+
+                      <p className="text-xs text-gray-400 text-right mt-1">
+                        {notes.length}/500
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Attachments</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() =>
+                        document
+                          .getElementById("bill-payment-attachments")
+                          ?.click()
+                      }
+                    >
+                      <CloudUpload fontSize="small" />
+                      Upload File
+                    </Button>
+                    <input
+                      id="bill-payment-attachments"
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        const files = e.target.files
+                          ? Array.from(e.target.files)
+                          : [];
+                        setPaymentAttachments(files.slice(0, 5));
+                      }}
+                    />
+                    {paymentAttachments.length > 0 && (
+                      <div className="space-y-1">
+                        {paymentAttachments.map((file, idx) => (
+                          <p
+                            key={`${file.name}-${idx}`}
+                            className="text-sm text-muted-foreground"
+                          >
+                            {file.name}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveTab("order-details")}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleRecordPayment}
+                      disabled={paymentSubmitting}
+                      className="bg-[#C72030] hover:bg-[#a81a28]"
+                    >
+                      {paymentSubmitting ? "Saving..." : "Save as Paid"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Customer Info Tab */}
+            <TabsContent
+              value="customer-info"
+              className="p-3 sm:p-6 space-y-6"
+              style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    Vendor Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Vendor Name
+                    </p>
+                    <p className="text-base font-semibold mt-1">
+                      {salesOrder?.vendor_name}
+                    </p>
+                  </div>
+                  <div>
+                    {/* <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                        <Mail className="h-4 w-4" />
+                                        Email
+                                    </p> */}
+                    {/* <p className="text-base mt-1">{salesOrder.customer.email}</p> */}
+                  </div>
+                  <div>
+                    {/* <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                        <Phone className="h-4 w-4" />
+                                        Phone
+                                    </p> */}
+                    {/* <p className="text-base mt-1">{salesOrder.customer.phone}</p> */}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      {/* <Phone className="h-4 w-4" /> */}
+                      Notes
+                    </p>
+                    <p className="text-base mt-1">{salesOrder?.note || "-"}</p>
+                  </div>
+                  {/* <div>
+                                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                        {/* <Phone className="h-4 w-4" /> */}
+                  {/* Terms and Conditions
+                                    </p>
+                                    <p className="text-base mt-1">{salesOrder?.terms_and_conditions}</p>
+                                </div> */}
+                </CardContent>
+              </Card>
+
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-primary" />
+                                        Billing Address
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">{salesOrder.customer.billingAddress}</p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-primary" />
+                                        Shipping Address
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">{salesOrder.customer.shippingAddress}</p>
+                                </CardContent>
+                            </Card>
+                        </div> */}
+            </TabsContent>
+
+            {/* History Tab */}
+            <TabsContent
+              value="history"
+              className="p-3 sm:p-6 space-y-6"
+              style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    Bill History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex gap-4 pb-4 border-b">
+                      <div className="flex-shrink-0">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                      </div>
+                      <div className="flex-grow">
+                        <p className="font-medium">Bill Created</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(salesOrder?.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 pb-4 border-b">
+                      <div className="flex-shrink-0">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                      </div>
+                      <div className="flex-grow">
+                        <p className="font-medium">Bill Updated</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(salesOrder?.updated_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent
+              value="activity-logs"
+              className="p-3 sm:p-6 space-y-6"
+              style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Activity Logs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {Array.isArray((salesOrder as any)?.activity_logs) &&
+                    (salesOrder as any).activity_logs.length > 0 ? (
+                    <div className="divide-y">
+                      {(salesOrder as any).activity_logs.map(
+                        (log: any, idx: number) => {
+                          const key = `${log?.date || ""}-${log?.time || ""}-${idx}`;
+                          const hint =
+                            `${log?.action || ""} ${log?.message || ""}`.toLowerCase();
+                          const isConverted = hint.includes("convert");
+                          const isCreated = hint.includes("create");
+                          const isAccepted = hint.includes("accept");
+                          const isSent = hint.includes("sent");
+                          const Icon =
+                            isConverted || isCreated
+                              ? CirclePlus
+                              : isAccepted || isSent
+                                ? Eye
+                                : FileText;
+                          const iconWrapClass =
+                            isConverted || isCreated
+                              ? "bg-green-50 text-green-600 border-green-100"
+                              : isAccepted || isSent
+                                ? "bg-sky-50 text-sky-600 border-sky-100"
+                                : "bg-gray-50 text-gray-500 border-gray-100";
+
+                          return (
+                            <div key={key} className="flex gap-6 py-5">
+                              <div className="min-w-[170px] text-sm text-muted-foreground">
+                                <div>
+                                  {log?.date || "—"} {log?.time || ""}
+                                </div>
+                              </div>
+
+                              <div
+                                className={`w-9 h-9 rounded-full border flex items-center justify-center ${iconWrapClass}`}
+                              >
+                                <Icon className="h-5 w-5" />
+                              </div>
+
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-foreground">
+                                  {log?.message || "—"}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  by{" "}
+                                  <span className="font-medium text-foreground">
+                                    {log?.user || "—"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No activity logs found.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      <Dialog open={showApprovalLog} onOpenChange={setShowApprovalLog}>
+        <DialogContent className="max-w-4xl">
+          <div className="flex items-center justify-between">
+            <DialogHeader>
+              <DialogTitle className="text-[#C72030]">Approval Log</DialogTitle>
+            </DialogHeader>
+            <button
+              type="button"
+              onClick={() => setShowApprovalLog(false)}
+              className="p-2 rounded hover:bg-muted"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="rounded-lg border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-[#7a0c0c] hover:bg-[#7a0c0c] [&>th]:!text-white [&>th]:!opacity-100">
+                  <TableHead className="!text-white !opacity-100 font-semibold w-[70px]">
+                    Sr.No.
+                  </TableHead>
+                  <TableHead className="!text-white !opacity-100 font-semibold">
+                    Approval Level
+                  </TableHead>
+                  <TableHead className="!text-white !opacity-100 font-semibold">
+                    Approved By
+                  </TableHead>
+                  <TableHead className="!text-white !opacity-100 font-semibold">
+                    Date
+                  </TableHead>
+                  <TableHead className="!text-white !opacity-100 font-semibold">
+                    Status
+                  </TableHead>
+                  <TableHead className="!text-white !opacity-100 font-semibold">
+                    Remark
+                  </TableHead>
+                  <TableHead className="!text-white !opacity-100 font-semibold">
+                    Users
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(
+                  (salesOrder as any)?.approval_status?.approval_levels || []
+                ).map((lvl: any, index: number) => (
+                  <TableRow key={lvl?.id ?? index}>
+                    <TableCell className="font-medium">{index + 1}</TableCell>
+                    <TableCell className="font-medium">
+                      {lvl?.name || "—"}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {lvl?.approved_by || "—"}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {lvl?.approved_at || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-3 py-1 rounded text-xs font-semibold ${getApprovalStatusBadge(lvl?.status)}`}
+                      >
+                        {String(lvl?.status || "pending").toUpperCase()}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {lvl?.rejection_reason || "—"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {Array.isArray(lvl?.users)
+                        ? lvl.users
+                          .map((u: any) => u?.name || u)
+                          .filter(Boolean)
+                          .join(", ")
+                        : "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Sales Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this sales order? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 justify-end mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default BillDetails;

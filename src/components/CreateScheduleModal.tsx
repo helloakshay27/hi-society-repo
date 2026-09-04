@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { X } from 'lucide-react';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface CreateScheduleModalProps {
   isOpen: boolean;
@@ -32,7 +32,7 @@ export const CreateScheduleModal = ({ isOpen, onClose, onSubmit }: CreateSchedul
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader className="flex flex-row items-center justify-between pb-4">
           <DialogTitle className="text-lg font-semibold">Create Schedule</DialogTitle>
@@ -48,83 +48,94 @@ export const CreateScheduleModal = ({ isOpen, onClose, onSubmit }: CreateSchedul
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="flat" className="text-sm font-medium">Select Flat</Label>
-              <Select onValueChange={(value) => handleInputChange('flat', value)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="a-101">A-101</SelectItem>
-                  <SelectItem value="a-102">A-102</SelectItem>
-                  <SelectItem value="a-103">A-103</SelectItem>
-                  <SelectItem value="a-104">A-104</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Flat</InputLabel>
+              <MuiSelect
+                value={formData.flat}
+                onChange={(e) => handleInputChange('flat', e.target.value)}
+                displayEmpty
+                label="Select Flat"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select</em></MenuItem>
+                <MenuItem value="a-101">A-101</MenuItem>
+                <MenuItem value="a-102">A-102</MenuItem>
+                <MenuItem value="a-103">A-103</MenuItem>
+                <MenuItem value="a-104">A-104</MenuItem>
+              </MuiSelect>
+            </FormControl>
 
-            <div>
-              <Label htmlFor="category" className="text-sm font-medium">Select Category</Label>
-              <Select onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pest-control">Pest Control</SelectItem>
-                  <SelectItem value="deep-cleaning">Deep Cleaning</SelectItem>
-                  <SelectItem value="civil-mason">Civil & Mason Works</SelectItem>
-                  <SelectItem value="invisible-grill">Invisible Grill</SelectItem>
-                  <SelectItem value="mosquito-mesh">Mosquito Mesh</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Category</InputLabel>
+              <MuiSelect
+                value={formData.category}
+                onChange={(e) => handleInputChange('category', e.target.value)}
+                displayEmpty
+                label="Select Category"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Category</em></MenuItem>
+                <MenuItem value="pest-control">Pest Control</MenuItem>
+                <MenuItem value="deep-cleaning">Deep Cleaning</MenuItem>
+                <MenuItem value="civil-mason">Civil & Mason Works</MenuItem>
+                <MenuItem value="invisible-grill">Invisible Grill</MenuItem>
+                <MenuItem value="mosquito-mesh">Mosquito Mesh</MenuItem>
+              </MuiSelect>
+            </FormControl>
           </div>
 
-          <div>
-            <Label htmlFor="subCategory" className="text-sm font-medium">Select Sub Category</Label>
-            <Select onValueChange={(value) => handleInputChange('subCategory', value)}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="standard-cockroach">Standard Cockroach Control</SelectItem>
-                <SelectItem value="4d-cockroach">4D Cockroach Control</SelectItem>
-                <SelectItem value="bathroom-cleaning">Bathroom Cleaning</SelectItem>
-                <SelectItem value="sofa-cleaning">Sofa Cleaning</SelectItem>
-                <SelectItem value="grouting-tiles">Grouting Of Tiles</SelectItem>
-                <SelectItem value="residential-apartment">Residential Apartment</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Sub Category</InputLabel>
+            <MuiSelect
+              value={formData.subCategory}
+              onChange={(e) => handleInputChange('subCategory', e.target.value)}
+              displayEmpty
+              label="Select Sub Category"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value=""><em>Select Sub Category</em></MenuItem>
+              <MenuItem value="standard-cockroach">Standard Cockroach Control</MenuItem>
+              <MenuItem value="4d-cockroach">4D Cockroach Control</MenuItem>
+              <MenuItem value="bathroom-cleaning">Bathroom Cleaning</MenuItem>
+              <MenuItem value="sofa-cleaning">Sofa Cleaning</MenuItem>
+              <MenuItem value="grouting-tiles">Grouting Of Tiles</MenuItem>
+              <MenuItem value="residential-apartment">Residential Apartment</MenuItem>
+            </MuiSelect>
+          </FormControl>
 
           <div>
             <Label className="text-sm font-medium text-gray-900 block mb-2">Schedule Visit</Label>
-            <div>
-              <Label htmlFor="scheduleDate" className="text-sm font-medium">Select Date</Label>
-              <Input
-                id="scheduleDate"
-                type="date"
-                value={formData.scheduleDate}
-                onChange={(e) => handleInputChange('scheduleDate', e.target.value)}
-                className="mt-1"
-              />
-            </div>
+            <TextField
+              label="Select Date"
+              type="date"
+              value={formData.scheduleDate}
+              onChange={(e) => handleInputChange('scheduleDate', e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
           </div>
 
-          <div>
-            <Label htmlFor="paymentMethod" className="text-sm font-medium">Select Payment method</Label>
-            <Select onValueChange={(value) => handleInputChange('paymentMethod', value)}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Card" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
-                <SelectItem value="upi">UPI</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Payment method</InputLabel>
+            <MuiSelect
+              value={formData.paymentMethod}
+              onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+              displayEmpty
+              label="Select Payment method"
+              sx={fieldStyles}
+              MenuProps={menuProps}
+            >
+              <MenuItem value=""><em>Select Payment method</em></MenuItem>
+              <MenuItem value="card">Card</MenuItem>
+              <MenuItem value="cash">Cash</MenuItem>
+              <MenuItem value="bank-transfer">Bank Transfer</MenuItem>
+              <MenuItem value="upi">UPI</MenuItem>
+            </MuiSelect>
+          </FormControl>
 
           <div className="bg-gray-50 p-3 rounded text-xs text-gray-600">
             <strong>Disclaimer:</strong> The Services include the provision of the Platform that enables you to arrange and
@@ -135,7 +146,7 @@ export const CreateScheduleModal = ({ isOpen, onClose, onSubmit }: CreateSchedul
           <div className="flex justify-center pt-2">
             <Button
               onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-2"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               Pay {localStorage.getItem('currency')}
             </Button>

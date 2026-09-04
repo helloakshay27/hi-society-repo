@@ -222,7 +222,7 @@ const FaqCategoryForm = () => {
                   fullWidth
                   variant="outlined"
                   disabled={loading}
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                   InputProps={{ sx: fieldStyles }}
                 />
 
@@ -260,17 +260,16 @@ const FaqCategoryForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2"
-          >
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"           >
             {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Submit')}
           </button>
           <button
             type="button"
             onClick={() => navigate("/settings/faq-category-list")}
             disabled={loading}
-            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2 border-[1px]"
-          >
-            Cancel
+ className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">
+              Cancel
           </button>
         </div>
       </form>

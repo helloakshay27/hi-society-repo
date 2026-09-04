@@ -2,11 +2,20 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, KeyRound, Loader2 } from "lucide-react";
+import { Plus, KeyRound, Loader2, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import {
   Pagination,
@@ -109,9 +118,27 @@ const getHostDisplay = (v: ApiGatekeeper): string => {
   return "--";
 };
 
+// ─── API Actions ──────────────────────────────────────────────────────────────
+
+const checkVisitorAction = async (
+  id: number,
+  checkType: "in" | "out"
+): Promise<void> => {
+  const res = await fetch(getFullUrl(`/crm/admin/visitors/${id}.json`), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: getAuthHeader(),
+    },
+    body: JSON.stringify({ gatekeeper: { check_type: checkType } }),
+  });
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+};
+
 // ─── Column Config ─────────────────────────────────────────────────────────────
 
 const visitorInColumns: ColumnConfig[] = [
+  { key: "action",         label: "Action",         sortable: false, hideable: false, draggable: false },
   { key: "sr_no",           label: "Sr. No.",       sortable: false, hideable: true,  draggable: true  },
   { key: "visitor_image",   label: "Photo",          sortable: false, hideable: true,  draggable: true  },
   { key: "guest_name",      label: "Visitor Name",   sortable: true,  hideable: true,  draggable: true  },
@@ -130,9 +157,59 @@ const visitorInColumns: ColumnConfig[] = [
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 const SmartSecureVisitorIn: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+  const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
   const perPage = 20;
+
+  // ── Image Preview State ────────────────────────────────────────────────────
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>("");
+
+  // ── Verify OTP State ───────────────────────────────────────────────────────
+  const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+
+  const handleVerifyOtp = async () => {
+    if (!otpValue.trim()) {
+      toast.error("Please enter the OTP");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const res = await fetch(getFullUrl("/crm/admin/verify_hour_otp.json"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify({ otp: otpValue.trim() }),
+      });
+
+      let data: { message?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // Response had no JSON body; fall back to generic messages below.
+      }
+
+      if (!res.ok) {
+        throw new Error(data.message || `Request failed: ${res.status}`);
+      }
+
+      toast.success(data.message || "OTP verified successfully");
+      setOtpDialogOpen(false);
+      setOtpValue("");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Invalid OTP. Please try again.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   const { data: apiData, isLoading, isError, refetch } = useQuery<ApiResponse>({
     queryKey: ["visitor-in-list", currentPage],
@@ -155,6 +232,30 @@ const SmartSecureVisitorIn: React.FC = () => {
 
   const renderCell = useCallback((visitor: ApiGatekeeper, columnKey: string) => {
     switch (columnKey) {
+      case "action":
+        return (
+          <div className="flex gap-1">
+            {shouldShow("Visitor In", "show") && (
+              <button
+                onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
+                className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#C72030] transition-colors"
+                title="View Details"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+            )}
+            {/* {shouldShow("Visitor In", "update") && (
+              <button
+                onClick={() => navigate(`/smartsecure/visitor/details/${visitor.id}`)}
+                className="p-1.5 rounded hover:bg-gray-100 text-gray-900 transition-colors"
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )} */}
+          </div>
+        );
+
       case "sr_no": {
         const idx = rows.indexOf(visitor);
         return (
@@ -167,7 +268,17 @@ const SmartSecureVisitorIn: React.FC = () => {
       case "visitor_image":
         return (
           <div className="flex justify-center">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+            <button
+              onClick={() => {
+                if (visitor.image) {
+                  setPreviewImageUrl(visitor.image);
+                  setPreviewImageName(visitor.guest_name || "Visitor");
+                  setPreviewImageOpen(true);
+                }
+              }}
+              className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+              title="Click to preview"
+            >
               {visitor.image ? (
                 <img
                   src={visitor.image}
@@ -181,7 +292,7 @@ const SmartSecureVisitorIn: React.FC = () => {
                   </svg>
                 </div>
               )}
-            </div>
+            </button>
           </div>
         );
 
@@ -265,55 +376,183 @@ const SmartSecureVisitorIn: React.FC = () => {
           <span className="text-sm text-gray-700">{formatDateTime(visitor.guest_entry_time)}</span>
         );
 
-      case "check_in_action":
+      case "check_in_action": {
+        const inKey = `in-${visitor.id}`;
         return (
           <Button
             size="sm"
             className="hover:bg-green-600 text-white text-xs px-3 py-1"
-            onClick={() => {
-              toast.success(`${visitor.guest_name} checked in successfully`);
+            disabled={!!loadingIds[inKey]}
+            onClick={async () => {
+              setLoadingIds((prev) => ({ ...prev, [inKey]: true }));
+              try {
+                await checkVisitorAction(visitor.id, "in");
+                toast.success(`${visitor.guest_name} checked in successfully`);
+                queryClient.invalidateQueries({ queryKey: ["visitor-in-list"] });
+              } catch {
+                toast.error(`Failed to check in ${visitor.guest_name}`);
+              } finally {
+                setLoadingIds((prev) => ({ ...prev, [inKey]: false }));
+              }
             }}
           >
-            Check In
+            {loadingIds[inKey] ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "Check In"
+            )}
           </Button>
         );
+      }
 
-      case "out_action":
+      case "out_action": {
+        const outKey = `out-${visitor.id}`;
         return (
           <Button
             size="sm"
             variant="outline"
             className="border-red-500 text-red-500 hover:bg-red-50 text-xs px-3 py-1"
-            onClick={() => {
-              toast.info(`${visitor.guest_name} marked as OUT`);
+            disabled={!!loadingIds[outKey]}
+            onClick={async () => {
+              setLoadingIds((prev) => ({ ...prev, [outKey]: true }));
+              try {
+                await checkVisitorAction(visitor.id, "out");
+                toast.success(`${visitor.guest_name} marked as OUT`);
+                queryClient.invalidateQueries({ queryKey: ["visitor-in-list"] });
+              } catch {
+                toast.error(`Failed to mark ${visitor.guest_name} as OUT`);
+              } finally {
+                setLoadingIds((prev) => ({ ...prev, [outKey]: false }));
+              }
             }}
           >
-            OUT
+            {loadingIds[outKey] ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "OUT"
+            )}
           </Button>
         );
+      }
 
       default: {
         const val = (visitor as unknown as Record<string, unknown>)[columnKey];
         return val ? String(val) : "--";
       }
     }
-  }, [currentPage, perPage, rows]);
+    }, [currentPage, perPage, rows, loadingIds, queryClient]);
 
-  // ── Left Actions ───────────────────────────────────────────────────────────
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const leftActions = (
     <div className="flex gap-2">
+      {shouldShow("Visitor In", "create") && (
+        <Button
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          onClick={() => navigate("/smartsecure/visitor-in/add")}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add
+        </Button>
+      )}
       <Button
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        onClick={() => navigate("/smartsecure/visitor-in/add")}
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add
-      </Button>
-      <Button
-        variant="outline"
-        className="h-9 px-4 text-sm font-medium border-gray-300"
-        onClick={() => toast.info("Verify OTP dialog coming soon")}
+        className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={() => {
+          setOtpValue("");
+          setOtpDialogOpen(true);
+        }}
       >
         <KeyRound className="w-4 h-4 mr-2" />
         Verify OTP
@@ -322,15 +561,6 @@ const SmartSecureVisitorIn: React.FC = () => {
   );
 
   // ── Loading / Error ────────────────────────────────────────────────────────
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-        <span className="ml-2 text-gray-600">Loading visitors...</span>
-      </div>
-    );
-  }
 
   if (isError) {
     return (
@@ -358,54 +588,28 @@ const SmartSecureVisitorIn: React.FC = () => {
         searchPlaceholder="Search visitors..."
         hideTableExport={false}
         hideColumnsButton={false}
+        loading={isLoading}
         leftActions={leftActions}
       />
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalCount > 0 && (
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+          {/* <p className="text-sm text-gray-500">
             Showing page {currentPage} of {totalPages} ({totalCount} total visitors)
-          </p>
+          </p> */}
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => handlePageChange(currentPage - 1)}
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let page: number;
-                if (totalPages <= 5) {
-                  page = i + 1;
-                } else if (currentPage <= 3) {
-                  page = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  page = totalPages - 4 + i;
-                } else {
-                  page = currentPage - 2 + i;
-                }
-                return (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      isActive={page === currentPage}
-                      onClick={() => setCurrentPage(page)}
-                      className="cursor-pointer"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
-              {totalPages > 5 && currentPage < totalPages - 2 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
+              {renderPaginationItems()}
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => handlePageChange(currentPage + 1)}
                   className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
@@ -413,6 +617,75 @@ const SmartSecureVisitorIn: React.FC = () => {
           </Pagination>
         </div>
       )}
+
+      {/* Verify OTP Dialog */}
+      <Dialog open={otpDialogOpen} onOpenChange={(open) => { if (!otpLoading) { setOtpDialogOpen(open); if (!open) setOtpValue(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-[#C72030]" />
+              Verify OTP
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-gray-500 mb-3">Enter the OTP to verify visitor access.</p>
+            <Input
+              type="text"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="Enter OTP"
+              value={otpValue}
+              onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
+              onKeyDown={(e) => { if (e.key === "Enter") handleVerifyOtp(); }}
+              className="text-center text-lg tracking-widest font-semibold"
+              autoFocus
+            />
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setOtpDialogOpen(false); setOtpValue(""); }}
+              disabled={otpLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              onClick={handleVerifyOtp}
+              disabled={otpLoading || !otpValue.trim()}
+            >
+              {otpLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

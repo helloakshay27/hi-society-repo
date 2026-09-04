@@ -697,7 +697,7 @@ export const UnitMasterPage = () => {
                     size="sm"
                     onClick={() => handleEditClick(item)}
                   >
-                    <Edit className="w-4 h-4" />
+                    <Edit className="w-4 h-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
                   </Button>
                 </TableCell>
                 <TableCell>

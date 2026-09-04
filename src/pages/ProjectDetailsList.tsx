@@ -5,10 +5,10 @@ import { Plus, Eye, Edit, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { Switch } from '@mui/material';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Project {
   id: number;
@@ -23,6 +23,7 @@ interface Project {
 }
 
 const ProjectDetailsList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +117,116 @@ const ProjectDetailsList = () => {
       setCurrentPage(page);
     }
   };
-  
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
+
   const handleAddProject = () => navigate('/maintenance/project-details-create');
   const handleViewProject = (id: number) => navigate(`/maintenance/project-details-view/${id}`);
   const handleEditProject = (id: number) => navigate(`/maintenance/project-details-edit/${id}`);
@@ -224,12 +334,16 @@ const ProjectDetailsList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={() => handleViewProject(item.id)} title="View">
-              <Eye className="w-4 h-4 text-gray-700" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleEditProject(item.id)} title="Edit">
-              <Pencil className="w-4 h-4" />
-            </Button>
+            {shouldShow("Project", "show") && (
+              <Button variant="ghost" size="sm" onClick={() => handleViewProject(item.id)} title="View">
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {shouldShow("Project", "update") && (
+              <Button variant="ghost" size="sm" onClick={() => handleEditProject(item.id)} title="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
           case 'sr_no':
@@ -240,33 +354,37 @@ const ProjectDetailsList = () => {
         );
       case 'published':
         return (
-          <Switch
-            checked={item.published || false}
-            onChange={() => handleTogglePublished(item.id, item.published)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleTogglePublished(item.id, item.published)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.published ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.published ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case 'show_on_home':
         return (
-          <Switch
-            checked={item.show_on_home || false}
-            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.show_on_home ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.show_on_home ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       case 'configurations':
         const configs = item.configurations;
@@ -287,13 +405,15 @@ const ProjectDetailsList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      <Button 
-        onClick={handleAddProject}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-        Add
-      </Button>
+      {shouldShow("Project", "create") && (
+        <Button 
+          onClick={handleAddProject}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+          Add
+        </Button>
+      )}
     </div>
   );
 
@@ -316,38 +436,26 @@ const ProjectDetailsList = () => {
           storageKey="projects-table"
           enableGlobalSearch={true}
           onGlobalSearch={handleGlobalSearch}
-          searchPlaceholder="Search projects (name, type, ID, status, tag)..."
+          searchPlaceholder="Search projects "
           leftActions={renderCustomActions()}
           loading={isSearching || loading}
           loadingMessage={isSearching ? "Searching projects..." : "Loading projects..."}
         />
-        {!searchTerm && totalPages > 1 && (
+        {totalCount > 0 && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                      isActive={currentPage === page}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {renderPaginationItems()}
                 <PaginationItem>
                   <PaginationNext
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
               </PaginationContent>

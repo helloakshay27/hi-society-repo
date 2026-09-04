@@ -1,147 +1,216 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronDown, Folder, FolderOpen, File, FileText, Upload, RefreshCw, Loader2, Download, Search, FileVideo, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import {
+  File,
+  FileSpreadsheet,
+  FileText,
+  FileVideo,
+  Folder,
+  FolderOpen,
+  Image as ImageIcon,
+  RefreshCw,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader, ENDPOINTS } from "@/config/apiConfig";
 
-// ─── API Types ────────────────────────────────────────────────────────────────
-
-interface ApiFolder {
+interface TreeNode {
   id: string | number;
-  name: string;
+  parent: string | number;
+  text: string;
+  icon?: string;
+  a_attr?: {
+    href: string;
+  };
 }
 
-interface ApiDocument {
-  id: string | number;
-  name: string;
-  content: { url: string };
-}
+const FILE_EXTENSION_PATTERN =
+  /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
 
-interface CommonFolderResponse {
-  folder?: ApiFolder;
-  subfolders: ApiFolder[];
-  documents: ApiDocument[];
-}
+const isFileNode = (node: TreeNode): boolean => {
+  if (String(node.parent) === "#") return false;
+  return (
+    String(node.id).startsWith("documents_") ||
+    Boolean(node.a_attr?.href) ||
+    FILE_EXTENSION_PATTERN.test(node.text ?? "")
+  );
+};
 
-// ─── Internal Tree Types ──────────────────────────────────────────────────────
+const ALL_ROOT_NODE: TreeNode = { id: "All", parent: "#", text: "All" };
 
-interface DocumentNode {
-  id: string;
-  name: string;
-  type: "folder" | "file";
-  fileType?: string;
-  url?: string;
-}
+const isAllRootNode = (node: TreeNode): boolean =>
+  String(node.id) === "All" ||
+  String(node.text ?? "")
+    .trim()
+    .toLowerCase() === "all";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const isRootParent = (parentId: string, allRootId: string): boolean =>
+  parentId === "#" || parentId === "All" || parentId === allRootId;
 
-const getExtension = (name: string): string =>
-  name.split(".").pop()?.toLowerCase() ?? "";
+const getExtension = (name: string | null | undefined): string =>
+  (name ?? "").split(".").pop()?.toLowerCase() ?? "";
 
-const inferFileType = (name: string): string => {
-  const ext = getExtension(name);
-  if (["mp4", "mov", "avi", "mkv", "webm"].includes(ext)) return "video";
-  if (["pdf"].includes(ext)) return "pdf";
-  if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext)) return "image";
-  if (["xls", "xlsx", "csv"].includes(ext)) return "spreadsheet";
-  if (["doc", "docx"].includes(ext)) return "doc";
-  if (name.toLowerCase().includes("warranty_card")) return "pdf"; 
+const inferFileType = (name: string | null | undefined): string => {
+  const extension = getExtension(name);
+
+  if (["mp4", "mov", "avi", "mkv", "webm"].includes(extension)) {
+    return "video";
+  }
+  if (["pdf"].includes(extension)) {
+    return "pdf";
+  }
+  if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(extension)) {
+    return "image";
+  }
+  if (["xls", "xlsx", "csv"].includes(extension)) {
+    return "spreadsheet";
+  }
+  if (["doc", "docx"].includes(extension)) {
+    return "doc";
+  }
   return "file";
 };
 
-// ─── File icon helper ─────────────────────────────────────────────────────────
-
-const getFileIcon = (fileType?: string) => {
+const FileIcon = ({ fileType }: { fileType?: string }) => {
   switch (fileType) {
-    case "video":      return <FileVideo className="w-5 h-5 text-purple-500" />;
-    case "pdf":        return <FileText className="w-5 h-5 text-red-500" />;
-    case "image":      return <ImageIcon className="w-5 h-5 text-blue-500" />;
-    case "spreadsheet":return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
-    case "doc":        return <FileText className="w-5 h-5 text-blue-700" />;
-    default:           return <File className="w-5 h-5 text-gray-400" />;
+    case "video":
+      return <FileVideo className="h-5 w-5 shrink-0 text-purple-500" />;
+    case "pdf":
+      return <FileText className="h-5 w-5 shrink-0 text-red-500" />;
+    case "image":
+      return <ImageIcon className="h-5 w-5 shrink-0 text-green-500" />;
+    case "spreadsheet":
+      return <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-600" />;
+    case "doc":
+      return <FileText className="h-5 w-5 shrink-0 text-blue-500" />;
+    default:
+      return <File className="h-5 w-5 shrink-0 text-gray-400" />;
   }
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const TreeToggle: React.FC<{ isExpanded: boolean; visible: boolean }> = ({
+  isExpanded,
+  visible,
+}) => {
+  if (!visible) {
+    return <span className="h-[14px] w-[13px] shrink-0" aria-hidden="true" />;
+  }
+
+  return (
+    <span
+      className="flex h-[14px] w-[13px] shrink-0 items-center justify-center"
+      aria-hidden="true"
+    >
+      {isExpanded ? (
+        <span className="h-0 w-0 border-l-[4px] border-r-[4px] border-t-[5px] border-l-transparent border-r-transparent border-t-[#3f3f3f]" />
+      ) : (
+        <span className="h-0 w-0 border-b-[4px] border-l-[5px] border-t-[4px] border-b-transparent border-l-[#3f3f3f] border-t-transparent" />
+      )}
+    </span>
+  );
+};
 
 const BMSDocumentsCommonFiles: React.FC = () => {
   const navigate = useNavigate();
-  const [currentFolderId, setCurrentFolderId] = useState<string | number | undefined>(undefined);
-  const [breadcrumbs, setBreadcrumbs] = useState<{ id: string | number | undefined; name: string }[]>([
-    { id: undefined, name: "Common Files" }
-  ]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedFolders, setExpandedFolders] = useState<Set<string | number>>(
+    new Set(["All"])
+  );
 
   const {
-    data: folderData,
+    data: treeData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useQuery<CommonFolderResponse>({
-    queryKey: ["common-folder", currentFolderId],
+  } = useQuery<TreeNode[]>({
+    queryKey: ["attachment-common"],
     queryFn: async () => {
-      const url = getFullUrl("/crm/admin/common_folder_show.json");
-      const { data } = await axios.get(url, {
-        params: { folder_id: currentFolderId },
+      const { data } = await axios.get(getFullUrl(ENDPOINTS.ATTACHMENT_COMMON), {
         headers: { Authorization: getAuthHeader() },
       });
-      return data;
+
+      return Array.isArray(data) ? data : [];
     },
     retry: 1,
-    staleTime: 30000,
+    staleTime: 5000,
+    refetchOnMount: "always",
   });
 
-  // Transform folderData into UI nodes
-  const nodes: DocumentNode[] = [];
-  if (folderData) {
-    folderData.subfolders.forEach((sf) => {
-      nodes.push({
-        id: String(sf.id),
-        name: sf.name,
-        type: "folder"
-      });
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, TreeNode[]>();
+    const allRootNode = (treeData ?? []).find(isAllRootNode);
+    const allRootId = String(allRootNode?.id ?? ALL_ROOT_NODE.id);
+    const knownNodeIds = new Set(
+      (treeData ?? []).map((node) => String(node.id))
+    );
+
+    for (const node of treeData ?? []) {
+      const nodeId = String(node.id);
+      const rawParentId = String(node.parent);
+      const parentExists =
+        isRootParent(rawParentId, allRootId) || knownNodeIds.has(rawParentId);
+
+      if (nodeId === allRootId) {
+        continue;
+      }
+
+      // Place root-level files and orphan files directly under the All root
+      // so they remain visible instead of being silently dropped.
+      const parentId =
+        isRootParent(rawParentId, allRootId) || !parentExists
+          ? allRootId
+          : rawParentId;
+      const siblings = map.get(parentId) ?? [];
+      siblings.push(node);
+      map.set(parentId, siblings);
+    }
+
+    return map;
+  }, [treeData]);
+
+  const getChildren = (parentId: string | number): TreeNode[] =>
+    childrenByParent.get(String(parentId)) ?? [];
+
+  const isFolder = (node: TreeNode): boolean =>
+    getChildren(node.id).length > 0 || !isFileNode(node);
+
+  const roots = useMemo<TreeNode[]>(() => {
+    if (!treeData?.length) return [];
+
+    const allNode = treeData.find(isAllRootNode);
+    if (allNode) return [allNode];
+
+    return [ALL_ROOT_NODE];
+  }, [treeData]);
+
+  useEffect(() => {
+    if (!treeData?.length) return;
+
+    const allRootNode = treeData.find(isAllRootNode);
+    setExpandedFolders(
+      new Set<string | number>([allRootNode?.id ?? ALL_ROOT_NODE.id])
+    );
+  }, [treeData]);
+
+  const toggleFolder = (folderId: string | number) => {
+    setExpandedFolders((current) => {
+      const next = new Set(current);
+      if (next.has(folderId)) {
+        next.delete(folderId);
+      } else {
+        next.add(folderId);
+      }
+      return next;
     });
-    folderData.documents.forEach((doc) => {
-      nodes.push({
-        id: String(doc.id),
-        name: doc.name,
-        type: "file",
-        fileType: inferFileType(doc.name),
-        url: doc.content.url
-      });
-    });
-  }
-
-  const visibleDocuments = nodes.filter(n => 
-    n.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleFolderClick = (id: string, name: string) => {
-    setCurrentFolderId(id);
-    setBreadcrumbs(prev => [...prev, { id, name }]);
-  };
-
-  const handleBreadcrumbClick = (id: string | number | undefined, index: number) => {
-    setCurrentFolderId(id);
-    setBreadcrumbs(prev => prev.slice(0, index + 1));
   };
 
   const handleUpload = () => {
-    navigate("/bms/documents/upload");
-  };
-
-  const handleDownload = (fileName: string, url?: string) => {
-    if (url) {
-      window.open(url, '_blank');
-      toast.success(`Opening ${fileName}…`);
-    } else {
-      toast.error("File URL not found.");
-    }
+    navigate("/bms/documents/upload", {
+      state: { returnPath: "/bms/documents/common-files" },
+    });
   };
 
   const handleRefresh = () => {
@@ -149,64 +218,149 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     toast.success("Folder refreshed");
   };
 
-  const renderNode = (node: DocumentNode): React.ReactNode => {
-    if (node.type === "folder") {
+  const handleDownload = (fileName: string, nodeId: string | number) => {
+    try {
+      const authHeader = getAuthHeader();
+      const token = authHeader.replace("Bearer ", "").replace("Token ", "");
+      const baseUrl = getFullUrl("/crm/admin/attachments_common");
+      const downloadUrl = `${baseUrl}?id=${nodeId}&token=${token}`;
+
+      window.open(downloadUrl, "_blank");
+      toast.success(`Opening ${fileName}...`);
+    } catch (downloadError) {
+      console.error("Error opening file:", downloadError);
+      toast.error("Unable to open file. Please try again.");
+    }
+  };
+
+  const renderConnectorLines = (
+    depth: number,
+    isLast: boolean,
+    ancestorHasNextSibling: boolean[]
+  ) => (
+    <>
+      {ancestorHasNextSibling.map((hasNextSibling, index) =>
+        hasNextSibling ? (
+          <span
+            key={index}
+            className="pointer-events-none absolute bottom-0 top-0 border-l border-[#9f9f9f]"
+            style={{ left: `${23 + index * 18}px` }}
+          />
+        ) : null
+      )}
+      {depth > 0 && (
+        <>
+          <span
+            className="pointer-events-none absolute top-0 border-l border-[#9f9f9f]"
+            style={{
+              left: `${23 + (depth - 1) * 18}px`,
+              height: isLast ? "10px" : "20px",
+            }}
+          />
+          <span
+            className="pointer-events-none absolute border-t border-[#9f9f9f]"
+            style={{
+              left: `${23 + (depth - 1) * 18}px`,
+              top: "10px",
+              width: "11px",
+            }}
+          />
+        </>
+      )}
+    </>
+  );
+
+  const renderTreeNode = (
+    node: TreeNode,
+    depth = 0,
+    isLast = true,
+    ancestorHasNextSibling: boolean[] = []
+  ): React.ReactNode => {
+    const children = getChildren(node.id);
+    const nodeIsFolder = isFolder(node);
+    const isExpanded = expandedFolders.has(node.id);
+
+    if (!nodeIsFolder) {
       return (
-        <div 
+        <div
           key={node.id}
-          className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 cursor-pointer rounded border-b border-gray-50 last:border-0"
-          onClick={() => handleFolderClick(node.id, node.name)}
+          className="relative flex h-[20px] cursor-pointer items-center whitespace-nowrap text-[12px] leading-none text-[#333] hover:bg-[#eef6fb]"
+          style={{ paddingLeft: `${16 + depth * 18}px` }}
+          title={node.text ?? ""}
+          onClick={() => handleDownload(node.text ?? "file", node.id)}
         >
-          <Folder className="w-5 h-5 text-blue-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-gray-700 truncate">{node.name}</span>
-          <ChevronRight className="ml-auto w-4 h-4 text-gray-400" />
+          {renderConnectorLines(depth, isLast, ancestorHasNextSibling)}
+          <span className="relative z-[1] flex h-full items-center gap-[5px]">
+            <span className="h-[14px] w-[13px] shrink-0" aria-hidden="true" />
+            <FileIcon fileType={inferFileType(node.text ?? "")} />
+            <span>{node.text ?? ""}</span>
+          </span>
         </div>
       );
     }
 
     return (
-      <div
-        key={node.id}
-        className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 rounded group cursor-pointer border-b border-gray-50 last:border-0"
-        onClick={() => node.url && window.open(node.url, '_blank')}
-      >
-        <div className="flex-shrink-0">{getFileIcon(node.fileType)}</div>
-        <span className="text-sm text-gray-600 flex-1 truncate" title={node.name}>
-          {node.name}
-        </span>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="opacity-0 group-hover:opacity-100 h-7 px-2 flex-shrink-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDownload(node.name, node.url);
-          }}
+      <div key={node.id}>
+        <div
+          className="relative flex h-[20px] cursor-pointer select-none items-center whitespace-nowrap text-[12px] leading-none text-[#333] hover:bg-[#eef6fb]"
+          style={{ paddingLeft: `${16 + depth * 18}px` }}
+          onClick={() => toggleFolder(node.id)}
         >
-          <Download className="w-4 h-4" />
-        </Button>
+          {renderConnectorLines(depth, isLast, ancestorHasNextSibling)}
+          <span className="relative z-[1] flex h-full items-center gap-[5px]">
+            <TreeToggle isExpanded={isExpanded} visible={children.length > 0} />
+            {isExpanded ? (
+              <FolderOpen className="h-5 w-5 shrink-0 text-yellow-500" />
+            ) : (
+              <Folder className="h-5 w-5 shrink-0 text-yellow-500" />
+            )}
+            <span>{node.text ?? ""}</span>
+          </span>
+        </div>
+
+        {isExpanded &&
+          children.map((child, index) =>
+            renderTreeNode(child, depth + 1, index === children.length - 1, [
+              ...ancestorHasNextSibling,
+              index !== children.length - 1,
+            ])
+          )}
       </div>
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading files...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
-      <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">Common Files</h1>
+    <div className="min-h-[calc(100vh-7rem)] bg-white font-[Arial] text-[#333]">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between px-6 pt-6">
+        <h1 className="text-2xl font-bold text-[#1a1a1a]">Common Files</h1>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="h-9"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
           <Button
             onClick={handleUpload}
-            className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Document
@@ -214,71 +368,42 @@ const BMSDocumentsCommonFiles: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        {/* Breadcrumbs */}
-        <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/50 flex items-center gap-1 overflow-x-auto no-scrollbar">
-          {breadcrumbs.map((bc, idx) => (
-            <React.Fragment key={idx}>
-              <button
-                onClick={() => handleBreadcrumbClick(bc.id, idx)}
-                className={`text-xs font-medium whitespace-nowrap hover:text-blue-600 transition-colors ${
-                  idx === breadcrumbs.length - 1 ? "text-gray-900 cursor-default" : "text-gray-500"
-                }`}
-              >
-                {bc.name}
-              </button>
-              {idx < breadcrumbs.length - 1 && (
-                <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search in this folder..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+      <div className="relative min-h-[520px] overflow-auto bg-white pl-[16px] pr-[28px] pt-[7px]">
+        {isError ? (
+          <div className="pt-2 text-[12px] text-[#555]">
+            <p className="text-[#ED820E]">Error loading folder contents</p>
+            <p className="mt-1">
+              {error instanceof Error ? error.message : "Please try again"}
+            </p>
+            <button
+              type="button"
+              className="mt-2 border border-[#a4a4a4] bg-[#f7f7f7] px-2 py-1 text-[11px] text-[#333] hover:bg-[#ececec]"
+              onClick={() => refetch()}
+            >
+              Retry
+            </button>
           </div>
-        </div>
+        ) : roots.length === 0 ? (
+          <div className="pt-2 text-[12px] text-[#666]">
+            No folders available
+          </div>
+        ) : (
+          <div className="min-w-max">
+            {roots.map((root, index) =>
+              renderTreeNode(root, 0, index === roots.length - 1, [])
+            )}
+          </div>
+        )}
+      </div>
 
-        {/* Contents */}
-        <div className="p-2 min-h-[400px]">
-          {isLoading ? (
-            <div className="flex flex-col justify-center items-center py-24">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-2" />
-              <span className="text-sm text-gray-500">Retrieving content…</span>
-            </div>
-          ) : isError ? (
-            <div className="text-center py-24">
-              <p className="text-red-600 font-medium">Error loading folder contents</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {error instanceof Error ? error.message : "Please try again"}
-              </p>
-              <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Retry
-              </Button>
-            </div>
-          ) : visibleDocuments.length === 0 ? (
-            <div className="text-center py-24">
-              <Folder className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-400 text-sm">
-                {searchQuery ? "No items match your search" : "This folder is empty"}
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {visibleDocuments.map((node) => renderNode(node))}
-            </div>
-          )}
-        </div>
+      <div
+        className="fixed right-0 top-1/2 z-40 rounded-l-[4px] bg-[#f1bd00] px-[4px] py-[9px] text-[11px] font-bold leading-none text-white shadow-sm"
+        style={{
+          writingMode: "vertical-rl",
+          transform: "translateY(-50%) rotate(180deg)",
+        }}
+      >
+        SUPPORT
       </div>
     </div>
   );

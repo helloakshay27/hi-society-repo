@@ -1,6 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  TextField,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Plus,
   Download,
@@ -10,6 +21,7 @@ import {
   Edit,
   Trash2,
   Loader2,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AddSocietyModal } from "@/components/AddSocietyModal";
@@ -37,6 +49,13 @@ const columns: ColumnConfig[] = [
   {
     key: "actions",
     label: "Action",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
+    key: "srno",
+    label: "S.No.",
     sortable: false,
     hideable: false,
     draggable: false,
@@ -91,9 +110,9 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
-    key: "created_at",
-    label: "Created At",
-    sortable: true,
+    key: "ivr_enabled",
+    label: "IVR Enabled",
+    sortable: false,
     hideable: true,
     draggable: true,
   },
@@ -130,6 +149,17 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
   const [selectedSocietyId, setSelectedSocietyId] = useState<number | null>(null);
   const [selectedSocietyName, setSelectedSocietyName] = useState("");
 
+  // IVR modal state
+  const [isIvrModalOpen, setIsIvrModalOpen] = useState(false);
+  const [ivrSocietyId, setIvrSocietyId] = useState<number | null>(null);
+  const [ivrForm, setIvrForm] = useState({
+    ivr_enabled: true,
+    ivr_name: "",
+    ivr_api_key: "",
+    ivr_caller_id: "",
+  });
+  const [isIvrSubmitting, setIsIvrSubmitting] = useState(false);
+
   // Debug modal states
   useEffect(() => {
     console.log("🔔 Modal states changed:", { isAddModalOpen, isEditModalOpen, isDeleteModalOpen });
@@ -153,8 +183,10 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       "helloakshay27@gmail.com",
       "dev@lockated.com",
       "sumitra.patil@lockated.com",
+      "komalshinde0101@lockated.com",
       "demo@lockated.com",
-      "ajay.ghenand@lockated.com"
+      "ajay.ghenand@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     const hasPermission = allowedEmails.includes(userEmail);
     console.log("🔐 Edit Permission Check:", { userEmail, hasPermission, allowedEmails });
@@ -263,7 +295,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
   };
 
   const handleView = (id: number) => {
-    navigate(`/ops-account/society/${id}`);
+    navigate(`/ops-console/master/location/account/societies/details/${id}`);
   };
 
   const handleEdit = (id: number) => {
@@ -308,7 +340,74 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
     }
   };
 
-  const renderRow = (society: Society) => ({
+  const handleIvrToggle = async (id: number, currentIvr: boolean) => {
+    if (currentIvr) {
+      // Disabling — call API directly, no modal
+      submitIvrUpdate(id, { ivr_enabled: false, ivr_name: "", ivr_api_key: "", ivr_caller_id: "" });
+      return;
+    }
+
+    // Enabling — fetch current data, pre-fill modal
+    try {
+      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
+      const token = HI_SOCIETY_CONFIG.TOKEN;
+      const response = await fetch(`${baseUrl}/admin/societies/${id}.json?token=${token}`);
+      if (!response.ok) throw new Error("Failed to fetch society data");
+      const data = await response.json();
+
+      setIvrSocietyId(id);
+      setIvrForm({
+        ivr_enabled: true,
+        ivr_name: data.ivr_name || "",
+        ivr_api_key: data.ivr_api_key || "",
+        ivr_caller_id: data.ivr_caller_id || "",
+      });
+      setIsIvrModalOpen(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load IVR data");
+    }
+  };
+
+  const submitIvrUpdate = async (
+    id: number,
+    data: { ivr_enabled: boolean; ivr_name: string; ivr_api_key: string; ivr_caller_id: string }
+  ) => {
+    try {
+      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
+      const token = HI_SOCIETY_CONFIG.TOKEN;
+      const url = `${baseUrl}/admin/societies/${id}.json?token=${token}`;
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ society: data }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update IVR settings");
+
+      toast.success(`IVR ${data.ivr_enabled ? "enabled" : "disabled"} successfully`);
+      fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update IVR settings");
+    }
+  };
+
+  const handleIvrModalSubmit = async () => {
+    if (!ivrSocietyId) return;
+    setIsIvrSubmitting(true);
+    await submitIvrUpdate(ivrSocietyId, ivrForm);
+    setIsIvrSubmitting(false);
+    setIsIvrModalOpen(false);
+    setIvrSocietyId(null);
+  };
+
+  const displayedData = useMemo(
+    () => societies.map((s, i) => ({ ...s, srno: (currentPage - 1) * perPage + i + 1 })),
+    [societies, currentPage, perPage],
+  );
+
+  const renderRow = (society: Society & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{society.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         <button
@@ -320,7 +419,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         </button>
         <button
           onClick={() => handleEdit(society.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditSociety}
         >
@@ -328,7 +427,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         </button>
         <button
           onClick={() => handleDelete(society.id, society.building_name)}
-          className="p-1 text-red-600 hover:bg-red-50 rounded"
+          className="p-1 text-black-600 hover:bg-red-50 rounded"
           title="Delete"
           disabled={!canEditSociety}
         >
@@ -360,12 +459,12 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         disabled={!canEditSociety}
       />
     ),
-    created_at: (
-      <span className="text-sm text-gray-600">
-        {society.created_at
-          ? new Date(society.created_at).toLocaleDateString()
-          : "-"}
-      </span>
+    ivr_enabled: (
+      <Switch
+        checked={society.ivr_enabled === true}
+        onCheckedChange={() => handleIvrToggle(society.id, society.ivr_enabled === true)}
+        disabled={!canEditSociety}
+      />
     ),
   });
 
@@ -374,113 +473,191 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
 
   return (
     <>
-      {loading && societies.length === 0 ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-[#c72030]" />
-        </div>
-      ) : (
+      <div className="p-6 space-y-6">
+        <header className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Society</h1>
+        </header>
         <>
-          <EnhancedTaskTable
-            columns={columns}
-            data={societies}
-            renderRow={renderRow}
-            storageKey="society-dashboard-v1"
-            hideTableExport={true}
-            hideTableSearch={false}
-            enableSearch={true}
-            searchTerm={searchQuery}
-            onSearchChange={setSearchQuery}
-            leftActions={
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  console.log("🔵 Add Society button clicked", { canEditSociety });
-                  setIsAddModalOpen(true);
-                }}
-                className="bg-[#c72030] hover:bg-[#A01828]"
-                disabled={!canEditSociety}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Society
-              </Button>
-            }
-            rightActions={
-              <div className="flex items-center gap-2">
+            <EnhancedTaskTable
+              columns={columns}
+              data={displayedData}
+              renderRow={renderRow}
+              storageKey="society-dashboard-v1"
+              hideTableExport={true}
+              hideTableSearch={false}
+              enableSearch={true}
+              searchTerm={searchQuery}
+              onSearchChange={setSearchQuery}
+              loading={loading}
+              leftActions={
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   onClick={() => {
-                    toast.info("Bulk upload feature coming soon");
+                    console.log("🔵 Add Society button clicked", { canEditSociety });
+                    setIsAddModalOpen(true);
                   }}
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!canEditSociety}
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Bulk Upload
+                  <Plus className="w-4 h-4 mr-2 text-white" />
+                  Add Society
+                </Button>
+              }
+              rightActions={
+                <div className="flex items-center gap-2">
+                  {/* <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      toast.info("Bulk upload feature coming soon");
+                    }}
+                    disabled={!canEditSociety}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Bulk Upload
+                  </Button> */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      toast.info("Export feature coming soon");
+                    }}
+                  >
+                    <Download className="w-4 h-4 text-[#DA7756] !text-[#DA7756]" />
+                  </Button>
+                </div>
+              }
+            />
+
+            <TicketPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalRecords={totalRecords}
+              perPage={perPage}
+              isLoading={loading}
+              onPageChange={handlePageChange}
+              onPerPageChange={handlePerPageChange}
+            />
+          </>
+
+        {/* Modals */}
+        <AddSocietyModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={() => {
+            fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+          }}
+          canEdit={canEditSociety}
+        />
+
+        <EditSocietyModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedSocietyId(null);
+          }}
+          onSuccess={() => {
+            fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+          }}
+          societyId={selectedSocietyId}
+          canEdit={canEditSociety}
+        />
+
+        <DeleteSocietyModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setSelectedSocietyId(null);
+            setSelectedSocietyName("");
+          }}
+          onSuccess={() => {
+            fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+          }}
+          societyId={selectedSocietyId}
+          societyName={selectedSocietyName}
+          canEdit={canEditSociety}
+        />
+
+        {/* IVR Configuration Modal */}
+        <Dialog open={isIvrModalOpen} onOpenChange={(open) => { if (!open) setIsIvrModalOpen(false); }} modal={false}>
+          <DialogContent className="max-w-md bg-white z-50">
+            <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                IVR CONFIGURATION
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsIvrModalOpen(false)}
+                className="h-6 w-6 p-0 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium">IVR Enabled</span>
+                  <p className="text-xs text-gray-500">Enable IVR for this society</p>
+                </div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={ivrForm.ivr_enabled}
+                      onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_enabled: e.target.checked }))}
+                    />
+                  }
+                  label={ivrForm.ivr_enabled ? "Enabled" : "Disabled"}
+                />
+              </div>
+              <TextField
+                label="IVR Name"
+                placeholder="Enter IVR name"
+                value={ivrForm.ivr_name}
+                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_name: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+              />
+              <TextField
+                label="IVR API Key"
+                placeholder="Enter IVR API key"
+                value={ivrForm.ivr_api_key}
+                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_api_key: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+              />
+              <TextField
+                label="IVR Caller ID"
+                placeholder="Enter IVR caller ID"
+                value={ivrForm.ivr_caller_id}
+                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_caller_id: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+              />
+              <div className="flex justify-end gap-3 pt-2 border-t">
+                <Button variant="outline" onClick={() => setIsIvrModalOpen(false)} disabled={isIvrSubmitting}>
+                  Cancel
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    toast.info("Export feature coming soon");
-                  }}
+                  onClick={handleIvrModalSubmit}
+                  disabled={isIvrSubmitting}
+                  className="bg-[#c72030] hover:bg-[#a01828]"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
+                  {isIvrSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Save IVR Settings
                 </Button>
               </div>
-            }
-          />
-
-          <TicketPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            perPage={perPage}
-            isLoading={loading}
-            onPageChange={handlePageChange}
-            onPerPageChange={handlePerPageChange}
-          />
-        </>
-      )}
-
-      {/* Modals */}
-      <AddSocietyModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => {
-          fetchSocieties(currentPage, perPage, debouncedSearchQuery);
-        }}
-        canEdit={canEditSociety}
-      />
-
-      <EditSocietyModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedSocietyId(null);
-        }}
-        onSuccess={() => {
-          fetchSocieties(currentPage, perPage, debouncedSearchQuery);
-        }}
-        societyId={selectedSocietyId}
-        canEdit={canEditSociety}
-      />
-
-      <DeleteSocietyModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setSelectedSocietyId(null);
-          setSelectedSocietyName("");
-        }}
-        onSuccess={() => {
-          fetchSocieties(currentPage, perPage, debouncedSearchQuery);
-        }}
-        societyId={selectedSocietyId}
-        societyName={selectedSocietyName}
-        canEdit={canEditSociety}
-      />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </>
   );
 };

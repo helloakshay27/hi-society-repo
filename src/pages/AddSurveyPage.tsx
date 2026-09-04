@@ -115,11 +115,11 @@ export const AddSurveyPage = () => {
   const [ticketCategory, setTicketCategory] = useState("");
   const [ticketSubCategory, setTicketSubCategory] = useState("");
   const [assignTo, setAssignTo] = useState("");
-  const [ticketCategories, setTicketCategories] = useState<CategoryResponse[]>(
-    []
-  );
+  const [ticketCategories, setTicketCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
   const [ticketSubCategories, setTicketSubCategories] = useState<
-    SubCategoryResponse[]
+    { id: number; name: string; category_id: number }[]
   >([]);
   const [fmUsers, setFmUsers] = useState<
     {
@@ -174,9 +174,8 @@ export const AddSurveyPage = () => {
 
     setLoadingTicketCategories(true);
     try {
-      const response = await ticketManagementAPI.getCategories();
-      setTicketCategories(response.helpdesk_categories || []);
-      console.log("Ticket categories loaded:", response.helpdesk_categories);
+      const response = await apiClient.get("/dropdown/categories.json");
+      setTicketCategories(response.data?.categories || []);
     } catch (error) {
       console.error("Error loading ticket categories:", error);
     } finally {
@@ -188,10 +187,22 @@ export const AddSurveyPage = () => {
   const loadTicketSubCategories = useCallback(async (categoryId: number) => {
     setLoadingTicketSubCategories(true);
     try {
-      const subcats =
-        await ticketManagementAPI.getSubCategoriesByCategory(categoryId);
-      setTicketSubCategories(subcats);
-      console.log("Ticket subcategories loaded:", subcats);
+      const response = await apiClient.get(
+        "/crm/admin/helpdesk_sub_categories.json"
+      );
+      const allSubcats = response.data?.helpdesk_sub_categories || [];
+      const filtered = allSubcats
+        .filter((s: { category_id: number }) => s.category_id === categoryId)
+        .map(
+          (s: { id: number; sub_category: string | null; category_id: number }) =>
+            ({
+              id: s.id,
+              name: s.sub_category || "",
+              category_id: s.category_id,
+            })
+        )
+        .filter((s: { name: string }) => !!s.name);
+      setTicketSubCategories(filtered);
     } catch (error) {
       console.error("Error loading ticket subcategories:", error);
     } finally {
@@ -267,16 +278,24 @@ export const AddSurveyPage = () => {
           const updatedQuestion = { ...q, [field]: value };
           if (
             field === "answerType" &&
-            ["multiple-choice", "rating", "emojis"].includes(value as string) &&
+            ["multiple-choice", "rating", "emojis", "numeric"].includes(value as string) &&
             !updatedQuestion.answerOptions
           ) {
-            updatedQuestion.answerOptions = [
-              { text: "", type: "P" },
-              { text: "", type: "P" },
-            ];
+            // For numeric, auto-populate all 10 options (0-10)
+            if (value === "numeric") {
+              updatedQuestion.answerOptions = NUMERIC_VALUES.map((val) => ({
+                text: val,
+                type: "P",
+              }));
+            } else {
+              updatedQuestion.answerOptions = [
+                { text: "", type: "P" },
+                { text: "", type: "P" },
+              ];
+            }
           } else if (
             field === "answerType" &&
-            !["multiple-choice", "rating", "emojis"].includes(value as string)
+            !["multiple-choice", "rating", "emojis", "numeric"].includes(value as string)
           ) {
             updatedQuestion.answerOptions = undefined;
           }
@@ -394,6 +413,7 @@ export const AddSurveyPage = () => {
   const EMOJIS = ["😁", "😊", "😐", "😟", "😞"];
   const RATINGS = ["1", "2", "3", "4", "5"];
   const RATING_STARS = ["1-star", "2-star", "3-star", "4-star", "5-star"];
+  const NUMERIC_VALUES = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
   const handleAddAnswerOption = (questionId: string) => {
     const question = questions.find((q) => q.id === questionId);
@@ -406,6 +426,15 @@ export const AddSurveyPage = () => {
       if (currentOptionsCount >= 5) {
         toast.error("Maximum Options Reached", {
           description: `You can only add up to 5 options for ${question.answerType === "rating" ? "rating" : "emojis"} questions.`,
+          duration: 3000,
+        });
+        return;
+      }
+    }
+    if (question.answerType === "numeric") {
+      if (currentOptionsCount >= 11) {
+        toast.error("Maximum Options Reached", {
+          description: "Numeric questions must have exactly 11 options (0-10). You cannot add more options.",
           duration: 3000,
         });
         return;
@@ -533,9 +562,9 @@ export const AddSurveyPage = () => {
         return;
       }
 
-      // Check if multiple-choice, rating, or emojis have at least one option with text
+      // Check if multiple-choice, rating, emojis, or numeric have at least one option with text
       if (
-        ["multiple-choice", "rating", "emojis"].includes(question.answerType)
+        ["multiple-choice", "rating", "emojis", "numeric"].includes(question.answerType)
       ) {
         if (!question.answerOptions || question.answerOptions.length === 0) {
           toast.error("Validation Error", {
@@ -544,6 +573,18 @@ export const AddSurveyPage = () => {
           });
           return;
         }
+
+        // Special validation for numeric - must have exactly 11 options (0-10)
+        if (question.answerType === "numeric") {
+          if (question.answerOptions.length !== 11) {
+            toast.error("Validation Error", {
+              description: `Numeric questions must have exactly 11 options (0-10) for Question ${i + 1}. Currently has ${question.answerOptions.length}.`,
+              duration: 3000,
+            });
+            return;
+          }
+        }
+
         // Check if all options have text
         for (let j = 0; j < question.answerOptions.length; j++) {
           if (!question.answerOptions[j].text.trim()) {
@@ -632,7 +673,9 @@ export const AddSurveyPage = () => {
                 ? "emoji"
                 : question.answerType === "input-box"
                   ? "input_box"
-                  : "description";
+                  : question.answerType === "numeric"
+                    ? "numeric"
+                    : "description";
 
         formData.append(`question[][qtype]`, qtype);
         formData.append(
@@ -650,9 +693,9 @@ export const AddSurveyPage = () => {
           fileCounter++;
         }
 
-        // Add options for multiple-choice, rating, and emojis
+        // Add options for multiple-choice, rating, emojis, and numeric
         if (
-          ["multiple-choice", "rating", "emojis"].includes(
+          ["multiple-choice", "rating", "emojis", "numeric"].includes(
             question.answerType
           ) &&
           question.answerOptions
@@ -722,7 +765,7 @@ export const AddSurveyPage = () => {
         console.log(`   Question ${qIndex + 1}:`);
         console.log(`   question[][descr]: "${question.text}"`);
         console.log(
-          `   question[][qtype]: ${question.answerType === "multiple-choice" ? "multiple" : question.answerType === "rating" ? "rating" : question.answerType === "emojis" ? "emoji" : question.answerType === "input-box" ? "input_box" : "description"}`
+          `   question[][qtype]: ${question.answerType === "multiple-choice" ? "multiple" : question.answerType === "rating" ? "rating" : question.answerType === "emojis" ? "emoji" : question.answerType === "input-box" ? "input_box" : question.answerType === "numeric" ? "numeric" : "description"}`
         );
         console.log(`   question[][quest_mandatory]: ${question.mandatory}`);
 
@@ -733,7 +776,7 @@ export const AddSurveyPage = () => {
         }
 
         if (
-          ["multiple-choice", "rating", "emojis"].includes(
+          ["multiple-choice", "rating", "emojis", "numeric"].includes(
             question.answerType
           ) &&
           question.answerOptions
@@ -814,7 +857,7 @@ export const AddSurveyPage = () => {
         duration: 4000,
       });
 
-      navigate("/master/survey/list");
+      navigate("/settings/survey/list");
     } catch (error) {
       console.error("Error creating survey:", error);
 
@@ -1212,10 +1255,11 @@ export const AddSurveyPage = () => {
                       <MenuItem value="rating">Rating</MenuItem>
                       <MenuItem value="emojis">Emojis</MenuItem>
                       <MenuItem value="input-box">Input Box</MenuItem>
+                      <MenuItem value="numeric">Numeric</MenuItem>
                     </MuiSelect>
                   </FormControl>
 
-                  {["multiple-choice", "rating", "emojis"].includes(
+                  {["multiple-choice", "rating", "emojis", "numeric"].includes(
                     question.answerType
                   ) && (
                     <div className="space-y-3 pt-2">
@@ -1224,7 +1268,9 @@ export const AddSurveyPage = () => {
                           ? "Rating Options"
                           : question.answerType === "emojis"
                             ? "Emoji Options"
-                            : "Answer Options"}
+                            : question.answerType === "numeric"
+                              ? "Numeric Values"
+                              : "Answer Options"}
                       </label>
                       {(question.answerOptions || []).map((option, index) => (
                         <div key={index} className="flex items-center gap-3">
@@ -1236,6 +1282,12 @@ export const AddSurveyPage = () => {
                             <div className="flex items-center justify-center w-28 h-12">
                               <span className="text-base">
                                 {RATING_STARS[index]}
+                              </span>
+                            </div>
+                          ) : question.answerType === "numeric" ? (
+                            <div className="flex items-center justify-center w-12 h-12">
+                              <span className="text-base font-semibold text-gray-700">
+                                {NUMERIC_VALUES[index]}
                               </span>
                             </div>
                           ) : (
@@ -1251,7 +1303,9 @@ export const AddSurveyPage = () => {
                                 ? `Enter rating description`
                                 : question.answerType === "emojis"
                                   ? `Enter description for ${EMOJIS[index]}`
-                                  : `Option ${index + 1}`
+                                  : question.answerType === "numeric"
+                                    ? `Enter description for value ${NUMERIC_VALUES[index]}`
+                                    : `Option ${index + 1}`
                             }
                             value={option.text}
                             onChange={(e) => {
@@ -1631,8 +1685,7 @@ export const AddSurveyPage = () => {
             <div className="flex justify-center mt-8">
               <Button
                 onClick={handleAddQuestion}
-                variant="outline"
-                className="border-dashed border-gray-300 hover:border-red-400 hover:text-red-600"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4 mr-2" /> Add More Questions
               </Button>
@@ -1645,17 +1698,15 @@ export const AddSurveyPage = () => {
           <Button
             onClick={handleCreateSurvey}
             disabled={loading || isSubmitting}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-2 h-auto disabled:opacity-50"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading || isSubmitting ? "Creating..." : "Create"}
           </Button>
           <Button
             type="button"
-            variant="outline"
             onClick={() => navigate(-1)}
             disabled={loading || isSubmitting}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 h-auto disabled:opacity-50"
-          >
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"          >
             Cancel
           </Button>
         </div>

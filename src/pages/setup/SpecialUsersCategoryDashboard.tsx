@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Eye, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import {
@@ -14,6 +14,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 // Column configuration
 const columns: ColumnConfig[] = [
@@ -23,6 +35,7 @@ const columns: ColumnConfig[] = [
 ];
 
 export const SpecialUsersCategoryDashboard = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -32,6 +45,7 @@ export const SpecialUsersCategoryDashboard = () => {
   const [categoryName, setCategoryName] = useState("");
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch categories from API
   useEffect(() => {
@@ -196,32 +210,130 @@ export const SpecialUsersCategoryDashboard = () => {
     }
   };
 
+  const totalPages = Math.ceil(categories.length / PAGE_SIZE) || 1;
+  const paginatedCategories = categories.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   // Render cell content based on column key
   const renderCell = (category: any, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
           <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => handleEditCategory(category.id)}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="Edit"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {shouldShow("Special Users Category", "show") && (
+              <button
+                onClick={() => navigate(`/setup/special-users-category/${category.id}`)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="View"
               >
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                <path d="m15 5 4 4" />
-              </svg>
-            </button>
+                <Eye className="w-4 h-4 text-gray-700" />
+              </button>
+            )}
+            {shouldShow("Special Users Category", "update") && (
+              <button
+                onClick={() => handleEditCategory(category.id)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => handleDeleteCategory(category.id)}
               className="p-1 hover:bg-gray-100 rounded text-red-600"
@@ -266,7 +378,7 @@ export const SpecialUsersCategoryDashboard = () => {
         <div className="bg-[#fafafa] rounded-lg shadow-sm">
           <EnhancedTable
             columns={columns}
-            data={categories}
+            data={paginatedCategories}
             onRowClick={(category) => console.log("Row clicked:", category)}
             renderCell={renderCell}
             selectedItems={selectedCategories}
@@ -274,21 +386,49 @@ export const SpecialUsersCategoryDashboard = () => {
             onSelectItem={handleSelectCategory}
             enableSelection={true}
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={(term) => {
+              setSearchTerm(term);
+              setCurrentPage(1);
+            }}
             searchPlaceholder="Search..."
+            loading={isLoading}
             leftActions={
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleAddCategory}
-                  className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white border-none"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add
-                </Button>
+                {shouldShow("Special Users Category", "create") && (
+                  <Button
+                    size="sm"
+                    onClick={handleAddCategory}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                   >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add
+                  </Button>
+                )}
               </div>
             }
           />
+
+          {categories.length > 0 && (
+            <div className="p-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  {renderPaginationItems()}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
 
         {/* Add Category Dialog */}
@@ -307,8 +447,11 @@ export const SpecialUsersCategoryDashboard = () => {
             </DialogHeader>
 
             <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="categoryName" className="text-sm font-medium text-gray-700">
+              <div className="relative">
+                <Label
+                  htmlFor="categoryName"
+                  className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+                >
                   Category Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -316,21 +459,22 @@ export const SpecialUsersCategoryDashboard = () => {
                   placeholder="Enter Category Name"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full"
+                  className="w-full h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button
                   onClick={() => setShowAddDialog(false)}
-                  className="px-6 py-2 bg-[#F2EEE9] hover:bg-[#F2EEE9] text-white"
+                  variant="outline"
+                  className="px-8"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSubmitCategory}
                   disabled={isLoading}
-                  className="px-6 py-2 bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? "Adding..." : "Add"}
                 </Button>
@@ -359,8 +503,11 @@ export const SpecialUsersCategoryDashboard = () => {
             </DialogHeader>
 
             <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="editCategoryName" className="text-sm font-medium text-gray-700">
+              <div className="relative">
+                <Label
+                  htmlFor="editCategoryName"
+                  className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
+                >
                   Category Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -368,7 +515,7 @@ export const SpecialUsersCategoryDashboard = () => {
                   placeholder="Enter Category Name"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full"
+                  className="w-full h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
                 />
               </div>
 
@@ -387,7 +534,7 @@ export const SpecialUsersCategoryDashboard = () => {
                 <Button
                   onClick={handleSubmitEdit}
                   disabled={isLoading}
-                  className="px-6 py-2 bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
+                  className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   {isLoading ? "Updating..." : "Update"}
                 </Button>

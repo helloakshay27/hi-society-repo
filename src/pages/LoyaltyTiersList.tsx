@@ -7,12 +7,15 @@ import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { StatsCard } from '@/components/StatsCard';
 
 const validationSchema = Yup.object({
   name: Yup.string().required('Tier Name is required'),
+  title: Yup.string().required('Title is required'),
+  description: Yup.string(),
   exit_points: Yup.number()
     .required('Exit Points are required')
     .positive('Exit Points must be a positive number'),
@@ -30,6 +33,8 @@ const validationSchema = Yup.object({
 interface LoyaltyTier {
   id: number;
   name: string;
+  title?: string;
+  description?: string;
   exit_points: number;
   multipliers: number;
   welcome_bonus: number;
@@ -39,6 +44,7 @@ interface LoyaltyTier {
 
 const LoyaltyTiersList = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [tiers, setTiers] = useState<LoyaltyTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,7 +146,7 @@ const LoyaltyTiersList = () => {
   const renderPaginationItems = () => {
     if (!totalPages || totalPages <= 0) return null;
     const items = [];
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
     if (showEllipsis) {
       items.push(
         <PaginationItem key={1} className="cursor-pointer">
@@ -289,6 +295,7 @@ const LoyaltyTiersList = () => {
       case 'actions':
         return (
           <div className="flex justify-center items-center gap-2">
+            {shouldShow("Tiers", "update") && (
             <Button
               variant="ghost"
               size="sm"
@@ -297,6 +304,8 @@ const LoyaltyTiersList = () => {
             >
               <Edit className="w-4 h-4" />
             </Button>
+            )}
+            {shouldShow("Tiers", "show") && (
             <Button
               variant="ghost"
               size="sm"
@@ -305,6 +314,7 @@ const LoyaltyTiersList = () => {
             >
               <Eye className="w-4 h-4" />
             </Button>
+            )}
           </div>
         );
       default:
@@ -314,6 +324,7 @@ const LoyaltyTiersList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
+      {shouldShow("Tiers", "create") && (
       <Button
         onClick={handleAdd}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -321,6 +332,7 @@ const LoyaltyTiersList = () => {
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         New Tier
       </Button>
+      )}
     </div>
   );
 
@@ -336,12 +348,12 @@ const LoyaltyTiersList = () => {
         storageKey="loyalty-tiers-table"
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
-        searchPlaceholder="Search tiers (name, points, multipliers, bonus)..."
+        searchPlaceholder="Search tiers..."
         leftActions={renderCustomActions()}
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching tiers..." : "Loading tiers..."}
       />
-      {totalPages > 1 && (
+      {totalCount > 0 && (
         <div className="flex flex-col items-center gap-2 mt-4">
           <Pagination>
             <PaginationContent>
@@ -460,6 +472,8 @@ const LoyaltyTiersList = () => {
                   <Formik
                     initialValues={{
                       name: selectedTier.name || '',
+                      title: selectedTier.title || '',
+                      description: selectedTier.description || '',
                       exit_points: selectedTier.exit_points || 0,
                       // multipliers: selectedTier.multipliers || 0,
                       welcome_bonus: selectedTier.welcome_bonus || 0,
@@ -483,6 +497,20 @@ const LoyaltyTiersList = () => {
                               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             />
                             <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
+                          </div>
+
+                          {/* Title */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Title
+                              <span className="text-red-500 ml-1">*</span>
+                            </label>
+                            <Field
+                              type="text"
+                              name="title"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                            />
+                            <ErrorMessage name="title" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
 
                           {/* Exit Points */}
@@ -550,6 +578,21 @@ const LoyaltyTiersList = () => {
                             </select>
                             <ErrorMessage name="point_type" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
+                        </div>
+
+                        {/* Description - full width */}
+                        <div className="space-y-2 mt-6">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Description
+                          </label>
+                          <Field
+                            as="textarea"
+                            name="description"
+                            rows={3}
+                            placeholder="Enter description"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
+                          />
+                          <ErrorMessage name="description" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
 
                         {/* Action Buttons */}

@@ -122,6 +122,7 @@ export interface StatusFormData {
 // Operational Days Types
 export interface OperationalDay {
   id: number;
+  op_of_id?: number;
   dayofweek: string;
   start_hour: number;
   start_min: number;
@@ -293,6 +294,7 @@ export interface TicketFilters {
   complaint_status_name_eq?: string;
   complaint_status_fixed_state_not_eq?: string;
   complaint_status_fixed_state_null?: string;
+  complaint_type_eq?: string;
   m?: string;
   g?: Array<{
     m?: string;
@@ -605,12 +607,28 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
-  async getSocietyGates(page: number = 1, perPage: number = 20) {
+  async getSocietyGates(page: number = 1, perPage: number = 20, search: string = '') {
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
     queryParams.append('per_page', perPage.toString());
-    
+    if (search) {
+      queryParams.append('q[search_all_fields_cont]', search);
+    }
+
     const url = `${ENDPOINTS.SOCIETY_GATES}?${queryParams.toString()}`;
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+
+  async getSocietyGateEnquiries(page: number = 1, perPage: number = 20, search: string = '') {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('per_page', perPage.toString());
+    if (search) {
+      queryParams.append('q[search_all_fields_cont]', search);
+    }
+
+    const url = `${ENDPOINTS.SOCIETY_GATE_ENQUIRIES}?${queryParams.toString()}`;
     const response = await apiClient.get(url);
     return response.data;
   },
@@ -838,8 +856,10 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
-  async getSubCategories() {
-    const response = await apiClient.get('/crm/admin/complaints_sub_categories.json');
+  async getSubCategories(page: number = 1, perPage: number = 20, search: string = '') {
+    const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+    const url = `/pms/admin/get_all_helpdesk_sub_categories.json?page=${page}&per_page=${perPage}${searchParam}`;
+    const response = await apiClient.get(url);
     return response.data;
   },
 
@@ -931,7 +951,7 @@ export const ticketManagementAPI = {
   },
 
   async getStatuses() {
-    const response = await apiClient.get('/pms/admin/complaint_statuses.json');
+    const response = await apiClient.get('/crm/admin/complaint_statuses.json');
     return response.data;
   },
 
@@ -942,30 +962,20 @@ export const ticketManagementAPI = {
   },
 
   async updateOperationalDays(siteId: string, data: OperationalDay[]) {
-    const response = await apiClient.patch(`/pms/sites/${siteId}.json`, {
-      pms_site: {
-        helpdesk_operations_attributes: data.map(day => {
-          const attributes: any = {
-            op_of: "Pms::Site",
-            op_of_id: siteId,
-            dayofweek: day.dayofweek,
-            of_phase: "pms",
-            is_open: day.is_open ? "1" : "0",
-            start_hour: day.start_hour.toString(),
-            start_min: day.start_min.toString().padStart(2, '0'),
-            end_hour: day.end_hour.toString(),
-            end_min: day.end_min.toString().padStart(2, '0')
-          };
-          
-          // Only include id for existing records (id > 0)
-          if (day.id > 0) {
-            attributes.id = day.id.toString();
-          }
-          
-          return attributes;
-        })
-      },
-      id: siteId
+    const response = await apiClient.put(`/societies/${siteId}.json`, {
+      society: {
+        helpdesk_operations_attributes: data.map(day => ({
+          ...(day.id > 0 ? { id: day.id } : {}),
+          dayofweek: day.dayofweek,
+          active: day.active,
+          is_open: day.is_open,
+          start_hour: day.is_open ? day.start_hour : null,
+          start_min: day.is_open ? day.start_min : null,
+          end_hour: day.is_open ? day.end_hour : null,
+          end_min: day.is_open ? day.end_min : null,
+          of_phase: 'post_possession',
+        }))
+      }
     });
     return response.data;
   },
@@ -996,7 +1006,7 @@ export const ticketManagementAPI = {
   },
 
   async getComplaintModes() {
-    const response = await apiClient.get('/pms/admin/complaint_modes.json');
+    const response = await apiClient.get('/crm/admin/complaint_modes.json');
     return response.data;
   },
 
@@ -1091,7 +1101,7 @@ export const ticketManagementAPI = {
   // Get response TAT timings for a ticket by ID
   async getResponseTatTimings(ticketId: string) {
     try {
-      const response = await apiClient.get(`/response_tat_timings?id=${ticketId}`);
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/response_tat_timings.json`);
       return response.data;
     } catch (error) {
       console.error('Error fetching response TAT timings:', error);
@@ -1102,8 +1112,28 @@ export const ticketManagementAPI = {
   // Get resolution TAT timings for a ticket by ID
   async getResolutionTatTimings(ticketId: string) {
     try {
-      const response = await apiClient.get(`/resolution_tat_timings?id=${ticketId}`);
-      return response.data;
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/resolution_tat_timings.json`);
+      const data = response.data;
+      // API returns a direct array: [{escalation_name, status, scheduled_minutes, escalate_to_user, fired_at}]
+      if (Array.isArray(data)) {
+        return data.map((item: any) => ({
+          ...item,
+          minutes: item.minutes ?? item.scheduled_minutes,
+          users: item.users ?? item.escalate_to_user ?? [],
+        }));
+      }
+      // Fallback: old escalation_matrix format
+      const matrix = Array.isArray(data.escalation_matrix) ? data.escalation_matrix : [];
+      return matrix.map((item: any) => ({
+        escalation_name: item.name,
+        scheduled_minutes: item.tat_minutes,
+        minutes: item.tat_minutes,
+        scheduled_seconds: 0,
+        escalate_to_user: Array.isArray(item.escalated_to) ? item.escalated_to : [],
+        users: Array.isArray(item.escalated_to) ? item.escalated_to : [],
+        fired: item.fired,
+        fired_at: item.fired_at,
+      }));
     } catch (error) {
       console.error('Error fetching resolution TAT timings:', error);
       throw error;
@@ -1117,6 +1147,17 @@ export const ticketManagementAPI = {
       return response.data;
     } catch (error) {
       console.error('Error fetching ticket feeds:', error);
+      throw error;
+    }
+  },
+
+  // Get CRM admin ticket feeds by ID (BMS helpdesk)
+  async getCrmTicketFeeds(ticketId: string) {
+    try {
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/feeds.json`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching CRM ticket feeds:', error);
       throw error;
     }
   },
@@ -1666,6 +1707,73 @@ export const ticketManagementAPI = {
     }
   },
 
+  // Create a Smartsecure-type society gate (Society + Society Block, no building)
+  async createSmartsecureGate(gateData: {
+    gate_name: string;
+    gate_device: string;
+    resource_id: number;
+    society_block_id: number;
+    user_id: number;
+  }) {
+    try {
+      const response = await apiClient.post(ENDPOINTS.SOCIETY_GATES, {
+        society_gate: gateData,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating smartsecure gate:', error);
+      throw error;
+    }
+  },
+
+  // Update a Smartsecure-type society gate
+  async updateSmartsecureGate(gateId: string | number, gateData: Partial<{
+    gate_name: string;
+    gate_device: string;
+    resource_id: number;
+    society_block_id: number;
+    user_id: number;
+    active: number;
+  }>) {
+    try {
+      const response = await apiClient.patch(`${ENDPOINTS.UPDATE_SOCIETY_GATE}/${gateId}.json`, {
+        society_gate: gateData,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating smartsecure gate:', error);
+      throw error;
+    }
+  },
+
+  // Admin societies list (for Smartsecure gate "Society" dropdown)
+  async getAdminSocieties(page: number = 1, perPage: number = 200, search: string = '') {
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('per_page', perPage.toString());
+      if (search.trim()) {
+        params.append('q[building_name_cont]', search.trim());
+      }
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN_SOCIETIES}?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching admin societies:', error);
+      throw error;
+    }
+  },
+
+  // Society blocks for a given society (Smartsecure gate "Society Block" dropdown)
+  async getSocietyBlocksForSociety(societyId: number | string) {
+    try {
+      const response = await apiClient.get(`${ENDPOINTS.GET_SOCIETY_BLOCKS}?society_id=${societyId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching society blocks:', error);
+      throw error;
+    }
+  },
+
   // Get recent surveys
   async getRecentSurveys() {
     try {
@@ -1738,6 +1846,42 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
+  async getAssignRules(params?: Record<string, string | number>) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/assign_rule.json?token=${token}`, { params });
+    return response.data;
+  },
+
+  async getAssignRuleById(id: string | number) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/show_assign_rule.json?token=${token}&id=${id}`);
+    return response.data;
+  },
+
+  async getResolutionEscalationRules(params?: Record<string, string | number>) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/escalation_rule.json?token=${token}`, { params });
+    return response.data;
+  },
+
+  async getResolutionEscalationRuleById(id: string | number) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/show_escalation_rule.json?token=${token}&id=${id}`);
+    return response.data;
+  },
+
+  async getResponseEscalationRules(params?: Record<string, string | number>) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/response_escalation_rule.json?token=${token}`, { params });
+    return response.data;
+  },
+
+  async getResponseEscalationRuleById(id: string | number) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/response_escalation_rule.json?token=${token}&id=${id}`);
+    return response.data;
+  },
+
   async getIssueTypesDropdown() {
     const response = await apiClient.get('/dropdown/issue_types');
     return response.data;
@@ -1748,8 +1892,8 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
-  async getServiceEngineers() {
-    const response = await apiClient.get('/dropdown/service_engineers');
+  async getServiceEngineers(params?: Record<string, string>) {
+    const response = await apiClient.get('/dropdown/service_engineers', { params });
     return response.data;
   },
 
@@ -1762,7 +1906,8 @@ export const ticketManagementAPI = {
       assign_to: string[];
     };
   }) {
-    const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/create_complaint_worker.json?token=${token}`, payload);
     return response.data;
   },
 
@@ -1774,18 +1919,26 @@ export const ticketManagementAPI = {
       issue_type_id: string;
       category_id: string;
     };
-    escalation_matrix: Record<string, {
-      name: string;
-      escalate_to_users?: string[];
-      copy_to?: string[];
-      p1: string;
-      p2: string;
-      p3: string;
-      p4: string;
-      p5: string;
-    }>;
+    escalation_matrix: any[];
   }) {
-    const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/create_complaint_worker.json?token=${token}`, payload);
+    return response.data;
+  },
+
+  async updateResolutionEscalationRule(payload: {
+    id: string | number;
+    complaint_worker: {
+      esc_type?: string;
+      issue_related_to?: string;
+      of_phase?: string;
+      issue_type_id: string;
+      category_id: string;
+    };
+    escalation_matrix: any[];
+  }) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/update_complaint_worker.json?token=${token}`, payload);
     return response.data;
   },
 
@@ -1797,12 +1950,14 @@ export const ticketManagementAPI = {
       assign_to: string[];
     };
   }) {
-    const response = await apiClient.post('/crm/admin/update_complaint_worker', payload);
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/update_complaint_worker.json?token=${token}`, payload);
     return response.data;
   },
 
   async deleteComplaintWorker(id: string) {
-    const response = await apiClient.post('/crm/admin/delete_complaint_worker', {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/delete_complaint_worker.json?token=${token}`, {
       id,
       complaint_worker: { assign: '0' },
     });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,6 +12,17 @@ import {
 import { toast } from "sonner";
 import axios from "axios";
 
+const LABEL_CLASS = "text-gray-500 font-medium text-sm";
+const FIELD_CLASS =
+  "w-full h-[36px] border-0 rounded-none bg-transparent px-0 py-0 text-base font-normal text-black placeholder:font-normal placeholder:text-gray-400 shadow-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none";
+
+const FieldBox: React.FC<{ label: React.ReactNode; children: React.ReactNode }> = ({ label, children }) => (
+  <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
+    <legend className={`px-1 ${LABEL_CLASS}`}>{label}</legend>
+    {children}
+  </fieldset>
+);
+
 interface PaymentTerm {
   id: number;
   name: string;
@@ -20,7 +31,7 @@ interface PaymentTerm {
 
 const PaymentTermsPage: React.FC = () => {
   const [paymentTerms, setPaymentTerms] = useState<PaymentTerm[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -146,8 +157,11 @@ const PaymentTermsPage: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-500">
-                  Loading...
+                <td colSpan={4} className="text-center py-8">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span className="ml-2">Loading...</span>
+                  </div>
                 </td>
               </tr>
             ) : paymentTerms.length === 0 ? (
@@ -192,28 +206,24 @@ const PaymentTermsPage: React.FC = () => {
             <DialogTitle>{isEditMode ? "Edit Payment Term" : "Add Payment Term"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">
-                Name <span className="text-red-500">*</span>
-              </label>
+            <FieldBox label={<>Name <span className="text-red-500">*</span></>}>
               <Input
                 placeholder="Enter payment term name"
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                className={FIELD_CLASS}
               />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">
-                No. of Days <span className="text-red-500">*</span>
-              </label>
+            </FieldBox>
+            <FieldBox label={<>No. of Days <span className="text-red-500">*</span></>}>
               <Input
                 type="number"
                 min="0"
                 placeholder="Enter number of days"
                 value={formData.no_of_days}
                 onChange={(e) => setFormData((prev) => ({ ...prev, no_of_days: e.target.value }))}
+                className={FIELD_CLASS}
               />
-            </div>
+            </FieldBox>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={submitting}>

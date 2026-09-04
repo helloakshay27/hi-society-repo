@@ -11,7 +11,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AddOrganizationModal } from "@/components/AddOrganizationModal";
@@ -98,12 +97,20 @@ interface OrganizationTabProps {
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
+
   {
     key: "actions",
     label: "Action",
     sortable: false,
     hideable: false,
     draggable: false,
+  },
+  {
+    key: "sr_no",
+    label: "Sr No",
+    sortable: false,
+    hideable: true,
+    draggable: true,
   },
   {
     key: "name",
@@ -150,7 +157,7 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
 }) => {
   const navigate = useNavigate();
   const { getFullUrl, getAuthHeader } = useApiConfig();
-console.log("auth :",getFullUrl, getAuthHeader());
+  console.log("auth :", getFullUrl, getAuthHeader());
   // State management
   const [organizations, setOrganizations] = useState<OrganizationItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -196,8 +203,10 @@ console.log("auth :",getFullUrl, getAuthHeader());
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com", 
-"demo@lockated.com",
+      "sumitra.patil@lockated.com",
+      "komalshinde0101@lockated.com",
+      "demo@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEditOrganization(allowedEmails.includes(userEmail));
   };
@@ -466,22 +475,29 @@ console.log("auth :",getFullUrl, getAuthHeader());
   };
 
   const totalRecords = pagination.total_count;
-  const totalPages = pagination.total_pages;
+  const totalPages = Math.ceil(pagination.total_count / perPage) || 1;
 
-  // Use API data directly instead of client-side filtering
-  const displayedData = organizations;
+  const startIndex = (currentPage - 1) * perPage;
+  const displayedData =
+    organizations.length > perPage
+      ? organizations.slice(startIndex, startIndex + perPage)
+      : organizations;
 
   // Render row function for enhanced table
   const renderRow = (org: OrganizationItem) => ({
+    sr_no: (
+      <span className="text-sm text-gray-600">
+        {(currentPage - 1) * perPage + organizations.indexOf(org) + 1}
+      </span>
+    ),
     actions: (
       <div className="flex items-center gap-2">
         <button
           onClick={() => org?.id && org?.active && handleView(org.id)}
-          className={`p-1 rounded ${
-            org?.active
-              ? "text-blue-600 hover:bg-blue-50 cursor-pointer"
-              : "text-gray-400 cursor-not-allowed"
-          }`}
+          className={`p-1 rounded ${org?.active
+            ? "text-blue-600 hover:bg-blue-50 cursor-pointer"
+            : "text-gray-400 cursor-not-allowed"
+            }`}
           title={org?.active ? "View" : "Inactive organization - View disabled"}
           disabled={!org?.id || !org?.active}
         >
@@ -489,7 +505,7 @@ console.log("auth :",getFullUrl, getAuthHeader());
         </button>
         <button
           onClick={() => org?.id && handleEdit(org.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditOrganization || !org?.id}
         >
@@ -679,15 +695,7 @@ console.log("auth :",getFullUrl, getAuthHeader());
         <h1 className="text-2xl font-bold">Organizations</h1>
       </header>
 
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">Loading organizations...</span>
-        </div>
-      )}
-
-      {!loading && (
-        <>
+      <>
           <EnhancedTaskTable
             data={displayedData}
             columns={columns}
@@ -699,36 +707,37 @@ console.log("auth :",getFullUrl, getAuthHeader());
             searchTerm={searchQuery}
             onSearchChange={handleSearch}
             onFilterClick={() => setIsFilterOpen(true)}
+            loading={loading}
             leftActions={
               <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={!canEditOrganization}
               >
                 <Plus className="w-4 h-4 mr-2" /> Add Organization
               </Button>
             }
-            // rightActions={(
-            //   <div className="flex items-center gap-2">
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsBulkUploadOpen(true)}
-            //       disabled={!canEditOrganization}
-            //     >
-            //       <Upload className="w-4 h-4 mr-2" />
-            //       Bulk Upload
-            //     </Button>
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsExportOpen(true)}
-            //     >
-            //       <Download className="w-4 h-4 mr-2" />
-            //       Export
-            //     </Button>
-            //   </div>
-            // )}
+          // rightActions={(
+          //   <div className="flex items-center gap-2">
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsBulkUploadOpen(true)}
+          //       disabled={!canEditOrganization}
+          //     >
+          //       <Upload className="w-4 h-4 mr-2" />
+          //       Bulk Upload
+          //     </Button>
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsExportOpen(true)}
+          //     >
+          //       <Download className="w-4 h-4 mr-2" />
+          //       Export
+          //     </Button>
+          //   </div>
+          // )}
           />
 
           <TicketPagination
@@ -741,7 +750,6 @@ console.log("auth :",getFullUrl, getAuthHeader());
             onPerPageChange={handlePerPageChange}
           />
         </>
-      )}
 
       {/* Modals */}
       <AddOrganizationModal

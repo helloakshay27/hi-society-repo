@@ -288,7 +288,7 @@ export const EditRegionModal: React.FC<EditRegionModalProps> = ({
                 </MuiSelect>
               </FormControl>
 
-              <TextField
+              {/* <TextField
                 label="Description"
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
@@ -297,18 +297,18 @@ export const EditRegionModal: React.FC<EditRegionModalProps> = ({
                 rows={3}
                 sx={fieldStyles}
                 className="md:col-span-2"
-              />
+              /> */}
             </div>
 
             {/* Status Toggle */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-4">
               <label className="text-sm font-medium">Status:</label>
               <div className="flex items-center gap-2">
                 <Switch
                   checked={formData.active}
                   onCheckedChange={(checked) => handleChange('active', checked)}
                 />
-                <span className={`text-sm ${formData.active ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`text-sm ${formData.active ? 'text-[#DA7756]' : 'text-red-600'}`}>
                   {formData.active ? 'Active' : 'Inactive'}
                 </span>
               </div>
@@ -323,7 +323,7 @@ export const EditRegionModal: React.FC<EditRegionModalProps> = ({
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting || !canEdit}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Updating...' : 'Update Region'}
           </Button>

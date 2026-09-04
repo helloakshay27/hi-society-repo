@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Edit, Plus, ArrowLeft } from 'lucide-react';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { Eye, Edit, Plus, ArrowLeft, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import axios from 'axios';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import { toast } from 'sonner';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 
 export const FMGroupDashboard = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -14,9 +16,109 @@ export const FMGroupDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const token = localStorage.getItem("access_token");
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(groups.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedGroups = groups.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const fetchGroups = async () => {
     setLoading(true);
@@ -40,14 +142,14 @@ export const FMGroupDashboard = () => {
     fetchGroups();
   }, []);
 
-  const handleToggleStatus = async (groupId: number, currentStatus: boolean | number) => {
+  const handleDeleteGroup = async (groupId: number) => {
+    if (!confirm('Are you sure you want to delete this group?')) return;
     try {
-      const nextActive = currentStatus ? 0 : 1;
       await axios.put(
         `${baseURL}/crm/usergroups/${groupId}.json`,
         {
           usergroup: {
-            active: nextActive
+            active: 0
           }
         },
         {
@@ -56,11 +158,11 @@ export const FMGroupDashboard = () => {
           },
         }
       );
-      toast.success("Status updated successfully");
+      toast.success("Group deleted successfully");
       fetchGroups();
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error("Failed to update status");
+      console.error('Error deleting group:', error);
+      toast.error("Failed to delete group");
     }
   };
 
@@ -76,11 +178,12 @@ export const FMGroupDashboard = () => {
         },
       });
       
+      const data = response.data;
       const groupData = {
-        id: response.data.id,
-        groupName: response.data.name,
-        membersList: response.data.groupmembers || [],
-        active: response.data.active
+        id: data.id,
+        groupName: data.name,
+        membersList: data.groupmembers || [],
+        active: data.active
       };
       
       setSelectedGroup(groupData);
@@ -118,19 +221,21 @@ export const FMGroupDashboard = () => {
         </div>
 
         <div className="flex items-center gap-3 mb-6">
-          <Button 
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
-          </Button>
+          {shouldShow("Groups", "create") && (
+            <Button 
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               onClick={() => setIsAddModalOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </Button>
+          )}
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-gray-500">Loading groups...</div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
             </div>
           ) : groups.length === 0 ? (
             <div className="flex items-center justify-center py-12">
@@ -145,27 +250,38 @@ export const FMGroupDashboard = () => {
                   {/* <TableHead>Profile</TableHead> */}
                   <TableHead>Group Name</TableHead>
                   <TableHead>Members</TableHead>
-                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {groups.map((group: any) => (
+                {paginatedGroups.map((group: any) => (
                   <TableRow key={group.id} className="hover:bg-gray-50">
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        {shouldShow("Groups", "show") && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewGroup(group.id)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {shouldShow("Groups", "update") && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEditGroup(group.id)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => handleViewGroup(group.id)}
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteGroup(group.id)}
                         >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleEditGroup(group.id)}
-                        >
-                          <Edit className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -177,14 +293,6 @@ export const FMGroupDashboard = () => {
                     </TableCell> */}
                     <TableCell>{group.name}</TableCell>
                     <TableCell>{group.members_count}</TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => handleToggleStatus(group.id, group.active)}
-                        className={`w-8 h-5 rounded-full flex items-center ${group.active ? 'bg-green-500' : 'bg-gray-300'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${group.active ? 'translate-x-3' : 'translate-x-0.5'}`} />
-                      </button>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -192,7 +300,29 @@ export const FMGroupDashboard = () => {
           )}
         </div>
 
-        <AddGroupModal 
+        {groups.length > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+
+        <AddGroupModal
           isOpen={isAddModalOpen} 
           onClose={handleCloseModal}
           fetchGroups={fetchGroups}

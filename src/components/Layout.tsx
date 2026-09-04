@@ -13,15 +13,17 @@ import { StaticDynamicHeader } from "./StaticDynamicHeader";
 import { StacticSidebar } from "./StacticSidebar";
 
 import { saveToken, saveUser, saveBaseUrl, getUser } from "../utils/auth";
+import { isEmbeddedMode } from "../utils/embeddedMode";
 import { ProtectionLayer } from "./ProtectionLayer";
 
 import { HiSocietyHeader } from "./HiSocietyHeader";
 import { HiSocietyNavigation } from "./HiSocietyNavigation";
 import HiSocietySidebar from "./HiSocietySidebar";
+import RMSidebar from "./RMSidebar";
+import CSSidebar from "./CSSidebar";
 
 import { EmployeeSidebar } from "./EmployeeSidebar";
 import { EmployeeSidebarStatic } from "./EmployeeSidebarStatic";
-
 import { ViewSelectionModal } from "./ViewSelectionModal";
 
 import { ActionSidebar } from "./ActionSidebar";
@@ -29,6 +31,9 @@ import { ActionHeader } from "./ActionHeader";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { UIHiSocietySidebar } from "./UIHiSocietySidebar";
 import { UIHiSocietyNavigation } from "./UIHiSocietyNavigation";
+import { ZxSidebar } from "./ZxSidebar";
+import { RouteErrorBoundary } from "./ErrorBoundary";
+import { CPNavigation } from "./CPNavigation";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -41,6 +46,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     currentSection,
     setCurrentSection,
     layoutMode,
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
   } = useLayout();
   const { isActionSidebarVisible } = useActionLayout();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
@@ -51,9 +58,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const org_id = localStorage.getItem("org_id");
   const hostname = window.location.hostname;
 
+  // Account API (fetched globally on login / app load) tells us the
+  // logged-in user's type — RM/CS users get a restricted sidebar and no
+  // dynamic header, regardless of which Hi-Society domain they're on.
+  let hiSocietyAccountUserType: string | undefined;
+  try {
+    const hiSocietyAccountRaw = localStorage.getItem("hiSocietyAccount");
+    hiSocietyAccountUserType = hiSocietyAccountRaw
+      ? JSON.parse(hiSocietyAccountRaw)?.user_type
+      : undefined;
+  } catch {
+    hiSocietyAccountUserType = undefined;
+  }
+  const isCSUser = hiSocietyAccountUserType === "cs_user";
+  const isRMUser = hiSocietyAccountUserType === "rm_user";
+
   // Detect Club Management routes
   const isClubManagementRoute =
     hostname === "club.lockated.com" ||
+    hostname === "recess-club.panchshil.com" ||
     location.pathname.startsWith("/club-management");
 
   // Debug layoutMode state and localStorage sync
@@ -109,9 +132,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Detect Hi-Society site - used for fallback when no API role exists
   const isUIHiSocietySite =
     hostname.includes("ui-hisociety.lockated.com") ||
-    hostname.includes("localhost") ||org_id === "9";
+    org_id === "9";
 
   const isDevHiSocietySite = hostname.includes("dev-hisociety.lockated.com");
+  const isCPSite = hostname === "runwal-cp.lockated.com";
 
   const isLocalhost =
     hostname.includes("lockated.gophygital.work") ||
@@ -132,14 +156,32 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const renderSidebar = () => {
     // If Hi-Society mode is active, use the unified HiSocietySidebar
 
-    if (layoutMode === "hi-society" && isDevHiSocietySite) {
-      return <HiSocietySidebar />;
+    // Check for token-based VI access first
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasTokenParam = urlParams.has("access_token");
+    const storedToken = localStorage.getItem("token");
+    const hasToken = hasTokenParam || storedToken;
+
+    if (
+      userEmail === "dineshshinde6666@gmail.com"
+    ) {
+      console.log("✅ Rendering ActionSidebar (company-specific)");
+      return <ActionSidebar />;
     }
 
-    if (layoutMode === "hi-society" && isUIHiSocietySite) {
-      return <UIHiSocietySidebar />;
-    }
     if (layoutMode === "hi-society") {
+      // RM Users get the scoped RMSidebar
+      if (isRMUser) {
+        return <RMSidebar />;
+      }
+
+      // CS Users + Admins get all access to full HiSocietySidebar
+      if (isDevHiSocietySite) {
+        return <HiSocietySidebar />;
+      }
+      if (isUIHiSocietySite) {
+        return <UIHiSocietySidebar />;
+      }
       return <HiSocietySidebar />;
     }
 
@@ -161,7 +203,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           userEmail === "ubaid.hashmat@lockated.com" ||
           userEmail === "besis69240@azeriom.com" ||
           userEmail === "megipow156@aixind.com" ||
-          userEmail === "jevosak839@cimario.com"
+          userEmail === "jevosak839@cimario.com" ||
+          userEmail === "deveshjain928@gmail.com" ||
+          userEmail === "abdul.ghaffar@lockated.com" ||
+          userEmail === "mailroom2@zs.com" ||
+          userEmail === "abdul.g@gophygital.work"
         ) {
           return <EmployeeSidebar />;
         }
@@ -177,28 +223,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       // return <HiSocietySidebar />;
     }
 
-    // Check for token-based VI access first
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasTokenParam = urlParams.has("access_token");
-    const storedToken = localStorage.getItem("token");
-    const hasToken = hasTokenParam || storedToken;
 
-    if (
-      selectedCompany?.id === 300 ||
-      selectedCompany?.id === 295 ||
-      selectedCompany?.id === 298 ||
-      selectedCompany?.id === 199 ||
-      selectedCompany?.id === 307 ||
-      org_id === "90" ||
-      org_id === "84" ||
-      org_id === "1" ||
-      userEmail === "ubaid.hashmat@lockated.com" ||
-      userEmail === "besis69240@azeriom.com" ||
-      userEmail === "megipow156@aixind.com" ||
-      userEmail === "jevosak839@cimario.com"
-    ) {
-      console.log("✅ Rendering ActionSidebar (company-specific)");
-      return <ActionSidebar />;
+
+    if (selectedCompany?.id === 189) {
+      return <ZxSidebar />;
     }
 
     // Domain-based logic takes precedence for backward compatibility
@@ -223,6 +251,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const renderDynamicHeader = () => {
     // If Hi-Society mode is active, show HiSocietyNavigation
 
+    // Company-specific logic (Admin layout)
+
+    if (
+      userEmail === "dineshshinde6666@gmail.com"
+    ) {
+      return <ActionHeader />;
+    }
+
+    // RM/CS users get a restricted sidebar-only experience — no dynamic header
+    if (layoutMode === "hi-society" && (isCSUser || isRMUser)) {
+      return null;
+    }
+
+    if (layoutMode === "hi-society" && isCPSite) {
+      return <CPNavigation />;
+    }
+
     if (layoutMode === "hi-society" && isDevHiSocietySite) {
       return <HiSocietyNavigation />;
     }
@@ -239,25 +284,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Employees don't need dynamic header, they use HiSocietyHeader instead
     if (isEmployeeUser) {
       return null; // No dynamic header for Hi Society dashboard
-    }
-
-    // Company-specific logic (Admin layout)
-
-    if (
-      selectedCompany?.id === 300 ||
-      selectedCompany?.id === 295 ||
-      selectedCompany?.id === 298 ||
-      selectedCompany?.id === 199 ||
-      selectedCompany?.id === 307 ||
-      org_id === "90" ||
-      org_id === "84" ||
-      org_id === "1" ||
-      userEmail === "ubaid.hashmat@lockated.com" ||
-      userEmail === "besis69240@azeriom.com" ||
-      userEmail === "megipow156@aixind.com" ||
-      userEmail === "jevosak839@cimario.com"
-    ) {
-      return <ActionHeader />;
     }
 
     // Domain-based logic takes precedence for backward compatibility
@@ -328,6 +354,42 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, [location.search]);
 
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname, setIsMobileSidebarOpen]);
+
+  const [activeNavMenu, setActiveNavMenu] = useState<string | null>(null);
+  const isNewEmpHubRoute = location.pathname === "/employee/company-hub-new";
+
+  // Effect to set the current section based on the route
+  useEffect(() => {
+    const path = location.pathname;
+
+    if (path.startsWith('/setup')) { // Covers KYC details and other setup routes
+      setCurrentSection('settings');
+    } else if (path.startsWith('/dashboard')) {
+      setCurrentSection('dashboard');
+    } else if (path.startsWith('/tickets')) {
+      setCurrentSection('tickets');
+    } else if (path.startsWith('/maintenance')) {
+      setCurrentSection('maintenance');
+    } else if (path.startsWith('/incidents')) {
+      setCurrentSection('incidents');
+    } else if (path.startsWith('/inventory')) {
+      setCurrentSection('inventory');
+    } else if (path.startsWith('/fitout')) {
+      setCurrentSection('fitout');
+    } else if (path.startsWith('/snagging')) {
+      setCurrentSection('snagging');
+    } else if (path.startsWith('/club-management')) {
+      setCurrentSection('club-management');
+    } else if (path.startsWith('/events')) {
+      setCurrentSection('events');
+    }
+    // Add more routes here if needed to ensure correct section highlighting
+  }, [location.pathname, setCurrentSection]);
+
   return (
     <div
       className="min-h-screen bg-[#fafafa]"
@@ -351,33 +413,47 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Conditional Header - Hi-Society mode shows HiSocietyHeader, FM Matrix mode shows admin Header */}
       {layoutMode === "hi-society" ? <HiSocietyHeader /> : <Header />}
 
+      {/* Mobile overlay backdrop - closes sidebar when tapping outside */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed top-0 bottom-0 left-0 right-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       {renderSidebar()}
 
       {renderDynamicHeader()}
 
       <main
-        className={`${
+        className={`transition-all duration-300 ${
           // Hi-Society mode styling
           layoutMode === "hi-society"
             ? isSidebarCollapsed
-              ? "ml-16"
-              : "ml-64"
+              ? "md:ml-16 ml-0"
+              : "md:ml-64 ml-0"
             : // FM Matrix mode - always show sidebar margin for admin users
-              isActionSidebarVisible
-              ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
+            isActionSidebarVisible
+              ? "md:ml-64 ml-0 pt-28"
               : isSidebarCollapsed
-                ? "ml-16"
-                : "ml-64"
-        } ${
+                ? "md:ml-16 ml-0"
+                : "md:ml-64 ml-0"
+          } ${
           // Top padding based on mode
           layoutMode === "hi-society"
-            ? "pt-28" // Header (16) + Navigation (12) = 28
+            ? // RM/CS users have no HiSocietyNavigation bar (renderDynamicHeader
+              // returns null for them), so they only need space for the header
+              isCSUser || isRMUser
+              ? "pt-16"
+              : "pt-28"
             : isActionSidebarVisible
               ? ""
               : "pt-28"
-        } transition-all duration-300`}
+          }`}
       >
-        <Outlet />
+        <RouteErrorBoundary locationKey={location.key}>
+          <Outlet />
+        </RouteErrorBoundary>
       </main>
     </div>
   );

@@ -4,10 +4,23 @@ import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { ColumnConfig } from '@/hooks/useEnhancedTable'
 import { Switch } from '@mui/material';
 import axios from 'axios';
-import { Download, Edit, Eye, Plus, QrCode, Users } from 'lucide-react';
+import { Download, Edit, Eye, Plus, QrCode, Users, UserCheck, Clock, UserX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CMSClubMembersFilterModal } from '@/components/CMSClubMembersFilterModal';
+import { StatsCard } from '@/components/StatsCard';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+
+const PAGE_SIZE = 10;
 
 const columns: ColumnConfig[] = [
   {
@@ -91,16 +104,24 @@ interface MemberFilters {
 
 const CMSClubMembers = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
 
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
   const [members, setMembers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
   const [modalData, setModalData] = useState<{ isOpen: boolean, title: string, items: string[] }>({ isOpen: false, title: '', items: [] });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<MemberFilters>({});
+  const [summaryData, setSummaryData] = useState({
+    total_members: 0,
+    total_active: 0,
+    total_inactive: 0,
+    total_pending: 0,
+  });
 
   const fetchMembers = async (filters: MemberFilters = appliedFilters) => {
     try {
@@ -139,6 +160,10 @@ const CMSClubMembers = () => {
       })
 
       setMembers(response.data?.club_member_allocations);
+      setCurrentPage(1);
+      if (response.data?.summary) {
+        setSummaryData(response.data.summary);
+      }
     } catch (error) {
       console.log(error)
     } finally {
@@ -149,6 +174,106 @@ const CMSClubMembers = () => {
   const handleFilterApply = (filters: any) => {
     setAppliedFilters(filters);
     fetchMembers(filters);
+  };
+
+  const totalPages = Math.ceil((members?.length || 0) / PAGE_SIZE) || 1;
+  const paginatedMembers = (members || []).slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   useEffect(() => {
@@ -202,33 +327,45 @@ const CMSClubMembers = () => {
   const renderActions = (item: any) => {
     return (
       <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="p-1"
-          onClick={() => navigate(`view/${item.id}`)}
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="p-1"
-          onClick={() => navigate(`edit/${item.id}`)}
-        >
-          <Edit className="w-4 h-4" />
-        </Button>
+        {
+          shouldShow("Club Members", "show") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`view/${item.id}`)}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          )
+        }
+        {
+          shouldShow("Club Members", "update") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`edit/${item.id}`)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )
+        }
       </div>
     )
   };
 
   const leftActions = (
-    <Button
-      onClick={() => setShowActionPanel(true)}
-    >
-      <Plus className="w-4 h-4" />
-      Actions
-    </Button>
+    shouldShow("Club Members", "create") && (
+      <Button
+        onClick={() => setShowActionPanel(true)}
+        variant="ghost"
+        className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white h-[36px] py-[10px] px-[20px]"
+      >
+        <Plus className="w-4 h-4" />
+        Actions
+      </Button>
+    )
   )
 
   const renderCell = (item: any, columnKey: string) => {
@@ -256,7 +393,7 @@ const CMSClubMembers = () => {
             ))}
             {names.length > 2 && (
               <span
-                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                className="text-xs text-black-600 cursor-pointer hover:underline"
                 onClick={() => {
                   setModalData({
                     isOpen: true,
@@ -282,7 +419,7 @@ const CMSClubMembers = () => {
             ))}
             {emails.length > 2 && (
               <span
-                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                className="text-xs text-black-600 cursor-pointer hover:underline"
                 onClick={() => {
                   setModalData({
                     isOpen: true,
@@ -308,7 +445,7 @@ const CMSClubMembers = () => {
             ))}
             {mobiles.length > 2 && (
               <span
-                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                className="text-xs text-black-600 cursor-pointer hover:underline"
                 onClick={() => {
                   setModalData({
                     isOpen: true,
@@ -377,8 +514,37 @@ const CMSClubMembers = () => {
           onClearSelection={() => setShowActionPanel(false)}
         />
       )}
+
+      {/* Summary Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <StatsCard
+          title="Total Members"
+          value={summaryData.total_members.toString()}
+          icon={<Users className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+        <StatsCard
+          title="Active"
+          value={summaryData.total_active.toString()}
+          icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+        <StatsCard
+          title="Inactive"
+          value={summaryData.total_inactive.toString()}
+          icon={<UserX className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+        <StatsCard
+          title="Pending"
+          value={summaryData.total_pending.toString()}
+          icon={<Clock className="w-5 h-5 text-[#C72030]" />}
+          downloadData={[]}
+        />
+      </div>
+
       <EnhancedTable
-        data={members || []}
+        data={paginatedMembers}
         columns={columns}
         renderCell={renderCell}
         renderActions={renderActions}
@@ -386,6 +552,28 @@ const CMSClubMembers = () => {
         loading={isLoading}
         onFilterClick={() => setIsFilterModalOpen(true)}
       />
+
+      {(members?.length || 0) > 0 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       <CMSClubMembersFilterModal
         open={isFilterModalOpen}

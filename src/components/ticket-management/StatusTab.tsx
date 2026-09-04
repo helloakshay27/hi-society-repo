@@ -5,8 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -16,20 +23,23 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManagementAPI';
 import { EditStatusModal } from './modals/EditStatusModal';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchStatuses, createStatus, updateStatus, deleteStatus, fetchAccounts } from '@/store/slices/statusesSlice';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 const statusSchema = z.object({
   name: z.string().min(1, 'Status is required'),
@@ -69,6 +79,14 @@ export const StatusTab: React.FC = () => {
   const [userAccount, setUserAccount] = useState<UserAccountResponse | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<StatusType | null>(null);
+  const [closeByUser, setCloseByUser] = useState(false);
+  const [autoComplaintClose, setAutoComplaintClose] = useState(false);
+  const [isSavingTicketSettings, setIsSavingTicketSettings] = useState(false);
+  const [settingsSocietyId, setSettingsSocietyId] = useState<number | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const currentSiteId =
     accounts && accounts.length > 0
@@ -88,7 +106,7 @@ export const StatusTab: React.FC = () => {
   useEffect(() => {
     fetchStatuses();
     loadUserAccount();
-    fetchReopenData();
+    fetchComplaintSettings();
   }, []);
 
   const loadUserAccount = async () => {
@@ -101,10 +119,49 @@ export const StatusTab: React.FC = () => {
     }
   };
 
-  const fetchReopenData = async () => {
+  const handleSaveTicketSettings = async () => {
+    const societyId = settingsSocietyId || userAccount?.company_id;
+    if (!societyId) {
+      toast.error('Unable to determine society ID. Please refresh and try again.');
+      return;
+    }
+    setIsSavingTicketSettings(true);
     try {
-      const url = getFullUrl('/pms/admin/reopen_data.json');
+      const url = getFullUrl(`/societies/${societyId}.json`);
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          society: {
+            auto_complaint_close: autoComplaintClose,
+            close_by_user: closeByUser,
+          },
+        }),
+      });
+      if (response.ok) {
+        toast.success('Ticket settings updated successfully!');
+      } else {
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || errorData?.error || 'Failed to update ticket settings');
+      }
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to update ticket settings';
+      console.error('Error saving ticket settings:', error);
+      toast.error(msg);
+    } finally {
+      setIsSavingTicketSettings(false);
+    }
+  };
 
+  const fetchComplaintSettings = async () => {
+    try {
+      const url = getFullUrl('/crm/admin/complaint_settings_index.json');
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -112,43 +169,46 @@ export const StatusTab: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-
       if (response.ok) {
         const data = await response.json();
 
-        // Check if data exists and populate the form
-        if (data && data.period_type && data.time_period) {
+        // Populate reopen settings
+        const reopen = data.reopen_status;
+        if (reopen && reopen.period_type && reopen.time_period) {
           setAllowReopen(true);
-          setPeriodType(data.period_type as 'days' | 'hours' | 'minutes');
-          setTimePeriod(data.time_period.toString());
+          setPeriodType(reopen.period_type as 'days' | 'hours' | 'minutes');
+          setTimePeriod(reopen.time_period.toString());
+        } else {
+          setAllowReopen(false);
+        }
+
+        // Populate society ticket settings
+        const societySettings = data.society_settings;
+        if (societySettings) {
+          setCloseByUser(societySettings.close_by_user || false);
+          setAutoComplaintClose(societySettings.auto_complaint_close || false);
+          if (societySettings.society_id) {
+            setSettingsSocietyId(societySettings.society_id);
+          }
         }
       }
     } catch (error) {
-      console.error('Error fetching reopen data:', error);
-      // Don't show error toast as this might be expected if no data exists yet
+      console.error('Error fetching complaint settings:', error);
     }
   };
 
   const fetchStatuses = async () => {
     setIsLoading(true);
     try {
-      const url = getFullUrl('/crm/admin/helpdesk_categories.json');
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setStatuses(Array.isArray(data.statuses) ? data.statuses : []);
-      } else {
-        toast.error('Failed to fetch statuses');
-      }
-    } catch (error) {
-      toast.error('Failed to fetch statuses');
+      const data = await ticketManagementAPI.getStatuses();
+      const list = data?.complaint_statuses ?? (Array.isArray(data) ? data : []);
+      setStatuses(Array.isArray(list) ? list : []);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to fetch statuses';
+      toast.error(msg);
       console.error('Error fetching statuses:', error);
     } finally {
       setIsLoading(false);
@@ -156,50 +216,40 @@ export const StatusTab: React.FC = () => {
   };
 
   const handleCreateSubmit = async () => {
-    // Get form values directly from the form inputs
-    const statusNameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
-    const colorCodeInput = document.querySelector('input[placeholder="#000000"]') as HTMLInputElement;
-    const positionInput = document.querySelector('input[type="number"]') as HTMLInputElement;
-    const fixedStateValue = form.getValues('fixedState');
+    const values = form.getValues();
 
-    // Check for required fields with specific messages
-    if (!statusNameInput?.value?.trim()) {
+    if (!values.name?.trim()) {
       toast.error('Please enter a status name');
       return;
     }
 
-    // if (!fixedStateValue) {
-    //   toast.error('Please select a fixed state');
-    //   return;
-    // }
-
-    if (!colorCodeInput?.value?.trim()) {
+    if (!values.colorCode?.trim()) {
       toast.error('Please enter a color code');
       return;
     }
 
-    if (!positionInput?.value?.trim()) {
+    if (!values.position) {
       toast.error('Please enter an order number');
       return;
     }
 
-    // Get the form data
     const data: StatusFormData = {
-      name: statusNameInput.value.trim(),
-      fixedState: fixedStateValue as 'closed' | 'reopen' | 'complete' | '',
-      colorCode: colorCodeInput.value.trim(),
-      position: parseInt(positionInput.value) || 0,
+      name: values.name.trim(),
+      fixedState: (values.fixedState || undefined) as 'closed' | 'reopen' | 'complete' | undefined,
+      colorCode: values.colorCode.trim(),
+      position: values.position,
     };
 
-    // Continue with the rest of the validation and submission logic
     await handleSubmit(data);
   };
 
   const handleSubmit = async (data: StatusFormData) => {
-    if (!userAccount?.company_id) {
-      toast.error('Unable to determine company ID. Please refresh and try again.');
-      return;
-    }
+    // Removed: this blocked status creation whenever userAccount.company_id
+    // failed to load, even though createStatus doesn't actually send it.
+    // if (!userAccount?.company_id) {
+    //   toast.error('Unable to determine company ID. Please refresh and try again.');
+    //   return;
+    // }
 
     // Check if position already exists
     const positionExists = statuses.some(status => status.position === data.position);
@@ -212,19 +262,24 @@ export const StatusTab: React.FC = () => {
     try {
       const statusData = {
         name: data.name,
-        fixed_state: data.fixedState,
+        fixed_state: data.fixedState || '',
         color_code: data.colorCode,
         position: data.position,
-        // of_phase: 'pms',
-        // society_id: userAccount.company_id.toString(),
+        // of_phase: 'post',
+        society_id: String(userAccount?.company_id || currentSiteId),
       };
 
       await ticketManagementAPI.createStatus(statusData);
       toast.success('Status created successfully!');
       form.reset();
+      setAddDialogOpen(false);
       fetchStatuses();
-    } catch (error) {
-      toast.error('Failed to create status');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to create status';
+      toast.error(msg);
       console.error('Error creating status:', error);
     } finally {
       setIsSubmitting(false);
@@ -248,7 +303,7 @@ export const StatusTab: React.FC = () => {
     }
 
     try {
-      const url = getFullUrl('/pms/admin/create_reopen.json');
+      const url = getFullUrl('/crm/admin/create_reopen.json');
 
       const response = await fetch(url, {
         method: 'POST',
@@ -264,18 +319,18 @@ export const StatusTab: React.FC = () => {
 
       if (response.ok) {
         toast.success('Reopen settings saved successfully!');
-        // Store current tab and refresh page
-        localStorage.setItem('ticketManagementActiveTab', 'status');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        await fetchComplaintSettings();
       } else {
         const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || 'Failed to save reopen settings');
+        toast.error(errorData?.message || errorData?.error || 'Failed to save reopen settings');
       }
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to save reopen settings';
       console.error('Error saving reopen settings:', error);
-      toast.error('Failed to save reopen settings');
+      toast.error(msg);
     }
   };
 
@@ -320,11 +375,15 @@ export const StatusTab: React.FC = () => {
         toast.success('Status deleted successfully!');
       } else {
         const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || 'Failed to delete status');
+        toast.error(errorData?.message || errorData?.error || 'Failed to delete status');
       }
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to delete status';
       console.error('Error deleting status:', error);
-      toast.error('Failed to delete status');
+      toast.error(msg);
     }
   };
 
@@ -334,7 +393,7 @@ export const StatusTab: React.FC = () => {
     { key: 'name', label: 'Status', sortable: true },
     { key: 'fixed_state', label: 'Fixed State', sortable: true },
     { key: 'color_code', label: 'Color', sortable: false },
-    { key: 'email', label: 'Email', sortable: true },
+    // { key: 'email', label: 'Email', sortable: true },
   ];
 
   const renderCell = (item: any, columnKey: string) => {
@@ -369,203 +428,351 @@ export const StatusTab: React.FC = () => {
     </div>
   );
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const filteredStatuses = statuses.filter((item) => {
+    if (!searchTerm) return true;
+    const query = searchTerm.toLowerCase();
+    return Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query));
+  });
+
+  const totalCount = filteredStatuses.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedStatuses = filteredStatuses.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   return (
     <div className="space-y-6">
+      {/* Add Status Dialog */}
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) form.reset();
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Status</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <TextField
+                        label={<>Status <span style={{ color: 'red' }}>*</span></>}
+                        placeholder="Enter status"
+                        value={field.value}
+                        onChange={field.onChange}
+                        fullWidth
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fixedState"
+                render={({ field }) => (
+                  <FormItem>
+                    <MuiFormControl fullWidth variant="outlined">
+                      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Fixed State</InputLabel>
+                      <MuiSelect
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        displayEmpty
+                        label="Fixed State"
+                        sx={fieldStyles}
+                        MenuProps={menuProps}
+                      >
+                        <MenuItem value=""><em>Select fixed state</em></MenuItem>
+                        {fixedStates.map((state) => (
+                          <MenuItem key={state.value} value={state.value}>
+                            {state.label}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </MuiFormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="colorCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <input type="color" className="w-16 h-10 p-1 border rounded" value={field.value} onChange={field.onChange} />
+                        <TextField
+                          placeholder="#000000"
+                          value={field.value}
+                          onChange={field.onChange}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <TextField
+                        label={<>Order <span style={{ color: 'red' }}>*</span></>}
+                        type="number"
+                        placeholder="Enter order"
+                        value={field.value}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        fullWidth
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Form>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setAddDialogOpen(false); form.reset(); }} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => { await handleCreateSubmit(); }}
+              disabled={isSubmitting || loading}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isSubmitting || loading ? 'Saving...' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={paginatedStatuses}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="status-table"
+          pagination={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
+          searchPlaceholder="Search statuses..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
+
+      {/* Reopen & Ticket Settings Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Add Status</CardTitle>
+          <CardTitle className="text-base">Ticket Settings</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter status" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="allowReopen"
+                checked={allowReopen}
+                onCheckedChange={handleAllowReopenChange}
+              />
+              <label htmlFor="allowReopen" className="text-sm font-medium">
+                Allow User to reopen ticket after closure
+              </label>
+            </div>
 
-                <FormField
-                  control={form.control}
-                  name="fixedState"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fixed State
-                        {/* <span className="text-red-500">*</span> */}
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select fixed state" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {fixedStates.map((state) => (
-                            <SelectItem key={state.value} value={state.value}>
-                              {state.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem >
-                  )}
-                />
-
-                < FormField
-                  control={form.control}
-                  name="colorCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Color Code <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <div className="flex gap-2">
-                          <Input
-                            type="color"
-                            className="w-16 h-10 p-1 border rounded"
-                            {...field}
-                          />
-                          <Input
-                            placeholder="#000000"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                < FormField
-                  control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter order"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div >
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleCreateSubmit}
-                  disabled={isSubmitting || loading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                >
-                  {isSubmitting || loading ? 'Saving...' : 'Submit'}
-                </Button>
+            {allowReopen && (
+              <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg border">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Period Type <span className="text-red-500">*</span>
+                    </label>
+                    <Select value={periodType} onValueChange={(value: 'days' | 'hours' | 'minutes') => {
+                      setPeriodType(value);
+                      setTimePeriod('');
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select period type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="days">Days</SelectItem>
+                        <SelectItem value="hours">Hours</SelectItem>
+                        <SelectItem value="minutes">Minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Time Period <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Enter time period"
+                      value={timePeriod}
+                      onChange={(e) => setTimePeriod(e.target.value)}
+                      min="1"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleSaveReopen} className="bg-[#C72030] hover:bg-[#a01828] text-white">
+                    Save Reopen Settings
+                  </Button>
+                </div>
+                {timePeriod && (
+                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-sm">
+                      <span className="font-semibold">Selected Time Period:</span> {timePeriod} {periodType}
+                    </p>
+                  </div>
+                )}
               </div>
-            </div >
-          </Form >
+            )}
 
-          <div className="mt-6 pt-6 border-t">
-            <div className="space-y-4">
+            <div className="pt-4 border-t space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="allowReopen"
-                  checked={allowReopen}
-                  onCheckedChange={handleAllowReopenChange}
+                  id="closeByUser"
+                  checked={closeByUser}
+                  onCheckedChange={(checked) => setCloseByUser(checked === true)}
                 />
-                <label htmlFor="allowReopen" className="text-sm font-medium">
-                  Allow User to reopen ticket after closure
+                <label htmlFor="closeByUser" className="text-sm font-medium">
+                  Close Tickets by User
                 </label>
               </div>
-
-              {allowReopen && (
-                <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg border">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Period Type <span className="text-red-500">*</span>
-                      </label>
-                      <Select value={periodType} onValueChange={(value: 'days' | 'hours' | 'minutes') => {
-                        setPeriodType(value);
-                        setTimePeriod(''); // Reset time period when period type changes
-                      }}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select period type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="days">Days</SelectItem>
-                          <SelectItem value="hours">Hours</SelectItem>
-                          <SelectItem value="minutes">Minutes</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Time Period <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="Enter time period"
-                        value={timePeriod}
-                        onChange={(e) => setTimePeriod(e.target.value)}
-                        min="1"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleSaveReopen}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      Save Reopen Settings
-                    </Button>
-                  </div>
-
-                  {timePeriod && (
-                    <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                      <p className="text-sm text-black-800">
-                        <span className="font-semibold">Selected Time Period:</span> {timePeriod} {periodType}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="autoComplaintClose"
+                  checked={autoComplaintClose}
+                  onCheckedChange={(checked) => setAutoComplaintClose(checked === true)}
+                />
+                <label htmlFor="autoComplaintClose" className="text-sm font-medium">
+                  Auto Close Tickets
+                </label>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSaveTicketSettings}
+                  disabled={isSavingTicketSettings}
+                  className="bg-[#C72030] hover:bg-[#a01828] text-white"
+                >
+                  {isSavingTicketSettings ? 'Saving...' : 'Update'}
+                </Button>
+              </div>
             </div>
           </div>
-        </CardContent >
-      </Card >
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Status List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading statuses...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={statuses}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="status-table"
-            />
-          )}
         </CardContent>
       </Card>
 
@@ -575,6 +782,6 @@ export const StatusTab: React.FC = () => {
         status={selectedStatus}
         onUpdate={handleStatusUpdated}
       />
-    </div >
+    </div>
   );
 };

@@ -1,12 +1,44 @@
 import { getBaseUrl, getToken } from "@/utils/auth";
 
+/** Hi-Society API host — not the org FM/PMS backend stored at login. */
+export const getHiSocietyBaseUrl = (): string => {
+  const hostname = window.location.hostname;
+
+  if (
+    hostname === "ui-hisociety.lockated.com" ||
+    hostname === "uat-hi-society.lockated.com"
+  ) {
+    return "https://uat-hi-society.lockated.com";
+  }
+
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "web.hisociety.lockated.com"
+  ) {
+    return "https://uat-hi-society.lockated.com";
+  }
+
+  return "https://hi-society.lockated.com";
+};
+
+export const isHiSocietyAppContext = (): boolean => {
+  const hostname = window.location.hostname;
+  if (localStorage.getItem("layoutMode") === "hi-society") return true;
+
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.includes("hisociety") ||
+    hostname === "uat-hi-society.lockated.com"
+  );
+};
+
 // Hi-Society API Configuration
 export const HI_SOCIETY_CONFIG = {
   get BASE_URL() {
     const savedBaseUrl = getBaseUrl();
-
-    // Default to UAT for other environments
-    return savedBaseUrl || "https://uat-hi-society.lockated.com";
+    return savedBaseUrl || "";
   },
   get TOKEN() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -26,21 +58,17 @@ const getApiConfig = () => {
   const savedToken = getToken();
   const savedBaseUrl = getBaseUrl();
 
-  // Use saved base URL or fallback to UAT Hi-Society
-  const finalBaseUrl = savedBaseUrl || "https://uat-hi-society.lockated.com";
-
-  console.log("API Config Debug:", {
-    savedToken: savedToken ? "Present" : "Missing",
-    savedBaseUrl: savedBaseUrl || "Missing",
-    finalBaseUrl,
-    tokenLength: savedToken?.length || 0,
-    baseUrlValue: finalBaseUrl,
-  });
+  const finalBaseUrl = savedBaseUrl || "";
 
   return {
     BASE_URL: finalBaseUrl,
     TOKEN: savedToken,
   };
+};
+
+const isWebOrg34 = () => {
+  const orgId = String(localStorage.getItem("org_id") ?? "").trim();
+  return window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost" ;
 };
 
 export const API_CONFIG = {
@@ -53,6 +81,7 @@ export const API_CONFIG = {
   get TOKEN() {
     return getApiConfig().TOKEN;
   },
+
   ENDPOINTS: {
     ASSETS: "/pms/assets.json",
     AMC: "/pms/asset_amcs.json",
@@ -64,14 +93,20 @@ export const API_CONFIG = {
     DEPARTMENTS: "/pms/departments.json",
     SITES: "/pms/sites.json",
     UNITS: "/pms/units.json",
-    SOCIETY_STAFF_TYPES: "/pms/society_staff_types.json",
-    SOCIETY_STAFF_DETAILS: "/pms/admin/society_staffs", // Base path, will append /{id}.json
-    UPDATE_SOCIETY_STAFF: "/pms/admin/society_staffs", // Base path, will append /{id}.json
+    SOCIETY_STAFF_TYPES: "/society_staff_types.json",
+    SOCIETY_STAFF_DETAILS: "/crm/admin/society_staffs", // Base path, will append /{id}.json
+    UPDATE_SOCIETY_STAFF: "/crm/admin/society_staffs", // Base path, will append /{id}.json
     SEND_STAFF_OTP: "/pms/admin/society_staffs/send_otp.json",
     VERIFY_STAFF_NUMBER: "/pms/admin/society_staffs/verify_number.json",
     PRINT_QR_CODES: "/pms/admin/society_staffs/print_qr_codes.json",
-    ROLES: "/lock_roles.json",
-    ROLES_WITH_MODULES: "/lock_roles_with_modules.json",
+    get ROLES() {
+      return isWebOrg34() ? "/roles.json" : "/lock_roles.json";
+    },
+    get ROLES_WITH_MODULES() {
+      return isWebOrg34()
+        ? "/roles_with_modules.json"
+        : "/lock_roles_with_modules.json";
+    },
     FUNCTIONS: "/lock_functions.json",
     FUNCTION_DETAILS: "/lock_functions", // Base path, will append /:id.json
     SUB_FUNCTIONS: "/lock_sub_functions.json",
@@ -102,7 +137,7 @@ export const API_CONFIG = {
     CHANGE_SITE: "/change_site.json",
     HELPDESK_CATEGORIES: "/crm/admin/helpdesk_categories.json",
     HELPDESK_SUBCATEGORIES: "/pms/admin/get_all_helpdesk_sub_categories",
-    COMPLAINT_STATUSES: "/pms/admin/complaint_statuses.json",
+    COMPLAINT_STATUSES: "/crm/admin/complaint_statuses.json",
     CREATE_COMPLAINT_WORKER: "/pms/admin/create_complaint_worker.json",
     COST_APPROVALS: "/pms/admin/cost_approvals.json",
     USER_ACCOUNT: "/api/users/account.json",
@@ -122,8 +157,8 @@ export const API_CONFIG = {
     UPDATE_ISSUE_TYPE: "/crm/admin/helpdesk_categories/modify_issue_type.json",
     DELETE_ISSUE_TYPE: "/crm/admin/helpdesk_categories/delete_issue_type.json",
     ACCOUNTS: "/api/users/account.json",
-    STATUSES: "/pms/admin/create_complaint_statuses.json",
-    STATUSES_LIST: "/pms/admin/complaint_statuses.json",
+    STATUSES: "/crm/admin/create_complaint_statuses.json",
+    STATUSES_LIST: "/crm/admin/complaint_statuses.json",
     STATUSES_UPDATE: "/pms/admin/modify_complaint_status.json",
     MODIFY_COMPLAINT_STATUS: "/pms/admin/modify_complaint_status.json",
     // Holiday Calendar endpoints
@@ -155,7 +190,7 @@ export const API_CONFIG = {
     // Add task group endpoints
     TASK_GROUPS: "/pms/asset_groups.json?type=checklist",
     TASK_SUB_GROUPS: "/pms/assets/get_asset_group_sub_group.json", // Will append ?group_id=
-    TICKETS_SUMMARY: "/pms/admin/ticket_summary.json",
+    TICKETS_SUMMARY: "/crm/admin/ticket_summary.json",
     TICKETS_EXPORT_EXCEL: "/pms/admin/complaints.xlsx",
     // Checklist master endpoint
     CHECKLIST_MASTER: "/master_checklist_list.json",
@@ -182,6 +217,7 @@ export const API_CONFIG = {
     CHECKLIST_SAMPLE_FORMAT: "/assets/checklist.xlsx",
     // Bulk upload for custom forms
     CUSTOM_FORMS_BULK_UPLOAD: "/pms/custom_forms/bulk_upload.json",
+    PATROLLING_IMPORT_CHECKPOINTS: "/patrolling/import_checkpoints.json",
     // Asset dashboard endpoints
     // ASSET_STATISTICS: '/pms/asset_statistics.json',
     // ASSET_STATUS: '/pms/asset_status.json',
@@ -220,7 +256,10 @@ export const API_CONFIG = {
       "/pms/create_cost_approvals_for_complaint.json",
     SURVEY_RESPONSES: "/survey_mapping_responses/all_responses.json",
     SURVEY_DETAILS: "/pms/admin/snag_checklists/survey_details.json",
-    SUPPORT_STAFF_CATEGORIES: "/pms/admin/support_staff_categories.json",
+    SUPPORT_STAFF_CATEGORIES: "/crm/admin/support_staff_categories.json",
+    SUPPORT_STAFF_CATEGORY_DETAILS: "/crm/admin/support_staff_categories", // Base path, will append /{id}.json
+    DELIVERY_SERVICE_PROVIDERS: "/crm/admin/delivery_service_providers.json",
+    DELIVERY_SERVICE_PROVIDER_DETAILS: "/crm/admin/delivery_service_providers", // Base path, will append /{id}.json
     CREATE_VISITOR: "/pms/admin/visitors/new_visitor.json",
     UNEXPECTED_VISITORS: "/pms/admin/visitors/unexpected_visitors.json",
     EXPECTED_VISITORS: "/pms/admin/visitors/expected_visitors.json",
@@ -260,13 +299,19 @@ export const API_CONFIG = {
     RECENT_VISITORS: "/pms/admin/visitors/recent_visitors.json",
     // Visitor setup endpoint (visiting purposes, move in/out, staff types, comments)
     VISITOR_SETUP: "/pms/admin/visitors/visitor_setup.json",
-    CREATE_VISIT_PURPOSE: "/pms/soc_visit_purposes.json",
+    CREATE_VISIT_PURPOSE: "/soc_visit_purposes.json",
     EDIT_VISIT_PURPOSE: "/pms/soc_visit_purposes",
-    CREATE_MOVE_IN_OUT_PURPOSE: "/pms/society_mimo_purposes.json",
+    CREATE_MOVE_IN_OUT_PURPOSE: "/society_mimo_purposes.json",
     EDIT_MOVE_IN_OUT_PURPOSE: "/pms/society_mimo_purposes",
-    CREATE_WORK_TYPE: "/pms/society_staff_types.json",
+    CREATE_WORK_TYPE: "/society_staff_types.json",
     EDIT_WORK_TYPE: "/pms/society_staff_types", // Base path, will append /{id}.json
-    CREATE_SOCIETY_STAFF: "/pms/admin/society_staffs.json",
+    CREATE_SOCIETY_STAFF: "/crm/admin/society_staffs.json",
+    STAFF_SAMPLE_FORMAT: "/crm/admin/society_staffs/sample_format.xlsx",
+    STAFF_EXPORT: "/export_society_staff.xlsx",
+    STAFF_FILTERS: "/crm/admin/staff_filters.json",
+    STAFF_BULK_UPLOAD: "/crm/admin/society_staffs/upload",
+    STAFF_HISTORY_EXPORT: "/crm/admin/staffs_data.xlsx",
+    STAFF_PRINT_QR_CODES: "/crm/admin/society_staffs/print_qr_codes",
     CREATE_VISITOR_COMMENT: "/visitor_comments.json",
     EDIT_VISITOR_COMMENT: "/visitor_comments",
     PARKING_CONFIGURATIONS_SEARCH: "/pms/admin/parking_configurations.json",
@@ -281,9 +326,15 @@ export const API_CONFIG = {
     ICONS: "/pms/icons.json",
     // Society gates endpoint
     SOCIETY_GATES: "/admin/society_gates.json",
+    // Society gate enquiries endpoint
+    SOCIETY_GATE_ENQUIRIES: "/admin/society_gates/enquiries.json",
     // Society gate by ID endpoints
     SOCIETY_GATE_BY_ID: "/admin/society_gates", // Base path, will append /{id}.json
     UPDATE_SOCIETY_GATE: "/admin/society_gates", // Base path, will append /{id}.json
+    // Admin societies list (for Smartsecure gate Society dropdown)
+    ADMIN_SOCIETIES: "/admin/societies.json",
+    // Society blocks for a given society (Smartsecure gate Society Block dropdown)
+    GET_SOCIETY_BLOCKS: "/get_society_blocks.json",
     RECENT_SURVEYS: "/survey_mappings/response_list.json?&recent=true",
     // Visitor history export endpoint
     VISITOR_HISTORY_EXPORT: "/pms/admin/visitors/visitors_history.xlsx",
@@ -319,6 +370,40 @@ export const API_CONFIG = {
     FLIP_CARD_HISTORY: "/api/flip_cards/history.json",
     // Purchase Order endpoints
     PURCHASE_ORDER_SUPPLIERS: "/pms/purchase_orders/get_suppliers.json",
+    RATINGS: "/ratings",
+    RATINGS_SHOW: "/ratings", // Base path, will append /:id.json
+    JOB_STATUS: "/jobs/status",
+    JOB_DESCRIPTIONS: "/job_descriptions",
+    JD_DETAIL: "/job_descriptions", // Will append /:id.json
+    KPIS: "/kpis.json",
+    USER_SETUP: "/jobs/setup", // Will append /:user_id
+    USER_JOURNALS: "/user_journals.json",
+    TEAM_MEMBERS: "/business_compass/team_members",
+    BUSINESS_COMPASS_DEPARTMENTS: "/business_compass/departments",
+    BUSINESS_COMPASS_ROLES: "/business_compass/roles",
+    INVITE_USER: "/business_compass/invite_user",
+    BULK_INVITE: "/business_compass/bulk_invite",
+    PENDING_INVITATIONS: "/business_compass/pending_invitations",
+    INVITATION_HISTORY: "/business_compass/invitation_history",
+    RESEND_INVITATION: "/business_compass/resend_invitation",
+    EMAIL_LOGS: "/business_compass/email_logs",
+    WITHDRAW_INVITATION: "/business_compass/withdraw_invitation",
+    // Endpoint used by BMS documents UI to fetch common folder contents
+    COMMON_FOLDER_SHOW: "/crm/admin/common_folder_show",
+    ATTACHMENT_COMMON: "/crm/admin/attachment_common.json",
+    ATTACHMENTS: "/crm/admin/attachments.json",
+    SHARE_MULTIPLE_DOCUMENTS: "/crm/admin/share_multiple_documents.json",
+    LOYALTY_DASHBOARD_HOME: "/loyalty/dashboard/home",
+    LOYALTY_DASHBOARD_OVERVIEW: "/loyalty/dashboard/overview",
+    LOYALTY_DASHBOARD_MEMBERS: "/loyalty/dashboard/members",
+    LOYALTY_DASHBOARD_WALLET: "/loyalty/dashboard/wallet",
+    LOYALTY_DASHBOARD_ORDERS: "/loyalty/dashboard/orders",
+    LOYALTY_DASHBOARD_STORE: "/loyalty/dashboard/store",
+    LOYALTY_DASHBOARD_REDEMPTION: "/loyalty/dashboard/redemption",
+    LOYALTY_DASHBOARD_RULE_SUMMARY: "/wallet_transaction_logs/rules_summary",
+    LOYALTY_DASHBOARD_RULES: "/wallet_transaction_logs/rules",
+    LOYALTY_DASHBOARD_FIRES_BY_CATEGORY: "/wallet_transaction_logs/fires_by_category",
+    LOYALTY_DASHBOARD_DAILY_FIRES: "/wallet_transaction_logs/daily_fires",
   },
 } as const;
 
@@ -329,8 +414,8 @@ export const TOKEN = API_CONFIG.TOKEN;
 
 // Helper to get full URL
 export const getFullUrl = (endpoint: string): string => {
-  let resolvedBaseUrl = API_CONFIG.BASE_URL;
-  if (!resolvedBaseUrl) {
+  const baseUrl = API_CONFIG.BASE_URL;
+  if (!baseUrl) {
     console.warn(
       "Base URL is not configured, this should not happen with fallback"
     );
@@ -338,16 +423,7 @@ export const getFullUrl = (endpoint: string): string => {
       "Base URL is not configured. Please check your authentication settings."
     );
   }
-  const hostname = window.location.hostname;
-  // Force UAT baseUrl for localhost
-  if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-    resolvedBaseUrl = "https://uat-hi-society.lockated.com";
-  }
-  // Ensure endpoint starts with '/'
-  const normalizedEndpoint = endpoint.startsWith("/")
-    ? endpoint
-    : `/${endpoint}`;
-  return `${resolvedBaseUrl}${normalizedEndpoint}`;
+  return `${baseUrl}${endpoint}`;
 };
 
 // Helper to get authorization header
@@ -359,6 +435,20 @@ export const getAuthHeader = (): string => {
     );
   }
   return `Bearer ${token}`;
+};
+
+/** Auth for /crm/admin/* on the org base_url (login backend). */
+export const getCrmAdminRequestConfig = () => {
+  const token = API_CONFIG.TOKEN;
+  if (!token) {
+    throw new Error(
+      "Authentication token is not available. Please log in again."
+    );
+  }
+  return {
+    params: { token, _: Date.now() },
+    headers: { Authorization: `Bearer ${token}` },
+  };
 };
 
 // Helper to get role name header

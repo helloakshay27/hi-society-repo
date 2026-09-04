@@ -4,6 +4,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
     Pagination,
     PaginationContent,
@@ -16,6 +17,7 @@ import {
 
 export const LoyaltyCustomers = () => {
     const navigate = useNavigate();
+    const { shouldShow } = useDynamicPermissions();
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -78,6 +80,7 @@ export const LoyaltyCustomers = () => {
             case "actions":
                 return (
                     <div className="flex items-center gap-2">
+                        {shouldShow("Customers", "show") && (
                         <Button
                             variant="ghost"
                             size="icon"
@@ -86,6 +89,7 @@ export const LoyaltyCustomers = () => {
                         >
                             <Eye className="h-4 w-4" />
                         </Button>
+                        )}
                         {/* <Button
                             variant="ghost"
                             size="icon"
@@ -150,7 +154,7 @@ export const LoyaltyCustomers = () => {
     const renderPaginationItems = () => {
         if (!totalPages || totalPages <= 0) return null;
         const items = [];
-        const showEllipsis = totalPages > 7;
+        const showEllipsis = totalPages > 5;
         if (showEllipsis) {
             items.push(
                 <PaginationItem key={1} className="cursor-pointer">
@@ -228,30 +232,28 @@ export const LoyaltyCustomers = () => {
                     loadingMessage="Loading customers..."
                     emptyMessage="No customers found"
                 />
-                {totalPages > 1 && (
-                    <div className="flex flex-col items-center gap-2 mt-4">
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                        className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                                {renderPaginationItems()}
-                                <PaginationItem>
-                                    <PaginationNext
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                        <p className="text-sm text-gray-600">
-                            Showing page {currentPage} of {totalPages} ({totalCount} total customers)
-                        </p>
-                    </div>
-                )}
+                <div className="flex flex-col items-center gap-2 mt-4">
+                    <Pagination>
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                />
+                            </PaginationItem>
+                            {renderPaginationItems()}
+                            <PaginationItem>
+                                <PaginationNext
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                    <p className="text-sm text-gray-600">
+                        Showing page {currentPage} of {totalPages} ({totalCount} total customers)
+                    </p>
+                </div>
             </div>
         </div>
     );

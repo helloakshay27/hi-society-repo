@@ -165,6 +165,7 @@ const ProjectBuildingType = () => {
     sx={{
       width: "350px",
       "& .MuiInputBase-root": fieldStyles,
+      "& .MuiFormLabel-asterisk": { color: "#da7756" },
     }}
     required
   >
@@ -217,6 +218,7 @@ const ProjectBuildingType = () => {
         padding: "12px 14px",
         boxSizing: "border-box",
       },
+      "& .MuiFormLabel-asterisk": { color: "#da7756" },
     }}
   />
 </div>
@@ -238,6 +240,7 @@ const ProjectBuildingType = () => {
         <Button
           type="button"
           onClick={handleGoBack}
+          variant="outline"
           className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
           disabled={loading}
         >

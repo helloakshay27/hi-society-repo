@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,6 @@ import {
   MapPin,
   Building2,
   Clock,
-  Users,
   Loader2,
   Save,
   X,
@@ -29,8 +28,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { toast } from "sonner";
-import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
-import { departmentService, Department } from "@/services/departmentService";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { RootState } from "@/store/store";
 
 // Section component for consistent layout
@@ -65,7 +63,6 @@ interface Shift {
   end_hour: number;
   end_min: number;
   timings: string;
-  total_hour: number;
 }
 
 interface RosterFormData {
@@ -74,7 +71,6 @@ interface RosterFormData {
   dayType: "Weekdays" | "Weekends" | "Recurring";
   weekSelection: string[];
   location: string;
-  departments: number[];
   shift: number | null;
   selectedEmployees: number[];
   rosterType: "Permanent";
@@ -83,7 +79,12 @@ interface RosterFormData {
 
 export const RosterEditPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
+  const rosterBasePath = location.pathname.startsWith("/smartsecure/roster")
+    ? "/smartsecure/roster"
+    : "/settings/account/roster";
+  const isSmartSecureRoster = rosterBasePath === "/smartsecure/roster";
 
   // Redux state for site information
   const { selectedSite } = useSelector((state: RootState) => state.site);
@@ -100,7 +101,6 @@ export const RosterEditPage: React.FC = () => {
     dayType: "Weekdays",
     weekSelection: [],
     location: "",
-    departments: [],
     shift: null,
     selectedEmployees: [],
     rosterType: "Permanent",
@@ -117,14 +117,10 @@ export const RosterEditPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingFMUsers, setLoadingFMUsers] = useState(false);
-  const [loadingFilteredFMUsers, setLoadingFilteredFMUsers] = useState(false);
-  const [loadingDepartments, setLoadingDepartments] = useState(false);
   const [loadingShifts, setLoadingShifts] = useState(false);
 
   // Data states
   const [fmUsers, setFMUsers] = useState<FMUser[]>([]);
-  const [filteredFMUsers, setFilteredFMUsers] = useState<FMUser[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [currentLocation, setCurrentLocation] = useState<string>("");
 
@@ -134,7 +130,6 @@ export const RosterEditPage: React.FC = () => {
     selectedDays: false,
     dayType: false,
     location: false,
-    departments: false,
     shift: false,
     selectedEmployees: false,
   });
@@ -164,7 +159,6 @@ export const RosterEditPage: React.FC = () => {
     if (id) {
       fetchRosterTemplate();
       fetchFMUsers();
-      fetchDepartments();
       fetchShifts();
       fetchCurrentLocation();
     }
@@ -174,17 +168,19 @@ export const RosterEditPage: React.FC = () => {
   const fetchRosterTemplate = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: getAuthHeader(),
-          },
-        }
+      const apiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
       );
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch roster template");
       const data = await response.json();
       const r = data; // Direct response structure
@@ -250,16 +246,6 @@ export const RosterEditPage: React.FC = () => {
         periodDates.endDate = new Date(r.end_date);
       }
 
-      // Map departments from the new response structure
-      const departments =
-        r.departments && Array.isArray(r.departments)
-          ? r.departments.map((dept: any) => dept.id)
-          : r.department_id
-            ? Array.isArray(r.department_id)
-              ? r.department_id.map(Number)
-              : [Number(r.department_id)]
-            : [];
-
       // Map employees from the new response structure
       const selectedEmployees =
         r.employees && Array.isArray(r.employees)
@@ -268,9 +254,7 @@ export const RosterEditPage: React.FC = () => {
             ? [Number(r.resource_id)]
             : [];
 
-      console.log("🏢 Mapped Departments:", departments);
       console.log("👥 Mapped Employees:", selectedEmployees);
-      console.log("📊 Original departments data:", r.departments);
       console.log("📊 Original employees data:", r.employees);
 
       setFormData({
@@ -279,7 +263,6 @@ export const RosterEditPage: React.FC = () => {
         dayType: r.roaster_type || "Weekdays",
         weekSelection,
         location: r.location || "",
-        departments,
         shift: r.user_shift_id ? Number(r.user_shift_id) : null,
         selectedEmployees,
         rosterType: r.allocation_type || "Permanent",
@@ -287,11 +270,6 @@ export const RosterEditPage: React.FC = () => {
       });
 
       setPeriod(periodDates);
-
-      // Fetch filtered users for the departments
-      if (departments.length > 0) {
-        fetchFilteredFMUsers(departments);
-      }
     } catch (error) {
       console.error("Error fetching roster template:", error);
       toast.error("Failed to load roster template");
@@ -305,7 +283,13 @@ export const RosterEditPage: React.FC = () => {
   const fetchFMUsers = async () => {
     setLoadingFMUsers(true);
     try {
-      const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.FM_USERS);
+      const societyId =
+        localStorage.getItem("selectedSocietyId") ||
+        localStorage.getItem("society_id") ||
+        "";
+      const apiUrl = getFullUrl(
+        `/spree/manage/user_roasters/security_users?society_id=${societyId}`
+      );
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -320,20 +304,12 @@ export const RosterEditPage: React.FC = () => {
       }
 
       const data = await response.json();
-
-      // Adapt the response to our expected format
-      const users = data.fm_users || data.users || data.employees || data || [];
+      const users = Array.isArray(data) ? data : data.users || [];
       setFMUsers(
-        users.map((user: any) => ({
+        users.map((user: { id: number; name: string; email?: string }) => ({
           id: user.id,
-          name:
-            user.name ||
-            user.full_name ||
-            `${user.firstname || ""} ${user.lastname || ""}`.trim(),
+          name: user.name,
           email: user.email,
-          department: user.department
-            ? user.department.department_name || user.department.name
-            : undefined,
         }))
       );
     } catch (error) {
@@ -345,26 +321,17 @@ export const RosterEditPage: React.FC = () => {
     }
   };
 
-  // Fetch Departments
-  const fetchDepartments = async () => {
-    setLoadingDepartments(true);
-    try {
-      const departmentData = await departmentService.fetchDepartments();
-      setDepartments(departmentData);
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-      toast.error("Failed to load departments");
-      setDepartments([]);
-    } finally {
-      setLoadingDepartments(false);
-    }
-  };
-
   // Fetch Shifts from the API
   const fetchShifts = async () => {
     setLoadingShifts(true);
     try {
-      const apiUrl = getFullUrl("/pms/admin/user_shifts.json");
+      const societyId =
+        localStorage.getItem("selectedSocietyId") ||
+        localStorage.getItem("society_id") ||
+        "";
+      const apiUrl = getFullUrl(
+        `/spree/manage/user_shifts.json?society_id=${societyId}`
+      );
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -391,7 +358,6 @@ export const RosterEditPage: React.FC = () => {
           end_hour: shift.end_hour,
           end_min: shift.end_min,
           timings: shift.timings,
-          total_hour: shift.total_hour,
         }))
       );
     } catch (error) {
@@ -444,51 +410,6 @@ export const RosterEditPage: React.FC = () => {
     }
   };
 
-  // Fetch FM Users for selected departments
-  const fetchFilteredFMUsers = async (departmentIds: number[]) => {
-    if (!departmentIds || departmentIds.length === 0) {
-      setFilteredFMUsers([]);
-      return;
-    }
-    setLoadingFilteredFMUsers(true);
-    try {
-      const idsParam = departmentIds.join(",");
-      const apiUrl = `${API_CONFIG.BASE_URL}/pms/admin/user_roasters/department_roasters.json?department_id=${idsParam}`;
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: getAuthHeader(),
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      // Adapt response to FMUser[]
-      const users = data.fm_users || data.users || data.employees || data || [];
-      setFilteredFMUsers(
-        users.map((user: any) => ({
-          id: user.id,
-          name:
-            user.name ||
-            user.full_name ||
-            `${user.firstname || ""} ${user.lastname || ""}`.trim(),
-          email: user.email,
-          department: user.department
-            ? user.department.department_name || user.department.name
-            : undefined,
-        }))
-      );
-    } catch (error) {
-      console.error("Error fetching filtered FM users:", error);
-      toast.error("Failed to load employees for selected departments");
-      setFilteredFMUsers([]);
-    } finally {
-      setLoadingFilteredFMUsers(false);
-    }
-  };
 
   // Handle day type selection
   const handleDayTypeChange = (type: "Weekdays" | "Weekends" | "Recurring") => {
@@ -618,29 +539,11 @@ export const RosterEditPage: React.FC = () => {
   const handleInputChange = (field: keyof RosterFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    // If departments are being changed, fetch filtered users and clear selected employees
-    if (field === "departments") {
-      const departmentIds = value as number[];
-      setFormData((prev) => ({
-        ...prev,
-        [field]: departmentIds,
-        selectedEmployees: [],
-      }));
-      fetchFilteredFMUsers(departmentIds);
-    }
-
     // Clear field error when user starts typing/selecting
     if (errors[field as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [field]: false }));
     }
   };
-
-  // Effect to fetch filtered users when initial departments are loaded
-  useEffect(() => {
-    if (formData.departments.length > 0) {
-      fetchFilteredFMUsers(formData.departments);
-    }
-  }, []);
 
   // Effect to update location when selectedSite changes
   useEffect(() => {
@@ -668,7 +571,6 @@ export const RosterEditPage: React.FC = () => {
       selectedDays: !hasSelectedDays,
       dayType: false,
       location: false, // Location is auto-populated, not required validation
-      departments: formData.departments.length === 0,
       shift: formData.shift === null,
       selectedEmployees: formData.selectedEmployees.length === 0,
     };
@@ -681,7 +583,6 @@ export const RosterEditPage: React.FC = () => {
       const errorFields = [];
       if (newErrors.templateName) errorFields.push("Template Name");
       if (newErrors.selectedDays) errorFields.push("Working Days");
-      if (newErrors.departments) errorFields.push("Department");
       if (newErrors.shift) errorFields.push("Shift");
       if (newErrors.selectedEmployees) errorFields.push("Selected Employees");
 
@@ -714,7 +615,6 @@ export const RosterEditPage: React.FC = () => {
         resource_id:
           selectedSite?.id || localStorage.getItem("selectedSiteId") || "",
         user_shift_id: formData.shift || "",
-        seat_category_id: "1", // Required field
         allocation_type: formData.rosterType,
         roaster_type: formData.dayType,
         active: formData.active,
@@ -736,7 +636,6 @@ export const RosterEditPage: React.FC = () => {
           ...baseUserRoaster,
           ...commonDateFields,
         },
-        department_id: formData.departments.map(String),
         no_of_days: "",
         weekdays: [],
         weekends: [],
@@ -744,36 +643,30 @@ export const RosterEditPage: React.FC = () => {
       };
 
       if (formData.dayType === "Weekdays") {
-        // Weekdays payload
-        // Convert week selections to weekday numbers (1-5 for 1st Week to 5th Week)
         const weekdays = formData.weekSelection
-          .filter((w) => w.match(/^\d/)) // Filter selections that start with digit
-          .map((w) => w.charAt(0)); // Get first character (week number)
+          .filter((w) => w.match(/^\d/))
+          .map((w) => w.charAt(0));
 
         payload = {
           ...basePayload,
           weekdays: weekdays,
         };
       } else if (formData.dayType === "Weekends") {
-        // Weekends payload
-        // Convert weekend selections to weekend numbers (1-5 for 1st Weekend to 5th Weekend)
         const weekends = formData.weekSelection
-          .filter((w) => w.match(/^\d/)) // Filter selections that start with digit
-          .map((w) => w.charAt(0)); // Get first character (weekend number)
+          .filter((w) => w.match(/^\d/))
+          .map((w) => w.charAt(0));
 
         payload = {
           ...basePayload,
           weekends: weekends,
         };
       } else if (formData.dayType === "Recurring") {
-        // Recurring payload - matching your example structure
         const recurringData = {};
         for (let weekNum = 1; weekNum <= 5; weekNum++) {
           const daysForWeek = formData.selectedDays
             .filter((d) => d.startsWith(`Week${weekNum}-`))
             .map((d) => {
               const dayShort = d.split("-")[1];
-              // Map short day to number (Mon=1, Tue=2, ..., Sun=7)
               return (
                 ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(
                   dayShort
@@ -790,7 +683,6 @@ export const RosterEditPage: React.FC = () => {
           recurring: [recurringData],
         };
       } else {
-        // Default fallback
         payload = basePayload;
       }
 
@@ -798,22 +690,24 @@ export const RosterEditPage: React.FC = () => {
       console.log("🎯 PATCH API Payload:", JSON.stringify(payload, null, 2));
 
       // PATCH API call
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: getAuthHeader(),
-          },
-          body: JSON.stringify(payload),
-        }
+      const updateApiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
       );
+      const response = await fetch(updateApiUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) throw new Error("API error");
 
       toast.success("Roster template updated successfully!");
-      navigate(`/settings/roster/detail/${id}`);
+      navigate(`${rosterBasePath}/detail/${id}`);
     } catch (error) {
       console.error("Error updating roster template:", error);
       toast.error("Failed to update roster template. Please try again.");
@@ -824,7 +718,7 @@ export const RosterEditPage: React.FC = () => {
 
   // Handle cancel
   const handleCancel = () => {
-    navigate(`/settings/account/roster/detail/${id}`);
+    navigate(`${rosterBasePath}/detail/${id}`);
   };
 
   if (isLoading) {
@@ -859,9 +753,6 @@ export const RosterEditPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#C72030]/10 text-[#C72030] flex items-center justify-center">
-              <Edit className="w-5 h-5" />
-            </div>
             <div>
               <h1 className="text-xl font-bold tracking-wide uppercase">
                 Edit Roster Template
@@ -1216,9 +1107,9 @@ export const RosterEditPage: React.FC = () => {
           </div>
         </Section>
 
-        {/* Location & Department Section */}
+        {/* Location Section */}
         <Section
-          title="Location & Department"
+          title="Location"
           icon={<MapPin className="w-4 h-4" />}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1242,81 +1133,6 @@ export const RosterEditPage: React.FC = () => {
                   ),
                 }}
               />
-            </div>
-
-            <div className="relative">
-              <FormControl
-                fullWidth
-                variant="outlined"
-                sx={{ "& .MuiInputBase-root": fieldStyles }}
-              >
-                <InputLabel shrink>
-                  Department <span className="text-red-500">*</span>
-                </InputLabel>
-                <MuiSelect
-                  multiple
-                  value={formData.departments}
-                  onChange={(e) =>
-                    handleInputChange("departments", e.target.value as number[])
-                  }
-                  input={<OutlinedInput notched label="Department *" />}
-                  renderValue={(selected) => {
-                    const selectedArray = selected as number[];
-                    if (selectedArray.length === 0) return "";
-                    if (selectedArray.length === 1) {
-                      const dept = departments.find(
-                        (d) => d.id === selectedArray[0]
-                      );
-                      return dept?.department_name || `ID: ${selectedArray[0]}`;
-                    }
-                    if (selectedArray.length <= 3) {
-                      return selectedArray
-                        .map((value) => {
-                          const dept = departments.find((d) => d.id === value);
-                          return dept?.department_name || `ID: ${value}`;
-                        })
-                        .join(", ");
-                    }
-                    return `${selectedArray.length} departments selected`;
-                  }}
-                  displayEmpty
-                  disabled={loadingDepartments || isSubmitting}
-                  error={errors.departments}
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        overflow: "auto",
-                      },
-                    },
-                  }}
-                >
-                  {departments.map((dept) => (
-                    <MenuItem key={dept.id} value={dept.id}>
-                      <Checkbox
-                        checked={formData.departments.indexOf(dept.id!) > -1}
-                        sx={{
-                          color: "#D5DbDB",
-                          "&.Mui-checked": {
-                            color: "#C72030",
-                          },
-                        }}
-                      />
-                      <ListItemText primary={dept.department_name} />
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-                {loadingDepartments && (
-                  <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                    <CircularProgress size={16} />
-                  </div>
-                )}
-              </FormControl>
-              {errors.departments && (
-                <p className="text-red-500 text-sm mt-1">
-                  Please select at least one department
-                </p>
-              )}
             </div>
           </div>
         </Section>
@@ -1347,7 +1163,7 @@ export const RosterEditPage: React.FC = () => {
                   <MenuItem value="">Select Shift</MenuItem>
                   {shifts.map((shift) => (
                     <MenuItem key={shift.id} value={shift.id}>
-                      {shift.timings} ({shift.total_hour}h)
+                      {shift.timings}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -1364,136 +1180,101 @@ export const RosterEditPage: React.FC = () => {
               )}
             </div>
 
-            {formData.departments.length > 0 && (
-              <div className="relative">
-                <FormControl
-                  fullWidth
-                  variant="outlined"
-                  sx={{ "& .MuiInputBase-root": fieldStyles }}
-                >
-                  <InputLabel shrink>
-                    List Of Selected Employees{" "}
-                    <span className="text-red-500">*</span>
-                  </InputLabel>
-                  <MuiSelect
-                    multiple
-                    value={formData.selectedEmployees}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "selectedEmployees",
-                        e.target.value as number[]
-                      )
+            <div className="relative">
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
+              >
+                <InputLabel shrink>
+                  List Of Selected Employees{" "}
+                  <span className="text-red-500">*</span>
+                </InputLabel>
+                <MuiSelect
+                  multiple
+                  value={formData.selectedEmployees}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "selectedEmployees",
+                      e.target.value as number[]
+                    )
+                  }
+                  input={
+                    <OutlinedInput
+                      notched
+                      label="List Of Selected Employees *"
+                    />
+                  }
+                  renderValue={(selected) => {
+                    const selectedArray = selected as number[];
+                    if (selectedArray.length === 0) return "";
+                    if (selectedArray.length === 1) {
+                      const user = fmUsers.find((u) => u.id === selectedArray[0]);
+                      return user?.name || `User ${selectedArray[0]}`;
                     }
-                    input={
-                      <OutlinedInput
-                        notched
-                        label="List Of Selected Employees *"
-                      />
+                    if (selectedArray.length <= 3) {
+                      return selectedArray
+                        .map((value) => {
+                          const user = fmUsers.find((u) => u.id === value);
+                          return user?.name || `User ${value}`;
+                        })
+                        .join(", ");
                     }
-                    renderValue={(selected) => {
-                      const selectedArray = selected as number[];
-                      if (selectedArray.length === 0) return "";
-                      if (selectedArray.length === 1) {
-                        const user = filteredFMUsers.find(
-                          (u) => u.id === selectedArray[0]
-                        );
-                        return user?.name || `User ${selectedArray[0]}`;
-                      }
-                      if (selectedArray.length <= 3) {
-                        return selectedArray
-                          .map((value) => {
-                            const user = filteredFMUsers.find(
-                              (u) => u.id === value
-                            );
-                            return user?.name || `User ${value}`;
-                          })
-                          .join(", ");
-                      }
-                      return `${selectedArray.length} employees selected`;
-                    }}
-                    displayEmpty
-                    disabled={
-                      loadingFilteredFMUsers ||
-                      isSubmitting ||
-                      formData.departments.length === 0
-                    }
-                    error={errors.selectedEmployees}
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 300,
-                          overflow: "auto",
-                        },
+                    return `${selectedArray.length} employees selected`;
+                  }}
+                  displayEmpty
+                  disabled={loadingFMUsers || isSubmitting}
+                  error={errors.selectedEmployees}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                        overflow: "auto",
                       },
-                    }}
-                  >
-                    {filteredFMUsers.length > 0 ? (
-                      filteredFMUsers.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          <Checkbox
-                            checked={
-                              formData.selectedEmployees.indexOf(user.id) > -1
-                            }
-                            sx={{
-                              color: "#D5DbDB",
-                              "&.Mui-checked": {
-                                color: "#C72030",
-                              },
-                            }}
-                          />
-                          <ListItemText
-                            primary={user.name || "No name available"}
-                            secondary={user.email}
-                          />
-                        </MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem disabled>
+                    },
+                  }}
+                >
+                  {fmUsers.length > 0 ? (
+                    fmUsers.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        <Checkbox
+                          checked={formData.selectedEmployees.indexOf(user.id) > -1}
+                          sx={{
+                            color: "#D5DbDB",
+                            "&.Mui-checked": {
+                              color: "#C72030",
+                            },
+                          }}
+                        />
                         <ListItemText
-                          primary="No employees found for selected departments"
-                          sx={{ fontStyle: "italic", color: "#9ca3af" }}
+                          primary={user.name || "No name available"}
+                          secondary={user.email}
                         />
                       </MenuItem>
-                    )}
-                  </MuiSelect>
-                  {loadingFilteredFMUsers && (
-                    <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                      <CircularProgress size={16} />
-                    </div>
+                    ))
+                  ) : (
+                    <MenuItem disabled>
+                      <ListItemText
+                        primary="No employees found"
+                        sx={{ fontStyle: "italic", color: "#9ca3af" }}
+                      />
+                    </MenuItem>
                   )}
-                </FormControl>
-                {errors.selectedEmployees && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Please select at least one employee
-                  </p>
+                </MuiSelect>
+                {loadingFMUsers && (
+                  <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                    <CircularProgress size={16} />
+                  </div>
                 )}
-                <p className="text-sm text-gray-500 mt-2">
-                  Showing employees from selected departments:{" "}
-                  {departments
-                    .filter((dept) => formData.departments.includes(dept.id!))
-                    .map((dept) => dept.department_name)
-                    .join(", ")}
+              </FormControl>
+              {errors.selectedEmployees && (
+                <p className="text-red-500 text-sm mt-1">
+                  Please select at least one employee
                 </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </Section>
-
-        {/* Show message if no departments selected */}
-        {formData.departments.length === 0 && (
-          <Section title="Employees" icon={<Users className="w-4 h-4" />}>
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg font-medium mb-2">
-                Select Departments First
-              </p>
-              <p className="text-gray-400 text-sm">
-                Please select at least one department to view and select
-                employees
-              </p>
-            </div>
-          </Section>
-        )}
 
         <Section title="Select Period" icon={<Calendar className="w-4 h-4" />}>
           <div className="space-y-6">
@@ -1586,8 +1367,7 @@ export const RosterEditPage: React.FC = () => {
       {/* Footer Actions */}
       <div className="flex items-center gap-3 justify-center pt-2">
         <Button
-          variant="destructive"
-          className="px-8"
+          className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >

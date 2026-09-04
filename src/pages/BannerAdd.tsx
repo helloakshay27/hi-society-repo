@@ -332,7 +332,8 @@ const BannerAdd = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen banner-add-page">
+      <style>{`.banner-add-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -441,8 +442,7 @@ const BannerAdd = () => {
 
                 <button
                   type="button"
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                  onClick={() => setShowUploader(true)}
+           className="btn-primary h-9 px-4 text-sm font-medium"                  onClick={() => setShowUploader(true)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -593,15 +593,13 @@ const BannerAdd = () => {
           <button
             type="submit"
             disabled={loading}
-             className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
+           className="btn-primary h-9 px-4 text-sm font-medium"          >
             {loading ? 'Submit' : 'Submit'}
           </button>
           <button
             type="button"
             onClick={handleCancel}
-             className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"          >
             Cancel
           </button>
         </div>

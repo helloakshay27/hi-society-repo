@@ -456,7 +456,7 @@ const Tiers = () => {
             </div>
 
             {loading && <p>Loading tiers...</p>}
-            {error && <p className="text-danger">{error}</p>}
+            {!loading && error && <p className="text-danger">{error}</p>}
             {!loading && !error && (
               <>
                 <div className="tbl-container mt-4" style={{ height: "100%", display: "flex", flexDirection: "column" }}>

@@ -3,22 +3,27 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { EditComplaintModeModal } from './modals/EditComplaintModeModal';
 import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManagementAPI';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { API_CONFIG, getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import {
@@ -28,6 +33,8 @@ import {
   deleteComplaintMode,
   fetchAccounts
 } from '@/store/slices/complaintModeSlice';
+import { TextField } from '@mui/material';
+import { fieldStyles } from './fieldStyles';
 
 const complaintModeSchema = z.object({
   complaintMode: z.string().min(1, 'Complaint mode is required'),
@@ -53,6 +60,10 @@ export const ComplaintModeTab: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingComplaintMode, setEditingComplaintMode] = useState<any>(null);
   const [userAccount, setUserAccount] = useState<UserAccountResponse | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const form = useForm<ComplaintModeFormData>({
     resolver: zodResolver(complaintModeSchema),
@@ -79,17 +90,9 @@ export const ComplaintModeTab: React.FC = () => {
   const fetchComplaintModes = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch complaint modes');
-      }
-      const data = await response.json();
-      setComplaintModes(Array.isArray(data.complaint_modes) ? data.complaint_modes : []);
+      const data = await ticketManagementAPI.getComplaintModes();
+      const list = data?.complaint_modes ?? (Array.isArray(data) ? data : []);
+      setComplaintModes(Array.isArray(list) ? list : []);
     } catch (error) {
       toast.error('Failed to fetch complaint modes');
       console.error('Error fetching complaint modes:', error);
@@ -142,6 +145,7 @@ export const ComplaintModeTab: React.FC = () => {
 
       toast.success('Complaint mode created successfully!');
       form.reset();
+      setAddDialogOpen(false);
       fetchComplaintModes();
     } catch (error: any) {
       console.error('Error creating complaint mode:', error);
@@ -217,65 +221,183 @@ export const ComplaintModeTab: React.FC = () => {
     </div>
   );
 
-  console.log('complaintModes', complaintModes);
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const filteredComplaintModes = complaintModes.filter((item) => {
+    if (!searchTerm) return true;
+    const query = searchTerm.toLowerCase();
+    return Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query));
+  });
+
+  const totalCount = filteredComplaintModes.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedComplaintModes = filteredComplaintModes.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Complaint Mode</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="space-y-4">
+      {/* Add Complaint Mode Dialog */}
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) form.reset();
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Complaint Mode</DialogTitle>
+          </DialogHeader>
           <Form {...form}>
-            <div className="space-y-4">
+            <div className="py-2">
               <FormField
                 control={form.control}
                 name="complaintMode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Complaint Mode <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter complaint mode" {...field} />
+                      <TextField
+                        label={<>Complaint Mode <span style={{ color: 'red' }}>*</span></>}
+                        placeholder="Enter complaint mode"
+                        value={field.value}
+                        onChange={field.onChange}
+                        fullWidth
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleCreateSubmit}
-                  disabled={isSubmitting || loading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                >
-                  {isSubmitting || loading ? 'Saving...' : 'Submit'}
-                </Button>
-              </div>
             </div>
           </Form>
-          {error && <div className="text-red-500 mt-2">{error}</div>}
-        </CardContent>
-      </Card>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setAddDialogOpen(false); form.reset(); }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => { await handleCreateSubmit(); if (!isSubmitting) setAddDialogOpen(false); }}
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isSubmitting ? 'Saving...' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Complaint Modes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading complaint modes...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={complaintModes}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="complaint-modes-table"
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={paginatedComplaintModes}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="complaint-modes-table"
+          pagination={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
+          searchPlaceholder="Search complaint modes..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
 
       <EditComplaintModeModal
         open={editModalOpen}

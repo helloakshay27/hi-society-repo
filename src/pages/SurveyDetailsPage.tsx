@@ -156,13 +156,24 @@ export const SurveyDetailsPage = () => {
     loadData();
   }, [id]);
 
+  if (loading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading survey details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <Button
           variant="ghost"
-          onClick={() => navigate("/maintenance/survey/list")}
+          onClick={() => navigate("/settings/survey/list")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -170,8 +181,8 @@ export const SurveyDetailsPage = () => {
         </Button>
         {!loading && snagChecklist && (
           <Button
-            onClick={() => navigate(`/maintenance/survey/edit/${id}`)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => navigate(`/settings/survey/edit/${id}`)}
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit className="w-4 h-4" />
             Edit Survey
@@ -186,37 +197,10 @@ export const SurveyDetailsPage = () => {
             <CardTitle className="text-lg font-semibold text-gray-900">
               Question Details
             </CardTitle>
-            {/* <div className="flex items-center gap-2">
-              {!loading && snagChecklist && (
-                <>
-                  {snagChecklist.check_type && (
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                      {snagChecklist.check_type.charAt(0).toUpperCase() +
-                        snagChecklist.check_type.slice(1)}
-                    </span>
-                  )}
-                  {snagChecklist.active !== undefined && (
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        snagChecklist.active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {snagChecklist.active ? "Active" : "Inactive"}
-                    </span>
-                  )}
-                </>
-              )}
-            </div> */}
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-gray-500">Loading Question data...</div>
-            </div>
-          ) : !snagChecklist ? (
+          {!snagChecklist ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Question not found</div>
             </div>
@@ -351,7 +335,9 @@ export const SurveyDetailsPage = () => {
                                           ? "bg-purple-100 text-purple-800"
                                           : question.qtype === "description"
                                             ? "bg-indigo-100 text-indigo-800"
-                                            : "bg-gray-100 text-gray-800"
+                                            : question.qtype === "numeric"
+                                              ? "bg-orange-100 text-orange-800"
+                                              : "bg-gray-100 text-gray-800"
                                 }
                               `}
                               >
@@ -366,7 +352,9 @@ export const SurveyDetailsPage = () => {
                                         ? "Emoji"
                                         : question.qtype === "description"
                                           ? "Description"
-                                          : question.qtype || "Unknown"}
+                                          : question.qtype === "numeric"
+                                            ? "Numeric"
+                                            : question.qtype || "Unknown"}
                               </span>
                               {question.quest_mandatory && (
                                 <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
@@ -407,7 +395,9 @@ export const SurveyDetailsPage = () => {
                                             ? "Emojis"
                                             : question.qtype === "description"
                                               ? "Description Box"
-                                              : "Unknown Type"
+                                              : question.qtype === "numeric"
+                                                ? "Numeric"
+                                                : "Unknown Type"
                                   }
                                   disabled
                                 >
@@ -426,6 +416,9 @@ export const SurveyDetailsPage = () => {
                                     </SelectItem>
                                     <SelectItem value="Rating">
                                       Rating
+                                    </SelectItem>
+                                    <SelectItem value="Numeric">
+                                      Numeric
                                     </SelectItem>
                                     <SelectItem value="Emojis">
                                       Emojis
@@ -465,6 +458,12 @@ export const SurveyDetailsPage = () => {
                                                   {RATING_STARS[optIdx]}
                                                 </span>
                                               </div>
+                                            ) : question.qtype === "numeric" ? (
+                                              <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-md border border-gray-300">
+                                                <span className="text-base font-semibold text-gray-700">
+                                                  {option.qname}
+                                                </span>
+                                              </div>
                                             ) : (
                                               <div className="w-12 h-12 flex items-center justify-center text-gray-400">
                                                 {optIdx + 1}
@@ -478,7 +477,9 @@ export const SurveyDetailsPage = () => {
                                                   ? "Enter rating description"
                                                   : question.qtype === "emoji"
                                                     ? `Enter description for ${EMOJIS[optIdx]}`
-                                                    : "Answer Option"
+                                                    : question.qtype === "numeric"
+                                                      ? "Numeric value"
+                                                      : "Answer Option"
                                               }
                                               className="flex-1 h-10 px-3 border border-gray-300 rounded-md bg-gray-50 text-gray-700"
                                               value={option.qname || ""}

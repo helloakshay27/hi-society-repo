@@ -26,15 +26,16 @@ import {
 import { userService, User } from '@/services/userService';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { TimeSetupStep } from '@/components/schedule/TimeSetupStep';
+import { useLayout } from '@/contexts/LayoutContext';
 
 // Section component defined outside to prevent re-creation on every render
 const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-  <section className="bg-card rounded-lg border border-border shadow-sm">
-    <div className="px-6 py-4 border-b border-border flex items-center gap-3">
-      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+  <section className="bg-white rounded-lg border border-[#E5E7EB]">
+    <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center gap-3">
+      <div className="text-brand flex items-center justify-center">
         {icon}
       </div>
-      <h2 className="text-sm font-semibold tracking-wide uppercase">{title}</h2>
+      <h2 className="text-[13px] font-bold tracking-wider uppercase text-gray-900">{title}</h2>
     </div>
     <div className="p-6">{children}</div>
   </section>
@@ -69,106 +70,25 @@ const CheckpointLocationSelector: React.FC<{
     rooms: false
   });
 
-  // Fetch buildings on mount
-  useEffect(() => {
-    const fetchBuildings = async () => {
-      const siteId = localStorage.getItem('selectedSiteId');
-      if (!siteId) return;
-
-      setLoadingStates(prev => ({ ...prev, buildings: true }));
-      try {
-        const url = `${API_CONFIG.BASE_URL}/pms/sites/${siteId}/buildings.json`;
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch buildings');
-        
-        const data = await response.json();
-        const items = Array.isArray(data) ? data : (data.buildings || []);
-        
-        // Update the checkpoint's locationData
-        onLocationChange('building', null); // This will trigger the parent to update locationData
-      } catch (error) {
-        console.error('Error fetching buildings:', error);
-      } finally {
-        setLoadingStates(prev => ({ ...prev, buildings: false }));
-      }
-    };
-
-    if (checkpoint.locationData.buildings.length === 0) {
-      fetchBuildings();
-    }
-  }, []);
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Building */}
+      {/* Tower */}
       <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Building *</InputLabel>
+        <InputLabel shrink><span>Tower <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
         <MuiSelect
           value={checkpoint.buildingId || ''}
           onChange={(e) => onLocationChange('building', Number(e.target.value) || null)}
-          label="Building *"
+          label={<span>Tower <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
           notched
           displayEmpty
           disabled={disabled || loadingStates.buildings}
         >
-          <MenuItem value="">Select Building</MenuItem>
+          <MenuItem value="">Select Tower</MenuItem>
           {checkpoint.locationData.buildings.map(building => (
             <MenuItem key={building.id} value={building.id}>{building.name}</MenuItem>
           ))}
         </MuiSelect>
         {loadingStates.buildings && (
-          <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-            <CircularProgress size={16} />
-          </div>
-        )}
-      </FormControl>
-
-      {/* Wing */}
-      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Wing</InputLabel>
-        <MuiSelect
-          value={checkpoint.wingId || ''}
-          onChange={(e) => onLocationChange('wing', Number(e.target.value) || null)}
-          label="Wing"
-          notched
-          displayEmpty
-          disabled={disabled || !checkpoint.buildingId || loadingStates.wings}
-        >
-          <MenuItem value="">Select Wing</MenuItem>
-          {checkpoint.locationData.wings.map(wing => (
-            <MenuItem key={wing.id} value={wing.id}>{wing.name}</MenuItem>
-          ))}
-        </MuiSelect>
-        {loadingStates.wings && (
-          <div className="absolute s right-8 top-1/2 transform -translate-y-1/2">
-            <CircularProgress size={16} />
-          </div>
-        )}
-      </FormControl>
-
-      {/* Area */}
-      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Area</InputLabel>
-        <MuiSelect
-          value={checkpoint.areaId || ''}
-          onChange={(e) => onLocationChange('area', Number(e.target.value) || null)}
-          label="Area"
-          notched
-          displayEmpty
-          disabled={disabled || !checkpoint.buildingId || loadingStates.areas}
-        >
-          <MenuItem value="">Select Area</MenuItem>
-          {checkpoint.locationData.areas.map(area => (
-            <MenuItem key={area.id} value={area.id}>{area.name}</MenuItem>
-          ))}
-        </MuiSelect>
-        {loadingStates.areas && (
           <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
             <CircularProgress size={16} />
           </div>
@@ -198,18 +118,18 @@ const CheckpointLocationSelector: React.FC<{
         )}
       </FormControl>
 
-      {/* Room */}
+      {/* Flat */}
       <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-        <InputLabel shrink>Room</InputLabel>
+        <InputLabel shrink>Flat</InputLabel>
         <MuiSelect
           value={checkpoint.roomId || ''}
           onChange={(e) => onLocationChange('room', Number(e.target.value) || null)}
-          label="Room"
+          label="Flat"
           notched
           displayEmpty
-          disabled={disabled || !checkpoint.floorId || loadingStates.rooms}
+          disabled={disabled || !checkpoint.buildingId || loadingStates.rooms}
         >
-          <MenuItem value="">Select Room</MenuItem>
+          <MenuItem value="">Select Flat</MenuItem>
           {checkpoint.locationData.rooms.map(room => (
             <MenuItem key={room.id} value={room.id}>{room.name}</MenuItem>
           ))}
@@ -226,6 +146,13 @@ const CheckpointLocationSelector: React.FC<{
 
 export const PatrollingCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const { setCurrentSection } = useLayout();
+
+  // Keep sidebar/navbar showing "Security" section
+  useEffect(() => {
+    setCurrentSection('Security');
+  }, [setCurrentSection]);
+
   useEffect(() => { document.title = 'Create Patrolling'; }, []);
 
   type Question = {
@@ -283,6 +210,7 @@ export const PatrollingCreatePage: React.FC = () => {
   const [patrolName, setPatrolName] = useState('');
   const [description, setDescription] = useState('');
   const [estimatedDuration, setEstimatedDuration] = useState('');
+  const [graceType, setGraceType] = useState<'minutes' | 'hours'>('minutes');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [grace, setGrace] = useState('');
@@ -306,6 +234,38 @@ export const PatrollingCreatePage: React.FC = () => {
   const [checklistOptions, setChecklistOptions] = useState<{ id: string; name: string; raw?: any }[]>([]);
   const [selectedChecklist, setSelectedChecklist] = useState<{ id: string; name: string; raw?: any } | null>(null);
   const [isChecklistLoading, setIsChecklistLoading] = useState(false);
+
+  // Department dropdown state
+  const [departmentOptions, setDepartmentOptions] = useState<{ id: number; name: string }[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | ''>('');
+  const [isDepartmentLoading, setIsDepartmentLoading] = useState(false);
+
+  // Fetch departments on mount
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setIsDepartmentLoading(true);
+      try {
+        const url = `${API_CONFIG.BASE_URL}/business_compass/departments.json`;
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch departments');
+        const data = await response.json();
+        const depts: { id: number; name: string }[] = (data.departments || [])
+          .filter((d: any) => d.name && d.name.trim() !== '');
+        setDepartmentOptions(depts);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        setDepartmentOptions([]);
+      } finally {
+        setIsDepartmentLoading(false);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   // Fetch checklist options on mount
   useEffect(() => {
@@ -348,23 +308,32 @@ export const PatrollingCreatePage: React.FC = () => {
       const filledQuestions = selectedChecklist.raw.snag_questions.map((q: any) => {
         // Map API question types to UI input types
         let inputType = '';
-        switch (q.qtype) {
+        switch ((q.qtype || '').trim().toLowerCase()) {
           case 'multiple':
+          case 'multiple_choice':
             inputType = 'multiple_choice';
             break;
           case 'yesno':
+          case 'yes_no':
+          case 'boolean':
             inputType = 'yes_no';
             break;
           case 'rating':
             inputType = 'rating';
             break;
           case 'input':
+          case 'text':
+          case 'text_input':
+          case 'input_box':
+          case 'numeric':
             inputType = 'text_input';
             break;
           case 'description':
+          case 'textarea':
             inputType = 'description';
             break;
           case 'emoji':
+          case 'smiley':
             inputType = 'emoji';
             break;
           default:
@@ -452,10 +421,64 @@ export const PatrollingCreatePage: React.FC = () => {
     params: { siteId?: number; buildingId?: number; wingId?: number; areaId?: number; floorId?: number }
   ) => {
     try {
+      // Flats have their own endpoint (paginated) and need client-side filtering
+      // by tower (society_block_id) and floor (society_floor_id).
+      if (field === 'rooms') {
+        const societyId = localStorage.getItem('selectedSocietyId') || '';
+        const token = API_CONFIG.TOKEN;
+        let allFlats: any[] = [];
+        let page = 1;
+        let totalPages = 1;
+
+        do {
+          const flatParams = new URLSearchParams();
+          if (token) flatParams.append('token', token);
+          if (societyId) flatParams.append('society_id', societyId);
+          if (params.buildingId) flatParams.append('block_id', params.buildingId.toString());
+          flatParams.append('page', page.toString());
+
+          const url = `${API_CONFIG.BASE_URL}/admin/society_flats.json?${flatParams.toString()}`;
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': getAuthHeader(),
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) throw new Error('Failed to fetch rooms');
+
+          const data = await response.json();
+          const flats = Array.isArray(data.society_flats) ? data.society_flats : [];
+          allFlats = allFlats.concat(flats);
+          totalPages = data.pagination?.total_pages || 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        // Only show flats that belong to the selected tower and floor
+        const items = allFlats
+          .filter(flat =>
+            (!params.buildingId || flat.society_block_id === params.buildingId) &&
+            (!params.floorId || flat.society_floor_id === params.floorId)
+          )
+          .map(flat => ({ id: flat.id, name: flat.flat_no }));
+
+        setCheckpoints(prev => prev.map((checkpoint, i) => {
+          if (i !== checkpointIndex) return checkpoint;
+          return {
+            ...checkpoint,
+            locationData: {
+              ...checkpoint.locationData,
+              rooms: items
+            }
+          };
+        }));
+        return;
+      }
+
       let url = '';
       switch (field) {
         case 'buildings':
-          url = `${API_CONFIG.BASE_URL}/pms/sites/${params.siteId}/buildings.json`;
+          url = `${API_CONFIG.BASE_URL}/crm/admin/society_blocks.json`;
           break;
         case 'wings':
           url = `${API_CONFIG.BASE_URL}/pms/wings.json?q[building_id_eq]=${params.buildingId}`;
@@ -468,37 +491,28 @@ export const PatrollingCreatePage: React.FC = () => {
           break;
         }
         case 'floors': {
-          const floorParams = new URLSearchParams();
-          if (params.areaId) floorParams.append('q[area_id_eq]', params.areaId.toString());
-          if (params.buildingId) floorParams.append('q[building_id_eq]', params.buildingId.toString());
-          if (params.wingId) floorParams.append('q[wing_id_eq]', params.wingId.toString());
-          url = `${API_CONFIG.BASE_URL}/pms/floors.json?${floorParams.toString()}`;
-          break;
-        }
-        case 'rooms': {
-          const roomParams = new URLSearchParams();
-          if (params.floorId) roomParams.append('q[floor_id_eq]', params.floorId.toString());
-          if (params.buildingId) roomParams.append('q[building_id_eq]', params.buildingId.toString());
-          if (params.wingId) roomParams.append('q[wing_id_eq]', params.wingId.toString());
-          if (params.areaId) roomParams.append('q[area_id_eq]', params.areaId.toString());
-          url = `${API_CONFIG.BASE_URL}/pms/rooms.json?${roomParams.toString()}`;
+          // Floors are already scoped to the selected tower
+          url = `${API_CONFIG.BASE_URL}/society_floors.json?society_block_id=${params.buildingId}`;
           break;
         }
       }
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) throw new Error(`Failed to fetch ${field}`);
-      
+
       const data = await response.json();
       // Handle both array format and object with field property
-      const items = Array.isArray(data) ? data : (data[field] || []);
-      
+      let items = Array.isArray(data) ? data : (data[field] || []);
+      if (field === 'buildings' && Array.isArray(data.society_blocks)) {
+        items = data.society_blocks;
+      }
+
       setCheckpoints(prev => prev.map((checkpoint, i) => {
         if (i !== checkpointIndex) return checkpoint;
         return {
@@ -521,11 +535,10 @@ export const PatrollingCreatePage: React.FC = () => {
     },
   };
 
-  // Fetch buildings for the first checkpoint on mount
+  // Fetch towers (society blocks) for the first checkpoint on mount
   useEffect(() => {
-    const siteId = localStorage.getItem('selectedSiteId');
-    if (siteId && checkpoints.length > 0 && checkpoints[0].locationData.buildings.length === 0) {
-      fetchLocationDataForCheckpoint(0, 'buildings', { siteId: parseInt(siteId) });
+    if (checkpoints.length > 0 && checkpoints[0].locationData.buildings.length === 0) {
+      fetchLocationDataForCheckpoint(0, 'buildings', {});
     }
   }, []);
 
@@ -627,12 +640,9 @@ export const PatrollingCreatePage: React.FC = () => {
     // Add the new checkpoint
     setCheckpoints(prev => [...prev, newCheckpoint]);
 
-    // Fetch buildings for the new checkpoint
+    // Fetch towers (society blocks) for the new checkpoint
     const newIndex = checkpoints.length;
-    const siteId = localStorage.getItem('selectedSiteId');
-    if (siteId) {
-      await fetchLocationDataForCheckpoint(newIndex, 'buildings', { siteId: parseInt(siteId) });
-    }
+    await fetchLocationDataForCheckpoint(newIndex, 'buildings', {});
   };
 
   const removeCheckpoint = (idx: number) => setCheckpoints(prev => prev.filter((_, i) => i !== idx));
@@ -732,55 +742,21 @@ export const PatrollingCreatePage: React.FC = () => {
     switch (field) {
       case 'building':
         if (value) {
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'wings', { buildingId: value });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'areas', { buildingId: value });
           await fetchLocationDataForCheckpoint(checkpointIndex, 'floors', { buildingId: value });
           await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { buildingId: value });
         }
         break;
 
-      case 'wing':
-        if (value && checkpoint.buildingId) {
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'areas', { 
-            buildingId: checkpoint.buildingId, 
-            wingId: value 
-          });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'floors', { 
-            buildingId: checkpoint.buildingId, 
-            wingId: value 
-          });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { 
-            buildingId: checkpoint.buildingId, 
-            wingId: value 
-          });
-        }
-        break;
-
-      case 'area':
-        if (value && checkpoint.buildingId) {
-          const wingId = checkpoint.wingId || undefined;
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'floors', { 
-            buildingId: checkpoint.buildingId, 
-            wingId, 
-            areaId: value 
-          });
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { 
-            buildingId: checkpoint.buildingId, 
-            wingId, 
-            areaId: value 
-          });
-        }
-        break;
-
       case 'floor':
         if (value && checkpoint.buildingId) {
-          const wingId = checkpoint.wingId || undefined;
-          const areaId = checkpoint.areaId || undefined;
-          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', { 
-            buildingId: checkpoint.buildingId, 
-            wingId, 
-            areaId, 
-            floorId: value 
+          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', {
+            buildingId: checkpoint.buildingId,
+            floorId: value
+          });
+        } else if (!value && checkpoint.buildingId) {
+          // Fetch all flats for the building if the floor is deselected
+          await fetchLocationDataForCheckpoint(checkpointIndex, 'rooms', {
+            buildingId: checkpoint.buildingId
           });
         }
         break;
@@ -815,7 +791,7 @@ export const PatrollingCreatePage: React.FC = () => {
       });
 
       const errorFields = [];
-      if (hasPatrolNameError) errorFields.push('Patrol Name');
+      // if (hasPatrolNameError) errorFields.push('Patrol Name');
       if (hasEstimatedDurationError) errorFields.push('Estimated Duration');
       if (hasStartDateError) errorFields.push('Start Date');
       if (hasEndDateError) errorFields.push('End Date');
@@ -898,29 +874,29 @@ export const PatrollingCreatePage: React.FC = () => {
    
 
     // Validate shift assignees
-    const shiftsWithoutAssignee = validShifts.filter(s => !s.assignee || s.assignee.trim() === '');
-    if (shiftsWithoutAssignee.length > 0) {
-      toast.error('All schedules must have an assignee', {
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    // const shiftsWithoutAssignee = validShifts.filter(s => !s.assignee || s.assignee.trim() === '');
+    // if (shiftsWithoutAssignee.length > 0) {
+    //   toast.error('All schedules must have an assignee', {
+    //     duration: 5000,
+    //   });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     // Validate shift supervisors
-    const shiftsWithoutSupervisor = validShifts.filter(s => !s.supervisor || s.supervisor.trim() === '');
-    if (shiftsWithoutSupervisor.length > 0) {
-      toast.error('All schedules must have a supervisor', {
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    // const shiftsWithoutSupervisor = validShifts.filter(s => !s.supervisor || s.supervisor.trim() === '');
+    // if (shiftsWithoutSupervisor.length > 0) {
+    //   toast.error('All schedules must have a supervisor', {
+    //     duration: 5000,
+    //   });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     // Checkpoints validation
-    const validCheckpoints = checkpoints.filter(c => c.name.trim() !== '');
+    const validCheckpoints = checkpoints.filter(c => c.buildingId && c.buildingId > 0);
     if (validCheckpoints.length === 0) {
-      toast.error('At least one checkpoint is required', {
+      toast.error('At least one checkpoint with a Building selected is required', {
         duration: 5000,
       });
       setIsSubmitting(false);
@@ -1019,8 +995,9 @@ export const PatrollingCreatePage: React.FC = () => {
         "description": description,
         "validity_start_date": startDate,
         ...(selectedChecklist && { "checklist_id": selectedChecklist.id }),
+        ...(selectedDepartmentId && { "department_id": selectedDepartmentId }),
         "validity_end_date": endDate,
-        "grace_period_minutes": parseInt(estimatedDuration) || 0,
+        "grace_period_minutes": graceType === 'hours' ? (parseInt(estimatedDuration) || 0) * 60 : (parseInt(estimatedDuration) || 0),
        
         "schedules": shifts.map(s => {
           const assigneeUser = fmUsers.find(u => u.id.toString() === s.assignee);
@@ -1142,14 +1119,25 @@ export const PatrollingCreatePage: React.FC = () => {
             }
           };
         }),
-        "checkpoints": checkpoints.filter(c => c.name.trim() !== '').map(c => {
+        "checkpoints": validCheckpoints.map((c, idx) => {
           const validScheduleIds = c.scheduleIds.filter(scheduleId => {
             const correspondingShift = shifts.find(s => s.scheduleId === scheduleId);
             return !!correspondingShift;
           });
+
+          // Generate name if empty
+          let generatedName = c.name;
+          if (!generatedName || generatedName.trim() === '') {
+            const bName = c.locationData.buildings.find(b => b.id === c.buildingId)?.name;
+            const fName = c.locationData.floors.find(f => f.id === c.floorId)?.name;
+            const rName = c.locationData.rooms.find(r => r.id === c.roomId)?.name;
+            const parts = [bName, fName, rName].filter(Boolean);
+            generatedName = parts.length > 0 ? parts.join(" / ") : `Checkpoint ${idx + 1}`;
+          }
+
           return {
-            "name": c.name,
-            "description": c.description,
+            "name": generatedName,
+            "description": c.description || "",
             "building_id": c.buildingId?.toString() || "",
             "wing_id": c.wingId?.toString() || "",
             "floor_id": c.floorId?.toString() || "",
@@ -1228,84 +1216,97 @@ export const PatrollingCreatePage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-6 space-y-6 relative patrolling-create-page">
+      <style>{`.patrolling-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
         </div>
       )}
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-wide uppercase">Patrolling</h1>
+      <header className="flex items-center justify-between pb-2">
+        <h1 className="text-lg font-bold tracking-wider uppercase text-gray-800">Patrolling</h1>
       </header>
 
-      <Section title="Patrol Details" icon={<Type className="w-3.5 h-3.5" />}>
-        <div className="space-y-6">
-          {/* Name and Duration on first row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <TextField
-                label={
-                  <>
-                    Name<span className="text-red-500">*</span>
-                  </>
-                }
-                placeholder="Enter Patrol Name"
-                value={patrolName}
-                onChange={(e) => handlePatrolNameChange(e.target.value)}
-                fullWidth
-                variant="outlined"
-                error={errors.patrolName}
-                helperText={errors.patrolName ? 'Patrol Name is required' : ''}
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div>
-              <TextField
-                label="Description"
-                value={description}
-                onChange={(e) => handleDescriptionChange(e.target.value)}
-                fullWidth
-                variant="outlined"
-                error={errors.description}
-                helperText={errors.description ? 'Patrol Description is required' : ''}
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-                disabled={isSubmitting}
-              />
-            </div>
-
+      <Section title="Patrol Details" icon={<Type className="w-[18px] h-[18px]" />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <TextField
+              label="Name"
+              placeholder="Enter Patrol Name"
+              value={patrolName}
+              onChange={(e) => handlePatrolNameChange(e.target.value)}
+              fullWidth
+              variant="outlined"
+              error={errors.patrolName}
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+              }}
+              InputProps={{
+                sx: fieldStyles,
+              }}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div>
+            <TextField
+              label="Description"
+              value={description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              fullWidth
+              variant="outlined"
+              error={errors.description}
+              helperText={errors.description ? 'Patrol Description is required' : ''}
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+              }}
+              InputProps={{
+                sx: fieldStyles,
+              }}
+              disabled={isSubmitting}
+            />
           </div>
 
-          {/* Description on second row - full width */}
-
+          {/* Department Dropdown */}
+          {/* <div>
+            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+              <InputLabel shrink>Department</InputLabel>
+              <MuiSelect
+                value={selectedDepartmentId}
+                onChange={(e) => setSelectedDepartmentId(Number(e.target.value) || '')}
+                label="Department"
+                notched
+                displayEmpty
+                disabled={isSubmitting || isDepartmentLoading}
+              >
+                <MenuItem value="">
+                  {isDepartmentLoading ? 'Loading departments...' : 'Select Department'}
+                </MenuItem>
+                {departmentOptions.map((dept) => (
+                  <MenuItem key={dept.id} value={dept.id}>
+                    {dept.name.trim()}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+          </div> */}
         </div>
       </Section>
 
-      <Section title="Validity" icon={<CalendarRange className="w-3.5 h-3.5" />}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Section title="Validity" icon={<CalendarRange className="w-[18px] h-[18px]" />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <TextField
               type="date"
               label={
                 <>
-                  Start Date<span className="text-red-500">*</span>
+                  Start Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
-              placeholder="Select Start Date"
+              placeholder="dd-mm-yyyy"
               value={startDate}
               onChange={(e) => handleStartDateChange(e.target.value)}
               fullWidth
@@ -1328,10 +1329,10 @@ export const PatrollingCreatePage: React.FC = () => {
               type="date"
               label={
                 <>
-                  End Date<span className="text-red-500">*</span>
+                  End Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
-              placeholder="Select End Date"
+              placeholder="dd-mm-yyyy"
               value={endDate}
               onChange={(e) => handleEndDateChange(e.target.value)}
               fullWidth
@@ -1351,11 +1352,29 @@ export const PatrollingCreatePage: React.FC = () => {
           </div>
 
           <div>
+            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+              <InputLabel shrink>
+                Grace Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
+              </InputLabel>
+              <MuiSelect
+                value={graceType}
+                onChange={(e) => setGraceType(e.target.value as 'minutes' | 'hours')}
+                label={<>Grace Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></>}
+                notched
+                disabled={isSubmitting}
+              >
+                <MenuItem value="minutes">Minutes</MenuItem>
+                <MenuItem value="hours">Hourly</MenuItem>
+              </MuiSelect>
+            </FormControl>
+          </div>
+
+          <div>
             <TextField
               type="number"
               label={
                 <>
-                  Grace Period (minutes)<span className="text-red-500">*</span>
+                  Grace Period (minutes)<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               placeholder="Enter grace period in minutes"
@@ -1376,7 +1395,6 @@ export const PatrollingCreatePage: React.FC = () => {
               disabled={isSubmitting}
             />
           </div>
-
         </div>
       </Section>
 
@@ -1434,7 +1452,7 @@ export const PatrollingCreatePage: React.FC = () => {
                   <TextField
                     label={
                       <>
-                        Question<span className="text-red-500">*</span>
+                        Question<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                       </>
                     }
                     placeholder="Enter Task"
@@ -1454,7 +1472,7 @@ export const PatrollingCreatePage: React.FC = () => {
                 </div>
                 <div>
                   <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                    <InputLabel shrink>Input Type<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Input Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={q.inputType}
                       label="Input Type*"
@@ -1562,9 +1580,9 @@ export const PatrollingCreatePage: React.FC = () => {
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Assignee Dropdown */}
-                <div>
+                {/* <div>
                   <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                    <InputLabel shrink>Guard<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Guard<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.assignee}
                       onChange={(e) => updateShift(idx, 'assignee', String(e.target.value))}
@@ -1589,11 +1607,11 @@ export const PatrollingCreatePage: React.FC = () => {
                       <MenuItem value="bhai">bhai</MenuItem>
                     </MuiSelect>
                   </FormControl>
-                </div>
+                </div> */}
                 {/* Supervisor Dropdown */}
-                <div>
+                {/* <div>
                   <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                    <InputLabel shrink>Supervisor<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Supervisor<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.supervisor}
                       onChange={(e) => updateShift(idx, 'supervisor', String(e.target.value))}
@@ -1618,7 +1636,7 @@ export const PatrollingCreatePage: React.FC = () => {
                       <MenuItem value="bhai">bhai</MenuItem>
                     </MuiSelect>
                   </FormControl>
-                </div>
+                </div> */}
                 {/* Time Setup UI for each shift */}
                
               </div>
@@ -1659,50 +1677,30 @@ export const PatrollingCreatePage: React.FC = () => {
               )}
               <p className="mb-3 text-sm font-medium text-muted-foreground">Checkpoint {idx + 1}</p>
               <div className="space-y-4">
-                {/* Checkpoint Name and Description */}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <TextField
-                      label={
-                        <>
-                          Checkpoint Name<span className="text-red-500">*</span>
-                        </>
-                      }
-                      placeholder="Enter checkpoint name"
-                      value={c.name}
-                      onChange={(e) => updateCheckpoint(idx, 'name', e.target.value)}
-                      fullWidth
-                      variant="outlined"
-                      slotProps={{
-                        inputLabel: {
-                          shrink: true,
-                        },
-                      }}
-                      InputProps={{
-                        sx: fieldStyles,
-                      }}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div>
-                    <TextField
-                      label="Description"
-                      placeholder="Enter checkpoint description"
-                      value={c.description}
-                      onChange={(e) => updateCheckpoint(idx, 'description', e.target.value)}
-                      fullWidth
-                      variant="outlined"
-                      slotProps={{
-                        inputLabel: {
-                          shrink: true,
-                        },
-                      }}
-                      InputProps={{
-                        sx: fieldStyles,
-                      }}
-                      disabled={isSubmitting}
-                    />
-                  </div>
+                  <TextField
+                    label={<span>Checkpoint Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
+                    placeholder="Enter checkpoint name"
+                    value={c.name}
+                    onChange={(e) => updateCheckpoint(idx, 'name', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    InputProps={{ sx: fieldStyles }}
+                    disabled={isSubmitting}
+                  />
+                  <TextField
+                    label="Description"
+                    placeholder="Enter checkpoint description"
+                    value={c.description}
+                    onChange={(e) => updateCheckpoint(idx, 'description', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    InputProps={{ sx: fieldStyles }}
+                    disabled={isSubmitting}
+                  />
                 </div>
 
                 {/* Location Selector (without Groups) */}
@@ -1723,7 +1721,11 @@ export const PatrollingCreatePage: React.FC = () => {
             </div>
           ))}
           <div className="flex justify-end">
-            <Button variant="outline" onClick={addCheckpoint} disabled={isSubmitting}>
+            <Button
+              onClick={addCheckpoint}
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Plus className="w-4 h-4 mr-2" /> Add Checkpoint
             </Button>
           </div>
@@ -1732,8 +1734,8 @@ export const PatrollingCreatePage: React.FC = () => {
 
       <div className="flex items-center gap-3 justify-center pt-2">
         <Button
-          variant="destructive"
-          className="px-8"
+          variant="ghost"
+          className="btn-primary h-9 px-4 text-sm font-medium"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
@@ -1748,9 +1750,9 @@ export const PatrollingCreatePage: React.FC = () => {
         </Button>
         <Button
           variant="outline"
-          className="px-8"
           onClick={() => navigate('/security/patrolling')}
           disabled={isSubmitting}
+          className="btn-cancel h-9 px-4 text-sm font-medium !bg-white !border-[#da7756] !text-[#da7756] hover:!bg-gray-100"
         >
           Cancel
         </Button>

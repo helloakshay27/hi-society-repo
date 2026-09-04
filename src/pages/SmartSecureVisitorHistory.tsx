@@ -1,23 +1,16 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Loader2 } from "lucide-react";
+import { Plus, Eye, Pencil, Loader2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -29,7 +22,10 @@ import {
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect, TextField } from "@mui/material";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -184,120 +180,101 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
 }) => {
   const [local, setLocal] = useState<FilterState>(filters);
 
+  useEffect(() => {
+    if (open) setLocal(filters);
+  }, [open, filters]);
+
   const set = (key: keyof FilterState, val: string) =>
     setLocal((prev) => ({ ...prev, [key]: val }));
 
+  const renderSelectField = (
+    label: string,
+    placeholder: string,
+    value: string,
+    key: keyof FilterState,
+    items: FilterOption[] = [],
+  ) => (
+    <FormControl fullWidth variant="outlined">
+      <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+        {label}
+      </InputLabel>
+      <MuiSelect
+        value={value}
+        onChange={(e) => set(key, e.target.value)}
+        displayEmpty
+        label={label}
+        sx={fieldStyles}
+        MenuProps={menuProps}
+      >
+        <MenuItem value="">
+          <em>{placeholder}</em>
+        </MenuItem>
+        {items.map((item) => (
+          <MenuItem key={`${label}-${item.value}`} value={String(item.value)}>
+            {item.label}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+    </FormControl>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Filter Visitor History</DialogTitle>
+    <Dialog open={open} modal={false} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+            FILTER BY
+          </DialogTitle>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+            <X className="w-4 h-4" />
+          </Button>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          {/* Building */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Building</label>
-            <Select value={local.building || "__all__"} onValueChange={(v) => set("building", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Buildings" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.buildings.map((b) => (
-                  <SelectItem key={b.value} value={String(b.value)}>{b.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Tower */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Tower</label>
-            <Select value={local.tower || "__all__"} onValueChange={(v) => set("tower", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Towers" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.towers.map((t) => (
-                  <SelectItem key={t.value} value={String(t.value)}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Flat */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Flat</label>
-            <Select value={local.flat || "__all__"} onValueChange={(v) => set("flat", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Flats" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.flats.map((f) => (
-                  <SelectItem key={f.value} value={String(f.value)}>{f.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Visitor Type */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Visitor Type</label>
-            <Select value={local.visitor_type || "__all__"} onValueChange={(v) => set("visitor_type", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.visitor_types.map((vt) => (
-                  <SelectItem key={vt.value} value={String(vt.value)}>{vt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Approval Status */}
-          <div className="grid gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Approval Status</label>
-            <Select value={local.approval_status || "__all__"} onValueChange={(v) => set("approval_status", v === "__all__" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All</SelectItem>
-                {options?.approval_statuses.map((s) => (
-                  <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Date Range */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <label className="text-sm font-medium text-gray-700">From Date</label>
-              <input
-                type="date"
-                title="From Date"
-                value={local.from_date}
-                onChange={(e) => set("from_date", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <label className="text-sm font-medium text-gray-700">To Date</label>
-              <input
-                type="date"
-                title="To Date"
-                value={local.to_date}
-                onChange={(e) => set("to_date", e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-            </div>
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            {renderSelectField("Building", "Select Building", local.building, "building", options?.buildings)}
+            {renderSelectField("Tower", "Select Tower", local.tower, "tower", options?.towers)}
+            {renderSelectField("Flat", "Select Flat", local.flat, "flat", options?.flats)}
+            {renderSelectField("Visitor Type", "Select Visitor Type", local.visitor_type, "visitor_type", options?.visitor_types)}
+            {renderSelectField("Approval Status", "Select Approval Status", local.approval_status, "approval_status", options?.approval_statuses)}
+            <TextField
+              label="From Date"
+              type="date"
+              value={local.from_date}
+              onChange={(e) => set("from_date", e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <TextField
+              label="To Date"
+              type="date"
+              value={local.to_date}
+              onChange={(e) => set("to_date", e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => { setLocal(defaultFilters); onReset(); }}>
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={() => { setLocal(defaultFilters); onReset(); }}
+            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+          >
             Reset
           </Button>
-          <Button className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => onApply(local)}>
-            Apply
+          <Button
+            onClick={() => onApply(local)}
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+          >
+            Apply Filters
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -306,9 +283,16 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const SmartSecureVisitorHistory: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
+
+  // Image preview state
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageName, setPreviewImageName] = useState<string>('');
 
   const { data: apiData, isLoading, isError, error, refetch } = useQuery<ApiResponse>({
     queryKey: ["visitor-history-list", currentPage, activeFilters],
@@ -349,26 +333,17 @@ const SmartSecureVisitorHistory: React.FC = () => {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="flex items-center gap-2">
-            <button
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-              title="View"
-              onClick={() => toast.info(`Viewing visitor: ${row.guest_name}`)}
-            >
-              <svg className="w-4 h-4 text-gray-600 hover:text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-            <button
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-              title="Flag"
-              onClick={() => toast.info(`Flagged: ${row.guest_name}`)}
-            >
-              <svg className="w-4 h-4 text-gray-600 hover:text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-              </svg>
-            </button>
+          <div className="flex gap-1">
+            {shouldShow("Visitor History", "show") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="View">
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {/* {shouldShow("Visitor History", "update") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/smartsecure/visitor/details/${row.id}`)} title="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )} */}
           </div>
         );
 
@@ -384,11 +359,31 @@ const SmartSecureVisitorHistory: React.FC = () => {
       case "visitor_image":
         return (
           <div className="flex justify-center">
-            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-              </svg>
-            </div>
+            <button
+              onClick={() => {
+                // Check if row has image field (or image_url)
+                const imageUrl = (row as any).image || (row as any).image_url;
+                if (imageUrl) {
+                  setPreviewImageUrl(imageUrl);
+                  setPreviewImageName(row.guest_name || 'Visitor');
+                  setPreviewImageOpen(true);
+                }
+              }}
+              className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+              title="Click to preview"
+            >
+              {(row as any).image || (row as any).image_url ? (
+                <img
+                  src={(row as any).image || (row as any).image_url}
+                  alt={row.guest_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              )}
+            </button>
           </div>
         );
 
@@ -485,38 +480,105 @@ const SmartSecureVisitorHistory: React.FC = () => {
         return val ? String(val) : "--";
       }
     }
-  }, [currentPage, perPage, rows]);
+  }, [currentPage, perPage, rows, navigate, shouldShow]);
 
   // ── Pagination ─────────────────────────────────────────────────────────────
 
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
     const items = [];
-    for (let i = 1; i <= totalPages; i++) {
-      if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
         items.push(
-          <PaginationItem key={i}>
-            <PaginationLink className="cursor-pointer" onClick={() => setCurrentPage(i)} isActive={currentPage === i}>
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
               {i}
             </PaginationLink>
           </PaginationItem>
         );
-      } else if ((i === 2 && currentPage > 4) || (i === totalPages - 1 && currentPage < totalPages - 3)) {
-        items.push(<PaginationItem key={`e-${i}`}><PaginationEllipsis /></PaginationItem>);
       }
     }
+
     return items;
   };
 
   // ── Loading / Error ────────────────────────────────────────────────────────
-
-  if (isLoading) {
-    return (
-      <div className="p-6 flex justify-center items-center py-24">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400 mr-2" />
-        <span className="text-sm text-gray-500">Loading visitor history...</span>
-      </div>
-    );
-  }
 
   if (isError) {
     return (
@@ -543,16 +605,30 @@ const SmartSecureVisitorHistory: React.FC = () => {
         searchPlaceholder="Search visitors..."
         hideTableExport={false}
         hideColumnsButton={false}
+        loading={isLoading}
         onFilterClick={() => setFilterOpen(true)}
+        // leftActions={
+        //   <div className="flex gap-2">
+        //     {shouldShow("Visitor History", "create") && (
+        //       <Button
+        //         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        //         onClick={() => navigate("/smartsecure/visitor-in/add")}
+        //       >
+        //         <Plus className="w-4 h-4 mr-2" />
+        //         Add
+        //       </Button>
+        //     )}
+        //   </div>
+        // }
       />
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalCount > 0 && (
         <div className="flex items-center justify-between mt-4 px-1">
-          <span className="text-sm text-gray-500">
+          {/* <span className="text-sm text-gray-500">
             Showing {(currentPage - 1) * perPage + 1}–
             {Math.min(currentPage * perPage, totalCount)} of {totalCount} records
-          </span>
+          </span> */}
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -582,6 +658,24 @@ const SmartSecureVisitorHistory: React.FC = () => {
         onApply={handleApplyFilter}
         onReset={handleResetFilter}
       />
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImageName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImageUrl && (
+              <img
+                src={previewImageUrl}
+                alt={previewImageName}
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

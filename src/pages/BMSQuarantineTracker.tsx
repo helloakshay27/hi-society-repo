@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, Download, RefreshCw, Loader2, Activity, AlertCircle, CheckCircle } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Download, RefreshCw, Activity, AlertCircle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface QuarantineRecord {
   id: string;
@@ -30,6 +30,7 @@ interface QuarantineRecord {
 
 const BMSQuarantineTracker: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,230 +45,46 @@ const BMSQuarantineTracker: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Mock data query (replace with actual API call)
-  const {
-    data: quarantineData,
-    isLoading,
-    error,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["quarantine-tracker", debouncedSearchQuery, currentPage, pageSize],
-    queryFn: async () => {
-      // TODO: Replace with actual API endpoint
-      // Mock data for demonstration
+  const [quarantineRecords, setQuarantineRecords] = useState<QuarantineRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // TODO: Replace with actual API call
       const mockData: QuarantineRecord[] = [
-        {
-          id: "1",
-          residentName: "Ubaid Hashmat",
-          tower: "A",
-          flat: "101",
-          contactNumber: "+91 98765 43210",
-          quarantineType: "COVID-19",
-          status: "Completed",
-          startDate: "01/01/2025",
-          endDate: "15/01/2025",
-          healthStatus: "Recovered",
-          lastCheckup: "14/01/2025 10:00AM",
-          temperature: "98.6°F",
-          symptoms: "None",
-          testResult: "Negative",
-          emergencyContact: "+91 98765 43211",
-          createdOn: "01/01/2025 09:30AM",
-          createdBy: "Admin",
-        },
-        {
-          id: "2",
-          residentName: "Godrej Living",
-          tower: "FM",
-          flat: "Office",
-          contactNumber: "+91 98765 43212",
-          quarantineType: "COVID-19",
-          status: "In Quarantine",
-          startDate: "10/01/2025",
-          endDate: "24/01/2025",
-          healthStatus: "Stable",
-          lastCheckup: "23/01/2025 11:30AM",
-          temperature: "99.2°F",
-          symptoms: "Mild cough",
-          testResult: "Positive",
-          emergencyContact: "+91 98765 43213",
-          createdOn: "10/01/2025 08:15AM",
-          createdBy: "Admin",
-        },
-        {
-          id: "3",
-          residentName: "Deepak Gupta",
-          tower: "A",
-          flat: "104",
-          contactNumber: "+91 98765 43214",
-          quarantineType: "Flu",
-          status: "Under Observation",
-          startDate: "15/01/2025",
-          endDate: "22/01/2025",
-          healthStatus: "Improving",
-          lastCheckup: "22/01/2025 02:45PM",
-          temperature: "98.4°F",
-          symptoms: "Fever subsided",
-          testResult: "Not Tested",
-          emergencyContact: "+91 98765 43215",
-          createdOn: "15/01/2025 10:20AM",
-          createdBy: "Admin",
-        },
-        {
-          id: "4",
-          residentName: "Prashant Sangle",
-          tower: "A",
-          flat: "101",
-          contactNumber: "+91 98765 43216",
-          quarantineType: "COVID-19",
-          status: "Cleared",
-          startDate: "05/01/2025",
-          endDate: "19/01/2025",
-          healthStatus: "Recovered",
-          lastCheckup: "19/01/2025 09:15AM",
-          temperature: "98.6°F",
-          symptoms: "None",
-          testResult: "Negative",
-          emergencyContact: "+91 98765 43217",
-          createdOn: "05/01/2025 11:00AM",
-          createdBy: "Admin",
-        },
-        {
-          id: "5",
-          residentName: "Ashik Bhattacharya",
-          tower: "GL",
-          flat: "Team",
-          contactNumber: "+91 98765 43218",
-          quarantineType: "COVID-19",
-          status: "In Quarantine",
-          startDate: "18/01/2025",
-          endDate: "01/02/2025",
-          healthStatus: "Stable",
-          lastCheckup: "24/01/2025 03:30PM",
-          temperature: "99.0°F",
-          symptoms: "Sore throat",
-          testResult: "Positive",
-          emergencyContact: "+91 98765 43219",
-          createdOn: "18/01/2025 01:45PM",
-          createdBy: "Admin",
-        },
-        {
-          id: "6",
-          residentName: "Samay Seth",
-          tower: "A",
-          flat: "102",
-          contactNumber: "+91 98765 43220",
-          quarantineType: "Flu",
-          status: "Completed",
-          startDate: "08/01/2025",
-          endDate: "15/01/2025",
-          healthStatus: "Recovered",
-          lastCheckup: "15/01/2025 04:00PM",
-          temperature: "98.6°F",
-          symptoms: "None",
-          testResult: "Not Tested",
-          emergencyContact: "+91 98765 43221",
-          createdOn: "08/01/2025 09:45AM",
-          createdBy: "Admin",
-        },
-        {
-          id: "7",
-          residentName: "Godrej Living Staff",
-          tower: "FM",
-          flat: "Office",
-          contactNumber: "+91 98765 43222",
-          quarantineType: "COVID-19",
-          status: "Under Observation",
-          startDate: "20/01/2025",
-          endDate: "27/01/2025",
-          healthStatus: "Improving",
-          lastCheckup: "24/01/2025 10:30AM",
-          temperature: "98.8°F",
-          symptoms: "Mild fatigue",
-          testResult: "Pending",
-          emergencyContact: "+91 98765 43223",
-          createdOn: "20/01/2025 12:00PM",
-          createdBy: "Admin",
-        },
-        {
-          id: "8",
-          residentName: "Resident A-201",
-          tower: "A",
-          flat: "201",
-          contactNumber: "+91 98765 43224",
-          quarantineType: "COVID-19",
-          status: "In Quarantine",
-          startDate: "22/01/2025",
-          endDate: "05/02/2025",
-          healthStatus: "Stable",
-          lastCheckup: "24/01/2025 11:45AM",
-          temperature: "99.3°F",
-          symptoms: "Headache, body ache",
-          testResult: "Positive",
-          emergencyContact: "+91 98765 43225",
-          createdOn: "22/01/2025 02:30PM",
-          createdBy: "Admin",
-        },
-        {
-          id: "9",
-          residentName: "Senior Citizen A-301",
-          tower: "A",
-          flat: "301",
-          contactNumber: "+91 98765 43226",
-          quarantineType: "COVID-19",
-          status: "Cleared",
-          startDate: "03/01/2025",
-          endDate: "17/01/2025",
-          healthStatus: "Recovered",
-          lastCheckup: "17/01/2025 01:15PM",
-          temperature: "98.6°F",
-          symptoms: "None",
-          testResult: "Negative",
-          emergencyContact: "+91 98765 43227",
-          createdOn: "03/01/2025 08:30AM",
-          createdBy: "Admin",
-        },
-        {
-          id: "10",
-          residentName: "Team Member GL",
-          tower: "GL",
-          flat: "Team",
-          contactNumber: "+91 98765 43228",
-          quarantineType: "Flu",
-          status: "Under Observation",
-          startDate: "21/01/2025",
-          endDate: "28/01/2025",
-          healthStatus: "Improving",
-          lastCheckup: "24/01/2025 04:30PM",
-          temperature: "98.5°F",
-          symptoms: "Cough reducing",
-          testResult: "Not Tested",
-          emergencyContact: "+91 98765 43229",
-          createdOn: "21/01/2025 10:15AM",
-          createdBy: "Admin",
-        },
+        { id: "1", residentName: "Ubaid Hashmat", tower: "A", flat: "101", contactNumber: "+91 98765 43210", quarantineType: "COVID-19", status: "Completed", startDate: "01/01/2025", endDate: "15/01/2025", healthStatus: "Recovered", lastCheckup: "14/01/2025 10:00AM", temperature: "98.6°F", symptoms: "None", testResult: "Negative", emergencyContact: "+91 98765 43211", createdOn: "01/01/2025 09:30AM", createdBy: "Admin" },
+        { id: "2", residentName: "Godrej Living", tower: "FM", flat: "Office", contactNumber: "+91 98765 43212", quarantineType: "COVID-19", status: "In Quarantine", startDate: "10/01/2025", endDate: "24/01/2025", healthStatus: "Stable", lastCheckup: "23/01/2025 11:30AM", temperature: "99.2°F", symptoms: "Mild cough", testResult: "Positive", emergencyContact: "+91 98765 43213", createdOn: "10/01/2025 08:15AM", createdBy: "Admin" },
+        { id: "3", residentName: "Deepak Gupta", tower: "A", flat: "104", contactNumber: "+91 98765 43214", quarantineType: "Flu", status: "Under Observation", startDate: "15/01/2025", endDate: "22/01/2025", healthStatus: "Improving", lastCheckup: "22/01/2025 02:45PM", temperature: "98.4°F", symptoms: "Fever subsided", testResult: "Not Tested", emergencyContact: "+91 98765 43215", createdOn: "15/01/2025 10:20AM", createdBy: "Admin" },
+        { id: "4", residentName: "Prashant Sangle", tower: "A", flat: "101", contactNumber: "+91 98765 43216", quarantineType: "COVID-19", status: "Cleared", startDate: "05/01/2025", endDate: "19/01/2025", healthStatus: "Recovered", lastCheckup: "19/01/2025 09:15AM", temperature: "98.6°F", symptoms: "None", testResult: "Negative", emergencyContact: "+91 98765 43217", createdOn: "05/01/2025 11:00AM", createdBy: "Admin" },
+        { id: "5", residentName: "Ashik Bhattacharya", tower: "GL", flat: "Team", contactNumber: "+91 98765 43218", quarantineType: "COVID-19", status: "In Quarantine", startDate: "18/01/2025", endDate: "01/02/2025", healthStatus: "Stable", lastCheckup: "24/01/2025 03:30PM", temperature: "99.0°F", symptoms: "Sore throat", testResult: "Positive", emergencyContact: "+91 98765 43219", createdOn: "18/01/2025 01:45PM", createdBy: "Admin" },
+        { id: "6", residentName: "Samay Seth", tower: "A", flat: "102", contactNumber: "+91 98765 43220", quarantineType: "Flu", status: "Completed", startDate: "08/01/2025", endDate: "15/01/2025", healthStatus: "Recovered", lastCheckup: "15/01/2025 04:00PM", temperature: "98.6°F", symptoms: "None", testResult: "Not Tested", emergencyContact: "+91 98765 43221", createdOn: "08/01/2025 09:45AM", createdBy: "Admin" },
+        { id: "7", residentName: "Godrej Living Staff", tower: "FM", flat: "Office", contactNumber: "+91 98765 43222", quarantineType: "COVID-19", status: "Under Observation", startDate: "20/01/2025", endDate: "27/01/2025", healthStatus: "Improving", lastCheckup: "24/01/2025 10:30AM", temperature: "98.8°F", symptoms: "Mild fatigue", testResult: "Pending", emergencyContact: "+91 98765 43223", createdOn: "20/01/2025 12:00PM", createdBy: "Admin" },
+        { id: "8", residentName: "Resident A-201", tower: "A", flat: "201", contactNumber: "+91 98765 43224", quarantineType: "COVID-19", status: "In Quarantine", startDate: "22/01/2025", endDate: "05/02/2025", healthStatus: "Stable", lastCheckup: "24/01/2025 11:45AM", temperature: "99.3°F", symptoms: "Headache, body ache", testResult: "Positive", emergencyContact: "+91 98765 43225", createdOn: "22/01/2025 02:30PM", createdBy: "Admin" },
+        { id: "9", residentName: "Senior Citizen A-301", tower: "A", flat: "301", contactNumber: "+91 98765 43226", quarantineType: "COVID-19", status: "Cleared", startDate: "03/01/2025", endDate: "17/01/2025", healthStatus: "Recovered", lastCheckup: "17/01/2025 01:15PM", temperature: "98.6°F", symptoms: "None", testResult: "Negative", emergencyContact: "+91 98765 43227", createdOn: "03/01/2025 08:30AM", createdBy: "Admin" },
+        { id: "10", residentName: "Team Member GL", tower: "GL", flat: "Team", contactNumber: "+91 98765 43228", quarantineType: "Flu", status: "Under Observation", startDate: "21/01/2025", endDate: "28/01/2025", healthStatus: "Improving", lastCheckup: "24/01/2025 04:30PM", temperature: "98.5°F", symptoms: "Cough reducing", testResult: "Not Tested", emergencyContact: "+91 98765 43229", createdOn: "21/01/2025 10:15AM", createdBy: "Admin" },
       ];
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setQuarantineRecords(mockData);
+    } catch (err: any) {
+      setError(err);
+      toast.error("Failed to load quarantine data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      return {
-        quarantineRecords: mockData,
-        pagination: {
-          total_count: mockData.length,
-          total_pages: Math.ceil(mockData.length / pageSize),
-          current_page: currentPage,
-        },
-      };
-    },
-    retry: 2,
-    staleTime: 30000,
-    gcTime: 60000,
-  });
-
-  const quarantineRecords: QuarantineRecord[] = quarantineData?.quarantineRecords || [];
-  const totalCount = quarantineData?.pagination?.total_count || 0;
-  const totalPages = quarantineData?.pagination?.total_pages || 1;
+  useEffect(() => {
+    fetchData();
+  }, [debouncedSearchQuery, currentPage, pageSize]);
+  const totalCount = quarantineRecords.length;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const columns = [
+    { key: "actions", label: "Actions", sortable: false },
     { key: "residentName", label: "Resident Name", sortable: true },
     { key: "tower", label: "Tower", sortable: true },
     { key: "flat", label: "Flat", sortable: true },
@@ -282,7 +99,6 @@ const BMSQuarantineTracker: React.FC = () => {
     { key: "symptoms", label: "Symptoms", sortable: false },
     { key: "testResult", label: "Test Result", sortable: true },
     { key: "createdOn", label: "Created On", sortable: true },
-    { key: "actions", label: "Actions", sortable: false },
   ];
 
   const handleAddRecord = () => {
@@ -311,7 +127,7 @@ const BMSQuarantineTracker: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    refetch();
+    fetchData();
     toast.success("Quarantine tracker data refreshed");
   };
 
@@ -435,30 +251,33 @@ const BMSQuarantineTracker: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-1">
+            {shouldShow("Quarantine Tracker","show")&&(
             <Button
               size="sm"
               variant="ghost"
               onClick={() => handleViewRecord(item)}
-              className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
+              className="h-8 w-8 p-0"
             >
               <Eye className="h-4 w-4" />
-            </Button>
+            </Button>)}
+            {shouldShow("Quarantine Tracker","update")&&(
             <Button
               size="sm"
               variant="ghost"
               onClick={() => handleEditRecord(item)}
-              className="h-8 w-8 p-0 hover:bg-[#DBC2A9]"
+              className="h-8 w-8 p-0"
             >
               <Edit className="h-4 w-4" />
-            </Button>
+            </Button>)}
+            {shouldShow("Quarantine Tracker","destroy")&&(
             <Button
               size="sm"
               variant="ghost"
               onClick={() => handleDeleteRecord(item)}
-              className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+              className="h-8 w-8 p-0 text-red-600"
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </Button>)}
           </div>
         );
       default:
@@ -469,7 +288,7 @@ const BMSQuarantineTracker: React.FC = () => {
   // Render pagination items
   const renderPaginationItems = () => {
     const items = [];
-    const maxVisiblePages = 7;
+    const maxVisiblePages = 5;
 
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
@@ -553,13 +372,15 @@ const BMSQuarantineTracker: React.FC = () => {
 
   // Render custom left actions
   const renderLeftActions = () => (
+    shouldShow("Quarantine Tracker","create")&&(
     <Button
       onClick={handleAddRecord}
-      className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
+      className="bg-[#C72030] hover:bg-[#A01828] !text-white h-9 px-4 text-sm font-medium"
     >
       <Plus className="w-4 h-4 mr-2" />
       Add Record
     </Button>
+    )
   );
 
   // Render custom right actions
@@ -570,7 +391,7 @@ const BMSQuarantineTracker: React.FC = () => {
         size="sm"
         onClick={handleRefresh}
         disabled={isLoading}
-        className="h-9"
+        className="h-9 !bg-white !text-[#da7756] !border !border-[#da7756] [&_svg]:text-[#da7756]"
       >
         <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
         Refresh
@@ -579,7 +400,7 @@ const BMSQuarantineTracker: React.FC = () => {
         variant="outline"
         size="sm"
         onClick={handleExport}
-        className="h-9"
+        className="h-9 !bg-white !text-[#da7756] !border !border-[#da7756] [&_svg]:text-[#da7756]"
       >
         <Download className="w-4 h-4 mr-2" />
         Export
@@ -609,51 +430,41 @@ const BMSQuarantineTracker: React.FC = () => {
       />
 
       {/* Custom Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={
-                    currentPage === 1 || isLoading
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-              {renderPaginationItems()}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={
-                    currentPage === totalPages || isLoading
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
-
-      {/* Loading state overlay */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500">Loading quarantine data...</span>
-        </div>
-      )}
+      <div className="flex justify-center mt-6">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                className={
+                  currentPage === 1 || isLoading
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                className={
+                  currentPage === totalPages || isLoading
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
 
       {/* Error state */}
-      {isError && (
+      {!isLoading && error && (
         <div className="flex justify-center items-center py-8">
           <div className="text-center">
             <p className="text-red-600 font-medium">Error loading quarantine data</p>
             <p className="text-sm text-gray-500 mt-1">{error?.message || "Please try again"}</p>
-            <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
+            <Button onClick={() => fetchData()} variant="outline" size="sm" className="mt-4">
               <RefreshCw className="w-4 h-4 mr-2" />
               Retry
             </Button>

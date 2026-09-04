@@ -240,13 +240,13 @@ const FaqSubCategory = () => {
                   disabled={loading}
                   error={!!errors.name}
                   helperText={errors.name}
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } }}
                   InputProps={{ sx: fieldStyles }}
                 />
 
                 {/* FAQ Category */}
                 <FormControl fullWidth variant="outlined" required error={!!errors.faq_category_id}>
-                  <InputLabel shrink htmlFor="category-select">
+                  <InputLabel shrink htmlFor="category-select" sx={{ '& .MuiFormLabel-asterisk': { color: '#da7756' } }}>
                     FAQ Category
                   </InputLabel>
                   <MuiSelect
@@ -281,16 +281,15 @@ const FaqSubCategory = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2"
-          >
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"          >
             {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Submit')}
           </button>
           <button
             type="button"
             onClick={() => navigate("/settings/faq-subcategory-list")}
             disabled={loading}
-            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2 border-[1px]"
-          >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"          >
             Cancel
           </button>
         </div>

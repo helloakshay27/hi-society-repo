@@ -1,6 +1,7 @@
 import React, { useState, useEffect, startTransition } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLayout } from "../contexts/LayoutContext";
+import { trackSidebarClick } from "@/utils/posthogHelpers";
 import {
   Home,
   Settings as SettingsIcon,
@@ -44,6 +45,8 @@ import {
   Settings,
   DollarSign,
   Palette,
+  Wrench,
+  Video,
 } from "lucide-react";
 
 interface MenuItem {
@@ -62,7 +65,7 @@ interface SectionConfig {
 export const UIHiSocietySidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
+  const { isSidebarCollapsed, setIsSidebarCollapsed, isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
 
   // Domain detection
   const hostname = window.location.hostname;
@@ -89,6 +92,7 @@ export const UIHiSocietySidebar: React.FC = () => {
     vehicles: true,
     smartsecureReports: true,
     smartsecureSetup: true,
+    maintenance: true,
   });
 
   // Determine active section based on route
@@ -130,7 +134,6 @@ export const UIHiSocietySidebar: React.FC = () => {
     // Check for Application Setup paths first - these should stay in settings
     if (
       path.startsWith("/fitout/setup") ||
-      path.startsWith("/accounting/tax-setup") ||
       path.startsWith("/accounting/payment-terms") ||
       path.startsWith("/accounting/vendors") ||
       path.startsWith("/smartsecure/visitor-purpose") ||
@@ -143,12 +146,28 @@ export const UIHiSocietySidebar: React.FC = () => {
     }
 
     if (path.startsWith("/cms")) return "cms";
+    if (
+      path.startsWith("/maintenance/survey") ||
+      path.startsWith("/maintenance/ticket") ||
+      path.startsWith("/maintenance/task") ||
+      path.startsWith("/maintenance/schedule") ||
+      path.startsWith("/maintenance/service") ||
+      path.startsWith("/maintenance/asset") ||
+      path.startsWith("/maintenance/inventory") ||
+      path.startsWith("/maintenance/amc") ||
+      path.startsWith("/maintenance/audit") ||
+      path.startsWith("/maintenance/waste") ||
+      path.startsWith("/maintenance/vendor") ||
+      path.startsWith("/maintenance/attendance")
+    )
+      return "maintenance";
     if (path.startsWith("/campaigns")) return "campaigns";
     if (path.startsWith("/fb")) return "fb";
     if (path.startsWith("/osr")) return "osr";
     if (path.startsWith("/fitout")) return "fitout";
     if (path.startsWith("/accounting")) return "accounting";
     if (path.startsWith("/smartsecure")) return "smartsecure";
+    if (path.startsWith("/safety")) return "incidents";
     if (path.startsWith("/incidents")) return "incidents";
     if (path.startsWith("/appointmentz")) return "appointmentz";
     if (path.startsWith("/settings")) return "settings";
@@ -345,6 +364,30 @@ export const UIHiSocietySidebar: React.FC = () => {
         },
       ],
     },
+    maintenance: {
+      title: "Maintenance",
+      items: [
+        {
+          id: "survey",
+          label: "Survey",
+          icon: Wrench,
+          subItems: [
+            {
+              id: "survey-mapping",
+              label: "Survey Configuration",
+              icon: FileText,
+              path: "/maintenance/survey/mapping",
+            },
+            {
+              id: "survey-response",
+              label: "Response",
+              icon: FileText,
+              path: "/maintenance/survey/response",
+            },
+          ],
+        },
+      ],
+    },
     loyalty: {
       title: "",
       items: [
@@ -352,17 +395,48 @@ export const UIHiSocietySidebar: React.FC = () => {
           id: "loyalty",
           label: "Loyalty",
           subItems: [
-            {
-              id: "loyalty-dashboard",
-              label: "Dashboard",
-              icon: LayoutDashboard,
-              path: "/loyalty/dashboard",
-            },
+            // {
+            //   id: "loyalty-dashboard",
+            //   label: "Dashboard",
+            //   icon: LayoutDashboard,
+            //   path: "/loyalty/dashboard",
+            // },
+            // {
+            //   id: "loyalty-dashboard-new",
+            //   label: "Dashboard New",
+            //   icon: LayoutDashboard,
+            //   path: "/loyalty/dashboard-new",
+            // },
             {
               id: "wallet-management",
               label: "Wallet Management",
               icon: Database,
               path: "/loyalty/wallet-management",
+            },
+            {
+              id: "encashment",
+              label: "Encashment",
+              icon: DollarSign,
+              subItems: [
+                {
+                  id: "encashment-config",
+                  label: "Encashment Config",
+                  icon: SettingsIcon,
+                  path: "/loyalty/encashment/config",
+                },
+                {
+                  id: "encashment-requests",
+                  label: "Encashment Requests",
+                  icon: FileText,
+                  path: "/loyalty/encashment/requests",
+                },
+                {
+                  id: "encashment-kyc-requests",
+                  label: "KYC Requests",
+                  icon: UserCheck,
+                  path: "/loyalty/encashment/kyc-requests",
+                },
+              ],
             },
             {
               id: "loyalty-customers",
@@ -606,6 +680,37 @@ export const UIHiSocietySidebar: React.FC = () => {
           path: "/accounting/receipts",
         },
         {
+          id: "configuration",
+          label: "Configuration",
+          icon: BarChart3,
+          subItems: [
+            {
+              id: "charges",
+              label: "Charges",
+              icon: PieChart,
+              path: "/accounting/charges",
+            },
+            {
+              id: "bill-cycles",
+              label: "Bill Cycles",
+              icon: FileText,
+              path: "/accounting/bill-cycles",
+            },
+            {
+              id: "units-bill-cycle-mapping",
+              label: "Units & Bill Cycle Mapping",
+              icon: Database,
+              path: "/accounting/units-bill-cycle-mapping",
+            },
+            {
+              id: "charge-calculations",
+              label: "Charge Calculations",
+              icon: Database,
+              path: "/accounting/charge-calculations",
+            },
+          ],
+        },
+        {
           id: "reports",
           label: "Reports",
           icon: BarChart3,
@@ -629,6 +734,12 @@ export const UIHiSocietySidebar: React.FC = () => {
               path: "/accounting/cash-flow",
             },
           ],
+        },
+        {
+          id: "invoice-creation",
+          label: "Invoice Creation",
+          icon: FileText,
+          path: "/accounting/invoice-creation",
         },
       ],
     },
@@ -787,7 +898,7 @@ export const UIHiSocietySidebar: React.FC = () => {
           id: "incidents",
           label: "Incidents",
           icon: AlertTriangle,
-          path: "/incidents/incidents",
+          path: "/safety/incident",
         },
         {
           id: "design-inputs",
@@ -818,10 +929,28 @@ export const UIHiSocietySidebar: React.FC = () => {
       title: "Appointmentz",
       items: [
         {
-          id: "site-visit-requests",
-          label: "Site Visit Requests",
+          id: "request",
+          label: "Request",
           icon: Calendar,
-          path: "/appointmentz/site-scheduling",
+          path: "/appointmentz/request",
+        },
+        // {
+        //   id: "site-visit-requests",
+        //   label: "Site Visit Requests",
+        //   icon: Calendar,
+        //   path: "/appointmentz/site-scheduling",
+        // },
+        {
+          id: "virtual-requests",
+          label: "virtual Requests",
+          icon: Video,
+          path: "/appointmentz/virtual-requests",
+        },
+        {
+          id: "manage-flats",
+          label: "Manage Flats",
+          icon: Building2,
+          path: "/appointmentz/manage-flats",
         },
         {
           id: "rm-cs-config",
@@ -841,6 +970,12 @@ export const UIHiSocietySidebar: React.FC = () => {
           icon: SettingsIcon,
           path: "/appointmentz/block-days-config",
         },
+        {
+          id: "email-config",
+          label: "Email Configuration",
+          icon: SettingsIcon,
+          path: "/appointmentz/email-config",
+        },
       ],
     },
     osr: {
@@ -857,13 +992,42 @@ export const UIHiSocietySidebar: React.FC = () => {
     settings: {
       title: "Settings",
       items: [
-
+        {
+          id: "setup",
+          label: "Setup",
+          icon: SettingsIcon,
+          subItems: [
+            {
+              id: "special-users",
+              label: "Special Users Category",
+              icon: Users,
+              path: "/settings/special-users-category",
+            },
+            {
+              id: "manage-users",
+              label: "Manage Users",
+              icon: Users,
+              path: "/settings/manage-users",
+            },
+            {
+              id: "manage-flats",
+              label: "Manage Flats",
+              icon: Building2,
+              path: "/settings/manage-flats",
+            }
+          ],
+        },
         {
           id: "setup-member",
           label: "Setup Member",
           icon: Users,
           subItems: [
-
+            {
+              id: "template-list",
+              label: "Email Templates",
+              icon: FileText,
+              path: "/settings/template-list",
+            },
             {
               id: "image-configuration-list",
               label: "Image Configuration",
@@ -899,6 +1063,18 @@ export const UIHiSocietySidebar: React.FC = () => {
               label: "Generic Categories",
               icon: CreditCard,
               path: "/settings/generic-categories",
+            },
+            {
+              id: "ways-to-earn",
+              label: "Ways to Earn",
+              icon: CreditCard,
+              path: "/settings/ways-to-earn",
+            },
+            {
+              id: "brand-partners-config",
+              label: "Brand Partners Config",
+              icon: CreditCard,
+              path: "/settings/brand-partners-config",
             },
           ],
         },
@@ -993,8 +1169,8 @@ export const UIHiSocietySidebar: React.FC = () => {
     );
   };
 
-  // before: const handleNavigation = (path: string) => { ... }
-  const handleNavigation = (path: string, navState?: Record<string, any>) => {
+  const handleNavigation = (path: string, navState?: Record<string, unknown>) => {
+    setIsMobileSidebarOpen(false);
     startTransition(() => {
       navigate(path, { state: navState });
     });
@@ -1003,7 +1179,8 @@ export const UIHiSocietySidebar: React.FC = () => {
   // Render menu item
   const renderMenuItem = (
     item: MenuItem,
-    level: number = 0
+    level: number = 0,
+    showCollapsed: boolean = isSidebarCollapsed
   ): React.ReactNode => {
     const hasSubItems = item.subItems && item.subItems.length > 0;
     const isExpanded = expandedSections[item.id] || false;
@@ -1035,7 +1212,7 @@ export const UIHiSocietySidebar: React.FC = () => {
     //   : undefined;
     // handleNavigation(subItem.path, navState);
 
-    if (isSidebarCollapsed) {
+    if (showCollapsed) {
       // Collapsed view - show only icons
       return (
         <div key={item.id}>
@@ -1044,6 +1221,7 @@ export const UIHiSocietySidebar: React.FC = () => {
               if (hasSubItems) {
                 const firstSubItem = item.subItems![0];
                 if (firstSubItem.path) {
+                  trackSidebarClick(firstSubItem.label, currentConfig.title, firstSubItem.path, true, item.label);
                   handleNavigation(
                     firstSubItem.path,
                     isLoyaltyMaintenancePath(firstSubItem.path)
@@ -1052,6 +1230,7 @@ export const UIHiSocietySidebar: React.FC = () => {
                   );
                 }
               } else if (item.path) {
+                trackSidebarClick(item.label, currentConfig.title, item.path, false);
                 handleNavigation(
                   item.path,
                   isLoyaltyMaintenancePath(item.path)
@@ -1091,6 +1270,7 @@ export const UIHiSocietySidebar: React.FC = () => {
             if (hasSubItems) {
               toggleSection(item.id);
             } else if (item.path) {
+              trackSidebarClick(item.label, currentConfig.title, item.path, false);
               handleNavigation(
                 item.path,
                 isLoyaltyMaintenancePath(item.path)
@@ -1114,10 +1294,14 @@ export const UIHiSocietySidebar: React.FC = () => {
             ))}
         </button>
 
-        {/* Render sub-items */}
+        {/* Render sub-items (recursive, so a sub-item can itself have its own subItems) */}
         {hasSubItems && isExpanded && (
           <div className="ml-4 mt-1 space-y-1">
             {item.subItems!.map((subItem) => {
+              if (subItem.subItems && subItem.subItems.length > 0) {
+                return renderMenuItem(subItem, level + 1, false);
+              }
+
               const subActive = isActive(subItem.path);
               const SubIcon = subItem.icon;
 
@@ -1125,15 +1309,17 @@ export const UIHiSocietySidebar: React.FC = () => {
                 <button
                   key={subItem.id}
                   // inside sub-item click
-                  onClick={() =>
-                    subItem.path &&
-                    handleNavigation(
-                      subItem.path,
-                      isLoyaltyMaintenancePath(subItem.path)
-                        ? { fromSection: "loyalty" }
-                        : undefined
-                    )
-                  }
+                  onClick={() => {
+                    if (subItem.path) {
+                      trackSidebarClick(subItem.label, currentConfig.title, subItem.path, true, item.label);
+                      handleNavigation(
+                        subItem.path,
+                        isLoyaltyMaintenancePath(subItem.path)
+                          ? { fromSection: "loyalty" }
+                          : undefined
+                      );
+                    }
+                  }}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
                 >
                   {subActive && (
@@ -1157,19 +1343,23 @@ export const UIHiSocietySidebar: React.FC = () => {
     return null;
   }
 
+  // On mobile (sidebar open as overlay), always show expanded regardless of isSidebarCollapsed
+  const showCollapsed = isSidebarCollapsed && !isMobileSidebarOpen;
+
   return (
     <div
-      className={`${isSidebarCollapsed ? "w-16" : "w-64"
-        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${showCollapsed ? "w-16" : "w-64"
+        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40
+        ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
-      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
-        {/* Collapse Button */}
+      <div className={`${showCollapsed ? "px-2 py-2" : "p-2"}`}>
+        {/* Collapse Button — hidden on mobile */}
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
+          className="hidden md:block absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
         >
-          {isSidebarCollapsed ? (
+          {showCollapsed ? (
             <div className="flex justify-center items-center w-8 h-8 bg-[#f6f4ee] border border-[#e5e1d8] mx-auto">
               <ChevronRight className="w-4 h-4" />
             </div>
@@ -1182,7 +1372,7 @@ export const UIHiSocietySidebar: React.FC = () => {
         <div className="w-full h-4 bg-[#f6f4ee] border-[#e5e1d8] mb-2 mt-4" />
 
         {/* Header */}
-        {!isSidebarCollapsed && currentConfig.title && (
+        {!showCollapsed && currentConfig.title && (
           <div className="mb-4">
             <h3 className="text-sm font-medium text-[#1a1a1a] opacity-70 uppercase tracking-wide">
               {currentConfig.title}
@@ -1192,7 +1382,7 @@ export const UIHiSocietySidebar: React.FC = () => {
 
         {/* Menu */}
         <nav className="space-y-2">
-          {currentConfig.items.map((item) => renderMenuItem(item))}
+          {currentConfig.items.map((item) => renderMenuItem(item, 0, showCollapsed))}
         </nav>
       </div>
     </div>

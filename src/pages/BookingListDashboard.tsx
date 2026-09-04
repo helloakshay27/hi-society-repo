@@ -45,6 +45,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const enhancedTableColumns: ColumnConfig[] = [
   { key: "id", label: "ID", sortable: true, draggable: true },
@@ -172,10 +173,12 @@ const getStatusBadgeVariant = (status: string) => {
       return "success";
     case "Pending":
       return "warning";
-    case "Cancelled":
+    case "cancelled":
       return "destructive";
     case "Completed":
       return "default";
+    case "Rejected":
+      return "destructive";
     default:
       return "default";
   }
@@ -184,6 +187,7 @@ const getStatusBadgeVariant = (status: string) => {
 const BookingListDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { shouldShow } = useDynamicPermissions()
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
@@ -440,14 +444,14 @@ const BookingListDashboard = () => {
         facilityType: safeValue(item.fac_type),
         scheduledDate: formatDate(item.startdate),
         scheduledTime: safeValue(item.show_schedule_24_hour || item.show_schedule),
-        createdOn: formatDate(item.created_at),
+        createdOn: format(item.created_at, 'dd MMMM yyyy, hh:mm a'),
         source: safeValue(item.source),
         totalAmount: safeValue(item.amount_full),
         refundableAmount: safeValue(item.refunded_amount),
         gst: safeValue(item.gst),
         amountPaid: safeValue(item.amount_paid),
         paymentStatus: safeValue(item.pg_state),
-        bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+        bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
         member: safeValue(item.member_count),
         nonMember: safeValue(item.non_member_count),
         guest: safeValue(item.guest_count),
@@ -588,14 +592,14 @@ const BookingListDashboard = () => {
           facilityType: safeValue(item.fac_type),
           scheduledDate: formatDate(item.startdate),
           scheduledTime: safeValue(item.show_schedule_24_hour || item.show_schedule),
-          createdOn: formatDate(item.created_at),
+          createdOn: format(item.created_at, 'dd MMMM yyyy, hh:mm a'),
           source: safeValue(item.source),
           totalAmount: safeValue(item.amount_full),
           refundableAmount: safeValue(item.refunded_amount),
           gst: safeValue(item.gst),
           amountPaid: safeValue(item.amount_paid),
           paymentStatus: safeValue(item.pg_state),
-          bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+          bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
           member: safeValue(item.member_count),
           nonMember: safeValue(item.non_member_count),
           guest: safeValue(item.guest_count),
@@ -767,8 +771,10 @@ const BookingListDashboard = () => {
                     "bg-[#F4C790] hover:bg-[#F4C790] text-black",
                     item.bookingStatus === "Confirmed" &&
                     "bg-[#A3E4DB] hover:bg-[#8CDAD1] text-black",
-                    item.bookingStatus === "Cancelled" &&
-                    "bg-[#E4626F] hover:bg-[#E4626F] text-white"
+                    item.bookingStatus === "cancelled" &&
+                    "bg-[#E4626F] hover:bg-[#E4626F] text-white",
+                    item.bookingStatus === "Rejected" &&
+                    "bg-[#c72030] hover:bg-[#c72030] text-white",
                   )}
                 >
                   {item.bookingStatus.charAt(0).toUpperCase() + item.bookingStatus.slice(1)}
@@ -792,7 +798,7 @@ const BookingListDashboard = () => {
                   </div>
                 </SelectItem>
 
-                <SelectItem value="Cancelled">
+                <SelectItem value="cancelled">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-[#E4626F]" />
                     Cancelled
@@ -802,6 +808,10 @@ const BookingListDashboard = () => {
             )}
           </Select>
         );
+      case "scheduledTime":
+        return <div className="truncate w-[200px]" title={item.scheduledTime}>
+          {item.scheduledTime}
+        </div>
       default:
         return item[columnKey as keyof BookingData];
     }
@@ -886,7 +896,7 @@ const BookingListDashboard = () => {
             }
             variant="outline"
             size="sm"
-            className="mt-2"
+            className="mt-2 border-[var(--color-primary,#da7756)] text-[var(--color-primary,#da7756)] hover:bg-[var(--color-primary-light,rgba(218,119,86,0.15))]"
             disabled={loading}
           >
             {loading ? "Retrying..." : "Retry"}
@@ -915,13 +925,18 @@ const BookingListDashboard = () => {
         }
         leftActions={
           <div className="flex flex-wrap gap-2">
-            <Button
-              className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white w-[106px] h-[36px] py-[10px] px-[20px]"
-              onClick={() => setShowActionPanel(true)}
-            >
-              <Plus className="w-4 h-4" />
-              Action
-            </Button>
+            {
+              shouldShow("Facility Bookings", "create") && (
+                <Button
+                 variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
+                  onClick={() => setShowActionPanel(true)}
+                >
+                  <Plus className="w-4 h-4" />
+                  Action
+                </Button>
+              )
+            }
           </div>
         }
       />
@@ -1080,7 +1095,7 @@ const BookingListDashboard = () => {
               <div className="flex gap-3 pt-4">
                 <Button
                   onClick={handleApplyFilters}
-                  className="flex-1 bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white"
+                  className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isFiltering}
                 >
                   Apply

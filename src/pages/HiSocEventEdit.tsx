@@ -29,7 +29,7 @@ import {
   TableRow,
 } from "../components/ui/table";
 import SelectBox from "@/components/ui/select-box";
-
+import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
 const HiSocEventEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -81,7 +81,10 @@ const HiSocEventEdit = () => {
   const [eventType, setEventType] = useState([]);
   const [eventUserID, setEventUserID] = useState([]);
   const [groups, setGroups] = useState([]); // State to store groups
+  const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
+  const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(true);
 
   const [reminderValue, setReminderValue] = useState("");
   const [reminderUnit, setReminderUnit] = useState("");
@@ -111,7 +114,7 @@ const HiSocEventEdit = () => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const totalSteps = 3;
 
-  // Invite CPs state
+  // Invite Member / User state
   const [channelPartners, setChannelPartners] = useState([]);
   const [selectedChannelPartners, setSelectedChannelPartners] = useState([]);
   const [csvFiles, setCsvFiles] = useState([]);
@@ -546,6 +549,7 @@ const HiSocEventEdit = () => {
 
   useEffect(() => {
     const fetchEvent = async () => {
+      setFetchingData(true);
       try {
         const response = await axios.get(`${baseURL}/crm/admin/events/${id}.json`, {
           headers: {
@@ -800,9 +804,11 @@ const HiSocEventEdit = () => {
 
         console.log("Fetched event data:", data);
         toast.success("Event details loaded successfully");
+        setFetchingData(false);
       } catch (error) {
         console.error("Error fetching event:", error);
         toast.error("Failed to load event details");
+        setFetchingData(false);
       }
     };
 
@@ -869,62 +875,75 @@ const HiSocEventEdit = () => {
     fetchImageConfigurations();
   }, []);
 
+  const fetchUsers = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        `${API_CONFIG.BASE_URL}/usergroups/get_members_list.json${qs ? `?${qs}` : ""}`,
+        {
+           headers: {
+                    Authorization: getAuthHeader(),
+                    "Content-Type": "application/json",
+                  },
+        }
+      );
+
+      // Transform the response to match the expected format
+      const transformedUsers = (response?.data || []).map(item => ({
+        id: item.id,
+        id_user: item.id_user,
+        firstname: item.user?.firstname || '',
+        lastname: item.user?.lastname || '',
+        user_name: `${item.user?.firstname || ''} ${item.user?.lastname || ''}`.trim(),
+        email: item.user?.email || '',
+        mobile: item.user?.mobile || '',
+        flat: item.user_flat?.flat || '',
+        block: item.user_flat?.block || '',
+        society_name: item.society?.building_name || '',
+        user: item.user,
+        user_flat: item.user_flat
+      }));
+
+      setEventUserID(transformedUsers);
+      console.log("Fetched users for edit:", transformedUsers.length, transformedUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(
-          `${API_CONFIG.BASE_URL}/usergroups/get_members_list.json`,
-          {
-             headers: {
-                      Authorization: getAuthHeader(),
-                      "Content-Type": "application/json",
-                    },
-          }
-        );
-
-        // Transform the response to match the expected format
-        const transformedUsers = (response?.data || []).map(item => ({
-          id: item.id,
-          id_user: item.id_user,
-          firstname: item.user?.firstname || '',
-          lastname: item.user?.lastname || '',
-          user_name: `${item.user?.firstname || ''} ${item.user?.lastname || ''}`.trim(),
-          email: item.user?.email || '',
-          mobile: item.user?.mobile || '',
-          flat: item.user_flat?.flat || '',
-          block: item.user_flat?.block || '',
-          society_name: item.society?.building_name || '',
-          user: item.user,
-          user_flat: item.user_flat
-        }));
-
-        setEventUserID(transformedUsers);
-        console.log("Fetched users for edit:", transformedUsers.length, transformedUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
     fetchUsers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch groups
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get(`${API_CONFIG.BASE_URL}/crm/usergroups.json`, {
+  const fetchGroups = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        `${API_CONFIG.BASE_URL}/crm/usergroups.json${qs ? `?${qs}` : ""}`,
+        {
           headers: {
                       Authorization: getAuthHeader(),
                       "Content-Type": "application/json",
                     },
-        });
-        const groupsData = response.data.usergroups || [];
-        setGroups(groupsData);
-        console.log("Fetched groups for edit:", groupsData.length, groupsData);
-      } catch (error) {
-        console.error("Error fetching groups:", error);
-      }
-    };
+        }
+      );
+      const groupsData = response.data.usergroups || [];
+      setGroups(groupsData);
+      console.log("Fetched groups for edit:", groupsData.length, groupsData);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+    }
+  };
 
+  useEffect(() => {
     // Fetch groups on mount
     fetchGroups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1542,39 +1561,23 @@ const HiSocEventEdit = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
-    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
-    if (currentStep === 0 && formData.rsvp_action === "0") {
+    // If on Step 0 (Event Details), go to Step 1 (Event Images)
+    if (currentStep === 0) {
       setCurrentStep(1);
       setShowPreviousSections(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // If on Step 0 (Event Details) and RSVP is Yes, go to Step 1 (Event Images)
-    if (currentStep === 0 && formData.rsvp_action === "1") {
-      setCurrentStep(1);
-      setShowPreviousSections(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // If on Step 1 (Event Images) and RSVP is Yes, go to Step 2 (Invite CPs)
-    if (currentStep === 1 && formData.rsvp_action === "1") {
+    // If on Step 1 (Event Images), go to Step 2 (Invite Member / User / Share With)
+    if (currentStep === 1) {
       setCurrentStep(2);
       setShowPreviousSections(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // If on Step 1 (Event Images) and RSVP is No, go directly to preview
-    if (currentStep === 1 && formData.rsvp_action === "0") {
-      setIsPreviewMode(true);
-      setShowPreviousSections(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // If on Step 2 (Invite CPs), go to preview
+    // If on Step 2 (Invite Member / User), go to preview
     if (currentStep === totalSteps - 1) {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
@@ -1611,9 +1614,7 @@ const HiSocEventEdit = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = formData.rsvp_action === "1" 
-      ? ['Event Details', 'Event Related Images', 'Invite CPs']
-      : ['Event Details', 'Event Related Images'];
+    const steps = ['Event Details', 'Event Related Images', 'Invite Member / User'];
 
     return (
      <Box sx={{ mb: 4, width: '100%' }}>
@@ -1645,20 +1646,20 @@ const HiSocEventEdit = () => {
                          cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
                          width: '100%',
                          height: '40px',
-                         backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
-                         color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                         border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
-                         padding: '12px 20px',
-                         fontSize: '13px',
-                         fontWeight: 500,
-                         textAlign: 'center',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
+backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#da7756' :
+                            (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
+                          color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
+                            (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
+                          border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #da7756' :
+                            (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
+                          padding: '12px 20px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          textAlign: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: index === currentStep ? '0 2px 4px rgba(218, 119, 86, 0.3)' : 'none',
                          transition: 'all 0.2s ease',
                          fontFamily: 'Work Sans, sans-serif',
                          position: 'relative',
@@ -1714,6 +1715,17 @@ const HiSocEventEdit = () => {
     );
   };
 
+  if (fetchingData) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading event data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
       {!isPreviewMode && <StepperComponent />}
@@ -1732,7 +1744,7 @@ const HiSocEventEdit = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
               </Avatar>
               Event Details
             </h2>
@@ -1855,24 +1867,32 @@ const HiSocEventEdit = () => {
               />
 
               {/* Event Description */}
-              <div className="md:col-span-3">
-                <TextField
-                  label="Event Description"
-                  placeholder="Enter Description"
+              <div className="md:col-span-3 relative w-full">
+                <textarea
+                  id="description"
                   value={formData.description}
                   onChange={handleChange}
                   name="description"
-                  fullWidth
-                  variant="outlined"
-                  slotProps={{
-                    inputLabel: {
-                      shrink: true,
-                    },
-                  }}
-                  InputProps={{
-                    sx: fieldStyles,
-                  }}
+                  rows={3}
+                  placeholder=" "
+                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent 
+      focus:outline-none 
+      focus:border-[2px] 
+      focus:border-[rgb(25,118,210)] 
+      resize-vertical"
                 />
+                <label
+                  htmlFor="description"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+      peer-placeholder-shown:top-4
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-focus:-top-[10px]
+      peer-focus:text-sm
+      peer-focus:text-[rgb(25,118,210)]"
+                >
+                  Event Description <span className="text-red-500">*</span>
+                </label>
               </div>
             </div>
 
@@ -2149,7 +2169,7 @@ const HiSocEventEdit = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Visibility
               </h2>
@@ -2238,7 +2258,7 @@ const HiSocEventEdit = () => {
           </div>
         )}
 
-        {/* Step 3: Invite CPs */}
+        {/* Step 3: Invite Member / User */}
         {currentStep === 2 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
@@ -2251,9 +2271,9 @@ const HiSocEventEdit = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
-                Invite CPs
+                Invite Member / User
               </h2>
             </div>
             <div className="p-6 space-y-6">
@@ -2358,60 +2378,111 @@ const HiSocEventEdit = () => {
                 </div>
 
                 {formData.shared === "individual" && (
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    sx={{ '& .MuiInputBase-root': fieldStyles }}
-                  >
-                    <InputLabel shrink>Individuals</InputLabel>
-                    <MuiSelect
-                      multiple
-                      value={Array.isArray(formData.user_id) ? formData.user_id.map(id => id.toString()) : []}
-                      onChange={(e) => {
-                        const selectedIds = e.target.value;
-                        setFormData((prev) => ({
-                          ...prev,
-                          user_id: Array.isArray(selectedIds) ? selectedIds.map(id => parseInt(id)) : [],
-                        }));
-                      }}
-                      label="Individuals"
-                      notched
-                      displayEmpty
-                      renderValue={(selected) => {
-                        if (!selected || selected.length === 0) {
-                          return <span style={{ color: '#999' }}>Select Individuals</span>;
-                        }
-                        return selected
-                          .map((id) => {
-                            const member = eventUserID.find((u) => u.id.toString() === id);
-                            if (!member) return id;
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter members by role or tower</span>
+                      <MemberFilterPanel
+                        value={memberFilter}
+                        onChange={(newFilters) => {
+                          setMemberFilter(newFilters);
+                          fetchUsers(newFilters);
+                        }}
+                      />
+                    </div>
+
+                    {/* Select All Checkbox */}
+                    {eventUserID?.length > 0 && (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
+                        <input
+                          type="checkbox"
+                          id="selectAllUsersEdit"
+                          checked={Array.isArray(formData.user_id) && formData.user_id.length === eventUserID.length && eventUserID.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                user_id: eventUserID.map((u) => u.id),
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                user_id: [],
+                              }));
+                            }
+                          }}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: '#C72030' }}
+                        />
+                        <label htmlFor="selectAllUsersEdit" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+                          Select All Members ({Array.isArray(formData.user_id) ? formData.user_id.length : 0}/{eventUserID.length})
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Members List with Checkboxes */}
+                    {eventUserID && eventUserID.length > 0 ? (
+                      <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                        <div className="divide-y">
+                          {eventUserID.map((member) => {
                             const firstName = member.user?.firstname || member.firstname || '';
                             const lastName = member.user?.lastname || member.lastname || '';
-                            return `${firstName} ${lastName}`.trim() || id;
-                          })
-                          .join(", ");
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        Select Individuals
-                      </MenuItem>
-                      {eventUserID?.map((member) => {
-                        const firstName = member.user?.firstname || member.firstname || '';
-                        const lastName = member.user?.lastname || member.lastname || '';
-                        const flat = member.user_flat?.flat || member.flat || '';
-                        const block = member.user_flat?.block || member.block || '';
-                        const displayName = `${firstName} ${lastName}`.trim();
-                        const flatBlock = flat && block ? ` - Flat ${flat} (${block})` : '';
-                        return (
-                          <MenuItem key={member.id} value={member.id.toString()}>
-                            {displayName}{flatBlock}
-                          </MenuItem>
-                        );
-                      })}
-                    </MuiSelect>
-                  </FormControl>
+                            const flat = member.user_flat?.flat || member.flat || '';
+                            const block = member.user_flat?.block || member.block || '';
+                            const name = `${firstName} ${lastName}`.trim();
+                            const flatText = flat ? ` - Flat ${flat}` : '';
+                            const blockText = block ? ` (${block})` : '';
+                            const displayName = name + flatText + blockText;
+                            const isChecked = Array.isArray(formData.user_id) && formData.user_id.includes(member.id);
+
+                            return (
+                              <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
+                                <input
+                                  type="checkbox"
+                                  id={`user-edit-${member.id}`}
+                                  checked={isChecked}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        user_id: [...(Array.isArray(prev.user_id) ? prev.user_id : []), member.id],
+                                      }));
+                                    } else {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        user_id: (prev.user_id || []).filter((id) => id !== member.id),
+                                      }));
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <label htmlFor={`user-edit-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+                                  {displayName}
+                                </label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                        No members available
+                      </div>
+                    )}
+                  </div>
                 )}
                 {formData.shared === "group" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter groups by role or tower</span>
+                      <MemberFilterPanel
+                        value={groupFilter}
+                        onChange={(newFilters) => {
+                          setGroupFilter(newFilters);
+                          fetchGroups(newFilters);
+                        }}
+                      />
+                    </div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -2453,6 +2524,7 @@ const HiSocEventEdit = () => {
                       ))}
                     </MuiSelect>
                   </FormControl>
+                  </div>
                 )}
               </div>
 
@@ -2572,7 +2644,7 @@ const HiSocEventEdit = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
               </Avatar>
               Event Related Images
             </h2>
@@ -2929,14 +3001,14 @@ const HiSocEventEdit = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2 h-11"
               >
                 Proceed to save
               </button>
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2 h-11"
               >
                 Save to draft
               </button>
@@ -2971,7 +3043,7 @@ const HiSocEventEdit = () => {
                               mr: 1.5
                             }}
                           >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                           </Avatar>
                           Event Details
                         </h2>
@@ -3149,7 +3221,7 @@ const HiSocEventEdit = () => {
                               mr: 1.5
                             }}
                           >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                           </Avatar>
                           Visibility
                         </h2>
@@ -3255,7 +3327,7 @@ const HiSocEventEdit = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Event Related Images
                       </h2>
@@ -3381,7 +3453,7 @@ const HiSocEventEdit = () => {
                   </div>
                 )}
 
-                {/* Step 2: Invite CPs - Completed */}
+                {/* Step 2: Invite Member / User - Completed */}
                 {stepIndex === 2 && (
                   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
@@ -3394,9 +3466,9 @@ const HiSocEventEdit = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
-                        Invite CPs
+                        Invite Member / User
                       </h2>
                       <button
                         type="button"
@@ -3510,7 +3582,7 @@ const HiSocEventEdit = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Event Details
                     </h2>
@@ -3691,7 +3763,7 @@ const HiSocEventEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Visibility
                   </h2>
@@ -3804,7 +3876,7 @@ const HiSocEventEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Event Related Images
                   </h2>
@@ -3929,7 +4001,7 @@ const HiSocEventEdit = () => {
                 </div>
               </div>
             </div>
-            </div>            {/* Step 3: Invite CPs Preview */}
+            </div>            {/* Step 3: Invite Member / User Preview */}
             <div className="mb-6">
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
@@ -3942,9 +4014,9 @@ const HiSocEventEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
-                    Invite CPs
+                    Invite Member / User
                   </h2>
                   <button
                     type="button"
@@ -4043,14 +4115,14 @@ const HiSocEventEdit = () => {
                   type="submit"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Submitting...' : 'Submit Event'}
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
                 >
                   Cancel
                 </button>

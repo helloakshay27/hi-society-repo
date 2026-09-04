@@ -7,8 +7,8 @@ import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
-import { Switch } from "@mui/material";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface PropertyType {
   id: number;
@@ -23,6 +23,7 @@ interface Permissions {
 }
 
 const PropertyTypeList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   
@@ -112,6 +113,94 @@ const PropertyTypeList = () => {
     }
   };
 
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   const handleAddPropertyType = () => navigate("/settings/property-type");
   const handleEditPropertyType = (id: number) => navigate(`/settings/property-type-edit/${id}`);
 
@@ -152,30 +241,28 @@ const PropertyTypeList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {/* {propertyTypePermission.update === "true" && ( */}
+            {shouldShow("PropertyType", "update") && (
               <Button variant="ghost" size="sm" onClick={() => handleEditPropertyType(item.id)} title="Edit">
                 <Edit className="w-4 h-4" />
               </Button>
-            {/* )} */}
+            )}
           </div>
         );
       case 'status':
         return (
-          <div className="flex justify-center">
-            {/* {propertyTypePermission.show === "true" && ( */}
-              <Switch
-                checked={item.active}
-                onChange={() => handleToggle(item.id, item.active)}
-                sx={{
-                  '& .MuiSwitch-switchBase.Mui-checked': {
-                    color: '#C72030',
-                  },
-                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                    backgroundColor: '#C72030',
-                  },
-                }}
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggle(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
               />
-            {/* )} */}
+            </button>
           </div>
         );
       default:
@@ -185,15 +272,15 @@ const PropertyTypeList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {/* {propertyTypePermission.create === "true" && ( */}
+      {shouldShow("PropertyType", "create") && (
         <Button 
           onClick={handleAddPropertyType}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
           Add
         </Button>
-      {/* )} */}
+      )}
     </div>
   );
 
@@ -212,33 +299,21 @@ const PropertyTypeList = () => {
             loading={isSearching || loading}
             loadingMessage={isSearching ? "Searching property types..." : "Loading property types..."}
           />
-          {!searchTerm && totalPages > 1 && (
+          {totalCount > 0 && (
             <div className="mt-6 flex justify-center">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <PaginationItem key={page}>
-                      <PaginationLink 
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
+                  {renderPaginationItems()}
                   <PaginationItem>
                     <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
                 </PaginationContent>

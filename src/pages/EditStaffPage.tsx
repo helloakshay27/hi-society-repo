@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { staffService, SocietyStaffDetails, Unit, Department, WorkType } from '@/services/staffService';
+import { staffService, SocietyStaffDetails, StaffFormData, StaffFiltersResponse } from '@/services/staffService';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
-import { API_CONFIG } from '@/config/apiConfig';
 
 // Field styles for Material-UI components
 const fieldStyles = {
@@ -44,6 +43,18 @@ interface ScheduleDay {
   endMinute: string;
 }
 
+interface ScheduleDataEntry {
+  checked: boolean;
+  startTime: string;
+  startMinute: string;
+  endTime: string;
+  endMinute: string;
+}
+
+interface ScheduleData {
+  [key: string]: ScheduleDataEntry;
+}
+
 export const EditStaffPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -54,13 +65,9 @@ export const EditStaffPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Dropdown data state
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [workTypes, setWorkTypes] = useState<WorkType[]>([]);
-  const [loadingUnits, setLoadingUnits] = useState(true);
-  const [loadingDepartments, setLoadingDepartments] = useState(true);
-  const [loadingWorkTypes, setLoadingWorkTypes] = useState(true);
+  // Staff filters state (from /crm/admin/staff_filters.json)
+  const [staffFilters, setStaffFilters] = useState<StaffFiltersResponse | null>(null);
+  const [loadingFilters, setLoadingFilters] = useState(true);
 
   // Load staff data from API
   useEffect(() => {
@@ -74,11 +81,7 @@ export const EditStaffPage = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching staff details for ID:', id);
         const staffDetails = await staffService.getStaffDetails(id);
-        console.log('Fetched staff details:', staffDetails);
-        console.log('Staff status_text:', staffDetails.status_text);
-        console.log('Staff status (raw):', staffDetails.status);
         setStaff(staffDetails);
       } catch (err) {
         console.error('Error loading staff details:', err);
@@ -91,29 +94,22 @@ export const EditStaffPage = () => {
     loadStaffData();
   }, [id]);
 
-  // Fetch dropdown data on component mount
+  // Fetch staff filters on component mount
   useEffect(() => {
-    const fetchDropdownData = async () => {
+    const fetchFilters = async () => {
       try {
-        const [unitsData, departmentsData, workTypesData] = await Promise.all([
-          staffService.getUnits(),
-          staffService.getDepartments(),
-          staffService.getWorkTypes()
-        ]);
-        setUnits(unitsData);
-        setDepartments(departmentsData);
-        setWorkTypes(workTypesData);
+        setLoadingFilters(true);
+        const filters = await staffService.getStaffFilters();
+        setStaffFilters(filters);
       } catch (error) {
-        console.error('Failed to fetch dropdown data:', error);
+        console.error('Failed to fetch staff filters:', error);
         toast.error('Failed to load dropdown options');
       } finally {
-        setLoadingUnits(false);
-        setLoadingDepartments(false);
-        setLoadingWorkTypes(false);
+        setLoadingFilters(false);
       }
     };
 
-    fetchDropdownData();
+    fetchFilters();
   }, []);
 
   const [formData, setFormData] = useState({
@@ -122,50 +118,64 @@ export const EditStaffPage = () => {
     email: '',
     password: '',
     mobile: '',
-    unit: '',
-    department: '',
+    staffType: '',
     workType: '',
+    associateFunctionId: '',
     staffId: '',
     vendorName: '',
     validFrom: '',
     validTill: '',
-    status: ''
+    active: '',
+    notes: '',
+    companyName: ''
   });
 
-  // Update form data when staff data is loaded
+  // Update form data when staff data and filters are loaded
   useEffect(() => {
-    if (staff && units.length > 0 && departments.length > 0 && workTypes.length > 0) {
+    if (staff && staffFilters) {
       const nameParts = staff.full_name.split(' ');
       
-      // Find the matching department by ID
-      const matchingDepartment = departments.find(dept => dept.id === staff.department_id);
-      console.log('Staff department_id:', staff.department_id, 'Found department:', matchingDepartment);
-      
-      // Find the matching work type by ID
-      const matchingWorkType = workTypes.find(wt => wt.id === staff.type_id);
-      console.log('Staff type_id:', staff.type_id, 'Found work type:', matchingWorkType);
-      
-      // Find the matching unit by ID
-      const matchingUnit = units.find(unit => unit.id === staff.pms_unit_id);
-      console.log('Staff pms_unit_id:', staff.pms_unit_id, 'Found unit:', matchingUnit);
+      // Map staff_type from API to dropdown value
+      // API returns staff_type as a label string like "Society", "Personal", "Shared"
+      let staffTypeValue = '';
+      if (staff.staff_type) {
+        const matchingStaffType = staffFilters.staff_types?.find(
+          st => st.label.toLowerCase() === staff.staff_type?.toLowerCase() ||
+                String(st.value).toLowerCase() === staff.staff_type?.toLowerCase()
+        );
+        staffTypeValue = matchingStaffType ? String(matchingStaffType.value) : staff.staff_type || '';
+      }
+
+      // Map work type from API to dropdown value
+      // API returns work_type as a label string like "House Keeping", not the numeric ID
+      // So we match by label first, then fall back to type_id if available
+      let workTypeValue = '';
+      if (staff.work_type_name) {
+        const matchingWorkType = staffFilters.work_types?.find(
+          wt => wt.label.toLowerCase() === staff.work_type_name?.toLowerCase()
+        );
+        workTypeValue = matchingWorkType ? String(matchingWorkType.value) : '';
+      }
+      // Fallback: if we have a numeric type_id and didn't find by name
+      if (!workTypeValue && staff.type_id && staff.type_id !== 0) {
+        const matchingWorkType = staffFilters.work_types?.find(
+          wt => wt.value === staff.type_id
+        );
+        workTypeValue = matchingWorkType ? String(matchingWorkType.value) : String(staff.type_id);
+      }
       
       // Map status from API response to dropdown value
+      // API returns status as { value: 1, label: "Approved" }
       let statusValue = '';
       if (staff.status_text) {
-        // Map status text to dropdown values
-        switch (staff.status_text.toLowerCase()) {
-          case 'approved':
-            statusValue = '1';
-            break;
-          case 'pending':
-            statusValue = 'pending';
-            break;
-          case 'rejected':
-            statusValue = '0';
-            break;
-          default:
-            statusValue = staff.status_text;
-        }
+        const matchingStatus = staffFilters.statuses?.find(
+          s => s.label.toLowerCase() === staff.status_text?.toLowerCase()
+        );
+        statusValue = matchingStatus ? String(matchingStatus.value) : '';
+      }
+      // Fallback: use raw status value if available
+      if (!statusValue && staff.status !== undefined && staff.status !== '') {
+        statusValue = String(staff.status);
       }
       
       setFormData({
@@ -174,19 +184,48 @@ export const EditStaffPage = () => {
         email: staff.email || '',
         password: '', // Don't populate password for security
         mobile: staff.mobile || '',
-        unit: matchingUnit ? matchingUnit.unit_name : '',
-        department: matchingDepartment ? matchingDepartment.department_name : '',
-        workType: matchingWorkType ? matchingWorkType.id.toString() : '',
+        staffType: staffTypeValue,
+        workType: workTypeValue,
+        associateFunctionId: staff.associate_function_id ? String(staff.associate_function_id) : '',
         staffId: staff.soc_staff_id || '',
         vendorName: staff.vendor_name || '',
         validFrom: staff.valid_from || '',
         validTill: staff.expiry || '',
-        status: statusValue
+        active: statusValue,
+        notes: staff.notes || '',
+        companyName: staff.vendor_name || ''
       });
 
-      console.log('Status mapping - API status_text:', staff.status_text, 'Mapped to:', statusValue);
+      // Populate schedule from helpdesk_operations
+      if (staff.helpdesk_operations && staff.helpdesk_operations.length > 0) {
+        const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const updatedSchedule = dayOrder.map(dayName => {
+          const op = staff.helpdesk_operations.find(
+            o => o.day?.toLowerCase() === dayName.toLowerCase()
+          );
+          if (op && op.is_open) {
+            return {
+              day: dayName,
+              enabled: true,
+              startHour: String(op.start_hour ?? 0).padStart(2, '0'),
+              startMinute: String(op.start_min ?? 0).padStart(2, '0'),
+              endHour: String(op.end_hour ?? 0).padStart(2, '0'),
+              endMinute: String(op.end_min ?? 0).padStart(2, '0'),
+            };
+          }
+          return {
+            day: dayName,
+            enabled: false,
+            startHour: '00',
+            startMinute: '00',
+            endHour: '00',
+            endMinute: '00',
+          };
+        });
+        setSchedule(updatedSchedule);
+      }
     }
-  }, [staff, workTypes, departments, units]); // Add all dependencies
+  }, [staff, staffFilters]);
 
   const [schedule, setSchedule] = useState<ScheduleDay[]>([
     { day: 'Monday', enabled: false, startHour: '00', startMinute: '00', endHour: '00', endMinute: '00' },
@@ -200,11 +239,8 @@ export const EditStaffPage = () => {
 
   const [attachments, setAttachments] = useState({
     profilePicture: null as File | null,
-    manuals: null as File | null
   });
-
-  // Track removed files for API
-  const [removedFiles, setRemovedFiles] = useState<number[]>([]);
+  const [documents, setDocuments] = useState<File[]>([]);
 
   // Loading state
   if (loading) {
@@ -231,7 +267,7 @@ export const EditStaffPage = () => {
           <p className="text-gray-600 mb-4">
             {error || 'The requested staff member could not be found.'}
           </p>
-          <Button onClick={() => navigate('/security/staff')}>
+          <Button onClick={() => navigate('/smartsecure/staff')}>
             Back to Staff List
           </Button>
         </div>
@@ -240,7 +276,7 @@ export const EditStaffPage = () => {
   }
 
   const handleBack = () => {
-    navigate('/security/staff');
+    navigate('/smartsecure/staff');
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -263,6 +299,10 @@ export const EditStaffPage = () => {
     }));
   };
 
+  const handleDocumentsChange = (files: File[]) => {
+    setDocuments(prev => [...prev, ...files]);
+  };
+
   const handleSubmit = async () => {
     if (!id || !staff) {
       toast.error('Staff ID not available');
@@ -271,84 +311,45 @@ export const EditStaffPage = () => {
 
     setSaving(true);
     try {
-      // Create FormData object
-      const formDataToSend = new FormData();
-      
-      // Add text fields - following the exact API specification format
-      formDataToSend.append('society_staff[first_name]', formData.firstName);
-      formDataToSend.append('society_staff[last_name]', formData.lastName);
-      formDataToSend.append('society_staff[email]', formData.email);
-      formDataToSend.append('society_staff[mobile]', formData.mobile);
-      
-      // Add staff ID if provided
-      if (formData.staffId) {
-        formDataToSend.append('society_staff[soc_staff_id]', formData.staffId);
-      }
-      
-      // Add additional fields
-      if (formData.unit) {
-        // Find the unit ID by name
-        const selectedUnit = units.find(unit => unit.unit_name === formData.unit);
-        if (selectedUnit) {
-          formDataToSend.append('society_staff[pms_unit_id]', selectedUnit.id.toString());
-        }
-      }
-      if (formData.department) {
-        // Find the department ID by name
-        const selectedDepartment = departments.find(dept => dept.department_name === formData.department);
-        if (selectedDepartment) {
-          formDataToSend.append('society_staff[department_id]', selectedDepartment.id.toString());
-        }
-      }
-      if (formData.workType) {
-        // Work type is already stored as ID
-        formDataToSend.append('society_staff[type_id]', formData.workType);
-      }
-      if (formData.vendorName) {
-        formDataToSend.append('society_staff[vendor_name]', formData.vendorName);
-      }
-      if (formData.validFrom) {
-        formDataToSend.append('society_staff[valid_from]', formData.validFrom);
-      }
-      if (formData.validTill) {
-        formDataToSend.append('society_staff[expiry]', formData.validTill);
-      }
-      if (formData.status) {
-        // Map dropdown value back to API format
-        formDataToSend.append('society_staff[status]', formData.status);
-        console.log('Status submission - Form value:', formData.status);
-      }
-      
-      if (formData.password) {
-        formDataToSend.append('society_staff[password]', formData.password);
-      }
+      // Convert schedule format to match staffService expectations
+      const scheduleData: ScheduleData = {};
+      schedule.forEach((day, index) => {
+        const dayKey = day.day.toLowerCase();
+        scheduleData[dayKey] = {
+          checked: day.enabled,
+          startTime: day.startHour,
+          startMinute: day.startMinute,
+          endTime: day.endHour,
+          endMinute: day.endMinute
+        };
+      });
 
-      // Add removed files if any
-      if (removedFiles.length > 0) {
-        formDataToSend.append('removed_files', removedFiles.join(','));
-      }
+      const formDataToSubmit: StaffFormData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        mobile: formData.mobile,
+        staffType: formData.staffType,
+        workType: formData.workType,
+        associateFunctionId: formData.associateFunctionId,
+        staffId: formData.staffId,
+        vendorName: formData.vendorName,
+        validFrom: formData.validFrom,
+        validTill: formData.validTill,
+        active: formData.active,
+        notes: formData.notes,
+        companyName: formData.companyName
+      };
 
-      // Add file uploads if any
-      if (attachments.profilePicture) {
-        formDataToSend.append('staffimage', attachments.profilePicture);
-      }
-      
-      if (attachments.manuals) {
-        formDataToSend.append('attachments[]', attachments.manuals);
-      }
-
-      console.log('📤 Final form data being sent to API:');
-      for (const [key, value] of formDataToSend.entries()) {
-        console.log(`${key}:`, value);
-      }
-      
-      console.log('🔗 API Endpoint will be:', `${API_CONFIG.BASE_URL}/pms/admin/society_staffs/${id}.json`);
-      console.log('🔑 Using PUT method for staff update');
-
-      await staffService.updateStaff(id, formDataToSend);
+      await staffService.updateStaff(id, formDataToSubmit, scheduleData, {
+        profilePicture: attachments.profilePicture || undefined,
+        documents: documents,
+        capturedPhoto: undefined
+      });
       
       // Navigate back to staff list after successful update
-      navigate('/security/staff');
+      navigate('/smartsecure/staff');
     } catch (error) {
       console.error('Error updating staff:', error);
       // Error is already handled in the service with toast
@@ -390,6 +391,22 @@ export const EditStaffPage = () => {
           </div>
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <TextField
+                label="Company Name"
+                placeholder="Enter Company Name"
+                value={formData.companyName}
+                onChange={(e) => handleInputChange('companyName', e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
               <TextField
                 label="First Name*"
                 value={formData.firstName}
@@ -439,7 +456,7 @@ export const EditStaffPage = () => {
                 }}
               />
               
-              <TextField
+              {/* <TextField
                 label="Password"
                 type="password"
                 placeholder="Leave empty to keep current password"
@@ -455,14 +472,18 @@ export const EditStaffPage = () => {
                 InputProps={{
                   sx: fieldStyles,
                 }}
-              />
+              /> */}
               
               <TextField
                 label="Mobile*"
                 value={formData.mobile}
-                onChange={(e) => handleInputChange('mobile', e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  handleInputChange('mobile', val);
+                }}
                 fullWidth
                 variant="outlined"
+                inputProps={{ maxLength: 10, pattern: '[0-9]*', inputMode: 'numeric' }}
                 slotProps={{
                   inputLabel: {
                     shrink: true,
@@ -473,50 +494,30 @@ export const EditStaffPage = () => {
                 }}
               />
               
+              {/* Staff Type Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Unit
+                  Staff Type
                 </InputLabel>
                 <MuiSelect
-                  value={formData.unit}
-                  onChange={(e) => handleInputChange('unit', e.target.value)}
-                  label="Unit"
+                  value={formData.staffType}
+                  onChange={(e) => handleInputChange('staffType', e.target.value)}
+                  label="Staff Type"
                   displayEmpty
                   sx={fieldStyles}
                 >
                   <MenuItem value="" disabled>
-                    {loadingUnits ? "Loading units..." : "Select Unit"}
+                    {loadingFilters ? "Loading..." : "Select Staff Type"}
                   </MenuItem>
-                  {units.map((unit) => (
-                    <MenuItem key={unit.id} value={unit.unit_name}>
-                      {unit.unit_name}
+                  {staffFilters?.staff_types?.map((item, index) => (
+                    <MenuItem key={`staff-type-${index}`} value={String(item.value)}>
+                      {item.label}
                     </MenuItem>
                   ))}
                 </MuiSelect>
               </FormControl>
-              
-              <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Department
-                </InputLabel>
-                <MuiSelect
-                  value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  label="Department"
-                  displayEmpty
-                  sx={fieldStyles}
-                >
-                  <MenuItem value="" disabled>
-                    {loadingDepartments ? "Loading departments..." : "Select Department"}
-                  </MenuItem>
-                  {departments.map((department) => (
-                    <MenuItem key={department.id} value={department.department_name}>
-                      {department.department_name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-              </FormControl>
-              
+
+              {/* Work Type Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
                   Work Type
@@ -529,11 +530,34 @@ export const EditStaffPage = () => {
                   sx={fieldStyles}
                 >
                   <MenuItem value="" disabled>
-                    {loadingWorkTypes ? "Loading work types..." : "Select Work Type"}
+                    {loadingFilters ? "Loading..." : "Select Work Type"}
                   </MenuItem>
-                  {workTypes.map((workType) => (
-                    <MenuItem key={workType.id} value={workType.id.toString()}>
-                      {workType.staff_type}
+                  {staffFilters?.work_types?.map((item, index) => (
+                    <MenuItem key={`work-type-${index}`} value={String(item.value)}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
+              {/* Association Type (Function) Dropdown - from staff_filters API */}
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
+                  Association Type
+                </InputLabel>
+                <MuiSelect
+                  value={formData.associateFunctionId}
+                  onChange={(e) => handleInputChange('associateFunctionId', e.target.value)}
+                  label="Association Type"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="" disabled>
+                    {loadingFilters ? "Loading..." : "Select Association Type"}
+                  </MenuItem>
+                  {staffFilters?.functions?.map((item, index) => (
+                    <MenuItem key={`function-${index}`} value={String(item.value)}>
+                      {item.label}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -607,21 +631,26 @@ export const EditStaffPage = () => {
                 }}
               />
               
+              {/* Status Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Status
+                  Active Status
                 </InputLabel>
                 <MuiSelect
-                  value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  label="Status"
+                  value={formData.active}
+                  onChange={(e) => handleInputChange('active', e.target.value)}
+                  label="Active Status"
                   displayEmpty
                   sx={fieldStyles}
                 >
-                  <MenuItem value="" disabled>Select Status</MenuItem>
-                  <MenuItem value="1">Approved</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="0">Rejected</MenuItem>
+                  <MenuItem value="" disabled>
+                    {loadingFilters ? "Loading..." : "Select Status"}
+                  </MenuItem>
+                  {staffFilters?.statuses?.map((item, index) => (
+                    <MenuItem key={`status-${index}`} value={String(item.value)}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
                 </MuiSelect>
               </FormControl>
             </div>
@@ -639,6 +668,44 @@ export const EditStaffPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">Profile Picture Upload</Label>
+                
+                {/* Existing profile image from API */}
+                {staff.staff_image_url && !attachments.profilePicture && (
+                  <div className="mb-4 p-4 border-2 border-blue-300 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-blue-600">Current Photo</span>
+                    </div>
+                    <img
+                      src={staff.staff_image_url}
+                      alt="Current Profile"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* New uploaded image preview */}
+                {attachments.profilePicture && (
+                  <div className="mb-4 p-4 border-2 border-green-500 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-green-600">New Photo</span>
+                      <Button
+                        type="button"
+                        onClick={() => handleFileUpload('profilePicture', null)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs text-[#C72030] hover:bg-[#C72030]/10"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    <img
+                      src={URL.createObjectURL(attachments.profilePicture)}
+                      alt="New Profile"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
                   <input
                     type="file"
@@ -666,8 +733,9 @@ export const EditStaffPage = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
                   <input
                     type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileUpload('manuals', e.target.files?.[0] || null)}
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    multiple
+                    onChange={(e) => handleDocumentsChange(e.target.files ? Array.from(e.target.files) : [])}
                     className="hidden"
                     id="manuals-upload"
                   />
@@ -680,9 +748,31 @@ export const EditStaffPage = () => {
                     <p className="text-sm text-gray-600">
                       Drag & Drop or <span className="text-red-500 cursor-pointer font-medium">Choose File</span>
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">PDF, DOC up to 10MB</p>
+                    <p className="text-xs mt-1">
+                      {documents.length > 0 ? (
+                        <span className="text-red-600 font-medium">{documents.length} file(s) selected</span>
+                      ) : (
+                        <span className="text-gray-500">PDF, DOC up to 10MB</span>
+                      )}
+                    </p>
                   </label>
                 </div>
+                {documents.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {documents.map((file, i) => (
+                      <li key={i} className="flex items-center justify-between text-xs text-gray-600 bg-gray-50 px-3 py-1 rounded">
+                        <span className="truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDocuments(prev => prev.filter((_, idx) => idx !== i))}
+                          className="ml-2 text-[#C72030] hover:text-red-700 font-medium flex-shrink-0"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           </div>
@@ -712,6 +802,7 @@ export const EditStaffPage = () => {
                         <div className="flex items-center gap-3">
                           <input
                             type="checkbox"
+                            aria-label={`Enable ${scheduleDay.day}`}
                             checked={scheduleDay.enabled}
                             onChange={(e) => handleScheduleChange(index, 'enabled', e.target.checked)}
                             className="rounded border-gray-300 text-red-600 focus:ring-red-600"
@@ -791,18 +882,18 @@ export const EditStaffPage = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-4 justify-center pt-6">
-          <Button 
+          <Button
             type="submit"
             disabled={saving}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-2"
+            className="bg-red-600 hover:bg-red-700 px-8 py-2"
           >
             {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <span style={{ color: '#fff', display: 'inline-flex', alignItems: 'center' }}>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" style={{ color: '#fff' }} />
                 Updating...
-              </>
+              </span>
             ) : (
-              'Update Staff'
+              <span style={{ color: '#fff' }}>Update Staff</span>
             )}
           </Button>
           <Button 

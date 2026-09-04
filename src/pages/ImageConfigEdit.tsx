@@ -310,6 +310,7 @@ const EditImagesConfiguration = () => {
                   sx={{
                     width: "350px",
                     "& .MuiInputBase-root": fieldStyles,
+                    "& .MuiFormLabel-asterisk": { color: "#da7756" },
                   }}
                   required
                 >
@@ -352,8 +353,7 @@ const EditImagesConfiguration = () => {
           <Button
             type="button"
             onClick={handleGoBack}
-            className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
-            disabled={loading}
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"             disabled={loading}
           >
             Cancel
           </Button>

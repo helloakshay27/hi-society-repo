@@ -78,6 +78,7 @@ const CheckpointLocationSelector: React.FC<{
   fieldStyles,
   checkpointIndex,
   checkpoint,
+  disabled,
 }) => {
   const [loadingStates, setLoadingStates] = React.useState({
     buildings: false,
@@ -95,11 +96,11 @@ const CheckpointLocationSelector: React.FC<{
         variant="outlined"
         sx={{ "& .MuiInputBase-root": fieldStyles }}
       >
-        <InputLabel shrink>Building *</InputLabel>
+        <InputLabel shrink><span>Building <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
         <MuiSelect
           value={checkpoint.buildingId || ""}
           onChange={(e) => onLocationChange('building', Number(e.target.value) || null)}
-          label="Building *"
+          label={<span>Building <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
           notched
           displayEmpty
           disabled={disabled || loadingStates.buildings}
@@ -190,7 +191,7 @@ const CheckpointLocationSelector: React.FC<{
           label="Room"
           notched
           displayEmpty
-          disabled={disabled || !checkpoint.floorId || loadingStates.rooms}
+          disabled={disabled || !checkpoint.buildingId || loadingStates.rooms}
         >
           <MenuItem value="">Select Room</MenuItem>
           {checkpoint.locationData.rooms.map(room => (
@@ -440,6 +441,7 @@ export const PatrollingEditPage: React.FC = () => {
   const [patrolName, setPatrolName] = useState("");
   const [description, setDescription] = useState("");
   const [estimatedDuration, setEstimatedDuration] = useState("");
+  const [graceType, setGraceType] = useState<'minutes' | 'hours'>('minutes');
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [grace, setGrace] = useState("");
@@ -530,7 +532,16 @@ export const PatrollingEditPage: React.FC = () => {
         setDescription(data.description || "");
         setStartDate(data.validity_start_date || "");
         setEndDate(data.validity_end_date || "");
-        setGrace((data.grace_period_minutes || "").toString());
+
+        // Auto-detect grace type: if value is divisible by 60, show as hours
+        const graceMinutes = parseInt(data.grace_period_minutes);
+        if (!isNaN(graceMinutes) && graceMinutes > 0 && graceMinutes % 60 === 0) {
+          setGraceType('hours');
+          setGrace((graceMinutes / 60).toString());
+        } else {
+          setGraceType('minutes');
+          setGrace((data.grace_period_minutes || "").toString());
+        }
 
         // Populate schedules
         setShifts(
@@ -1354,28 +1365,28 @@ export const PatrollingEditPage: React.FC = () => {
     const validShifts = shifts;
 
     // Validate shift assignees
-    const shiftsWithoutAssignee = validShifts.filter(
-      (s) => !s.assignee || s.assignee.trim() === ""
-    );
-    if (shiftsWithoutAssignee.length > 0) {
-      toast.error("All schedules must have an assignee", {
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    // const shiftsWithoutAssignee = validShifts.filter(
+    //   (s) => !s.assignee || s.assignee.trim() === ""
+    // );
+    // if (shiftsWithoutAssignee.length > 0) {
+    //   toast.error("All schedules must have an assignee", {
+    //     duration: 5000,
+    //   });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     // Validate shift supervisors
-    const shiftsWithoutSupervisor = validShifts.filter(
-      (s) => !s.supervisor || s.supervisor.trim() === ""
-    );
-    if (shiftsWithoutSupervisor.length > 0) {
-      toast.error("All schedules must have a supervisor", {
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    // const shiftsWithoutSupervisor = validShifts.filter(
+    //   (s) => !s.supervisor || s.supervisor.trim() === ""
+    // );
+    // if (shiftsWithoutSupervisor.length > 0) {
+    //   toast.error("All schedules must have a supervisor", {
+    //     duration: 5000,
+    //   });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     // Validate shift time setups
     for (let i = 0; i < validShifts.length; i++) {
@@ -1412,7 +1423,7 @@ export const PatrollingEditPage: React.FC = () => {
         description: description,
         validity_start_date: startDate,
         validity_end_date: endDate,
-        grace_period_minutes: parseInt(grace) || 0,
+        grace_period_minutes: graceType === 'hours' ? (parseInt(grace) || 0) * 60 : (parseInt(grace) || 0),
         // Include checklist_id if a checklist is selected
         ...(selectedChecklist && { checklist_id: parseInt(selectedChecklist.id) }),
         questions: questions
@@ -1544,7 +1555,8 @@ export const PatrollingEditPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-6 space-y-6 relative patrolling-edit-page">
+      <style>{`.patrolling-edit-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
@@ -1575,7 +1587,7 @@ export const PatrollingEditPage: React.FC = () => {
               <TextField
                 label={
                   <>
-                    Name<span className="text-red-500">*</span>
+                    Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                   </>
                 }
                 placeholder="Enter Patrol Name"
@@ -1618,13 +1630,13 @@ export const PatrollingEditPage: React.FC = () => {
         title="Validity"
         icon={<CalendarRange className="w-3.5 h-3.5" />}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <TextField
               type="date"
               label={
                 <>
-                  Start Date<span className="text-red-500">*</span>
+                  Start Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               value={startDate}
@@ -1643,7 +1655,7 @@ export const PatrollingEditPage: React.FC = () => {
               type="date"
               label={
                 <>
-                  End Date<span className="text-red-500">*</span>
+                  End Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
               value={endDate}
@@ -1658,14 +1670,29 @@ export const PatrollingEditPage: React.FC = () => {
             />
           </div>
           <div>
+            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+              <InputLabel shrink>Grace Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
+              <MuiSelect
+                value={graceType}
+                onChange={(e) => setGraceType(e.target.value as 'minutes' | 'hours')}
+                label="Grace Type"
+                notched
+                disabled={isSubmitting}
+              >
+                <MenuItem value="minutes">Minutes</MenuItem>
+                <MenuItem value="hours">Hourly</MenuItem>
+              </MuiSelect>
+            </FormControl>
+          </div>
+          <div>
             <TextField
               type="number"
               label={
                 <>
-                  Grace Period (minutes)<span className="text-red-500">*</span>
+                  Grace Period ({graceType === 'hours' ? 'hours' : 'minutes'})<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </>
               }
-              placeholder="Enter grace period in minutes"
+              placeholder={`Enter grace period in ${graceType === 'hours' ? 'hours' : 'minutes'}`}
               value={grace}
               onChange={(e) => handlegraceminutes(e.target.value)}
               fullWidth
@@ -1760,7 +1787,7 @@ export const PatrollingEditPage: React.FC = () => {
                   <TextField
                     label={
                       <>
-                        Question<span className="text-red-500">*</span>
+                        Question<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                       </>
                     }
                     placeholder="Enter Task"
@@ -1782,14 +1809,14 @@ export const PatrollingEditPage: React.FC = () => {
                     sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
                     <InputLabel shrink>
-                      Input Type<span className="text-red-500">*</span>
+                      Input Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                     </InputLabel>
                     <MuiSelect
                       value={q.inputType}
                       onChange={(e) =>
                         updateQuestion(idx, "inputType", String(e.target.value))
                       }
-                      label="Input Type*"
+                      label={<span>Input Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                       notched
                       displayEmpty
                       disabled={isSubmitting || !!selectedChecklist}
@@ -1964,13 +1991,13 @@ export const PatrollingEditPage: React.FC = () => {
                 </button>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
+                {/* <div>
                   <FormControl
                     fullWidth
                     variant="outlined"
                     sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
-                    <InputLabel shrink>Guard<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Guard<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.assignee || ""}
                       onChange={(e) =>
@@ -1997,14 +2024,14 @@ export const PatrollingEditPage: React.FC = () => {
                       <MenuItem value="bhai">bhai</MenuItem>
                     </MuiSelect>
                   </FormControl>
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <FormControl
                     fullWidth
                     variant="outlined"
                     sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
-                    <InputLabel shrink>Supervisor<span className="text-red-500">*</span></InputLabel>
+                    <InputLabel shrink>Supervisor<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
                     <MuiSelect
                       value={s.supervisor || ""}
                       onChange={(e) =>
@@ -2031,7 +2058,7 @@ export const PatrollingEditPage: React.FC = () => {
                       <MenuItem value="bhai">bhai</MenuItem>
                     </MuiSelect>
                   </FormControl>
-                </div>
+                </div> */}
                 
               </div>
               <div>
@@ -2052,6 +2079,7 @@ export const PatrollingEditPage: React.FC = () => {
               variant="outline"
               onClick={addShift}
               disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4 mr-2" /> Add Schedule
             </Button>
@@ -2089,7 +2117,7 @@ export const PatrollingEditPage: React.FC = () => {
                     <TextField
                       label={
                         <>
-                          Checkpoint Name<span className="text-red-500">*</span>
+                          Checkpoint Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                         </>
                       }
                       placeholder="Enter checkpoint name"
@@ -2138,6 +2166,7 @@ export const PatrollingEditPage: React.FC = () => {
               variant="outline"
               onClick={addCheckpoint}
               disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4 mr-2" /> Add Checkpoint
             </Button>
@@ -2148,7 +2177,7 @@ export const PatrollingEditPage: React.FC = () => {
       <div className="flex items-center gap-3 justify-center pt-2">
         <Button
           variant="destructive"
-          className="px-8"
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >

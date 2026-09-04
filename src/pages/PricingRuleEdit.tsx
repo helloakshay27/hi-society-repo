@@ -65,15 +65,16 @@ const RedButton = styled(MuiButton)(() => ({
 }));
 
 const CancelButton = styled(MuiButton)(() => ({
-  backgroundColor: "#e7e3d9",
-  color: "#C72030",
+  backgroundColor: "#ffffff",
+  color: "#da7756",
+  border: "1px solid #da7756",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 16px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
   "&:hover": {
-    backgroundColor: "#e7e3d9",
+    backgroundColor: "#f5f5f5",
   },
 }));
 
@@ -244,17 +245,12 @@ export const PricingRuleEdit: React.FC = () => {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          backgroundColor: "#f5f5f5",
-        }}
-      >
-        <CircularProgress sx={{ color: "#C72030" }} />
-      </Box>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading pricing rule...</p>
+        </div>
+      </div>
     );
   }
 
@@ -426,10 +422,10 @@ export const PricingRuleEdit: React.FC = () => {
 
       {/* Action Buttons */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
-        <RedButton onClick={handleSubmit} disabled={submitting}>
+        <RedButton onClick={handleSubmit} disabled={submitting} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2">
           {submitting ? "Updating..." : "Update"}
         </RedButton>
-        <CancelButton onClick={handleCancel} disabled={submitting}>
+        <CancelButton onClick={handleCancel} disabled={submitting} className="px-6 sm:px-8 w-full sm:w-auto h-10">
           Cancel
         </CancelButton>
       </Box>

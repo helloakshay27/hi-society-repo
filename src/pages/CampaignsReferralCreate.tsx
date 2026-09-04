@@ -186,10 +186,11 @@ const CampaignsReferralCreate: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="bg-gray-50 min-h-screen p-6 campaigns-referral-create-page">
+      <style>{`.campaigns-referral-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       <div className="mx-auto">
         {/* Header */}
-        <div className="bg-[#F2EEE9] text-[#BF213E] px-4 py-3 mb-6 rounded-t">
+        <div className=" px-4 py-3 mb-6 rounded-t">
           <h1 className="text-lg font-medium">CREATE LEAD</h1>
         </div>
 
@@ -205,12 +206,14 @@ const CampaignsReferralCreate: React.FC = () => {
             {/* Project - Dynamic dropdown */}
             <FormControl fullWidth variant="outlined" required sx={fieldStyles}>
               <InputLabel shrink>
-                Project <span style={{ color: "#C72030" }}>*</span>
+                Project 
+                {/* <span style={{ color: "#C72030" }}>*
+                </span> */}
               </InputLabel>
               <MuiSelect
                 value={formData.projectId}
                 onChange={(e) => handleInputChange("projectId", e.target.value)}
-                label="Project *"
+                label="Project"
                 notched
                 displayEmpty
               >
@@ -255,7 +258,8 @@ const CampaignsReferralCreate: React.FC = () => {
             <TextField
               label={
                 <span>
-                  Client Name <span style={{ color: "#C72030" }}>*</span>
+                  Client Name 
+                  {/* <span style={{ color: "#C72030" }}>*</span> */}
                 </span>
               }
               placeholder="Client Name"
@@ -272,7 +276,8 @@ const CampaignsReferralCreate: React.FC = () => {
             <TextField
               label={
                 <span>
-                  Mobile <span style={{ color: "#C72030" }}>*</span>
+                  Mobile 
+                  {/* <span style={{ color: "#C72030" }}>*</span> */}
                 </span>
               }
               placeholder="Phone"
@@ -430,7 +435,7 @@ const CampaignsReferralCreate: React.FC = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+             className="bg-[#C72030] hover:bg-[#A01828] !text-white px-10 py-2"
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>

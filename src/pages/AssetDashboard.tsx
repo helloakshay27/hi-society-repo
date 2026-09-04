@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -1075,7 +1071,6 @@ export const AssetDashboard = () => {
         />
       </div>
 
-      {/* AI Assistant Widget - Assets Module */}
     </>
   );
 };

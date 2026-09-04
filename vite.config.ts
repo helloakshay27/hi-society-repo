@@ -1,13 +1,33 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
+
+// Pre-bundle every runtime dependency at startup. With lazy-loaded routes,
+// Vite would otherwise discover deps mid-session as pages load, forcing
+// re-optimization passes and full page reloads.
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf-8"));
+const runtimeDeps = Object.keys(pkg.dependencies).filter(
+  (d) => !d.startsWith("@types/")
+);
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 5173,
+    proxy: {
+      '/runwal-api': {
+        target: 'https://runwal-cp-api.lockated.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/runwal-api/, ''),
+      }
+    }
+  },
+  optimizeDeps: {
+    include: runtimeDeps,
   },
   plugins: [
     react(),
@@ -75,15 +95,25 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    // Reduce memory usage during build
+    minify: "esbuild",
+    sourcemap: false,
     // Add hash to filenames for cache busting
     rollupOptions: {
       output: {
-        // Keep chunks split for better caching strategy
-        manualChunks: (id) => {
-          // Vendor chunks for better caching
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
+        // Split vendor chunks to reduce memory pressure
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-mui": ["@mui/material", "@mui/icons-material"],
+          "vendor-radix": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-select",
+          ],
+          "vendor-tanstack": ["@tanstack/react-query"],
+          "vendor-charts": ["recharts"],
         },
         // Add hash to generated files for better cache invalidation
         entryFileNames: `assets/[name].[hash].js`,
@@ -95,5 +125,5 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 1000,
   },
   // Disable caching in development
-  cacheDir: mode === 'development' ? '.vite-no-cache' : '.vite',
+  cacheDir: mode === "development" ? ".vite-no-cache" : ".vite",
 }));

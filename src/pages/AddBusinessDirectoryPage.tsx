@@ -114,8 +114,28 @@ const AddBusinessDirectoryPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.companyName || !form.mobile || !form.primaryEmail || !form.category) {
-      toast.error("Please fill in all required fields");
+    if (!form.companyName) {
+      toast.error("Company name is required");
+      return;
+    }
+
+    if (!form.mobile) {
+      toast.error("Mobile number is required");
+      return;
+    }
+
+    if (!form.primaryEmail) {
+      toast.error("Email is required");
+      return;
+    }
+
+    if (!form.category) {
+      toast.error("Category is required");
+      return;
+    }
+
+    if (!form.subCategory) {
+      toast.error("Sub category is required");
       return;
     }
 
@@ -199,9 +219,6 @@ const AddBusinessDirectoryPage: React.FC = () => {
         <Card className="border-0 shadow-sm ring-1 ring-gray-200 bg-white overflow-hidden">
           <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-[#C72030]/10 flex items-center justify-center">
-                <ImageIcon className="h-4 w-4 text-[#C72030]" />
-              </div>
               <CardTitle className="text-lg font-semibold text-gray-900">
                 Business Details
               </CardTitle>
@@ -306,9 +323,11 @@ const AddBusinessDirectoryPage: React.FC = () => {
                       id="mobile"
                       placeholder="9876543210"
                       value={form.mobile}
-                      onChange={(e) =>
-                        handleInputChange("mobile", e.target.value)
-                      }
+                      maxLength={10}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        handleInputChange("mobile", value);
+                      }}
                       className="rounded-l-none border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
                     />
                   </div>
@@ -420,7 +439,9 @@ const AddBusinessDirectoryPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subCategory">Sub Category</Label>
+                  <Label htmlFor="subCategory">
+                    Sub Category <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={form.subCategory}
                     onValueChange={(value) =>
@@ -497,7 +518,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                   <label htmlFor="gallery-upload">
                     <Button
                       variant="outline"
-                      className="cursor-pointer border-dashed border-gray-300 hover:border-[#C72030] hover:text-[#C72030] transition-colors"
+                      className="cursor-pointer border-dashed border-gray-300 hover:border-[#da7756] hover:text-[#da7756] [&_svg]:text-[#da7756] transition-colors"
                       asChild
                     >
                       <span className="flex items-center gap-2">
@@ -561,7 +582,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
             onClick={handleSubmit}
             className="px-6 bg-[#C72030] hover:bg-[#a31b28] text-white shadow-sm"
           >
-            Submit Listing
+            Submit 
           </Button>
         </div>
       </div>

@@ -62,6 +62,31 @@ export function useEnhancedTable<T>({
     columns.map(column => column.key)
   );
 
+  // Sync columnOrder and columnVisibility if columns prop changes (e.g. dynamically added columns)
+  useEffect(() => {
+    setColumnOrder(prevOrder => {
+      const newKeys = columns.map(col => col.key).filter(key => !prevOrder.includes(key));
+      if (newKeys.length > 0) {
+        return [...prevOrder, ...newKeys];
+      }
+      // Optional: remove keys that no longer exist
+      // return prevOrder.filter(key => columns.some(col => col.key === key));
+      return prevOrder;
+    });
+
+    setColumnVisibility(prevVisibility => {
+      const newVisibility = { ...prevVisibility };
+      let hasChanges = false;
+      columns.forEach(col => {
+        if (!(col.key in newVisibility)) {
+          newVisibility[col.key] = col.defaultVisible !== false;
+          hasChanges = true;
+        }
+      });
+      return hasChanges ? newVisibility : prevVisibility;
+    });
+  }, [columns]);
+
   const [sortState, setSortState] = useState<SortState>({
     column: null,
     direction: null

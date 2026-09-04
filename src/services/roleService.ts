@@ -7,6 +7,16 @@ export interface ApiRole {
   permissions_hash: string;
 }
 
+export interface BCRole {
+  id: string;
+  name: string;
+}
+
+export interface BCRolesResponse {
+  success: boolean;
+  roles: BCRole[];
+}
+
 export interface CreateRolePayload {
   lock_role: {
     name: string;
@@ -174,6 +184,11 @@ interface CreateRoleWithPayload {
   lock_modules: number[]; // Array of module IDs instead of null
 }
 
+const isWebOrg34 = () => {
+  const orgId = String(localStorage.getItem("org_id") ?? "").trim();
+  return window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost";
+};
+
 export const roleService = {
   // Fetch all roles
   async fetchRoles(): Promise<ApiRole[]> {
@@ -182,6 +197,17 @@ export const roleService = {
       return response.data;
     } catch (error) {
       console.error("Error fetching roles:", error);
+      throw error;
+    }
+  },
+
+  // Fetch Business Compass roles
+  async fetchBusinessCompassRoles(): Promise<BCRole[]> {
+    try {
+      const response = await apiClient.get<BCRolesResponse>(ENDPOINTS.BUSINESS_COMPASS_ROLES);
+      return response.data.roles || [];
+    } catch (error) {
+      console.error("Error fetching BC roles:", error);
       throw error;
     }
   },
@@ -238,9 +264,18 @@ export const roleService = {
         modules: roleData.modules,
       };
 
+      const viPayload = {
+        role: {
+          name: roleData.role_name,
+        },
+        permissions_hash: {}, // You may need to build this from the modules data
+        lock_modules: roleData.modules?.length || 0,
+        modules: roleData.modules,
+      };
+
       const response = await apiClient.post<CreateRoleResponse>(
         ENDPOINTS.ROLES,
-        payload
+        isWebOrg34() ? viPayload : payload
       );
       return response.data;
     } catch (error) {
@@ -443,141 +478,52 @@ export const roleService = {
 
   // Fetch roles with their associated modules
   async fetchRolesWithModules(): Promise<RoleWithModules[]> {
+    // Step 1: Always fetch the flat roles list — this is the complete source of truth.
+    let allFlatRoles: any[] = [];
     try {
-      console.log(
-        "Fetching roles with modules from:",
-        ENDPOINTS.ROLES_WITH_MODULES
-      );
+      const rolesResponse = await apiClient.get<any>(ENDPOINTS.ROLES);
+      const data = rolesResponse.data;
+      if (Array.isArray(data)) {
+        allFlatRoles = data;
+      } else {
+        allFlatRoles = data?.roles || data?.lock_roles || [];
+      }
+      console.log("Flat roles fetched:", allFlatRoles.length);
+    } catch (err) {
+      console.error("Failed to fetch flat roles list:", err);
+    }
+
+    // Step 2: Try to enrich with module/permission data from the modules endpoint.
+    let transformedRoles: RoleWithModules[] = [];
+    try {
+      console.log("Fetching roles with modules from:", ENDPOINTS.ROLES_WITH_MODULES);
       const response = await apiClient.get<ApiRolesWithModulesResponse>(
         ENDPOINTS.ROLES_WITH_MODULES
       );
       console.log("Raw roles with modules response:", response.data);
-
-      // Also fetch regular roles to get the role IDs
-      console.log("Fetching regular roles for ID mapping...");
-      const rolesResponse = await apiClient.get<ApiRole[]>(ENDPOINTS.ROLES);
-      console.log("Regular roles response:", rolesResponse.data);
-
-      // Transform the API response to match frontend structure
-      return this.transformApiResponseToRoleWithModules(
+      transformedRoles = this.transformApiResponseToRoleWithModules(
         response.data,
-        rolesResponse.data
+        allFlatRoles
       );
-    } catch (error) {
-      console.error("Error fetching roles with modules:", error);
-
-      // Return mock data for testing
-      console.warn("Returning mock roles data for testing...");
-      const mockRoles: RoleWithModules[] = [
-        {
-          id: 1,
-          role_id: 1,
-          role_name: "Admin Role",
-          modules: [
-            {
-              id: 1,
-              module_id: 1,
-              name: "User Management",
-              enabled: true,
-              functions: [
-                {
-                  id: 1,
-                  function_id: 1,
-                  function_name: "User Operations",
-                  enabled: true,
-                  sub_functions: [
-                    {
-                      id: 1,
-                      sub_function_id: 1,
-                      sub_function_name: "Create User",
-                      enabled: true,
-                    },
-                    {
-                      id: 2,
-                      sub_function_id: 2,
-                      sub_function_name: "Edit User",
-                      enabled: true,
-                    },
-                    {
-                      id: 3,
-                      sub_function_id: 3,
-                      sub_function_name: "Delete User",
-                      enabled: false,
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              id: 2,
-              module_id: 2,
-              name: "Asset Management",
-              enabled: true,
-              functions: [
-                {
-                  id: 2,
-                  function_id: 2,
-                  function_name: "Asset Operations",
-                  enabled: false,
-                  sub_functions: [
-                    {
-                      id: 4,
-                      sub_function_id: 4,
-                      sub_function_name: "Add Asset",
-                      enabled: false,
-                    },
-                    {
-                      id: 5,
-                      sub_function_id: 5,
-                      sub_function_name: "View Assets",
-                      enabled: true,
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: 2,
-          role_id: 2,
-          role_name: "Manager Role",
-          modules: [
-            {
-              id: 1,
-              module_id: 1,
-              name: "User Management",
-              enabled: false,
-              functions: [
-                {
-                  id: 1,
-                  function_id: 1,
-                  function_name: "User Operations",
-                  enabled: false,
-                  sub_functions: [
-                    {
-                      id: 1,
-                      sub_function_id: 1,
-                      sub_function_name: "Create User",
-                      enabled: false,
-                    },
-                    {
-                      id: 2,
-                      sub_function_id: 2,
-                      sub_function_name: "Edit User",
-                      enabled: true,
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ];
-
-      console.log("Mock roles data:", mockRoles);
-      return mockRoles;
+    } catch (err) {
+      console.error("Failed to fetch roles_with_modules (will use flat list):", err);
     }
+
+    // Step 3: Any role from the flat list that is missing from the modules response
+    // gets added with empty modules so it still appears in the sidebar.
+    const transformedIds = new Set(transformedRoles.map((r: RoleWithModules) => r.role_id));
+    const extraRoles: RoleWithModules[] = allFlatRoles
+      .filter((role: any) => role.active && !transformedIds.has(role.id))
+      .map((role: any): RoleWithModules => ({
+        id: role.id,
+        role_id: role.id,
+        role_name: role.title || role.name,
+        modules: [],
+      }));
+
+    const result = [...transformedRoles, ...extraRoles];
+    console.log("fetchRolesWithModules result count:", result.length);
+    return result;
   },
 
   // Transform API response to frontend structure
@@ -737,6 +683,12 @@ export const roleService = {
         });
       });
 
+      const filteredPermissionsHash = Object.fromEntries(
+        Object.entries(permissionsHash).filter(
+          ([_, value]) => Object.keys(value).length > 0
+        )
+      );
+
       // Get enabled module IDs
       const enabledModuleIds = roleWithModules.modules
         .filter((module) => module.enabled)
@@ -755,6 +707,20 @@ export const roleService = {
         lock_modules: enabledModuleIds,
       };
 
+      const viPayload = {
+        role: {
+          user_id: localStorage.getItem("userId"),
+          name: roleWithModules.role_name,
+          title: roleWithModules.role_name,
+          description: "",
+          // resource_type: "Pms::CompanySetup",
+          // resource_id: localStorage.getItem("selectedCompanyId"),
+          active: true,
+          modules: enabledModuleIds,
+          the_role: filteredPermissionsHash,
+        },
+      };
+
       console.log("Updating role with payload:", payload);
       console.log("Role ID being used:", roleWithModules.role_id);
       console.log(
@@ -764,7 +730,7 @@ export const roleService = {
 
       await apiClient.patch(
         `${ENDPOINTS.ROLES.replace(".json", "")}/${roleWithModules.role_id}.json`,
-        payload
+        isWebOrg34() ? viPayload : payload
       );
     } catch (error) {
       console.error("Error updating role with modules:", error);

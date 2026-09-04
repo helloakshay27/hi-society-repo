@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 interface LocationLevel {
   level: 1 | 2 | 3;
@@ -58,11 +59,15 @@ export const LocationTab: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // Form state
   const [selectedLevel1, setSelectedLevel1] = useState('');
   const [selectedLevel2, setSelectedLevel2] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const levels: LocationLevel[] = [
     { level: 1, label: 'Level 1', placeholder: 'Enter Level 1 name' },
@@ -153,6 +158,8 @@ export const LocationTab: React.FC = () => {
     setSelectedLevel1('');
     setSelectedLevel2('');
     setInputValue('');
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   // Reset level2 selection when level1 changes
@@ -227,6 +234,7 @@ export const LocationTab: React.FC = () => {
         setInputValue('');
         setSelectedLevel1('');
         setSelectedLevel2('');
+        setAddDialogOpen(false);
         refetchCurrentLevel();
         // Also re-fetch all so dropdowns stay fresh
         if (activeLevel === 1) fetchLevel1();
@@ -313,8 +321,92 @@ export const LocationTab: React.FC = () => {
   const currentLocations: LocationItem[] =
     activeLevel === 1 ? level1Items : activeLevel === 2 ? level2Items : level3Items;
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const filteredLocations = currentLocations.filter((item) => {
+    if (!searchTerm) return true;
+    const query = searchTerm.toLowerCase();
+    return Object.values(item).some((v) => String(v ?? '').toLowerCase().includes(query));
+  });
+
+  const totalCount = filteredLocations.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedLocations = filteredLocations.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   const renderCell = (item: LocationItem & { level?: number; society_location_id?: number | null; wing_id?: string | null }, columnKey: string) => {
-    const index = currentLocations.findIndex(loc => loc.id === item.id);
+    const index = filteredLocations.findIndex(loc => loc.id === item.id);
     switch (columnKey) {
       case 'srno':
         return index + 1;
@@ -332,120 +424,165 @@ export const LocationTab: React.FC = () => {
   const renderActions = (item: LocationItem & { level?: number }) => (
     <div className="flex gap-2">
       <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4 text-red-500" />
+        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
       </Button>
     </div>
   );
 
   return (
     <div className="space-y-6">
-      {/* Add Form Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-4">
-            {levels.map((level) => (
-              <Button
-                key={level.level}
-                onClick={() => handleLevelChange(level.level)}
-                className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                  activeLevel === level.level
-                    ? 'bg-[#4A90E2] text-white hover:bg-[#357ABD]'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {level.label}
-              </Button>
-            ))}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3 flex-wrap">
+      {/* Add Location Dialog */}
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
+        if (!open) {
+          setInputValue('');
+          setSelectedLevel1('');
+          setSelectedLevel2('');
+        }
+        setAddDialogOpen(open);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add {levels[activeLevel - 1].label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
             {/* Level 1 Dropdown — shown for Level 2 and Level 3 */}
             {activeLevel >= 2 && (
-              <div className="flex-1 min-w-[180px]">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Level 1</label>
-                <Select value={selectedLevel1} onValueChange={handleLevel1Change}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Level 1" />
-                  </SelectTrigger>
-                  <SelectContent>
+              <div className="space-y-1">
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Level 1</InputLabel>
+                  <MuiSelect
+                    value={selectedLevel1}
+                    onChange={(e) => handleLevel1Change(e.target.value)}
+                    displayEmpty
+                    label="Level 1"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Level 1</em></MenuItem>
                     {level1Items.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <MenuItem key={item.id} value={item.id.toString()}>
                         {item.name}
-                      </SelectItem>
+                      </MenuItem>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </MuiSelect>
+                </MuiFormControl>
               </div>
             )}
 
             {/* Level 2 Dropdown — shown only for Level 3 */}
             {activeLevel === 3 && (
-              <div className="flex-1 min-w-[180px]">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Level 2</label>
-                <Select value={selectedLevel2} onValueChange={setSelectedLevel2} disabled={!selectedLevel1}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={selectedLevel1 ? 'Select Level 2' : 'Select Level 1 first'} />
-                  </SelectTrigger>
-                  <SelectContent>
+              <div className="space-y-1">
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Level 2</InputLabel>
+                  <MuiSelect
+                    value={selectedLevel2}
+                    onChange={(e) => setSelectedLevel2(e.target.value)}
+                    displayEmpty
+                    disabled={!selectedLevel1}
+                    label="Level 2"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>{selectedLevel1 ? 'Select Level 2' : 'Select Level 1 first'}</em></MenuItem>
                     {filteredLevel2ForDropdown.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <MenuItem key={item.id} value={item.id.toString()}>
                         {item.name}
-                      </SelectItem>
+                      </MenuItem>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </MuiSelect>
+                </MuiFormControl>
               </div>
             )}
 
             {/* Name Input */}
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                {levels[activeLevel - 1].label} Name
-              </label>
-              <Input
+            <div className="space-y-1">
+              <TextField
+                label={`${levels[activeLevel - 1].label} Name`}
                 placeholder={levels[activeLevel - 1].placeholder}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
             </div>
-
-            {/* Add Button */}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAddDialogOpen(false)}
+            >
+              Cancel
+            </Button>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 self-end"
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
             >
               {isSubmitting ? 'Adding...' : 'Add'}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Table Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{levels[activeLevel - 1].label} List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={currentLocations}
-              columns={getColumns()}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey={`location-level-${activeLevel}-table`}
-              enableSearch={true}
-              searchPlaceholder={`Search ${levels[activeLevel - 1].label}...`}
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Level Tabs + Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        {/* Level toggle buttons */}
+        <div className="flex items-center gap-3 mb-4">
+          {levels.map((level) => (
+            <Button
+              key={level.level}
+              onClick={() => handleLevelChange(level.level)}
+              className={`bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                activeLevel === level.level
+                  ? ''
+                  : 'opacity-50'
+              }`}
+            >
+              {level.label}
+            </Button>
+          ))}
+        </div>
+
+        <EnhancedTable
+          data={paginatedLocations}
+          columns={getColumns()}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey={`location-level-${activeLevel}-table`}
+          pagination={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
+          searchPlaceholder={`Search ${levels[activeLevel - 1].label}...`}
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

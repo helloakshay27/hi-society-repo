@@ -138,7 +138,7 @@ const ProjectConfiguration = () => {
                 onChange={handleInputChange}
                 fullWidth
                 variant="outlined"
-                slotProps={{ inputLabel: { shrink: true } }}
+                slotProps={{ inputLabel: { shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } } }}
                 InputProps={{ sx: { ...fieldStyles, width: '350px' } }}
                 required
               />
@@ -221,8 +221,8 @@ const ProjectConfiguration = () => {
           </Button>
           <Button
             type="button"
-          
             onClick={handleGoBack}
+            variant="outline"
             className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
             disabled={loading}
           >

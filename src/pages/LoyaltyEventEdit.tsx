@@ -47,7 +47,6 @@ import {
   TableRow,
 } from "../components/ui/table";
 import SelectBox from "@/components/ui/select-box";
-
 const EventEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -1990,7 +1989,7 @@ const EventEdit = () => {
                     height: "40px",
                     backgroundColor:
                       index === currentStep || completedSteps.includes(index)
-                        ? "#C72030"
+                        ? "#da7756"
                         : index > currentStep &&
                           !completedSteps.includes(index - 1)
                           ? "rgba(245, 245, 245, 1)"
@@ -2004,7 +2003,7 @@ const EventEdit = () => {
                           : "rgba(196, 184, 157, 1)",
                     border:
                       index === currentStep || completedSteps.includes(index)
-                        ? "2px solid #C72030"
+                        ? "2px solid #da7756"
                         : index > currentStep &&
                           !completedSteps.includes(index - 1)
                           ? "1px solid rgba(200, 200, 200, 1)"
@@ -2126,7 +2125,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Event Details
@@ -2578,7 +2577,7 @@ const EventEdit = () => {
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Share
               </h2>
@@ -2664,7 +2663,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Visibility
@@ -2786,7 +2785,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Invite CPs
@@ -3130,7 +3129,7 @@ const EventEdit = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "#da7756" }}
                   />
                 </Avatar>
                 Event Related Images
@@ -3621,7 +3620,7 @@ const EventEdit = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Proceed to save
               </button>
@@ -3635,8 +3634,7 @@ const EventEdit = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-              >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"              >
                 Cancel
               </button>
             </div>
@@ -3680,7 +3678,7 @@ const EventEdit = () => {
                               }}
                             >
                               <SettingsOutlinedIcon
-                                sx={{ fontSize: 18, color: "#C72030" }}
+                                sx={{ fontSize: 18, color: "#da7756" }}
                               />
                             </Avatar>
                             Event Details
@@ -3884,7 +3882,7 @@ const EventEdit = () => {
                               }}
                             >
                               <SettingsOutlinedIcon
-                                sx={{ fontSize: 18, color: "#C72030" }}
+                                sx={{ fontSize: 18, color: "#da7756" }}
                               />
                             </Avatar>
                             Visibility
@@ -4012,7 +4010,7 @@ const EventEdit = () => {
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "#C72030" }}
+                              sx={{ fontSize: 18, color: "#da7756" }}
                             />
                           </Avatar>
                           Event Related Images
@@ -4236,7 +4234,7 @@ const EventEdit = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Invite CPs
                       </h2>
@@ -4357,7 +4355,7 @@ const EventEdit = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "#da7756" }}
                         />
                       </Avatar>
                       Event Details
@@ -4559,7 +4557,7 @@ const EventEdit = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "#da7756" }}
                         />
                       </Avatar>
                       Visibility
@@ -4680,7 +4678,7 @@ const EventEdit = () => {
                 <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Share
                   </h2>
@@ -4742,7 +4740,7 @@ const EventEdit = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "#da7756" }}
                         />
                       </Avatar>
                       Event Related Images
@@ -5001,14 +4999,14 @@ const EventEdit = () => {
                     type="submit"
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Submitting..." : "Submit Event"}
                   </button>
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
                   >
                     Cancel
                   </button>

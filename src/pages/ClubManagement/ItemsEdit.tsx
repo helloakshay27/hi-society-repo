@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     // TextField,
     FormControl,
@@ -15,7 +15,8 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { InputAdornment, TextField } from "@mui/material";
+import { InputAdornment, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { Plus, Eye, Filter, Ticket, Clock, AlertCircle, CheckCircle, BarChart3, TrendingUp, Download, Edit, Trash2, Settings, Upload, Flag, Star, ArrowLeft } from 'lucide-react';
 
 // const muiTheme = createTheme({
 //   components: {
@@ -136,12 +137,17 @@ const ItemsEdit = () => {
     const { id } = useParams();
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
-
+    const lock_account_id = localStorage.getItem("lock_account_id");
+    const [exemptions, setExemptions] = useState([]);
+    const [taxSettings, setTaxSettings] = useState<any | null>(null);
     const [form, setForm] = useState({
         type: "goods",
         name: "",
         unit: "",
         sku: "",
+        hsn_code: "",
+        sac_code: "",
+
         sellable: true,
         purchasable: true,
         selling_price: "",
@@ -152,6 +158,11 @@ const ItemsEdit = () => {
         purchase_account: "",
         purchase_description: "",
         preferred_vendor: "",
+
+        tax_preference: "",
+        intra_state_tax: "",
+        inter_state_tax: "",
+        exemption_reason: "",
     });
     const [loading, setLoading] = useState(false);
     const [accountGroups, setAccountGroups] = React.useState([]);
@@ -164,7 +175,7 @@ const ItemsEdit = () => {
         const fetchAccountGroups = async () => {
             try {
                 // Replace with your actual endpoint for groups/ledgers
-                const res = await axios.get(`https://${baseUrl}/lock_accounts/1/lock_account_groups?format=flat`, {
+                const res = await axios.get(`https://${baseUrl}/lock_accounts/${lock_account_id}/lock_account_groups?format=flat`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -177,6 +188,33 @@ const ItemsEdit = () => {
         };
         fetchAccountGroups();
     }, [openSalesAccount, openPurchaseAccount, baseUrl, token]);
+    React.useEffect(() => {
+        const fetchTaxSettings = async () => {
+            try {
+                const baseUrl = localStorage.getItem("baseUrl");
+                const token = localStorage.getItem("token");
+
+                const res = await axios.get(
+                    `https://${baseUrl}/lock_accounts/${lock_account_id}/tax_settings.json`,
+                    {
+                        headers: {
+                            Authorization: token ? `Bearer ${token}` : undefined,
+                        },
+                    }
+                );
+
+                console.log("Tax settings:", res.data);
+                setTaxSettings(res.data || null); // adjust based on response
+            } catch (err) {
+                console.error("Failed to fetch tax settings", err);
+                setTaxSettings(null);
+            }
+        };
+
+        fetchTaxSettings();
+    }, []);
+
+
     React.useEffect(() => {
         const fetchItemDetails = async () => {
             setLoading(true);
@@ -199,6 +237,8 @@ const ItemsEdit = () => {
                     name: data.name || "",
                     unit: data.unit || "",
                     sku: data.sku || "",
+                    hsn_code: data.hsn_code || "",
+                    sac_code: data.sac || "",
                     sellable: data.can_be_sold ?? true,
                     purchasable: data.can_be_purchased ?? true,
                     selling_price: data.sale_rate?.toString() || "",
@@ -209,7 +249,12 @@ const ItemsEdit = () => {
                     purchase_account: data.purchase_lock_account_ledger_id?.toString() || "",
                     purchase_description: data.purchase_description || "",
                     preferred_vendor: data.pms_supplier_id?.toString() || "",
+                    tax_preference: data.tax_preference || "",
+                    exemption_reason: data.tax_exemption_id?.toString() || "",
                 });
+                if (data.icon?.document_file_name && data.icon?.attachment_url) {
+                    setPreview(data.icon.attachment_url);
+                }
             } catch (error) {
                 toast.error("Failed to fetch item details");
             } finally {
@@ -218,6 +263,63 @@ const ItemsEdit = () => {
         };
         if (id) fetchItemDetails();
     }, [id, baseUrl, token]);
+
+
+    React.useEffect(() => {
+        const fetchExemptions = async () => {
+            try {
+                const baseUrl = localStorage.getItem("baseUrl");
+                const token = localStorage.getItem("token");
+
+                const res = await axios.get(
+                    `https://${baseUrl}/tax_exemptions.json?lock_account_id=${lock_account_id}&q[exemption_type_eq]=item`,
+                    {
+                        headers: {
+                            Authorization: token ? `Bearer ${token}` : undefined,
+                        },
+                    }
+                );
+
+                console.log("Exemptions:", res.data);
+                setExemptions(res.data || []); // adjust path if different
+            } catch (err) {
+                console.error("Failed to fetch tax exemptions", err);
+                setExemptions([]);
+            }
+        };
+
+        fetchExemptions();
+    }, []);
+
+
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [loadingCustomers, setLoadingCustomers] = useState(false);
+
+    useEffect(() => {
+        setLoadingCustomers(true);
+
+        const baseUrl = localStorage.getItem("baseUrl");
+        const token = localStorage.getItem("token");
+
+        axios
+            .get(`https://${baseUrl}/pms/suppliers.json`, {
+                headers: {
+                    Authorization: token ? `Bearer ${token}` : undefined,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then((res) => {
+                console.log("suppliers:", res);
+                setCustomers(res?.data?.pms_suppliers || []);
+            })
+            .catch((err) => {
+                console.error("Supplier API error", err);
+            })
+            .finally(() => {
+                setLoadingCustomers(false);
+            });
+    }, []);
 
     const handleChange = (e: any) => {
         const { name, value, type, checked } = e.target;
@@ -246,6 +348,22 @@ const ItemsEdit = () => {
             toast.error("Please mention the item name.");
             return;
         }
+        if (form.type === "goods" && !form.hsn_code.trim()) {
+            toast.error("HSN Code is required.");
+            return;
+        }
+
+        if (!form.tax_preference) {
+            toast.error("Please select Tax Preference");
+            return;
+        }
+        // ✅ If Non-Taxable
+        if (form.tax_preference === "non_taxable") {
+            if (!form.exemption_reason) {
+                toast.error("Please select Exemption Reason");
+                return;
+            }
+        }
         if (!form.sellable && !form.purchasable) {
             toast.error("Select at least one option from, Sales Information, Purchase Information to proceed.");
             return;
@@ -257,6 +375,14 @@ const ItemsEdit = () => {
             }
             if (!form.sales_account) {
                 toast.error("Sales Account is required for Sellable items");
+                return;
+            }
+            if (
+                form.mrp &&
+                !isNaN(Number(form.mrp)) &&
+                Number(form.selling_price) > Number(form.mrp)
+            ) {
+                toast.error("Selling Price cannot be greater than MRP.");
                 return;
             }
         }
@@ -295,28 +421,99 @@ const ItemsEdit = () => {
         const payload = {
             lock_account_item: itemPayload
         };
+
+
+
+        const formData = new FormData();
+        formData.append("lock_account_item[name]", form.name);
+        formData.append("lock_account_item[sku]", form.sku);
+        formData.append("lock_account_item[product_type]", form.type);
+        formData.append("lock_account_item[pms_supplier_id]", form.preferred_vendor);
+        formData.append("lock_account_item[unit]", form.unit);
+        formData.append("lock_account_item[can_be_sold]", form.sellable);
+        formData.append("lock_account_item[can_be_purchased]", form.purchasable);
+        formData.append("lock_account_item[track_inventory]", "false");
+        formData.append("lock_account_item[tax_preference]", form.tax_preference);
+        if (form.type === "goods") {
+            formData.append("lock_account_item[hsn_code]", form.hsn_code);
+        }
+
+        if (form.type === "service") {
+            formData.append("lock_account_item[sac]", form.sac_code);
+        }
+
+        if (form.tax_preference === "taxable" && taxSettings) {
+            formData.append(
+                "lock_account_item[intra_state_tax_rate_id]",
+                taxSettings.intra_state_tax_rate_id
+            );
+
+            formData.append(
+                "lock_account_item[inter_state_tax_rate_id]",
+                taxSettings.inter_state_tax_rate_id
+            );
+        }
+
+        if (form.tax_preference === "non_taxable") {
+            formData.append(
+                "lock_account_item[tax_exemption_id]",
+                form.exemption_reason
+            );
+        }
+
+        if (form.sellable) {
+            formData.append("lock_account_item[sale_description]", form.sales_description);
+            formData.append("lock_account_item[sale_rate]", form.selling_price);
+            formData.append("lock_account_item[sale_lock_account_ledger_id]", form.sales_account);
+            formData.append("lock_account_item[sale_mrp]", form.mrp);
+        }
+        if (form.purchasable) {
+            formData.append("lock_account_item[purchase_description]", form.purchase_description);
+            formData.append("lock_account_item[purchase_rate]", form.cost_price);
+            formData.append(
+                "lock_account_item[purchase_lock_account_ledger_id]",
+                form.purchase_account
+            );
+        }
+
+        if (image) {
+            formData.append("lock_account_item[icon_attributes][document]", image);
+            formData.append("lock_account_item[icon_attributes][active]", "true");
+        }
+        formData.append("lock_account_id", lock_account_id);
+
         try {
             let apiBase = baseUrl;
             apiBase = `https://${baseUrl}`;
             await axios.patch(
                 `${apiBase}/lock_account_items/${id}.json`,
-                payload,
+                // payload,
+                formData,
                 {
                     headers: {
                         "Authorization": token ? `Bearer ${token}` : undefined,
-                        "Content-Type": "application/json"
+                        // "Content-Type": "application/json"
                     }
                 }
             );
             toast.success("Item updated successfully!");
             navigate("/accounting/items");
-        } catch (err) {
-            toast.error("Failed to update item");
+        } catch (err: any) {
             console.error("Item update error:", err);
+            const errors = err?.response?.data;
+            if (errors && typeof errors === 'object') {
+                const messages = Object.entries(errors)
+                    .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+                    .join('\n');
+                toast.error(messages);
+            } else {
+                toast.error("Failed to update item");
+            }
         }
     };
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -327,11 +524,22 @@ const ItemsEdit = () => {
     const handleRemoveImage = () => {
         setImage(null);
         setPreview(null);
+        setOpenDeleteDialog(false);
     };
 
     return (
         <ThemeProvider theme={muiTheme}>
             <div className="p-6 bg-white min-h-screen">
+                <div className="mb-6">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate("/accounting/items")}
+                        className="p-0"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Items List
+                    </Button>
+                </div>
                 <h1 className="text-2xl font-semibold mb-6">Edit Item</h1>
 
                 {/* TYPE */}
@@ -412,6 +620,75 @@ const ItemsEdit = () => {
                             </Select>
                         </FormControl>
 
+                        {form.type === "goods" ? (
+                            <TextField
+                                label={<span>HSN Code <span style={{ color: 'red' }}>*</span></span>}
+                                name="hsn_code"
+                                placeholder="Enter HSN Code"
+                                value={form.hsn_code}
+                                // required
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Allow only numbers and max 8 digits
+                                    if (/^\d{0,8}$/.test(value)) {
+                                        handleChange(e);
+                                    }
+                                }}
+                                inputProps={{ maxLength: 8, inputMode: "numeric", pattern: "[0-9]*" }}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                        ) : (
+                            <TextField
+                                label="SAC"
+                                name="sac_code"
+                                placeholder="Enter SAC Code"
+                                value={form.sac_code}
+                                onChange={handleChange}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                        )}
+
+
+                        <FormControl fullWidth>
+                            <InputLabel>Tax Preference <span style={{ color: "red" }}>*</span></InputLabel>
+                            <Select
+                                name="tax_preference"
+                                value={form.tax_preference}
+                                label="Tax Preference"
+                                onChange={handleChange}
+                                displayEmpty
+                            >
+                                <MenuItem value="">Select Tax Preference</MenuItem>
+                                <MenuItem value="taxable">Taxable</MenuItem>
+                                <MenuItem value="non_taxable">Non-Taxable</MenuItem>
+                                <MenuItem value="out_of_scope">Out of Scope</MenuItem>
+                                <MenuItem value="non_gst_supply">Non-GST Supply</MenuItem>
+                            </Select>
+                        </FormControl>
+
+                        {form.tax_preference === "non_taxable" && (
+                            <FormControl fullWidth>
+                                <InputLabel>Exemption Reason <span style={{ color: "red" }}>*</span></InputLabel>
+                                <Select
+                                    name="exemption_reason"
+                                    value={form.exemption_reason}
+                                    label="Exemption Reason"
+                                    onChange={handleChange}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">
+                                        Select exemption reason
+                                    </MenuItem>
+
+                                    {exemptions.map((ex) => (
+                                        <MenuItem key={ex.id} value={ex.id}>
+                                            {ex.reason}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+
                     </div>
 
                     {/* RIGHT SIDE ATTACHMENT */}
@@ -461,10 +738,10 @@ const ItemsEdit = () => {
 
                                     <button
                                         type="button"
-                                        onClick={handleRemoveImage}
+                                        onClick={() => setOpenDeleteDialog(true)}
                                         className="text-gray-500 hover:text-red-600"
                                     >
-                                        🗑
+                                         <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
                             </div>
@@ -770,15 +1047,52 @@ const ItemsEdit = () => {
                                     value={form.preferred_vendor}
                                     label="Preferred Vendor"
                                     onChange={handleChange}
+                                    displayEmpty
                                 >
-                                    <MenuItem value="" disabled>Select vendor</MenuItem>
+                                    {/* <MenuItem value="" disabled>Select vendor</MenuItem>
                                     <MenuItem value="Vendor 1">Vendor 1</MenuItem>
-                                    <MenuItem value="Vendor 2">Vendor 2</MenuItem>
+                                    <MenuItem value="Vendor 2">Vendor 2</MenuItem> */}
+                                    <MenuItem value="">Select vendor</MenuItem>
+                                    {/* <MenuItem value="Vendor 1">Vendor 1</MenuItem>
+                                                                        <MenuItem value="Vendor 2">Vendor 2</MenuItem> */}
+                                    {customers.map((supplier: any) => (
+                                        <MenuItem key={supplier.id} value={supplier.id}>
+                                            {supplier.company_name}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </div>
                     </div>
                 </div>
+
+                {form.tax_preference === "taxable" && taxSettings && (
+                    <div className="grid md:grid-cols-2 gap-6 mt-4 p-4 border rounded-lg bg-gray-50">
+
+                        <div className="md:col-span-2 font-semibold text-gray-700">
+                            Default Tax Rates
+                        </div>
+
+                        {/* Intra State Tax (CGST + SGST) */}
+                        <TextField
+                            label="Intra State Tax Rate"
+                            value={taxSettings.intra_state_tax_rate || "-"}
+                            disabled
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                        />
+
+                        {/* Inter State Tax (IGST) */}
+                        <TextField
+                            label="Inter State Tax Rate"
+                            value={taxSettings.inter_state_tax_rate || "-"}
+                            disabled
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                        />
+
+                    </div>
+                )}
 
                 {/* BUTTONS */}
                 <div className="flex gap-3 mt-10 mb-5 justify-center">
@@ -794,6 +1108,27 @@ const ItemsEdit = () => {
                     </Button>
                 </div>
             </div>
+
+            <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+                <DialogTitle>Delete Image</DialogTitle>
+                <DialogContent>
+                    Are you sure about deleting this image?
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        className="bg-[#C72030] hover:bg-[#A01020] text-white"
+                        onClick={handleRemoveImage}
+                    >
+                        Delete
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setOpenDeleteDialog(false)}
+                    >
+                        Cancel
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </ThemeProvider>
     );
 };

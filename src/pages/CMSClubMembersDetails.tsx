@@ -23,6 +23,7 @@ import {
     TextareaAutosize,
 } from "@mui/material";
 import axios from "axios";
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 
 interface Attachment {
     id: number;
@@ -118,6 +119,22 @@ interface Log {
     }>;
 }
 
+interface RenewalLog {
+    id: number;
+    updated_by: string;
+    updated_at: string;
+    date: string;
+    time: string;
+    start_date: {
+        from: string;
+        to: string;
+    };
+    end_date: {
+        from: string;
+        to: string;
+    };
+}
+
 interface GroupMembershipDetail {
     id: number;
     membership_plan_id: number;
@@ -130,6 +147,7 @@ interface GroupMembershipDetail {
     club_members: ClubMember[];
     bills?: Bill[];
     logs?: Log[];
+    renewal_logs?: RenewalLog[];
     allocation_payment_detail?: {
         id: number;
         club_member_allocation_id: number;
@@ -137,6 +155,8 @@ interface GroupMembershipDetail {
         discount: string;
         cgst: string;
         sgst: string;
+        cgst_per?: number;
+        sgst_per?: number;
         total_tax: string;
         total_amount: string;
         landed_amount: string;
@@ -144,6 +164,21 @@ interface GroupMembershipDetail {
         payment_status: string;
         created_at: string;
         updated_at: string;
+        paid_bills?: Array<{
+            id: number;
+            bill_number: string;
+            total_amount: number;
+            due_date: string;
+            status: string;
+            invoice_file: string | null;
+            lock_payment?: {
+                transaction_id: string;
+                paid_amount: string;
+                payment_mode: string;
+                notes: string;
+                paid_date: string;
+            };
+        }>;
     } | null;
 }
 
@@ -239,6 +274,7 @@ const QUESTION_SECTIONS: { [key: string]: { title: string; questionIds: string[]
 
 export const CMSClubMembersDetails = () => {
     const { id } = useParams<{ id: string }>();
+    const { shouldShow } = useDynamicPermissions();
     const navigate = useNavigate();
 
     const [membershipData, setMembershipData] = useState<GroupMembershipDetail | null>(null);
@@ -731,14 +767,18 @@ export const CMSClubMembersDetails = () => {
                             <RefreshCw className="w-4 h-4 mr-2" />
                             Renew Membership
                         </Button>
-                        <Button
-                            onClick={handleEdit}
-                            variant="outline"
-                            className="border-[#C72030] text-[#C72030]"
-                        >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                        </Button>
+                        {
+                            shouldShow("Club Members", "update") && (
+                                <Button
+                                    onClick={handleEdit}
+                                    variant="outline"
+                                    className="border-[#C72030] text-[#C72030]"
+                                >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit
+                                </Button>
+                            )
+                        }
                     </div>
                 </div>
             </div>
@@ -784,6 +824,12 @@ export const CMSClubMembersDetails = () => {
                             className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
                         >
                             Logs
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="renewal-logs"
+                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                        >
+                            Renewal Logs
                         </TabsTrigger>
                     </TabsList>
 
@@ -903,8 +949,7 @@ export const CMSClubMembersDetails = () => {
                                     membershipData.allocation_payment_detail.payment_status.toLowerCase() === 'pending') && (
                                         <Button
                                             onClick={() => setIsCaptureDialogOpen(true)}
-                                            className="bg-[#16B364] hover:bg-[#129a55] text-white text-xs font-semibold px-3 py-1 h-auto ml-2"
-                                            size="sm"
+                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                                         >
                                             Capture Payment
                                         </Button>
@@ -975,6 +1020,73 @@ export const CMSClubMembersDetails = () => {
                                     <span className="text-gray-900 font-medium">{formatDateTime(membershipData.allocation_payment_detail.created_at)}</span>
                                 </div>
                             </div>
+
+                            {membershipData.allocation_payment_detail.paid_bills && membershipData.allocation_payment_detail.paid_bills.length > 0 && (
+                                <div className="mt-6">
+                                    <h3 className="text-base font-semibold text-[#1a1a1a] mb-3 flex items-center gap-2">
+                                        <CreditCard className="w-4 h-4 text-[#C72030]" />
+                                        Paid Bills
+                                    </h3>
+                                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-gray-50 border-b border-gray-200">
+                                                <tr>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Bill #</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Amount</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Due Date</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Transaction ID</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Amount</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Payment Mode</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Notes</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Date</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Status</th>
+                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Invoice</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {membershipData.allocation_payment_detail.paid_bills.map((bill) => (
+                                                    <tr key={bill.id} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 font-medium text-gray-900">#{bill.bill_number}</td>
+                                                        <td className="px-4 py-3 text-gray-900">
+                                                            ₹{bill?.total_amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-700">{formatDate(bill.due_date)}</td>
+                                                        <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.transaction_id || '-'}</td>
+                                                        <td className="px-4 py-3 text-gray-900">
+                                                            {bill.lock_payment?.paid_amount
+                                                                ? `₹${Number(bill?.lock_payment.paid_amount)?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-700 capitalize">{bill.lock_payment?.payment_mode || '-'}</td>
+                                                        <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.notes || '-'}</td>
+                                                        <td className="px-4 py-3 text-gray-700">
+                                                            {bill.lock_payment?.paid_date ? formatDateTime(bill?.lock_payment?.paid_date) : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <Badge className="bg-green-100 text-green-800 border-0 capitalize">
+                                                                {bill?.status}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            {bill?.invoice_file ? (
+                                                                <button
+                                                                    onClick={() => window.open(bill?.invoice_file!, '_blank')}
+                                                                    className="text-[#C72030] hover:underline flex items-center gap-1 text-xs font-medium"
+                                                                >
+                                                                    <Download className="w-3 h-3" />
+                                                                    Download
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-gray-400 text-xs">N/A</span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </TabsContent>
                     )}
 
@@ -1020,7 +1132,7 @@ export const CMSClubMembersDetails = () => {
                                                 <div className="flex items-center justify-between text-sm">
                                                     <span className="text-gray-600">Total Amount</span>
                                                     <span className="text-lg font-bold text-[#C72030]">
-                                                        ₹{bill.total_amount.toLocaleString('en-IN', {
+                                                        ₹{bill.total_amount?.toLocaleString('en-IN', {
                                                             minimumFractionDigits: 2,
                                                             maximumFractionDigits: 2
                                                         })}
@@ -1041,11 +1153,9 @@ export const CMSClubMembersDetails = () => {
                                                     onClick={() => {
                                                         window.open(bill.invoice_file!, '_blank');
                                                     }}
-                                                    variant="outline"
-                                                    className="w-full border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white"
-                                                    size="sm"
+                                                    className="w-full px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center justify-center gap-2"
                                                 >
-                                                    <Download className="w-3 h-3 mr-2" />
+                                                    <Download className="w-3 h-3" />
                                                     Download Invoice
                                                 </Button>
                                             )}
@@ -1382,6 +1492,52 @@ export const CMSClubMembersDetails = () => {
                             </div>
                         )}
                     </TabsContent>
+
+                    <TabsContent value="renewal-logs" className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <RefreshCw className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-[#1a1a1a]">
+                                Renewal Logs
+                            </h2>
+                        </div>
+                        {membershipData.renewal_logs && membershipData.renewal_logs.length > 0 ? (
+                            <div className="overflow-x-auto px-3">
+                                <LogsTimeline
+                                    logs={membershipData.renewal_logs.map((log) => {
+                                        const formatRenewalDate = (date: string) => {
+                                            if (!date || date === 'nil') return 'null';
+
+                                            // Handle complex format: "Fri, 01 May 2026 00:00:00.000000000 IST +05:30"
+                                            if (date.includes('.') && date.includes('IST')) {
+                                                const parts = date.split('.');
+                                                if (parts[0]) return formatDate(parts[0]);
+                                            }
+
+                                            return formatDate(date);
+                                        };
+
+                                        const startDateChange = `Start Date: ${formatRenewalDate(log?.start_date?.from)} → ${formatRenewalDate(log?.start_date?.to)}`;
+                                        const endDateChange = `End Date: ${formatRenewalDate(log?.end_date?.from)} → ${formatRenewalDate(log?.end_date?.to)}`;
+                                        const description = `Membership Renewed\n${startDateChange} | ${endDateChange}`;
+
+                                        return {
+                                            id: log.id.toString(),
+                                            description: description,
+                                            timestamp: `${log.updated_by} • ${log.date} ${log.time}`,
+                                        };
+                                    })}
+                                />
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                                <RefreshCw className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-gray-600 font-medium">No renewal logs available</p>
+                                <p className="text-sm text-gray-500 mt-1">Renewal history will appear here</p>
+                            </div>
+                        )}
+                    </TabsContent>
                 </Tabs >
             </div >
 
@@ -1522,9 +1678,9 @@ export const CMSClubMembersDetails = () => {
                                     <MenuItem value="" disabled>
                                         Select Bill
                                     </MenuItem>
-                                    {membershipData?.bills?.map((bill) => (
+                                    {membershipData?.bills?.filter(b => b.status !== "PAID").map((bill) => (
                                         <MenuItem key={bill.id} value={bill.id.toString()}>
-                                            ₹{bill.total_amount}
+                                            Bill #{bill.bill_number} - ₹{bill.total_amount}
                                         </MenuItem>
                                     ))}
                                 </MuiSelect>

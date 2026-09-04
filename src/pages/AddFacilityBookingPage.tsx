@@ -5,7 +5,7 @@ import {
   Select as MuiSelect,
   TextField,
 } from "@mui/material";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, Loader, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -40,8 +40,9 @@ const AddFacilityBookingPage = () => {
 
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
-  const societyId = localStorage.getItem("selectedUserSociety");
+  const societyId = localStorage.getItem("selectedSocietyId");
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedTowerId, setSelectedTowerId] = useState("");
   const [towers, setTowers] = useState([]);
   const [selectedFlatId, setSelectedFlatId] = useState("");
@@ -110,37 +111,14 @@ const AddFacilityBookingPage = () => {
         slotPremiumDetails: [],
       };
 
-    // If booking rule rate is 0, make the entire booking free for this user
-    if (bookingRuleData && bookingRuleData.rate === 0) {
-      return {
-        subTotal: 0,
-        cgstAmount: 0,
-        sgstAmount: 0,
-        igstAmount: 0,
-        gst: 0,
-        convenienceCharge: 0,
-        grandTotal: 0,
-        slotPremiumDetails: selectedSlotIds.length > 0
-          ? selectedSlotIds.map((slotId) => {
-            const slot = availableSlots.find((s) => (s.id || s.Index)?.toString() === slotId);
-            return {
-              slotLabel: slot ? (slot.ampm || slot.time || `Slot ${slotId}`) : `Slot ${slotId}`,
-              slotPremiumPercent: 0,
-              premiumAmount: 0,
-              baseAmount: 0,
-              total: 0,
-            };
-          })
-          : [],
-        cgst_percent: 0,
-        sgst_percent: 0,
-        igst_percent: 0,
-        slotCount: selectedSlotIds.length || 1,
-      };
-    }
-
-    const adultMemberRate = charge.adult_member_charge || 0;
-    console.log(adultMemberRate)
+    // Booking rule (per selected user) overrides the facility's default member charge.
+    // This only zeroes out the Member rate — Guest/Tenant/Non Member charges below are unaffected.
+    const adultMemberRate = (bookingRuleData && typeof bookingRuleData.adult_rate === 'number')
+      ? bookingRuleData.adult_rate
+      : (charge.adult_member_charge || 0);
+    const childMemberRate = (bookingRuleData && typeof bookingRuleData.child_rate === 'number')
+      ? bookingRuleData.child_rate
+      : (charge.child_member_charge || 0);
 
     let baseSubTotal = 0;
     let slotPremiumDetails: Array<{
@@ -161,7 +139,7 @@ const AddFacilityBookingPage = () => {
         // Calculate base amount for this slot
         let slotBaseAmount = 0;
         slotBaseAmount += memberCounts.adultMember * adultMemberRate;
-        slotBaseAmount += memberCounts.childMember * (charge.child_member_charge || 0);
+        slotBaseAmount += memberCounts.childMember * childMemberRate;
         slotBaseAmount += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
         slotBaseAmount += memberCounts.childGuest * (charge.child_guest_charge || 0);
         slotBaseAmount += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
@@ -189,7 +167,7 @@ const AddFacilityBookingPage = () => {
     } else {
       // No slots selected, use base charges
       baseSubTotal += memberCounts.adultMember * adultMemberRate;
-      baseSubTotal += memberCounts.childMember * (charge.child_member_charge || 0);
+      baseSubTotal += memberCounts.childMember * childMemberRate;
       baseSubTotal += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
       baseSubTotal += memberCounts.childGuest * (charge.child_guest_charge || 0);
       baseSubTotal += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
@@ -527,7 +505,7 @@ const AddFacilityBookingPage = () => {
       let url = "";
 
       if (facilityDetails?.fac_type === "bookable") {
-        url = `https://${baseUrl}/get_schedules_admin_facility.json?id=${selectedFacilitySetup}&q[on_date]=${formattedDate}&user_society_id=${societyId}`;
+        url = `https://${baseUrl}/get_schedules_admin_facility.json?id=${selectedFacilitySetup}&q[on_date]=${formattedDate}&user_society_id=${selectedUserId}`;
       } else if (facilityDetails?.fac_type === "request") {
         url = `https://${baseUrl}/requestable_slots.json?id=${selectedFacilitySetup}&q[on_date]=${formattedDate}`;
       }
@@ -600,6 +578,7 @@ const AddFacilityBookingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+    setIsSubmitting(true);
     try {
       const booked_members_attributes: any[] = [];
 
@@ -692,6 +671,8 @@ const AddFacilityBookingPage = () => {
     } catch (error) {
       console.log(error);
       toast.error("Failed to create facility booking");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -995,8 +976,13 @@ const AddFacilityBookingPage = () => {
                                 label: "Member",
                                 key: "Member",
                                 visible: activeCharge.member,
-                                adultCharge: activeCharge.adult_member_charge,
-                                childCharge: activeCharge.child_member_charge,
+                                // Booking rule (per selected user) overrides the facility's default member charge
+                                adultCharge: (bookingRuleData && typeof bookingRuleData.adult_rate === 'number')
+                                  ? bookingRuleData.adult_rate
+                                  : activeCharge.adult_member_charge,
+                                childCharge: (bookingRuleData && typeof bookingRuleData.child_rate === 'number')
+                                  ? bookingRuleData.child_rate
+                                  : activeCharge.child_member_charge,
                               },
                               {
                                 label: "Guest",
@@ -1347,7 +1333,9 @@ const AddFacilityBookingPage = () => {
           </div>
         </div>
         <div className="flex justify-center pt-4">
-          <Button type="submit">Submit</Button>
+          <Button type="submit" disabled={isSubmitting} className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Submit"}
+          </Button>
         </div>
       </form>
     </div>

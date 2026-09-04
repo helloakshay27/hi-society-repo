@@ -9,17 +9,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { ticketManagementAPI } from '@/services/ticketManagementAPI';
+import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
+import { TextField } from '@mui/material';
+import { fieldStyles } from '../fieldStyles';
 
 const relatedToSchema = z.object({
   issueType: z.string().min(1, 'Issue type is required'),
@@ -68,39 +68,50 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
   const handleSubmit = async (data: RelatedToFormData) => {
     setIsSubmitting(true);
     try {
-      const updatedData = {
+      const payload = {
+        id: relatedTo.id,
         name: data.issueType,
-        society_id: relatedTo.society_id.toString(),
+        active: 1,
       };
 
-      await ticketManagementAPI.updateIssueType(relatedTo.id, updatedData);
-      
+      const response = await fetch(getFullUrl('/crm/admin/modify_issue_type.json'), {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        if (errorData?.name?.includes('has already been taken')) {
+          toast.error('Issue type has already been taken');
+        } else {
+          toast.error(errorData?.message || 'Failed to update issue type');
+        }
+        return;
+      }
+
       const updatedRelatedTo: RelatedToType = {
         ...relatedTo,
         name: data.issueType,
       };
 
       onUpdate(updatedRelatedTo);
-      toast.success('Related to item updated successfully!');
+      toast.success('Issue type updated successfully!');
       onClose();
       onRefresh();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating related to item:', error);
-      
-      if (error.response?.status === 422 && 
-          error.response?.data?.name && 
-          error.response.data.name.includes('has already been taken')) {
-        toast.error('Issue type has already been taken');
-      } else {
-        toast.error('Failed to update related to item');
-      }
+      toast.error('Failed to update issue type');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Related To</DialogTitle>
@@ -113,12 +124,16 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
               name="issueType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Issue Type</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter issue type" 
-                      {...field}
-                      className="h-10"
+                    <TextField
+                      label="Issue Type"
+                      placeholder="Enter issue type"
+                      value={field.value}
+                      onChange={field.onChange}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                   </FormControl>
                   <FormMessage />

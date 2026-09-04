@@ -2249,7 +2249,7 @@ export const EditIncidentDetailsPage = () => {
     incidentDate: '',
     incidentTime: '',
     location: '',
-    building: '',
+    tower: '',
     primaryCategory: '',
     subCategory: '',
     subSubCategory: '',
@@ -2296,8 +2296,8 @@ export const EditIncidentDetailsPage = () => {
 
   const [formKey, setFormKey] = useState(0);
 
-  // State for buildings and categories (same as AddIncidentPage)
-  const [buildings, setBuildings] = useState<{ id: number; name: string }[]>([]);
+  // State for towers and categories (same as AddIncidentPage)
+  const [towers, setTowers] = useState<{ id: number; name: string }[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   // Category hierarchy states
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
@@ -2454,28 +2454,37 @@ export const EditIncidentDetailsPage = () => {
         baseUrl = 'https://' + baseUrl.replace(/^\/\/+/, '');
       }
 
-      // Fetch buildings
+      // Fetch towers (society blocks)
       try {
-        const response = await fetch(`${baseUrl}/pms/buildings.json`, {
+        const societyId = localStorage.getItem('selectedSocietyId') || '';
+        const response = await fetch(`${baseUrl}/get_society_blocks.json?society_id=${societyId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
           const result = await response.json();
-          // Update to use pms_buildings array as per API response structure
-          const buildingsArray = Array.isArray(result.pms_buildings) ? result.pms_buildings : [];
-          setBuildings(buildingsArray.map((b: any) => ({ id: b.id, name: b.name })));
-          console.log('Loaded buildings:', buildingsArray.length);
+          // Normalize possible shapes
+          const list = Array.isArray(result)
+            ? result
+            : Array.isArray(result.blocks)
+              ? result.blocks
+              : Array.isArray(result.society_blocks)
+                ? result.society_blocks
+                : Array.isArray(result.data)
+                  ? result.data
+                  : [];
+          setTowers(list.map((t: any) => ({ id: t.id ?? t.block_id ?? t.tower_id, name: t.name ?? t.block_name ?? t.tower_name ?? '' })));
+          console.log('Loaded towers:', list.length);
         } else {
-          setBuildings([]);
+          setTowers([]);
         }
       } catch (error) {
-        console.error('Error fetching buildings:', error);
-        setBuildings([]);
+        console.error('Error fetching towers:', error);
+        setTowers([]);
       }
 
       // Fetch incident levels
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags.json`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -2494,7 +2503,7 @@ export const EditIncidentDetailsPage = () => {
 
       // Fetch all tags for categories
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags.json`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -2570,12 +2579,12 @@ export const EditIncidentDetailsPage = () => {
     fetchAll();
   }, []);
 
-  // Fetch incident details after API data is loaded and buildings are available
+  // Fetch incident details after API data is loaded (do not gate on towers length)
   useEffect(() => {
-    if (id && dataLoaded && buildings.length > 0) {
+    if (id && dataLoaded) {
       fetchIncidentDetails();
     }
-  }, [id, dataLoaded, buildings.length]);
+  }, [id, dataLoaded]);
 
   const fetchIncidentDetails = async () => {
     try {
@@ -2639,8 +2648,8 @@ export const EditIncidentDetailsPage = () => {
       minute: incTime.getMinutes().toString(),
       incidentDate: incident.inc_time,
       incidentTime: incident.inc_time,
-      location: incident.building_name || '',
-      building: getValidOptionValue(incident.building_id, buildings),
+      location: incident.tower_name || incident.building_name || '',
+      tower: getValidOptionValue(incident.tower_id, towers) || getValidOptionValue(incident.building_id, towers),
       primaryCategory: getValidOptionValue(incident.inc_category_id, categories),
       subCategory: getValidOptionValue(incident.inc_sub_category_id, subCategories),
       subSubCategory: getValidOptionValue(incident.inc_sub_sub_category_id, subSubCategories),
@@ -2710,7 +2719,7 @@ export const EditIncidentDetailsPage = () => {
     }
 
     console.log('Available options for validation:', {
-      buildings: buildings.length,
+      towers: towers.length,
       categories: categories.length,
       subCategories: subCategories.length,
       subSubCategories: subSubCategories.length,
@@ -2858,8 +2867,8 @@ export const EditIncidentDetailsPage = () => {
   console.log(formData)
 
   const validateForm = () => {
-    if (!formData.building) {
-      toast.error('Please select a Building');
+    if (!formData.tower) {
+      toast.error('Please select a Tower');
       return false;
     }
     if (!formData.primaryCategory) {
@@ -2872,10 +2881,6 @@ export const EditIncidentDetailsPage = () => {
     }
     if (!formData.subSubCategory) {
       toast.error('Please select a Sub-Sub Category');
-      return false;
-    }
-    if (!formData.subSubSubCategory) {
-      toast.error('Please select a Sub-Sub-Sub Category');
       return false;
     }
 
@@ -2954,8 +2959,8 @@ export const EditIncidentDetailsPage = () => {
       // Show success message
       toast.success('Incident updated successfully!');
 
-      // Navigate back to the details page
-      navigate(`${basePath}/incident/${id}`);
+      // Navigate to the new details page
+      navigate(`${basePath}/incident/new-details/${id}`);
     } catch (err) {
       setError('Failed to update incident details');
       console.error('Error updating incident:', err);
@@ -2973,7 +2978,7 @@ export const EditIncidentDetailsPage = () => {
   return (
     <div className="p-6 bg-white min-h-screen">
       {/* Header */}
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <nav className="flex items-center text-sm text-gray-600 mb-4">
           <span>{isSafetyContext ? 'Safety' : 'Maintenance'}</span>
           <span className="mx-2">{'>'}</span>
@@ -2987,6 +2992,28 @@ export const EditIncidentDetailsPage = () => {
             <p className="text-gray-600">Incident #{id}</p>
           </div>
         </div>
+      </div> */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <span>{'>'}</span>
+          <button onClick={() => navigate(`${basePath}/incident/new-details/${id}`)} className="hover:text-[#C72030] hover:underline transition-colors">
+            Incident
+          </button>
+          <span>{'>'}</span>
+          <span className="text-[#1a1a1a] font-medium">Edit Incident</span>
+        </div>
+
+        <h1 className="text-2xl font-bold text-[#1a1a1a]">EDIT INCIDENT DETAILS</h1>
+        <p className="text-gray-600">Incident #{id}</p>
       </div>
 
       <div className="space-y-6" key={formKey}>
@@ -3100,20 +3127,20 @@ export const EditIncidentDetailsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {/* Building Dropdown */}
               <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                <InputLabel shrink>Building <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                <MuiSelect
-                  label="Building *"
-                  value={formData.building}
-                  onChange={e => handleInputChange('building', e.target.value)}
+                <InputLabel shrink>Tower <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                  <MuiSelect
+                    label="Tower *"
+                    value={formData.tower}
+                    onChange={e => handleInputChange('tower', e.target.value)}
                   displayEmpty
                   sx={fieldStyles}
                 >
-                  <MenuItem value=""><em>Select Building</em></MenuItem>
-                  {buildings.map((building) => (
-                    <MenuItem key={building.id} value={building.id.toString()}>
-                      {building.name}
-                    </MenuItem>
-                  ))}
+                    <MenuItem value=""><em>Select Tower</em></MenuItem>
+                    {towers.map((tower) => (
+                      <MenuItem key={tower.id} value={tower.id.toString()}>
+                        {tower.name}
+                      </MenuItem>
+                    ))}
                 </MuiSelect>
               </FormControl>
 
@@ -3181,7 +3208,7 @@ export const EditIncidentDetailsPage = () => {
 
               {/* Level 4: Sub Sub Sub Category */}
               <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!formData.subSubCategory}>
-                <InputLabel shrink>Sub Sub Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                <InputLabel shrink>Sub Sub Sub Category</InputLabel>
                 <MuiSelect
                   label="Sub Sub Sub Category"
                   value={formData.subSubSubCategory}

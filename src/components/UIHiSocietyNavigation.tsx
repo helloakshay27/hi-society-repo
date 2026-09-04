@@ -6,8 +6,10 @@ import {
   Settings as SettingsIcon,
   Users,
   Gift,
+  Wrench,
 } from "lucide-react";
 import { useLayout } from "../contexts/LayoutContext";
+import { trackModuleSwitch } from "@/utils/posthogHelpers";
 
 interface NavigationItem {
   id: string;
@@ -17,20 +19,37 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-  
+
   {
     id: "loyalty",
     label: "Loyalty",
     icon: <Gift className="w-4 h-4" />,
-    path: "/loyalty/dashboard",
+    path: "/loyalty/wallet-management",
   },
-  
-  // {
-  //   id: "settings",
-  //   label: "Settings",
-  //   icon: <SettingsIcon className="w-4 h-4" />,
-  //   path: "/settings/special-users-category",
-  // },
+  {
+    id: "maintenance",
+    label: "Maintenance",
+    icon: <Wrench className="w-4 h-4" />,
+    path: "/maintenance/survey/mapping",
+  },
+  {
+    id: "bms",
+    label: "BMS",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/bms/helpdesk",
+  },
+  {
+    id: "incidents",
+    label: "Incidents",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/safety/incident",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/settings/special-users-category",
+  },
 ];
 
 export const UIHiSocietyNavigation: React.FC = () => {
@@ -44,7 +63,7 @@ export const UIHiSocietyNavigation: React.FC = () => {
 
   // Check if current domain is Fitout domain
   const isFitoutDomain =
-    window.location.hostname === "web.hisociety.lockated.com";
+    window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost";
 
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
@@ -89,6 +108,8 @@ export const UIHiSocietyNavigation: React.FC = () => {
       "faq",
     ];
 
+    const bmsRoutePrefixes = ["/bms", "/communication", "/quarantine-tracker"];
+
     // Extract first segment from path
     const segments = path.split('/').filter(Boolean);
     const firstSegment = segments[0];
@@ -119,9 +140,9 @@ export const UIHiSocietyNavigation: React.FC = () => {
       setActiveNav("fitout");
     } else if (path.startsWith("/accounting")) {
       setActiveNav("accounting");
-    } else if (path.startsWith("/smartsecure")) {
+    } else if (path.startsWith("/smartsecure") || path.startsWith("/security")) {
       setActiveNav("smartsecure");
-    } else if (path.startsWith("/incidents")) {
+    } else if (path.startsWith("/incidents") || path.startsWith("/safety")) {
       setActiveNav("incidents");
     } else if (path.startsWith("/appointmentz")) {
       setActiveNav("Appointmentz");
@@ -130,10 +151,13 @@ export const UIHiSocietyNavigation: React.FC = () => {
     } else if (path.startsWith("/loyalty") || loyaltyChildRoutes.includes(firstSegment)) {
       setActiveNav("loyalty");
     } else if (
-      path.startsWith("/bms") ||
-      path.startsWith("/communication")
+      bmsRoutePrefixes.some((route) => path === route || path.startsWith(`${route}/`))
     ) {
       setActiveNav("bms");
+    } else if (
+      path.startsWith("/maintenance/survey")
+    ) {
+      setActiveNav("maintenance");
     } else if (
       path.startsWith("/maintenance") ||
       path.startsWith("/communication") ||
@@ -142,26 +166,26 @@ export const UIHiSocietyNavigation: React.FC = () => {
       homeChildRoutes.includes(firstSegment)
     ) {
       setActiveNav("home");
-    }
-    else {
+    } else {
       setActiveNav("home");
     }
   }, [location.pathname, isCMSDomain, location.state]);
 
   const handleNavClick = (item: NavigationItem) => {
+    trackModuleSwitch(item.label, item.path, activeNav, { module_id: item.id });
     setActiveNav(item.id);
     navigate(item.path);
   };
 
   return (
     <div
-      className={`h-12 border-b border-[#D5DbDB] fixed top-16 right-0 ${isSidebarCollapsed ? "left-16" : "left-64"} z-10 transition-all duration-300`}
+      className={`h-12 border-b border-[#D5DbDB] fixed top-16 right-0 ${isSidebarCollapsed ? "md:left-16 left-0" : "md:left-64 left-0"} z-20 transition-all duration-300`}
       style={{ backgroundColor: "#f6f4ee" }}
     >
       <div className="flex items-center h-full px-4 overflow-x-auto">
         <div className="w-full overflow-x-auto md:overflow-visible no-scrollbar">
           {/* Mobile & Tablet: scroll + spacing; Desktop: full width and justify-between */}
-          <div className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start lg:justify-between whitespace-nowrap">
+          <div className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start gap-6 whitespace-nowrap">
             {filteredNavigationItems.map((item) => {
               const isActive = activeNav === item.id;
               return (

@@ -96,6 +96,7 @@ export const AddRolePage = () => {
   const [permissions, setPermissions] = useState<NewRolePermission[]>([]);
   const [activeModuleTab, setActiveModuleTab] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const org_id = localStorage.getItem("org_id");
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -368,9 +369,29 @@ export const AddRolePage = () => {
         lock_modules: enabledModuleIds,
       };
 
+
+      const viPayload = {
+        role: {
+          user_id: localStorage.getItem("userId"),
+          title: displayName.trim(),
+          name: roleName.trim(),
+          active: 1,
+          description: "",
+          // resource_id: localStorage.getItem("selectedCompanyId"),
+          // resource_type: "Pms::CompanySetup",
+
+          the_role: permissionsHash,
+          modules: enabledModuleIds,
+
+
+        },
+      };
+
       console.log("Creating role with payload:", payload);
 
-      await roleService.createRoleWithPayload(payload);
+      await roleService.createRoleWithPayload(
+        window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost" ? viPayload : payload
+      );
       toast.success("Role created successfully");
       navigate("/settings/roles/role");
     } catch (error) {
@@ -534,12 +555,12 @@ export const AddRolePage = () => {
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setActiveModuleTab(tab.id)}
-                    className={`px-4 py-2 rounded border text-sm font-medium transition-colors whitespace-nowrap ${
-                      activeModuleTab === tab.id
-                        ? "bg-[#C72030] text-white border-[#C72030]"
-                        : "bg-white text-[#C72030] border-[#C72030] hover:bg-[#C72030]/10"
-                    }`}
+                    className={`px-4 py-2 rounded border text-sm font-medium transition-colors whitespace-nowrap ${activeModuleTab === tab.id
+                      ? "bg-brand text-white border-brand"
+                      : "bg-white text-brand border-brand hover:bg-brand-light"
+                      }`}
                   >
                     {tab.name}
                   </button>
@@ -688,14 +709,14 @@ export const AddRolePage = () => {
           <Button
             variant="outline"
             onClick={handleBack}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSaveRole}
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#A11D2A] text-white w-full sm:w-auto"
+            className="w-full sm:w-auto bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Save className="w-4 h-4 mr-2" />
             {loading ? "Creating..." : "Create Role"}

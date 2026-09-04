@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -11,7 +11,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AddCountryModal } from "@/components/AddCountryModal";
@@ -69,6 +68,13 @@ interface CountryTabProps {
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
+  {
+    key: "srno",
+    label: "S.No.",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
   {
     key: "id",
     label: "ID",
@@ -189,8 +195,10 @@ export const CountryTab: React.FC<CountryTabProps> = ({
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com", 
-"demo@lockated.com",
+      "sumitra.patil@lockated.com",
+      "komalshinde0101@lockated.com",
+      "demo@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEditCountry(allowedEmails.includes(userEmail));
   }, [user.email]);
@@ -355,10 +363,10 @@ export const CountryTab: React.FC<CountryTabProps> = ({
         const normalizedBase = storedBaseUrl.startsWith("http")
           ? storedBaseUrl.replace(/\/+$/, "")
           : `https://${storedBaseUrl.replace(/\/+$/, "")}`;
-        url = `${normalizedBase}/pms/countries.json`;
+        url = `${normalizedBase}/pms/countries.json?per_page=1000`;
       } else {
         // Fallback to configured helper
-        url = getFullUrl("/pms/countries.json");
+        url = getFullUrl("/pms/countries.json?per_page=1000");
       }
 
       if (storedToken) {
@@ -567,20 +575,22 @@ export const CountryTab: React.FC<CountryTabProps> = ({
   }, [entriesPerPage, perPage]);
 
   // Data is passed directly to EnhancedTaskTable with renderCell and renderActions
+  const displayedData = useMemo(
+    () => countries.map((c, i) => ({ ...c, srno: (currentPage - 1) * perPage + i + 1 })),
+    [countries, currentPage, perPage],
+  );
 
   const totalPages = pagination.total_pages;
   const totalRecords = pagination.total_count;
 
   return (
-    <div className="space-y-4">
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-        </div>
-      ) : (
-        <>
+    <div className="p-6 space-y-6">
+      <header className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Headquarters</h1>
+      </header>
+      <>
           <EnhancedTaskTable
-            data={countries}
+            data={displayedData}
             columns={columns}
             searchTerm={searchQuery}
             onSearchChange={setSearchQuery}
@@ -618,8 +628,10 @@ export const CountryTab: React.FC<CountryTabProps> = ({
                 </Button> */}
               </div>
             )}
-            renderCell={(country: CountryItem, columnKey: string) => {
+            renderCell={(country: CountryItem & { srno?: number }, columnKey: string) => {
               switch (columnKey) {
+                case "srno":
+                  return <span className="text-sm text-gray-600">{country.srno}</span>;
                 case "id":
                   return country.id;
                 case "name":
@@ -703,7 +715,6 @@ export const CountryTab: React.FC<CountryTabProps> = ({
             onPerPageChange={handlePerPageChange}
           />
         </>
-      )}
 
       {/* Modals */}
       <AddCountryModal

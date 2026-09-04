@@ -89,7 +89,7 @@ export const PaymentPlanSetup = () => {
             variant="ghost"
             onClick={() => navigate(`/settings/payment-plan/details/${item.id}`)}
             title="View Details"
-            className="p-0"
+            className="p-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -97,7 +97,7 @@ export const PaymentPlanSetup = () => {
             variant="ghost"
             onClick={() => navigate(`/settings/payment-plan/edit/${item.id}`)}
             title="Edit"
-            className="p-0"
+            className="p-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Edit className="w-4 h-4" />
           </Button>
@@ -131,7 +131,7 @@ export const PaymentPlanSetup = () => {
   const renderCustomActions = () => (
     <div className="flex gap-3">
       <Button
-        className="bg-[#C72030] hover:bg-[#A01020] text-white"
+        className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
         onClick={() => navigate('/settings/payment-plan/add')}
       >
         <Plus className="w-4 h-4 mr-2" />

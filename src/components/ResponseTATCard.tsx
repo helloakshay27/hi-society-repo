@@ -108,17 +108,22 @@ export const ResponseTATCard: React.FC<ResponseTATCardProps> = ({ data, classNam
     );
   }
 
+  const responseTatOpen = data.response.response_tat?.open;
+  const responseTatClose = data.response.response_tat?.close;
+  const resolutionTatOpen = data.response.resolution_tat?.open;
+  const resolutionTatClose = data.response.resolution_tat?.close;
+
   // Prepare data for Response TAT bar chart - Two categories: Open and Close
   const responseTATChartData = [
     {
       name: 'Open',
-      achieved: data.response.response_tat.open.achieved,
-      breached: data.response.response_tat.open.breached,
+      achieved: responseTatOpen?.achieved ?? 0,
+      breached: responseTatOpen?.breached ?? 0,
     },
     {
       name: 'Close',
-      achieved: data.response.response_tat.close.achieved,
-      breached: data.response.response_tat.close.breached,
+      achieved: responseTatClose?.achieved ?? 0,
+      breached: responseTatClose?.breached ?? 0,
     }
   ];
 
@@ -126,28 +131,28 @@ export const ResponseTATCard: React.FC<ResponseTATCardProps> = ({ data, classNam
   const resolutionTATChartData = [
     {
       name: 'Open',
-      achieved: data.response.resolution_tat.open.achieved,
-      breached: data.response.resolution_tat.open.breached,
+      achieved: resolutionTatOpen?.achieved ?? 0,
+      breached: resolutionTatOpen?.breached ?? 0,
     },
     {
       name: 'Close',
-      achieved: data.response.resolution_tat.close.achieved,
-      breached: data.response.resolution_tat.close.breached,
+      achieved: resolutionTatClose?.achieved ?? 0,
+      breached: resolutionTatClose?.breached ?? 0,
     }
   ];
 
   // Calculate totals for display
   const responseTotalValue = 
-    data.response.response_tat.open.achieved +
-    data.response.response_tat.open.breached +
-    data.response.response_tat.close.achieved +
-    data.response.response_tat.close.breached;
+    (responseTatOpen?.achieved ?? 0) +
+    (responseTatOpen?.breached ?? 0) +
+    (responseTatClose?.achieved ?? 0) +
+    (responseTatClose?.breached ?? 0);
 
   const resolutionTotalValue = 
-    data.response.resolution_tat.open.achieved +
-    data.response.resolution_tat.open.breached +
-    data.response.resolution_tat.close.achieved +
-    data.response.resolution_tat.close.breached;
+    (resolutionTatOpen?.achieved ?? 0) +
+    (resolutionTatOpen?.breached ?? 0) +
+    (resolutionTatClose?.achieved ?? 0) +
+    (resolutionTatClose?.breached ?? 0);
 
   return (
     <Card className={`bg-white ${className} relative z-0`}>

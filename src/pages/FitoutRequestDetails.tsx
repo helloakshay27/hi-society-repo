@@ -396,7 +396,17 @@ const FitoutRequestDetails: React.FC = () => {
     try {
       const response = await apiClient.get(`/crm/admin/fitout_requests/${id}/feeds.json`);
       console.log('Logs Response:', response.data);
-      setLogs(response.data || []);
+      const data = response.data;
+      const logsArray = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.feeds)
+          ? data.feeds
+          : Array.isArray(data?.logs)
+            ? data.logs
+            : Array.isArray(data?.data)
+              ? data.data
+              : [];
+      setLogs(logsArray);
     } catch (error: any) {
       console.error('Error fetching logs:', error);
       toast.error(`Failed to load logs: ${error.message || 'Unknown error'}`, {
@@ -940,6 +950,56 @@ const FitoutRequestDetails: React.FC = () => {
       });
     } finally {
       setDeviationLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (categoryId: number, documentId: number) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    try {
+      await apiClient.delete(`/fitout_request_categories/${categoryId}/delete_document/${documentId}.json`);
+
+      toast.success('Document deleted successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error deleting document:', error);
+      toast.error(`Failed to delete document: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+    }
+  };
+
+  const handleDeleteAnswerDocument = async (documentId: number) => {
+    if (!confirm('Are you sure you want to delete this attachment?')) return;
+
+    try {
+      await apiClient.delete(`/attachfiles/${documentId}.json`);
+
+      toast.success('Attachment deleted successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error deleting attachment:', error);
+      toast.error(`Failed to delete attachment: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
     }
   };
 
@@ -2067,12 +2127,10 @@ const FitoutRequestDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">
-            Loading fitout request details...
-          </span>
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading fitout request details...</p>
         </div>
       </div>
     );
@@ -2138,8 +2196,7 @@ const FitoutRequestDetails: React.FC = () => {
               <Button
                 onClick={handleCapturePayment}
                 size="sm"
-                style={{ backgroundColor: '#C72030', color: 'white' }}
-                className="hover:opacity-90"
+                className="bg-[#C72030] hover:bg-[#C72030] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Capture Payment
@@ -2150,7 +2207,7 @@ const FitoutRequestDetails: React.FC = () => {
               onClick={handleEdit}
               // variant="outline"
               size="sm"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -2158,7 +2215,7 @@ const FitoutRequestDetails: React.FC = () => {
               <Button
               onClick={handleLogsOpen}
               size="sm"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Logs className="w-4 h-4 mr-2" />
               Logs
@@ -2166,8 +2223,7 @@ const FitoutRequestDetails: React.FC = () => {
              <Button
               onClick={handleChecklistOpen}
               size="sm"
-              style={{ backgroundColor: '#C72030', color: 'white' }}
-              className="hover:opacity-90"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Checklist
@@ -2421,9 +2477,8 @@ const FitoutRequestDetails: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Button
                           onClick={handleDownloadAnnexuresPDF}
-                          variant="outline"
                           size="sm"
-                          className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                          className="h-8 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
                           disabled={isDownloadingAnnexurePDF || annexureSaveLoading}
                         >
                           {isDownloadingAnnexurePDF ? (
@@ -2435,9 +2490,8 @@ const FitoutRequestDetails: React.FC = () => {
                         </Button>
                         <Button
                           onClick={handleAnnexureResponsesEditButtonClick}
-                          variant="outline"
                           size="sm"
-                          className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                          className="h-8 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
                           disabled={annexureSaveLoading}
                         >
                           {annexureSaveLoading ? (
@@ -2507,9 +2561,8 @@ const FitoutRequestDetails: React.FC = () => {
                                   </Button> */}
                                   <Button
                                     onClick={() => category && handleStatusChangeOpen(category)}
-                                    variant="outline"
                                     size="sm"
-                                    className="h-7 text-xs border-gray-300 hover:bg-gray-50"
+                                    className="h-7 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
                                   >
                                     <Edit className="w-3 h-3 mr-1" />
                                     Change Status
@@ -2518,8 +2571,7 @@ const FitoutRequestDetails: React.FC = () => {
                                     <Button
                                       onClick={() => category && handleFileUploadOpen(category)}
                                       size="sm"
-                                      style={{ backgroundColor: '#C72030', color: 'white' }}
-                                      className="h-7 text-xs hover:opacity-90"
+                                      className="h-7 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030] [&_svg]:text-white"
                                     >
                                       <Upload className="w-3 h-3 mr-1" />
                                       Upload
@@ -2846,7 +2898,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                                       <Paperclip className="w-8 h-8 text-gray-400" />
                                                                     </div>
                                                                   )}
-                                                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-1">
                                                                     <Button
                                                                       size="sm"
                                                                       variant="secondary"
@@ -2855,6 +2907,14 @@ const FitoutRequestDetails: React.FC = () => {
                                                                     >
                                                                       <Download className="w-3 h-3 mr-1" />
                                                                       View
+                                                                    </Button>
+                                                                    <Button
+                                                                      size="sm"
+                                                                      variant="secondary"
+                                                                      className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700"
+                                                                      onClick={() => handleDeleteAnswerDocument(doc.id)}
+                                                                    >
+                                                                      <Trash2 className="w-3 h-3" />
                                                                     </Button>
                                                                   </div>
                                                                 </div>
@@ -3015,7 +3075,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                                     <Paperclip className="w-8 h-8 text-gray-400" />
                                                                   </div>
                                                                 )}
-                                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-1">
                                                                   <Button
                                                                     size="sm"
                                                                     variant="secondary"
@@ -3024,6 +3084,14 @@ const FitoutRequestDetails: React.FC = () => {
                                                                   >
                                                                     <Download className="w-3 h-3 mr-1" />
                                                                     View
+                                                                  </Button>
+                                                                  <Button
+                                                                    size="sm"
+                                                                    variant="secondary"
+                                                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700"
+                                                                    onClick={() => handleDeleteAnswerDocument(doc.id)}
+                                                                  >
+                                                                    <Trash2 className="w-3 h-3" />
                                                                   </Button>
                                                                 </div>
                                                                 <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center truncate">
@@ -3178,30 +3246,28 @@ const FitoutRequestDetails: React.FC = () => {
                                     {category.documents.map((doc, docIndex) => (
                                       <div
                                         key={doc.id}
-                                        className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                        className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
                                       >
                                         <img
                                           src={decodeURIComponent(doc.document_url)}
                                           alt={`Document ${docIndex + 1}`}
-                                          className="w-full h-32 object-cover"
+                                          className="w-full h-32 object-cover cursor-pointer"
+                                          onClick={() => window.open(doc.document_url, '_blank')}
                                           onError={(e) => {
                                             const target = e.target as HTMLImageElement;
                                             target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
                                           }}
                                         />
-                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
-                                          <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => window.open(doc.document_url, '_blank')}
+                                        <div className="flex items-center justify-between px-2 py-1 bg-gray-50">
+                                          <span className="text-xs text-gray-500">Doc {docIndex + 1}</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteDocument(category.id, doc.id)}
+                                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                                            title="Delete document"
                                           >
-                                            <Eye className="w-4 h-4 mr-1" />
-                                            View
-                                          </Button>
-                                        </div>
-                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center">
-                                          Doc {docIndex + 1}
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
                                         </div>
                                       </div>
                                     ))}
@@ -3274,12 +3340,11 @@ const FitoutRequestDetails: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <Button
                                     onClick={() => handleDeviationEdit(deviation)}
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-gray-300"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="hover:bg-transparent [&_svg]:text-black"
                                   >
-                                    <Edit className="w-4 h-4 mr-1" />
-                                    Edit
+                                    <Edit className="w-4 h-4" />
                                   </Button>
                                 </td>
                                 <td className="px-6 py-4">
@@ -3549,8 +3614,7 @@ const FitoutRequestDetails: React.FC = () => {
                       </p>
                       <Button
                         onClick={handleCapturePayment}
-                        style={{ backgroundColor: '#C72030', color: 'white' }}
-                        className="hover:opacity-90"
+                        className="bg-[#C72030] text-white border-0 hover:bg-[#C72030] [&_svg]:text-white"
                       >
                         <DollarSign className="w-4 h-4 mr-2" />
                         Capture Payment
@@ -3661,8 +3725,9 @@ const FitoutRequestDetails: React.FC = () => {
                   type="button"
                   variant="outline"
                   onClick={() => document.getElementById('payment-image-input')?.click()}
-                  className="border-gray-300"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  <Plus className="w-4 h-4 mr-2" />
                   Choose file
                 </Button>
                 <span className="text-sm text-gray-500">
@@ -3691,8 +3756,7 @@ const FitoutRequestDetails: React.FC = () => {
             <div className="flex justify-center pt-4">
               <Button
                 onClick={handlePaymentSubmit}
-                style={{ backgroundColor: '#C72030', color: 'white' }}
-                className="px-8 hover:opacity-90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Submit
               </Button>
@@ -3827,11 +3891,11 @@ const FitoutRequestDetails: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => document.getElementById(`attachment-file-${question.id}`)?.click()}
-                            className="border-gray-300 text-sm"
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Choose File
-                          </Button>
+className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Choose File
+                    </Button>
                           <span className="text-xs text-gray-500">
                             {question.attachment ? question.attachment.name : 'No file chosen'}
                           </span>
@@ -3872,7 +3936,7 @@ const FitoutRequestDetails: React.FC = () => {
                       };
                       setChecklistQuestions([...checklistQuestions, newQuestion]);
                     }}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Question
@@ -3898,8 +3962,7 @@ const FitoutRequestDetails: React.FC = () => {
                 <div className="flex justify-center pt-4">
                   <Button
                     onClick={handleChecklistSubmit}
-                    style={{ backgroundColor: '#C72030', color: 'white' }}
-                    className="px-8 hover:opacity-90"
+                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Submit
                   </Button>
@@ -3933,7 +3996,7 @@ const FitoutRequestDetails: React.FC = () => {
                 <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
                 <span className="ml-2 text-gray-600">Loading logs...</span>
               </div>
-            ) : logs.length === 0 ? (
+            ) : !Array.isArray(logs) || logs.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No logs available
               </div>
@@ -4123,9 +4186,8 @@ const FitoutRequestDetails: React.FC = () => {
                   <Button
                     onClick={handleDeviationUpdate}
                     disabled={deviationLoading}
-                    style={{ backgroundColor: '#C72030', color: 'white' }}
-                    className="px-8 hover:opacity-90"
-                  >
+                    // style={{ backgroundColor: '#C72030', color: 'white' }}
+ className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"                  >
                     {deviationLoading ? 'Updating...' : 'Update'}
                   </Button>
                 </div>

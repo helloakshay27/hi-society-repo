@@ -112,6 +112,8 @@ export const EditMembershipPlanPage = () => {
     renewalTerms: "",
     payment_plan_id: "",
     hsnCode: "",
+    cgst: "",
+    sgst: "",
     amenities: [] as any[],
     amenityDetails: {} as Record<string, {
       frequency: string;
@@ -193,6 +195,8 @@ export const EditMembershipPlanPage = () => {
         amenities: data.plan_amenities,
         amenityDetails: amenityDetailsMap,
         hsnCode: data.hsn_code || "",
+        cgst: data.cgst?.toString() || "",
+        sgst: data.sgst?.toString() || "",
       })
     } catch (error) {
       console.error("Error fetching membership plan details:", error);
@@ -246,6 +250,8 @@ export const EditMembershipPlanPage = () => {
           renewal_terms: formData.renewalTerms,
           payment_plan_id: formData.payment_plan_id ? parseInt(formData.payment_plan_id) : null,
           hsn_code: formData.hsnCode,
+          cgst: formData.cgst ? parseFloat(formData.cgst) : 0,
+          sgst: formData.sgst ? parseFloat(formData.sgst) : 0,
           active: true,
           plan_amenities_attributes: [
             ...formData.amenities.map(amenity => {
@@ -334,9 +340,10 @@ export const EditMembershipPlanPage = () => {
 
   if (loading) {
     return (
-      <div className="p-6 bg-white">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
+      <div className="bg-gray-50 h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading membership plan...</p>
         </div>
       </div>
     );
@@ -360,7 +367,7 @@ export const EditMembershipPlanPage = () => {
           {/* Basic Info */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <User className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -457,7 +464,7 @@ export const EditMembershipPlanPage = () => {
           {/* Amenities */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <DollarSign className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">

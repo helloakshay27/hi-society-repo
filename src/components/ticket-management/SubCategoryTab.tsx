@@ -1,44 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { ticketManagementAPI } from '@/services/ticketManagementAPI';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 interface SubCategoryItem {
   id: number;
-  helpdesk_category_id: number;
-  helpdesk_category_name: string | null;
-  name: string;
-  position: number | null;
-  active: number | null;
-  created_at: string;
-  updated_at: string;
-  issue_type_id: number | null;
+  issue_type_id: number;
+  issue_type: string;
+  category_id: number;
+  category_type: string;
+  sub_category: string;
   helpdesk_text: string;
-  location_enabled: string | null;
-  location_data: string | null;
-  icon_file_name: string | null;
-  icon_content_type: string | null;
-  icon_file_size: number | null;
-  icon_updated_at: string | null;
-  customer_enabled: boolean | null;
 }
 
 interface IssueType {
@@ -54,9 +39,18 @@ interface CategoryOption {
 export const SubCategoryTab: React.FC = () => {
   const [subCategories, setSubCategories] = useState<SubCategoryItem[]>([]);
   const [issueTypes, setIssueTypes] = useState<IssueType[]>([]);
+  // Category options are dependent on the selected issue type — kept separate
+  // for the Add and Edit dialogs so they don't stomp on each other.
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [editCategories, setEditCategories] = useState<CategoryOption[]>([]);
+  const [editCategoriesLoading, setEditCategoriesLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const perPage = 20;
 
   // Create form state
   const [selectedIssueType, setSelectedIssueType] = useState('');
@@ -71,62 +65,172 @@ export const SubCategoryTab: React.FC = () => {
   const [editCategory, setEditCategory] = useState('');
   const [editSubCategoryName, setEditSubCategoryName] = useState('');
   const [editHelpdeskText, setEditHelpdeskText] = useState('');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Fetch all data from single API
-  const fetchAllData = useCallback(async () => {
+  // Fetch all data from separate APIs
+  const fetchSubCategories = useCallback(async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
+      const subCategoriesRes = await fetch(
+        getFullUrl(`/crm/admin/helpdesk_sub_categories.json?page=${page}&per_page=${perPage}`),
+        { headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' } },
+      );
+      if (subCategoriesRes.ok) {
+        const data = await subCategoriesRes.json();
+        const subCats = data.helpdesk_sub_categories ?? (Array.isArray(data) ? data : []);
+        setSubCategories(subCats);
+        if (data.pagination) {
+          setCurrentPage(data.pagination.current_page);
+          setTotalPages(data.pagination.total_pages);
+          setTotalCount(data.pagination.total_count);
+        }
+      } else {
+        toast.error('Failed to fetch sub-categories');
+      }
+    } catch (error) {
+      console.error('Error fetching sub-categories:', error);
+      toast.error('Failed to fetch sub-categories');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const fetchAllData = useCallback(async () => {
+    try {
+      const issueTypesRes = await fetch(getFullUrl('/dropdown/issue_types.json'), {
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       });
-      if (response.ok) {
-        const data = await response.json();
-        // Set issue types from response
+
+      if (issueTypesRes.ok) {
+        const data = await issueTypesRes.json();
         setIssueTypes(
           (data.issue_types || []).map((it: { id: number; name: string }) => ({
             id: it.id,
             name: it.name,
           }))
         );
-        // Set categories from response
-        setCategories(
-          (data.helpdesk_categories || []).map((cat: { id: number; name: string }) => ({
-            id: cat.id,
-            name: cat.name,
-          }))
-        );
-        // Set sub-categories from response
-        setSubCategories(data.helpdesk_sub_categories || []);
       } else {
-        toast.error('Failed to fetch data');
+        toast.error('Failed to fetch issue types');
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch data');
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
+  // Category options depend on the selected issue type — fetch them
+  // per-target (add vs edit dialog) whenever that dialog's issue type changes.
+  const fetchCategoriesByIssueType = useCallback(async (issueTypeId: string, target: 'add' | 'edit') => {
+    const setLoading = target === 'add' ? setCategoriesLoading : setEditCategoriesLoading;
+    const setOptions = target === 'add' ? setCategories : setEditCategories;
+
+    if (!issueTypeId) {
+      setOptions([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        getFullUrl(`/dropdown/categories.json?q[issue_type_id_eq]=${issueTypeId}`),
+        { headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' } },
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const cats = Array.isArray(data) ? data : (data.categories || []);
+        setOptions(
+          cats.map((cat: { id: number; name: string }) => ({ id: cat.id, name: cat.name }))
+        );
+      } else {
+        setOptions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories by issue type:', error);
+      setOptions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    fetchSubCategories(page);
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   useEffect(() => {
     fetchAllData();
-  }, [fetchAllData]);
+    fetchSubCategories(1);
+  }, [fetchAllData, fetchSubCategories]);
 
-  // Get issue type name by ID
-  const getIssueTypeName = (issueTypeId: number | null) => {
-    if (!issueTypeId) return '--';
-    const issueType = issueTypes.find(it => it.id === issueTypeId);
-    return issueType?.name || '--';
-  };
+  useEffect(() => {
+    fetchCategoriesByIssueType(selectedIssueType, 'add');
+  }, [selectedIssueType, fetchCategoriesByIssueType]);
 
-  // Get category name by ID
-  const getCategoryName = (categoryId: number) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category?.name || '--';
-  };
+  useEffect(() => {
+    fetchCategoriesByIssueType(editIssueType, 'edit');
+  }, [editIssueType, fetchCategoriesByIssueType]);
 
   // Handle create submit
   const handleCreateSubmit = async () => {
@@ -155,7 +259,7 @@ export const SubCategoryTab: React.FC = () => {
       }
 
       const response = await fetch(
-        getFullUrl('/crm/admin/helpdesk_categories/create_helpdesk_sub_category.json'),
+        getFullUrl('/crm/admin/create_helpdesk_sub_category.json'),
         {
           method: 'POST',
           headers: {
@@ -171,7 +275,8 @@ export const SubCategoryTab: React.FC = () => {
         setSelectedCategory('');
         setSubCategoryName('');
         setHelpdeskText('');
-        fetchAllData();
+        setAddDialogOpen(false);
+        fetchSubCategories(1);
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || 'Failed to create sub-category');
@@ -188,8 +293,8 @@ export const SubCategoryTab: React.FC = () => {
   const handleEdit = (subCategory: SubCategoryItem) => {
     setEditingSubCategory(subCategory);
     setEditIssueType(subCategory.issue_type_id?.toString() || '');
-    setEditCategory(subCategory.helpdesk_category_id?.toString() || '');
-    setEditSubCategoryName(subCategory.name || '');
+    setEditCategory(subCategory.category_id?.toString() || '');
+    setEditSubCategoryName(subCategory.sub_category || '');
     setEditHelpdeskText(subCategory.helpdesk_text || '');
     setIsEditModalOpen(true);
   };
@@ -214,16 +319,18 @@ export const SubCategoryTab: React.FC = () => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('helpdesk_sub_category[issue_type_id]', editIssueType);
-      formData.append('helpdesk_sub_category[name]', editSubCategoryName.trim());
-      formData.append('helpdesk_sub_category[helpdesk_category_id]', editCategory);
+      formData.append('id', editingSubCategory.id.toString());
+      formData.append('name', editSubCategoryName.trim());
+      formData.append('issue_type_id', editIssueType);
+      formData.append('helpdesk_category_id', editCategory);
+      formData.append('active', '1');
 
       if (editHelpdeskText.trim()) {
-        formData.append('helpdesk_sub_category[helpdesk_text]', editHelpdeskText.trim());
+        formData.append('helpdesk_text', editHelpdeskText.trim());
       }
 
       const response = await fetch(
-        getFullUrl(`/crm/admin/helpdesk_categories/modify_helpdesk_sub_category.json?id=${editingSubCategory.id}`),
+        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
         {
           method: 'POST',
           headers: {
@@ -237,7 +344,7 @@ export const SubCategoryTab: React.FC = () => {
         toast.success('Sub-category updated successfully!');
         setIsEditModalOpen(false);
         setEditingSubCategory(null);
-        fetchAllData();
+        fetchSubCategories(currentPage);
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || 'Failed to update sub-category');
@@ -257,9 +364,30 @@ export const SubCategoryTab: React.FC = () => {
     }
 
     try {
-      await ticketManagementAPI.deleteSubCategory(subCategory.id.toString());
-      setSubCategories(subCategories.filter(sc => sc.id !== subCategory.id));
-      toast.success('Sub-category deleted successfully!');
+      const formData = new FormData();
+      formData.append('id', subCategory.id.toString());
+      formData.append('name', subCategory.sub_category || '');
+      formData.append('issue_type_id', subCategory.issue_type_id?.toString() || '');
+      formData.append('helpdesk_category_id', subCategory.category_id?.toString() || '');
+      formData.append('active', '0');
+
+      const response = await fetch(
+        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
+        {
+          method: 'POST',
+          headers: { 'Authorization': getAuthHeader() },
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        setSubCategories(subCategories.filter(sc => sc.id !== subCategory.id));
+        toast.success('Sub-category deleted successfully!');
+        fetchSubCategories(currentPage);
+      } else {
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || 'Failed to delete sub-category');
+      }
     } catch (error) {
       console.error('Error deleting sub-category:', error);
       toast.error('Failed to delete sub-category');
@@ -282,11 +410,11 @@ export const SubCategoryTab: React.FC = () => {
       case 'srno':
         return index + 1;
       case 'issue_type':
-        return getIssueTypeName(item.issue_type_id);
+        return item.issue_type || '--';
       case 'category':
-        return item.helpdesk_category_name || getCategoryName(item.helpdesk_category_id);
+        return item.category_type || '--';
       case 'name':
-        return item.name || '--';
+        return item.sub_category || '--';
       case 'helpdesk_text':
         return item.helpdesk_text || '--';
       default:
@@ -307,100 +435,150 @@ export const SubCategoryTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Sub-Category</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3">
-            {/* Issue Type Dropdown */}
-            <div className="flex-1">
-              <Select value={selectedIssueType} onValueChange={setSelectedIssueType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Issue Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {issueTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Category Dropdown */}
-            <div className="flex-1">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Sub-category Name */}
-            <div className="flex-1">
-              <Input
-                placeholder="Enter Sub-category"
-                value={subCategoryName}
-                onChange={(e) => setSubCategoryName(e.target.value)}
-              />
-            </div>
-
-            {/* Helpdesk Text */}
-            <div className="flex-1">
-              <Input
-                placeholder="Enter text"
-                value={helpdeskText}
-                onChange={(e) => setHelpdeskText(e.target.value)}
-              />
-            </div>
-
-            {/* Add Button */}
+      {/* Add Sub-Category Dialog */}
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) {
+          setSelectedIssueType('');
+          setSelectedCategory('');
+          setSubCategoryName('');
+          setHelpdeskText('');
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Sub-Category</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                Select Issue Type <span style={{ color: '#da7756' }}>*</span>
+              </InputLabel>
+              <MuiSelect
+                label="Select Issue Type *"
+                displayEmpty
+                value={selectedIssueType}
+                onChange={(e) => {
+                  setSelectedIssueType(e.target.value);
+                  setSelectedCategory('');
+                }}
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                {issueTypes.map((type) => (
+                  <MenuItem key={type.id} value={type.id.toString()}>{type.name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <FormControl fullWidth variant="outlined" disabled={!selectedIssueType}>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                Select Category <span style={{ color: '#da7756' }}>*</span>
+              </InputLabel>
+              <MuiSelect
+                label="Select Category *"
+                displayEmpty
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                disabled={!selectedIssueType || categoriesLoading}
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled>
+                  <em>
+                    {!selectedIssueType
+                      ? 'Select Issue Type first'
+                      : categoriesLoading
+                      ? 'Loading categories...'
+                      : 'Select Category'}
+                  </em>
+                </MenuItem>
+                {categories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <TextField
+              label="Sub-category Name"
+              placeholder="Enter Sub-category"
+              value={subCategoryName}
+              onChange={(e) => setSubCategoryName(e.target.value)}
+              fullWidth
+              variant="outlined"
+              required
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <TextField
+              label="Text"
+              placeholder="Enter text"
+              value={helpdeskText}
+              onChange={(e) => setHelpdeskText(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setAddDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
             <Button
               onClick={handleCreateSubmit}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white px-6"
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
             >
-              <Plus className="h-4 w-4 mr-1" />
               {isSubmitting ? 'Adding...' : 'Add'}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Sub Categories</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading sub-categories...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={subCategories}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="sub-categories-table"
-              enableSearch={true}
-              searchPlaceholder="Search sub-categories..."
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={subCategories}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="sub-categories-table"
+          enableSearch={true}
+          searchPlaceholder="Search sub-categories..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+        {/* Pagination */}
+        {(totalCount || subCategories.length) > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
 
       {/* Edit Sub-Category Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Edit Sub-Category</DialogTitle>
@@ -409,66 +587,81 @@ export const SubCategoryTab: React.FC = () => {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Issue Type Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Issue Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editIssueType} onValueChange={setEditIssueType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                    Select Issue Type <span style={{ color: '#da7756' }}>*</span>
+                  </InputLabel>
+                  <MuiSelect
+                    label="Select Issue Type *"
+                    displayEmpty
+                    value={editIssueType}
+                    onChange={(e) => {
+                      setEditIssueType(e.target.value);
+                      setEditCategory('');
+                    }}
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id.toString()}>{type.name}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Category Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Category <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editCategory} onValueChange={setEditCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormControl fullWidth variant="outlined" disabled={!editIssueType}>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                    Select Category <span style={{ color: '#da7756' }}>*</span>
+                  </InputLabel>
+                  <MuiSelect
+                    label="Select Category *"
+                    displayEmpty
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    disabled={!editIssueType || editCategoriesLoading}
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled>
+                      <em>
+                        {!editIssueType
+                          ? 'Select Issue Type first'
+                          : editCategoriesLoading
+                          ? 'Loading categories...'
+                          : 'Select Category'}
+                      </em>
+                    </MenuItem>
+                    {editCategories.map((cat) => (
+                      <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Sub-category Name */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Sub-category Name <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    value={editSubCategoryName}
-                    onChange={(e) => setEditSubCategoryName(e.target.value)}
-                    placeholder="Enter Sub-category"
-                  />
-                </div>
+                <TextField
+                  label="Sub-category Name"
+                  placeholder="Enter Sub-category"
+                  value={editSubCategoryName}
+                  onChange={(e) => setEditSubCategoryName(e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Helpdesk Text */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Text
-                  </label>
-                  <Input
-                    value={editHelpdeskText}
-                    onChange={(e) => setEditHelpdeskText(e.target.value)}
-                    placeholder="Enter text"
-                  />
-                </div>
+                <TextField
+                  label="Text"
+                  placeholder="Enter text"
+                  value={editHelpdeskText}
+                  onChange={(e) => setEditHelpdeskText(e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
@@ -486,9 +679,9 @@ export const SubCategoryTab: React.FC = () => {
                 <Button
                   onClick={handleEditSubmit}
                   disabled={isSubmitting}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                  className="bg-[#C72030] hover:bg-[#a01828] text-white px-8"
                 >
-                  {isSubmitting ? 'Updating...' : 'Submit'}
+                  {isSubmitting ? 'Updating...' : 'Update'}
                 </Button>
               </div>
             </div>

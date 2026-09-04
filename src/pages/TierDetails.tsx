@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, ChevronRight, Star, Trophy, Zap, Gift, Clock } from "lucide-react";
+import { ArrowLeft, ChevronRight, Star, Trophy, Zap, Gift, Clock, Tag, FileText } from "lucide-react";
 
 export default function TierDetails() {
   const { id } = useParams();
@@ -156,6 +156,19 @@ export default function TierDetails() {
                   </div>
                 </div>
 
+                {/* Title */}
+                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Tag className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Title</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {tierDetails?.title || "N/A"}
+                    </p>
+                  </div>
+                </div>
+
                 {/* Exit Points */}
                 <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
@@ -165,6 +178,19 @@ export default function TierDetails() {
                     <p className="text-sm text-gray-500 mb-1">Exit Points</p>
                     <p className="text-lg font-semibold text-gray-900">
                       {tierDetails?.exit_points ?? "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Welcome Bonus */}
+                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <Gift className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Welcome Bonus</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {tierDetails?.welcome_bonus ?? "N/A"} Points
                     </p>
                   </div>
                 </div>
@@ -182,18 +208,20 @@ export default function TierDetails() {
                   </div>
                 </div>
 
-                {/* Welcome Bonus */}
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <Gift className="w-5 h-5 text-green-600" />
+                {/* Description - full width */}
+                {tierDetails?.description && (
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg md:col-span-2">
+                    <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Description</p>
+                      <p className="text-base text-gray-900">
+                        {tierDetails.description}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Welcome Bonus</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {tierDetails?.welcome_bonus ?? "N/A"} Points
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

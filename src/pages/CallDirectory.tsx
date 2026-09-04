@@ -30,6 +30,111 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, TextField } from "@mui/material";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
+
+const renderPaginationItems = (
+  currentPage: number,
+  totalPages: number,
+  onPageChange: (page: number) => void
+) => {
+  if (!totalPages || totalPages <= 0) {
+    return null;
+  }
+  const items = [];
+  const showEllipsis = totalPages > 5;
+
+  if (showEllipsis) {
+    items.push(
+      <PaginationItem key={1} className="cursor-pointer">
+        <PaginationLink onClick={() => onPageChange(1)} isActive={currentPage === 1}>
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    if (currentPage > 4) {
+      items.push(
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage > 3 && currentPage < totalPages - 2) {
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage < totalPages - 3) {
+      items.push(
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+        if (!items.find((item) => item.key === i.toString())) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+    }
+
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key={totalPages} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(totalPages)} isActive={currentPage === totalPages}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  } else {
+    for (let i = 1; i <= totalPages; i++) {
+      items.push(
+        <PaginationItem key={i} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  }
+
+  return items;
+};
 
 const columns: ColumnConfig[] = [
   { key: "icon", label: "Icon", sortable: false, draggable: true },
@@ -111,12 +216,43 @@ const CallDirectory: React.FC = () => {
   const navigate = useNavigate();
   const [isAddOpen, setIsAddOpen] = React.useState(false);
 
+  const [loading, setLoading] = React.useState(true);
   const [quickCalls, setQuickCalls] = React.useState<QuickCall[]>([]);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [currentPage, setCurrentPage] = React.useState(1);
+
+  const filteredQuickCalls = React.useMemo(() => {
+    if (!searchTerm.trim()) return quickCalls;
+    const query = searchTerm.toLowerCase();
+    return quickCalls.filter((item) =>
+      Object.values(item).some((value) =>
+        String(value).toLowerCase().includes(query)
+      )
+    );
+  }, [quickCalls, searchTerm]);
+
+  const totalPages = Math.ceil(filteredQuickCalls.length / PAGE_SIZE) || 1;
+  const paginatedQuickCalls = filteredQuickCalls.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
   const fetchQuickCalls = React.useCallback(async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `https://${baseUrl}/public_directories.json`,
@@ -140,6 +276,8 @@ const CallDirectory: React.FC = () => {
     } catch (error) {
       console.error("Error fetching quick calls", error);
       toast.error("Failed to load directories. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }, [baseUrl, token]);
 
@@ -365,7 +503,7 @@ const CallDirectory: React.FC = () => {
   const renderActions = (item: QuickCall) => (
     <div className="flex items-center gap-2">
       <Button size="sm" variant="ghost" onClick={() => handleEditClick(item)}>
-        <Pencil className="w-4 h-4 text-gray-500 hover:text-[#BF213E]" />
+        <Pencil className="w-4 h-4 text-black" />
       </Button>
     </div>
   );
@@ -381,8 +519,8 @@ const CallDirectory: React.FC = () => {
         }
         setIsAddOpen(true);
       }}
-      className="hidden sm:inline-flex"
-    >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"    >
       + Add
     </Button>
   );
@@ -397,20 +535,42 @@ const CallDirectory: React.FC = () => {
       {/* Content */}
       <div className="mx-auto">
         <EnhancedTable
-          data={quickCalls}
+          data={paginatedQuickCalls}
           columns={columns}
           renderCell={renderCell}
           renderActions={renderActions}
+          loading={loading}
           storageKey="call-directory-table"
           className="min-w-full"
           emptyMessage="No quick calls found. Add one to get started."
           leftActions={leftActions}
           enableSearch={true}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
           enableSelection={false}
           hideTableExport={true}
-          pagination={true}
-          pageSize={10}
+          pagination={false}
         />
+
+        <div className="mt-4 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems(currentPage, totalPages, handlePageChange)}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
 
       {/* Floating add button (mobile style like reference) */}
@@ -515,20 +675,20 @@ const CallDirectory: React.FC = () => {
           </div>
 
           <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
-            <Button
+            <button
+              type="button"
               onClick={onSubmit}
-              className="!bg-[#F2EEE9] !text-[#BF213E] hover:!bg-[#e8e1d9] px-10"
-              disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
+           className="btn-primary h-9 px-4 text-sm font-medium"               disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
               title={!form.quick_call_icon_id ? "Please select an icon" : ""}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={closeAdd}
-              className="!bg-[#F2EEE9] !text-[#BF213E] hover:!bg-[#e8e1d9] px-10"
-            >
-              Cancel
-            </Button>
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">
+                  Cancel
+            </button>
           </div>
         </DialogContent>
       </Dialog>

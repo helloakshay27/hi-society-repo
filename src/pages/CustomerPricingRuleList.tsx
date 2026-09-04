@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getFullUrl } from "@/config/apiConfig";
-
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 
 const columns = [
   { key: "actions", label: "Actions", sortable: true },
@@ -150,8 +148,8 @@ export const CustomerPricingRuleList = () => {
   const renderCustomActions = () => (
     <Button
       onClick={handleAdd}
-      className="bg-[#C72030] hover:bg-[#A01828] text-white"
-    >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"     >
       <Plus className="h-4 w-4 mr-2" />
       Add Pricing Rule
     </Button>
@@ -201,7 +199,8 @@ export const CustomerPricingRuleList = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold">Customer Pricing Rules</h1>
-        <Button className="bg-[#C72030] text-white" onClick={() => setEditOpen(true)}>
+        <Button variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" onClick={() => setEditOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> Add Rule
         </Button>
       </div>
@@ -217,7 +216,7 @@ export const CustomerPricingRuleList = () => {
         storageKey="customer-pricing-rules-table"
         leftActions={renderCustomActions()}
       />
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog modal={false} open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex justify-between items-start">
@@ -232,77 +231,93 @@ export const CustomerPricingRuleList = () => {
             </div>
           </DialogHeader>
           <div className="space-y-4 mt-4 pb-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Organization <span className="text-red-500">*</span>
-              </Label>
-              <Select value={editOrgId?.toString()} onValueChange={setEditOrgId}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
-                  <SelectValue placeholder="Select an organization" />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations.length === 0 ? (
-                    <div className="px-3 py-2 text-gray-400">No organizations found</div>
-                  ) : (
-                    organizations.map((org) => (
-                      <SelectItem key={org.id} value={org.id.toString()}>
-                        {org.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Category <span className="text-red-500">*</span>
-              </Label>
-              <Select value={editCatId?.toString()} onValueChange={setEditCatId}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.length === 0 ? (
-                    <div className="px-3 py-2 text-gray-400">No categories found</div>
-                  ) : (
-                    categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Margin Type <span className="text-red-500">*</span>
-              </Label>
-              <Select value={editMarginType} onValueChange={setEditMarginType}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
-                  <SelectValue placeholder="Select margin type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="percentage">Percentage</SelectItem>
-                  <SelectItem value="flat">Flat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Margin Value <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                type="number"
-                value={editMarginValue}
-                onChange={e => setEditMarginValue(e.target.value)}
-                className="bg-gray-50 border-[#e5e1d8]"
-                placeholder="e.g., 10"
-                min={0}
-                step={0.01}
-              />
-            </div>
-            <div className="flex justify-center pt-4">
+            <FormControl
+              fullWidth
+              variant="outlined"
+              required
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+            >
+              <InputLabel shrink>Organization</InputLabel>
+              <MuiSelect
+                value={editOrgId?.toString() ?? ""}
+                onChange={(e) => setEditOrgId(e.target.value)}
+                label="Organization"
+                notched
+                displayEmpty
+                MenuProps={menuProps}
+              >
+                <MenuItem value="">Select an organization</MenuItem>
+                {organizations.length === 0 ? (
+                  <MenuItem value="" disabled>No organizations found</MenuItem>
+                ) : (
+                  organizations.map((org) => (
+                    <MenuItem key={org.id} value={org.id.toString()}>
+                      {org.name}
+                    </MenuItem>
+                  ))
+                )}
+              </MuiSelect>
+            </FormControl>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              required
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+            >
+              <InputLabel shrink>Category</InputLabel>
+              <MuiSelect
+                value={editCatId?.toString() ?? ""}
+                onChange={(e) => setEditCatId(e.target.value)}
+                label="Category"
+                notched
+                displayEmpty
+                MenuProps={menuProps}
+              >
+                <MenuItem value="">Select a category</MenuItem>
+                {categories.length === 0 ? (
+                  <MenuItem value="" disabled>No categories found</MenuItem>
+                ) : (
+                  categories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </MenuItem>
+                  ))
+                )}
+              </MuiSelect>
+            </FormControl>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              required
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+            >
+              <InputLabel shrink>Margin Type</InputLabel>
+              <MuiSelect
+                value={editMarginType}
+                onChange={(e) => setEditMarginType(e.target.value)}
+                label="Margin Type"
+                notched
+                displayEmpty
+                MenuProps={menuProps}
+              >
+                <MenuItem value="percentage">Percentage</MenuItem>
+                <MenuItem value="flat">Flat</MenuItem>
+              </MuiSelect>
+            </FormControl>
+            <TextField
+              fullWidth
+              variant="outlined"
+              required
+              type="number"
+              label="Margin Value"
+              value={editMarginValue}
+              onChange={e => setEditMarginValue(e.target.value)}
+              placeholder="e.g., 10"
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ min: 0, step: 0.01 }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+            />
+            <div className="flex justify-center gap-4 pt-4">
               <Button
                 onClick={handleEditSubmit}
                 className="bg-[#C72030] hover:bg-[#A01828] text-white px-12"
@@ -312,8 +327,7 @@ export const CustomerPricingRuleList = () => {
               </Button>
               <Button
                 onClick={handleEditClose}
-                className="bg-[#e7e3d9] text-[#C72030] px-6 ml-4"
-                disabled={editLoading}
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"                 disabled={editLoading}
               >
                 Cancel
               </Button>

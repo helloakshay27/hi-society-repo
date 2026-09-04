@@ -11,6 +11,7 @@ import { toast } from "sonner";
 const AddChartofAccountModal = ({ open, onOpenChange, editingAccessory = null }) => {
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
+    const lock_account_id = localStorage.getItem("lock_account_id");
 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
@@ -24,8 +25,12 @@ const AddChartofAccountModal = ({ open, onOpenChange, editingAccessory = null })
 
     useEffect(() => {
         const fetchAccountTypes = async () => {
+            if (!lock_account_id) {
+                setAccountTypes([]);
+                return;
+            }
             try {
-                const res = await axios.get(`https://${baseUrl}/lock_accounts/1/lock_account_groups?format=flat`, {
+                const res = await axios.get(`https://${baseUrl}/lock_accounts/${lock_account_id}/lock_account_groups?format=flat`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -36,7 +41,7 @@ const AddChartofAccountModal = ({ open, onOpenChange, editingAccessory = null })
             }
         };
         if (open) fetchAccountTypes();
-    }, [open, baseUrl, token]);
+    }, [open, baseUrl, token, lock_account_id]);
 
     // Helper to flatten tree for dropdown
     const flattenGroups = (groups, prefix = '') => {
@@ -95,7 +100,7 @@ const AddChartofAccountModal = ({ open, onOpenChange, editingAccessory = null })
     };
 
     const ledgerData = {
-        lock_account_id: 2, // or get from context if dynamic
+        lock_account_id: lock_account_id, // or get from context if dynamic
         name: formData.accountName || '',
         lock_account_group_id: formData.accountTypeId || '',
         ledger_of: null,
@@ -109,9 +114,24 @@ const AddChartofAccountModal = ({ open, onOpenChange, editingAccessory = null })
     console.log('Submitting ledger data:', ledgerData);
 
     const handleSubmit = async () => {
+        // Validation
+        if (!formData.accountTypeId) {
+            toast.error("Account Type is required");
+            return;
+        }
+
+        if (!formData.accountName || formData.accountName.trim() === "") {
+            toast.error("Account Name is required");
+            return;
+        }
         setIsSubmitting(true);
+        if (!lock_account_id) {
+            toast.error("Lock account not found");
+            setIsSubmitting(false);
+            return;
+        }
         const ledgerData = {
-            lock_account_id: 2, // or get from context if dynamic
+            lock_account_id: lock_account_id, // or get from context if dynamic
             name: formData.accountName || '',
             lock_account_group_id: formData.accountTypeId || '',
             ledger_of: null,
@@ -125,7 +145,7 @@ const AddChartofAccountModal = ({ open, onOpenChange, editingAccessory = null })
         console.log('Submitting ledger data:', ledgerData);
         try {
             await axios.post(
-                `https://${baseUrl}/lock_accounts/1/lock_account_ledgers.json`,
+                `https://${baseUrl}/lock_accounts/${lock_account_id}/lock_account_ledgers.json`,
                 { lock_account_ledger: ledgerData },
                 {
                     headers: {
@@ -334,6 +354,7 @@ const AddChartofAccountModal = ({ open, onOpenChange, editingAccessory = null })
                     </div>
                     <div className="mt-4 pt-5 flex justify-center gap-3">
                         <Button
+                            type="button"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                             style={{ backgroundColor: "#C72030" }}

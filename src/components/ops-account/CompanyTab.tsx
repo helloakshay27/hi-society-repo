@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -9,7 +9,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AddCompanyModal } from "@/components/AddCompanyModal";
@@ -75,6 +74,13 @@ const columns: ColumnConfig[] = [
     draggable: false,
   },
   {
+    key: "srno",
+    label: "S.No.",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
     key: "name",
     label: "Company Name",
     sortable: true,
@@ -117,7 +123,7 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
-    key: "status",
+    key: "approve",
     label: "Status",
     sortable: true,
     hideable: true,
@@ -188,8 +194,10 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
       "helloakshay27@gmail.com",
       "dev@lockated.com",
       "sumitra.patil@lockated.com",
+      "komalshinde0101@lockated.com",
       "demo@lockated.com",
-      "ajay.ghenand@lockated.com"
+      "ajay.ghenand@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEditCompany(allowedEmails.includes(userEmail));
   };
@@ -498,10 +506,14 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
   const totalPages = pagination.total_pages;
 
   // Use API data directly instead of client-side filtering
-  const displayedData = companies;
+  const displayedData = useMemo(
+    () => companies.map((c, i) => ({ ...c, srno: (currentPage - 1) * perPage + i + 1 })),
+    [companies, currentPage, perPage],
+  );
 
   // Render row function for enhanced table
-  const renderRow = (company: CompanyItem) => ({
+  const renderRow = (company: CompanyItem & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{company.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         <button
@@ -514,7 +526,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
         </button>
         <button
           onClick={() => company?.id && handleEdit(company.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditCompany || !company?.id}
         >
@@ -535,7 +547,10 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
         <div>
           <div className="font-medium">{company?.name || "N/A"}</div>
           {company?.remarks && (
-            <div className="text-sm text-gray-500">{company.remarks}</div>
+            <div className="text-sm text-gray-500" title={company.remarks}>
+              {company.remarks.split(" ").slice(0, 5).join(" ")}
+              {company.remarks.split(" ").length > 5 ? "..." : ""}
+            </div>
           )}
         </div>
       </div>
@@ -574,7 +589,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
         {formatDate(company?.live_date)}
       </span>
     ),
-    status: (
+    approve: (
       <div className="flex items-center gap-2">
         <Switch
           checked={!!company?.active}
@@ -607,7 +622,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
     try {
       const formDataToSend = new FormData();
       formDataToSend.append(
-        "pms_company_setup[active]",
+        "pms_company_setup[approve]",
         (!isActive).toString()
       );
 
@@ -712,15 +727,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
         <h1 className="text-2xl font-bold">Companies</h1>
       </header>
 
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">Loading companies...</span>
-        </div>
-      )}
-
-      {!loading && (
-        <>
+      <>
           <EnhancedTaskTable
             data={displayedData}
             columns={columns}
@@ -732,9 +739,10 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
             searchTerm={searchQuery}
             onSearchChange={handleSearch}
             onFilterClick={() => setIsFilterOpen(true)}
+            loading={loading}
             leftActions={
               <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={!canEditCompany}
               >
@@ -774,7 +782,6 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
             onPerPageChange={handlePerPageChange}
           />
         </>
-      )}
 
       {/* Modals */}
       <AddCompanyModal

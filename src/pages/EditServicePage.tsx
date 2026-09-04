@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Download, File, FileSpreadsheet, FileText, Upload, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, CircularProgress, FormHelperText } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/hooks/useAppDispatch';
 import { fetchService, updateService, clearError, resetServiceState } from '@/store/slices/serviceSlice';
-import { fetchSites, fetchBuildings, fetchWings, fetchAreas, fetchFloors, fetchRooms, fetchGroups, fetchSubGroups } from '@/store/slices/serviceLocationSlice';
+import { clearAllSelections } from '@/store/slices/serviceLocationSlice';
+import { LocationSelector } from '@/components/service/LocationSelector';
 import { toast } from 'sonner';
 
 export const EditServicePage = () => {
@@ -14,17 +15,6 @@ export const EditServicePage = () => {
   const { id } = useParams();
   const dispatch = useAppDispatch();
   const { loading, error, fetchedService, updatedService } = useAppSelector(state => state.serviceEdit);
-  const {
-    sites,
-    buildings,
-    wings,
-    areas,
-    floors,
-    rooms,
-    groups,
-    subGroups,
-    loading: locationLoading
-  } = useAppSelector(state => state.serviceLocation);
 
   const [formData, setFormData] = useState({
     serviceName: '',
@@ -55,11 +45,7 @@ export const EditServicePage = () => {
 
   const [errors, setErrors] = useState({
     serviceName: false,
-    executionType: false,
     buildingId: false,
-    wingId: false,
-    areaId: false,
-    floorId: false,
   });
 
   // Upload constraints (match Add Service page)
@@ -71,30 +57,25 @@ export const EditServicePage = () => {
   useEffect(() => {
     if (id) {
       dispatch(fetchService(id));
-      dispatch(fetchSites());
-      dispatch(fetchGroups());
-      
-      // Auto-set site based on user's current site
-      const userSiteId = localStorage.getItem('selectedSiteId') || localStorage.getItem('siteId');
-      if (userSiteId && !formData.siteId) {
-        const siteId = Number(userSiteId);
-        setFormData(prev => ({ ...prev, siteId }));
-        dispatch(fetchBuildings(siteId));
-      }
     }
     return () => {
       dispatch(resetServiceState());
+      dispatch(clearAllSelections());
     };
   }, [id, dispatch]);
 
   useEffect(() => {
     if (fetchedService) {
-      setFormData({
+      const storedSiteId = Number(localStorage.getItem('selectedSiteId') || localStorage.getItem('siteId') || '0') || null;
+      const effectiveSiteId = fetchedService.site_id || storedSiteId;
+
+      setFormData(prev => ({
+        ...prev,
         serviceName: fetchedService.service_name || '',
         executionType: fetchedService.execution_type || '',
         uom: fetchedService.base_uom || '',
         serviceDescription: fetchedService.description || '',
-        siteId: fetchedService.site_id || null,
+        siteId: effectiveSiteId,
         buildingId: fetchedService.building_id || null,
         wingId: fetchedService.wing_id || null,
         areaId: fetchedService.area_id || null,
@@ -108,7 +89,7 @@ export const EditServicePage = () => {
         serviceCode: fetchedService.service_code || '',
         extCode: fetchedService.ext_code || '',
         rateContractVendorCode: fetchedService.rate_contract_vendor_code || '',
-      });
+      }));
 
       if (Array.isArray(fetchedService.documents)) {
         setExistingFiles(
@@ -119,19 +100,8 @@ export const EditServicePage = () => {
           }))
         );
       }
-
-      // Fetch sub-groups when groupId is available from fetchedService
-      if (fetchedService.group_id) {
-        dispatch(fetchSubGroups(fetchedService.group_id));
-      }
-
-      if (fetchedService.site_id) dispatch(fetchBuildings(fetchedService.site_id));
-      if (fetchedService.building_id) dispatch(fetchWings(fetchedService.building_id));
-      if (fetchedService.wing_id) dispatch(fetchAreas(fetchedService.wing_id));
-      if (fetchedService.area_id) dispatch(fetchFloors(fetchedService.area_id));
-      if (fetchedService.floor_id) dispatch(fetchRooms(fetchedService.floor_id));
     }
-  }, [fetchedService, dispatch]);
+  }, [fetchedService]);
   useEffect(() => {
     if (error) {
       toast("error");
@@ -152,37 +122,23 @@ export const EditServicePage = () => {
     if (field === 'serviceName' && value && String(value).trim() !== '') {
       setErrors(prev => ({ ...prev, serviceName: false }));
     }
-    if (field === 'executionType' && value !== '') {
-      setErrors(prev => ({ ...prev, executionType: false }));
-    }
-    if (field === 'buildingId' && value !== null) {
-      setErrors(prev => ({ ...prev, buildingId: false }));
-      const selectedBuilding = buildings.find(b => b.id === value);
-      if (selectedBuilding?.has_wing) {
-        dispatch(fetchWings(Number(value)));
-      }
-      setFormData(prev => ({ ...prev, wingId: null, areaId: null, floorId: null, roomId: null }));
-    }
-    if (field === 'wingId' && value !== null) {
-      setErrors(prev => ({ ...prev, wingId: false }));
-      dispatch(fetchAreas(Number(value)));
-      setFormData(prev => ({ ...prev, areaId: null, floorId: null, roomId: null }));
-    }
-    if (field === 'areaId' && value !== null) {
-      setErrors(prev => ({ ...prev, areaId: false }));
-      dispatch(fetchFloors(Number(value)));
-      setFormData(prev => ({ ...prev, floorId: null, roomId: null }));
-    }
-    if (field === 'floorId' && value !== null) {
-      setErrors(prev => ({ ...prev, floorId: false }));
-      dispatch(fetchRooms(Number(value)));
-      setFormData(prev => ({ ...prev, roomId: null }));
-    }
-    if (field === 'groupId' && value !== null) {
-      dispatch(fetchSubGroups(Number(value)));
-      setFormData(prev => ({ ...prev, subGroupId: null, subGroupName: '' }));
-    }
   };
+
+  const handleLocationChange = useCallback((location: {
+    siteId: number | null;
+    buildingId: number | null;
+    wingId: number | null;
+    areaId: number | null;
+    floorId: number | null;
+    roomId: number | null;
+    groupId: number | null;
+    subGroupId: number | null;
+  }) => {
+    setFormData(prev => ({ ...prev, ...location }));
+    if (location.buildingId !== null) {
+      setErrors(prev => ({ ...prev, buildingId: false }));
+    }
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -231,36 +187,17 @@ export const EditServicePage = () => {
     setIsSubmitting(true);
 
     const hasServiceNameError = formData.serviceName.trim() === '';
-    const hasExecutionTypeError = formData.executionType === '';
     const hasBuildingIdError = formData.buildingId === null;
-    const hasWingIdError = formData.wingId === null;
-    const hasAreaIdError = formData.areaId === null;
-    const hasFloorIdError = formData.floorId === null;
 
-    if (
-      hasServiceNameError ||
-      hasExecutionTypeError ||
-      hasBuildingIdError ||
-      hasWingIdError ||
-      hasAreaIdError ||
-      hasFloorIdError
-    ) {
+    if (hasServiceNameError || hasBuildingIdError) {
       setErrors({
         serviceName: hasServiceNameError,
-        executionType: hasExecutionTypeError,
         buildingId: hasBuildingIdError,
-        wingId: hasWingIdError,
-        areaId: hasAreaIdError,
-        floorId: hasFloorIdError,
       });
 
       const errorFields = [];
       if (hasServiceNameError) errorFields.push('Service Name');
-      if (hasExecutionTypeError) errorFields.push('Execution Type');
       if (hasBuildingIdError) errorFields.push('Building');
-      if (hasWingIdError) errorFields.push('Wing');
-      if (hasAreaIdError) errorFields.push('Area');
-      if (hasFloorIdError) errorFields.push('Floor');
 
       toast(`Please fill in the following required fields: ${errorFields.join(', ')}`);
 
@@ -270,11 +207,7 @@ export const EditServicePage = () => {
 
     setErrors({
       serviceName: false,
-      executionType: false,
       buildingId: false,
-      wingId: false,
-      areaId: false,
-      floorId: false,
     });
 
     const sendData = new FormData();
@@ -318,8 +251,6 @@ export const EditServicePage = () => {
       padding: { xs: '8px', sm: '10px', md: '12px' },
     },
   };
-
-  const selectedBuilding = buildings.find(b => b.id === formData.buildingId);
 
   if (loading) {
     return (
@@ -378,9 +309,9 @@ export const EditServicePage = () => {
               InputProps={{ sx: fieldStyles }}
               disabled={isSubmitting}
             />
-            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }} error={errors.executionType}>
+            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
               <InputLabel shrink>
-                Execution Type<span style={{ color: '#C72030' }}>*</span>
+                Execution Type
               </InputLabel>              <MuiSelect
                 value={formData.executionType}
                 onChange={(e) => handleInputChange('executionType', e.target.value)}
@@ -393,9 +324,6 @@ export const EditServicePage = () => {
                 <MenuItem value="internal">Internal</MenuItem>
                 <MenuItem value="external">External</MenuItem>
               </MuiSelect>
-              {errors.executionType && (
-                <FormHelperText>Execution Type is required</FormHelperText>
-              )}
             </FormControl>
             <TextField
               label="UOM"
@@ -410,209 +338,23 @@ export const EditServicePage = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <FormControl fullWidth variant="outlined" error={errors.buildingId}>
-              <InputLabel id="building-select-label" shrink>
-                Building<span style={{ color: '#C72030' }}>*</span>
-              </InputLabel>              <MuiSelect
-                labelId="building-select-label"
-                label="Building"
-                displayEmpty
-                value={formData.buildingId || ''}
-                onChange={(e) => handleInputChange('buildingId', Number(e.target.value))}
-                sx={fieldStyles}
-                disabled={!formData.siteId || locationLoading.buildings || isSubmitting}
-              >
-                <MenuItem value="">
-                  <em>Select Building</em>
-                </MenuItem>
-                {Array.isArray(buildings) && buildings.map((building) => (
-                  <MenuItem key={building.id} value={building.id}>
-                    {building.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              {errors.buildingId && <FormHelperText>Building is required</FormHelperText>}
-              {locationLoading.buildings && (
-                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                  <CircularProgress size={16} />
-                </div>
-              )}
-            </FormControl>
-
-            <FormControl fullWidth variant="outlined" error={errors.wingId}>
-              <InputLabel id="wing-select-label" shrink>
-                Wing<span style={{ color: '#C72030' }}>*</span>
-              </InputLabel>              <MuiSelect
-                labelId="wing-select-label"
-                label="Wing"
-                displayEmpty
-                value={formData.wingId || ''}
-                onChange={(e) => handleInputChange('wingId', Number(e.target.value))}
-                sx={fieldStyles}
-                disabled={!formData.buildingId || !selectedBuilding?.has_wing || locationLoading.wings || isSubmitting}
-              >
-                <MenuItem value="">
-                  <em>Select Wing</em>
-                </MenuItem>
-                {Array.isArray(wings) && wings.map((wing) => (
-                  <MenuItem key={wing.id} value={wing.id}>
-                    {wing.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              {errors.wingId && <FormHelperText>Wing is required</FormHelperText>}
-              {locationLoading.wings && (
-                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                  <CircularProgress size={16} />
-                </div>
-              )}
-            </FormControl>
-
-            <FormControl fullWidth variant="outlined" error={errors.areaId}>
-              <InputLabel id="area-select-label" shrink>
-                Area<span style={{ color: '#C72030' }}>*</span>
-              </InputLabel>              <MuiSelect
-                labelId="area-select-label"
-                label="Area"
-                displayEmpty
-                value={formData.areaId || ''}
-                onChange={(e) => handleInputChange('areaId', Number(e.target.value))}
-                sx={fieldStyles}
-                disabled={!formData.wingId || !selectedBuilding?.has_area || locationLoading.areas || isSubmitting}
-              >
-                <MenuItem value="">
-                  <em>Select Area</em>
-                </MenuItem>
-                {Array.isArray(areas) && areas.map((area) => (
-                  <MenuItem key={area.id} value={area.id}>
-                    {area.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              {errors.areaId && <FormHelperText>Area is required</FormHelperText>}
-              {locationLoading.areas && (
-                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                  <CircularProgress size={16} />
-                </div>
-              )}
-            </FormControl>
-
-            <FormControl fullWidth variant="outlined" error={errors.floorId}>
-              <InputLabel id="floor-select-label" shrink>
-                Floor<span style={{ color: '#C72030' }}>*</span>
-              </InputLabel>              <MuiSelect
-                labelId="floor-select-label"
-                label="Floor"
-                displayEmpty
-                value={formData.floorId || ''}
-                onChange={(e) => handleInputChange('floorId', Number(e.target.value))}
-                sx={fieldStyles}
-                disabled={!formData.areaId || !selectedBuilding?.has_floor || locationLoading.floors || isSubmitting}
-              >
-                <MenuItem value="">
-                  <em>Select Floor</em>
-                </MenuItem>
-                {Array.isArray(floors) && floors.map((floor) => (
-                  <MenuItem key={floor.id} value={floor.id}>
-                    {floor.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              {errors.floorId && <FormHelperText>Floor is required</FormHelperText>}
-              {locationLoading.floors && (
-                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                  <CircularProgress size={16} />
-                </div>
-              )}
-            </FormControl>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="room-select-label" shrink>Room</InputLabel>
-              <MuiSelect
-                labelId="room-select-label"
-                label="Room"
-                displayEmpty
-                value={formData.roomId || ''}
-                onChange={(e) => handleInputChange('roomId', Number(e.target.value))}
-                sx={fieldStyles}
-                disabled={!formData.floorId || !selectedBuilding?.has_room || locationLoading.rooms || isSubmitting}
-              >
-                <MenuItem value="">
-                  <em>Select Room</em>
-                </MenuItem>
-                {Array.isArray(rooms) && rooms.map((room) => (
-                  <MenuItem key={room.id} value={room.id}>
-                    {room.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              {locationLoading.rooms && (
-                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                  <CircularProgress size={16} />
-                </div>
-              )}
-            </FormControl>
-
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="group-select-label" shrink>Group</InputLabel>
-              <MuiSelect
-                labelId="group-select-label"
-                label="Group"
-                displayEmpty
-                value={formData.groupId || ''}
-                onChange={(e) => handleInputChange('groupId', Number(e.target.value))}
-                sx={fieldStyles}
-                disabled={locationLoading.groups || isSubmitting}
-              >
-                <MenuItem value="">
-                  <em>Select Group</em>
-                </MenuItem>
-                {Array.isArray(groups) && groups.map((group) => (
-                  <MenuItem key={group.id} value={group.id}>
-                    {group.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              {locationLoading.groups && (
-                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                  <CircularProgress size={16} />
-                </div>
-              )}
-            </FormControl>
-
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="subgroup-select-label" shrink>Sub-Group</InputLabel>
-              <MuiSelect
-                labelId="subgroup-select-label"
-                label="Sub-Group"
-                displayEmpty
-                value={formData.subGroupId || ''}
-                onChange={(e) => handleInputChange('subGroupId', Number(e.target.value))}
-                sx={fieldStyles}
-                disabled={!formData.groupId || locationLoading.subGroups || isSubmitting}
-              >
-                <MenuItem value="">
-                  <em>Select Sub-Group</em>
-                </MenuItem>
-                {Array.isArray(subGroups) && subGroups.map((subGroup) => (
-                  <MenuItem key={subGroup.id} value={subGroup.id}>
-                    {subGroup.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              {locationLoading.subGroups && (
-                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                  <CircularProgress size={16} />
-                </div>
-              )}
-            </FormControl>
-
-            {/* Empty slot for consistent grid layout */}
-            <div></div>
-          </div>
+          <LocationSelector
+            fieldStyles={fieldStyles}
+            onLocationChange={handleLocationChange}
+            disabled={isSubmitting}
+            errors={{ buildingId: errors.buildingId }}
+            helperTexts={{ buildingId: errors.buildingId ? 'Building is required' : '' }}
+            initialValues={{
+              siteId: formData.siteId,
+              buildingId: formData.buildingId,
+              wingId: formData.wingId,
+              areaId: formData.areaId,
+              floorId: formData.floorId,
+              roomId: formData.roomId,
+              groupId: formData.groupId,
+              subGroupId: formData.subGroupId,
+            }}
+          />
         </CardContent>
       </Card>
 

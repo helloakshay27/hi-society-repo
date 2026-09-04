@@ -106,7 +106,7 @@ export const EditFMUserDetailsPage = () => {
           onClick={handleEdit}
           variant="outline"
           size="sm"
-          className="ml-auto border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white"
+          className="ml-auto border-[#C72030] bg-[#C72030] text-white hover:bg-[#C72030]/90"
         >
           <Edit className="w-4 h-4 mr-1" />
           {isEditing ? 'Cancel' : 'Edit'}
@@ -454,7 +454,7 @@ export const EditFMUserDetailsPage = () => {
           <div className="mt-6 flex justify-end">
             <Button
               onClick={handleSave}
-              className="bg-[#C72030] hover:bg-[#A01020] text-white px-8"
+              className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               Save Changes
             </Button>

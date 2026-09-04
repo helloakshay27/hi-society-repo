@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Edit, RefreshCw, Settings2, Download } from "lucide-react";
+import { Edit, RefreshCw, Settings2, Download, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { getReferralSetups, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
+import { getReferralSetups, updateReferralSetup, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
 import {
   Dialog,
   DialogContent,
@@ -22,9 +22,22 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { X } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 const CampaignsReferralSetup: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +49,7 @@ const CampaignsReferralSetup: React.FC = () => {
   });
 
   const [projectsData, setProjectsData] = useState<ReferralSetup[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch referral setups from API
   const fetchReferralSetups = useCallback(async () => {
@@ -44,6 +58,7 @@ const CampaignsReferralSetup: React.FC = () => {
     try {
       const response = await getReferralSetups();
       setProjectsData(response.referral_setups || []);
+      setCurrentPage(1);
     } catch (err) {
       console.error("Failed to fetch referral setups:", err);
       setError("Failed to load referral setups. Please try again.");
@@ -56,30 +71,84 @@ const CampaignsReferralSetup: React.FC = () => {
     fetchReferralSetups();
   }, [fetchReferralSetups]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const handleToggleReferralProgram = async (id: number, currentValue: boolean) => {
-    // Note: The API doesn't have a direct endpoint to toggle status,
-    // so this would need to be implemented on the backend or use the update endpoint
-    // For now, we just update the local state
+    const item = projectsData.find((p) => p.id === id);
+    if (!item) return;
+
+    const newValue = !currentValue;
+
+    // Optimistic update
     setProjectsData((prev) =>
       prev.map((project) =>
-        project.id === id
-          ? { ...project, is_referral: !currentValue }
-          : project
+        project.id === id ? { ...project, is_referral: newValue } : project
       )
     );
+
+    try {
+      const updated = await updateReferralSetup(id, {
+        society_banner: {
+          project_name: item.project_name,
+          project_reference_id: parseInt(item.project_reference_id || "0", 10),
+          active: item.active === 1 ? "on" : "off",
+          is_referral: newValue ? "on" : "off",
+        },
+      });
+      // Sync with actual server response
+      setProjectsData((prev) =>
+        prev.map((project) => (project.id === id ? { ...project, ...updated } : project))
+      );
+    } catch (err) {
+      console.error("Failed to update referral program status:", err);
+      // Rollback
+      setProjectsData((prev) =>
+        prev.map((project) =>
+          project.id === id ? { ...project, is_referral: currentValue } : project
+        )
+      );
+      toast.error("Failed to update referral program status");
+    }
   };
 
   const handleToggleBannerStatus = async (id: number, currentValue: boolean) => {
-    // Note: The API doesn't have a direct endpoint to toggle banner status,
-    // so this would need to be implemented on the backend or use the update endpoint
-    // For now, we just update the local state
+    const item = projectsData.find((p) => p.id === id);
+    if (!item) return;
+
+    const newActive = currentValue ? 0 : 1;
+
+    // Optimistic update
     setProjectsData((prev) =>
       prev.map((project) =>
-        project.id === id
-          ? { ...project, active: currentValue ? 0 : 1 }
-          : project
+        project.id === id ? { ...project, active: newActive } : project
       )
     );
+
+    try {
+      const updated = await updateReferralSetup(id, {
+        society_banner: {
+          project_name: item.project_name,
+          project_reference_id: parseInt(item.project_reference_id || "0", 10),
+          active: newActive === 1 ? "on" : "off",
+          is_referral: item.is_referral ? "on" : "off",
+        },
+      });
+      // Sync with actual server response
+      setProjectsData((prev) =>
+        prev.map((project) => (project.id === id ? { ...project, ...updated } : project))
+      );
+    } catch (err) {
+      console.error("Failed to update banner status:", err);
+      // Rollback
+      setProjectsData((prev) =>
+        prev.map((project) =>
+          project.id === id ? { ...project, active: currentValue ? 1 : 0 } : project
+        )
+      );
+      toast.error("Failed to update banner status");
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -150,7 +219,7 @@ const CampaignsReferralSetup: React.FC = () => {
                 navigate(`/campaigns/referral-setup/edit/${item.id}`)
               }
             >
-              <Edit className="w-4 h-4 text-gray-600" />
+              <Edit className="w-4 h-4 text-gray-900" />
             </button>
             {/* <button
               className="p-1 hover:bg-gray-100 rounded"
@@ -162,56 +231,79 @@ const CampaignsReferralSetup: React.FC = () => {
         );
       case "banner":
         return (
-          <div className="flex items-center justify-center">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 80,
+              height: 56,
+              minWidth: 80,
+              minHeight: 56,
+              background: "#f3f4f6",
+              borderRadius: 8,
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             {item.banner_url || item.banner ? (
               <img
                 src={item.banner_url || item.banner || ""}
-                alt={item.project_name}
-                className="w-20 h-14 object-cover rounded"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (item.banner && target.src !== item.banner && item.banner_url) {
-                    target.src = item.banner; // fallback
-                  }
+                alt=""
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+                draggable={false}
+                onError={e => {
+                  (e.target as HTMLImageElement).style.display = "none";
                 }}
               />
-            ) : (
-              <div className="w-20 h-14 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
-                No Image
-              </div>
-            )}
+            ) : null}
           </div>
         );
       case "project_name":
-        return <span className="text-sm">{item.project_name}</span>;
+        return (
+          <span className="text-sm" style={{ display: "block", minHeight: 24 }}>
+            {item.project_name}
+          </span>
+        );
       case "project_reference_id":
         return <span className="text-sm">{item.project_reference_id || "-"}</span>;
       case "active":
         return (
           <div className="flex items-center justify-center">
-            <Switch
-              checked={!!item.is_referral}
-              onCheckedChange={() => handleToggleReferralProgram(item.id, !!item.is_referral)}
-              className={
-                item.is_referral
-                  ? "data-[state=checked]:bg-green-500"
-                  : "data-[state=unchecked]:bg-red-500"
-              }
-            />
+            <button
+              onClick={() => handleToggleReferralProgram(item.id, !!item.is_referral)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !!item.is_referral ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !!item.is_referral ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       case "bannerStatus":
         return (
           <div className="flex items-center justify-center">
-            <Switch
-              checked={item.active === 1}
-              onCheckedChange={() => handleToggleBannerStatus(item.id, item.active === 1)}
-              className={
-                item.active === 1
-                  ? "data-[state=checked]:bg-green-500"
-                  : "data-[state=unchecked]:bg-red-500"
-              }
-            />
+            <button
+              onClick={() => handleToggleBannerStatus(item.id, item.active === 1)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active === 1 ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active === 1 ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         );
       default:
@@ -224,6 +316,106 @@ const CampaignsReferralSetup: React.FC = () => {
       project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.project_reference_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const handleApplyFilters = () => {
     // Apply filter logic here - connect to API or filter local data
@@ -239,11 +431,11 @@ const CampaignsReferralSetup: React.FC = () => {
         {/* Table */}
         <div>
           <EnhancedTable
-            data={filteredData}
+            data={paginatedData}
             columns={columns}
             renderCell={renderCell}
-            pagination={true}
-            pageSize={10}
+            pagination={false}
+            loading={isLoading}
             hideTableSearch={false}
             hideTableExport={false}
             hideColumnsButton={false}
@@ -254,15 +446,39 @@ const CampaignsReferralSetup: React.FC = () => {
             onFilterClick={() => setShowFilters(!showFilters)}
             leftActions={
               <div className="flex items-center gap-2">
+                {shouldShow("Referral Setup","create")&&(
                 <Button
-                  className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8"
-                  onClick={() => navigate("/campaigns/referral-setup/create")}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                   onClick={() => navigate("/campaigns/referral-setup/create")}
                 >
+                  <Plus className="w-4 h-4" />
                   Add
-                </Button>
+                </Button>)}
               </div>
             }
           />
+
+          {filteredData.length > 0 && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  {renderPaginationItems()}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </div>
 
@@ -393,17 +609,16 @@ const CampaignsReferralSetup: React.FC = () => {
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button
-                    className="flex-1"
-                    variant="outline"
-                    onClick={handleResetFilters}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    className="flex-1 bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white"
+                    className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleApplyFilters}
                   >
                     Apply
+                  </Button>
+                  <Button
+                    className="flex-1 !bg-white border border-[#C72030] text-[#C72030] px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleResetFilters}
+                  >
+                    Reset
                   </Button>
                 </div>
               </div>

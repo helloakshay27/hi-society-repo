@@ -50,9 +50,17 @@ const ActionLayoutContext = createContext<ActionLayoutContextType | undefined>(
 export const useActionLayout = () => {
   const context = useContext(ActionLayoutContext);
   if (context === undefined) {
-    throw new Error(
-      "useActionLayout must be used within an ActionLayoutProvider"
-    );
+    // Return safe defaults instead of throwing — prevents crashes during HMR
+    // and when Layout is momentarily rendered outside the provider tree
+    return {
+      currentModule: "",
+      setCurrentModule: () => { },
+      currentFunction: "",
+      setCurrentFunction: () => { },
+      availableModules: [],
+      getModuleFunctions: () => [],
+      isActionSidebarVisible: false,
+    } as ActionLayoutContextType;
   }
   return context;
 };
@@ -127,6 +135,7 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
   // Auto-detect module and function from current route
   useEffect(() => {
     const path = location.pathname;
+    const userType = localStorage.getItem("userType");
 
     if (!userRole || !userRole.lock_modules) {
       setIsActionSidebarVisible(false);
@@ -139,6 +148,17 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
 
     // Search through all modules to find matching route
     for (const module of userRole.lock_modules) {
+      // Skip Employee Sidebar and Employee Projects Sidebar modules if user is admin
+      if (
+        userType !== "pms_occupant" &&
+        (module.module_name === "Employee Sidebar" ||
+          module.module_name === "Employee Projects Sidebar" ||
+          module.module_name === "Employee Business Compass" ||
+          module.module_name === "Employee Admin Compass")
+      ) {
+        continue;
+      }
+
       for (const func of module.lock_functions) {
         if (func.function_active === 1 && func.react_link) {
           // Check if current path matches or starts with the function's react_link

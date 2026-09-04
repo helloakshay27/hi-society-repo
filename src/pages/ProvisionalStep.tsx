@@ -157,6 +157,10 @@ const ProvisionalStep: React.FC<ProvisionalStepProps> = ({
     }, [setCorrectiveActions]);
 
     const updateCorrectiveAction = useCallback((id: string, field: string, value: any) => {
+        // Character limit for description field (240 characters)
+        if (field === 'description' && value.length > 240) {
+            return; // Don't update state if exceeds 240 characters
+        }
         setCorrectiveActions(prev => prev.map(action =>
             action.id === id ? { ...action, [field]: value } : action
         ));
@@ -178,6 +182,10 @@ const ProvisionalStep: React.FC<ProvisionalStepProps> = ({
     }, [setPreventiveActions]);
 
     const updatePreventiveAction = useCallback((id: string, field: string, value: any) => {
+        // Character limit for description field (240 characters)
+        if (field === 'description' && value.length > 240) {
+            return; // Don't update state if exceeds 240 characters
+        }
         setPreventiveActions(prev => prev.map(action =>
             action.id === id ? { ...action, [field]: value } : action
         ));
@@ -257,7 +265,7 @@ const ProvisionalStep: React.FC<ProvisionalStepProps> = ({
                                 {correctiveActions.map((action, index) => (
                                     <div key={action.id} className="p-4 rounded-lg border border-gray-200 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="text-sm font-semibold">Action #{index + 1}</h4>
+                                            <h4 className="text-sm font-semibold">Action {index + 1}</h4>
                                             {correctiveActions.length > 1 && (
                                                 <Button
                                                     variant="ghost"
@@ -332,6 +340,9 @@ const ProvisionalStep: React.FC<ProvisionalStepProps> = ({
                                             placeholder="This is how description will look like if the user has put description at the time of creation."
                                             className="bg-white min-h-[80px]"
                                         />
+                                        <div className="mt-1 text-xs text-gray-600">
+                                            {action.description.length} / 240
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -355,7 +366,7 @@ const ProvisionalStep: React.FC<ProvisionalStepProps> = ({
                                 {preventiveActions.map((action, index) => (
                                     <div key={action.id} className="p-4 rounded-lg border border-gray-200 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="text-sm font-semibold">Action #{index + 1}</h4>
+                                            <h4 className="text-sm font-semibold">Action {index + 1}</h4>
                                             {preventiveActions.length > 1 && (
                                                 <Button
                                                     variant="ghost"
@@ -430,6 +441,9 @@ const ProvisionalStep: React.FC<ProvisionalStepProps> = ({
                                             placeholder="This is how description will look like if the user has put description at the time of creation."
                                             className="bg-white min-h-[80px]"
                                         />
+                                        <div className="mt-1 text-xs text-gray-600">
+                                            {action.description.length} / 240
+                                        </div>
                                     </div>
                                 ))}
                             </div>

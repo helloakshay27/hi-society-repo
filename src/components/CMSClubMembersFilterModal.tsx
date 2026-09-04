@@ -309,7 +309,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
 
                             <div className="flex gap-3 pt-4">
                                 <Button variant="outline" className="flex-1" onClick={handleReset}>Reset</Button>
-                                <Button className="flex-1 bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white" onClick={handleApply}>Apply</Button>
+                                <Button className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleApply}>Apply</Button>
                             </div>
                         </div>
                     </Box>

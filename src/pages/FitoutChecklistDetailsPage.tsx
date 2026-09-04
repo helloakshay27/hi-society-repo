@@ -89,7 +89,7 @@ export const FitoutChecklistDetailsPage = () => {
         {!loading && checklistData && (
           <Button
             onClick={() => navigate(`/fitout/checklists/edit/${id}`)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit className="w-4 h-4" />
             Edit Checklist
@@ -108,8 +108,11 @@ export const FitoutChecklistDetailsPage = () => {
         </CardHeader>
         <CardContent className="p-6">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-gray-500">Loading checklist data...</div>
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading checklist data...</p>
+              </div>
             </div>
           ) : !checklistData ? (
             <div className="flex items-center justify-center py-8">

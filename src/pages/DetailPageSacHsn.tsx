@@ -80,7 +80,7 @@ const DetailPageSacHsn: React.FC = () => {
         </div>
 
         {loading && <div>Loading...</div>}
-        {error && <div className="text-red-600">Error: {error}</div>}
+        {!loading && error && <div className="text-red-600">Error: {error}</div>}
 
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

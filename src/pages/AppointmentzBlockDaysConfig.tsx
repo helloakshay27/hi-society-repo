@@ -1,25 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Switch } from "@mui/material";
 import {
+  Switch,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+  SelectChangeEvent,
   Dialog,
-  DialogContent,
-  DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  DialogContent,
+  DialogActions,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   getBlockDays,
   createBlockDay,
@@ -27,6 +25,16 @@ import {
   BlockDay as APIBlockDay,
   getRMUsers,
 } from "@/services/appointmentzService";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface BlockDayConfig {
   id: number;
@@ -39,8 +47,13 @@ interface BlockDayConfig {
 
 const AppointmentzBlockDaysConfig = () => {
   const [data, setData] = useState<BlockDayConfig[]>([]);
+  const { shouldShow } = useDynamicPermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<
+    Record<number, boolean>
+  >({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -92,6 +105,94 @@ const AppointmentzBlockDaysConfig = () => {
     setCurrentPage(page);
   };
 
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   const fetchRMUsers = useCallback(async () => {
     try {
       const response = await getRMUsers();
@@ -111,6 +212,7 @@ const AppointmentzBlockDaysConfig = () => {
   }, [fetchBlockDays, fetchRMUsers, currentPage]);
 
   const columns = [
+    { key: "srNo", label: "Sr. No.", sortable: false },
     { key: "actions", label: "Actions", sortable: false },
     { key: "rmUser", label: "RM User", sortable: true },
     { key: "blockedDate", label: "Blocked Date", sortable: true },
@@ -170,6 +272,8 @@ const AppointmentzBlockDaysConfig = () => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     // Basic validation
     if (!formData.rmUserId || !formData.blockDate) {
       setTimeout(() => {
@@ -178,17 +282,30 @@ const AppointmentzBlockDaysConfig = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       if (isEditMode && selectedId) {
         const item = data.find((d) => d.id === selectedId);
         const response = await updateBlockDay(selectedId, {
-          blocked_dates: formData.blockDate,
+          blocked_date: formData.blockDate,
           block_day: {
             resource_id: formData.rmUserId,
             resource_type: "RmUser",
             active: item ? item.status : true,
           },
         });
+        setData((prev) =>
+          prev.map((blockDay) =>
+            blockDay.id === selectedId
+              ? {
+                  ...blockDay,
+                  rmUser: formData.rmUser,
+                  rmUserId: formData.rmUserId,
+                  blockedDate: formData.blockDate,
+                }
+              : blockDay
+          )
+        );
         setTimeout(() => {
           toast.success(response.message || "Block Day updated successfully!");
         }, 0);
@@ -215,10 +332,15 @@ const AppointmentzBlockDaysConfig = () => {
       setTimeout(() => {
         toast.error("Failed to save block day");
       }, 0);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    if (updatingStatus[id]) return;
+
+    setUpdatingStatus((prev) => ({ ...prev, [id]: true }));
     try {
       const item = data.find((d) => d.id === id);
       const response = await updateBlockDay(id, {
@@ -242,39 +364,56 @@ const AppointmentzBlockDaysConfig = () => {
       setTimeout(() => {
         toast.error("Failed to update status");
       }, 0);
+    } finally {
+      setUpdatingStatus((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     }
   };
 
-  const renderCell = (item: BlockDayConfig, columnKey: string) => {
+  const renderCell = (item: BlockDayConfig, columnKey: string, index: number) => {
     switch (columnKey) {
+      case "srNo":
+        return (currentPage - 1) * 10 + index + 1;
       case "actions":
         return (
+          shouldShow("Block Days Configuration","update") &&(
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-500 hover:text-blue-600"
+            className="bg-transparent text-[#C72030] hover:bg-transparent"
             onClick={() => handleOpenEdit(item)}
           >
             <Edit className="w-4 h-4" />
           </Button>
+          )
         );
       case "status":
         return (
-          <Switch
-            checked={item.status}
-            onChange={() => handleToggleStatus(item.id, item.status)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#65C466",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#65C466",
-              },
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={item.status}
+              disabled={!!updatingStatus[item.id]}
+              onChange={() => handleToggleStatus(item.id, item.status)}
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#65C466",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#65C466",
+                },
+              }}
+            />
+            {updatingStatus[item.id] && (
+              <Loader2 className="w-4 h-4 animate-spin text-[#C72030]" />
+            )}
+          </div>
         );
       default:
-        return item[columnKey];
+        // @ts-expect-error: Accessing key by string
+        return item[columnKey as keyof BlockDayConfig];
     }
   };
 
@@ -284,62 +423,130 @@ const AppointmentzBlockDaysConfig = () => {
         data={data}
         columns={columns}
         renderCell={renderCell}
-        pagination={true}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
+        pagination={false}
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
         leftActions={
+          shouldShow("Block Days Configuration","create")&&(
           <Button
             onClick={handleOpenAdd}
-            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
-          >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
+                     >
             <Plus className="w-4 h-4 mr-2" />
             Add
           </Button>
+          )
         }
         loading={loading}
         emptyMessage="No Matching Records Found"
       />
 
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[700px] bg-white p-0">
-          <DialogHeader className="p-4 border-b bg-[#F6F4EE]">
-            <DialogTitle className="text-center font-bold text-lg">
-              {isEditMode ? "Edit" : "Add"}
-            </DialogTitle>
-          </DialogHeader>
+      {totalCount > 0 && (
+        <div className="mt-4 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
-          <div className="p-8 grid grid-cols-2 gap-8 bg-white">
+      <Dialog
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{ sx: { borderRadius: 2, overflow: "visible" } }}
+      >
+        <DialogTitle
+          sx={{
+            p: 2,
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: 18,
+            backgroundColor: "#F6F4EE",
+            borderBottom: "1px solid #e5e7eb",
+          }}
+        >
+          {isEditMode ? "Edit" : "Add"}
+          <IconButton
+            aria-label="close"
+            onClick={() => setIsAddModalOpen(false)}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: "#6b7280",
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ p: 4, backgroundColor: "#fff" }}>
+          <div className="grid grid-cols-2 gap-8 pt-4">
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: "40px",
+                  backgroundColor: "#fff",
+                  "& fieldset": { borderColor: "#d1d5db" },
+                  "&:hover fieldset": { borderColor: "#C72030" },
+                  "&.Mui-focused fieldset": { borderColor: "#C72030" },
+                },
+                "& .MuiInputLabel-root.Mui-focused": { color: "#C72030" },
+                "& .MuiFormLabel-asterisk": { color: "#da7756" },
+              }}
+            >
+              <InputLabel id="rm-user-label" shrink required>
+                Rm User
+              </InputLabel>
+              <MuiSelect
+                labelId="rm-user-label"
+                label="Rm User *"
+                notched
+                displayEmpty
+                value={
+                  formData.rmUserId ? formData.rmUserId.toString() : ""
+                }
+                onChange={(event: SelectChangeEvent<string>) =>
+                  handleSelectChange("rmUser", event.target.value)
+                }
+                MenuProps={{
+                  PaperProps: { sx: { maxHeight: 300, mt: 0.5 } },
+                }}
+              >
+                <MenuItem value="" disabled>
+                  Select Rm User
+                </MenuItem>
+                {rmUsers.map((user) => (
+                  <MenuItem key={user.id} value={user.id.toString()}>
+                    {user.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
             <div className="space-y-2">
               <div className="relative">
                 <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  Rm User <span className="text-[#C72030]">*</span>
-                </label>
-                <Select
-                  onValueChange={(val) => handleSelectChange("rmUser", val)}
-                  value={formData.rmUserId.toString()}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
-                    <SelectValue placeholder="Select Rm User" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rmUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  Block Dates <span className="text-[#C72030]">*</span>
+                  Block Dates <span className="text-[#da7756]">*</span>
                 </label>
                 <Input
                   type="date"
@@ -351,16 +558,25 @@ const AppointmentzBlockDaysConfig = () => {
               </div>
             </div>
           </div>
-
-          <DialogFooter className="p-4 border-t flex justify-center bg-white">
-            <Button
-              onClick={handleSubmit}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
-            >
-              Submit
-            </Button>
-          </DialogFooter>
         </DialogContent>
+
+        <DialogActions
+          sx={{
+            p: 2,
+            borderTop: "1px solid #e5e7eb",
+            justifyContent: "center",
+            backgroundColor: "#fff",
+          }}
+        >
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="min-w-[100px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
+          >
+            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+        </DialogActions>
       </Dialog>
     </div>
   );

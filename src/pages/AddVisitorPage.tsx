@@ -22,7 +22,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ticketManagementAPI } from "@/services/ticketManagementAPI";
 import { useSelector } from "react-redux";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 
 export const AddVisitorPage = () => {
@@ -354,10 +353,10 @@ export const AddVisitorPage = () => {
             return;
         }
 
-        if (!formData.societyGate) {
-            toast.error("Please select a society gate");
-            return;
-        }
+        // if (!formData.societyGate) {
+        //     toast.error("Please select a society gate");
+        //     return;
+        // }
 
         if (formData.visitorType === "support" && !formData.supportCategory) {
             toast.error("Please select a support staff category");
@@ -424,7 +423,7 @@ export const AddVisitorPage = () => {
             });
 
             toast.success("Visitor added successfully!");
-            navigate("/smartsecure/visitor-history");
+            navigate("/smartsecure/visitor-in");
         } catch (error) {
             console.error("Error creating visitor:", error);
             toast.error("Failed to add visitor. Please try again.");
@@ -614,24 +613,34 @@ export const AddVisitorPage = () => {
                                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                                     Visitor Type <span className="text-red-500">*</span>
                                 </label>
-                                <RadioGroup
-                                    value={formData.visitorType}
-                                    onValueChange={(v) => handleInputChange("visitorType", v)}
-                                    className="flex gap-6"
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="Guest" id="guest" />
-                                        <label htmlFor="guest" className="cursor-pointer">
-                                            Guest
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="Support Staff" id="support" />
-                                        <label htmlFor="support" className="cursor-pointer">
-                                            Support Staff
-                                        </label>
-                                    </div>
-                                </RadioGroup>
+                                <div className="flex items-center gap-6">
+                                  <div className="flex items-center space-x-2">
+                                    <input
+                                      type="radio"
+                                      id="guest"
+                                      name="visitorType"
+                                      value="Guest"
+                                      checked={formData.visitorType === "Guest"}
+                                      onChange={(e) => handleInputChange("visitorType", e.target.value)}
+                                      className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
+                                      style={{ accentColor: '#C72030' }}
+                                    />
+                                    <label htmlFor="guest" className="cursor-pointer text-sm font-medium">Guest</label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <input
+                                      type="radio"
+                                      id="support"
+                                      name="visitorType"
+                                      value="Support Staff"
+                                      checked={formData.visitorType === "Support Staff"}
+                                      onChange={(e) => handleInputChange("visitorType", e.target.value)}
+                                      className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
+                                      style={{ accentColor: '#C72030' }}
+                                    />
+                                    <label htmlFor="support" className="cursor-pointer text-sm font-medium">Support Staff</label>
+                                  </div>
+                                </div>
                             </div>
 
                             {/* Support Category - Show only for Support Staff */}
@@ -809,7 +818,7 @@ export const AddVisitorPage = () => {
                                 <FormControl
                                     fullWidth
                                     variant="outlined"
-                                    required
+                                    // required
                                     sx={fieldStyles}
                                 >
                                     <InputLabel shrink>Society Gate</InputLabel>
@@ -916,66 +925,65 @@ export const AddVisitorPage = () => {
                             </div>
                             <div className="p-6 space-y-5">
                                 {/* Single Item Row */}
-                                <div className="space-y-3">
-                                    <div className="flex gap-4 items-stretch">
-                                        <div className="flex-1">
-                                            <TextField
-                                                placeholder="Item description"
-                                                value={item?.description || ""}
-                                                onChange={(e) =>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                                    <div className="md:col-span-3">
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                            Item Description
+                                        </label>
+                                        <TextField
+                                            placeholder="Item description"
+                                            value={item?.description || ""}
+                                            onChange={(e) =>
+                                                setItem({
+                                                    ...item,
+                                                    description: e.target.value
+                                                })
+                                            }
+                                            fullWidth
+                                            // multiline
+                                            rows={3}
+                                            variant="outlined"
+                                            InputLabelProps={{ shrink: true }}
+                                            sx={{
+                                                ...fieldStyles,
+                                                height: "auto",
+                                                "& .MuiOutlinedInput-root": {
+                                                    ...fieldStyles["& .MuiOutlinedInput-root"],
+                                                    height: "auto",
+                                                    minHeight: "80px",
+                                                },
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-1">
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                            No. of Items
+                                        </label>
+                                        <TextField
+                                            type="number"
+                                            placeholder="Qty"
+                                            value={item?.quantity || 1}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value) || 0;
+                                                if (val > 0) {
                                                     setItem({
                                                         ...item,
-                                                        description: e.target.value
-                                                    })
+                                                        quantity: val
+                                                    });
                                                 }
-                                                fullWidth
-                                                multiline
-                                                rows={3}
-                                                variant="outlined"
-                                                InputLabelProps={{ shrink: true }}
-                                                sx={{
-                                                    ...fieldStyles,
-                                                    height: "auto",
-                                                    "& .MuiOutlinedInput-root": {
-                                                        ...fieldStyles["& .MuiOutlinedInput-root"],
-                                                        height: "auto",
-                                                        minHeight: "120px",
-                                                    },
-                                                    "& .MuiOutlinedInput-input": {
-                                                        resize: "vertical",
-                                                    },
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-2 items-center">
-                                            <div className="w-24">
-                                                <TextField
-                                                    type="number"
-                                                    placeholder="Qty"
-                                                    value={item?.quantity || 1}
-                                                    onChange={(e) => {
-                                                        const val = parseInt(e.target.value) || 0;
-                                                        if (val > 0) {
-                                                            setItem({
-                                                                ...item,
-                                                                quantity: val
-                                                            });
-                                                        }
-                                                    }}
-                                                    fullWidth
-                                                    variant="outlined"
-                                                    InputLabelProps={{ shrink: true }}
-                                                    inputProps={{
-                                                        min: 1,
-                                                        style: { textAlign: "center", fontSize: "16px", fontWeight: "500" }
-                                                    }}
-                                                    sx={{
-                                                        ...fieldStyles,
-                                                        "& input": { textAlign: "center" },
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
+                                            }}
+                                            fullWidth
+                                            variant="outlined"
+                                            InputLabelProps={{ shrink: true }}
+                                            inputProps={{
+                                                min: 1,
+                                                style: { textAlign: "center", fontSize: "16px", fontWeight: "500" }
+                                            }}
+                                            sx={{
+                                                ...fieldStyles,
+                                                "& input": { textAlign: "center" },
+                                            }}
+                                        />
                                     </div>
                                 </div>
 
@@ -1091,22 +1099,20 @@ export const AddVisitorPage = () => {
                     )}
 
                     {/* Submit Button */}
-                    <div className="flex gap-4 pt-6">
-                        <Button
+                    <div className="flex gap-4 justify-center pt-6">
+                        <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-6 rounded-lg font-medium text-lg"
+                            className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? "Submitting..." : "Submit"}
-                        </Button>
-                        <Button
+                        </button>
+                        <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            variant="outline"
-                            className="flex-1 py-6 rounded-lg font-medium text-lg"
-                        >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"                        >
                             Cancel
-                        </Button>
+                        </button>
                     </div>
                 </form>
             </div>

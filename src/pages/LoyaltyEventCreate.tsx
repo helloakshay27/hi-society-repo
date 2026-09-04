@@ -46,7 +46,6 @@ import {
   Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-
 const EventCreate = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -269,7 +268,7 @@ const EventCreate = () => {
     },
     "& .MuiInputLabel-root": {
       "&.Mui-focused": {
-        color: "#C72030",
+        color: "var(--color-primary, #da7756)",
       },
     },
   };
@@ -363,7 +362,7 @@ const EventCreate = () => {
       ...provided,
       padding: "4px 8px",
       color: state.isFocused ? "#C72030" : "#666",
-      "&:hover": { color: "#C72030" },
+      "&:hover": { color: "var(--color-primary, #da7756)" },
     }),
     indicatorSeparator: () => ({ display: "none" }),
     placeholder: (provided: any) => ({
@@ -404,7 +403,7 @@ const EventCreate = () => {
     multiValueRemove: (provided: any) => ({
       ...provided,
       color: "#666",
-      "&:hover": { backgroundColor: "#C72030", color: "#fff" },
+      "&:hover": { backgroundColor: "var(--color-primary, #da7756)", color: "#fff" },
     }),
   };
 
@@ -1764,7 +1763,7 @@ const EventCreate = () => {
                     height: "40px",
                     backgroundColor:
                       index === currentStep || completedSteps.includes(index)
-                        ? "#C72030"
+                        ? "var(--color-primary, #da7756)"
                         : index > currentStep &&
                           !completedSteps.includes(index - 1)
                           ? "rgba(245, 245, 245, 1)"
@@ -1778,7 +1777,7 @@ const EventCreate = () => {
                           : "rgba(196, 184, 157, 1)",
                     border:
                       index === currentStep || completedSteps.includes(index)
-                        ? "2px solid #C72030"
+                        ? "2px solid var(--color-primary, #da7756)"
                         : index > currentStep &&
                           !completedSteps.includes(index - 1)
                           ? "1px solid rgba(200, 200, 200, 1)"
@@ -1792,7 +1791,7 @@ const EventCreate = () => {
                     justifyContent: "center",
                     boxShadow:
                       index === currentStep
-                        ? "0 2px 4px rgba(199, 32, 48, 0.3)"
+                        ? "0 2px 4px rgba(218, 119, 86, 0.3)"
                         : "none",
                     transition: "all 0.2s ease",
                     fontFamily: "Work Sans, sans-serif",
@@ -1900,7 +1899,7 @@ const EventCreate = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                   />
                 </Avatar>
                 Event Details
@@ -2106,7 +2105,7 @@ const EventCreate = () => {
       "
                     >
                       Event Description{" "}
-                      <span className="text-[#C72030]">*</span>
+                      <span className="text-[var(--color-primary)]">*</span>
                     </label>
 
                     <div className="relative p-4 pt-2">
@@ -2184,8 +2183,8 @@ const EventCreate = () => {
                           is_important: true,
                         }))
                       }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: 'var(--color-primary, #da7756)' }}
                     />
                     <span className="ml-2 text-sm text-gray-700">Yes</span>
                   </label>
@@ -2200,8 +2199,8 @@ const EventCreate = () => {
                           is_important: false,
                         }))
                       }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: 'var(--color-primary, #da7756)' }}
                     />
                     <span className="ml-2 text-sm text-gray-700">No</span>
                   </label>
@@ -2226,8 +2225,8 @@ const EventCreate = () => {
                             email_trigger_enabled: e.target.value,
                           }))
                         }
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: "#C72030" }}
+                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "var(--color-primary, #da7756)" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -2243,8 +2242,8 @@ const EventCreate = () => {
                             email_trigger_enabled: e.target.value,
                           }))
                         }
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: "#C72030" }}
+                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "var(--color-primary, #da7756)" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -2264,8 +2263,8 @@ const EventCreate = () => {
                         value="1"
                         checked={formData.rsvp_action === "1"}
                         onChange={handleChange}
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: "#C72030" }}
+                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "var(--color-primary, #da7756)" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -2276,8 +2275,8 @@ const EventCreate = () => {
                         value="0"
                         checked={formData.rsvp_action === "0"}
                         onChange={handleChange}
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: "#C72030" }}
+                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "var(--color-primary, #da7756)" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -2339,7 +2338,7 @@ const EventCreate = () => {
                   />
                   <button
                     type="button"
-                    className="px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed h-[45px]"
+                    className="px-6 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed h-[45px]"
                     onClick={handleAddReminder}
                     disabled={!reminderValue || !reminderUnit}
                   >
@@ -2410,7 +2409,7 @@ const EventCreate = () => {
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Share
               </h2>
@@ -2425,7 +2424,7 @@ const EventCreate = () => {
                     checked={shareWith === 'all'}
                     onChange={() => { setShareWith('all'); setSelectedSocieties([]); }}
                     className="w-4 h-4"
-                    style={{ accentColor: '#C72030' }}
+                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
                   />
                   <span className="text-sm text-gray-700 font-medium">All Society</span>
                 </label>
@@ -2437,7 +2436,7 @@ const EventCreate = () => {
                     checked={shareWith === 'individual'}
                     onChange={() => setShareWith('individual')}
                     className="w-4 h-4"
-                    style={{ accentColor: '#C72030' }}
+                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
                   />
                   <span className="text-sm text-gray-700 font-medium">Individual Society</span>
                 </label>
@@ -2488,7 +2487,7 @@ const EventCreate = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                   />
                 </Avatar>
                 Visibility
@@ -2517,10 +2516,10 @@ const EventCreate = () => {
                     size="small"
                     sx={{
                       "& .MuiSwitch-switchBase.Mui-checked": {
-                        color: "#C72030",
+                        color: "var(--color-primary, #da7756)",
                       },
                       "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: "#C72030",
+                        backgroundColor: "var(--color-primary, #da7756)",
                       },
                     }}
                   />
@@ -2574,10 +2573,10 @@ const EventCreate = () => {
                   onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#C72030',
+                      color: 'var(--color-primary, #da7756)',
                     },
                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#C72030',
+                      backgroundColor: 'var(--color-primary, #da7756)',
                     },
                   }}
                 />
@@ -2594,10 +2593,10 @@ const EventCreate = () => {
                   onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#C72030',
+                      color: 'var(--color-primary, #da7756)',
                     },
                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#C72030',
+                      backgroundColor: 'var(--color-primary, #da7756)',
                     },
                   }}
                 />
@@ -2614,10 +2613,10 @@ const EventCreate = () => {
                   onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#C72030',
+                      color: 'var(--color-primary, #da7756)',
                     },
                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#C72030',
+                      backgroundColor: 'var(--color-primary, #da7756)',
                     },
                   }}
                 />
@@ -2643,7 +2642,7 @@ const EventCreate = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                   />
                 </Avatar>
                 Invite CPs
@@ -2708,8 +2707,8 @@ const EventCreate = () => {
                           group_id: [],
                         }))
                       }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: "#C72030" }}
+                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: "var(--color-primary, #da7756)" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">All</span>
                   </label>
@@ -2726,8 +2725,8 @@ const EventCreate = () => {
                           group_id: [],
                         }))
                       }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: "#C72030" }}
+                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: "var(--color-primary, #da7756)" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">
                       Individuals
@@ -2746,8 +2745,8 @@ const EventCreate = () => {
                           user_id: [],
                         }))
                       }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: "#C72030" }}
+                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: "var(--color-primary, #da7756)" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">Groups</span>
                   </label>
@@ -2918,11 +2917,11 @@ const EventCreate = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full space-y-3">
-                      <div className="text-[#C72030]">
+                      <div className="text-[var(--color-primary)]">
                         <Upload className="w-12 h-12" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-[#C72030] mb-1">
+                        <p className="text-sm font-semibold text-[var(--color-primary)] mb-1">
                           Choose CSV File
                         </p>
                         <p className="text-xs text-gray-500">
@@ -2937,7 +2936,7 @@ const EventCreate = () => {
                           onChange={handleCsvFileUpload}
                           className="hidden"
                         />
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors text-sm font-medium">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors text-sm font-medium">
                           <Upload className="w-4 h-4" />
                           Upload Files
                         </span>
@@ -2955,7 +2954,7 @@ const EventCreate = () => {
                           onChange={handleCsvFileUpload}
                           className="hidden"
                         />
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors text-sm font-medium">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors text-sm font-medium">
                           <Plus className="w-4 h-4" />
                           Add More Files
                         </span>
@@ -2988,7 +2987,7 @@ const EventCreate = () => {
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "#C72030" }}
+                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                   />
                 </Avatar>
                 Event Related Images
@@ -3016,7 +3015,7 @@ const EventCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[var(--color-primary)] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                     type="button"
                     onClick={() => setShowCoverUploader(true)}
                   >
@@ -3102,7 +3101,7 @@ const EventCreate = () => {
                                   handleImageRemoval(key, index, file.id)
                                 }
                               >
-                                <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                <Trash2 className="w-4 h-4 text-[var(--color-primary)]" />
                               </button>
                             </TableCell>
                           </TableRow>
@@ -3133,7 +3132,7 @@ const EventCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[var(--color-primary)] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                     type="button"
                     onClick={() => setShowEventUploader(true)}
                   >
@@ -3228,7 +3227,7 @@ const EventCreate = () => {
                                       handleImageRemoval(key, index)
                                     }
                                   >
-                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                    <Trash2 className="w-4 h-4 text-[var(--color-primary)]" />
                                   </button>
                                 </TableCell>
                               </TableRow>
@@ -3260,7 +3259,7 @@ const EventCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[var(--color-primary)] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                     type="button"
                     onClick={() => setShowDetailsImageUploader(true)}
                   >
@@ -3298,7 +3297,7 @@ const EventCreate = () => {
                                   type="button"
                                   onClick={() => handleImageRemoval(key, index)}
                                 >
-                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-[var(--color-primary)]" />
                                 </button>
                               </TableCell>
                             </TableRow>
@@ -3327,14 +3326,14 @@ const EventCreate = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] h-9 px-4 text-sm font-medium min-w-[120px]"
               >
                 Proceed to save
               </button>
               {/* <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C4B89D59] text-[var(--color-primary)] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
               >
                 Save to draft
               </button> */}
@@ -3378,7 +3377,7 @@ const EventCreate = () => {
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "#C72030" }}
+                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                             />
                           </Avatar>
                           Event Details
@@ -3389,10 +3388,10 @@ const EventCreate = () => {
                             setCurrentStep(0);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                         >
-                          <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
-                          <span className="text-[#bf213e]">Edit</span>
+                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
+                          <span className="text-[var(--color-primary)]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -3526,7 +3525,7 @@ const EventCreate = () => {
       "
                               >
                                 Event Description{" "}
-                                <span className="text-[#C72030]">*</span>
+                                <span className="text-[var(--color-primary)]">*</span>
                               </label>
 
                               {/* Textarea */}
@@ -3566,8 +3565,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.is_important === true}
                                     disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
+                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">Yes</span>
                                 </label>
@@ -3576,8 +3575,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.is_important === false}
                                     disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
+                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">No</span>
                                 </label>
@@ -3597,8 +3596,8 @@ const EventCreate = () => {
                                     formData.email_trigger_enabled === "true"
                                   }
                                   disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: "#C72030" }}
+                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   Yes
@@ -3611,8 +3610,8 @@ const EventCreate = () => {
                                     formData.email_trigger_enabled === "false"
                                   }
                                   disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: "#C72030" }}
+                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   No
@@ -3632,8 +3631,8 @@ const EventCreate = () => {
                                   type="radio"
                                   checked={formData.rsvp_action === "1"}
                                   disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: "#C72030" }}
+                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   Yes
@@ -3644,8 +3643,8 @@ const EventCreate = () => {
                                   type="radio"
                                   checked={formData.rsvp_action === "0"}
                                   disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: "#C72030" }}
+                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   No
@@ -3665,8 +3664,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.shared === "all"}
                                     disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
+                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">All</span>
                                 </label>
@@ -3675,8 +3674,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.shared === "individual"}
                                     disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
+                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">Individuals</span>
                                 </label>
@@ -3685,8 +3684,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.shared === "group"}
                                     disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
+                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">Groups</span>
                                 </label>
@@ -3776,7 +3775,7 @@ const EventCreate = () => {
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "#C72030" }}
+                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                             />
                           </Avatar>
                           Visibility
@@ -3787,10 +3786,10 @@ const EventCreate = () => {
                             setCurrentStep(0);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                         >
-                          <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
-                          <span className="text-[#bf213e]">Edit</span>
+                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
+                          <span className="text-[var(--color-primary)]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 space-y-4 opacity-75 pointer-events-none">
@@ -3817,10 +3816,10 @@ const EventCreate = () => {
                               size="small"
                               sx={{
                                 "& .MuiSwitch-switchBase.Mui-checked": {
-                                  color: "#C72030",
+                                  color: "var(--color-primary, #da7756)",
                                 },
                                 "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                  backgroundColor: "#C72030",
+                                  backgroundColor: "var(--color-primary, #da7756)",
                                 },
                               }}
                             />
@@ -3942,7 +3941,7 @@ const EventCreate = () => {
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "#C72030" }}
+                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                             />
                           </Avatar>
                           Event Related Images
@@ -3953,10 +3952,10 @@ const EventCreate = () => {
                             setCurrentStep(1);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                         >
-                          <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
-                          <span className="text-[#bf213e]">Edit</span>
+                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
+                          <span className="text-[var(--color-primary)]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 opacity-75 pointer-events-none">
@@ -3983,7 +3982,7 @@ const EventCreate = () => {
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "#C72030" }}
+                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                             />
                           </Avatar>
                           Invite CPs
@@ -3994,10 +3993,10 @@ const EventCreate = () => {
                             setCurrentStep(2);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                         >
-                          <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
-                          <span className="text-[#bf213e]">Edit</span>
+                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
+                          <span className="text-[var(--color-primary)]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -4044,8 +4043,8 @@ const EventCreate = () => {
                                 type="radio"
                                 checked={formData.shared === "all"}
                                 disabled
-                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                style={{ accentColor: "#C72030" }}
+                                className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                style={{ accentColor: "var(--color-primary, #da7756)" }}
                               />
                               <span className="ml-2 text-sm text-gray-700">
                                 All
@@ -4056,8 +4055,8 @@ const EventCreate = () => {
                                 type="radio"
                                 checked={formData.shared === "individual"}
                                 disabled
-                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                style={{ accentColor: "#C72030" }}
+                                className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                style={{ accentColor: "var(--color-primary, #da7756)" }}
                               />
                               <span className="ml-2 text-sm text-gray-700">
                                 Individuals
@@ -4068,8 +4067,8 @@ const EventCreate = () => {
                                 type="radio"
                                 checked={formData.shared === "group"}
                                 disabled
-                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                style={{ accentColor: "#C72030" }}
+                                className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                style={{ accentColor: "var(--color-primary, #da7756)" }}
                               />
                               <span className="ml-2 text-sm text-gray-700">
                                 Groups
@@ -4219,7 +4218,7 @@ const EventCreate = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                         />
                       </Avatar>
                       Event Details
@@ -4231,10 +4230,10 @@ const EventCreate = () => {
                         setCurrentStep(0);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
-                      <span className="text-[#bf213e]">Edit</span>
+                      <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
+                      <span className="text-[var(--color-primary)]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -4379,7 +4378,7 @@ const EventCreate = () => {
       "
                           >
                             Event Description{" "}
-                            <span className="text-[#C72030]">*</span>
+                            <span className="text-[var(--color-primary)]">*</span>
                           </label>
 
                           <textarea
@@ -4431,8 +4430,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.is_important === true}
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">Yes</span>
                           </label>
@@ -4441,8 +4440,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.is_important === false}
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">No</span>
                           </label>
@@ -4463,8 +4462,8 @@ const EventCreate = () => {
                                 formData.email_trigger_enabled === "true"
                               }
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: "#C72030" }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "var(--color-primary, #da7756)" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               Yes
@@ -4477,8 +4476,8 @@ const EventCreate = () => {
                                 formData.email_trigger_enabled === "false"
                               }
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: "#C72030" }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "var(--color-primary, #da7756)" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               No
@@ -4497,8 +4496,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.rsvp_action === "1"}
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: "#C72030" }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "var(--color-primary, #da7756)" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               Yes
@@ -4509,8 +4508,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.rsvp_action === "0"}
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: "#C72030" }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "var(--color-primary, #da7756)" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               No
@@ -4554,8 +4553,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.shared === "all"}
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">All</span>
                           </label>
@@ -4564,8 +4563,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.shared === "individual"}
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">Individuals</span>
                           </label>
@@ -4574,8 +4573,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.shared === "group"}
                               disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">Groups</span>
                           </label>
@@ -4664,7 +4663,7 @@ const EventCreate = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                         />
                       </Avatar>
                       Visibility
@@ -4676,10 +4675,10 @@ const EventCreate = () => {
                         setCurrentStep(0);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
-                      <span className="text-[#bf213e]">Edit</span>
+                      <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
+                      <span className="text-[var(--color-primary)]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-4">
@@ -4703,10 +4702,10 @@ const EventCreate = () => {
                           size="small"
                           sx={{
                             "& .MuiSwitch-switchBase.Mui-checked": {
-                              color: "#C72030",
+                              color: "var(--color-primary, #da7756)",
                             },
                             "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                              backgroundColor: "#C72030",
+                              backgroundColor: "var(--color-primary, #da7756)",
                             },
                           }}
                         />
@@ -4727,10 +4726,10 @@ const EventCreate = () => {
                         onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#C72030',
+                            color: 'var(--color-primary, #da7756)',
                           },
                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#C72030',
+                            backgroundColor: 'var(--color-primary, #da7756)',
                           },
                         }}
                       />
@@ -4747,10 +4746,10 @@ const EventCreate = () => {
                         onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#C72030',
+                            color: 'var(--color-primary, #da7756)',
                           },
                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#C72030',
+                            backgroundColor: 'var(--color-primary, #da7756)',
                           },
                         }}
                       />
@@ -4767,10 +4766,10 @@ const EventCreate = () => {
                         onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#C72030',
+                            color: 'var(--color-primary, #da7756)',
                           },
                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#C72030',
+                            backgroundColor: 'var(--color-primary, #da7756)',
                           },
                         }}
                       />
@@ -4785,7 +4784,7 @@ const EventCreate = () => {
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Share
                     </h2>
@@ -4796,15 +4795,15 @@ const EventCreate = () => {
                         setCurrentStep(0);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
+                      <Edit className="w-4 h-4 text-[var(--color-primary)]" /> <span className="text-[var(--color-primary)]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-sm text-gray-500 font-medium">Share With:</span>
-                      <span className="text-sm font-semibold" style={{ color: '#C72030' }}>
+                      <span className="text-sm font-semibold" style={{ color: 'var(--color-primary, #da7756)' }}>
                         {shareWith === 'all' ? 'All Society' : 'Individual Society'}
                       </span>
                     </div>
@@ -4843,7 +4842,7 @@ const EventCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Invite CPs
                     </h2>
@@ -4854,9 +4853,9 @@ const EventCreate = () => {
                         setCurrentStep(2);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
+                      <Edit className="w-4 h-4 text-[var(--color-primary)]" /> <span className="text-[var(--color-primary)]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -4899,8 +4898,8 @@ const EventCreate = () => {
                             type="radio"
                             checked={formData.shared === "all"}
                             disabled
-                            className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                            style={{ accentColor: '#C72030' }}
+                            className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                            style={{ accentColor: 'var(--color-primary, #da7756)' }}
                           />
                           <span className="ml-2 text-sm text-gray-700">All</span>
                         </label>
@@ -4909,8 +4908,8 @@ const EventCreate = () => {
                             type="radio"
                             checked={formData.shared === "individual"}
                             disabled
-                            className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                            style={{ accentColor: '#C72030' }}
+                            className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                            style={{ accentColor: 'var(--color-primary, #da7756)' }}
                           />
                           <span className="ml-2 text-sm text-gray-700">Individuals</span>
                         </label>
@@ -4919,8 +4918,8 @@ const EventCreate = () => {
                             type="radio"
                             checked={formData.shared === "group"}
                             disabled
-                            className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                            style={{ accentColor: '#C72030' }}
+                            className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                            style={{ accentColor: 'var(--color-primary, #da7756)' }}
                           />
                           <span className="ml-2 text-sm text-gray-700">Groups</span>
                         </label>
@@ -5019,7 +5018,7 @@ const EventCreate = () => {
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "#C72030" }}
+                          sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
                         />
                       </Avatar>
                       Event Related Images
@@ -5031,10 +5030,10 @@ const EventCreate = () => {
                         setCurrentStep(1);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
-                      <span className="text-[#bf213e]">Edit</span>
+                      <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
+                      <span className="text-[var(--color-primary)]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -5262,7 +5261,7 @@ const EventCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       QR Code Generation
                     </h2>
@@ -5270,14 +5269,14 @@ const EventCreate = () => {
                       <button
                         type="button"
                         onClick={handleDownloadAllQRCodes}
-                        className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                      >
-                        Download All QR Codes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSendAllQRCodesEmail}
-                        className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+              >
+                Download All QR Codes
+              </button>
+              <button
+                type="button"
+                onClick={handleSendAllQRCodesEmail}
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
                       >
                         Send QR Codes via Email
                       </button>
@@ -5393,7 +5392,7 @@ const EventCreate = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleDownloadQRCode(row.qrCodeId, row.cpName)}
-                                      className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                      className="p-1.5 text-[var(--color-primary)] hover:bg-[#FFF5F5] rounded transition-colors"
                                       title="Download QR Code"
                                     >
                                       <Download className="w-4 h-4" />
@@ -5401,7 +5400,7 @@ const EventCreate = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleSendQRCodeEmail(row.emailId, row.cpName)}
-                                      className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                      className="p-1.5 text-[var(--color-primary)] hover:bg-[#FFF5F5] rounded transition-colors"
                                       title="Send via Email"
                                     >
                                       <Mail className="w-4 h-4" />
@@ -5439,14 +5438,14 @@ const EventCreate = () => {
               <button
                 type="button"
                 onClick={() => setIsPreviewMode(false)}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Back to Edit
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Submitting..." : "Submit Event"}
               </button>

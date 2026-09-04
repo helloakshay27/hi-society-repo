@@ -24,7 +24,6 @@ import MuiMultiSelect from "../components/MuiMultiSelect";
 import { API_CONFIG } from "../config/apiConfig";
 import { toast } from "sonner";
 import { useLayout } from "@/contexts/LayoutContext";
-
 // Define types for form data
 interface Attendee {
   id: number;
@@ -135,7 +134,7 @@ const AddMoMPage = () => {
     const token = localStorage.getItem("token");
     const baseUrl = localStorage.getItem("baseUrl");
     if (token && baseUrl) {
-      dispatch(fetchProjectsTags());
+      dispatch(fetchProjectsTags({ active: true }));
     }
   }, [dispatch]);
 

@@ -44,9 +44,9 @@ const EditApprovalMatrixPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const functionOptions = [
-      { label: 'Fitout Request Category', value: 'fitout_request_category' },
-      { label: 'Fitout Request Refund', value: 'fitout_request_refund' },
-      { label: 'Internal Fitout Approval', value: 'internal_fitout_approval' },
+    { label: 'Fitout Request Category', value: 'fitout_request_category' },
+    { label: 'Fitout Request Refund', value: 'fitout_request_refund' },
+    { label: 'Internal Fitout Approval', value: 'internal_fitout_approval' },
     // { label: 'GRN', value: 'grn' },
     // { label: 'Work Order', value: 'work_order' },
     // { label: 'Work Order Invoice', value: 'work_order_invoice' },
@@ -67,7 +67,7 @@ const EditApprovalMatrixPage = () => {
         setLoadingUsers(true);
         const response = await apiClient.get('/usergroups/get_members_list.json');
         console.log('Users API response:', response.data);
-        
+
         // Filter users that have user data
         if (Array.isArray(response.data)) {
           const filteredUsers = response.data.filter((item: any) => item.user && item.user.id);
@@ -98,25 +98,25 @@ const EditApprovalMatrixPage = () => {
         const root = data?.invoice_approval || data;
         const approvalType = root?.approval_type || root?.approval_function || root?.approval_function_name || '';
         const levels = root?.invoice_approval_levels || root?.approval_levels || root?.levels || [];
-    const mapped: ApprovalLevel[] = Array.isArray(levels)
+        const mapped: ApprovalLevel[] = Array.isArray(levels)
           ? levels.map((lvl: any, idx: number) => ({
-      levelId: lvl.id != null ? Number(lvl.id) : undefined,
-              order: Number(lvl.order ?? idx + 1),
-              name: String(lvl.name ?? lvl.level_name ?? ''),
-              users: (
-                Array.isArray(lvl.escalate_to_users)
-                  ? lvl.escalate_to_users
-                  : Array.isArray(lvl.user_ids)
+            levelId: lvl.id != null ? Number(lvl.id) : undefined,
+            order: Number(lvl.order ?? idx + 1),
+            name: String(lvl.name ?? lvl.level_name ?? ''),
+            users: (
+              Array.isArray(lvl.escalate_to_users)
+                ? lvl.escalate_to_users
+                : Array.isArray(lvl.user_ids)
                   ? lvl.user_ids
                   : Array.isArray(lvl.approval_user_id)
-                  ? lvl.approval_user_id
-                  : []
-              )
-                .filter((u: any) => u != null && String(u).trim() !== '')
-                .map((u: any) => u?.toString?.() ?? String(u)),
-              sendEmails: Boolean(lvl.send_email ?? lvl.sendEmails ?? false),
-              userNames: lvl.approval_user_name ?? lvl.user_names ?? undefined,
-            }))
+                    ? lvl.approval_user_id
+                    : []
+            )
+              .filter((u: any) => u != null && String(u).trim() !== '')
+              .map((u: any) => u?.toString?.() ?? String(u)),
+            sendEmails: Boolean(lvl.send_email ?? lvl.sendEmails ?? false),
+            userNames: lvl.approval_user_name ?? lvl.user_names ?? undefined,
+          }))
           : [];
         if (!active) return;
         setSelectedFunction(approvalType);
@@ -213,16 +213,16 @@ const EditApprovalMatrixPage = () => {
     if (!validateForm()) return;
     try {
       setIsSubmitting(true);
-      
+
       // Get dynamic society_id from localStorage
       const societyId = localStorage.getItem('selectedSocietyId');
-      
+
       if (!societyId) {
         toast.error('Please select a society from the header');
         setIsSubmitting(false);
         return;
       }
-      
+
       const payload = {
         society_id: societyId,
         invoice_approval: {
@@ -306,7 +306,7 @@ const EditApprovalMatrixPage = () => {
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         {/* Function Selection */}
-        <div className="mb-8"> 
+        <div className="mb-8">
           <FormControl fullWidth error={!!functionError}>
             <InputLabel required shrink={true} sx={{ color: '#1a1a1a', '&.Mui-focused': { color: '#C72030' } }}>
               Function
@@ -482,7 +482,7 @@ const EditApprovalMatrixPage = () => {
           <Button
             variant="ghost"
             onClick={addApprovalLevel}
-            className="bg-[#f6f4ee] hover:bg-[#e8e5dc] text-[#6B2C91] w-12 h-12 rounded-lg p-0"
+            className="w-12 h-12 rounded-lg p-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <Plus className="w-6 h-6" />
           </Button>
@@ -493,7 +493,7 @@ const EditApprovalMatrixPage = () => {
           <Button
             onClick={handleUpdate}
             disabled={isSubmitting || isLoading}
-            className="bg-[#6B2C91] hover:bg-[#5A2478] text-white px-8 disabled:opacity-50"
+            className="px-8 disabled:opacity-50 bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             {isSubmitting ? 'Updating...' : 'Update'}
           </Button>
@@ -501,7 +501,7 @@ const EditApprovalMatrixPage = () => {
           <Button
             variant="outline"
             onClick={() => navigate('/settings/approval-matrix/setup')}
-            className="border-[#6B2C91] text-[#6B2C91] hover:bg-[#6B2C91] hover:text-white px-8"
+            className="px-8 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </Button>

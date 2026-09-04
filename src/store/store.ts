@@ -14,6 +14,8 @@ import { createMoMReducer, updateMoMReducer, fetchMoMsReducer, fetchMoMDetailRed
 import userCountsReducer from './slices/userCountsSlice'
 import occupantUsersReducer, { exportOccupantUsersReducer } from './slices/occupantUsersSlice'
 import occupantUserCountsReducer from './slices/occupantUserCountsSlice'
+import viUsersReducer from './slices/viUsersSlice'
+import hiSocietyUsersReducer from './slices/hiSocietyUsersSlice'
 import projectReducer from './slices/projectSlice'
 import siteReducer from './slices/siteSlice'
 import helpdeskCategoriesReducer from './slices/helpdeskCategoriesSlice'
@@ -79,6 +81,7 @@ import { createProjectTaskReducer, editProjectTaskReducer, fetchProjectTasksById
 import { fetchIssuesReducer, fetchIssueByIdReducer, createIssueReducer, updateIssueReducer, deleteIssueReducer, filterIssuesReducer } from './slices/issueSlice'
 import { createProjectGroupReducer, deleteProjectGroupReducer, fetchProjectGroupsReducer, updateProjectGroupReducer } from './slices/projectGroupSlice'
 import { fetchSprintsReducer, fetchSprintByIdReducer, createSprintReducer, updateSprintReducer, updateSprintStatusReducer, deleteSprintReducer, filterSprintsReducer } from './slices/sprintSlice'
+import adminViewEmulationReducer from './slices/adminViewEmulationSlice'
 
 export const store = configureStore({
   reducer: {
@@ -96,6 +99,8 @@ export const store = configureStore({
     userCounts: userCountsReducer,
     occupantUsers: occupantUsersReducer,
     occupantUserCounts: occupantUserCountsReducer,
+    viUsers: viUsersReducer,
+    hiSocietyUsers: hiSocietyUsersReducer,
     project: projectReducer,
     site: siteReducer,
     helpdeskCategories: helpdeskCategoriesReducer,
@@ -410,6 +415,7 @@ export const store = configureStore({
     updateSprintStatus: updateSprintStatusReducer,
     deleteSprint: deleteSprintReducer,
     filterSprints: filterSprintsReducer,
+    adminViewEmulation: adminViewEmulationReducer,
   },
 })
 export type RootState = ReturnType<typeof store.getState>

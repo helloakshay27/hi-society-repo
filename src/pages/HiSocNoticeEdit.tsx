@@ -228,6 +228,33 @@ const HiSocNoticeEdit = () => {
           });
         }
 
+        // Existing attached_files
+        if (notice.attached_files && Array.isArray(notice.attached_files)) {
+          notice.attached_files.forEach((af: any, idx: number) => {
+            const url = af.document_url || "";
+            const name = url ? url.split("/").pop() : `Attachment ${idx + 1}`;
+            const isVideo =
+              url.includes(".mp4") ||
+              url.includes(".mov") ||
+              url.includes(".avi") ||
+              url.includes(".webm");
+            const isDoc =
+              url.includes(".pdf") ||
+              url.includes(".doc") ||
+              url.includes(".xls") ||
+              url.includes(".txt");
+            existingBroadcastImages.push({
+              file: null,
+              name,
+              preview: isDoc ? null : url,
+              ratio: "1:1",
+              type: isVideo ? "video" : isDoc ? "document" : "image",
+              isExisting: true,
+              id: `existing-attached-${idx}-${Date.now()}`,
+            });
+          });
+        }
+
         setFormData({
           notice_heading: notice.notice_heading || "",
           notice_text: notice.notice_text || "",
@@ -483,18 +510,18 @@ const HiSocNoticeEdit = () => {
       errors.push("Send Email is required.");
       return errors;
     }
-    if (!data.shared) {
-      errors.push("Share With is required.");
-      return errors;
-    }
-    if (data.shared === "1" && data.user_ids.length === 0) {
-      errors.push("Please select at least one user.");
-      return errors;
-    }
-    if (data.shared === "2" && data.group_id.length === 0) {
-      errors.push("Please select at least one group.");
-      return errors;
-    }
+    // if (!data.shared) {
+    //   errors.push("Share With is required.");
+    //   return errors;
+    // }
+    // if (data.shared === "1" && data.user_ids.length === 0) {
+    //   errors.push("Please select at least one user.");
+    //   return errors;
+    // }
+    // if (data.shared === "2" && data.group_id.length === 0) {
+    //   errors.push("Please select at least one group.");
+    //   return errors;
+    // }
     return errors;
   };
 
@@ -610,29 +637,10 @@ const HiSocNoticeEdit = () => {
   // ─── Loading state ────────────────────────────────────────────────────────────
   if (fetchingData) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-[#C72030]"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
-          <p className="text-gray-600 text-sm">Loading notice data...</p>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading notice data...</p>
         </div>
       </div>
     );
@@ -745,22 +753,33 @@ const HiSocNoticeEdit = () => {
               />
 
               {/* Notice Description (2 cols) */}
-              <div className="md:col-span-2">
-                <TextField
-                  label={
-                    <span>
-                      Notice Description<span className="text-red-500">*</span>
-                    </span>
-                  }
-                  placeholder="Enter Description"
+              <div className="md:col-span-2 relative w-full">
+                <textarea
+                  id="notice_text"
                   value={formData.notice_text}
                   onChange={handleChange}
                   name="notice_text"
-                  fullWidth
-                  variant="outlined"
-                  slotProps={{ inputLabel: { shrink: true } }}
-                  InputProps={{ sx: fieldStyles }}
+                  rows={3}
+                  placeholder=" "
+                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent 
+      focus:outline-none 
+      focus:border-[2px] 
+      focus:border-[rgb(25,118,210)] 
+      resize-vertical"
                 />
+
+                <label
+                  htmlFor="notice_text"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+      peer-placeholder-shown:top-4
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-focus:-top-[10px]
+      peer-focus:text-sm
+      peer-focus:text-[rgb(25,118,210)]"
+                >
+                  Notice Description <span className="text-red-500">*</span>
+                </label>
               </div>
 
               {/* Expire Time */}
@@ -869,121 +888,89 @@ const HiSocNoticeEdit = () => {
             {/* Share With */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Share With <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-6 mb-4">
-                  <label className="flex items-center opacity-60 cursor-not-allowed">
-                    <input
-                      type="radio"
-                      name="shared"
-                      value="0"
-                      checked={formData.shared === "0"}
-                      onChange={() => {}}
-                      disabled
-                      className="w-4 h-4 cursor-not-allowed"
-                      style={{ accentColor: "#C72030" }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">All</span>
-                  </label>
-                  <label className="flex items-center opacity-60 cursor-not-allowed">
-                    <input
-                      type="radio"
-                      name="shared"
-                      value="1"
-                      checked={formData.shared === "1"}
-                      onChange={() => {}}
-                      disabled
-                      className="w-4 h-4 cursor-not-allowed"
-                      style={{ accentColor: "#C72030" }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">
-                      Individuals
-                    </span>
-                  </label>
-                  <label className="flex items-center opacity-60 cursor-not-allowed">
-                    <input
-                      type="radio"
-                      name="shared"
-                      value="2"
-                      checked={formData.shared === "2"}
-                      onChange={() => {}}
-                      disabled
-                      className="w-4 h-4 cursor-not-allowed"
-                      style={{ accentColor: "#C72030" }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Groups</span>
-                  </label>
-                </div>
 
-                {/* Individual Users Select */}
                 {formData.shared === "1" && (
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    disabled
-                    sx={{ "& .MuiInputBase-root": fieldStyles }}
-                  >
-                    <InputLabel shrink>Select Users</InputLabel>
-                    <MuiSelect
-                      multiple
-                      value={formData.user_ids}
-                      onChange={() => {}}
-                      label="Select Users"
-                      notched
-                      displayEmpty
-                      renderValue={(selected: any) => {
-                        if (!selected || selected.length === 0)
-                          return (
-                            <span style={{ color: "#999" }}>Select Users</span>
-                          );
-                        return selected
-                          .map((id: any) => {
-                            const member = users.find(
-                              (u) =>
-                                u.id.toString() === id.toString()
+                  <div className="space-y-3">
+                    {/* Select All Checkbox */}
+                    {users.length > 0 && (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
+                        <input
+                          type="checkbox"
+                          id="selectAllUsers"
+                          checked={formData.user_ids.length === users.length && users.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData((prev: any) => ({
+                                ...prev,
+                                user_ids: users.map((u) => u.id),
+                              }));
+                            } else {
+                              setFormData((prev: any) => ({
+                                ...prev,
+                                user_ids: [],
+                              }));
+                            }
+                          }}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: '#C72030' }}
+                        />
+                        <label htmlFor="selectAllUsers" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+                          Select All Members ({formData.user_ids.length}/{users.length})
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Members List with Checkboxes */}
+                    {users.length > 0 ? (
+                      <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                        <div className="divide-y">
+                          {users.map((member) => {
+                            if (!member?.user) return null;
+                            const name = `${member.user.firstname || ""} ${member.user.lastname || ""}`.trim();
+                            const flat = member.user_flat?.flat ? ` - Flat ${member.user_flat.flat}` : "";
+                            const block = member.user_flat?.block ? ` (${member.user_flat.block})` : "";
+                            const displayName = name + flat + block;
+                            const isChecked = formData.user_ids.includes(member.id);
+
+                            return (
+                              <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
+                                <input
+                                  type="checkbox"
+                                  id={`user-${member.id}`}
+                                  checked={isChecked}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setFormData((prev: any) => ({
+                                        ...prev,
+                                        user_ids: [...prev.user_ids, member.id],
+                                      }));
+                                    } else {
+                                      setFormData((prev: any) => ({
+                                        ...prev,
+                                        user_ids: prev.user_ids.filter((id) => id !== member.id),
+                                      }));
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <label htmlFor={`user-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+                                  {displayName}
+                                </label>
+                              </div>
                             );
-                            if (!member?.user) return "";
-                            const name = `${
-                              member.user.firstname || ""
-                            } ${member.user.lastname || ""}`.trim();
-                            const flat = member.user_flat?.flat
-                              ? ` - ${member.user_flat.flat}`
-                              : "";
-                            const block = member.user_flat?.block
-                              ? ` (${member.user_flat.block})`
-                              : "";
-                            return name + flat + block;
-                          })
-                          .filter(Boolean)
-                          .join(", ");
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        Select Users
-                      </MenuItem>
-                      {users.map((member) => {
-                        if (!member?.user) return null;
-                        const name = `${member.user.firstname || ""} ${
-                          member.user.lastname || ""
-                        }`.trim();
-                        const flat = member.user_flat?.flat
-                          ? ` - Flat ${member.user_flat.flat}`
-                          : "";
-                        const block = member.user_flat?.block
-                          ? ` (${member.user_flat.block})`
-                          : "";
-                        return (
-                          <MenuItem key={member.id} value={member.id}>
-                            {name + flat + block}
-                          </MenuItem>
-                        );
-                      })}
-                    </MuiSelect>
-                  </FormControl>
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                        No members available
+                      </div>
+                    )}
+                  </div>
                 )}
 
-                {/* Groups Select */}
+               
                 {formData.shared === "2" && (
                   <FormControl
                     fullWidth
@@ -1093,7 +1080,7 @@ const HiSocNoticeEdit = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="bg-[#C72030] text-white hover:bg-[#A01828] h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
                   onClick={() =>
                     document.getElementById("coverImageInputEdit")?.click()
@@ -1246,7 +1233,7 @@ const HiSocNoticeEdit = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="bg-[#C72030] text-white hover:bg-[#A01828] h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
                   onClick={() =>
                     document
@@ -1379,7 +1366,7 @@ const HiSocNoticeEdit = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] flex items-center justify-center gap-2"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
           >
             {loading ? (
               <>
@@ -1412,8 +1399,7 @@ const HiSocNoticeEdit = () => {
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
+className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"          >
             Cancel
           </button>
         </div>

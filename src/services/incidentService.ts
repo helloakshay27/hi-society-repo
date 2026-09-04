@@ -114,6 +114,7 @@ export interface Incident {
   logs: any[];
   incident_witnesses?: IncidentWitness[];
   incident_investigations?: IncidentInvestigation[];
+  investigator_details?: any[];
   probability?: number;
   inc_sub_sub_sub_category_id?: number;
   inc_sec_sub_sub_sub_category_id?: number;
@@ -163,7 +164,7 @@ export const incidentService = {
       baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
     }
 
-    const url = `${baseUrl}/pms/incidents.json${query ? `?${query}` : ''}`;
+    const url = `${baseUrl}/incidents.json${query ? `?${query}` : ''}`;
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -186,7 +187,7 @@ export const incidentService = {
       baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
     }
 
-    const response = await fetch(`${baseUrl}/pms/incidents/counts.json`, {
+    const response = await fetch(`${baseUrl}/incidents/counts.json`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -208,7 +209,7 @@ export const incidentService = {
       baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
     }
 
-    const response = await fetch(`${baseUrl}/pms/incidents/${id}.json`, {
+    const response = await fetch(`${baseUrl}/incidents/${id}.json`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -388,7 +389,12 @@ export const incidentService = {
     if (formData.minute) body.append('incident[inc_time(5i)]', formData.minute);
     
     // Basic fields
-    if (formData.building) body.append('incident[building_id]', formData.building);
+    // Prefer tower_id for HiSociety; fall back to building_id if present
+    if (formData.tower) {
+      body.append('incident[tower_id]', formData.tower);
+    } else if (formData.building) {
+      body.append('incident[building_id]', formData.building);
+    }
     if (formData.primaryCategory) body.append('incident[inc_category_id]', formData.primaryCategory);
     if (formData.subCategory) body.append('incident[inc_sub_category_id]', formData.subCategory);
     if (formData.subSubCategory) body.append('incident[inc_sub_sub_category_id]', formData.subSubCategory);
@@ -489,7 +495,7 @@ export const incidentService = {
     // Add commit parameter
     body.append('commit', 'Update Incident');
 
-    const response = await fetch(`${baseUrl}/pms/incidents/${id}.json`, {
+    const response = await fetch(`${baseUrl}/incidents/${id}.json`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -512,7 +518,7 @@ export const incidentService = {
     }
 
     const response = await fetch(
-      `${baseUrl}/pms/incidents/add_inc_details.json`,
+      `${baseUrl}/incidents/add_inc_details.json`,
       {
         method: "PUT",
         headers: {

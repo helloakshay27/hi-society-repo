@@ -36,9 +36,9 @@ const SectionHeader = styled(Box)({
   borderBottom: "1px solid #e5e7eb",
 });
 
-const RedIcon = styled(Box)({
+const SectionIcon = styled(Box)({
   color: "white",
-  backgroundColor: "#C72030",
+  backgroundColor: "var(--color-primary, #da7756)",
   borderRadius: "50%",
   padding: "8px",
   display: "flex",
@@ -49,11 +49,8 @@ const RedIcon = styled(Box)({
 });
 
 const RedButton = styled(MuiButton)({
-  backgroundColor: "#C72030",
-  color: "white",
-  "&:hover": {
-    backgroundColor: "#a61a2a",
-  },
+  backgroundColor: "var(--color-primary, #da7756)",
+  color: "#ffffff !important",
   textTransform: "none",
   padding: "8px 16px",
   borderRadius: 0,
@@ -62,22 +59,35 @@ const RedButton = styled(MuiButton)({
   fontSize: "0.875rem",
   lineHeight: "1.5",
   boxShadow: "none",
+  "& .MuiButton-startIcon, & .MuiButton-startIcon svg": {
+    color: "#ffffff !important",
+    stroke: "#ffffff !important",
+  },
   "&:hover": {
-    backgroundColor: "#B8252F",
-    boxShadow: "0 4px 8px rgba(199, 32, 48, 0.3)",
+    backgroundColor: "var(--color-primary-hover, rgba(218,119,86,0.85))",
+    boxShadow: "0 4px 8px rgba(218, 119, 86, 0.3)",
   },
 });
 
 const DraftButton = styled(MuiButton)({
-  backgroundColor: "#e7e3d9",
-  color: "#C72030",
+  backgroundColor: "#ffffff",
+  color: "var(--color-primary, #da7756) !important",
   borderRadius: 0,
   textTransform: "none",
-  padding: "8px 16px",
+  padding: "8px 40px",
+  border: "1px solid var(--color-primary, #da7756)",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
+  "& .MuiButton-startIcon, & .MuiButton-startIcon svg": {
+    color: "var(--color-primary, #da7756) !important",
+    stroke: "var(--color-primary, #da7756) !important",
+  },
   "&:hover": {
-    backgroundColor: "#d9d5c9",
+    backgroundColor: "rgba(218, 119, 86, 0.1)",
+  },
+  "&.Mui-disabled": {
+    opacity: 0.5,
+    cursor: "not-allowed",
   },
 });
 
@@ -89,16 +99,16 @@ const fieldStyles = {
       borderColor: "#ddd",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#da7756",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#da7756",
     },
   },
   "& .MuiInputLabel-root": {
     fontSize: "14px",
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#da7756",
     },
   },
 };
@@ -157,9 +167,9 @@ const AddQuarantinePage: React.FC = () => {
         {/* Quarantine Details Section */}
         <SectionCard>
           <SectionHeader>
-            <RedIcon>
+            <SectionIcon>
               <Info size={16} />
-            </RedIcon>
+            </SectionIcon>
             <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600, color: "#1A1A1A" }}>
               Quarantine Details
             </Typography>
@@ -231,7 +241,6 @@ const AddQuarantinePage: React.FC = () => {
                 <DraftButton
                   
                   onClick={handleCancel}
-                  startIcon={<X size={16} />}
                 >
                   Cancel
                 </DraftButton>

@@ -158,6 +158,7 @@ const ConnectivityTypeCreate: React.FC = () => {
                   sx={{
                     width: "350px",
                     ...fieldStyles,
+                    "& .MuiFormLabel-asterisk": { color: "#da7756" },
                   }}
                 />
               </div>
@@ -169,6 +170,7 @@ const ConnectivityTypeCreate: React.FC = () => {
                   sx={{
                     width: "350px",
                     "& .MuiInputBase-root": fieldStyles,
+                    "& .MuiFormLabel-asterisk": { color: "#da7756" },
                   }}
                   required
                 >
@@ -202,6 +204,7 @@ const ConnectivityTypeCreate: React.FC = () => {
           <Button
             type="button"
             onClick={handleGoBack}
+            variant="outline"
             className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
             disabled={loading}
           >

@@ -41,10 +41,11 @@ export const fetchAllowedSites = createAsyncThunk(
   "site/fetchAllowedSites",
   async (userId: number, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(
-        `${ENDPOINTS.ALLOWED_SITES}?user_id=${userId}`
-      );
-      return response.data;
+      // const response = await apiClient.get(
+      //   `${ENDPOINTS.ALLOWED_SITES}?user_id=${userId}`
+      // );
+      // return response.data;
+      return { sites: [], selected_site: null };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch sites"
@@ -62,37 +63,36 @@ export const changeSite = createAsyncThunk(
       );
 
       // Call allowed_sites API after changing site
-      const userId = localStorage.getItem("userId"); // Mock user ID - in real app, this would come from auth state
-      const allowedSitesResponse = await apiClient.get(
-        `${ENDPOINTS.ALLOWED_SITES}?user_id=${userId}`
-      );
+      // const userId = localStorage.getItem("userId"); // Mock user ID - in real app, this would come from auth state
+      // const allowedSitesResponse = await apiClient.get(
+      //   `${ENDPOINTS.ALLOWED_SITES}?user_id=${userId}`
+      // );
 
-      // Store selected site ID in localStorage
-      if (
-        allowedSitesResponse.data.selected_site?.id &&
-        !location.pathname.includes("/dashboard-executive")
-      ) {
-        localStorage.setItem(
-          "selectedSiteId",
-          allowedSitesResponse.data.selected_site.id.toString()
-        );
-        console.log("selectedSiteId", allowedSitesResponse.data.selected_site.id);
-      }
-      // Always store all site IDs as comma-separated string in localStorage
-      if (
-        Array.isArray(allowedSitesResponse.data.sites) &&
-        location.pathname.includes("/dashboard-executive")
-      ) {
-        const allSiteIds = allowedSitesResponse.data.sites
-          .map((site: any) => site.id)
-          .join(",");
-        localStorage.setItem("allSiteIds", allSiteIds);
-        console.log("allSiteIds", allSiteIds);
-      }
+      // // Store selected site ID in localStorage
+      // if (
+      //   allowedSitesResponse.data.selected_site?.id &&
+      //   !location.pathname.includes("/dashboard-executive")
+      // ) {
+      //   localStorage.setItem(
+      //     "selectedSiteId",
+      //     allowedSitesResponse.data.selected_site.id.toString()
+      //   );
+      //   console.log("selectedSiteId", allowedSitesResponse.data.selected_site.id);
+      // }
+      // // Always store all site IDs as comma-separated string in localStorage
+      // if (
+      //   Array.isArray(allowedSitesResponse.data.sites) &&
+      //   location.pathname.includes("/dashboard-executive")
+      // ) {
+      //   const allSiteIds = allowedSitesResponse.data.sites
+      //     .map((site: any) => site.id)
+      //     .join(",");
+      //   localStorage.setItem("allSiteIds", allSiteIds);
+      //   console.log("allSiteIds", allSiteIds);
+      // }
 
       return {
         ...response.data,
-        allowedSitesData: allowedSitesResponse.data,
       };
     } catch (error: any) {
       return rejectWithValue(

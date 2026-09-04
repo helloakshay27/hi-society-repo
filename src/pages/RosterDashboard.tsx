@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Loader2, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BulkUploadModal } from '@/components/BulkUploadModal';
@@ -7,16 +7,16 @@ import { ExportModal } from '@/components/ExportModal';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { TicketPagination } from '@/components/TicketPagination';
-import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // Type definitions for the roster data
 interface RosterItem {
   id: number;
   template: string;
   location: string;
-  department: string;
   shift: string;
   rosterType: string;
   createdOn: string;
@@ -35,6 +35,32 @@ interface ApiResponse {
     has_next_page: boolean;
     has_prev_page: boolean;
   };
+}
+
+interface RosterApiItem {
+  id: number;
+  name?: string;
+  template?: string;
+  location?: string | null;
+  shift?: string | null;
+  timings?: string | null;
+  user_shift?: {
+    timings?: string | null;
+    shift?: string | null;
+  };
+  roaster_type?: string | null;
+  allocation_type?: string | null;
+  created_on?: string | null;
+  created_at?: string | null;
+  createdAt?: string | null;
+  created_by?: string | null;
+  created_by_name?: string | null;
+  creator_name?: string | null;
+  user_name?: string | null;
+  site_name?: string | null;
+  resource_name?: string | null;
+  building_name?: string | null;
+  active?: boolean;
 }
 
 // Column configuration for the enhanced table
@@ -56,13 +82,6 @@ const columns: ColumnConfig[] = [
   {
     key: 'location',
     label: 'Location',
-    sortable: true,
-    hideable: true,
-    draggable: true
-  },
-  {
-    key: 'department',
-    label: 'Department',
     sortable: true,
     hideable: true,
     draggable: true
@@ -97,232 +116,77 @@ const columns: ColumnConfig[] = [
   // }
 ];
 
-// Mock data for roster management (based on the image provided)
-const mockRosterData: RosterItem[] = [
-  {
-    id: 1,
-    template: 'Mon, Tue, Wed',
-    location: 'Lockated',
-    department: 'Tech',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '18/04/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 2,
-    template: 'MON,TUE,WED',
-    location: 'Lockated',
-    department: 'Tech',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/03/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 3,
-    template: 'Operations',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '09/02/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 4,
-    template: '2023',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '09/02/2023',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 5,
-    template: 'Monday,Wednesday,Friday',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 07:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '29/11/2022',
-    createdBy: '',
-    active: true
-  },
-  {
-    id: 6,
-    template: 'Mon,Wed,Fri',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:30 AM to 06:30 PM',
-    rosterType: 'Permanent',
-    createdOn: '28/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 7,
-    template: 'operations',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '09:00 AM to 06:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '28/11/2022',
-    createdBy: '',
-    active: true
-  },
-  {
-    id: 8,
-    template: 'tech',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:30 AM to 06:30 PM',
-    rosterType: 'Permanent',
-    createdOn: '28/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 9,
-    template: 'Monday to Saturday',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '25/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 10,
-    template: 'ho',
-    location: 'Lockated',
-    department: 'Operations',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '16/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 11,
-    template: 'IOS',
-    location: 'Lockated',
-    department: 'IOS',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '09/11/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 12,
-    template: 'Roster R (Mon,Wed,Thu,Fri)',
-    location: 'Lockated',
-    department: 'Marketing',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '12/10/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 13,
-    template: 'Roster Z',
-    location: 'Lockated',
-    department: 'Sales,HR',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '15/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 14,
-    template: 'Mon,Tue, Wed, Thurs,Fri',
-    location: 'Lockated',
-    department: 'kitchen',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '14/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 15,
-    template: 'Monday, Wednesday, Friday',
-    location: 'Lockated',
-    department: 'HR',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '14/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 16,
-    template: 'Tuesday,Thursday,Sat',
-    location: 'Lockated',
-    department: 'Sales,HR,Operations,IR,Tech,Accounts,RM ,BMS,Electrical,IBMS,Housekeeping,kitchen,Finance',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/09/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 17,
-    template: 'QA',
-    location: 'Lockated',
-    department: 'Sales,HR,Operations,IR,Tech,Accounts,RM ,BMS,Electrical,IBMS,Housekeeping',
-    shift: '03:15 AM to 11:15 PM',
-    rosterType: 'Permanent',
-    createdOn: '22/06/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 18,
-    template: 'IR Roster',
-    location: 'Lockated',
-    department: 'IR',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '06/01/2022',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 19,
-    template: 'Weekly Roster 4 (Sales,Accounts)',
-    location: 'Lockated',
-    department: 'Sales',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/08/2021',
-    createdBy: 'Robert Day2',
-    active: true
-  },
-  {
-    id: 20,
-    template: 'Weekly Roster 3 (Tech)',
-    location: 'Lockated',
-    department: 'Tech',
-    shift: '10:00 AM to 08:00 PM',
-    rosterType: 'Permanent',
-    createdOn: '13/08/2021',
-    createdBy: 'Robert Day2',
-    active: true
-  }
-];
+interface RosterDashboardProps {
+  basePath?: string;
+}
 
-export const RosterDashboard = () => {
+const getSmartSecureSocietyId = () => {
+  const params = new URLSearchParams(window.location.search);
+  return (
+    params.get("society_id") ||
+    params.get("site_id") ||
+    params.get("resource_id") ||
+    localStorage.getItem("selectedSiteId") ||
+    localStorage.getItem("society_id") ||
+    localStorage.getItem("selectedSocietyId") ||
+    localStorage.getItem("selectedUserSociety") ||
+    "15"
+  );
+};
+
+const getRosterItems = (data: unknown): RosterApiItem[] => {
+  if (Array.isArray(data)) return data;
+
+  if (!data || typeof data !== 'object') return [];
+
+  const rosterData = data as {
+    user_roasters?: RosterApiItem[];
+    roasters?: RosterApiItem[];
+    rosters?: RosterApiItem[];
+    data?: {
+      user_roasters?: RosterApiItem[];
+      roasters?: RosterApiItem[];
+      rosters?: RosterApiItem[];
+    } | RosterApiItem[];
+  };
+
+  const candidates = [
+    rosterData.user_roasters,
+    rosterData.roasters,
+    rosterData.rosters,
+    rosterData.data,
+    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.user_roasters,
+    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.roasters,
+    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.rosters,
+  ];
+
+  const firstMatch = candidates.find((candidate): candidate is RosterApiItem[] => Array.isArray(candidate));
+  return firstMatch || [];
+};
+
+const formatRosterDate = (value: unknown) => {
+  if (typeof value !== 'string' || !value.trim()) {
+    return 'Not available';
+  }
+
+  const parsedDate = new Date(value);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return parsedDate.toLocaleDateString('en-GB');
+  }
+
+  return value;
+};
+
+export const RosterDashboard = ({
+  basePath = "/settings/account/roster",
+}: RosterDashboardProps = {}) => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+  const rosterBasePath = basePath.replace(/\/$/, "");
+  const isSmartSecureRoster = rosterBasePath === "/smartsecure/roster";
+  const tableStorageKey = isSmartSecureRoster
+    ? "smartsecure-roster-management-table"
+    : "roster-management-table";
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -339,10 +203,17 @@ export const RosterDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   // API call to fetch roster data
-  const fetchRosterData = async () => {
+  const fetchRosterData = useCallback(async () => {
     setLoading(true);
     try {
-      const apiUrl = getFullUrl('/pms/admin/user_roasters.json');
+      const societyId = encodeURIComponent(getSmartSecureSocietyId());
+      const apiUrl = isSmartSecureRoster
+        ? getFullUrl(
+            `/spree/manage/user_roasters.json?page=1&per_page=${itemsPerPage}&society_id=${societyId}`
+          )
+        : getFullUrl(
+            `/pms/admin/user_roasters.json?page=1&per_page=${itemsPerPage}`
+          );
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -357,63 +228,41 @@ export const RosterDashboard = () => {
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
+      const rosterItems = getRosterItems(data);
 
       // Transform API data to match our interface
-      const transformedData: RosterItem[] = data.map((item: any) => {
-        // Handle department mapping - could be string, array, or object
-        let departmentName = 'Not assigned';
-        if (item.departments) {
-          if (typeof item.departments === 'string') {
-            departmentName = item.departments;
-          } else if (Array.isArray(item.departments)) {
-            departmentName = item.departments.join(', ');
-          }
-        } else if (item.department) {
-          departmentName = item.department;
-        }
+      const transformedData: RosterItem[] = rosterItems.map((item) => {
+        const shiftInfo =
+          item.shift ||
+          item.timings ||
+          item.user_shift?.timings ||
+          item.user_shift?.shift ||
+          'Not specified';
 
-        // Handle shift information
-        let shiftInfo = 'Not specified';
-        if (item.shift) {
-          shiftInfo = item.shift;
-        } else if (item.user_shift && item.user_shift.timings) {
-          shiftInfo = item.user_shift.timings;
-        }
+        const locationInfo =
+          item.location ||
+          item.site_name ||
+          item.resource_name ||
+          item.building_name ||
+          'Not specified';
 
-        // Handle location
-        let locationInfo = 'Not specified';
-        if (item.location) {
-          locationInfo = item.location;
-        }
+        const createdDate = formatRosterDate(
+          item.created_on || item.created_at || item.createdAt
+        );
 
-        // Handle created date
-        let createdDate = 'Not available';
-        if (item.created_at) {
-          try {
-            createdDate = new Date(item.created_at).toLocaleDateString('en-GB');
-          } catch (e) {
-            createdDate = item.created_at;
-          }
-        } else if (item.created_on) {
-          createdDate = item.created_on;
-        }
-
-        // Handle created by
-        let createdByInfo = 'System';
-        if (item.created_by) {
-          createdByInfo = item.created_by;
-        } else if (item.created_by_name) {
-          createdByInfo = item.created_by_name;
-        }
+        const createdByInfo =
+          item.created_by ||
+          item.created_by_name ||
+          item.creator_name ||
+          item.user_name ||
+          'System';
 
         return {
           id: item.id,
           template: item.name || item.template || 'Unnamed Template',
           location: locationInfo,
-          department: departmentName,
           shift: shiftInfo,
-          rosterType: item.allocation_type || item.roaster_type || 'Permanent',
+          rosterType: item.roaster_type || item.allocation_type || 'User',
           createdOn: createdDate,
           createdBy: createdByInfo,
           active: item.active !== undefined ? item.active : true
@@ -421,25 +270,23 @@ export const RosterDashboard = () => {
       });
 
       setAllRosterData(transformedData);
-      console.log('Transformed Data Count:', transformedData.length);
-      console.log('First Item:', transformedData[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error fetching roster data:', error);
-      toast.error(`Failed to load roster data: ${error.message}`, {
+      toast.error(`Failed to load roster data: ${message}`, {
         duration: 5000,
       });
       
-      // Fallback to mock data on API error
-      setAllRosterData(mockRosterData);
+      setAllRosterData([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSmartSecureRoster, itemsPerPage]);
 
   // Load data on component mount
   useEffect(() => {
     fetchRosterData();
-  }, []);
+  }, [fetchRosterData]);
 
   // Reset pagination when roster data changes
   useEffect(() => {
@@ -462,7 +309,6 @@ export const RosterDashboard = () => {
       return (
         item.template.toLowerCase().includes(searchLower) ||
         item.location.toLowerCase().includes(searchLower) ||
-        item.department.toLowerCase().includes(searchLower) ||
         item.shift.toLowerCase().includes(searchLower) ||
         item.createdBy.toLowerCase().includes(searchLower) ||
         item.createdOn.includes(debouncedSearchQuery)
@@ -503,20 +349,24 @@ export const RosterDashboard = () => {
   const renderRow = (roster: RosterItem) => ({
     actions: (
       <div className="flex items-center gap-2">
-        <button 
-          onClick={() => handleView(roster.id)} 
-          className="p-1 text-black hover:bg-gray-100 rounded" 
-          title="View"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
-        <button 
-          onClick={() => handleEdit(roster.id)} 
-          className="p-1 text-black hover:bg-gray-100 rounded" 
-          title="Edit"
-        >
-          <Edit className="w-4 h-4" />
-        </button>
+        {shouldShow("Roster", "show") && (
+          <button 
+            onClick={() => handleView(roster.id)} 
+            className="p-1 text-black hover:bg-gray-100 rounded" 
+            title="View"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        )}
+        {shouldShow("Roster", "update") && (
+          <button 
+            onClick={() => handleEdit(roster.id)} 
+            className="p-1 text-black hover:bg-gray-100 rounded" 
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+        )}
       </div>
     ),
     template: (
@@ -526,11 +376,6 @@ export const RosterDashboard = () => {
     ),
     location: (
       <span className="text-sm text-gray-600">{roster.location}</span>
-    ),
-    department: (
-      <div className="text-sm text-gray-600 max-w-xs truncate" title={roster.department}>
-        {roster.department}
-      </div>
     ),
     shift: (
       <span className="text-sm text-gray-600 whitespace-nowrap">{roster.shift}</span>
@@ -549,17 +394,15 @@ export const RosterDashboard = () => {
   });
 
   const handleView = (id: number) => {
-    console.log('View roster:', id);
-    navigate(`/settings/account/roster/detail/${id}`);
+    navigate(`${rosterBasePath}/detail/${id}`);
   };
 
   const handleEdit = (id: number) => {
-    console.log('Edit roster:', id);
-    navigate(`/settings/account/roster/edit/${id}`);
+    navigate(`${rosterBasePath}/edit/${id}`);
   };
 
   const handleAdd = () => {
-    navigate('/settings/account/roster/create');
+    navigate(`${rosterBasePath}/create`);
   };
 
   const handleExport = () => {
@@ -578,9 +421,6 @@ export const RosterDashboard = () => {
     <div className="p-6 space-y-6">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#C72030]/10 text-[#C72030] flex items-center justify-center">
-            <Calendar className="w-5 h-5" />
-          </div>
           <div>
             <h1 className="text-xl font-bold tracking-wide uppercase">Roster Management</h1>
             <p className="text-gray-600">Manage roster templates and schedules</p>
@@ -588,32 +428,32 @@ export const RosterDashboard = () => {
         </div>
       </header>
 
-      {loading && (
-        <div className="flex items-center justify-center py-6">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-        </div>
-      )}
-
-      {!loading && (
-        <div className=" ">
+      <div className=" ">
           <EnhancedTable
             data={currentRosterData}
             columns={columns}
             renderRow={renderRow}
-            storageKey="roster-management-table"
+            storageKey={tableStorageKey}
             enableSearch={true}
+            searchTerm={searchTerm}
+            searchValue={searchTerm}
             searchPlaceholder="Search rosters..."
             onSearchChange={handleSearch}
+            disableClientSearch={true}
             enableExport={false}
             exportFileName="roster-data"
             leftActions={
-              <Button 
-                onClick={handleAdd} 
-                className="flex items-center gap-2 bg-[#C72030] hover:bg-[#C72030]/90 text-white"
-              >
-                <Plus className="w-4 h-4" />
-                Add
-              </Button>
+              <div className="flex gap-2">
+                {shouldShow("Roster", "create") && (
+                  <Button 
+                    onClick={handleAdd} 
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                   >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </Button>
+                )}
+              </div>
             }
             pagination={false} // Disable built-in pagination since we're adding custom
             loading={loading}
@@ -623,9 +463,9 @@ export const RosterDashboard = () => {
           {/* Pagination Controls - matching BuildingPage style */}
           {allRosterData.length > 0 && (
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
+              {/* <div className="text-sm text-muted-foreground">
                 Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} rosters
-              </div>
+              </div> */}
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
@@ -662,9 +502,17 @@ export const RosterDashboard = () => {
                         variant={currentPage === page ? "default" : "outline"}
                         size="sm"
                         onClick={() => goToPage(page)}
-                        className="w-8 h-8 p-0"
+                        className={
+                          currentPage === page
+                            ? "w-8 h-8 p-0 !bg-[#da7756] hover:!bg-[#da7756]"
+                            : "w-8 h-8 p-0"
+                        }
                       >
-                        {page}
+                        {currentPage === page ? (
+                          <span style={{ color: '#fff' }}>{page}</span>
+                        ) : (
+                          page
+                        )}
                       </Button>
                     ))}
 
@@ -697,7 +545,6 @@ export const RosterDashboard = () => {
             </div>
           )}
           </div>
-        )}
 
         {/* Modals */}
         {isBulkUploadOpen && (

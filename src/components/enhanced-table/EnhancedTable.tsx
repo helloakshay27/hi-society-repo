@@ -120,12 +120,12 @@ interface BulkAction<T> {
   icon?: React.ComponentType<any>;
   onClick: (selectedItems: T[]) => void;
   variant?:
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary"
-    | "ghost"
-    | "link";
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
 }
 
 interface EnhancedTableProps<T> {
@@ -154,11 +154,13 @@ interface EnhancedTableProps<T> {
   bulkActions?: BulkAction<T>[];
   showBulkActions?: boolean;
   pagination?: boolean;
+  manualPagination?: boolean;
   pageSize?: number;
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
   loading?: boolean;
+  isLoading?: boolean;
   enableSearch?: boolean;
   enableSelection?: boolean;
   hideTableExport?: boolean;
@@ -167,6 +169,7 @@ interface EnhancedTableProps<T> {
   leftActions?: React.ReactNode;
   rightActions?: React.ReactNode;
   onFilterClick?: () => void;
+  filterButtonClassName?: string;
   canAddRow?: boolean;
   onAddRow?: (newRowData: Partial<T>) => void;
   renderEditableCell?: (
@@ -220,11 +223,13 @@ export function EnhancedTable<T extends Record<string, any>>({
   bulkActions = [],
   showBulkActions = false,
   pagination = false,
+  manualPagination = false,
   pageSize = 10,
   currentPage: externalCurrentPage,
   totalPages: externalTotalPages,
   onPageChange: externalOnPageChange,
   loading = false,
+  isLoading = false,
   enableSearch = false,
   enableSelection = false,
   hideTableExport = false,
@@ -233,6 +238,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   leftActions,
   rightActions,
   onFilterClick,
+  filterButtonClassName,
   canAddRow = false,
   onAddRow,
   renderEditableCell,
@@ -253,6 +259,28 @@ export function EnhancedTable<T extends Record<string, any>>({
   getChildrenKey,
   renderChildrenRows,
 }: EnhancedTableProps<T>) {
+  const loadingStartTimeRef = useRef<number | null>(null);
+  const [minLoadingElapsed, setMinLoadingElapsed] = useState(true);
+  const rawLoading = loading || isLoading;
+
+  useEffect(() => {
+    if (rawLoading) {
+      loadingStartTimeRef.current = Date.now();
+      setMinLoadingElapsed(false);
+    } else if (loadingStartTimeRef.current) {
+      const elapsed = Date.now() - loadingStartTimeRef.current;
+      const remaining = 1200 - elapsed;
+      if (remaining > 0) {
+        const timer = setTimeout(() => setMinLoadingElapsed(true), remaining);
+        return () => clearTimeout(timer);
+      } else {
+        setMinLoadingElapsed(true);
+      }
+      loadingStartTimeRef.current = null;
+    }
+  }, [rawLoading]);
+
+  const effectiveLoading = rawLoading || !minLoadingElapsed;
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [internalCurrentPage, setInternalCurrentPage] = useState(1);
@@ -335,11 +363,11 @@ export function EnhancedTable<T extends Record<string, any>>({
 
   // Add effect to reset loading state when search completes
   useEffect(() => {
-    if (enableGlobalSearch && !loading) {
+    if (enableGlobalSearch && !effectiveLoading) {
       setIsSearching(false);
       setSearchAbortController(null);
     }
-  }, [loading, enableGlobalSearch]);
+  }, [effectiveLoading, enableGlobalSearch]);
 
   // Reset search state when data changes (search completes)
   useEffect(() => {
@@ -513,11 +541,11 @@ export function EnhancedTable<T extends Record<string, any>>({
 
   // Paginate data if pagination is enabled
   const paginatedData = useMemo(() => {
-    if (!pagination) return filteredData;
+    if (!pagination || manualPagination) return filteredData;
 
     const startIndex = (currentPage - 1) * pageSize;
     return filteredData.slice(startIndex, startIndex + pageSize);
-  }, [filteredData, currentPage, pageSize, pagination]);
+  }, [filteredData, currentPage, pageSize, pagination, manualPagination]);
 
   const sortedData = pagination ? paginatedData : filteredData;
   // Use external totalPages if provided, otherwise calculate from filtered data
@@ -843,7 +871,6 @@ export function EnhancedTable<T extends Record<string, any>>({
         </div>
 
         <div className="flex items-center gap-2">
-          {rightActions}
           {!hideTableSearch &&
             (onSearchChange || !externalSearchTerm || enableGlobalSearch) &&
             (customSearchInput ? (
@@ -875,11 +902,16 @@ export function EnhancedTable<T extends Record<string, any>>({
               renderCustomSearchInput()
             ))}
 
+          {rightActions}
+
           {onFilterClick && (
             <Button
               variant="outline"
               size="sm"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2"
+              className={cn(
+                "border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2 rounded-lg",
+                filterButtonClassName
+              )}
               onClick={onFilterClick}
               title="Filter"
             >
@@ -901,7 +933,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={handleExportClick}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 rounded-lg"
               title="Export"
             >
               <Download className="w-4 h-4" />
@@ -1074,10 +1106,10 @@ export function EnhancedTable<T extends Record<string, any>>({
 
                       const customCell = renderEditableCell
                         ? renderEditableCell(
-                            column.key,
-                            newRowData[column.key],
-                            (value) => handleNewRowDataChange(column.key, value)
-                          )
+                          column.key,
+                          newRowData[column.key],
+                          (value) => handleNewRowDataChange(column.key, value)
+                        )
                         : null;
 
                       return (
@@ -1088,18 +1120,18 @@ export function EnhancedTable<T extends Record<string, any>>({
                           {customCell !== null
                             ? customCell
                             : renderDefaultEditableCell(
-                                column.key,
-                                newRowData[column.key],
-                                (value) =>
-                                  handleNewRowDataChange(column.key, value)
-                              )}
+                              column.key,
+                              newRowData[column.key],
+                              (value) =>
+                                handleNewRowDataChange(column.key, value)
+                            )}
                         </TableCell>
                       );
                     })}
                   </TableRow>
                 )}
 
-                {loading && (
+                {effectiveLoading && (
                   <TableRow>
                     <TableCell
                       colSpan={
@@ -1117,7 +1149,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                     </TableCell>
                   </TableRow>
                 )}
-                {!loading && sortedData.length === 0 && (
+                {!effectiveLoading && sortedData.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={
@@ -1147,7 +1179,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                     </TableCell>
                   </TableRow>
                 )}
-                {!loading &&
+                {!effectiveLoading &&
                   sortedData.map((item, index) => {
                     const itemId = getItemId(item);
                     const isSelected = selectedItems.includes(itemId);
@@ -1268,7 +1300,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                 {/* Add Row Placeholder at the bottom when canAddRow is true but not currently adding */}
                 {canAddRow &&
                   !isAddingRow &&
-                  !loading &&
+                  !effectiveLoading &&
                   sortedData.length > 0 && (
                     <TableRow
                       className="cursor-pointer hover:bg-gray-50 border-2 border-dashed border-gray-200"
@@ -1318,27 +1350,14 @@ export function EnhancedTable<T extends Record<string, any>>({
               />
             </PaginationItem>
 
-            {generatePageNumbers().map((page, index) => (
-              <PaginationItem key={index}>
-                {page === "ellipsis-start" || page === "ellipsis-end" ? (
-                  <PaginationEllipsis />
-                ) : (
-                  <PaginationLink
-                    onClick={() => {
-                      if (externalOnPageChange) {
-                        externalOnPageChange(page as number);
-                      } else {
-                        setInternalCurrentPage(page as number);
-                      }
-                    }}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                )}
-              </PaginationItem>
-            ))}
+            <PaginationItem>
+              <PaginationLink
+                isActive={true}
+                className="cursor-default"
+              >
+                {currentPage}
+              </PaginationLink>
+            </PaginationItem>
 
             <PaginationItem>
               <PaginationNext

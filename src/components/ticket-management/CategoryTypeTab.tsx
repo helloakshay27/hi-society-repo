@@ -2,9 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
@@ -15,24 +13,22 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { ticketManagementAPI } from '@/services/ticketManagementAPI';
+import { userService } from '@/services/userService';
 import { API_CONFIG, getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import ReactSelect from 'react-select';
 import { Label } from "@/components/ui/label";
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 import { Edit, Plus, Trash2, Upload, X } from 'lucide-react';
 
 const categorySchema = z.object({
@@ -50,13 +46,19 @@ interface CategoryApiResponse {
     id: number;
     society_id: number;
     name: string;
+    issue_type_id: number | null;
+    of_phase: string | null;
     position: number | null;
     created_at: string;
     updated_at: string;
     icon_url: string;
-    doc_type: string;
+    doc_type: string | null;
     selected_icon_url: string;
-    tat: string;
+    priority?: string | null;
+    response_tat: Record<string, unknown>;
+    tat: number | string | null;
+    project_tat?: number | string | null;
+    active?: boolean | number | null;
     assigned_to_names?: string;
     category_email: Array<{
       id: number;
@@ -94,7 +96,13 @@ interface CategoryApiResponse {
       cloned_at: string | null;
     };
   }>;
-  statuses: Array<{
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
+  statuses?: Array<{
     id: number;
     society_id: number;
     name: string;
@@ -130,6 +138,10 @@ export const CategoryTypeTab: React.FC = () => {
   const [sites, setSites] = useState<Site[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const perPage = 20;
   const [faqItems, setFaqItems] = useState<FAQ[]>([{ question: '', answer: '' }]);
   const [vendorEmails, setVendorEmails] = useState<string[]>(['']);
   const [engineers, setEngineers] = useState<{ id: number; full_name: string }[]>([]);
@@ -142,7 +154,7 @@ export const CategoryTypeTab: React.FC = () => {
   const [fmResponseTime, setFmResponseTime] = useState('');
   const [projectResponseTime, setProjectResponseTime] = useState('');
   
-  const priorityOptions = ['P1', 'P2', 'P3', 'P4'];
+  const priorityOptions = ['P1', 'P2', 'P3', 'P4', 'P5'];
   const [accountData, setAccountData] = useState<{
     id?: string;
     company_id?: number;
@@ -150,6 +162,7 @@ export const CategoryTypeTab: React.FC = () => {
   } | null>(null);
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryApiResponse['helpdesk_categories'][0] | null>(null);
   const [editFaqItems, setEditFaqItems] = useState<FAQ[]>([{ question: '', answer: '' }]);
   const [editIconFile, setEditIconFile] = useState<File | null>(null);
@@ -160,6 +173,9 @@ export const CategoryTypeTab: React.FC = () => {
   const [editPriority, setEditPriority] = useState('');
   const [editFmResponseTime, setEditFmResponseTime] = useState('');
   const [editProjectResponseTime, setEditProjectResponseTime] = useState('');
+  const [selectedOfPhase, setSelectedOfPhase] = useState('');
+  const [editOfPhase, setEditOfPhase] = useState('');
+  const [editCategoryName, setEditCategoryName] = useState('');
 
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -174,27 +190,19 @@ export const CategoryTypeTab: React.FC = () => {
 
   const fetchAccountData = useCallback(async () => {
     try {
-      const response = await fetch(getFullUrl('/api/users/account.json'), {
+      const data = await userService.getAccountDetails();
+      setAccountData(data);
+      
+      // Auto-populate form with company_id as society_id
+      form.setValue('siteId', (data as any).company_id?.toString() || '');
+      
+      // Fetch allowed sites for the user
+      const sitesResponse = await fetch(getFullUrl(`/pms/sites/allowed_sites.json?user_id=${data.id}`), {
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json',
         },
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAccountData(data);
-        
-        // Auto-populate form with company_id as society_id
-        form.setValue('siteId', data.company_id?.toString() || '');
-        
-        // Fetch allowed sites for the user
-        const sitesResponse = await fetch(getFullUrl(`/pms/sites/allowed_sites.json?user_id=${data.id}`), {
-          headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json',
-          },
-        });
 
         if (sitesResponse.ok) {
           const sitesData = await sitesResponse.json();
@@ -205,18 +213,32 @@ export const CategoryTypeTab: React.FC = () => {
             setSelectedSite(sitesData.selected_site);
           }
         }
-      }
     } catch (error) {
       console.error('Error fetching account data:', error);
       toast.error('Failed to fetch account data');
     }
   }, [form]);
 
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = useCallback(async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await ticketManagementAPI.getCategories();
-      setCategories(response.helpdesk_categories || []);
+      const response = await fetch(
+        getFullUrl(`/crm/admin/helpdesk_categories.json?page=${page}`),
+        {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data: CategoryApiResponse = await response.json();
+      setCategories(data.helpdesk_categories || []);
+      if (data.pagination) {
+        setCurrentPage(data.pagination.current_page);
+        setTotalPages(data.pagination.total_pages);
+        setTotalCount(data.pagination.total_count);
+      }
     } catch (error) {
       toast.error('Failed to fetch categories');
       console.error('Error fetching categories:', error);
@@ -242,7 +264,7 @@ export const CategoryTypeTab: React.FC = () => {
 
   const fetchIssueTypes = async () => {
     try {
-      const response = await fetch(getFullUrl('/user/issue_type.json'), {
+      const response = await fetch(getFullUrl('/dropdown/issue_types.json'), {
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json',
@@ -250,7 +272,7 @@ export const CategoryTypeTab: React.FC = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setIssueTypes(data.data || []);
+        setIssueTypes(data.issue_types || []);
       }
     } catch (error) {
       console.error('Error fetching issue types:', error);
@@ -263,6 +285,73 @@ export const CategoryTypeTab: React.FC = () => {
     fetchAccountData();
     fetchIssueTypes();
   }, [fetchCategories, fetchAccountData]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    fetchCategories(page);
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>{i}</PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
 
   const fetchSites = async () => {
     try {
@@ -291,30 +380,21 @@ export const CategoryTypeTab: React.FC = () => {
   };
 
   const handleCreateSubmit = async () => {
-    // Get form values directly from the form inputs
-    const categoryNameInput = document.querySelector('input[name="categoryName"]') as HTMLInputElement;
+    const categoryNameValue = form.getValues('categoryName');
     
-    // Check for required fields with specific messages
-    if (!categoryNameInput?.value?.trim()) {
+    if (!categoryNameValue?.trim()) {
       toast.error('Please enter a category name');
       return;
     }
     
-    if (!iconFile) {
-      toast.error('Please select an icon');
-      return;
-    }
-    
-    // Get the form data
     const data: CategoryFormData = {
-      categoryName: categoryNameInput.value.trim(),
-      responseTime: fmResponseTime, // Use the state variable
+      categoryName: categoryNameValue.trim(),
+      responseTime: fmResponseTime,
       customerEnabled: false,
       siteId: accountData?.company_id?.toString() || '',
       engineerIds: [],
     };
 
-    // Continue with the rest of the validation and submission logic
     await handleSubmit(data);
   };
 
@@ -383,6 +463,7 @@ export const CategoryTypeTab: React.FC = () => {
       formData.append('helpdesk_category[tat]', fmResponseTime);
       formData.append('helpdesk_category[project_tat]', projectResponseTime);
       formData.append('helpdesk_category[priority]', selectedPriority);
+      formData.append('helpdesk_category[active]', '1');
       
       if (iconFile) {
         formData.append('helpdesk_category[icon]', iconFile);
@@ -405,9 +486,11 @@ export const CategoryTypeTab: React.FC = () => {
         setSelectedPriority('');
         setFmResponseTime('');
         setProjectResponseTime('');
+        setSelectedOfPhase('');
         setIconFile(null);
+        setAddDialogOpen(false);
         
-        fetchCategories();
+        fetchCategories(1);
       } else {
         // Try to get the error message from the response
         const errorData = await response.json().catch(() => null);
@@ -476,142 +559,76 @@ export const CategoryTypeTab: React.FC = () => {
 
   const handleEdit = (category: CategoryApiResponse['helpdesk_categories'][0]) => {
     setEditingCategory(category);
-    
-    // Populate issue type, priority, and response times from category data
-    if (category.complaint_worker?.issue_type_id) {
-      setEditIssueType(category.complaint_worker.issue_type_id.toString());
-    } else {
-      setEditIssueType('');
-    }
-    
-    // Set response times
-    setEditFmResponseTime(category.tat || '');
-    // If you have project_tat in API response, use it:
-    // setEditProjectResponseTime(category.project_tat || '');
-    setEditProjectResponseTime('');
-    
-    // Set priority - you may need to adjust based on where priority is stored
-    setEditPriority('');
-    
-    // Populate FAQ items if available, otherwise default empty FAQ
-    if (category.complaint_faqs && category.complaint_faqs.length > 0) {
-      setEditFaqItems(category.complaint_faqs.map(faq => ({
-        id: faq.id,
-        question: faq.question || '',
-        answer: faq.answer || ''
-      })));
-    } else {
-      setEditFaqItems([{ question: '', answer: '' }]);
-    }
-    
-    // Populate assigned engineers if available
-    if (category.complaint_worker?.assign_to) {
-      let engineerIds: number[] = [];
-      
-      // Handle both array and YAML string cases
-      if (Array.isArray(category.complaint_worker.assign_to)) {
-        engineerIds = category.complaint_worker.assign_to.map(id => parseInt(id));
-      } else if (typeof category.complaint_worker.assign_to === 'string') {
-        // Parse YAML string like "---\n- '33051'\n"
-        const matches = category.complaint_worker.assign_to.match(/'(\d+)'/g);
-        if (matches) {
-          engineerIds = matches.map(match => parseInt(match.replace(/'/g, '')));
-        }
-      }
-      
-      setSelectedEngineers(engineerIds);
-      form.setValue('engineerIds', engineerIds);
-    } else {
-      setSelectedEngineers([]);
-      form.setValue('engineerIds', []);
-    }
-    
-    setEditIconFile(null);
-    setEditVendorEmailEnabled(category.category_email?.length > 0);
-    setEditVendorEmails(category.category_email?.length > 0 ? category.category_email.map(e => e.email) : ['']);
-    
-    // Set the selected site IDs
-    setEditSelectedSiteId(selectedSite?.id.toString() || sites[0]?.id.toString() || '');
-    
+    setEditCategoryName(category.name || '');
     setIsEditModalOpen(true);
+
+    const fetchCategoryDetails = async () => {
+      try {
+        const response = await fetch(getFullUrl(`/crm/admin/helpdesk_categories/${category.id}.json`), {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
+          const json = await response.json();
+          const data = json.helpdesk_category || json;
+          setEditingCategory(data);
+          setEditCategoryName(data.name || '');
+          setEditIssueType(data.issue_type_id ? data.issue_type_id.toString() : '');
+          setEditFmResponseTime(data.tat != null ? String(data.tat) : '');
+          setEditProjectResponseTime(data.project_tat != null ? String(data.project_tat) : '');
+          setEditPriority(data.priority || '');
+          setEditIconFile(null);
+          setEditVendorEmailEnabled(data.category_email?.length > 0);
+          setEditVendorEmails(data.category_email?.length > 0 ? data.category_email.map((e: { email: string }) => e.email) : ['']);
+        }
+      } catch (error) {
+        console.error('Error fetching category details:', error);
+        toast.error('Failed to fetch category details');
+      }
+    };
+    fetchCategoryDetails();
   };
 
-  const handleEditSubmit = async (formData: object) => {
+  const handleEditSubmit = async () => {
     if (!editingCategory) return;
-    
-    // Get category name from input
-    const categoryNameInput = document.querySelector('#edit-category-name') as HTMLInputElement;
-    
-    if (!categoryNameInput?.value?.trim()) {
+
+    if (!editCategoryName.trim()) {
       toast.error('Please enter a category name');
       return;
     }
-    
-    // Validate required fields
+
     if (!editIssueType) {
       toast.error('Please select issue type');
-      return;
-    }
-    if (!editPriority) {
-      toast.error('Please select priority');
       return;
     }
     if (!editFmResponseTime) {
       toast.error('Please enter FM response time');
       return;
     }
-    if (!editProjectResponseTime) {
-      toast.error('Please enter project response time');
-      return;
-    }
-    
-    if (!editSelectedSiteId) {
-      toast.error('Please select a site');
-      return;
-    }
-    
-    // Validate vendor emails if enabled
-    if (editVendorEmailEnabled) {
-      const invalidEmails = editVendorEmails.filter(email => email.trim() && !isValidEmail(email));
-      if (invalidEmails.length > 0) {
-        toast.error('Please enter valid email addresses for all vendor emails.');
-        return;
-      }
-      
-      const validEmails = editVendorEmails.filter(email => email.trim());
-      if (validEmails.length === 0) {
-        toast.error('Please provide at least one vendor email when vendor email is enabled.');
-        return;
-      }
-    }
 
-    // Validate FAQ items
-    const incompleteFaqItems = editFaqItems.filter(item => 
-      !item._destroy && ((item.question.trim() && !item.answer.trim()) || (!item.question.trim() && item.answer.trim()))
-    );
-    
-    if (incompleteFaqItems.length > 0) {
-      toast.error('Please complete all FAQ items. If you enter a question, you must also provide an answer.');
-      return;
-    }
-    
     setIsSubmitting(true);
     try {
       const submitFormData = new FormData();
-      
-      // Helpdesk category data - only the 6 required parameters
+
       submitFormData.append('helpdesk_category[issue_type_id]', editIssueType);
-      submitFormData.append('helpdesk_category[name]', categoryNameInput.value.trim());
+      submitFormData.append('helpdesk_category[name]', editCategoryName.trim());
       submitFormData.append('helpdesk_category[tat]', editFmResponseTime);
-      submitFormData.append('helpdesk_category[project_tat]', editProjectResponseTime);
-      submitFormData.append('helpdesk_category[priority]', editPriority);
-      
-      // Add icon if a new one is selected
+      if (editProjectResponseTime) {
+        submitFormData.append('helpdesk_category[project_tat]', editProjectResponseTime);
+      }
+      if (editPriority) {
+        submitFormData.append('helpdesk_category[priority]', editPriority);
+      }
+      if (editOfPhase) {
+        submitFormData.append('helpdesk_category[of_phase]', editOfPhase);
+      }
       if (editIconFile) {
         submitFormData.append('helpdesk_category[icon]', editIconFile);
       }
 
-      const response = await fetch(getFullUrl(`/pms/admin/modify_helpdesk_category/${editingCategory.id}.json`), {
+      const response = await fetch(getFullUrl(`/crm/admin/helpdesk_categories/${editingCategory.id}.json`), {
         method: 'PATCH',
         headers: {
           'Authorization': getAuthHeader(),
@@ -623,7 +640,7 @@ export const CategoryTypeTab: React.FC = () => {
         toast.success('Category updated successfully!');
         setIsEditModalOpen(false);
         setEditingCategory(null);
-        fetchCategories();
+        fetchCategories(currentPage);
       } else {
         const errorData = await response.json().catch(() => null);
         console.error('API Response Error:', errorData);
@@ -717,6 +734,7 @@ export const CategoryTypeTab: React.FC = () => {
       if (response.ok) {
         setCategories(categories.filter(cat => cat.id !== category.id));
         toast.success('Category deleted successfully!');
+        fetchCategories(currentPage);
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || 'Failed to delete category');
@@ -747,11 +765,12 @@ export const CategoryTypeTab: React.FC = () => {
   const columns = [
     { key: 'srno', label: 'S.No.', sortable: false },
     { key: 'name', label: 'Category Type', sortable: true },
-    { key: 'assign_to_names', label: 'Assignee', sortable: false },
-    { key: 'tat', label: 'Response Time', sortable: false },
-    { key: 'category_email', label: 'Vendor Email', sortable: false },
+    { key: 'issue_type_id', label: 'Issue Type', sortable: false },
+    { key: 'priority', label: 'Priority', sortable: false },
+    { key: 'tat', label: 'Response Time (FM)', sortable: false },
+    { key: 'project_tat', label: 'Project Response Time', sortable: false },
+    
     { key: 'icon_url', label: 'Icon', sortable: false },
-    // { key: 'selected_icon_url', label: 'Selected Icon', sortable: false },
   ];
 
   const renderCell = (item: CategoryApiResponse['helpdesk_categories'][0], columnKey: string) => {
@@ -762,6 +781,14 @@ export const CategoryTypeTab: React.FC = () => {
         return index + 1;
       case 'name':
         return item.name;
+      case 'issue_type_id': {
+        const issueType = issueTypes.find((t) => t.id === item.issue_type_id);
+        return issueType ? issueType.name : (item.issue_type_id != null ? String(item.issue_type_id) : '--');
+      }
+      case 'priority':
+        return item.priority || '--';
+      case 'project_tat':
+        return item.project_tat || '--';
       case 'assign_to_names':
         // Use the assigned_to_names field directly from the API response
         if (item.assigned_to_names) {
@@ -836,32 +863,44 @@ export const CategoryTypeTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Category</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Add Category Dialog */}
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+          setSelectedIssueType('');
+          setSelectedPriority('');
+          setFmResponseTime('');
+          setProjectResponseTime('');
+          setIconFile(null);
+        }
+        setAddDialogOpen(open);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Category</DialogTitle>
+          </DialogHeader>
           <Form {...form}>
-            <div className="space-y-6">
+            <div className="space-y-4 py-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Issue Type Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Issue Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={selectedIssueType} onValueChange={setSelectedIssueType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedIssueType}
+                    onChange={(e) => setSelectedIssueType(e.target.value)}
+                    displayEmpty
+                    label="Select Issue Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Category Name */}
                 <FormField
@@ -869,9 +908,17 @@ export const CategoryTypeTab: React.FC = () => {
                   name="categoryName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Enter category <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter category" {...field} />
+                        <TextField
+                          label={<>Enter category <span style={{ color: 'red' }}>*</span></>}
+                          placeholder="Enter category"
+                          value={field.value}
+                          onChange={field.onChange}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -880,22 +927,21 @@ export const CategoryTypeTab: React.FC = () => {
 
                 {/* FM Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter FM response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Enter FM response time" 
+                    <TextField
+                      label={<>Enter FM response time <span style={{ color: 'red' }}>*</span></>}
+                      type="number"
+                      placeholder="Enter FM response time"
                       value={fmResponseTime}
                       onChange={(e) => setFmResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
-                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
-                          e.preventDefault();
-                        }
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -905,22 +951,21 @@ export const CategoryTypeTab: React.FC = () => {
 
                 {/* Project Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter Project response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Enter Project response time" 
+                    <TextField
+                      label={<>Enter Project response time <span style={{ color: 'red' }}>*</span></>}
+                      type="number"
+                      placeholder="Enter Project response time"
                       value={projectResponseTime}
                       onChange={(e) => setProjectResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
-                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
-                          e.preventDefault();
-                        }
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -929,35 +974,34 @@ export const CategoryTypeTab: React.FC = () => {
                 </div>
 
                 {/* Priority Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Priority <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {priorityOptions.map((priority) => (
-                        <SelectItem key={priority} value={priority}>
-                          {priority}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Priority <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedPriority}
+                    onChange={(e) => setSelectedPriority(e.target.value)}
+                    displayEmpty
+                    label="Select Priority *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Priority</em></MenuItem>
+                    {priorityOptions.map((priority) => (
+                      <MenuItem key={priority} value={priority}>
+                        {priority}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Upload Icon */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium">
-                    Upload Icon <span className="text-red-500">*</span>
+                    Upload Icon
                   </label>
                   <div className="flex items-center gap-2">
                     <label htmlFor="icon-upload" className="cursor-pointer flex-1">
                       <Button type="button" variant="outline" size="sm" className="w-full justify-start" asChild>
-                        <span>
-                          Choose file
-                        </span>
+                        <span>Choose file</span>
                       </Button>
                     </label>
                     <span className="text-sm text-gray-600">
@@ -973,273 +1017,68 @@ export const CategoryTypeTab: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Comment out unused sections */}
-              {/*
-              <div className="space-y-2">
-                <label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Upload Icon <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="icon-upload" className="cursor-pointer">
-                    <Button type="button" variant="outline" size="sm" asChild>
-                      <span>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Icon
-                      </span>
-                    </Button>
-                  </label>
-                  <input
-                    id="icon-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleIconChange}
-                  />
-                  {iconFile && (
-                    <span className="text-sm text-gray-600">{iconFile.name}</span>
-                  )}
-                </div>
-              </div>
-
-              <FormField
-                control={form.control}
-                name="siteId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Enable Sites <span className="text-red-500">*</span></FormLabel>
-                    <FormControl>
-                      <div className="space-y-3">
-                        <ReactSelect
-                          isMulti
-                          options={sites.map(site => ({
-                            value: site.id.toString(),
-                            label: site.name
-                          }))}
-                          onChange={(selected) => {
-                            if (!selected || selected.length === 0) {
-                              field.onChange('');
-                              return;
-                            }
-                            const siteIds = selected.map(s => s.value).join(',');
-                            field.onChange(siteIds);
-                          }}
-                          value={field.value ? 
-                            sites
-                              .filter(site => field.value.split(',').includes(site.id.toString()))
-                              .map(site => ({
-                                value: site.id.toString(),
-                                label: site.name
-                              }))
-                            : []
-                          }
-                          className="mt-1"
-                          placeholder="Select sites..."
-                          noOptionsMessage={() => "No sites available"}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="engineerIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assign Engineers</FormLabel>
-                    <FormControl>
-                      <div className="space-y-3">
-                        <ReactSelect
-                          isMulti
-                          options={engineers.map(engineer => ({
-                            value: engineer.id,
-                            label: engineer.full_name
-                          }))}
-                          onChange={(selected) => {
-                            if (!selected) {
-                              field.onChange([]);
-                              return;
-                            }
-                            const newEngineers = selected.map(s => s.value);
-                            field.onChange(newEngineers);
-                          }}
-                          value={engineers
-                            .filter(engineer => field.value?.includes(engineer.id))
-                            .map(engineer => ({
-                              value: engineer.id,
-                              label: engineer.full_name
-                            }))}
-                          className="mt-1"
-                          placeholder="Select engineers..."
-                          noOptionsMessage={() => "No engineers available"}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <input type="hidden" value="pms" />
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    checked={vendorEmailEnabled}
-                    onCheckedChange={(checked) => setVendorEmailEnabled(!!checked)}
-                  />
-                  <label className="text-sm font-medium">Enable Vendor Email</label>
-                </div>
-
-                {vendorEmailEnabled && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Vendor Emails</h3>
-                      <Button type="button" onClick={addVendorEmail} variant="outline" size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Email
-                      </Button>
-                    </div>
-
-                    {vendorEmails.map((email, index) => (
-                      <div key={index} className="flex gap-2">
-                        <div className="flex-1">
-                          <Input
-                            type="email"
-                            placeholder="Enter vendor email"
-                            value={email}
-                            onChange={(e) => handleVendorEmailChange(index, e.target.value)}
-                            className={`${
-                              email && !isValidEmail(email) 
-                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                                : ''
-                            }`}
-                          />
-                          {email && !isValidEmail(email) && (
-                            <p className="text-red-500 text-xs mt-1">Please enter a valid email address</p>
-                          )}
-                        </div>
-                        {vendorEmails.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeVendorEmail(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">FAQ Section</h3>
-                  <Button type="button" onClick={addFaqItem} variant="outline" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add FAQ
-                  </Button>
-                </div>
-
-                {faqItems.map((item, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Question
-                      </label>
-                      <Input
-                        placeholder="Enter question"
-                        value={item.question}
-                        onChange={(e) => updateFaqItem(index, 'question', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Answer
-                      </label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Enter answer"
-                          value={item.answer}
-                          onChange={(e) => updateFaqItem(index, 'answer', e.target.value)}
-                        />
-                        {faqItems.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeFaqItem(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              */}
-
-              <div className="flex justify-end gap-3">
-                <Button 
-                  type="button"
-                  onClick={() => {
-                    form.reset();
-                    setSelectedIssueType('');
-                    setSelectedPriority('');
-                    setFmResponseTime('');
-                    setProjectResponseTime('');
-                    setIconFile(null);
-                  }}
-                  variant="outline"
-                  className="px-8"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateSubmit}
-                  disabled={isSubmitting}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
-                </Button>
-              </div>
             </div>
           </Form>
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => setAddDialogOpen(false)}
+className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateSubmit}
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Category Types</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading categories...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={transformedCategories}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="category-types-table"
-              enableSearch={true}
-              searchPlaceholder="Search categories..."
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Category Types Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={transformedCategories}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="category-types-table"
+          enableSearch={true}
+          searchPlaceholder="Search categories..."
+          leftActions={
+            <button
+              type="button"
+              onClick={() => setAddDialogOpen(true)}
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
+              <Plus className="h-4 w-4" />
+              Add
+            </button>
+          }
+        />
+
+        {/* Pagination */}
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
 
       {/* Edit Category Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Edit Category</DialogTitle>
@@ -1248,55 +1087,58 @@ export const CategoryTypeTab: React.FC = () => {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Issue Type Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Issue Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editIssueType} onValueChange={setEditIssueType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={editIssueType}
+                    onChange={(e) => setEditIssueType(e.target.value)}
+                    displayEmpty
+                    label="Select Issue Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Category Name */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    id="edit-category-name"
-                    defaultValue={editingCategory.name}
+                  <TextField
+                    label={<>Category <span style={{ color: 'red' }}>*</span></>}
+                    value={editCategoryName}
+                    onChange={(e) => setEditCategoryName(e.target.value)}
                     placeholder="Enter category"
-                    className="w-full"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
                 </div>
 
                 {/* FM Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter FM response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Enter FM response time" 
+                    <TextField
+                      label={<>Enter FM response time <span style={{ color: 'red' }}>*</span></>}
+                      type="number"
+                      placeholder="Enter FM response time"
                       value={editFmResponseTime}
                       onChange={(e) => setEditFmResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
                         if (e.key === '-' || e.key === 'e' || e.key === 'E') {
                           e.preventDefault();
                         }
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -1306,22 +1148,23 @@ export const CategoryTypeTab: React.FC = () => {
 
                 {/* Project Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter Project response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Enter Project response time" 
+                    <TextField
+                      label={<>Enter Project response time <span style={{ color: 'red' }}>*</span></>}
+                      type="number"
+                      placeholder="Enter Project response time"
                       value={editProjectResponseTime}
                       onChange={(e) => setEditProjectResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
                         if (e.key === '-' || e.key === 'e' || e.key === 'E') {
                           e.preventDefault();
                         }
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -1330,23 +1173,24 @@ export const CategoryTypeTab: React.FC = () => {
                 </div>
 
                 {/* Priority Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Priority <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editPriority} onValueChange={setEditPriority}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {priorityOptions.map((priority) => (
-                        <SelectItem key={priority} value={priority}>
-                          {priority}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Priority <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={editPriority}
+                    onChange={(e) => setEditPriority(e.target.value)}
+                    displayEmpty
+                    label="Select Priority *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Priority</em></MenuItem>
+                    {priorityOptions.map((priority) => (
+                      <MenuItem key={priority} value={priority}>
+                        {priority}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Upload Icon */}
                 <div className="space-y-2">
@@ -1456,11 +1300,15 @@ export const CategoryTypeTab: React.FC = () => {
                     {editVendorEmails.map((email, index) => (
                       <div key={index} className="flex gap-2">
                         <div className="flex-1">
-                          <Input
+                          <TextField
                             type="email"
                             placeholder="Enter vendor email"
                             value={email}
                             onChange={(e) => handleEditVendorEmailChange(index, e.target.value)}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
                           />
                         </div>
                         {editVendorEmails.length > 1 && (
@@ -1570,15 +1418,14 @@ export const CategoryTypeTab: React.FC = () => {
                     setIsEditModalOpen(false);
                     setEditingCategory(null);
                   }}
-                  variant="outline"
-                  className="px-8"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </Button>
                 <Button 
-                  onClick={() => handleEditSubmit({})}
+                  onClick={() => handleEditSubmit()}
                   disabled={isSubmitting}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Updating...' : 'Submit'}
                 </Button>

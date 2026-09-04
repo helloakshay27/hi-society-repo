@@ -31,11 +31,13 @@ import {
 } from "lucide-react";
 import { Download } from "lucide-react";
 import { toast } from 'sonner';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 
 const PollsPage = () => {
-  const baseUrl = localStorage.getItem('baseUrl')
-  const token = localStorage.getItem('token')
+  const baseUrl = localStorage.getItem('baseUrl');
+  const { shouldShow } = useDynamicPermissions();
+  const token = localStorage.getItem('token');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -159,7 +161,7 @@ const PollsPage = () => {
         return "success";   // green
       case "close":
       case "closed":
-        return "error";     // red
+        return "primary";     // red
       default:
         return "default";
     }
@@ -221,7 +223,7 @@ const PollsPage = () => {
 
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="full" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
@@ -232,22 +234,21 @@ const PollsPage = () => {
             Manage your polls and surveys
           </Typography>
         </Box>
+        {shouldShow("Polls","create")&&(
         <Button
           variant="contained"
           startIcon={<Plus size={20} />}
           onClick={() => navigate('/communication/polls/add')}
+          className="bg-[#da7756] hover:bg-[#da7756] !text-white rounded-md min-w-[160px]"
           sx={{
-            bgcolor: '#C72030',
-            '&:hover': { bgcolor: '#B01E2A' },
             textTransform: 'none',
             fontWeight: 600,
-            px: 3,
-            py: 1.5,
-            borderRadius: 2
+            boxShadow: 'none',
+            '&:hover': { boxShadow: 'none' },
           }}
         >
           Add Poll
-        </Button>
+        </Button>)}
       </Box>
 
       {/* Search and Filter */}
@@ -271,13 +272,17 @@ const PollsPage = () => {
               }}
               sx={{ width: 280 }}
             />
-            <Button
-              variant="outlined"
-              startIcon={<Filter size={18} />}
-              sx={{ textTransform: 'none' }}
+            <IconButton
+              sx={{
+                border: '1px solid #da7756',
+                borderRadius: '8px',
+                color: '#da7756',
+                width: 40,
+                height: 40,
+              }}
             >
-              Filter
-            </Button>
+              <Filter size={18} />
+            </IconButton>
           </Stack>
         </Box>
 

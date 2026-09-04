@@ -20,7 +20,6 @@ import {
   Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-
 const EventCommunicationCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
@@ -1337,11 +1336,11 @@ const EventCommunicationCreate = () => {
                     cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
                     width: '100%',
                     height: '40px',
-                    backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
+                    backgroundColor: (index === currentStep || completedSteps.includes(index)) ? 'var(--color-primary, #da7756)' :
                       (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
                     color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
                       (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                    border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
+                    border: (index === currentStep || completedSteps.includes(index)) ? '2px solid var(--color-primary, #da7756)' :
                       (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
                     padding: '12px 20px',
                     fontSize: '13px',
@@ -1350,7 +1349,7 @@ const EventCommunicationCreate = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
+                    boxShadow: index === currentStep ? '0 2px 4px rgba(218, 119, 86, 0.3)' : 'none',
                     transition: 'all 0.2s ease',
                     fontFamily: 'Work Sans, sans-serif',
                     position: 'relative',
@@ -1437,7 +1436,7 @@ const EventCommunicationCreate = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Event Details
               </h2>
@@ -1861,7 +1860,7 @@ const EventCommunicationCreate = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Visibility
               </h2>
@@ -1996,7 +1995,7 @@ const EventCommunicationCreate = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Invite CPs
               </h2>
@@ -2308,7 +2307,7 @@ const EventCommunicationCreate = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Event Related Images
               </h2>
@@ -2333,7 +2332,7 @@ const EventCommunicationCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowCoverUploader(true)}
                   >
@@ -2407,7 +2406,7 @@ const EventCommunicationCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowEventUploader(true)}
                   >
@@ -2480,14 +2479,14 @@ const EventCommunicationCreate = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Proceed to save
               </button>
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Save to draft
               </button>
@@ -2521,7 +2520,7 @@ const EventCommunicationCreate = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Event Details
                       </h2>
@@ -2834,7 +2833,7 @@ const EventCommunicationCreate = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Visibility
                       </h2>
@@ -2980,7 +2979,7 @@ const EventCommunicationCreate = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Event Related Images
                       </h2>
@@ -3013,7 +3012,7 @@ const EventCommunicationCreate = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Invite CPs
                       </h2>
@@ -3199,7 +3198,7 @@ const EventCommunicationCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Event Details
                     </h2>
@@ -3527,7 +3526,7 @@ const EventCommunicationCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Visibility
                     </h2>
@@ -3640,7 +3639,7 @@ const EventCommunicationCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Invite CPs
                     </h2>
@@ -3815,7 +3814,7 @@ const EventCommunicationCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Event Related Images
                     </h2>
@@ -3930,7 +3929,7 @@ const EventCommunicationCreate = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       QR Code Generation
                     </h2>
@@ -3938,14 +3937,14 @@ const EventCommunicationCreate = () => {
                       <button
                         type="button"
                         onClick={handleDownloadAllQRCodes}
-                        className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                      >
-                        Download All QR Codes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSendAllQRCodesEmail}
-                        className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+              >
+                Download All QR Codes
+              </button>
+              <button
+                type="button"
+                onClick={handleSendAllQRCodesEmail}
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
                       >
                         Send QR Codes via Email
                       </button>
@@ -4107,14 +4106,14 @@ const EventCommunicationCreate = () => {
               <button
                 type="button"
                 onClick={() => setIsPreviewMode(false)}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Back to Edit
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Submitting...' : 'Submit Event'}
               </button>

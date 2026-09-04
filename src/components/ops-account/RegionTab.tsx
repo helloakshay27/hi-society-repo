@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, Filter, Upload, Eye, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Download, Filter, Upload, Eye, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AddRegionModal } from '@/components/AddRegionModal';
 import { EditRegionModal } from '@/components/EditRegionModal';
@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { useApiConfig } from '@/hooks/useApiConfig';
 import { getUser } from '@/utils/auth';
 import { useDebounce } from '@/hooks/useDebounce';
-
+import { Switch } from "@/components/ui/switch";
 // Type definitions for the API response
 interface RegionItem {
   id: number;
@@ -61,19 +61,26 @@ const columns: ColumnConfig[] = [
     draggable: false,
   },
   {
+    key: "srno",
+    label: "S.No.",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
     key: "name",
     label: "Region Name",
     sortable: true,
     hideable: true,
     draggable: true,
   },
-  {
-    key: "code",
-    label: "Code",
-    sortable: true,
-    hideable: true,
-    draggable: true,
-  },
+  // {
+  //   key: "code",
+  //   label: "Code",
+  //   sortable: true,
+  //   hideable: true,
+  //   draggable: true,
+  // },
   {
     key: "company",
     label: "Company",
@@ -158,8 +165,10 @@ export const RegionTab: React.FC<RegionTabProps> = ({
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com", 
-"demo@lockated.com",
+      "sumitra.patil@lockated.com",
+      "komalshinde0101@lockated.com",
+      "demo@lockated.com",
+      "dineshshinde6666@gmail.com"
     ];
     setCanEditRegion(allowedEmails.includes(userEmail));
   };
@@ -414,10 +423,14 @@ export const RegionTab: React.FC<RegionTabProps> = ({
   const totalPages = pagination.total_pages;
 
   // Use API data directly instead of client-side filtering
-  const displayedData = regions;
+  const displayedData = useMemo(
+    () => regions.map((r, i) => ({ ...r, srno: (currentPage - 1) * perPage + i + 1 })),
+    [regions, currentPage, perPage],
+  );
 
   // Render row function for enhanced table
-  const renderRow = (region: RegionItem) => ({
+  const renderRow = (region: RegionItem & { srno?: number }) => ({
+    srno: <span className="text-sm text-gray-600">{region.srno}</span>,
     actions: (
       <div className="flex items-center gap-2">
         {/* <button
@@ -430,7 +443,7 @@ export const RegionTab: React.FC<RegionTabProps> = ({
         </button> */}
         <button
           onClick={() => region?.id && handleEdit(region.id)}
-          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          className="p-1 text-black-600 hover:bg-green-50 rounded"
           title="Edit"
           disabled={!canEditRegion || !region?.id}
         >
@@ -596,15 +609,7 @@ export const RegionTab: React.FC<RegionTabProps> = ({
         <h1 className="text-2xl font-bold">Regions</h1>
       </header>
 
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-          <span className="ml-2 text-gray-600">Loading regions...</span>
-        </div>
-      )}
-
-      {!loading && (
-        <>
+      <>
           <EnhancedTaskTable
             data={displayedData}
             columns={columns}
@@ -616,36 +621,38 @@ export const RegionTab: React.FC<RegionTabProps> = ({
             searchTerm={searchTerm}
             onSearchChange={handleSearch}
             onFilterClick={() => setIsFilterOpen(true)}
+            pagination={true}
+            loading={loading}
             leftActions={
               <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={!canEditRegion}
               >
                 <Plus className="w-4 h-4 mr-2" /> Add Region
               </Button>
             }
-            // rightActions={(
-            //   <div className="flex items-center gap-2">
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsBulkUploadOpen(true)}
-            //       disabled={!canEditRegion}
-            //     >
-            //       <Upload className="w-4 h-4 mr-2" />
-            //       Bulk Upload
-            //     </Button>
-            //     <Button
-            //       variant="outline"
-            //       size="sm"
-            //       onClick={() => setIsExportOpen(true)}
-            //     >
-            //       <Download className="w-4 h-4 mr-2" />
-            //       Export
-            //     </Button>
-            //   </div>
-            // )}
+          // rightActions={(
+          //   <div className="flex items-center gap-2">
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsBulkUploadOpen(true)}
+          //       disabled={!canEditRegion}
+          //     >
+          //       <Upload className="w-4 h-4 mr-2" />
+          //       Bulk Upload
+          //     </Button>
+          //     <Button
+          //       variant="outline"
+          //       size="sm"
+          //       onClick={() => setIsExportOpen(true)}
+          //     >
+          //       <Download className="w-4 h-4 mr-2" />
+          //       Export
+          //     </Button>
+          //   </div>
+          // )}
           />
 
           <TicketPagination
@@ -658,7 +665,6 @@ export const RegionTab: React.FC<RegionTabProps> = ({
             onPerPageChange={handlePerPageChange}
           />
         </>
-      )}
 
       {/* Modals */}
       <AddRegionModal

@@ -6,8 +6,10 @@ import {
   Settings as SettingsIcon,
   Users,
   Gift,
+  Wrench,
 } from "lucide-react";
 import { useLayout } from "../contexts/LayoutContext";
+import { trackModuleSwitch } from "@/utils/posthogHelpers";
 
 interface NavigationItem {
   id: string;
@@ -24,6 +26,12 @@ const navigationItems: NavigationItem[] = [
     path: "/maintenance/project-details-list",
   },
   {
+    id: "maintenance",
+    label: "Maintenance",
+    icon: <Wrench className="w-4 h-4" />,
+    path: "/maintenance/survey/mapping",
+  },
+  {
     id: "bms",
     label: "BMS",
     icon: <SettingsIcon className="w-4 h-4" />,
@@ -33,7 +41,7 @@ const navigationItems: NavigationItem[] = [
     id: "loyalty",
     label: "Loyalty",
     icon: <Gift className="w-4 h-4" />,
-    path: "/loyalty/dashboard",
+    path: "/loyalty/wallet-management",
   },
   {
     id: "cms",
@@ -69,7 +77,7 @@ const navigationItems: NavigationItem[] = [
     id: "incidents",
     label: "Incidents",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/incidents/setup",
+    path: "/safety/incident",
   },
   {
     id: "fb",
@@ -87,7 +95,7 @@ const navigationItems: NavigationItem[] = [
     id: "osr",
     label: "OSR",
     icon: <MessageSquare className="w-4 h-4" />,
-    path: "/osr/setup",
+    path: "/osr/manage-bookings",
   },
   {
     id: "settings",
@@ -108,7 +116,7 @@ export const HiSocietyNavigation: React.FC = () => {
 
   // Check if current domain is Fitout domain
   const isFitoutDomain =
-    window.location.hostname === "web.hisociety.lockated.com";
+    window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost";
 
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
@@ -153,6 +161,8 @@ export const HiSocietyNavigation: React.FC = () => {
       "faq",
     ];
 
+    const bmsRoutePrefixes = ["/bms", "/communication", "/quarantine-tracker"];
+
     // Extract first segment from path
     const segments = path.split('/').filter(Boolean);
     const firstSegment = segments[0];
@@ -173,6 +183,21 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("settings");
     } else if (path.startsWith("/cms")) {
       setActiveNav("cms");
+    } else if (
+      path.startsWith("/maintenance/survey") ||
+      path.startsWith("/maintenance/ticket") ||
+      path.startsWith("/maintenance/task") ||
+      path.startsWith("/maintenance/schedule") ||
+      path.startsWith("/maintenance/service") ||
+      path.startsWith("/maintenance/asset") ||
+      path.startsWith("/maintenance/inventory") ||
+      path.startsWith("/maintenance/amc") ||
+      path.startsWith("/maintenance/audit") ||
+      path.startsWith("/maintenance/waste") ||
+      path.startsWith("/maintenance/vendor") ||
+      path.startsWith("/maintenance/attendance")
+    ) {
+      setActiveNav("maintenance");
     } else if (path.startsWith("/campaigns")) {
       setActiveNav("campaigns");
     } else if (path.startsWith("/fb")) {
@@ -183,9 +208,9 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("fitout");
     } else if (path.startsWith("/accounting")) {
       setActiveNav("accounting");
-    } else if (path.startsWith("/smartsecure")) {
+    } else if (path.startsWith("/smartsecure") || path.startsWith("/security")) {
       setActiveNav("smartsecure");
-    } else if (path.startsWith("/incidents")) {
+    } else if (path.startsWith("/incidents") || path.startsWith("/safety")) {
       setActiveNav("incidents");
     } else if (path.startsWith("/appointmentz")) {
       setActiveNav("Appointmentz");
@@ -194,8 +219,7 @@ export const HiSocietyNavigation: React.FC = () => {
     } else if (path.startsWith("/loyalty") || loyaltyChildRoutes.includes(firstSegment)) {
       setActiveNav("loyalty");
     } else if (
-      path.startsWith("/bms") ||
-      path.startsWith("/communication")
+      bmsRoutePrefixes.some((route) => path === route || path.startsWith(`${route}/`))
     ) {
       setActiveNav("bms");
     } else if (
@@ -213,13 +237,14 @@ export const HiSocietyNavigation: React.FC = () => {
   }, [location.pathname, isCMSDomain, location.state]);
 
   const handleNavClick = (item: NavigationItem) => {
+    trackModuleSwitch(item.label, item.path, activeNav, { module_id: item.id });
     setActiveNav(item.id);
     navigate(item.path);
   };
 
   return (
     <div
-      className={`h-12 border-b border-[#D5DbDB] fixed top-16 right-0 ${isSidebarCollapsed ? "left-16" : "left-64"} z-10 transition-all duration-300`}
+      className={`h-12 border-b border-[#D5DbDB] fixed top-16 right-0 ${isSidebarCollapsed ? "md:left-16 left-0" : "md:left-64 left-0"} z-20 transition-all duration-300`}
       style={{ backgroundColor: "#f6f4ee" }}
     >
       <div className="flex items-center h-full px-4 overflow-x-auto">

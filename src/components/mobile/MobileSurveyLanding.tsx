@@ -53,6 +53,12 @@ interface SurveyMapping {
   status?: string;
   message?: string;
   location?: string;
+  company_logo_url?: string | null;
+  society_name?: string;
+  created_by?: string;
+  user_name?: string;
+  tower_name?: string;
+  flat_no?: string;
   snag_checklist: {
     id: number;
     name: string;
@@ -71,6 +77,22 @@ interface SurveyAttach {
   file_size: number;
   updated_at: string;
   url: string;
+}
+
+interface SurveyResponsePayloadItem {
+  mapping_id: string;
+  question_id: number;
+  issues: string[];
+  option_id?: number;
+  rating?: number;
+  emoji?: string;
+  label?: string;
+  response_text?: string;
+  ans_descr?: string;
+  level_id?: number;
+  comments?: string;
+  answer_type?: string;
+  answer_mode?: string;
 }
 
 export const MobileSurveyLanding: React.FC = () => {
@@ -99,7 +121,7 @@ export const MobileSurveyLanding: React.FC = () => {
   const [negativeComments3, setNegativeComments3] = useState<string>("");
 
   const [pendingNegativeType, setPendingNegativeType] = useState<
-    null | "emoji" | "smiley" | "multiple" | "rating"
+    null | "emoji" | "smiley" | "multiple" | "rating" | "numeric"
   >(null);
   const [pendingNegativeAnswer, setPendingNegativeAnswer] = useState<
     | null
@@ -235,6 +257,8 @@ export const MobileSurveyLanding: React.FC = () => {
       case "description":
         return currentQuestionValue.trim() !== "";
       case "rating":
+        return selectedRating !== null;
+      case "numeric":
         return selectedRating !== null;
       case "emoji":
       case "smiley":
@@ -486,27 +510,6 @@ export const MobileSurveyLanding: React.FC = () => {
         answerData.comments = comments || "";
         break;
       }
-      case "rating": {
-        answerData.rating = rating || selectedRating;
-        answerData.value = rating || selectedRating;
-        // attach dynamic label from API if available
-        const dynamicLabel = getRatingLabel(
-          currentQuestion,
-          (rating || selectedRating) as number
-        );
-        if (dynamicLabel) {
-          answerData.label = dynamicLabel;
-        }
-        // Use provided tags parameter or current selectedTags state
-        const ratingTags =
-          tags || (selectedTags.length > 0 ? selectedTags : undefined);
-        if (ratingTags && ratingTags.length > 0) {
-          answerData.selectedTags = ratingTags;
-        }
-        // Always set comments, defaulting to empty string
-        answerData.comments = comments || "";
-        break;
-      }
       case "emoji":
       case "smiley": {
         answerData.rating = rating || selectedRating;
@@ -525,6 +528,18 @@ export const MobileSurveyLanding: React.FC = () => {
             answerData.selectedTags.map((t) => t.category_name)
           );
         }
+        break;
+      }
+      case "numeric": {
+        const numericValue = rating ?? selectedRating;
+        answerData.rating = numericValue;
+        answerData.value = numericValue?.toString() || "";
+        if (numericValue !== null && numericValue !== undefined) {
+          answerData.label = numericValue.toString();
+        }
+        // Use provided tags parameter or current selectedTags state
+        answerData.selectedTags = tags || selectedTags;
+        answerData.comments = comments || "";
         break;
       }
       case "input_box": {
@@ -582,21 +597,7 @@ export const MobileSurveyLanding: React.FC = () => {
         currentAnswer.selectedTags?.map((tag) => tag.category_name) || [];
 
       // Create comprehensive payload with all available fields
-      const surveyResponseItem: {
-        mapping_id: string;
-        question_id: number;
-        issues: string[];
-        option_id?: number;
-        rating?: number;
-        emoji?: string;
-        label?: string;
-        response_text?: string;
-        ans_descr?: string;
-        level_id?: number;
-        comments?: string;
-        answer_type?: string;
-        answer_mode?: string;
-      } = {
+      const surveyResponseItem: SurveyResponsePayloadItem = {
         mapping_id: mappingId || "",
         question_id: currentQuestion.id,
         issues: issues,
@@ -654,6 +655,22 @@ export const MobileSurveyLanding: React.FC = () => {
           break;
         }
 
+        case "numeric": {
+          if (currentAnswer.rating !== undefined) {
+            surveyResponseItem.rating = currentAnswer.rating;
+            surveyResponseItem.level_id = currentAnswer.rating;
+            surveyResponseItem.label = currentAnswer.rating.toString();
+            surveyResponseItem.ans_descr = currentAnswer.rating.toString();
+          }
+          surveyResponseItem.answer_type = currentQuestion.qtype;
+          surveyResponseItem.answer_mode = "numeric_selection";
+
+          if (currentAnswer.optionId) {
+            surveyResponseItem.option_id = currentAnswer.optionId;
+          }
+          break;
+        }
+
         case "emoji":
         case "smiley": {
           if (currentAnswer.rating !== undefined) {
@@ -703,6 +720,12 @@ export const MobileSurveyLanding: React.FC = () => {
           surveyResponseItem.answer_mode = "text_input";
           break;
       }
+
+      ensureAnswerDescription(
+        currentQuestion,
+        currentAnswer,
+        surveyResponseItem
+      );
 
       // Add individual question comment if available
       console.log("Current answer for payload building:", currentAnswer);
@@ -763,21 +786,7 @@ export const MobileSurveyLanding: React.FC = () => {
         answerData.selectedTags?.map((tag) => tag.category_name) || [];
 
       // Create comprehensive payload with all available fields
-      const surveyResponseItem: {
-        mapping_id: string;
-        question_id: number;
-        issues: string[];
-        option_id?: number;
-        rating?: number;
-        emoji?: string;
-        label?: string;
-        response_text?: string;
-        ans_descr?: string;
-        level_id?: number;
-        comments?: string;
-        answer_type?: string;
-        answer_mode?: string;
-      } = {
+      const surveyResponseItem: SurveyResponsePayloadItem = {
         mapping_id: mappingId || "",
         question_id: currentQuestion.id,
         issues: issues,
@@ -863,6 +872,22 @@ export const MobileSurveyLanding: React.FC = () => {
           }
           break;
         }
+        case "numeric": {
+          if (answerData.rating !== undefined) {
+            surveyResponseItem.rating = answerData.rating;
+            surveyResponseItem.level_id = answerData.rating;
+            surveyResponseItem.label = answerData.rating.toString();
+            surveyResponseItem.ans_descr = answerData.rating.toString();
+          }
+          surveyResponseItem.answer_type = currentQuestion.qtype;
+          surveyResponseItem.answer_mode = "numeric_selection";
+
+          // Add option_id for numeric questions
+          if (answerData.optionId) {
+            surveyResponseItem.option_id = answerData.optionId;
+          }
+          break;
+        }
 
         case "input":
         case "text":
@@ -886,6 +911,12 @@ export const MobileSurveyLanding: React.FC = () => {
           surveyResponseItem.answer_mode = "text_input";
           break;
       }
+
+      ensureAnswerDescription(
+        currentQuestion,
+        answerData,
+        surveyResponseItem
+      );
 
       // Add individual question comment if available
       if (answerData.comments && answerData.comments.trim()) {
@@ -1093,6 +1124,49 @@ export const MobileSurveyLanding: React.FC = () => {
                 }
               }
               break;
+            case "numeric":
+              if (savedAnswer.rating !== undefined) {
+                setSelectedRating(savedAnswer.rating);
+              }
+              // If there are tags and comments, show generic tags view
+              if (
+                savedAnswer.selectedTags &&
+                savedAnswer.selectedTags.length > 0
+              ) {
+                setSelectedTags(savedAnswer.selectedTags);
+                setShowGenericTags(true);
+
+                // Set pending negative data for restoration
+                if (savedAnswer.rating !== undefined) {
+                  // Find the corresponding option for the numeric value
+                  const numericToOptionIndex = Array.from(
+                    {
+                      length: previousQuestion.snag_quest_options?.length || 11,
+                    },
+                    (_, index) => ({
+                      rating: index,
+                      optionIndex: index,
+                    })
+                  );
+                  const selectedOptionMapping = numericToOptionIndex.find(
+                    (opt) => opt.rating === savedAnswer.rating
+                  );
+                  const selectedOption =
+                    selectedOptionMapping &&
+                    previousQuestion.snag_quest_options?.[
+                    selectedOptionMapping.optionIndex
+                    ];
+
+                  if (selectedOption) {
+                    setPendingNegativeType("numeric");
+                    setPendingNegativeAnswer({
+                      rating: savedAnswer.rating,
+                      option: selectedOption,
+                    });
+                  }
+                }
+              }
+              break;
             case "emoji":
             case "smiley":
               if (savedAnswer.rating !== undefined) {
@@ -1188,21 +1262,7 @@ export const MobileSurveyLanding: React.FC = () => {
           answer.selectedTags?.map((tag) => tag.category_name) || [];
 
         // Create comprehensive payload with all available fields for each question type
-        const surveyResponseItem: {
-          mapping_id: string;
-          question_id: number;
-          issues: string[];
-          option_id?: number;
-          rating?: number;
-          emoji?: string;
-          label?: string;
-          response_text?: string;
-          ans_descr?: string;
-          level_id?: number;
-          comments?: string;
-          answer_type?: string;
-          answer_mode?: string;
-        } = {
+        const surveyResponseItem: SurveyResponsePayloadItem = {
           mapping_id: mappingId || "",
           question_id: question.id,
           issues: issues,
@@ -1316,6 +1376,40 @@ export const MobileSurveyLanding: React.FC = () => {
             break;
           }
 
+          case "numeric": {
+            if (answer.rating !== undefined) {
+              surveyResponseItem.rating = answer.rating;
+              surveyResponseItem.level_id = answer.rating;
+              surveyResponseItem.label = answer.rating.toString();
+              surveyResponseItem.ans_descr = answer.rating.toString();
+            }
+            surveyResponseItem.answer_type = question.qtype;
+            surveyResponseItem.answer_mode = "numeric_selection";
+
+            if (answer.optionId) {
+              surveyResponseItem.option_id = answer.optionId;
+            } else if (
+              answer.rating !== undefined &&
+              question.snag_quest_options
+            ) {
+              const numericToOptionMapping = Array.from(
+                { length: question.snag_quest_options.length },
+                (_, index) => ({
+                  rating: index,
+                  optionIndex: index,
+                })
+              );
+              const mapping = numericToOptionMapping.find(
+                (opt) => opt.rating === answer.rating
+              );
+              if (mapping && question.snag_quest_options[mapping.optionIndex]) {
+                surveyResponseItem.option_id =
+                  question.snag_quest_options[mapping.optionIndex].id;
+              }
+            }
+            break;
+          }
+
           case "input":
           case "text":
           case "description":
@@ -1336,6 +1430,8 @@ export const MobileSurveyLanding: React.FC = () => {
             surveyResponseItem.answer_mode = "text_input";
             break;
         }
+
+        ensureAnswerDescription(question, answer, surveyResponseItem);
 
         // Add individual question comment if available
         console.log(`[Multi-Submit] Question ${question.id} answer:`, answer);
@@ -1470,6 +1566,59 @@ export const MobileSurveyLanding: React.FC = () => {
       return question.snag_quest_options[selected.optionIndex].qname;
     }
     return undefined;
+  };
+
+  const getQuestionOptionName = (
+    question: SurveyQuestion,
+    optionId?: number
+  ): string | undefined => {
+    if (!optionId) return undefined;
+    return question.snag_quest_options?.find((option) => option.id === optionId)
+      ?.qname;
+  };
+
+  const getAnswerDescription = (
+    question: SurveyQuestion,
+    answer: SurveyAnswers[number],
+    item: SurveyResponsePayloadItem
+  ): string => {
+    const selectedOptionNames =
+      answer.selectedOptions
+        ?.map((option) => option.qname)
+        .filter(Boolean)
+        .join(", ") || "";
+
+    const optionName = getQuestionOptionName(question, item.option_id);
+    const ratingLabel =
+      item.label || answer.label || getRatingLabel(question, item.rating);
+    const textValue =
+      answer.value !== undefined && answer.value !== null
+        ? answer.value.toString().trim()
+        : "";
+    const responseText = item.response_text?.toString().trim() || "";
+    const numericOrRatingValue =
+      item.rating !== undefined && item.rating !== null
+        ? item.rating.toString()
+        : "";
+
+    return (
+      item.ans_descr?.toString().trim() ||
+      selectedOptionNames ||
+      ratingLabel ||
+      optionName ||
+      responseText ||
+      textValue ||
+      numericOrRatingValue ||
+      ""
+    );
+  };
+
+  const ensureAnswerDescription = (
+    question: SurveyQuestion,
+    answer: SurveyAnswers[number],
+    item: SurveyResponsePayloadItem
+  ) => {
+    item.ans_descr = getAnswerDescription(question, answer, item);
   };
 
   // Check if survey is active
@@ -1644,7 +1793,7 @@ export const MobileSurveyLanding: React.FC = () => {
         const answer = answers[question.id];
         if (!answer) continue;
 
-        const surveyResponseItem: any = {
+        const surveyResponseItem: SurveyResponsePayloadItem = {
           mapping_id: mappingId || "",
           question_id: question.id,
           issues: [], // No generic tags in form view
@@ -1685,6 +1834,35 @@ export const MobileSurveyLanding: React.FC = () => {
                 })
               );
               const mapping = ratingToOptionMapping.find(
+                (opt) => opt.rating === answer.rating
+              );
+              if (mapping && question.snag_quest_options[mapping.optionIndex]) {
+                surveyResponseItem.option_id =
+                  question.snag_quest_options[mapping.optionIndex].id;
+              }
+            }
+            break;
+
+          case "numeric":
+            if (answer.rating !== undefined) {
+              surveyResponseItem.rating = answer.rating;
+              surveyResponseItem.level_id = answer.rating;
+              surveyResponseItem.label = answer.rating.toString();
+              surveyResponseItem.ans_descr = answer.rating.toString();
+            }
+            surveyResponseItem.answer_type = question.qtype;
+            surveyResponseItem.answer_mode = "numeric_selection";
+
+            // Map numeric value to option_id
+            if (question.snag_quest_options) {
+              const numericToOptionMapping = Array.from(
+                { length: question.snag_quest_options.length },
+                (_, index) => ({
+                  rating: index,
+                  optionIndex: index,
+                })
+              );
+              const mapping = numericToOptionMapping.find(
                 (opt) => opt.rating === answer.rating
               );
               if (mapping && question.snag_quest_options[mapping.optionIndex]) {
@@ -1749,6 +1927,8 @@ export const MobileSurveyLanding: React.FC = () => {
             break;
         }
 
+        ensureAnswerDescription(question, answer, surveyResponseItem);
+
         surveyResponseItem.comments = answer.comments || "";
         surveyResponseArray.push(surveyResponseItem);
       }
@@ -1809,18 +1989,22 @@ export const MobileSurveyLanding: React.FC = () => {
 
   return (
     <div
-      className="h-screen w-screen max-w-md mx-auto flex flex-col relative bg-gray-50"
-      style={{
-        backgroundImage: `url(${surveyData?.snag_checklist?.survey_attachment?.url})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        filter: "brightness(0.85)",
-      }}
+      className="h-screen w-screen max-w-md mx-auto flex flex-col relative bg-white"
     >
+      {/* Background image overlay - filter only affects this element */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url(${surveyData?.snag_checklist?.survey_attachment?.url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: "brightness(0.85)",
+        }}
+      />
       {/* Header with Logo */}
-      <div className="bg-transparent py-3 px-4 relative z-10">
-        <div className="flex justify-between items-center">
+      <div className="bg-transparent pt-6 pb-3 px-4 relative z-10">
+        <div className="flex justify-center items-center">
           <div className="flex justify-start items-center">
             {!isFormView &&
               ((currentQuestion &&
@@ -1842,10 +2026,10 @@ export const MobileSurveyLanding: React.FC = () => {
                       moveToPreviousQuestion();
                     }
                   }}
-                  className="flex items-center bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-lg text-white font-bold text-sm hover:bg-black/50 transition-all shadow-lg border-2 border-white/40"
+                  className="flex items-center bg-black/40 backdrop-blur-md px-2 py-1.5 rounded-lg text-white font-bold text-[10px] hover:bg-black/50 transition-all shadow-lg border-[1.5px] border-white/40"
                 >
                   <svg
-                    className="w-5 h-5 mr-1.5"
+                    className="w-4 h-4 mr-1"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1861,9 +2045,15 @@ export const MobileSurveyLanding: React.FC = () => {
                 </button>
               )}
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-center">
             <div className="w-40 h-16 sm:w-32 sm:h-20 flex items-center justify-center overflow-hidden">
-              {window.location.origin === "https://oig.gophygital.work" ? (
+              {surveyData?.company_logo_url ? (
+                <img
+                  src={surveyData.company_logo_url}
+                  alt="Company Logo"
+                  className="w-full h-full object-contain"
+                />
+              ) : window.location.origin === "https://oig.gophygital.work" ? (
                 <img
                   src="/Without bkg.svg"
                   alt="OIG Logo"
@@ -1883,8 +2073,8 @@ export const MobileSurveyLanding: React.FC = () => {
                 />
               ) : window.location.origin === "https://fm-matrix.lockated.com" ? (
                 <img
-                  src="https://www.persistent.com/wp-content/themes/persistent/dist/images/Persistent-Header-Logo-Black_460dd8e4.svg"
-                  alt="FM Matrix Logo"
+                  src="/gophygital-logo-min.jpg"
+                  alt="gophygital Logo"
                   className="w-full h-full object-contain"
                 />
               ) : (
@@ -1893,7 +2083,6 @@ export const MobileSurveyLanding: React.FC = () => {
                   alt="gophygital Logo"
                   className="w-full h-full object-contain"
                 />
-
               )}
             </div>
           </div>
@@ -1914,16 +2103,48 @@ export const MobileSurveyLanding: React.FC = () => {
 
       {/* Main Content */}
       {isFormView && (
-        <h1 className="text-2xl font-bold text-black/100 mb-4 text-center">
-          {surveyData.survey_title}
-        </h1>
+        <div className="px-4 pt-2 pb-1">
+          {(surveyData.society_name || surveyData.created_by || surveyData.user_name) && (
+            <div className="flex justify-start mb-3">
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-md border border-gray-100">
+                {surveyData.society_name && (
+                  <p className="text-[13px] font-bold text-gray-900 leading-tight">
+                    {surveyData.society_name}
+                  </p>
+                )}
+                 {surveyData.user_name && (
+                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <span className="font-semibold text-gray-700">Customer:</span>{" "}
+                    {surveyData.user_name}
+                  </p>
+                )}
+                {surveyData.tower_name && (
+                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <span className="font-semibold text-gray-700">Tower:</span>{" "}
+                    {surveyData.tower_name}
+                  </p>
+                )}
+                {surveyData.flat_no && (
+                  <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <span className="font-semibold text-gray-700">Flat:</span>{" "}
+                    {surveyData.flat_no}
+                  </p>
+                )}
+               
+              </div>
+            </div>
+          )}
+          <h1 className="text-xl font-semibold text-black/100 mb-3 text-center">
+            {surveyData.survey_title}
+          </h1>
+        </div>
       )}
 
       <div
         className={`flex-1 overflow-hidden relative z-10 ${isFormView ? "overflow-y-auto" : ""}`}
       >
         <div
-          className={`h-full ${isFormView ? "overflow-y-scroll px-4 py-4" : "flex flex-col px-4 pb-6"}`}
+          className={`h-full ${isFormView ? "overflow-y-scroll pb-6" : "flex flex-col pb-6"}`}
         >
           {/* Title - Only for Form View */}
 
@@ -1938,6 +2159,7 @@ export const MobileSurveyLanding: React.FC = () => {
                 isSubmitting={isSubmitting}
                 finalComment={finalDescription}
                 onFinalCommentChange={setFinalDescription}
+                surveyImageUrl={surveyData?.snag_checklist?.survey_attachment?.url}
               />
             </div>
           ) : (
@@ -1946,8 +2168,37 @@ export const MobileSurveyLanding: React.FC = () => {
               <div className="flex-1 flex flex-col justify-center">
                 {/* Survey Title for Normal View */}
                 {currentQuestion && currentQuestion.qtype !== "emoji" && currentQuestion.qtype !== "smiley" && (
-                  <div className="text-center mb-6">
-                    <h1 className="text-xl font-bold text-black/100 mb-2">
+                  <div className="mb-6">
+                    {(surveyData.society_name || surveyData.created_by || surveyData.user_name) && (
+                      <div className="flex justify-start mb-3">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-md border border-gray-100">
+                          {surveyData.society_name && (
+                            <p className="text-[13px] font-bold text-gray-900 leading-tight">
+                              {surveyData.society_name}
+                            </p>
+                          )}
+                          {surveyData.tower_name && (
+                            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                              <span className="font-semibold text-gray-700">Tower:</span>{" "}
+                              {surveyData.tower_name}
+                            </p>
+                          )}
+                           {surveyData.flat_no && (
+                            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                              <span className="font-semibold text-gray-700">Flat:</span>{" "}
+                              {surveyData.flat_no}
+                            </p>
+                          )}
+                          {surveyData.user_name && (
+                            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                              <span className="font-semibold text-gray-700">Customer:</span>{" "}
+                              {surveyData.user_name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <h1 className="text-xl font-bold text-black/100 mb-2 text-center">
                       {surveyData.survey_title}
                     </h1>
                   </div>
@@ -2266,6 +2517,81 @@ export const MobileSurveyLanding: React.FC = () => {
                           </>
                         )}
 
+                      {/* Numeric Question */}
+                      {currentQuestion.qtype === "numeric" &&
+                        !showGenericTags && (
+                          <>
+                            <div className="bg-white rounded-xl border-2 border-gray-200 shadow-lg p-6">
+                              {/* Buttons row */}
+                              <div className="flex items-center justify-between gap-1 sm:gap-2">
+                                {Array.from({ length: 11 }, (_, index) => index).map((value) => {
+                                  const getButtonColor = (val: number) => {
+                                    if (val <= 1) return '#f87171';
+                                    if (val <= 6) return '#f97659';
+                                    if (val <= 8) return '#fbbf24';
+                                    return '#4ade80';
+                                  };
+
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={value}
+                                      onClick={() => handleRatingSelect(value)}
+                                      style={{ backgroundColor: getButtonColor(value) }}
+                                      className={`
+                                        flex-1 aspect-square max-w-[52px] min-w-0
+                                        rounded-[7px] sm:rounded-[9px]
+                                        text-white font-bold
+                                        text-xs sm:text-sm md:text-lg
+                                        transition-all duration-150
+                                        flex items-center justify-center
+                                        ${selectedRating === value
+                                          ? 'scale-110 shadow-lg'
+                                          : 'hover:scale-105 hover:shadow-md'
+                                        }
+                                      `}
+                                    >
+                                      {value}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Labels */}
+                              <div className="flex justify-between text-xs sm:text-sm font-semibold text-gray-500">
+                                <span>😠 0 - NOT LIKELY</span>
+                                <span>10 - VERY LIKELY 😌</span>
+                              </div>
+
+                              {/* Selected state feedback */}
+                              {selectedRating !== null && (
+                                <div className="mt-2 p-3 rounded-lg border-2 text-center">
+                                  <p className="font-semibold">
+                                    Selected value: <span className="text-2xl">{selectedRating}</span>
+                                  </p>
+                                  <div className="mt-1">
+                                    {selectedRating <= 6 && (
+                                      <span className="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                                        Poor (0-6)
+                                      </span>
+                                    )}
+                                    {selectedRating >= 7 && selectedRating <= 8 && (
+                                      <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                                        Average (7-8)
+                                      </span>
+                                    )}
+                                    {selectedRating >= 9 && (
+                                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                        Excellent (9-10)
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+
                       {/* Emoji/Smiley Question */}
                       {(currentQuestion.qtype === "emoji" ||
                         currentQuestion.qtype === "smiley") &&
@@ -2348,109 +2674,51 @@ export const MobileSurveyLanding: React.FC = () => {
                                         key={pageIdx}
                                         className="flex flex-col gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0 w-full"
                                       >
-                                        {/* First row: items 0,1 */}
-                                        <div className="flex flex-row gap-1.5 xs:gap-2 sm:gap-3">
-                                          {[0, 1].map((slotIdx) => {
-                                            const tag = pageTags[slotIdx];
-                                            return tag ? (
-                                              <button
-                                                type="button"
-                                                key={tag.id}
-                                                onClick={() =>
-                                                  handleGenericTagClick(tag)
-                                                }
-                                                className={`flex-1 flex flex-col items-center justify-center p-1 xs:p-1.5 sm:p-2 rounded-[0.20rem] text-center transition-all border-2 ${selectedTags.some(
-                                                  (selectedTag) =>
-                                                    selectedTag.id === tag.id
-                                                )
-                                                  ? "border-blue-500 bg-gray-300"
-                                                  : "border-white/5"
-                                                  }`}
-                                              >
-                                                <div
-                                                  className="w-[80%] xs:w-[85%] sm:w-full mb-0.5 xs:mb-0.5 sm:mb-1"
-                                                  style={{
-                                                    aspectRatio: "16/9",
-                                                  }}
-                                                >
-                                                  {tag.icons &&
-                                                    tag.icons.length > 0 ? (
-                                                    <img
-                                                      src={tag.icons[0].url}
-                                                      alt={tag.category_name}
-                                                      className="w-full h-full object-contain"
-                                                    />
-                                                  ) : (
-                                                    <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
-                                                      <span className="text-sm xs:text-base sm:text-xl">
-                                                        🏷️
-                                                      </span>
-                                                    </div>
-                                                  )}
-                                                </div>
-                                                <span className="text-[9px] xs:text-[10px] sm:text-xs font-medium text-gray-700 leading-tight break-words w-full px-0.5">
-                                                  {tag.category_name}
-                                                </span>
-                                              </button>
-                                            ) : (
-                                              <div
-                                                key={`empty-row1-${pageIdx}-${slotIdx}`}
-                                                className="flex-1"
-                                              />
-                                            );
-                                          })}
-                                        </div>
-                                        {/* Second row: items 2,3 */}
-                                        <div className="flex flex-row gap-1.5 xs:gap-2 sm:gap-3">
-                                          {[2, 3].map((slotIdx) => {
-                                            const tag = pageTags[slotIdx];
-                                            return tag ? (
-                                              <button
-                                                type="button"
-                                                key={tag.id}
-                                                onClick={() =>
-                                                  handleGenericTagClick(tag)
-                                                }
-                                                className={`flex-1 flex flex-col items-center justify-center p-1 xs:p-1.5 sm:p-2 rounded-[0.20rem] text-center transition-all border-2 ${selectedTags.some(
-                                                  (selectedTag) =>
-                                                    selectedTag.id === tag.id
-                                                )
-                                                  ? "border-blue-500 bg-gray-300"
-                                                  : "border-white/5"
-                                                  }`}
-                                              >
-                                                <div
-                                                  className="w-[80%] xs:w-[85%] sm:w-full mb-0.5 xs:mb-0.5 sm:mb-1"
-                                                  style={{
-                                                    aspectRatio: "16/9",
-                                                  }}
-                                                >
-                                                  {tag.icons &&
-                                                    tag.icons.length > 0 ? (
-                                                    <img
-                                                      src={tag.icons[0].url}
-                                                      alt={tag.category_name}
-                                                      className="w-full h-full object-contain"
-                                                    />
-                                                  ) : (
-                                                    <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
-                                                      <span className="text-sm xs:text-base sm:text-xl">
-                                                        🏷️
-                                                      </span>
-                                                    </div>
-                                                  )}
-                                                </div>
-                                                <span className="text-[9px] xs:text-[10px] sm:text-xs font-medium text-gray-700 leading-tight break-words w-full px-0.5">
-                                                  {tag.category_name}
-                                                </span>
-                                              </button>
-                                            ) : (
-                                              <div
-                                                key={`empty-row2-${pageIdx}-${slotIdx}`}
-                                                className="flex-1"
-                                              />
-                                            );
-                                          })}
+                                        {/* 2x2 Grid for items 0,1,2,3 */}
+                                        <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3 px-1">
+                                          {pageTags.map((tag) => (
+                                            <button
+                                              type="button"
+                                              key={tag.id}
+                                              onClick={() =>
+                                                handleGenericTagClick(tag)
+                                              }
+                                              className={`flex flex-col items-center justify-center p-2 xs:p-2.5 rounded-lg text-center transition-all border-2 ${selectedTags.some(
+                                                (selectedTag) =>
+                                                  selectedTag.id === tag.id
+                                              )
+                                                ? "border-blue-500 bg-blue-50"
+                                                : "border-transparent bg-gray-50/50"
+                                                }`}
+                                            >
+                                              <div className="w-12 h-12 xs:w-16 xs:h-16 sm:w-20 sm:h-20 mb-1.5 xs:mb-2 flex items-center justify-center">
+                                                {tag.icons &&
+                                                  tag.icons.length > 0 ? (
+                                                  <img
+                                                    src={tag.icons[0].url}
+                                                    alt={tag.category_name}
+                                                    className="max-w-full max-h-full object-contain"
+                                                  />
+                                                ) : (
+                                                  <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
+                                                    <span className="text-xl xs:text-2xl">
+                                                      🏷️
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <span className="text-[10px] xs:text-xs font-semibold text-gray-800 leading-tight whitespace-normal break-words w-full">
+                                                {tag.category_name}
+                                              </span>
+                                            </button>
+                                          ))}
+                                          
+                                          {/* Fill empty slots in grid to maintain layout */}
+                                          {pageTags.length < itemsPerPage && 
+                                            Array.from({ length: itemsPerPage - pageTags.length }).map((_, idx) => (
+                                              <div key={`empty-${idx}`} className="flex-1" />
+                                            ))
+                                          }
                                         </div>
                                       </div>
                                     ))}

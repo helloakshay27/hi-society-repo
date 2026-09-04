@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { ticketManagementAPI, OperationalDay, UserAccountResponse } from '@/services/ticketManagementAPI';
+import { ticketManagementAPI, OperationalDay } from '@/services/ticketManagementAPI';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Upload, Download } from 'lucide-react';
@@ -35,24 +35,53 @@ const daysOfWeek = [
 
 export const OperationalDaysTab: React.FC = () => {
   const [schedule, setSchedule] = useState<OperationalDay[]>([]);
+  const [societyId, setSocietyId] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [userAccount, setUserAccount] = useState<UserAccountResponse | null>(null);
 
   useEffect(() => {
-    loadUserAccount();
+    fetchUserApprovedSocieties();
     fetchOperationalDays();
   }, []);
 
-  const loadUserAccount = async () => {
+  const fetchUserApprovedSocieties = async () => {
     try {
-      const account = await ticketManagementAPI.getUserAccount();
-      setUserAccount(account);
+      // Step 1: get the currently selected user society ID from account
+      const accountResponse = await fetch(getFullUrl('/api/users/account.json'), {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      let selectedUserSocietyId: number | null = null;
+      if (accountResponse.ok) {
+        const accountData = await accountResponse.json();
+        selectedUserSocietyId = accountData.selected_user_society ?? null;
+      }
+
+      // Step 2: fetch approved societies and match by the selected_user_society id
+      const response = await fetch(getFullUrl('/user_approved_societies.json'), {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const userSocieties: { id: number; id_society: string }[] = data.user_societies || [];
+        // Match the entry whose id equals selected_user_society; fall back to first entry
+        const matched =
+          (selectedUserSocietyId
+            ? userSocieties.find(s => s.id === selectedUserSocietyId)
+            : null) || userSocieties[0];
+        if (matched?.id_society) {
+          setSocietyId(matched.id_society);
+        }
+      }
     } catch (error) {
-      console.error('Error loading user account:', error);
-      toast.error('Failed to load user account');
+      console.error('Error fetching user approved societies:', error);
     }
   };
 
@@ -69,12 +98,29 @@ export const OperationalDaysTab: React.FC = () => {
         throw new Error('Failed to fetch operational days');
       }
       const data = await response.json();
-      const operationalDays: OperationalDay[] = Array.isArray(data.helpdesk_operations) ? data.helpdesk_operations : [];
-      
-      // Ensure all days of the week are represented
+      const operationalDays: OperationalDay[] = Array.isArray(data.helpdesk_operations)
+        ? data.helpdesk_operations
+        : [];
+
+      // Extract society ID from data as a fallback if user account hasn't loaded yet
+      const extractedSocietyId = operationalDays.find(d => d.op_of_id)?.op_of_id?.toString();
+      if (extractedSocietyId) {
+        setSocietyId(extractedSocietyId);
+      }
+
+      // Ensure all 7 days are present, filling defaults for any missing day
       const completeSchedule = daysOfWeek.map(day => {
-        const existingDay = operationalDays.find(d => d.dayofweek === day);
-        return existingDay || {
+        const existing = operationalDays.find(d => d.dayofweek === day);
+        if (existing) {
+          return {
+            ...existing,
+            start_hour: existing.start_hour ?? 9,
+            start_min: existing.start_min ?? 0,
+            end_hour: existing.end_hour ?? 17,
+            end_min: existing.end_min ?? 0,
+          };
+        }
+        return {
           id: 0,
           dayofweek: day,
           start_hour: 9,
@@ -85,7 +131,7 @@ export const OperationalDaysTab: React.FC = () => {
           active: true,
         };
       });
-      
+
       setSchedule(completeSchedule);
     } catch (error) {
       toast.error('Failed to fetch operational days');
@@ -115,22 +161,13 @@ export const OperationalDaysTab: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!societyId) {
+      toast.error('Unable to determine society ID. Please refresh and try again.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      // Ensure user account is loaded to get site_id
-      if (!userAccount) {
-        await loadUserAccount();
-      }
-
-      // Get site_id from user account API response
-      const siteId = userAccount?.site_id?.toString();
-      
-      if (!siteId) {
-        toast.error('Unable to determine site ID from user account. Please refresh and try again.');
-        return;
-      }
-
-      await ticketManagementAPI.updateOperationalDays(siteId, schedule);
+      await ticketManagementAPI.updateOperationalDays(societyId, schedule);
       toast.success('Operational days saved successfully!');
     } catch (error) {
       toast.error('Failed to save operational days');
@@ -176,8 +213,10 @@ export const OperationalDaysTab: React.FC = () => {
     }
   };
 
-  const formatTime = (hour: number, min: number) => {
-    return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+  const formatTime = (hour: number | null, min: number | null) => {
+    const h = (hour ?? 0).toString().padStart(2, '0');
+    const m = (min ?? 0).toString().padStart(2, '0');
+    return `${h}:${m}`;
   };
 
   const capitalizeDay = (day: string) => {
@@ -190,7 +229,7 @@ export const OperationalDaysTab: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Operational Days Setup</span>
-            <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            {/* <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Upload className="h-4 w-4 mr-2" />
@@ -221,7 +260,7 @@ export const OperationalDaysTab: React.FC = () => {
                   </Button>
                 </div>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -293,7 +332,7 @@ export const OperationalDaysTab: React.FC = () => {
                       size="sm"
                       onClick={handleSubmit}
                       disabled={isSubmitting}
-                      className="w-20"
+                      className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                     >
                       {isSubmitting ? 'Saving...' : 'Save'}
                     </Button>
@@ -304,7 +343,7 @@ export const OperationalDaysTab: React.FC = () => {
           )}
 
           <div className="flex justify-end mt-6">
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2">
               {isSubmitting ? 'Saving...' : 'Save All Changes'}
             </Button>
           </div>

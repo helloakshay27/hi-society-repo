@@ -12,11 +12,29 @@ import {
   ThumbsUp,
   ClipboardList,
   HelpCircle,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  TextField,
+} from "@mui/material";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Pagination,
   PaginationItem,
@@ -45,6 +63,18 @@ interface FilterState {
   surveyType: string;
   startDate: Date | null;
   endDate: Date | null;
+  // Location hierarchy filters
+  towerId: string;
+  flatId: string;
+  userId: string;
+  // Query string for API calls
+  queryString?: string;
+}
+
+interface ExportFilterState {
+  surveyTitle: string;
+  fromDate: string;
+  uptoDate: string;
 }
 
 interface AnalyticsData {
@@ -174,6 +204,10 @@ interface TransformedSurveyResponse {
   floor_name: string;
   area_name: string;
   room_name: string;
+  society_name: string;
+  tower_name: string;
+  flat_no: string;
+  user_names: string;
   total_responses: number;
   total_complaints: number;
   latest_response_date: string;
@@ -202,6 +236,21 @@ export const SurveyResponsePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportFilterOpen, setIsExportFilterOpen] = useState(false);
+  const [pendingExportVisibility, setPendingExportVisibility] = useState<
+    Record<string, boolean> | undefined
+  >(undefined);
+  const [exportFilters, setExportFilters] = useState<ExportFilterState>({
+    surveyTitle: "",
+    fromDate: "",
+    uptoDate: "",
+  });
+  const [exportSurveyTitles, setExportSurveyTitles] = useState<string[]>([]);
+  const [isLoadingExportSurveyTitles, setIsLoadingExportSurveyTitles] =
+    useState(false);
+  const [isExportSurveyDropdownOpen, setIsExportSurveyDropdownOpen] =
+    useState(false);
+  const [exportSurveySearch, setExportSurveySearch] = useState("");
   const [activeTab, setActiveTab] = useState("list");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -225,7 +274,20 @@ export const SurveyResponsePage = () => {
     surveyType: "",
     startDate: null,
     endDate: null,
+    // Location hierarchy filters
+    towerId: "",
+    flatId: "",
+    userId: "",
+    queryString: "",
   });
+
+  const formatDateForInput = (date: Date | null) => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   // Column visibility state - matching SurveyMappingDashboard
   const [columns, setColumns] = useState([
@@ -237,6 +299,10 @@ export const SurveyResponsePage = () => {
     { key: "floor_name", label: "Floor Name", visible: true },
     { key: "area_name", label: "Area Name", visible: true },
     { key: "room_name", label: "Room Name", visible: true },
+    { key: "society_name", label: "Society", visible: true },
+    { key: "tower_name", label: "Tower", visible: true },
+    { key: "flat_no", label: "Flat", visible: true },
+    { key: "user_names", label: "User", visible: true },
     { key: "total_responses", label: "Total Responses", visible: true },
     { key: "total_complaints", label: "Total Complaints", visible: true },
     // { key: "latest_response_date", label: "Latest Response", visible: true },
@@ -320,6 +386,19 @@ export const SurveyResponsePage = () => {
         // console.log('🔍 Adding survey title filter:', filters.surveyTitle);
       }
 
+      // Add queryString from filters if provided (contains tower, flat, user filters)
+      if (filters?.queryString && filters.queryString.trim()) {
+        // Parse the queryString and add each parameter to URL
+        const queryParams = filters.queryString.split("&");
+        queryParams.forEach(param => {
+          const [key, value] = param.split("=");
+          if (key && value) {
+            urlWithParams.searchParams.append(decodeURIComponent(key), decodeURIComponent(value));
+          }
+        });
+        // console.log('🔍 Adding location hierarchy filters:', filters.queryString);
+      }
+
       // console.log('🚀 Calling survey response list API:', urlWithParams.toString());
 
       const response = await fetch(urlWithParams.toString(), options);
@@ -371,8 +450,95 @@ export const SurveyResponsePage = () => {
     }
   };
 
-  // Export handler for survey response data
-  const handleSurveyResponseExport = async (visibility?: Record<string, boolean>) => {
+  const handleSurveyResponseExport = (visibility?: Record<string, boolean>) => {
+    setPendingExportVisibility(visibility);
+    setExportFilters({
+      surveyTitle: appliedFilters.surveyTitle || "",
+      fromDate: formatDateForInput(appliedFilters.startDate),
+      uptoDate: formatDateForInput(appliedFilters.endDate),
+    });
+    setIsExportFilterOpen(true);
+  };
+
+  const handleExportFilterChange = (
+    field: keyof ExportFilterState,
+    value: string
+  ) => {
+    setExportFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleResetExportFilters = () => {
+    setExportFilters({
+      surveyTitle: "",
+      fromDate: "",
+      uptoDate: "",
+    });
+    setExportSurveySearch("");
+    setIsExportSurveyDropdownOpen(false);
+  };
+
+  const fetchExportSurveyTitles = useCallback(async () => {
+    try {
+      setIsLoadingExportSurveyTitles(true);
+
+      const url = getFullUrl(
+        "/survey_mappings/response_list.json?list_response=true"
+      );
+      const urlWithParams = new URL(url);
+      urlWithParams.searchParams.set("page", "1");
+      urlWithParams.searchParams.set("per_page", "1000");
+
+      if (API_CONFIG.TOKEN) {
+        urlWithParams.searchParams.append("access_token", API_CONFIG.TOKEN);
+      }
+
+      const response = await fetch(
+        urlWithParams.toString(),
+        getAuthenticatedFetchOptions()
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch surveys");
+      }
+
+      const data: NewSurveyResponseApiResponse = await response.json();
+      const fetchedTitles = (data.responses || [])
+        .map((survey) => survey.survey_name)
+        .filter((title): title is string => Boolean(title?.trim()));
+
+      const visibleTitles = responseData
+        .map((survey) => survey.survey_name)
+        .filter((title): title is string => Boolean(title?.trim()));
+
+      setExportSurveyTitles(
+        Array.from(new Set([...visibleTitles, ...fetchedTitles])).sort((a, b) =>
+          a.localeCompare(b)
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching survey titles for export filter:", error);
+      const visibleTitles = responseData
+        .map((survey) => survey.survey_name)
+        .filter((title): title is string => Boolean(title?.trim()));
+      setExportSurveyTitles(Array.from(new Set(visibleTitles)));
+    } finally {
+      setIsLoadingExportSurveyTitles(false);
+    }
+  }, [responseData]);
+
+  useEffect(() => {
+    if (isExportFilterOpen) {
+      fetchExportSurveyTitles();
+    }
+  }, [fetchExportSurveyTitles, isExportFilterOpen]);
+
+  const executeSurveyResponseExport = async (
+    visibility?: Record<string, boolean>,
+    filters: ExportFilterState = exportFilters
+  ) => {
     try {
       setIsExporting(true);
       // console.log('📤 Exporting survey response data with current filters:', appliedFilters);
@@ -391,10 +557,10 @@ export const SurveyResponsePage = () => {
       }
 
       // Add current filters to export
-      if (appliedFilters.surveyTitle && appliedFilters.surveyTitle.trim()) {
+      if (filters.surveyTitle && filters.surveyTitle.trim()) {
         urlWithParams.searchParams.append(
           "q[name_cont]",
-          appliedFilters.surveyTitle.trim()
+          filters.surveyTitle.trim()
         );
         // console.log('🔍 Adding survey title filter to export:', appliedFilters.surveyTitle);
       }
@@ -409,18 +575,20 @@ export const SurveyResponsePage = () => {
       }
 
       // Add date range filters if provided
-      if (appliedFilters.startDate) {
+      if (filters.fromDate) {
+        const fromDate = new Date(`${filters.fromDate}T00:00:00`);
         urlWithParams.searchParams.append(
           "q[created_at_gteq]",
-          appliedFilters.startDate.toISOString()
+          fromDate.toISOString()
         );
         // console.log('🔍 Adding start date filter to export:', appliedFilters.startDate);
       }
 
-      if (appliedFilters.endDate) {
+      if (filters.uptoDate) {
+        const uptoDate = new Date(`${filters.uptoDate}T23:59:59`);
         urlWithParams.searchParams.append(
           "q[created_at_lteq]",
-          appliedFilters.endDate.toISOString()
+          uptoDate.toISOString()
         );
         // console.log('🔍 Adding end date filter to export:', appliedFilters.endDate);
       }
@@ -474,8 +642,8 @@ export const SurveyResponsePage = () => {
         .toISOString()
         .slice(0, 19)
         .replace(/:/g, "-");
-      const filterSuffix = appliedFilters.surveyTitle
-        ? `-${appliedFilters.surveyTitle.replace(/[^a-zA-Z0-9]/g, "_")}`
+      const filterSuffix = filters.surveyTitle
+        ? `-${filters.surveyTitle.replace(/[^a-zA-Z0-9]/g, "_")}`
         : "";
       link.download = `survey-response-export${filterSuffix}-${timestamp}.xlsx`;
 
@@ -487,11 +655,35 @@ export const SurveyResponsePage = () => {
 
       // console.log('✅ Survey response data exported successfully!');
       toast.success("Survey response data exported successfully!");
+      return true;
     } catch (error) {
       console.error("❌ Export error:", error);
       toast.error("Failed to export survey response data. Please try again.");
+      return false;
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleApplyExportFilters = async () => {
+    setIsExportSurveyDropdownOpen(false);
+
+    if (exportFilters.fromDate && exportFilters.uptoDate) {
+      const fromDate = new Date(`${exportFilters.fromDate}T00:00:00`);
+      const uptoDate = new Date(`${exportFilters.uptoDate}T23:59:59`);
+      if (fromDate > uptoDate) {
+        toast.error("From Date cannot be after Upto Date");
+        return;
+      }
+    }
+
+    const exported = await executeSurveyResponseExport(
+      pendingExportVisibility,
+      exportFilters
+    );
+    if (exported) {
+      setIsExportFilterOpen(false);
+      setPendingExportVisibility(undefined);
     }
   };
 
@@ -581,6 +773,26 @@ export const SurveyResponsePage = () => {
           (location.room_name || response.room_name) &&
             (location.room_name || response.room_name).trim() !== ""
             ? location.room_name || response.room_name
+            : "-",
+        society_name:
+          (location.society_name || response.society_name) &&
+            (location.society_name || response.society_name).trim() !== ""
+            ? location.society_name || response.society_name
+            : "-",
+        tower_name:
+          (location.tower_name || response.tower_name) &&
+            (location.tower_name || response.tower_name).trim() !== ""
+            ? location.tower_name || response.tower_name
+            : "-",
+        flat_no:
+          (location.flat_no || response.flat_no) &&
+            (location.flat_no || response.flat_no).trim() !== ""
+            ? location.flat_no || response.flat_no
+            : "-",
+        user_names:
+          (location.user_names || response.user_names) &&
+            (location.user_names || response.user_names).trim() !== ""
+            ? location.user_names || response.user_names
             : "-",
         total_responses: response?.answers_count || 0,
         total_complaints: response?.complaints_count || 0,
@@ -853,6 +1065,11 @@ export const SurveyResponsePage = () => {
       surveyType: "",
       startDate: null,
       endDate: null,
+      // Location hierarchy filters
+      towerId: "",
+      flatId: "",
+      userId: "",
+      queryString: "",
     };
     setAppliedFilters(resetFilters);
     // Reset to page 1 when filters are reset
@@ -941,49 +1158,85 @@ export const SurveyResponsePage = () => {
         hideable: true,
       },
       // { key: 'site_name', label: 'Site Name', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('site_name'), hideable: true },
+      // {
+      //   key: "building_name",
+      //   label: "Building Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("building_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "wing_name",
+      //   label: "Wing Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("wing_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "floor_name",
+      //   label: "Floor Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("floor_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "area_name",
+      //   label: "Area Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("area_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "room_name",
+      //   label: "Room Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("room_name"),
+      //   hideable: true,
+      // },
       {
-        key: "building_name",
-        label: "Building Name",
+        key: "society_name",
+        label: "Society",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("building_name"),
+        visible: isColumnVisible("society_name"),
         hideable: true,
       },
       {
-        key: "wing_name",
-        label: "Wing Name",
+        key: "tower_name",
+        label: "Tower",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("wing_name"),
+        visible: isColumnVisible("tower_name"),
         hideable: true,
       },
       {
-        key: "floor_name",
-        label: "Floor Name",
+        key: "flat_no",
+        label: "Flat",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("floor_name"),
+        visible: isColumnVisible("flat_no"),
         hideable: true,
       },
       {
-        key: "area_name",
-        label: "Area Name",
+        key: "user_names",
+        label: "Customer",
         sortable: true,
         draggable: true,
         defaultVisible: true,
-        visible: isColumnVisible("area_name"),
-        hideable: true,
-      },
-      {
-        key: "room_name",
-        label: "Room Name",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("room_name"),
+        visible: isColumnVisible("user_names"),
         hideable: true,
       },
       {
@@ -1057,7 +1310,7 @@ export const SurveyResponsePage = () => {
       case "actions":
         return (
           <div className="flex justify-center items-center gap-2">
-            {shouldShow("survey_response", "view") && (
+            {shouldShow("Response", "show") && (
               <button
                 onClick={() => handleViewDetails(item)}
                 className="p-1 text-black-600 hover:text-black-800 transition-colors"
@@ -1084,6 +1337,14 @@ export const SurveyResponsePage = () => {
         return renderLocation(item.area_name);
       case "room_name":
         return renderLocation(item.room_name);
+      case "society_name":
+        return renderLocation(item.society_name);
+      case "tower_name":
+        return renderLocation(item.tower_name);
+      case "flat_no":
+        return renderLocation(item.flat_no);
+      case "user_names":
+        return renderLocation(item.user_names);
       case "total_responses":
         return (
           <span
@@ -1145,12 +1406,141 @@ export const SurveyResponsePage = () => {
   // Note: Since we're using server-side pagination, we should show exactly what the API returns
   // The search filtering is now handled server-side through the API
   const filteredResponses = responseData;
+  const exportSurveyDropdownOptions = React.useMemo(
+    () => ["__all__", ...exportSurveyTitles],
+    [exportSurveyTitles]
+  );
+  const filteredExportSurveyOptions = React.useMemo(() => {
+    const normalizedSearch = exportSurveySearch.trim().toLowerCase();
+    if (!normalizedSearch) return exportSurveyDropdownOptions;
+
+    return exportSurveyDropdownOptions.filter((title) => {
+      const label = title === "__all__" ? "All Surveys" : title;
+      return label.toLowerCase().includes(normalizedSearch);
+    });
+  }, [exportSurveyDropdownOptions, exportSurveySearch]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
     // console.log('📄 Page changed to:', page);
     setCurrentPage(page);
     // Note: fetchSurveyResponses will be called automatically when currentPage changes due to the useCallback dependency
+  };
+
+  const renderPaginationItems = () => {
+    const totalPages = pagination.total_pages;
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    const disabled = isLoading || searchLoading;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => !disabled && handlePageChange(1)}
+            isActive={currentPage === 1}
+            className={disabled ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => !disabled && handlePageChange(i)}
+                  isActive={currentPage === i}
+                  className={disabled ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(i)}
+              isActive={currentPage === i}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   // Get dynamic counts from summary stats
@@ -1440,7 +1830,7 @@ export const SurveyResponsePage = () => {
                 )} */}
 
             {/* Server-side Pagination Controls */}
-            {pagination.total_pages > 1 && (
+            {(
               <div className="mt-6">
                 <Pagination>
                   <PaginationContent>
@@ -1453,37 +1843,11 @@ export const SurveyResponsePage = () => {
                         className={
                           currentPage === 1 || isLoading || searchLoading
                             ? "pointer-events-none opacity-50"
-                            : ""
+                            : "cursor-pointer"
                         }
                       />
                     </PaginationItem>
-                    {Array.from(
-                      { length: Math.min(pagination.total_pages, 10) },
-                      (_, i) => i + 1
-                    ).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => {
-                            if (!isLoading && !searchLoading) {
-                              handlePageChange(page);
-                            }
-                          }}
-                          isActive={currentPage === page}
-                          className={
-                            isLoading || searchLoading
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    {pagination.total_pages > 10 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
+                    {renderPaginationItems()}
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => {
@@ -1493,16 +1857,16 @@ export const SurveyResponsePage = () => {
                         className={
                           currentPage === pagination.total_pages || isLoading || searchLoading
                             ? "pointer-events-none opacity-50"
-                            : ""
+                            : "cursor-pointer"
                         }
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
-                <div className="text-center mt-2 text-sm text-gray-600">
+                {/* <div className="text-center mt-2 text-sm text-gray-600">
                   Showing page {currentPage} of {pagination.total_pages} (
                   {pagination.total_count} total survey responses)
-                </div>
+                </div> */}
               </div>
             )}
           </div>
@@ -1512,6 +1876,245 @@ export const SurveyResponsePage = () => {
           <SurveyAnalyticsContent />
         </TabsContent>
       </Tabs>
+
+      <Dialog
+        open={isExportFilterOpen}
+        onOpenChange={(open) => {
+          setIsExportSurveyDropdownOpen(false);
+          setExportSurveySearch("");
+          if (!isExporting) setIsExportFilterOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader className="relative pb-2">
+            <DialogTitle className="text-xl text-slate-950 font-normal">
+              DOWNLOAD FILTER
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setIsExportFilterOpen(false)}
+              className="absolute right-0 top-0 p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+              disabled={isExporting}
+              aria-label="Close download filter"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label
+                htmlFor="export-survey-title"
+                className="text-sm font-medium text-gray-700"
+              >
+                Survey Title
+              </label>
+              <div
+                className="relative"
+                onBlur={(event) => {
+                  if (
+                    !event.currentTarget.contains(
+                      event.relatedTarget as Node | null
+                    )
+                  ) {
+                    setIsExportSurveyDropdownOpen(false);
+                  }
+                }}
+              >
+                <TextField
+                  id="export-survey-title"
+                  value={exportFilters.surveyTitle || "All Surveys"}
+                  placeholder={
+                    isLoadingExportSurveyTitles
+                      ? "Loading surveys..."
+                      : "Select survey title"
+                  }
+                  size="small"
+                  fullWidth
+                  disabled={isExporting}
+                  onClick={() => {
+                    if (!isExporting) {
+                      setIsExportSurveyDropdownOpen((open) => !open);
+                    }
+                  }}
+                  inputProps={{
+                    readOnly: true,
+                  }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    backgroundColor: "white",
+                    "& .MuiOutlinedInput-root": {
+                      height: 40,
+                      cursor: "pointer",
+                    },
+                    "& .MuiInputBase-input": {
+                      cursor: "pointer",
+                    },
+                  }}
+                />
+
+                {isExportSurveyDropdownOpen && (
+                  <Paper
+                    elevation={4}
+                    tabIndex={-1}
+                    className="absolute left-0 right-0 top-[calc(100%+4px)]"
+                    sx={{
+                      zIndex: 1300,
+                      maxHeight: 288,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div className="p-2 border-b border-gray-200">
+                      <TextField
+                        value={exportSurveySearch}
+                        onChange={(event) =>
+                          setExportSurveySearch(event.target.value)
+                        }
+                        placeholder="Search survey..."
+                        size="small"
+                        fullWidth
+                        autoFocus
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Search className="h-4 w-4 text-gray-500" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </div>
+                    <List
+                      dense
+                      sx={{
+                        maxHeight: 224,
+                        overflowY: "auto",
+                        padding: 0,
+                      }}
+                    >
+                      {isLoadingExportSurveyTitles ? (
+                        <ListItemText
+                          primary="Loading surveys..."
+                          primaryTypographyProps={{
+                            color: "text.secondary",
+                            fontSize: 14,
+                            textAlign: "center",
+                          }}
+                          sx={{ py: 2 }}
+                        />
+                      ) : filteredExportSurveyOptions.length > 0 ? (
+                        filteredExportSurveyOptions.map((title) => {
+                          const label =
+                            title === "__all__" ? "All Surveys" : title;
+                          const isSelected =
+                            (exportFilters.surveyTitle || "__all__") === title;
+
+                          return (
+                            <ListItemButton
+                              key={title}
+                              selected={isSelected}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                handleExportFilterChange(
+                                  "surveyTitle",
+                                  title === "__all__" ? "" : title
+                                );
+                                setExportSurveySearch("");
+                                setIsExportSurveyDropdownOpen(false);
+                              }}
+                            >
+                              <ListItemText
+                                primary={label}
+                                primaryTypographyProps={{
+                                  noWrap: true,
+                                  title: label,
+                                  fontSize: 14,
+                                }}
+                              />
+                            </ListItemButton>
+                          );
+                        })
+                      ) : (
+                        <ListItemText
+                          primary="No surveys found"
+                          primaryTypographyProps={{
+                            color: "text.secondary",
+                            fontSize: 14,
+                            textAlign: "center",
+                          }}
+                          sx={{ py: 2 }}
+                        />
+                      )}
+                    </List>
+                  </Paper>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="export-from-date"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  From Date
+                </label>
+                <Input
+                  id="export-from-date"
+                  type="date"
+                  value={exportFilters.fromDate}
+                  onChange={(event) =>
+                    handleExportFilterChange("fromDate", event.target.value)
+                  }
+                  disabled={isExporting}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="export-upto-date"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Upto Date
+                </label>
+                <Input
+                  id="export-upto-date"
+                  type="date"
+                  value={exportFilters.uptoDate}
+                  onChange={(event) =>
+                    handleExportFilterChange("uptoDate", event.target.value)
+                  }
+                  disabled={isExporting}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-center items-center gap-3 pt-2 sm:justify-center">
+            <Button
+              type="button"
+              onClick={handleResetExportFilters}
+              disabled={isExporting}
+              className="bg-[#C72030] text-white hover:bg-[#A01828] px-8"
+            >
+              Reset
+            </Button>
+            <Button
+              type="button"
+              onClick={handleApplyExportFilters}
+              disabled={isExporting}
+              className="bg-[#C72030] text-white hover:bg-[#A01828] px-8"
+            >
+              {isExporting ? "Downloading..." : "Apply"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filter Modal */}
       <SurveyResponseFilterModal

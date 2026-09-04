@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -545,6 +545,7 @@ const getBalanceTATSeconds = (escalationTime: string | null | undefined): number
 export const TicketDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [ticketData, setTicketData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -566,7 +567,9 @@ export const TicketDetailsPage = () => {
   const [goldenTicketEscalationSeconds, setGoldenTicketEscalationSeconds] = useState<number>(0);
   // Extra TAT timings fetched from dedicated endpoints
   const [responseTatTimings, setResponseTatTimings] = useState<any>(null);
+  const [responseTatData, setResponseTatData] = useState<any>(null);
   const [resolutionTatTimings, setResolutionTatTimings] = useState<any>(null);
+  const [ticketFeedsData, setTicketFeedsData] = useState<any>(null);
   // Sequence support for multi-level escalations (response/resolution)
   const [responseSequence, setResponseSequence] = useState<any[] | null>(null);
   const responseSeqRef = useRef<any[] | null>(null);
@@ -586,9 +589,12 @@ export const TicketDetailsPage = () => {
     identifier: string;
     identifier_action: string;
     body: string;
-    resource_id: number;
-    resource_type: string;
-    active: boolean;
+    created_by_id: number;
+    created_by: { id: number; email: string };
+    resource: { id: number };
+    created_at: string;
+    updated_at: string;
+    active?: boolean;
   }>>([]);
   const [selectedInternalTemplate, setSelectedInternalTemplate] = useState<number | string>("");
   const [selectedCustomerTemplate, setSelectedCustomerTemplate] = useState<number | string>("");
@@ -653,6 +659,7 @@ export const TicketDetailsPage = () => {
     issue_related_to: '',
     complaint_mode_id: '',
     rca_template_ids: [] as number[],
+    rca_text: '',
     additional_notes: '',
     proactive_reactive: '', // <-- Add this property
     review_tracking: '',
@@ -700,6 +707,21 @@ export const TicketDetailsPage = () => {
     room: ''
   });
   const [submittingLocation, setSubmittingLocation] = useState(false);
+
+  // Society Location (new cascading dropdowns: Society → Wing → Area)
+  const [societyLocations, setSocietyLocations] = useState<Array<{ id: number; name: string }>>([]);
+  const [societyWings, setSocietyWings] = useState<Array<{ id: number; name: string }>>([]);
+  const [societyAreas, setSocietyAreas] = useState<Array<{ id: number; name: string }>>([]);
+  const [loadingSocietyLocations, setLoadingSocietyLocations] = useState(false);
+  const [loadingSocietyWings, setLoadingSocietyWings] = useState(false);
+  const [loadingSocietyAreas, setLoadingSocietyAreas] = useState(false);
+  const [isEditingSocietyLocation, setIsEditingSocietyLocation] = useState(false);
+  const [societyLocationFormData, setSocietyLocationFormData] = useState({
+    society_location_id: '',
+    wing_id: '',
+    area_id: '',
+  });
+  const [submittingSocietyLocation, setSubmittingSocietyLocation] = useState(false);
 
   // Location data states
   const [buildings, setBuildings] = useState<Array<{ id: number; name: string }>>([]);
@@ -895,6 +917,28 @@ export const TicketDetailsPage = () => {
     fetchTicketDetails();
   }, [id]);
 
+  // Fetch ticket feeds (logs) from CRM admin endpoint
+  const refreshFeeds = useCallback(async () => {
+    if (!id) return;
+    try {
+      const data = await ticketManagementAPI.getCrmTicketFeeds(id);
+      setTicketFeedsData(data);
+    } catch (err) {
+      console.error('Error fetching ticket feeds:', err);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    refreshFeeds();
+  }, [refreshFeeds]);
+
+  // Re-fetch feeds when returning from the edit page
+  useEffect(() => {
+    if (location.state?.from === 'edit') {
+      refreshFeeds();
+    }
+  }, [location.state, refreshFeeds]);
+
   // Function to refresh ticket data from backend (for timer updates)
   const refreshTicketData = useCallback(async () => {
     if (!id) return;
@@ -915,12 +959,31 @@ export const TicketDetailsPage = () => {
     const fetchTatTimings = async () => {
       try {
         const resp = await ticketManagementAPI.getResponseTatTimings(String(ticketData.id || id));
-        setResponseTatTimings(resp);
-        // If the endpoint returned an array of escalation steps, store as sequence
-        if (Array.isArray(resp) && resp.length > 0) {
-          setResponseSequence(resp);
-          responseSeqRef.current = resp;
-          console.log('✅ Response TAT timings fetched:', resp);
+        // Normalize new API response: { complaint, response_tat, escalation_matrix: [{name, tat_minutes, fired, fired_at, escalated_to}] }
+        if (resp?.response_tat) {
+          setResponseTatData(resp.response_tat);
+        }
+        const tatSteps = resp?.escalation_matrix
+          ? resp.escalation_matrix.map((step: any) => ({
+              escalation_name: step.name,
+              minutes: step.tat_minutes,
+              scheduled_minutes: step.tat_minutes,
+              scheduled_seconds: 0,
+              escalate_to_user: step.escalated_to || [],
+              users: step.escalated_to || [],
+              fired: step.fired,
+              fired_at: step.fired_at,
+            }))
+          : Array.isArray(resp) ? resp.map((step: any) => ({
+              ...step,
+              minutes: step.minutes ?? step.scheduled_minutes,
+              users: step.users ?? step.escalate_to_user ?? [],
+            })) : [];
+        setResponseTatTimings(tatSteps.length > 0 ? tatSteps : null);
+        if (tatSteps.length > 0) {
+          setResponseSequence(tatSteps);
+          responseSeqRef.current = tatSteps;
+          console.log('✅ Response TAT timings fetched:', tatSteps);
         }
       } catch (err) {
         console.error('Error fetching response TAT timings:', err);
@@ -973,7 +1036,7 @@ export const TicketDetailsPage = () => {
         setCommunicationTemplates(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error fetching communication templates:', err);
-        toast.error('Failed to load communication templates');
+        // toast.error('Failed to load communication templates');
       } finally {
         setLoadingTemplates(false);
       }
@@ -990,7 +1053,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingComplaintModes(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}/pms/admin/complaint_modes.json`;
+        const url = `https://${baseUrl}/crm/admin/complaint_modes.json`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1006,7 +1069,7 @@ export const TicketDetailsPage = () => {
 
         const complaintModesResponse = await response.json();
         console.log('Complaint modes response:', complaintModesResponse);
-        setComplaintModes(complaintModesResponse || []);
+        setComplaintModes(complaintModesResponse.complaint_modes || complaintModesResponse || []);
       } catch (err) {
         console.error('Error fetching complaint modes:', err);
         toast.error('Failed to load complaint modes');
@@ -1025,7 +1088,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingComplaintStatus(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}/pms/admin/complaint_statuses.json`;
+        const url = `https://${baseUrl}/crm/admin/complaint_statuses.json`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1041,7 +1104,7 @@ export const TicketDetailsPage = () => {
 
         const complaintStatusResponse = await response.json();
         console.log('Complaint status response:', complaintStatusResponse);
-        setComplaintStatus(complaintStatusResponse.data || complaintStatusResponse || []);
+        setComplaintStatus(Array.isArray(complaintStatusResponse) ? complaintStatusResponse : (complaintStatusResponse.data || []));
       } catch (err) {
         console.error('Error fetching complaint status:', err);
         toast.error('Failed to load complaint status');
@@ -1061,7 +1124,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingResponsiblePersons(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}/pms/users/get_escalate_to_users.json`;
+        const url = `https://${baseUrl}/dropdown/service_engineers`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1076,8 +1139,14 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        console.log('Responsible persons response:', data);
-        setResponsiblePersons(data.users || []);
+        const engineers = Array.isArray(data.helpdesk_users) ? data.helpdesk_users : [];
+        setResponsiblePersons(
+          engineers.map((engineer: { id: number; full_name: string }) => ({
+            id: engineer.id,
+            employee_type: '',
+            full_name: engineer.full_name,
+          }))
+        );
       } catch (err) {
         console.error('Error fetching responsible persons:', err);
         toast.error('Failed to load responsible persons');
@@ -1089,10 +1158,6 @@ export const TicketDetailsPage = () => {
     fetchResponsiblePersons();
   }, [ticketDetailsLoaded]);
 
-  console.log("corrective:-------------------", communicationTemplates
-    .filter(template => template.identifier === "Corrective Action" && template?.active === true)
-    .map(t => ({ value: t.id, label: t.identifier_action })));
-
 
   // PRIORITY 3: Fetch suppliers after ticket details are loaded
   useEffect(() => {
@@ -1102,7 +1167,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingSuppliers(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}${API_CONFIG.ENDPOINTS.SUPPLIERS}`;
+        const url = `https://${baseUrl}/crm/admin/vendor_setup.json`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1117,12 +1182,17 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        console.log('Suppliers response:', data);
-        // API returns pms_suppliers array
-        setSuppliers(Array.isArray(data.pms_suppliers) ? data.pms_suppliers : []);
+        console.log('Vendors response:', data);
+        // API returns a direct array of vendor objects
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.pms_suppliers)
+            ? data.pms_suppliers
+            : [];
+        setSuppliers(list);
       } catch (err) {
-        console.error('Error fetching suppliers:', err);
-        toast.error('Failed to load suppliers');
+        console.error('Error fetching vendors:', err);
+        toast.error('Failed to load vendors');
       } finally {
         setLoadingSuppliers(false);
       }
@@ -1277,6 +1347,23 @@ export const TicketDetailsPage = () => {
 
     loadLocationData();
   }, [ticketDetailsLoaded]);
+
+  // PRIORITY 3: Load society locations (for Location card Society/Wing/Area dropdowns)
+  useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    loadSocietyLocations();
+  }, [ticketDetailsLoaded]);
+
+  // Load society wings/areas for display when ticket data has the IDs
+  useEffect(() => {
+    if (!ticketData?.society_location_id) return;
+    loadSocietyWings(ticketData.society_location_id.toString());
+  }, [ticketData?.society_location_id]);
+
+  useEffect(() => {
+    if (!ticketData?.wing_id) return;
+    loadSocietyAreas(ticketData.wing_id.toString());
+  }, [ticketData?.wing_id]);
 
   // Initialize form data based on ticket data (runs once when ticket data and options are available)
   useEffect(() => {
@@ -1435,6 +1522,54 @@ export const TicketDetailsPage = () => {
       toast.error('Failed to load rooms');
     } finally {
       setLoadingRooms(false);
+    }
+  };
+
+  // Society Location load functions (separate from building/wing/area chain)
+  const loadSocietyLocations = async () => {
+    setLoadingSocietyLocations(true);
+    try {
+      const url = getFullUrl('/crm/admin/society_locations.json');
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyLocations(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading society locations:', error);
+    } finally {
+      setLoadingSocietyLocations(false);
+    }
+  };
+
+  const loadSocietyWings = async (societyLocationId: string) => {
+    setSocietyWings([]);
+    setLoadingSocietyWings(true);
+    try {
+      const url = getFullUrl(`/pms/wings.json?q[society_location_id_eq]=${societyLocationId}`);
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyWings(data.wings || []);
+    } catch (error) {
+      console.error('Error loading society wings:', error);
+    } finally {
+      setLoadingSocietyWings(false);
+    }
+  };
+
+  const loadSocietyAreas = async (wingId: string) => {
+    setSocietyAreas([]);
+    setLoadingSocietyAreas(true);
+    try {
+      const url = getFullUrl(`/pms/areas.json?q[wing_id_eq]=${wingId}`);
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyAreas(data.areas || []);
+    } catch (error) {
+      console.error('Error loading society areas:', error);
+    } finally {
+      setLoadingSocietyAreas(false);
     }
   };
 
@@ -2236,6 +2371,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data to show new comment
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
     } catch (error) {
       console.error('Error submitting comment:', error);
@@ -2335,6 +2471,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
     } catch (error) {
       console.error('Error submitting cost approval:', error);
@@ -2383,6 +2520,7 @@ export const TicketDetailsPage = () => {
       if (id) {
         const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
         setTicketData(ticketDetails);
+        refreshFeeds();
       }
 
       // Close modal and reset state
@@ -2505,6 +2643,13 @@ export const TicketDetailsPage = () => {
       issue_related_to: ticketData?.issue_related_to || 'FM',
       complaint_mode_id: findModeId(),
       rca_template_ids: ticketData?.rca_template_ids || [],
+      rca_text: ticketData?.root_cause
+        ? (typeof ticketData.root_cause === 'string'
+            ? ticketData.root_cause
+            : Array.isArray(ticketData.root_cause)
+              ? ticketData.root_cause.join(', ')
+              : '')
+        : '',
       additional_notes: ticketData?.notes || '',
       supplier_id: ticketData?.supplier_id ? ticketData.supplier_id.toString() : '',
       proactive_reactive: ticketData?.proactive_reactive || '',
@@ -2703,11 +2848,9 @@ export const TicketDetailsPage = () => {
         formDataToSend.append('service_id', ticketMgmtFormData.associatedTo.id.toString());
       }
 
-      // Add Root Cause Analysis template IDs under complaint
-      if (ticketMgmtFormData.rca_template_ids && ticketMgmtFormData.rca_template_ids.length > 0) {
-        ticketMgmtFormData.rca_template_ids.forEach((templateId, index) => {
-          formDataToSend.append(`complaint[root_cause_template_ids][${index}]`, String(templateId));
-        });
+      // Add Root Cause Analysis as plain text
+      if (ticketMgmtFormData.rca_text) {
+        formDataToSend.append('complaint[root_cause]', ticketMgmtFormData.rca_text);
       }
 
       console.log('🔄 Submitting ticket management with FormData');
@@ -2733,6 +2876,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
       toast.success('Ticket management updated successfully');
 
@@ -2924,6 +3068,7 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
       // Update form data with the fresh ticket data to maintain consistency
       if (ticketDetails) {
@@ -3244,9 +3389,9 @@ export const TicketDetailsPage = () => {
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
+      refreshFeeds();
 
       toast.success('Location updated successfully!');
-      setTicketData(ticketDetails);
 
       // Close the edit form
       setIsEditingLocation(false);
@@ -3256,6 +3401,92 @@ export const TicketDetailsPage = () => {
       toast.error(error instanceof Error ? error.message : 'Failed to update location');
     } finally {
       setSubmittingLocation(false);
+    }
+  };
+
+  // Society Location Edit Handlers
+  const handleSocietyLocationEdit = () => {
+    setSocietyLocationFormData({
+      society_location_id: ticketData?.society_location_id?.toString() || '',
+      wing_id: ticketData?.wing_id?.toString() || '',
+      area_id: ticketData?.area_id?.toString() || '',
+    });
+    if (ticketData?.society_location_id) {
+      loadSocietyWings(ticketData.society_location_id.toString());
+      if (ticketData?.wing_id) {
+        loadSocietyAreas(ticketData.wing_id.toString());
+      }
+    }
+    setIsEditingSocietyLocation(true);
+  };
+
+  const handleSocietyChange = async (societyLocationId: string) => {
+    setSocietyLocationFormData(prev => ({
+      ...prev,
+      society_location_id: societyLocationId,
+      wing_id: '',
+      area_id: '',
+    }));
+    setSocietyWings([]);
+    setSocietyAreas([]);
+    if (societyLocationId) {
+      await loadSocietyWings(societyLocationId);
+    }
+  };
+
+  const handleSocietyWingChange = async (wingId: string) => {
+    setSocietyLocationFormData(prev => ({
+      ...prev,
+      wing_id: wingId,
+      area_id: '',
+    }));
+    setSocietyAreas([]);
+    if (wingId) {
+      await loadSocietyAreas(wingId);
+    }
+  };
+
+  const handleSocietyLocationSubmit = async () => {
+    if (!id) return;
+    try {
+      setSubmittingSocietyLocation(true);
+      const formDataToSend = new FormData();
+      formDataToSend.append('id', id);
+      formDataToSend.append('complaint_log[complaint_id]', id);
+
+      if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
+        formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
+        formDataToSend.append('service_id', '');
+      } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
+        formDataToSend.append('asset_id', '');
+        formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+      } else {
+        formDataToSend.append('asset_id', '');
+        formDataToSend.append('service_id', '');
+      }
+
+      formDataToSend.append('complaint[society_location_id]', societyLocationFormData.society_location_id || '');
+      formDataToSend.append('complaint[wing_id]', societyLocationFormData.wing_id || '');
+      formDataToSend.append('complaint[area_id]', societyLocationFormData.area_id || '');
+
+      const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Authorization': getAuthHeader() },
+        body: formDataToSend,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+      const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
+      setTicketData(ticketDetails);
+      refreshFeeds();
+      toast.success('Location updated successfully!');
+      setIsEditingSocietyLocation(false);
+    } catch (error) {
+      console.error('Error updating society location:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update location');
+    } finally {
+      setSubmittingSocietyLocation(false);
     }
   };
 
@@ -3428,48 +3659,70 @@ export const TicketDetailsPage = () => {
         // Example: E1=5min (300s), Aging=30s → E1 should show 4min 30s (270s) remaining
         try {
           if (Array.isArray(responseTatTimings) && responseTatTimings.length > 0) {
-            let currentLevelIndex = -1;
-            let remainingSeconds = 0;
-            let consumedSeconds = 0; // Track consumed time in SECONDS
+            // Check if any step has actual scheduled_minutes configured (non-null, > 0)
+            const hasScheduledMinutes = responseTatTimings.some(step => {
+              const m = step?.scheduled_minutes ?? step?.minutes;
+              return m != null && m > 0;
+            });
 
-            // Iterate through escalation levels to find current level
-            for (let i = 0; i < responseTatTimings.length; i++) {
-              const step = responseTatTimings[i];
-              const stepMinutes = step?.scheduled_minutes ?? step?.minutes ?? 0;
-              const stepSeconds = step?.scheduled_seconds ?? 0;
-              const stepTotalSeconds = (stepMinutes * 60) + stepSeconds; // Convert to total seconds
+            if (!hasScheduledMinutes) {
+              // scheduled_minutes not configured in response escalation matrix
+              // Fall back to next_response_escalation.escalation_time countdown
+              setResponseSequenceIndex(0);
+              responseSeqIndexRef.current = 0;
+              if (ticketData.next_response_escalation?.escalation_time) {
+                const escDate = new Date(ticketData.next_response_escalation.escalation_time).getTime();
+                const diffMs = escDate - now;
+                setResponseEscalationSeconds(Math.floor(diffMs / 1000));
+                console.warn(`📍 Response TAT: using escalation_time fallback, ${Math.floor(diffMs / 1000)}s remaining`);
+              } else {
+                setResponseEscalationSeconds(0);
+              }
+            } else {
+              let currentLevelIndex = -1;
+              let remainingSeconds = 0;
+              let consumedSeconds = 0;
 
-              // Check if aging fits within this level
-              if (currentAgeingSeconds < consumedSeconds + stepTotalSeconds) {
-                // We're in this escalation level
-                currentLevelIndex = i;
-                const secondsUsedInThisLevel = currentAgeingSeconds - consumedSeconds;
-                remainingSeconds = stepTotalSeconds - secondsUsedInThisLevel;
-                console.log(`📍 Response TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s (${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s) remaining`);
-                break;
+              for (let i = 0; i < responseTatTimings.length; i++) {
+                const step = responseTatTimings[i];
+                const stepMinutes = step?.scheduled_minutes ?? step?.minutes ?? 0;
+                const stepSeconds = step?.scheduled_seconds ?? 0;
+                const stepTotalSeconds = (stepMinutes * 60) + stepSeconds;
+
+                if (currentAgeingSeconds < consumedSeconds + stepTotalSeconds) {
+                  currentLevelIndex = i;
+                  const secondsUsedInThisLevel = currentAgeingSeconds - consumedSeconds;
+                  remainingSeconds = stepTotalSeconds - secondsUsedInThisLevel;
+                  console.log(`📍 Response TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s remaining`);
+                  break;
+                }
+                consumedSeconds += stepTotalSeconds;
               }
 
-              // This level is complete, move to next
-              consumedSeconds += stepTotalSeconds;
-            }
+              if (currentLevelIndex === -1) {
+                currentLevelIndex = responseTatTimings.length - 1;
+                const lastStep = responseTatTimings[currentLevelIndex];
+                const lastStepMinutes = lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
+                const lastStepSeconds = lastStep?.scheduled_seconds ?? 0;
+                const lastStepTotalSeconds = (lastStepMinutes * 60) + lastStepSeconds;
+                const excessSeconds = currentAgeingSeconds - consumedSeconds;
+                remainingSeconds = lastStepTotalSeconds - excessSeconds;
+                console.log(`⚠️ Response TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`);
+              }
 
-            // If no active level found, we've exceeded all levels
-            if (currentLevelIndex === -1) {
-              currentLevelIndex = responseTatTimings.length - 1;
-              const lastStep = responseTatTimings[currentLevelIndex];
-              const lastStepMinutes = lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
-              const lastStepSeconds = lastStep?.scheduled_seconds ?? 0;
-              const lastStepTotalSeconds = (lastStepMinutes * 60) + lastStepSeconds;
-              const excessSeconds = currentAgeingSeconds - consumedSeconds;
-              remainingSeconds = lastStepTotalSeconds - excessSeconds; // Will be negative
-              console.log(`⚠️ Response TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`);
+              responseSeqIndexRef.current = currentLevelIndex;
+              setResponseSequenceIndex(currentLevelIndex);
+              setResponseEscalationSeconds(remainingSeconds);
             }
-
-            responseSeqIndexRef.current = currentLevelIndex;
-            setResponseSequenceIndex(currentLevelIndex);
-            setResponseEscalationSeconds(remainingSeconds);
           } else {
-            setResponseEscalationSeconds(0);
+            // No TAT sequence — use escalation_time if available
+            if (ticketData.next_response_escalation?.escalation_time) {
+              const escDate = new Date(ticketData.next_response_escalation.escalation_time).getTime();
+              const diffMs = escDate - now;
+              setResponseEscalationSeconds(Math.floor(diffMs / 1000));
+            } else {
+              setResponseEscalationSeconds(0);
+            }
           }
         } catch (e) {
           console.error('Error initializing response escalation seconds', e);
@@ -3674,15 +3927,17 @@ export const TicketDetailsPage = () => {
       {
         label: 'Response TAT',
         value: (() => {
-          // Prefer sequence step minutes when available, otherwise fallback to ticketData
+          // Use actual_response_minutes from response_tat API if available
+          if (responseTatData?.actual_response_minutes != null) {
+            return formatMinutesToDDHHMM(responseTatData.actual_response_minutes);
+          }
+          // Fallback to sequence step minutes or ticketData
           const seq = responseSequence;
           const seqMinutes = (seq && seq.length > 0 && responseSequenceIndex >= 0)
             ? (seq[responseSequenceIndex]?.scheduled_minutes ?? seq[responseSequenceIndex]?.minutes)
             : null;
           const sourceMinutes = seqMinutes ?? ticketData.next_response_escalation?.minutes ?? 0;
-          return (isTicketClosed || isTicketOnHold)
-            ? (sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00')
-            : (sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00');
+          return sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00';
         })()
       },
       {
@@ -3699,10 +3954,10 @@ export const TicketDetailsPage = () => {
           const seq = responseSequence;
           if (seq && seq.length > 0 && responseSequenceIndex >= 0) {
             const step = seq[responseSequenceIndex];
-            const name = step?.escalation_name || '';
+            const name = (step?.escalation_name || '').toUpperCase();
             return name ? `Escalation - ${name}` : 'Escalation';
           }
-          const escName = ticketData.next_response_escalation?.escalation_name || '';
+          const escName = (ticketData.next_response_escalation?.escalation_name || '').toUpperCase();
           return escName ? `Escalation - ${escName}` : 'Escalation';
         })(),
         value: (() => {
@@ -3750,10 +4005,10 @@ export const TicketDetailsPage = () => {
           const seq = resolutionSequence;
           if (seq && seq.length > 0 && resolutionSequenceIndex >= 0) {
             const step = seq[resolutionSequenceIndex];
-            const name = step?.escalation_name || '';
+            const name = (step?.escalation_name || '').toUpperCase();
             return name ? `Escalation - ${name}` : 'Escalation';
           }
-          const escName = ticketData.next_resolution_escalation?.escalation_name || '';
+          const escName = (ticketData.next_resolution_escalation?.escalation_name || '').toUpperCase();
           return escName ? `Escalation - ${escName}` : 'Escalation';
         })(),
         value: (() => {
@@ -4103,9 +4358,9 @@ export const TicketDetailsPage = () => {
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
               Location
-            </TabsTrigger>
+            </TabsTrigger> */}
 
-            <TabsTrigger
+            {/* <TabsTrigger
               value="survey-info"
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
@@ -4126,18 +4381,24 @@ export const TicketDetailsPage = () => {
               Attachments
             </TabsTrigger> */}
 
-            <TabsTrigger
+            {/* <TabsTrigger
               value="cost-approval"
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
               Cost Approval
-            </TabsTrigger>
+            </TabsTrigger> */}
 
             <TabsTrigger
               value="action-logs"
               className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
             >
-              Logs
+              Feeds
+            </TabsTrigger>
+            <TabsTrigger
+              value="feedbacks"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+            >
+              Feedbacks
             </TabsTrigger>
           </TabsList>
 
@@ -4354,7 +4615,11 @@ export const TicketDetailsPage = () => {
                           style={{ fontSize: 24 }}
                         >
                           {(() => {
-                            // Prefer sequence step minutes when available, otherwise fallback to ticketData
+                            // Use actual_response_minutes from response_tat API if available
+                            if (responseTatData?.actual_response_minutes != null) {
+                              return formatMinutesToDDHHMM(responseTatData.actual_response_minutes);
+                            }
+                            // Fallback to sequence step minutes or ticketData
                             const seq = responseSequence;
                             const seqMinutes = (seq && seq.length > 0 && responseSequenceIndex >= 0)
                               ? (seq[responseSequenceIndex]?.scheduled_minutes ?? seq[responseSequenceIndex]?.minutes)
@@ -4444,7 +4709,7 @@ export const TicketDetailsPage = () => {
                               const seq = responseSequence;
                               if (seq && seq.length > 0 && responseSequenceIndex >= 0) {
                                 const step = seq[responseSequenceIndex];
-                                const escName = step?.escalation_name || '';
+                                const escName = (step?.escalation_name || '').toUpperCase();
                                 const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
                                 const users = usersArr.filter(u => !!u);
 
@@ -4478,7 +4743,7 @@ export const TicketDetailsPage = () => {
                               }
 
                               // Fallback to ticketData if sequence is not available
-                              const escName = ticketData.next_response_escalation?.escalation_name || '';
+                              const escName = (ticketData.next_response_escalation?.escalation_name || '').toUpperCase();
                               const users = Array.isArray(ticketData.next_response_escalation?.users)
                                 ? ticketData.next_response_escalation.users.filter(u => !!u)
                                 : [];
@@ -4560,7 +4825,7 @@ export const TicketDetailsPage = () => {
                               const seq = resolutionSequence;
                               if (seq && seq.length > 0 && resolutionSequenceIndex >= 0) {
                                 const step = seq[resolutionSequenceIndex];
-                                const escName = step?.escalation_name || '';
+                                const escName = (step?.escalation_name || '').toUpperCase();
                                 const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
                                 const users = usersArr.filter(u => !!u);
 
@@ -4594,7 +4859,7 @@ export const TicketDetailsPage = () => {
                               }
 
                               // Fallback to ticketData if sequence is not available
-                              const escName = ticketData.next_resolution_escalation?.escalation_name || '';
+                              const escName = (ticketData.next_resolution_escalation?.escalation_name || '').toUpperCase();
                               const users = Array.isArray(ticketData.next_resolution_escalation?.users)
                                 ? ticketData.next_resolution_escalation.users.filter(u => !!u)
                                 : [];
@@ -4704,7 +4969,7 @@ export const TicketDetailsPage = () => {
                         </div>
                         <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
                           {(() => {
-                            const escName = ticketData.next_executive_escalation?.escalation_name || '';
+                            const escName = (ticketData.next_executive_escalation?.escalation_name || '').toUpperCase();
                             return escName ? `Golden Ticket Escalation - ${escName}` : 'Golden Ticket Escalation';
                           })()}
                         </span>
@@ -4918,13 +5183,14 @@ export const TicketDetailsPage = () => {
                             { label: 'Issue Type', value: capitalizeWords(ticketData.issue_type) },
                             { label: 'Assigned To', value: ticketData.assigned_to || '-' },
                             { label: 'Behalf Of', value: ticketData.on_behalf_of || '-' },
-                            { label: 'Source', value: ticketData.asset_service || '-' },
+                            { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                            // { label: 'Source', value: ticketData.asset_service || '-' },
                           ],
                           [
                             { label: 'Created By', value: ticketData.created_by_name || '-' },
                             { label: 'Updated By', value: ticketData.updated_by || '-' },
                             { label: 'Mode', value: ticketData.complaint_mode || '-' },
-                            { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                            
                           ],
                         ].map((row, rIdx) => (
                           <div
@@ -5206,7 +5472,6 @@ export const TicketDetailsPage = () => {
                                   ? ticketData.vendors.map(v => v.name || v).join(', ')
                                   : '-')
                           }, { label: 'Assigned To', value: ticketData.assigned_to || '-' },
-                          { label: 'Association', value: ticketData.asset_service || '-' },
 
                           { label: 'Expected Visit Date', value: ticketData.visit_date ? ticketData.visit_date : '-' },
                           { label: 'Expected Completion Date', value: ticketData.expected_completion_date ? formatDate(ticketData.expected_completion_date) : '-' },
@@ -5248,56 +5513,10 @@ export const TicketDetailsPage = () => {
                                     Root Cause Analysis
                                   </div>
                                   <div className="flex-1 text-[14px] font-semibold text-[#1A1A1A] break-words overflow-wrap-anywhere min-w-0">
-                                    {ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0
-                                      ? (() => {
-                                        const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-                                        return uniqueIds.map((templateId) => {
-                                          const matchedTemplate = communicationTemplates.find(
-                                            (template) =>
-                                              template.id === templateId &&
-                                              template.identifier === "Root Cause Analysis"
-                                          );
-                                          return matchedTemplate ? matchedTemplate.identifier_action : null;
-                                        }).filter(Boolean).join(', ');
-                                      })()
-                                      : '-'
-                                    }
+                                    {ticketData.root_cause ? ticketData.root_cause : '-'}
                                   </div>
                                 </div>
                               </div>
-                              {(ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0) && (
-                                <div
-                                  className="space-y-2 min-w-0 mt-4"
-                                  style={{ fontSize: "14px", fontWeight: "500" }}
-                                >
-                                  {(() => {
-                                    // Use template IDs from API with duplicate filtering
-                                    const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-
-                                    return uniqueIds.map((templateId, index) => {
-                                      const matchedTemplate = communicationTemplates.find(
-                                        (template) =>
-                                          template.id === templateId &&
-                                          template.identifier === "Root Cause Analysis"
-                                      );
-
-                                      if (!matchedTemplate) return null;
-
-                                      return (
-                                        <div key={`rca-display-${templateId}`}>
-                                          {index > 0 && <div className="my-2 border-t border-gray-300"></div>}
-                                          <div
-                                            className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                            style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                          >
-                                            {matchedTemplate.body || matchedTemplate.identifier_action}
-                                          </div>
-                                        </div>
-                                      );
-                                    });
-                                  })()}
-                                </div>
-                              )}
                               <div className="flex flex-col min-w-0 mt-4">
                                 <span className="text-[11px] tracking-wide text-[#6B6B6B] mb-1">
                                   Additional Notes
@@ -5347,15 +5566,7 @@ export const TicketDetailsPage = () => {
                                     {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
                                   </span>
                                 </MenuItem>
-                                {complaintStatus
-                                  .filter((status) => {
-                                    // If reopen_status is false, don't show statuses with fixed_state === 'reopen'
-                                    if (ticketData?.reopen_status === false && status.fixed_state === 'reopen') {
-                                      return false;
-                                    }
-                                    return true;
-                                  })
-                                  .map((status) => (
+                                {complaintStatus.map((status) => (
                                     <MenuItem key={status.id} value={status.id.toString()}>
                                       {status.name}
                                     </MenuItem>
@@ -5416,7 +5627,7 @@ export const TicketDetailsPage = () => {
                             </FormControl>
 
                             {/* Association Selection */}
-                            <div className="space-y-3">
+                            {/* <div className="space-y-3">
                               <FormLabel component="legend" className="text-sm font-medium">
                                 Association Type
                               </FormLabel>
@@ -5437,7 +5648,6 @@ export const TicketDetailsPage = () => {
                                 />
                               </RadioGroup>
 
-                              {/* Conditional Dropdown */}
                               {associationType && (
                                 <FormControl fullWidth size="small">
                                   <InputLabel>
@@ -5476,7 +5686,7 @@ export const TicketDetailsPage = () => {
                                   </MuiSelect>
                                 </FormControl>
                               )}
-                            </div>
+                            </div> */}
 
                           </div>
 
@@ -5490,6 +5700,7 @@ export const TicketDetailsPage = () => {
                               value={ticketMgmtFormData.visit_date}
                               onChange={(e) => handleTicketMgmtInputChange('visit_date', e.target.value)}
                               InputLabelProps={{ shrink: true }}
+                              inputProps={{ min: new Date().toISOString().split('T')[0] }}
                             />
 
                             <TextField
@@ -5500,6 +5711,7 @@ export const TicketDetailsPage = () => {
                               value={ticketMgmtFormData.expected_completion_date}
                               onChange={(e) => handleTicketMgmtInputChange('expected_completion_date', e.target.value)}
                               InputLabelProps={{ shrink: true }}
+                              inputProps={{ min: new Date().toISOString().split('T')[0] }}
                             />
 
                             <FormControl fullWidth size="small">
@@ -5558,67 +5770,36 @@ export const TicketDetailsPage = () => {
                           {/* 3️⃣ RIGHT COLUMN - Template Fields */}
                           <div className="space-y-4">
                             {/* Root Cause Analysis */}
-                            <div className="relative">
-                              <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                            <div className="relative w-full">
+                              <textarea
+                                id="ticket-rca-text"
+                                value={ticketMgmtFormData.rca_text}
+                                onChange={e => handleTicketMgmtInputChange('rca_text', e.target.value)}
+                                rows={4}
+                                placeholder=" "
+                                className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+                                  focus:outline-none
+                                  focus:border-[2px]
+                                  focus:border-[#1976d2]
+                                  hover:border-[#C72030]
+                                  resize-vertical"
+                                style={{ fontSize: '14px', height: '100px' }}
+                              />
+                              <label
+                                htmlFor="ticket-rca-text"
+                                className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+                                  peer-focus:bg-white
+                                  ${ticketMgmtFormData.rca_text ? 'bg-white' : ''}
+                                  peer-placeholder-shown:top-4
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-400
+                                  peer-focus:-top-[10px]
+                                  peer-focus:text-sm`}
+                                style={{ backgroundColor: ticketMgmtFormData.rca_text ? 'white' : undefined }}
+                              >
                                 Root Cause Analysis
                               </label>
-                              <Select
-                                isMulti
-                                value={communicationTemplates
-                                  .filter(
-                                    (t) =>
-                                      t.identifier === 'Root Cause Analysis' && t.active === true &&
-                                      ticketMgmtFormData.rca_template_ids.includes(t.id)
-                                  )
-                                  .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                                onChange={(selected) => {
-                                  const selectedIds = selected ? selected.map((s) => s.value) : [];
-                                  // Only update form data, don't call API immediately
-                                  handleRootCauseFormChange(selectedIds);
-                                }}
-                                options={communicationTemplates
-                                  .filter((t) => t.identifier === 'Root Cause Analysis' && t.active)
-                                  .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                                styles={customStyles}
-                                components={{
-                                  MultiValue: CustomMultiValue,
-                                  MultiValueRemove: () => null,
-                                }}
-                                closeMenuOnSelect={false}
-                                placeholder="Select Root Cause Analysis..."
-                              />
                             </div>
-                            {(ticketMgmtFormData.rca_template_ids && ticketMgmtFormData.rca_template_ids.length > 0) && (
-                              <div
-                                className="space-y-2 min-w-0 mt-4"
-                                style={{ fontSize: "14px", fontWeight: "500" }}
-                              >
-                                {(() => {
-                                  // Use template IDs from form data with duplicate filtering
-                                  const uniqueIds = [...new Set(ticketMgmtFormData.rca_template_ids)];
-
-                                  return uniqueIds.map((templateId, index) => {
-                                    const matchedTemplate = communicationTemplates.find(
-                                      (template) =>
-                                        template.id === templateId &&
-                                        template.identifier === "Root Cause Analysis"
-                                    );
-
-                                    if (!matchedTemplate) return null;
-
-                                    return (
-                                      <div
-                                        key={`rca-display-${templateId}`}
-                                        className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                        style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                      >
-                                        {matchedTemplate.body || matchedTemplate.identifier_action}
-                                      </div>
-                                    );
-                                  });
-                                })()}
-                              </div>
-                            )}
 
                             {/* Additional Notes */}
                             <div className="relative w-full">
@@ -6209,14 +6390,14 @@ export const TicketDetailsPage = () => {
                               >
                                 Preventive Action
                               </label>
-                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
+                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[20px] pl-4 min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                                 {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
                               </div>
                             </div>
                           </div>
 
                           {/* Short-term Impact - View Only */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full pt-4">
                               <label
                                 style={{
@@ -6237,7 +6418,7 @@ export const TicketDetailsPage = () => {
                                 {ticketData?.short_term_impact ? ticketData.short_term_impact : 'Not provided'}
                               </div>
                             </div>
-                          </div>
+                          </div> */}
 
                           {/* Corrective Action - View Only */}
                           <div className="bg-[#f2efea] border border-[#f2efea] p-4">
@@ -6257,14 +6438,14 @@ export const TicketDetailsPage = () => {
                               >
                                 Corrective Action
                               </label>
-                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
+                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[20px] pl-4 min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                                 {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
                               </div>
                             </div>
                           </div>
 
                           {/* Long-term Impact - View Only */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full pt-4">
                               <label
                                 style={{
@@ -6285,7 +6466,7 @@ export const TicketDetailsPage = () => {
                                 {ticketData?.long_term_impact ? ticketData.long_term_impact : 'Not provided'}
                               </div>
                             </div>
-                          </div>
+                          </div> */}
                         </div>
 
                         {/* Bottom Row: Review Date & Responsible Person - View Only */}
@@ -6379,7 +6560,7 @@ export const TicketDetailsPage = () => {
                           </div>
 
                           {/* Short-term Impact */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full">
                               <label
                                 style={{
@@ -6439,7 +6620,7 @@ export const TicketDetailsPage = () => {
                                 }}
                               />
                             </div>
-                          </div>
+                          </div> */}
 
                           {/* Corrective Action */}
                           <div className="bg-[#f2efea] border border-[#f2efea] p-4">
@@ -6505,7 +6686,7 @@ export const TicketDetailsPage = () => {
                           </div>
 
                           {/* Long-term Impact */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full">
                               <label
                                 style={{
@@ -6565,7 +6746,7 @@ export const TicketDetailsPage = () => {
                                 }}
                               />
                             </div>
-                          </div>
+                          </div> */}
                         </div>
 
                         {/* Bottom Row: Review Date & Responsible Person */}
@@ -6604,7 +6785,8 @@ export const TicketDetailsPage = () => {
                                   style: { display: 'none' } // Hide default label since we have floating label
                                 }}
                                 inputProps={{
-                                  style: { fontSize: '14px' }
+                                  style: { fontSize: '14px' },
+                                  min: new Date().toISOString().split('T')[0]
                                 }}
                                 sx={{
                                   '& .MuiInputBase-root': {
@@ -7062,6 +7244,236 @@ export const TicketDetailsPage = () => {
                   </Card>
                 )}
 
+                {/* Society / Wing / Area Card (editable) */}
+                <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                        <MapPin className="w-6 h-6 text-[#C72030]" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-black">LOCATION INFORMATION</h3>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
+                      onClick={handleSocietyLocationEdit}
+                      disabled={isEditingSocietyLocation || loadingSocietyLocations}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      {loadingSocietyLocations ? 'Loading...' : 'Edit'}
+                    </Button>
+                  </div>
+
+                  <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                    {!isEditingSocietyLocation ? (
+                      /* View Mode */
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                        <div className="flex items-center">
+                          <span className="text-gray-500 min-w-[140px]">Society</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.society_location_id
+                              ? (societyLocations.find(s => s.id === ticketData.society_location_id)?.name || ticketData.society_location_id)
+                              : '-'}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-gray-500 min-w-[140px]">Wing</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.wing_id
+                              ? (societyWings.find(w => w.id === ticketData.wing_id)?.name || ticketData.wing_name || ticketData.wing_id)
+                              : (ticketData.wing_name || '-')}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-gray-500 min-w-[140px]">Area</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.area_id
+                              ? (societyAreas.find(a => a.id === ticketData.area_id)?.name || ticketData.area_name || ticketData.area_id)
+                              : (ticketData.area_name || '-')}
+                          </span>
+                        </div>
+                        {hasData(ticketData.region) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Region</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.region}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.building_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Building</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.floor_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Floor</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
+                          </div>
+                        )}
+                        {/* {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
+                          </div>
+                        )} */}
+                        {hasData(ticketData.zone) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Zone</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.zone}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.district) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">District</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.district}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.room_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Room</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.site_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Site</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.site_name}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.city) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">City</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.city}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.state) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">State</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.state}</span>
+                          </div>
+                        )}
+                        {hasData(ticketData.address) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Address</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">{ticketData.address}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Edit Mode */
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSocietyLocationSubmit();
+                        }}
+                        className="space-y-6"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Society Dropdown */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Society</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.society_location_id}
+                              onChange={(e) => handleSocietyChange(e.target.value)}
+                              label="Society"
+                              notched
+                              displayEmpty
+                              disabled={loadingSocietyLocations}
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyLocations ? 'Loading...' : 'Select Society'}
+                              </MenuItem>
+                              {societyLocations.map((loc) => (
+                                <MenuItem key={loc.id} value={loc.id.toString()}>
+                                  {loc.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+
+                          {/* Wing Dropdown */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Wing</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.wing_id}
+                              onChange={(e) => handleSocietyWingChange(e.target.value)}
+                              label="Wing"
+                              notched
+                              displayEmpty
+                              disabled={loadingSocietyWings || !societyLocationFormData.society_location_id}
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyWings ? 'Loading...' : !societyLocationFormData.society_location_id ? 'Select Society First' : 'Select Wing'}
+                              </MenuItem>
+                              {societyWings.map((wing) => (
+                                <MenuItem key={wing.id} value={wing.id.toString()}>
+                                  {wing.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+
+                          {/* Area Dropdown */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Area</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.area_id}
+                              onChange={(e) => setSocietyLocationFormData(prev => ({ ...prev, area_id: e.target.value }))}
+                              label="Area"
+                              notched
+                              displayEmpty
+                              disabled={loadingSocietyAreas || !societyLocationFormData.wing_id}
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyAreas ? 'Loading...' : !societyLocationFormData.wing_id ? 'Select Wing First' : 'Select Area'}
+                              </MenuItem>
+                              {societyAreas.map((area) => (
+                                <MenuItem key={area.id} value={area.id.toString()}>
+                                  {area.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+                        </div>
+
+                        <div className="flex items-center gap-3 justify-end mt-6">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsEditingSocietyLocation(false)}
+                            disabled={submittingSocietyLocation}
+                            className="border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={submittingSocietyLocation}
+                            className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
+                          >
+                            {submittingSocietyLocation ? 'Saving...' : 'Submit'}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+
                 {isModalOpen && selectedDoc && (
                   <div
                     className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
@@ -7295,7 +7707,7 @@ export const TicketDetailsPage = () => {
                                   </span>
                                 </MenuItem>
                                 {communicationTemplates
-                                  .filter(template => template.identifier === "Internal" && template.active === true)
+                                  .filter(template => template.identifier === "helpdesk")
                                   .map((template) => (
                                     <MenuItem key={template.id} value={template.id}>
                                       {template.identifier_action}
@@ -7420,7 +7832,7 @@ export const TicketDetailsPage = () => {
                                   </span>
                                 </MenuItem>
                                 {communicationTemplates
-                                  .filter(template => template.identifier === "Customer" && template.active === true)
+                                  .filter(template => template.identifier === "helpdesk")
                                   .map((template) => (
                                     <MenuItem key={template.id} value={template.id}>
                                       {template.identifier_action}
@@ -7536,7 +7948,7 @@ export const TicketDetailsPage = () => {
                         </div>
                       </div>
                       <h3 className="text-lg font-semibold uppercase text-black">
-                        Logs
+                        Complaint Logs
                       </h3>
                     </div>
                   </div>
@@ -7548,7 +7960,7 @@ export const TicketDetailsPage = () => {
                     ) : (
                       (() => {
                         const sorted = [...complaintLogs].sort(
-                          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                         );
 
                         return (
@@ -8127,7 +8539,6 @@ export const TicketDetailsPage = () => {
                               ? ticketData.vendors.map(v => v.name || v).join(', ')
                               : '-')
                       }, { label: 'Assigned To', value: ticketData.assigned_to || '-' },
-                      { label: 'Association', value: ticketData.asset_service || 'Asset' },
 
                       { label: 'Expected Visit Date', value: ticketData.visit_date ? ticketData.visit_date : '-' },
                       { label: 'Expected Completion Date', value: ticketData.expected_completion_date ? formatDate(ticketData.expected_completion_date) : '-' },
@@ -8169,56 +8580,10 @@ export const TicketDetailsPage = () => {
                                 Root Cause Analysis
                               </div>
                               <div className="flex-1 text-[14px] font-semibold text-[#1A1A1A] break-words overflow-wrap-anywhere min-w-0">
-                                {ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0
-                                  ? (() => {
-                                    const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-                                    return uniqueIds.map((templateId) => {
-                                      const matchedTemplate = communicationTemplates.find(
-                                        (template) =>
-                                          template.id === templateId &&
-                                          template.identifier === "Root Cause Analysis"
-                                      );
-                                      return matchedTemplate ? matchedTemplate.identifier_action : null;
-                                    }).filter(Boolean).join(', ');
-                                  })()
-                                  : '-'
-                                }
+                                {ticketData.root_cause ? ticketData.root_cause : '-'}
                               </div>
                             </div>
                           </div>
-                          {(ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0) && (
-                            <div
-                              className="space-y-2 min-w-0 mt-4"
-                              style={{ fontSize: "14px", fontWeight: "500" }}
-                            >
-                              {(() => {
-                                // Use template IDs from API with duplicate filtering
-                                const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-
-                                return uniqueIds.map((templateId, index) => {
-                                  const matchedTemplate = communicationTemplates.find(
-                                    (template) =>
-                                      template.id === templateId &&
-                                      template.identifier === "Root Cause Analysis"
-                                  );
-
-                                  if (!matchedTemplate) return null;
-
-                                  return (
-                                    <div key={`rca-display-${templateId}`}>
-                                      {index > 0 && <div className="my-2 border-t border-gray-300"></div>}
-                                      <div
-                                        className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                        style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                      >
-                                        {matchedTemplate.body || matchedTemplate.identifier_action}
-                                      </div>
-                                    </div>
-                                  );
-                                });
-                              })()}
-                            </div>
-                          )}
                           <div className="flex flex-col min-w-0 mt-4">
                             <span className="text-[11px] tracking-wide text-[#6B6B6B] mb-1">
                               Additional Notes
@@ -8268,15 +8633,7 @@ export const TicketDetailsPage = () => {
                                 {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
                               </span>
                             </MenuItem>
-                            {complaintStatus
-                              .filter((status) => {
-                                // If reopen_status is false, don't show statuses with fixed_state === 'reopen'
-                                if (ticketData?.reopen_status === false && status.fixed_state === 'reopen') {
-                                  return false;
-                                }
-                                return true;
-                              })
-                              .map((status) => (
+                            {complaintStatus.map((status) => (
                                 <MenuItem key={status.id} value={status.id.toString()}>
                                   {status.name}
                                 </MenuItem>
@@ -8337,7 +8694,7 @@ export const TicketDetailsPage = () => {
                         </FormControl>
 
                         {/* Association Selection */}
-                        <div className="space-y-3">
+                        {/* <div className="space-y-3">
                           <FormLabel component="legend" className="text-sm font-medium">
                             Association Type
                           </FormLabel>
@@ -8358,7 +8715,7 @@ export const TicketDetailsPage = () => {
                             />
                           </RadioGroup>
 
-                          {/* Conditional Dropdown */}
+                          
                           {associationType && (
                             <FormControl fullWidth size="small">
                               <InputLabel>
@@ -8397,7 +8754,7 @@ export const TicketDetailsPage = () => {
                               </MuiSelect>
                             </FormControl>
                           )}
-                        </div>
+                        </div> */}
 
                       </div>
 
@@ -8411,6 +8768,7 @@ export const TicketDetailsPage = () => {
                           value={ticketMgmtFormData.visit_date}
                           onChange={(e) => handleTicketMgmtInputChange('visit_date', e.target.value)}
                           InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: new Date().toISOString().split('T')[0] }}
                         />
 
                         <TextField
@@ -8421,6 +8779,7 @@ export const TicketDetailsPage = () => {
                           value={ticketMgmtFormData.expected_completion_date}
                           onChange={(e) => handleTicketMgmtInputChange('expected_completion_date', e.target.value)}
                           InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: new Date().toISOString().split('T')[0] }}
                         />
 
                         <FormControl fullWidth size="small">
@@ -8479,67 +8838,36 @@ export const TicketDetailsPage = () => {
                       {/* 3️⃣ RIGHT COLUMN - Template Fields */}
                       <div className="space-y-4">
                         {/* Root Cause Analysis */}
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                        <div className="relative w-full">
+                          <textarea
+                            id="ticket-rca-text-2"
+                            value={ticketMgmtFormData.rca_text}
+                            onChange={e => handleTicketMgmtInputChange('rca_text', e.target.value)}
+                            rows={4}
+                            placeholder=" "
+                            className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+                                  focus:outline-none
+                                  focus:border-[2px]
+                                  focus:border-[#1976d2]
+                                  hover:border-[#C72030]
+                                  resize-vertical"
+                            style={{ fontSize: '14px', height: '100px' }}
+                          />
+                          <label
+                            htmlFor="ticket-rca-text-2"
+                            className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+                              peer-focus:bg-white
+                              ${ticketMgmtFormData.rca_text ? 'bg-white' : ''}
+                              peer-placeholder-shown:top-4
+                              peer-placeholder-shown:text-base
+                              peer-placeholder-shown:text-gray-400
+                              peer-focus:-top-[10px]
+                              peer-focus:text-sm`}
+                            style={{ backgroundColor: ticketMgmtFormData.rca_text ? 'white' : undefined }}
+                          >
                             Root Cause Analysis
                           </label>
-                          <Select
-                            isMulti
-                            value={communicationTemplates
-                              .filter(
-                                (t) =>
-                                  t.identifier === 'Root Cause Analysis' && t.active === true &&
-                                  ticketMgmtFormData.rca_template_ids.includes(t.id)
-                              )
-                              .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                            onChange={(selected) => {
-                              const selectedIds = selected ? selected.map((s) => s.value) : [];
-                              // Only update form data, don't call API immediately
-                              handleRootCauseFormChange(selectedIds);
-                            }}
-                            options={communicationTemplates
-                              .filter((t) => t.identifier === 'Root Cause Analysis' && t.active)
-                              .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                            styles={customStyles}
-                            components={{
-                              MultiValue: CustomMultiValue,
-                              MultiValueRemove: () => null,
-                            }}
-                            closeMenuOnSelect={false}
-                            placeholder="Select Root Cause Analysis..."
-                          />
                         </div>
-                        {(ticketMgmtFormData.rca_template_ids && ticketMgmtFormData.rca_template_ids.length > 0) && (
-                          <div
-                            className="space-y-2 min-w-0 mt-4"
-                            style={{ fontSize: "14px", fontWeight: "500" }}
-                          >
-                            {(() => {
-                              // Use template IDs from form data with duplicate filtering
-                              const uniqueIds = [...new Set(ticketMgmtFormData.rca_template_ids)];
-
-                              return uniqueIds.map((templateId, index) => {
-                                const matchedTemplate = communicationTemplates.find(
-                                  (template) =>
-                                    template.id === templateId &&
-                                    template.identifier === "Root Cause Analysis"
-                                );
-
-                                if (!matchedTemplate) return null;
-
-                                return (
-                                  <div
-                                    key={`rca-display-${templateId}`}
-                                    className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                    style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                  >
-                                    {matchedTemplate.body || matchedTemplate.identifier_action}
-                                  </div>
-                                );
-                              });
-                            })()}
-                          </div>
-                        )}
 
                         {/* Additional Notes */}
                         <div className="relative w-full">
@@ -9102,44 +9430,40 @@ export const TicketDetailsPage = () => {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       {/* Preventive Action - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Preventive Action</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
-                            {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
-                          </div>
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">Preventive Action</label>
+                        <div className="text-[14px] text-[#1A1A1A] break-words">
+                          {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
                         </div>
                       </div>
 
                       {/* Short-term Impact - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
+                      {/* <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative">
                           <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Short-term Impact</label>
                           <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
                             {ticketData?.short_term_impact ? ticketData.short_term_impact : 'Not provided'}
                           </div>
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Corrective Action - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Corrective Action</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
-                            {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
-                          </div>
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">Corrective Action</label>
+                        <div className="text-[14px] text-[#1A1A1A] break-words">
+                          {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
                         </div>
                       </div>
 
                       {/* Long-term Impact - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
+                      {/* <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative">
                           <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Long-term Impact</label>
                           <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
                             {ticketData?.long_term_impact ? ticketData.long_term_impact : 'Not provided'}
                           </div>
                         </div>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Bottom Row: Review Date & Responsible Person - View Only */}
@@ -9233,7 +9557,7 @@ export const TicketDetailsPage = () => {
                       </div>
 
                       {/* Short-term Impact */}
-                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                      {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative w-full">
                           <label
                             style={{
@@ -9318,7 +9642,7 @@ export const TicketDetailsPage = () => {
                             ));
                           })()}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Corrective Action */}
                       <div className="bg-[#f2efea] border border-[#f2efea] p-4">
@@ -9408,8 +9732,8 @@ export const TicketDetailsPage = () => {
                         </div>
                       </div>
 
-                      {/* Long-term Impact */}
-                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                  
+                      {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative w-full">
                           <label
                             style={{
@@ -9494,7 +9818,7 @@ export const TicketDetailsPage = () => {
                             ));
                           })()}
                         </div>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Bottom Row: Review Date & Responsible Person */}
@@ -9533,7 +9857,8 @@ export const TicketDetailsPage = () => {
                               style: { display: 'none' } // Hide default label since we have floating label
                             }}
                             inputProps={{
-                              style: { fontSize: '14px' }
+                              style: { fontSize: '14px' },
+                              min: new Date().toISOString().split('T')[0]
                             }}
                             sx={{
                               '& .MuiInputBase-root': {
@@ -9997,6 +10322,236 @@ export const TicketDetailsPage = () => {
               </Card>
             )}
 
+            {/* Society / Wing / Area Card (editable) */}
+            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                    <MapPin className="w-6 h-6 text-[#C72030]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black">LOCATION INFORMATION</h3>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
+                  onClick={handleSocietyLocationEdit}
+                  disabled={isEditingSocietyLocation || loadingSocietyLocations}
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  {loadingSocietyLocations ? 'Loading...' : 'Edit'}
+                </Button>
+              </div>
+
+              <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                {!isEditingSocietyLocation ? (
+                  /* View Mode */
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div className="flex items-center">
+                      <span className="text-gray-500 min-w-[140px]">Society</span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        {ticketData.society_location_id
+                          ? (societyLocations.find(s => s.id === ticketData.society_location_id)?.name || ticketData.society_location_id)
+                          : '-'}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-gray-500 min-w-[140px]">Wing</span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        {ticketData.wing_id
+                          ? (societyWings.find(w => w.id === ticketData.wing_id)?.name || ticketData.wing_name || ticketData.wing_id)
+                          : (ticketData.wing_name || '-')}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-gray-500 min-w-[140px]">Area</span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        {ticketData.area_id
+                          ? (societyAreas.find(a => a.id === ticketData.area_id)?.name || ticketData.area_name || ticketData.area_id)
+                          : (ticketData.area_name || '-')}
+                      </span>
+                    </div>
+                    {hasData(ticketData.region) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Region</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.region}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.building_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Building</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.floor_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Floor</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
+                      </div>
+                    )}
+                    {/* {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
+                      </div>
+                    )} */}
+                    {hasData(ticketData.zone) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Zone</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.zone}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.district) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">District</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.district}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.room_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Room</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.site_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Site</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.site_name}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.city) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">City</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.city}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.state) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">State</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.state}</span>
+                      </div>
+                    )}
+                    {hasData(ticketData.address) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Address</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{ticketData.address}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Edit Mode */
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSocietyLocationSubmit();
+                    }}
+                    className="space-y-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Society Dropdown */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Society</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.society_location_id}
+                          onChange={(e) => handleSocietyChange(e.target.value)}
+                          label="Society"
+                          notched
+                          displayEmpty
+                          disabled={loadingSocietyLocations}
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyLocations ? 'Loading...' : 'Select Society'}
+                          </MenuItem>
+                          {societyLocations.map((loc) => (
+                            <MenuItem key={loc.id} value={loc.id.toString()}>
+                              {loc.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+
+                      {/* Wing Dropdown */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Wing</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.wing_id}
+                          onChange={(e) => handleSocietyWingChange(e.target.value)}
+                          label="Wing"
+                          notched
+                          displayEmpty
+                          disabled={loadingSocietyWings || !societyLocationFormData.society_location_id}
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyWings ? 'Loading...' : !societyLocationFormData.society_location_id ? 'Select Society First' : 'Select Wing'}
+                          </MenuItem>
+                          {societyWings.map((wing) => (
+                            <MenuItem key={wing.id} value={wing.id.toString()}>
+                              {wing.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+
+                      {/* Area Dropdown */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Area</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.area_id}
+                          onChange={(e) => setSocietyLocationFormData(prev => ({ ...prev, area_id: e.target.value }))}
+                          label="Area"
+                          notched
+                          displayEmpty
+                          disabled={loadingSocietyAreas || !societyLocationFormData.wing_id}
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyAreas ? 'Loading...' : !societyLocationFormData.wing_id ? 'Select Wing First' : 'Select Area'}
+                          </MenuItem>
+                          {societyAreas.map((area) => (
+                            <MenuItem key={area.id} value={area.id.toString()}>
+                              {area.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                    </div>
+
+                    <div className="flex items-center gap-3 justify-end mt-6">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditingSocietyLocation(false)}
+                        disabled={submittingSocietyLocation}
+                        className="border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={submittingSocietyLocation}
+                        className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
+                      >
+                        {submittingSocietyLocation ? 'Saving...' : 'Submit'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+
             <Card className="w-full bg-white rounded-lg shadow-sm border">
               {/* Header */}
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
@@ -10052,7 +10607,7 @@ export const TicketDetailsPage = () => {
                               </span>
                             </MenuItem>
                             {communicationTemplates
-                              .filter(template => template.identifier === "Internal" && template.active === true)
+                              .filter(template => template.identifier === "helpdesk")
                               .map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
                                   {template.identifier_action}
@@ -10177,7 +10732,7 @@ export const TicketDetailsPage = () => {
                               </span>
                             </MenuItem>
                             {communicationTemplates
-                              .filter(template => template.identifier === "Customer" && template.active === true)
+                              .filter(template => template.identifier === "helpdesk")
                               .map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
                                   {template.identifier_action}
@@ -10293,7 +10848,7 @@ export const TicketDetailsPage = () => {
                     </div>
                   </div>
                   <h3 className="text-lg font-semibold uppercase text-black">
-                    Logs
+                    Complaint Logs
                   </h3>
                 </div>
               </div>
@@ -10305,7 +10860,7 @@ export const TicketDetailsPage = () => {
                 ) : (
                   (() => {
                     const sorted = [...complaintLogs].sort(
-                      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                     );
 
                     return (
@@ -10573,138 +11128,6 @@ export const TicketDetailsPage = () => {
           </TabsContent>
 
           {/* Location Info Tab */}
-          <TabsContent value="location-info" className="p-4 sm:p-6">
-            <div className="space-y-6">
-              {/* Check if there's any location data to display */}
-              {hasData(ticketData.region) ||
-                hasData(ticketData.building_name) ||
-                hasData(ticketData.floor_name) ||
-                hasData(ticketData.flat_number) ||
-                hasData(ticketData.unit_name) ||
-                hasData(ticketData.zone) ||
-                hasData(ticketData.district) ||
-                hasData(ticketData.room_name) ||
-                hasData(ticketData.area_name) ||
-                hasData(ticketData.site_name) ||
-                hasData(ticketData.city) ||
-                hasData(ticketData.state) ||
-                hasData(ticketData.address) ||
-                hasData(ticketData.wing_name) ? (
-                /* Location Information Card */
-                <Card className="w-full">
-                  <CardHeader className="pb-4 lg:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-[#1A1A1A] text-lg lg:text-xl">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-white text-xs">
-                        <MapPin className="w-6 h-6 text-[#C72030]" />
-                      </div>
-                      <span>LOCATION INFORMATION</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                      {hasData(ticketData.region) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Region</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.region}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.building_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Building</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.floor_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Floor</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.flat_number || ticketData.unit_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.zone) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Zone</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.zone}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.district) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">District</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.district}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.room_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Room</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.area_name || ticketData.site_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Area/Site</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.area_name || ticketData.site_name}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.city) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">City</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.city}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.state) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">State</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.state}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.address) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Address</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.address}</span>
-                        </div>
-                      )}
-                      {hasData(ticketData.wing_name) && (
-                        <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Wing</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.wing_name}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                /* No Data Available Message */
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <MapPin className="w-16 h-16 text-gray-300 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">
-                    No Location Information Available
-                  </h3>
-                  <p className="text-gray-400 max-w-sm">
-                    There is no location information available to display at
-                    this time.
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
           {/* Survey Info Tab */}
           <TabsContent value="survey-info" className="p-4 sm:p-6">
             <div className="space-y-6">
@@ -11269,45 +11692,166 @@ export const TicketDetailsPage = () => {
 
           {/* Action Logs Tab */}
           <TabsContent value="action-logs" className="p-4 sm:p-6">
-            {complaintLogs.length > 0 ? (
+            {ticketFeedsData?.feeds && ticketFeedsData.feeds.length > 0 ? (
+              <div className="space-y-6">
+                {[...ticketFeedsData.feeds].reverse().map((group: any, groupIdx: number) => (
+                  <div key={groupIdx}>
+                    {/* Date Header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-sm font-semibold text-[#C72030]">{group.date}</span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                    {/* Entries */}
+                    <div className="space-y-3 pl-2">
+                      {[...group.entries].reverse().map((entry: any, entryIdx: number) => (
+                        <div key={entryIdx} className="flex gap-4">
+                          {/* Time column */}
+                          <div className="w-20 shrink-0 text-xs text-gray-500 pt-1 text-right">
+                            {entry.time}
+                          </div>
+                          {/* Timeline dot */}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${(entry.type === 'Escalation' || entry.type === 'Executive Escalation') ? 'bg-[#C72030]' : 'bg-gray-400'}`} />
+                            {entryIdx < group.entries.length - 1 && (
+                              <div className="w-px flex-1 bg-gray-200 mt-1" style={{ minHeight: '20px' }} />
+                            )}
+                          </div>
+                          {/* Content card */}
+                          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-2">
+                            {(entry.type === 'Escalation' || entry.type === 'Executive Escalation') ? (
+                              <div>
+                                <p className="text-sm font-semibold text-gray-800 mb-1">{entry.label || entry.type}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="inline-block bg-[#C72030] text-white text-xs font-bold px-2 py-0.5 rounded">
+                                    {entry.name}
+                                  </span>
+                                  {entry.escalated_to && entry.escalated_to.length > 0 && (
+                                    <span className="text-sm text-gray-600">
+                                      escalated to{' '}
+                                      <span className="font-medium text-gray-800">
+                                        {entry.escalated_to.join(', ')}
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+                                {entry.category && (
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {entry.category}{entry.issue_related_to ? ` · ${entry.issue_related_to}` : ''}{entry.worker_esc_type ? ` · ${entry.worker_esc_type}` : ''}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div>
+                                {entry.user && (
+                                  <p className="text-sm font-semibold text-gray-800 mb-1">
+                                    {entry.user} <span className="font-normal text-gray-500">- made below changes</span>
+                                  </p>
+                                )}
+                                {entry.status && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600">Status -</span>
+                                    <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded border border-gray-300">
+                                      {entry.status}
+                                    </span>
+                                  </div>
+                                )}
+                                {entry.comments && entry.comments.length > 0 && entry.comments.map((c: any, ci: number) => (
+                                  <div key={ci} className="mt-1 text-sm text-gray-600 bg-white border border-gray-200 rounded px-3 py-1.5">
+                                    {c?.text ?? c}
+                                  </div>
+                                ))}
+                                {entry.internal_comments && entry.internal_comments.length > 0 && entry.internal_comments.map((c: any, ci: number) => (
+                                  <div key={ci} className="mt-1 text-sm text-gray-500 italic bg-white border border-gray-200 rounded px-3 py-1.5">
+                                    {c?.text ?? c}
+                                  </div>
+                                ))}
+                                {entry.changes && entry.changes.length > 0 && (
+                                  <div className="mt-1 space-y-1">
+                                    {entry.changes.map((change: { field: string; from?: string; to: string }, ci: number) => (
+                                      <div key={ci} className="flex items-center gap-1.5 text-xs text-gray-600">
+                                        <span className="font-medium">{change.field}:</span>
+                                        {change.from && (
+                                          <>
+                                            <span className="bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded">{change.from}</span>
+                                            <span className="text-gray-400">→</span>
+                                          </>
+                                        )}
+                                        <span className="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">{change.to}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {entry.status_reason && (
+                                  <p className="text-xs text-gray-400 mt-1">Reason: {entry.status_reason}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">
+                No logs found
+              </p>
+            )}
+          </TabsContent>
+
+          {/* Feedbacks Tab */}
+          <TabsContent value="feedbacks" className="p-4 sm:p-6">
+            {ticketData?.feedbacks && ticketData.feedbacks.length > 0 ? (
               <div className="bg-white rounded-lg border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date/Time</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Comment</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Staff</TableHead>
                       <TableHead>By</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Comments</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {complaintLogs.map((log, index) => (
-                      <TableRow key={log.id || index}>
+                    {ticketData.feedbacks.map((feedback: any, index: number) => (
+                      <TableRow key={feedback.id || index}>
                         <TableCell className="font-medium text-sm">
-                          {log.created_at ? formatLogTime(log.created_at) : ''}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className="bg-blue-100 text-blue-700 text-xs">
-                            {log.log_status}
-                          </Badge>
+                          {feedback.created_at ? formatLogTime(feedback.created_at) : '-'}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {log.log_by || "-"}
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <svg
+                                key={i}
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill={i < (feedback.rating || 0) ? '#C72030' : 'none'}
+                                stroke="#C72030"
+                                strokeWidth="2"
+                              >
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                              </svg>
+                            ))}
+                            <span className="ml-1 text-gray-600">({feedback.rating || 0}/5)</span>
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm">
-                          {getPriorityLabel(log.priority)}
+                          {feedback.comment && feedback.comment.trim() ? feedback.comment : '-'}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {log.log_comment && log.log_comment.length > 5 ? (
-                            <Tooltip title={log.log_comment} arrow>
-                              <span className="cursor-help">
-                                {log.log_comment.substring(0, 5)}...
-                              </span>
-                            </Tooltip>
-                          ) : (
-                            log.log_comment || "No comments"
-                          )}
+                          {feedback.status && feedback.status.trim() ? (
+                            <Badge className="bg-blue-100 text-blue-700 text-xs">{feedback.status}</Badge>
+                          ) : '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {feedback.staff && feedback.staff.trim() ? feedback.staff : '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {feedback.log_by || '-'}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -11315,9 +11859,7 @@ export const TicketDetailsPage = () => {
                 </Table>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">
-                No action logs found
-              </p>
+              <p className="text-gray-500 text-center py-8">No feedbacks found</p>
             )}
           </TabsContent>
         </Tabs>

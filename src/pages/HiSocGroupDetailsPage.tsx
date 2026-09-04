@@ -49,6 +49,17 @@ const HiSocGroupDetailsPage = () => {
     }
   }, [id, dispatch, baseUrl, token]);
 
+  if (loading) {
+    return (
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading group details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -108,11 +119,6 @@ const HiSocGroupDetailsPage = () => {
                       className="flex flex-col p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#C72030]/10 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-[#C72030]">
-                            {member.user?.firstname ? member.user.firstname.charAt(0).toUpperCase() : 'U'}
-                          </span>
-                        </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-900 truncate">
                             {member.user?.firstname || ''} {member.user?.lastname || ''}

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { useLayout } from "../contexts/LayoutContext";
+import { trackSidebarClick } from "@/utils/posthogHelpers";
 import {
   ChevronRight,
   ChevronLeft,
@@ -342,7 +343,6 @@ const actionIconMap: Record<string, any> = {
   sos_category_setup: AlertCircle,
 
   // Master Module (from API response)
-  account: Building,
   building: Building,
   wing: Building,
   area: MapPin,
@@ -369,7 +369,6 @@ const actionIconMap: Record<string, any> = {
   amenity: Star,
   carpool: Car,
   visitors: UserCheck,
-  events: PartyPopper,
   curated_services: Gift,
   service_category: Layers,
   service: Star,
@@ -379,7 +378,6 @@ const actionIconMap: Record<string, any> = {
   helpdesk: Ticket,
   notices: Bell,
   sos_directory: AlertCircle,
-  wallet: Wallet,
   esr_csr: HandHeart,
   customers: Users,
 
@@ -409,7 +407,12 @@ export const ActionSidebar = () => {
     setCurrentFunction,
     isActionSidebarVisible,
   } = useActionLayout();
-  const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
+  const {
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
+  } = useLayout();
   const [expandedFunctions, setExpandedFunctions] = useState<Set<string>>(
     new Set()
   );
@@ -491,6 +494,7 @@ export const ActionSidebar = () => {
   }
 
   const handleNavigation = (link: string, functionName: string) => {
+    trackSidebarClick(functionName, currentModule || 'Action Module', link);
     setCurrentFunction(functionName);
     navigate(link);
   };
@@ -594,7 +598,9 @@ export const ActionSidebar = () => {
     <div
       className={`${
         isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40 ${
+        isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      } md:translate-x-0`}
       style={{ top: "4rem", height: "91vh" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>

@@ -406,7 +406,8 @@ const BroadcastCreate = () => {
   }, [formData.shared, groups.length]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">
+    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto broadcast-create-page">
+      <style>{`.broadcast-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -509,7 +510,7 @@ const BroadcastCreate = () => {
               {/* Description spanning 2 columns */}
               <div className="md:col-span-2">
                 <TextField
-                  label={<span>Notice Description<span className="text-red-500">*</span></span>}
+                  label={<span>Notice Description<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                   placeholder="Enter Description"
                   value={formData.notice_text}
                   onChange={handleChange}
@@ -529,7 +530,7 @@ const BroadcastCreate = () => {
 
               {/* Broadcast From */}
               <TextField
-                label={<span>Expire Date<span className="text-red-500">*</span></span>}
+                label={<span>Expire Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="date"
                 value={formData.expire_date}
                 onChange={handleChange}
@@ -554,7 +555,7 @@ const BroadcastCreate = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Broadcast To */}
                <TextField
-                label={<span>Expire Time<span className="text-red-500">*</span></span>}
+                label={<span>Expire Time<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="time"
                 value={formData.expire_time}
                 onChange={handleChange}
@@ -912,8 +913,7 @@ const BroadcastCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                  type="button"
+           className="btn-primary h-9 px-4 text-sm font-medium"                  type="button"
                   onClick={() => document.getElementById('coverImageInput')?.click()}
                 >
                   {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -1033,8 +1033,8 @@ const BroadcastCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                  type="button"
+
+           className="btn-primary h-9 px-4 text-sm font-medium"                  type="button"
                   onClick={() => document.getElementById('broadcastAttachmentInput')?.click()}
                 >
                   {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -1108,15 +1108,13 @@ const BroadcastCreate = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
+           className="btn-primary h-9 px-4 text-sm font-medium"          >
             {loading ? 'Submit' : 'Submit'}
           </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"     >
             Cancel
           </button>
         </div>

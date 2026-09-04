@@ -18,16 +18,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface Attachment {
   id: number;
@@ -310,10 +305,11 @@ const ViolationDetail: React.FC = () => {
 
   if (!deviation) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <Toaster position="top-right" richColors closeButton />
-        <div className="flex items-center justify-center py-8">
-          <div className="text-gray-500">Loading violation details...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading violation details...</p>
         </div>
       </div>
     );
@@ -350,9 +346,8 @@ const ViolationDetail: React.FC = () => {
           <div className="flex gap-2">
             <Button
               onClick={handleEditStatus}
-              variant="outline"
               size="sm"
-              className="border-orange-500 text-orange-500 hover:bg-orange-50"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit Status
@@ -360,8 +355,7 @@ const ViolationDetail: React.FC = () => {
             <Button
               onClick={handleSendViolation}
               size="sm"
-              style={{ backgroundColor: "#00B8D9", color: "white" }}
-              className="hover:opacity-90"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Send Violation
             </Button>
@@ -543,10 +537,10 @@ const ViolationDetail: React.FC = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="w-full text-xs h-7"
+                                className="w-full text-xs h-7 [&_svg]:text-[#C72030]"
                                 onClick={() => window.open(attachment.document_file_name, '_blank')}
                               >
-                                <Download className="w-3 h-3 mr-1" />
+                                <Download className="w-3 h-3 mr-1 text-[#C72030]" />
                                 Download
                               </Button>
                             </div>
@@ -739,7 +733,7 @@ const ViolationDetail: React.FC = () => {
       </div>
 
       {/* Edit Status Dialog */}
-      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
+      <Dialog open={isEditStatusOpen} modal={false} onOpenChange={setIsEditStatusOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Status</DialogTitle>
@@ -749,21 +743,24 @@ const ViolationDetail: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* Status Dropdown */}
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status.id} value={String(status.id)}>
-                      {status.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Status <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                displayEmpty
+                label="Select Status *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Status</em></MenuItem>
+                {statusOptions.map((status) => (
+                  <MenuItem key={status.id} value={String(status.id)}>
+                    {status.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
 
             {/* Comments */}
             <div className="grid gap-2">
@@ -791,7 +788,7 @@ const ViolationDetail: React.FC = () => {
               type="submit"
               onClick={handleSubmitStatusEdit}
               disabled={isSubmittingStatus}
-              className="bg-orange-500 text-white hover:bg-orange-600"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingStatus ? 'Submitting...' : 'Submit'}
             </Button>
@@ -835,9 +832,8 @@ const ViolationDetail: React.FC = () => {
                 />
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={() => document.getElementById('attachments')?.click()}
-                  className="w-full"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Files
@@ -884,7 +880,7 @@ const ViolationDetail: React.FC = () => {
               type="submit"
               onClick={handleSubmitViolation}
               disabled={isSubmittingViolation}
-              className="bg-[#00B8D9] text-white hover:bg-[#00B8D9]/90"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingViolation ? 'Sending...' : 'Submit'}
             </Button>

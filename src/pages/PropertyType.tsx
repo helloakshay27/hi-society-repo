@@ -120,7 +120,7 @@ const PropertyType = () => {
                   onChange={(e) => setName(e.target.value)}
                   fullWidth
                   variant="outlined"
-                  slotProps={{ inputLabel: { shrink: true } }}
+                  slotProps={{ inputLabel: { shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#da7756' } } } }}
                   InputProps={{ sx: fieldStyles }}
                   required
                   disabled={loading}
@@ -141,7 +141,7 @@ const PropertyType = () => {
             <Button
               type="button"
               onClick={() => navigate("/settings/property-type-list")}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+              className="!border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50 px-8 py-2"
               disabled={loading}
             >
               Cancel

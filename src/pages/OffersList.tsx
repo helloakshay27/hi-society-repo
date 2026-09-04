@@ -19,6 +19,7 @@ import {
 import { Column } from 'jspdf-autotable';
 import axios from 'axios';
 import { getFullUrl, HI_SOCIETY_CONFIG } from '@/config/apiConfig';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface ApiOffer {
   id: number;
@@ -66,6 +67,7 @@ interface Offer {
 }
 
 export default function OffersList() {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('offers');
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -245,6 +247,96 @@ export default function OffersList() {
     setCurrentPage(page);
   };
 
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   // All columns from API
   const columns = [
     { key: 'srNo', label: 'Sr. No.', sortable: false },
@@ -341,22 +433,26 @@ export default function OffersList() {
       case 'actions':
         return (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/offer/view/${item.id}`)}
-              title="View"
-            >
-              <Eye className="w-4 h-4 text-gray-700" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/offer/add/${item.id}`)}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4 text-gray-700" />
-            </Button>
+            {shouldShow("Offers", "show") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/offer/view/${item.id}`)}
+                title="View"
+              >
+                <Eye className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
+            {shouldShow("Offers", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/offer/add/${item.id}`)}
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4 text-gray-700" />
+              </Button>
+            )}
           </div>
         );
       
@@ -392,13 +488,15 @@ export default function OffersList() {
   const renderCustomActions = () => {
     return (
       <div className="flex gap-2">
-        <Button 
-          onClick={handleAddOffer}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        >
-          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-          Add
-        </Button>
+        {shouldShow("Offers", "create") && (
+          <Button 
+            onClick={handleAddOffer}
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+            Add
+          </Button>
+        )}
         {selectedOffers.length > 0 && (
           <Button
             variant="outline"
@@ -513,13 +611,13 @@ export default function OffersList() {
             <Button
               variant="outline"
               onClick={() => console.log('Filter analytics')}
-              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border-gray-300"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 !border-[#da7756] [&_svg]:!text-[#da7756]"
             >
-              <Calendar className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
+              <Calendar className="w-4 h-4" />
+              <span className="text-sm font-medium text-[#da7756]">
                 2025-01-01 - 2025-12-31
               </span>
-              <Filter className="w-4 h-4 text-gray-600" />
+              <Filter className="w-4 h-4" />
             </Button>
           </div>
 
@@ -620,49 +718,28 @@ export default function OffersList() {
             />
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {totalCount > 0 && (
               <div className="mt-6">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
-                        onClick={() => {
-                          if (currentPage > 1) handlePageChange(currentPage - 1);
-                        }}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
-                    {Array.from(
-                      { length: Math.min(totalPages, 10) },
-                      (_, i) => i + 1
-                    ).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => handlePageChange(page)}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    {totalPages > 10 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
+                    {renderPaginationItems()}
                     <PaginationItem>
                       <PaginationNext
-                        onClick={() => {
-                          if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                        }}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
-                <div className="text-center mt-2 text-sm text-gray-600">
+                {/* <div className="text-center mt-2 text-sm text-gray-600">
                   Showing page {currentPage} of {totalPages} ({totalCount} total offers)
-                </div>
+                </div> */}
               </div>
             )}
           </div>

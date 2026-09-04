@@ -82,7 +82,7 @@ const AllContent = () => {
 
     const logoElement = useMemo(() => {
         if (typeof window === 'undefined') {
-            return   <DEFAULT_LOGO_CODE />;
+            return <DEFAULT_LOGO_CODE />;
             //  <OIG_LOGO_CODE />
             //  <DEFAULT_LOGO_CODE />;
         }

@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material'
+import { fieldStyles, menuProps } from '../ticket-management/fieldStyles'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -18,6 +20,7 @@ import { fetchHelpdeskCategories } from '@/store/slices/helpdeskCategoriesSlice'
 import { createResponseEscalation, clearState, fetchResponseEscalations, updateResponseEscalation, deleteResponseEscalation } from '@/store/slices/responseEscalationSlice'
 import { ResponseEscalationApiFormData, FMUserDropdown, EscalationMatrixPayload, ResponseEscalationGetResponse, UpdateResponseEscalationPayload } from '@/types/escalationMatrix'
 import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManagementAPI'
+import { apiClient } from '@/utils/apiClient'
 import { API_CONFIG } from '@/config/apiConfig'
 import { toast } from 'sonner'
 import ReactSelect from 'react-select'
@@ -25,26 +28,39 @@ import ReactSelect from 'react-select'
 // Schema for form validation
 const responseEscalationSchema = z.object({
   escalationLevels: z.object({
-    e1: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e2: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e3: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e4: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
-    e5: z.array(z.number()).max(15, 'Maximum 15 users allowed per level'),
+    e1: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e2: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e3: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e4: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
+    e5: z.array(z.number()).max(15, "Maximum 15 users allowed per level"),
   }),
-})
+});
 
-type ResponseEscalationFormData = z.infer<typeof responseEscalationSchema>
+type ResponseEscalationFormData = z.infer<typeof responseEscalationSchema>;
 
 export const ResponseEscalationTab: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
 
   // Local state
   const [selectedUsers, setSelectedUsers] = useState<{
-    e1: number[]
-    e2: number[]
-    e3: number[]
-    e4: number[]
-    e5: number[]
+    e1: number[];
+    e2: number[];
+    e3: number[];
+    e4: number[];
+    e5: number[];
+  }>({
+    e1: [],
+    e2: [],
+    e3: [],
+    e4: [],
+    e5: [],
+  })
+  const [editSelectedUsers, setEditSelectedUsers] = useState<{
+    e1: number[];
+    e2: number[];
+    e3: number[];
+    e4: number[];
+    e5: number[];
   }>({
     e1: [],
     e2: [],
@@ -68,11 +84,21 @@ export const ResponseEscalationTab: React.FC = () => {
   const [selectedIssueTypeId, setSelectedIssueTypeId] = useState<string>('')
   const [selectedCategoryTypeId, setSelectedCategoryTypeId] = useState<string>('')
   const [selectedAssignTo, setSelectedAssignTo] = useState<number[]>([])
+  const [formCategoryOptions, setFormCategoryOptions] = useState<{ id: number; name: string }[]>([])
+  const [formCategoriesLoading, setFormCategoriesLoading] = useState(false)
 
   // Edit dialog dropdown selections
   const [editIssueTypeId, setEditIssueTypeId] = useState<string>('')
   const [editCategoryTypeId, setEditCategoryTypeId] = useState<string>('')
   const [editAssignTo, setEditAssignTo] = useState<number[]>([])
+  const [editCategoryOptions, setEditCategoryOptions] = useState<{ id: number; name: string }[]>([])
+  const [editCategoriesLoading, setEditCategoriesLoading] = useState(false)
+  // Map of user id -> display name for pre-existing edit selections not in userOptions
+  const [editUserLabels, setEditUserLabels] = useState<Record<number, string>>({})
+
+  // Filter dialog category selections
+  const [filterCategoryOptions, setFilterCategoryOptions] = useState<{ id: number; name: string }[]>([])
+  const [filterCategoriesLoading, setFilterCategoriesLoading] = useState(false)
 
   // FM/Project tab state
   const [activeFmProjectTab, setActiveFmProjectTab] = useState<'fm' | 'project'>('fm')
@@ -113,6 +139,14 @@ export const ResponseEscalationTab: React.FC = () => {
   // Options for react-select
   const userOptions = serviceEngineerOptions?.map(user => ({ value: user.id, label: user.full_name })) || []
 
+  // Returns userOptions extended with any pre-selected edit users whose IDs aren't in userOptions
+  const getEditLevelOptions = (levelIds: number[]) => {
+    const extra = levelIds
+      .filter(id => !userOptions.find(o => o.value === id) && editUserLabels[id])
+      .map(id => ({ value: id, label: editUserLabels[id] }))
+    return [...userOptions, ...extra]
+  }
+
   // Fetch data on component mount
   useEffect(() => {
     dispatch(fetchHelpdeskCategories())
@@ -121,46 +155,104 @@ export const ResponseEscalationTab: React.FC = () => {
     loadEscalationRules(1, '', '')
   }, [dispatch])
 
+  // Fetch filtered categories when selectedIssueTypeId changes (form)
+  useEffect(() => {
+    if (selectedIssueTypeId) {
+      fetchCategoriesByIssueType(selectedIssueTypeId, 'form')
+    } else {
+      setFormCategoryOptions([])
+    }
+  }, [selectedIssueTypeId])
+
+  // Fetch filtered categories when editIssueTypeId changes (edit dialog)
+  useEffect(() => {
+    if (editIssueTypeId) {
+      fetchCategoriesByIssueType(editIssueTypeId, 'edit')
+    } else {
+      setEditCategoryOptions([])
+    }
+  }, [editIssueTypeId])
+
+  // Fetch filtered categories when filterIssueTypeId changes (filter)
+  useEffect(() => {
+    if (filterIssueTypeId) {
+      fetchCategoriesByIssueType(filterIssueTypeId, 'filter')
+    } else {
+      setFilterCategoryOptions([])
+    }
+  }, [filterIssueTypeId])
+
   // Reload escalation rules when FM/Project tab changes
   useEffect(() => {
     loadEscalationRules(1, filterIssueTypeId, filterCategoryId)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFmProjectTab])
 
   // Load user account to get site_id
   const loadUserAccount = async () => {
     try {
-      const account = await ticketManagementAPI.getUserAccount()
-      setUserAccount(account)
-      console.log('User account loaded:', account)
+      const account = await ticketManagementAPI.getUserAccount();
+      setUserAccount(account);
+      console.log("User account loaded:", account);
     } catch (error) {
-      console.error('Error loading user account:', error)
-      toast.error('Failed to load user account!')
+      console.error("Error loading user account:", error);
+      toast.error("Failed to load user account!");
     }
-  }
+  };
 
   // Load dropdown options
   const loadDropdowns = async () => {
     setLoadingUsers(true)
     try {
-      const [issueTypesData, categoriesData, engineersData] = await Promise.all([
+      const [issueTypesResult, engineersResult] = await Promise.allSettled([
         ticketManagementAPI.getIssueTypesDropdown(),
-        ticketManagementAPI.getCategoriesDropdown(),
-        ticketManagementAPI.getServiceEngineers(),
+        apiClient.get('/crm/admin/escalation_users'),
       ])
-      setIssueTypeOptions(issueTypesData.issue_types || [])
-      setCategoryDropdownOptions(categoriesData.categories || [])
-      setServiceEngineerOptions(engineersData.service_engineers || [])
-      console.log('Dropdowns loaded:', { issueTypesData, categoriesData, engineersData })
-    } catch (error) {
-      console.error('Error loading dropdowns:', error)
-      toast.error('Failed to load dropdown options!')
+      if (issueTypesResult.status === 'fulfilled') {
+        setIssueTypeOptions(issueTypesResult.value.issue_types || [])
+      } else {
+        console.error('Error loading issue types:', issueTypesResult.reason)
+        toast.error('Failed to load issue types!')
+      }
+      if (engineersResult.status === 'fulfilled') {
+        setServiceEngineerOptions(engineersResult.value.data.escalation_users || [])
+      } else {
+        console.error('Error loading escalation users:', engineersResult.reason)
+        toast.error('Failed to load escalation users!')
+      }
     } finally {
-      setLoadingUsers(false)
+      setLoadingUsers(false);
+    }
+  };
+
+  // Fetch categories filtered by issue type
+  const fetchCategoriesByIssueType = async (
+    issueTypeId: string,
+    target: 'form' | 'edit' | 'filter'
+  ) => {
+    const setLoading = target === 'form' ? setFormCategoriesLoading : target === 'edit' ? setEditCategoriesLoading : setFilterCategoriesLoading
+    const setOptions = target === 'form' ? setFormCategoryOptions : target === 'edit' ? setEditCategoryOptions : setFilterCategoryOptions
+
+    if (!issueTypeId) {
+      setOptions([])
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await apiClient.get('/dropdown/categories', {
+        params: { 'q[issue_type_id_eq]': issueTypeId },
+      })
+      setOptions(res.data.categories || [])
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      setOptions([])
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Load escalation rules from /crm/admin/assign_escalation.json
+  // Load escalation rules from /crm/admin/response_escalation_rule.json
   const loadEscalationRules = async (
     page = 1,
     issueTypeId = filterIssueTypeId,
@@ -171,13 +263,13 @@ export const ResponseEscalationTab: React.FC = () => {
       const params: Record<string, string | number> = {
         page,
         per_page: ESCALATION_RULES_PER_PAGE,
-        'q[esc_type_eq]': 'response',
-        'q[issue_related_to_eq]': activeFmProjectTab === 'fm' ? 'FM' : 'Project',
+        issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
       }
       if (issueTypeId) params['q[issue_type_id_eq]'] = issueTypeId
       if (categoryId) params['q[category_id_eq]'] = categoryId
-      const data = await ticketManagementAPI.getAssignEscalations(params)
-      setEscalationRulesList(data.complaint_workers || [])
+
+      const data = await ticketManagementAPI.getResponseEscalationRules(params)
+      setEscalationRulesList(data.response_rules || [])
       if (data.pagination) {
         setEscalationRulesPagination({
           currentPage: data.pagination.current_page,
@@ -199,7 +291,7 @@ export const ResponseEscalationTab: React.FC = () => {
     if (success) {
       // Only show toast for create operations, not update (update has its own toast in handleUpdateRule)
       if (!editingRule) {
-        toast.success('Response escalation rule created successfully!')
+        toast.success("Response escalation rule created successfully!");
       }
       // Reset form
       form.reset()
@@ -210,13 +302,16 @@ export const ResponseEscalationTab: React.FC = () => {
       dispatch(clearState())
       loadEscalationRules(1, '', '')
     }
-    if (error) {
+    if (!submissionLoading && error) {
       // Ensure error is a string for toast display
-      const errorMessage = typeof error === 'string' ? error : 'An error occurred while processing your request';
-      toast.error(errorMessage + '!');
+      const errorMessage =
+        typeof error === "string"
+          ? error
+          : "An error occurred while processing your request";
+      toast.error(errorMessage + "!");
       dispatch(clearState());
     }
-  }, [success, error, form, dispatch, editingRule])
+  }, [success, error, form, dispatch, editingRule, submissionLoading]);
 
   // Helper functions
   const getIssueTypeName = (id: number) => {
@@ -224,9 +319,9 @@ export const ResponseEscalationTab: React.FC = () => {
   }
 
   const getCategoryName = (id: number) => {
-    return categoryDropdownOptions.find(cat => cat.id === id)?.name || 
-           categoriesData?.helpdesk_categories?.find(cat => cat.id === id)?.name || 
-           'Unknown Category'
+    return categoryDropdownOptions.find(cat => cat.id === id)?.name ||
+      categoriesData?.helpdesk_categories?.find(cat => cat.id === id)?.name ||
+      'Unknown Category'
   }
 
   const getUserName = (id: number) => {
@@ -236,16 +331,16 @@ export const ResponseEscalationTab: React.FC = () => {
   const getUserNames = (userIds: string | number[] | null): string => {
     if (!userIds) return '-'
 
-    let ids: number[] = []
-    if (typeof userIds === 'string') {
+    let ids: number[] = [];
+    if (typeof userIds === "string") {
       try {
-        ids = JSON.parse(userIds)
+        ids = JSON.parse(userIds);
       } catch {
         // It might be a comma-separated name string, return as-is
         return userIds || '-'
       }
     } else {
-      ids = userIds
+      ids = userIds;
     }
 
     if (!Array.isArray(ids) || ids.length === 0) return '-'
@@ -281,79 +376,91 @@ export const ResponseEscalationTab: React.FC = () => {
   }
 
   // Handle edit rule
-  const handleEditRule = (rule: any) => {
-    setEditingRule(rule)
+  const handleEditRule = async (ruleListItem: any) => {
+    try {
+      const response = await ticketManagementAPI.getResponseEscalationRuleById(ruleListItem.id)
+      // The API returns an array, find the specific rule or take the first one
+      const rule = response.response_rules?.find((r: any) => r.id === ruleListItem.id) || response.response_rules?.[0] || ruleListItem
+      setEditingRule(rule)
 
-    // Helper to safely parse escalate_to_users
-    const safeParseUsers = (escalateToUsers: any): number[] => {
-      if (!escalateToUsers) return []
-      try {
-        if (Array.isArray(escalateToUsers)) {
-          return escalateToUsers.map(Number).filter(n => !isNaN(n))
-        }
-        if (typeof escalateToUsers === 'string') {
-          const parsed = JSON.parse(escalateToUsers)
-          return Array.isArray(parsed) ? parsed.map(Number).filter(n => !isNaN(n)) : []
-        }
-      } catch {
-        // Might be a comma-separated name string
-        return resolveNamesToIds(escalateToUsers)
-      }
-      return []
-    }
-
-    // Support both old format (escalations) and new API format (escalation_matrix)
-    const escalations = rule.escalations || []
-    const escalationMatrix = rule.escalation_matrix || []
-
-    const findLevel = (levelName: string) => {
-      const oldFormat = escalations.find((e: any) => e.name === levelName)
-      if (oldFormat) return oldFormat
-      const newFormat = escalationMatrix.find((e: any) => e.level === levelName)
-      return newFormat || null
-    }
-
-    const getLevelUsers = (levelName: string): number[] => {
-      const level = findLevel(levelName)
-      if (!level) return []
-      if (level.escalate_to_users) return safeParseUsers(level.escalate_to_users)
-      if (level.escalation_to && typeof level.escalation_to === 'string') {
-        return resolveNamesToIds(level.escalation_to)
-      }
-      return []
-    }
-
-    // Pre-populate form with existing data
-    const formUsers = {
-      e1: getLevelUsers('E1'),
-      e2: getLevelUsers('E2'),
-      e3: getLevelUsers('E3'),
-      e4: getLevelUsers('E4'),
-      e5: getLevelUsers('E5'),
-    }
-
-    form.reset({ escalationLevels: formUsers })
-    setSelectedUsers(formUsers)
-    setEditIssueTypeId(String(rule.issue_type_id || ''))
-    setEditCategoryTypeId(String(rule.category_id || ''))
-    
-    // Parse assign_to
-    let assignToIds: number[] = []
-    if (rule.assign_to) {
-      if (Array.isArray(rule.assign_to)) {
-        assignToIds = rule.assign_to.map(Number).filter((n: number) => !isNaN(n))
-      } else if (typeof rule.assign_to === 'string') {
+      // Helper to safely parse users
+      const safeParseUsers = (users: any): number[] => {
+        if (!users) return []
         try {
-          const parsed = JSON.parse(rule.assign_to)
-          assignToIds = Array.isArray(parsed) ? parsed.map(Number).filter((n: number) => !isNaN(n)) : []
+          if (Array.isArray(users)) {
+            return users.map(Number).filter(n => !isNaN(n))
+          }
+          if (typeof users === 'string') {
+            const parsed = JSON.parse(users)
+            return Array.isArray(parsed) ? parsed.map(Number).filter(n => !isNaN(n)) : []
+          }
         } catch {
-          assignToIds = resolveNamesToIds(rule.assign_to)
+          // Might be a comma-separated name string
+          return resolveNamesToIds(users)
         }
+        return []
       }
+
+      // Support both old format (escalations) and new API format (escalation_matrix)
+      const escalations = rule.escalations || []
+      const escalationMatrix = rule.escalation_matrix || []
+
+      const findLevelData = (levelName: string) => {
+        const oldFormat = escalations.find((e: any) => (e.name || '').toUpperCase() === levelName.toUpperCase())
+        if (oldFormat) return oldFormat
+        const newFormat = escalationMatrix.find((e: any) => (e.level || '').toUpperCase() === levelName.toUpperCase())
+        return newFormat || null
+      }
+
+      const getLevelUsersList = (levelName: string): number[] => {
+        const level = findLevelData(levelName)
+        if (!level) return []
+        // Support newest escalate_to_ids format
+        if (level.escalate_to_ids) return safeParseUsers(level.escalate_to_ids)
+        if (level.escalate_to_users) return safeParseUsers(level.escalate_to_users)
+        if (level.escalation_to && typeof level.escalation_to === 'string') {
+          return resolveNamesToIds(level.escalation_to)
+        }
+        return []
+      }
+
+      // Pre-populate form with existing data
+      const formUsers = {
+        e1: getLevelUsersList('E1'),
+        e2: getLevelUsersList('E2'),
+        e3: getLevelUsersList('E3'),
+        e4: getLevelUsersList('E4'),
+        e5: getLevelUsersList('E5'),
+      }
+
+      // Build id->name map from API escalate_to_display so edit dropdowns show names
+      const userLabels: Record<number, string> = {}
+        ;[...escalations, ...escalationMatrix].forEach((levelItem: any) => {
+          const ids: number[] = levelItem.escalate_to_ids || []
+          const display: string = levelItem.escalate_to_display || ''
+          const names = display.split(',').map((n: string) => n.trim()).filter(Boolean)
+          ids.forEach((id, i) => {
+            if (names[i]) userLabels[id] = names[i]
+          })
+        })
+      setEditUserLabels(userLabels)
+
+      setEditSelectedUsers(formUsers)
+      setEditIssueTypeId(String(rule.issue_type_id || ''))
+      setEditCategoryTypeId(String(rule.category_id || ''))
+
+      // Parse assign_to
+      let assignToIds: number[] = []
+      if (rule.assign_to) {
+        assignToIds = safeParseUsers(rule.assign_to)
+      }
+      setEditAssignTo(assignToIds)
+
+      setIsEditDialogOpen(true)
+    } catch (error) {
+      console.error('Error fetching response escalation rule details:', error)
+      toast.error('Failed to fetch rule details!')
     }
-    setEditAssignTo(assignToIds)
-    
-    setIsEditDialogOpen(true)
   }
 
   // Handle update rule
@@ -370,35 +477,49 @@ export const ResponseEscalationTab: React.FC = () => {
     }
 
     try {
+      const escalationMatrixPayload: any = {}
+      const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const
+      levels.forEach(level => {
+        // Preserve existing p1-p5 priority values from the rule being edited
+        const existingLevel = (editingRule?.escalation_matrix || []).find(
+          (e: any) => (e.level || e.name || '').toLowerCase() === level
+        ) || {}
+
+        escalationMatrixPayload[level] = {
+          name: level.toUpperCase(),
+          p1: existingLevel.p1 || '',
+          p2: existingLevel.p2 || '',
+          p3: existingLevel.p3 || '',
+          p4: existingLevel.p4 || '',
+          p5: existingLevel.p5 || '',
+          escalate_to_users: editSelectedUsers[level],
+          copy_to: existingLevel.copy_to || [],
+        }
+      })
+
       const payload = {
         id: editingRule.id,
         complaint_worker: {
           esc_type: 'response',
           issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
           of_phase: 'post_possession',
-          issue_type_id: editIssueTypeId,
-          category_id: editCategoryTypeId,
-          assign_to: editAssignTo.map(String),
+          issue_type_id: Number(editIssueTypeId),
+          category_id: Number(editCategoryTypeId),
+          assign_to: editAssignTo,
         },
-        escalation_matrix: {
-          e1: { name: 'E1', escalate_to_users: selectedUsers.e1.map(Number) },
-          e2: { name: 'E2', escalate_to_users: selectedUsers.e2.map(Number) },
-          e3: { name: 'E3', escalate_to_users: selectedUsers.e3.map(Number) },
-          e4: { name: 'E4', escalate_to_users: selectedUsers.e4.map(Number) },
-          e5: { name: 'E5', escalate_to_users: selectedUsers.e5.map(Number) },
-        },
+        escalation_matrix: escalationMatrixPayload,
       }
 
-      await ticketManagementAPI.createResolutionEscalationRule(payload as any)
+      await ticketManagementAPI.updateResolutionEscalationRule(payload as any)
       toast.success('Response escalation rule updated successfully!')
       setIsEditDialogOpen(false)
       setEditingRule(null)
       loadEscalationRules(escalationRulesPagination.currentPage, filterIssueTypeId, filterCategoryId)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating response escalation:', err)
-      toast.error('Failed to update response escalation. Please try again!')
+      toast.error(err?.response?.data?.message || 'Failed to update response escalation. Please try again!')
     }
-  }
+  };
 
   // Handle delete rule
   const handleDeleteRule = async (ruleId: number) => {
@@ -410,7 +531,7 @@ export const ResponseEscalationTab: React.FC = () => {
       console.error('Error deleting response escalation:', err)
       toast.error('Failed to delete response escalation. Please try again!')
     }
-  }
+  };
 
   // Form submission
   const onSubmit = async (data: ResponseEscalationFormData) => {
@@ -425,28 +546,31 @@ export const ResponseEscalationTab: React.FC = () => {
         return
       }
 
+      const escalationMatrixPayload: any = {}
+      const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const
+      levels.forEach(level => {
+        escalationMatrixPayload[level] = {
+          name: level.toUpperCase(),
+          escalate_to_users: data.escalationLevels[level],
+        }
+      })
+
       // Build payload for /crm/admin/create_complaint_worker
       const payload = {
         complaint_worker: {
           esc_type: 'response',
           issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
           of_phase: 'post_possession',
-          issue_type_id: selectedIssueTypeId,
-          category_id: selectedCategoryTypeId,
-          assign_to: selectedAssignTo.map(Number),
+          issue_type_id: Number(selectedIssueTypeId),
+          category_id: Number(selectedCategoryTypeId),
+          assign_to: selectedAssignTo,
         },
-        escalation_matrix: {
-          e1: { name: 'E1', escalate_to_users: data.escalationLevels.e1.map(Number) },
-          e2: { name: 'E2', escalate_to_users: data.escalationLevels.e2.map(Number) },
-          e3: { name: 'E3', escalate_to_users: data.escalationLevels.e3.map(Number) },
-          e4: { name: 'E4', escalate_to_users: data.escalationLevels.e4.map(Number) },
-          e5: { name: 'E5', escalate_to_users: data.escalationLevels.e5.map(Number) },
-        },
+        escalation_matrix: escalationMatrixPayload,
       }
 
       await ticketManagementAPI.createResolutionEscalationRule(payload as any)
       toast.success('Response escalation rule created successfully!')
-      
+
       // Reset form
       form.reset()
       setSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] })
@@ -496,29 +620,38 @@ export const ResponseEscalationTab: React.FC = () => {
         toast.error(finalErrorMessage + '!')
       }
     }
-  }
+  };
+
+  // Clear all create-form state when switching tabs
+  const clearFormState = () => {
+    form.reset({
+      escalationLevels: { e1: [], e2: [], e3: [], e4: [], e5: [] },
+    });
+    setSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] });
+    setSelectedIssueTypeId('');
+    setSelectedCategoryTypeId('');
+    setSelectedAssignTo([]);
+  };
 
   return (
     <div className="space-y-0">
       {/* FM / Project sub-tabs */}
       <div className="flex border-b border-gray-200 bg-white">
         <button
-          onClick={() => setActiveFmProjectTab('fm')}
-          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-            activeFmProjectTab === 'fm'
+          onClick={() => { if (activeFmProjectTab !== 'fm') { clearFormState(); setActiveFmProjectTab('fm'); } }}
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeFmProjectTab === 'fm'
               ? 'border-[#C72030] text-[#C72030]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
+            }`}
         >
           FM
         </button>
         <button
-          onClick={() => setActiveFmProjectTab('project')}
-          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-            activeFmProjectTab === 'project'
+          onClick={() => { if (activeFmProjectTab !== 'project') { clearFormState(); setActiveFmProjectTab('project'); } }}
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeFmProjectTab === 'project'
               ? 'border-[#C72030] text-[#C72030]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
+            }`}
         >
           Project
         </button>
@@ -534,41 +667,47 @@ export const ResponseEscalationTab: React.FC = () => {
             <CardContent className="space-y-6">
               {/* Issue Type & Category Type Dropdowns */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Issue Type <span className="text-red-500">*</span></Label>
-                  <Select value={selectedIssueTypeId} onValueChange={setSelectedIssueTypeId}>
-                    <SelectTrigger className="w-full border-gray-300">
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypeOptions.map((issueType) => (
-                        <SelectItem key={issueType.id} value={String(issueType.id)}>
-                          {issueType.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Category Type <span className="text-red-500">*</span></Label>
-                  <Select value={selectedCategoryTypeId} onValueChange={setSelectedCategoryTypeId}>
-                    <SelectTrigger className="w-full border-gray-300">
-                      <SelectValue placeholder="Select Category Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryDropdownOptions.map((category) => (
-                        <SelectItem key={category.id} value={String(category.id)}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedIssueTypeId}
+                    onChange={(e) => setSelectedIssueTypeId(e.target.value)}
+                    displayEmpty
+                    label="Issue Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypeOptions.map((issueType) => (
+                      <MenuItem key={issueType.id} value={String(issueType.id)}>
+                        {issueType.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
+                <MuiFormControl fullWidth variant="outlined" disabled={!selectedIssueTypeId || formCategoriesLoading}>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedCategoryTypeId}
+                    onChange={(e) => setSelectedCategoryTypeId(e.target.value)}
+                    displayEmpty
+                    label="Category Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>{selectedIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'}</em></MenuItem>
+                    {formCategoryOptions.map((category) => (
+                      <MenuItem key={category.id} value={String(category.id)}>
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
               </div>
 
               {/* Assign To Dropdown */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Assign To</Label>
+              {/* <div className="space-y-2">
+                <Label className={FIELD_LABEL_CLASS}>Assign To</Label>
                 <ReactSelect
                   isMulti
                   options={userOptions}
@@ -610,7 +749,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     })
                   }}
                 />
-              </div>
+              </div> */}
 
               {/* Escalation Matrix Table */}
               <div className="space-y-3">
@@ -699,7 +838,7 @@ export const ResponseEscalationTab: React.FC = () => {
           <div className="flex justify-center">
             <Button
               type="submit"
-              className="bg-[#C72030] hover:bg-[#A61B29] text-white border-none font-semibold px-8 py-2"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
               disabled={submissionLoading || loadingUsers}
             >
               {submissionLoading ? (
@@ -738,13 +877,13 @@ export const ResponseEscalationTab: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium text-gray-700">Category Type</Label>
-                  <Select value={filterCategoryId || 'all'} onValueChange={(val) => setFilterCategoryId(val === 'all' ? '' : val)}>
+                  <Select value={filterCategoryId || 'all'} onValueChange={(val) => setFilterCategoryId(val === 'all' ? '' : val)} disabled={!filterIssueTypeId || filterCategoriesLoading}>
                     <SelectTrigger className="w-40 border-gray-200">
-                      <SelectValue placeholder="All" />
+                      <SelectValue placeholder={filterIssueTypeId ? 'Loading...' : 'All'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
-                      {categoryDropdownOptions.map((category) => (
+                      {filterCategoryOptions.map((category) => (
                         <SelectItem key={category.id} value={String(category.id)}>
                           {category.name}
                         </SelectItem>
@@ -755,7 +894,7 @@ export const ResponseEscalationTab: React.FC = () => {
                 <Button
                   variant="default"
                   size="sm"
-                  className="bg-[#C72030] hover:bg-[#A61B29] text-white border-none font-semibold px-4"
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   onClick={handleApplyFilter}
                 >
                   Apply
@@ -763,7 +902,7 @@ export const ResponseEscalationTab: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-4"
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   onClick={handleResetFilter}
                 >
                   Reset
@@ -861,11 +1000,24 @@ export const ResponseEscalationTab: React.FC = () => {
                               <div className="space-y-2">
                                 {['E1', 'E2', 'E3', 'E4', 'E5'].map((level) => {
                                   const escalations = rule.escalations || rule.escalation_matrix || []
-                                  const levelData = escalations.find((e: any) => e.name === level || e.level === level)
-                                  const users = levelData?.escalate_to_users || levelData?.escalation_to || null
+                                  const levelData = escalations.find((e: any) => (e.name || '').toUpperCase() === level || (e.level || '').toUpperCase() === level)
+
+                                  let usersDisplay = '-'
+                                  if (levelData) {
+                                    if (levelData.escalate_to_display !== undefined) {
+                                      usersDisplay = levelData.escalate_to_display || '-'
+                                      if (levelData.escalate_to_more_count > 0) {
+                                        usersDisplay += ` +${levelData.escalate_to_more_count} more`
+                                      }
+                                    } else {
+                                      const users = levelData.escalate_to_users || levelData.escalation_to || null
+                                      usersDisplay = getUserNames(users)
+                                    }
+                                  }
+
                                   return (
                                     <div key={level} className="text-sm text-gray-700">
-                                      {getUserNames(users)}
+                                      {usersDisplay}
                                     </div>
                                   )
                                 })}
@@ -908,7 +1060,7 @@ export const ResponseEscalationTab: React.FC = () => {
         )}
 
         {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog modal={false} open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) setEditSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] }); }}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Response Escalation Rule</DialogTitle>
@@ -916,41 +1068,47 @@ export const ResponseEscalationTab: React.FC = () => {
             <div className="space-y-6">
               {/* Issue Type & Category Type Dropdowns */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Issue Type <span className="text-red-500">*</span></Label>
-                  <Select value={editIssueTypeId} onValueChange={setEditIssueTypeId}>
-                    <SelectTrigger className="w-full border-gray-300">
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypeOptions.map((issueType) => (
-                        <SelectItem key={issueType.id} value={String(issueType.id)}>
-                          {issueType.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Category Type <span className="text-red-500">*</span></Label>
-                  <Select value={editCategoryTypeId} onValueChange={setEditCategoryTypeId}>
-                    <SelectTrigger className="w-full border-gray-300">
-                      <SelectValue placeholder="Select Category Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryDropdownOptions.map((category) => (
-                        <SelectItem key={category.id} value={String(category.id)}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={editIssueTypeId}
+                    onChange={(e) => setEditIssueTypeId(e.target.value)}
+                    displayEmpty
+                    label="Issue Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypeOptions.map((issueType) => (
+                      <MenuItem key={issueType.id} value={String(issueType.id)}>
+                        {issueType.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
+                <MuiFormControl fullWidth variant="outlined" disabled={!editIssueTypeId || editCategoriesLoading}>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={editCategoryTypeId}
+                    onChange={(e) => setEditCategoryTypeId(e.target.value)}
+                    displayEmpty
+                    label="Category Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>{editIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'}</em></MenuItem>
+                    {editCategoryOptions.map((category) => (
+                      <MenuItem key={category.id} value={String(category.id)}>
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
               </div>
 
               {/* Assign To Dropdown */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Assign To</Label>
+              {/* <div className="space-y-2">
+                <Label className={FIELD_LABEL_CLASS}>Assign To</Label>
                 <ReactSelect
                   isMulti
                   options={userOptions}
@@ -992,7 +1150,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     })
                   }}
                 />
-              </div>
+              </div> */}
 
               {/* Escalation Levels */}
               <div className="space-y-3">
@@ -1014,13 +1172,12 @@ export const ResponseEscalationTab: React.FC = () => {
                           <TableCell>
                             <ReactSelect
                               isMulti
-                              options={userOptions}
-                              value={userOptions.filter(option => selectedUsers[level].includes(option.value))}
+                              options={getEditLevelOptions(editSelectedUsers[level])}
+                              value={getEditLevelOptions(editSelectedUsers[level]).filter(option => editSelectedUsers[level].includes(option.value))}
                               onChange={(selected) => {
                                 const newUsers = selected ? selected.map(s => s.value) : []
-                                const updatedUsers = { ...selectedUsers, [level]: newUsers }
-                                setSelectedUsers(updatedUsers)
-                                form.setValue('escalationLevels', updatedUsers)
+                                const updatedUsers = { ...editSelectedUsers, [level]: newUsers }
+                                setEditSelectedUsers(updatedUsers)
                               }}
                               placeholder="Select users..."
                               isLoading={loadingUsers}
@@ -1036,7 +1193,7 @@ export const ResponseEscalationTab: React.FC = () => {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => { setIsEditDialogOpen(false); setEditSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] }); }}>
                   Cancel
                 </Button>
                 <Button
@@ -1051,5 +1208,5 @@ export const ResponseEscalationTab: React.FC = () => {
         </Dialog>
       </div>
     </div>
-  )
-}
+  );
+};

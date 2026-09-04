@@ -108,6 +108,8 @@ export const AddMembershipPlanPage = () => {
     renewalTerms: "",
     payment_plan_id: "",
     hsnCode: "",
+    cgst: "",
+    sgst: "",
     usageLimits: "Unlimited",
     discountEligibility: "No",
     amenities: [] as string[],
@@ -149,11 +151,27 @@ export const AddMembershipPlanPage = () => {
     }
   }
 
-  console.log(amenities)
+  const fetchHSN = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/pms/hsns/get_hsns.json`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      setFormData({
+        ...formData,
+        hsnCode: response.data[0].code || "",
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   useEffect(() => {
     getAmenities()
     getPaymentPlans()
+    fetchHSN()
   }, [])
 
   const validateForm = () => {
@@ -171,10 +189,6 @@ export const AddMembershipPlanPage = () => {
     }
     if (!formData.payment_plan_id) {
       toast.error("Please select Payment Plan");
-      return false;
-    }
-    if (formData.amenities.length === 0) {
-      toast.error("Please select at least one amenity");
       return false;
     }
     // Validate frequency for each selected amenity
@@ -246,7 +260,8 @@ export const AddMembershipPlanPage = () => {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <div className="p-6 bg-white">
+      <div className="p-6 bg-white add-membership-plan-page">
+        <style>{`.add-membership-plan-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -262,7 +277,7 @@ export const AddMembershipPlanPage = () => {
           {/* Basic Info */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <User className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -273,20 +288,20 @@ export const AddMembershipPlanPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <TextField
-                label="Plan Name*"
+                label={<span>Plan Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 value={formData.name}
                 onChange={(e) => {
                   const value = e.target.value;
                   // Only allow letters and spaces, no numbers
-                  if (/^[a-zA-Z\s]*$/.test(value)) {
-                    setFormData({ ...formData, name: value });
-                  }
+                  // if (/^[a-zA-Z\s]*$/.test(value)) {
+                  setFormData({ ...formData, name: value });
+                  // }
                 }}
                 variant="outlined"
               />
 
               <TextField
-                label="Price*"
+                label={<span>Price<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="text"
                 value={formData.price}
                 onChange={(e) => {
@@ -318,13 +333,13 @@ export const AddMembershipPlanPage = () => {
 
 
               <FormControl variant="outlined">
-                <InputLabel>Membership Type*</InputLabel>
+                <InputLabel><span>Membership Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
                 <Select
                   value={formData.renewalTerms}
                   onChange={(e) =>
                     setFormData({ ...formData, renewalTerms: e.target.value })
                   }
-                  label="Membership Type*"
+                  label={<span>Membership Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 >
                   <MenuItem value="">
                     <em>Select Membership Type</em>
@@ -337,7 +352,7 @@ export const AddMembershipPlanPage = () => {
               </FormControl>
 
               <FormControl variant="outlined">
-                <InputLabel>Payment Plan*</InputLabel>
+                <InputLabel><span>Payment Plan<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
                 <Select
                   value={formData.payment_plan_id}
                   onChange={(e) =>
@@ -359,6 +374,7 @@ export const AddMembershipPlanPage = () => {
               {/* <TextField
                 label="HSN Code*"
                 value={formData.hsnCode}
+                disabled
                 onChange={(e) => {
                   const value = e.target.value;
                   // Allow only numbers and letters (alphanumeric)
@@ -375,7 +391,7 @@ export const AddMembershipPlanPage = () => {
           {/* Amenities */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <DollarSign className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">

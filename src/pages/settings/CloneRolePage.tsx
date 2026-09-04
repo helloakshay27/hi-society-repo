@@ -97,7 +97,7 @@ export const CloneRolePage = () => {
               <Button
                 onClick={handleSubmit}
                 disabled={!fromUser || !toUser}
-                className="bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-8 py-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-8 py-2 disabled:cursor-not-allowed bg-[#C72030] text-white hover:bg-[#C72030]/90"
               >
                 Submit
               </Button>

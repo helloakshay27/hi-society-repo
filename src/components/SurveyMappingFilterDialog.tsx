@@ -16,6 +16,7 @@ import {
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 interface SurveyMappingFilterDialogProps {
   isOpen: boolean;
@@ -31,11 +32,53 @@ export interface SurveyMappingFilters {
   areaIds?: string[];
   roomIds?: string[];
   surveyTitle?: string;
+  // Query string for /survey_mappings/mappings_list.json (optional)
+  mappingListQuery?: string;
+  // Convenience fields mapped to backend query params
+  buildingIdEq?: string;
+  wingIdEq?: string;
+  userSocietyIdEq?: string;
 }
 
 interface LocationOption {
   id: number;
   name: string;
+  flat_no?: string;
+}
+
+interface SurveyTitleOption {
+  id: number;
+  name: string;
+}
+
+interface SocietyItem {
+  id: number;
+  building_name: string;
+  url: string;
+  address1: string;
+  address2: string;
+  area: string;
+  postcode: number;
+  city: string;
+  latitude: null;
+  longitude: null;
+  state: string;
+  country: string;
+}
+
+interface SocietyItem {
+  id: number;
+  building_name: string;
+  url: string;
+  address1: string;
+  address2: string;
+  area: string;
+  postcode: number;
+  city: string;
+  latitude: null;
+  longitude: null;
+  state: string;
+  country: string;
 }
 
 const fieldStyles = {
@@ -68,6 +111,9 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
   onApply,
 }) => {
   const [surveyTitle, setSurveyTitle] = useState("");
+  const [surveyTitles, setSurveyTitles] = useState<SurveyTitleOption[]>([]);
+  const [selectedSociety, setSelectedSociety] = useState("");
+  const [societies, setSocieties] = useState<SocietyItem[]>([]);
   const [selectedSite, setSelectedSite] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedWing, setSelectedWing] = useState("");
@@ -83,11 +129,23 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
   const [areas, setAreas] = useState<LocationOption[]>([]);
   const [rooms, setRooms] = useState<LocationOption[]>([]);
 
+  // Tower / Flat / User options (from UserQRSetup pattern)
+  const [towers, setTowers] = useState<LocationOption[]>([]);
+  const [flats, setFlats] = useState<LocationOption[]>([]);
+  const [users, setUsers] = useState<LocationOption[]>([]);
+
+  const [selectedTower, setSelectedTower] = useState("");
+  const [selectedFlat, setSelectedFlat] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch sites on component mount
+  // Fetch sites and survey titles on component mount
   useEffect(() => {
+    fetchSocieties();
     fetchSites();
+    fetchSurveyTitles();
+    fetchTowers();
   }, []);
 
   // Fetch buildings when site changes
@@ -107,6 +165,20 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
       setSelectedRoom("");
     }
   }, [selectedSite]);
+
+  // Reset towers when society changes
+  useEffect(() => {
+    if (selectedSociety) {
+      fetchTowersForSociety(selectedSociety);
+    } else {
+      setTowers([]);
+      setSelectedTower("");
+      setFlats([]);
+      setSelectedFlat("");
+      setUsers([]);
+      setSelectedUser("");
+    }
+  }, [selectedSociety]);
 
   // Fetch wings when building changes
   useEffect(() => {
@@ -160,6 +232,100 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
     }
   }, [selectedArea]);
 
+  // Fetch flats when tower changes
+  useEffect(() => {
+    if (selectedSite /* placeholder to keep existing logic */) {
+      // no-op to avoid lint warning
+    }
+  }, []);
+
+  // Fetch flats when tower changes (tower is stored in selectedBuilding variable for reuse)
+  useEffect(() => {
+    if (selectedBuilding) {
+      // keep existing behavior if building was used elsewhere
+    }
+  }, [selectedBuilding]);
+
+  // Fetch flats/users when tower/flat selections change for the new UI
+  useEffect(() => {
+    if (selectedTower) {
+      // reset dependent selections then fetch flats
+      setSelectedFlat("");
+      setSelectedUser("");
+      setUsers([]);
+      fetchFlats(selectedTower);
+    } else {
+      setFlats([]);
+      setUsers([]);
+      setSelectedFlat("");
+      setSelectedUser("");
+    }
+  }, [selectedTower]);
+
+  useEffect(() => {
+    if (selectedFlat) {
+      // reset selected user then fetch users for the flat
+      setSelectedUser("");
+      fetchUsers(selectedFlat);
+    } else {
+      setUsers([]);
+      setSelectedUser("");
+    }
+  }, [selectedFlat]);
+
+  // New: fetch flats when tower (selectedSiteTower) changes - we'll use selectedSite variable for tower id mapping in this component
+
+  // Fetch societies from current user's company
+  const fetchSocieties = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get company ID from accounts API using apiClient
+      const accountResponse = await apiClient.get("/api/users/account.json");
+      const companyId = accountResponse.data?.society?.company_id;
+      
+      if (!companyId) {
+        console.error("No company_id found in account data", accountResponse.data);
+        toast.error("Company information not found in account", { duration: 3000 });
+        return;
+      }
+      
+      console.log("Fetching societies for company_id:", companyId);
+      
+      // Fetch societies using company_id
+      const societiesResponse = await apiClient.get(`/api/societies/search.json?q[company_id_eq]=${companyId}`);
+      const societiesArray = societiesResponse.data?.societies || [];
+      
+      console.log("Fetched societies:", societiesArray);
+      setSocieties(societiesArray);
+      
+      if (societiesArray.length === 0) {
+        toast.warning("No societies found for your account", { duration: 3000 });
+      }
+    } catch (error) {
+      console.error("Error fetching societies:", error);
+      toast.error("Failed to fetch societies. Please try again.", { duration: 5000 });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch towers for a specific society
+  const fetchTowersForSociety = async (societyId: string) => {
+    try {
+      setIsLoading(true);
+      if (!societyId) return;
+      const response = await apiClient.get(`/get_society_blocks.json?society_id=${societyId}`);
+      const towersArray = response.data?.society_blocks || [];
+      setTowers(towersArray);
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to fetch towers");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fetchSites = async () => {
     try {
       setIsLoading(true);
@@ -172,6 +338,125 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
     } catch (error) {
       console.error("Error fetching sites:", error);
       toast.error("Failed to fetch sites");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch survey titles for dropdown
+  const fetchSurveyTitles = async () => {
+    try {
+      setIsLoading(true);
+      const extractSurveyTitles = (data: unknown): SurveyTitleOption[] => {
+        const surveyMappings = (data as { survey_mappings?: unknown })
+          ?.survey_mappings;
+
+        return Array.isArray(surveyMappings)
+          ? surveyMappings.map(
+              (survey: {
+                id?: number;
+                survey_id?: number;
+                name?: string;
+                survey_name?: string;
+                survey_title?: string;
+              }) => ({
+                id: survey.id || survey.survey_id || 0,
+                name:
+                  survey.name ||
+                  survey.survey_name ||
+                  survey.survey_title ||
+                  "",
+              })
+            )
+          : [];
+      };
+
+      const firstResponse = await apiClient.get(
+        "/survey_mappings/mappings_list.json?page=1"
+      );
+      const totalPages = Number(firstResponse.data?.pagination?.total_pages) || 1;
+      let surveyData = extractSurveyTitles(firstResponse.data);
+
+      if (totalPages > 1) {
+        const pageResponses = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, index) =>
+            apiClient.get(
+              `/survey_mappings/mappings_list.json?page=${index + 2}`
+            )
+          )
+        );
+
+        surveyData = [
+          ...surveyData,
+          ...pageResponses.flatMap((response) =>
+            extractSurveyTitles(response.data)
+          ),
+        ];
+      }
+
+      // Filter out entries with no ID or name and remove duplicates by ID
+      const validSurveys = surveyData.filter(
+        (survey) => survey.id && survey.name.trim()
+      );
+      const uniqueSurveys = Array.from(
+        new Map(validSurveys.map((survey) => [survey.id, survey])).values()
+      );
+      setSurveyTitles(uniqueSurveys);
+    } catch (error) {
+      console.error("Error fetching survey titles:", error);
+      toast.error("Failed to fetch survey titles");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch towers (blocks)
+  const fetchTowers = async () => {
+    try {
+      setIsLoading(true);
+      const idSociety = localStorage.getItem("selectedSocietyId") || "";
+      if (!idSociety) return;
+      const response = await apiClient.get(`/get_society_blocks.json?society_id=${idSociety}`);
+      const towersArray = response.data?.society_blocks || [];
+      setTowers(towersArray);
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to fetch towers");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch flats for a tower
+  const fetchFlats = async (towerId: string) => {
+    try {
+      setIsLoading(true);
+      const idSociety = localStorage.getItem("selectedSocietyId") || "";
+      if (!towerId) return;
+      const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
+      const flatsArray = response.data?.society_flats || [];
+      setFlats(flatsArray);
+    } catch (error) {
+      console.error("Error fetching flats:", error);
+      toast.error("Failed to fetch flats");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch users for a flat
+  const fetchUsers = async (flatId: string) => {
+    try {
+      setIsLoading(true);
+      if (!flatId) return;
+      const response = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
+      const usersArray = Array.isArray(response.data)
+        ? response.data.map(([name, id]: [string, number]) => ({ id, name }))
+        : [];
+      setUsers(usersArray);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
     } finally {
       setIsLoading(false);
     }
@@ -265,17 +550,36 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
   const handleApply = async () => {
     setIsLoading(true);
     try {
+      // Build mapping-list query params based on selected tower/flat/user
+      const params: string[] = [];
+      // per_page and page are default sample values, caller can adjust as needed
+      params.push("per_page=10");
+      params.push("page=1");
+      if (selectedSociety) params.push(`q[site_id_eq]=${selectedSociety}`);
+      if (surveyTitle) params.push(`q[survey_id_eq]=${surveyTitle}`);
+      if (selectedTower) params.push(`q[building_id_eq]=${selectedTower}`);
+      if (selectedFlat) params.push(`q[wing_id_eq]=${selectedFlat}`);
+      if (selectedUser) params.push(`q[user_society_id_eq]=${selectedUser}`);
+
+      const mappingListQuery = `/survey_mappings/mappings_list.json?${params.join("&")}`;
+
       const filters: SurveyMappingFilters = {
-        surveyTitle: surveyTitle.trim() || undefined,
-        siteIds: selectedSite ? [selectedSite] : undefined,
+        surveyTitle: typeof surveyTitle === 'string' ? surveyTitle.trim() : undefined,
+        // keep existing hierarchical fields if used elsewhere
+        siteIds: selectedSociety ? [selectedSociety] : selectedSite ? [selectedSite] : undefined,
         buildingIds: selectedBuilding ? [selectedBuilding] : undefined,
         wingIds: selectedWing ? [selectedWing] : undefined,
         floorIds: selectedFloor ? [selectedFloor] : undefined,
         areaIds: selectedArea ? [selectedArea] : undefined,
         roomIds: selectedRoom ? [selectedRoom] : undefined,
+        // mapping convenience fields
+        mappingListQuery,
+        buildingIdEq: selectedTower || undefined,
+        wingIdEq: selectedFlat || undefined,
+        userSocietyIdEq: selectedUser || undefined,
       };
 
-      console.log("Applying survey mapping filters:", filters);
+      console.log("Applying survey mapping filters:", filters, "mappingQuery:", mappingListQuery);
       onApply(filters);
       onClose();
       toast.success("Filters applied successfully");
@@ -289,6 +593,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
   const handleClear = () => {
     setSurveyTitle("");
+    setSelectedSociety("");
     setSelectedSite("");
     setSelectedBuilding("");
     setSelectedWing("");
@@ -300,6 +605,13 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
     setFloors([]);
     setAreas([]);
     setRooms([]);
+    // Clear tower/flat/user selections
+    setSelectedTower("");
+    setSelectedFlat("");
+    setSelectedUser("");
+    setTowers([]);
+    setFlats([]);
+    setUsers([]);
     
     onApply({});
     toast.success("Filters cleared successfully");
@@ -329,22 +641,61 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Society Selection Section */}
+          {/* <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Society
+            </h3>
+            <div className="grid grid-cols-1 gap-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Select Society</InputLabel>
+                <MuiSelect
+                  value={selectedSociety}
+                  onChange={(e) => setSelectedSociety(e.target.value)}
+                  label="Select Society"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">
+                    <em>Select Society</em>
+                  </MenuItem>
+                  {societies.map((society) => (
+                    <MenuItem key={society.id} value={society.id.toString()}>
+                      {society.building_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
+          </div> */}
+
           {/* Survey Details Section */}
           <div>
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
               Survey Details
             </h3>
             <div className="grid grid-cols-1 gap-6">
-              <TextField
-                label="Survey Title"
-                placeholder="Enter Survey Title"
-                value={surveyTitle}
-                onChange={(e) => setSurveyTitle(e.target.value)}
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: fieldStyles }}
-              />
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Survey Title</InputLabel>
+                <MuiSelect
+                  value={surveyTitle}
+                  onChange={(e) => setSurveyTitle(e.target.value)}
+                  label="Survey Title"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">
+                    <em>Select Survey</em>
+                  </MenuItem>
+                  {surveyTitles.map((survey) => (
+                    <MenuItem key={survey.id} value={survey.id}>
+                      {survey.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             </div>
           </div>
 
@@ -353,139 +704,93 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
             <h3 className="text-sm font-medium text-[#C72030] mb-4">
               Location Hierarchy
             </h3>
+            {/* Society Selection */}
+            <div className="grid grid-cols-1 gap-6 mb-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Select Society</InputLabel>
+                <MuiSelect
+                  value={selectedSociety}
+                  onChange={(e) => setSelectedSociety(e.target.value)}
+                  label="Select Society"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">
+                    <em>Select Society</em>
+                  </MenuItem>
+                  {societies.map((society) => (
+                    <MenuItem key={society.id} value={society.id.toString()}>
+                      {society.building_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
             <div className="grid grid-cols-3 gap-6">
-              {/* Site Selection */}
+              {/* Tower Selection (mapped to building_id_eq) */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Site</InputLabel>
+                <InputLabel shrink>Tower</InputLabel>
                 <MuiSelect
-                  value={selectedSite}
-                  onChange={(e) => setSelectedSite(e.target.value)}
-                  label="Site"
+                  value={selectedTower}
+                  onChange={(e) => setSelectedTower(e.target.value)}
+                  label="Tower"
                   displayEmpty
                   MenuProps={selectMenuProps}
                   sx={fieldStyles}
                 >
                   <MenuItem value="">
-                    <em>Select Site</em>
+                    <em>Select Tower</em>
                   </MenuItem>
-                  {sites.map((site) => (
-                    <MenuItem key={site.id} value={site.id.toString()}>
-                      {site.name}
+                  {towers.map((t) => (
+                    <MenuItem key={t.id} value={t.id.toString()}>
+                      {t.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>
               </FormControl>
 
-              {/* Building Selection */}
+              {/* Flat Selection (mapped to wing_id_eq) */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Building</InputLabel>
+                <InputLabel shrink>Flat</InputLabel>
                 <MuiSelect
-                  value={selectedBuilding}
-                  onChange={(e) => setSelectedBuilding(e.target.value)}
-                  label="Building"
+                  value={selectedFlat}
+                  onChange={(e) => setSelectedFlat(e.target.value)}
+                  label="Flat"
                   displayEmpty
                   MenuProps={selectMenuProps}
                   sx={fieldStyles}
-                  disabled={!selectedSite}
+                  disabled={!selectedTower}
                 >
                   <MenuItem value="">
-                    <em>Select Building</em>
+                    <em>Select Flat</em>
                   </MenuItem>
-                  {buildings.map((building) => (
-                    <MenuItem key={building.id} value={building.id.toString()}>
-                      {building.name}
+                  {flats.map((f) => (
+                    <MenuItem key={f.id} value={f.id.toString()}>
+                      {f.flat_no || f.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>
               </FormControl>
 
-              {/* Wing Selection */}
+              {/* User Selection (mapped to user_society_id_eq) */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Wing</InputLabel>
+                <InputLabel shrink>Customer</InputLabel>
                 <MuiSelect
-                  value={selectedWing}
-                  onChange={(e) => setSelectedWing(e.target.value)}
-                  label="Wing"
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                  label="User"
                   displayEmpty
                   MenuProps={selectMenuProps}
                   sx={fieldStyles}
-                  disabled={!selectedBuilding}
+                  disabled={!selectedFlat}
                 >
                   <MenuItem value="">
-                    <em>Select Wing</em>
+                    <em>Select Customer</em>
                   </MenuItem>
-                  {wings.map((wing) => (
-                    <MenuItem key={wing.id} value={wing.id.toString()}>
-                      {wing.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-              </FormControl>
-
-              {/* Floor Selection */}
-              <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Floor</InputLabel>
-                <MuiSelect
-                  value={selectedFloor}
-                  onChange={(e) => setSelectedFloor(e.target.value)}
-                  label="Floor"
-                  displayEmpty
-                  MenuProps={selectMenuProps}
-                  sx={fieldStyles}
-                  disabled={!selectedWing}
-                >
-                  <MenuItem value="">
-                    <em>Select Floor</em>
-                  </MenuItem>
-                  {floors.map((floor) => (
-                    <MenuItem key={floor.id} value={floor.id.toString()}>
-                      {floor.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-              </FormControl>
-
-              {/* Area Selection */}
-              <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Area</InputLabel>
-                <MuiSelect
-                  value={selectedArea}
-                  onChange={(e) => setSelectedArea(e.target.value)}
-                  label="Area"
-                  displayEmpty
-                  MenuProps={selectMenuProps}
-                  sx={fieldStyles}
-                  disabled={!selectedFloor}
-                >
-                  <MenuItem value="">
-                    <em>Select Area</em>
-                  </MenuItem>
-                  {areas.map((area) => (
-                    <MenuItem key={area.id} value={area.id.toString()}>
-                      {area.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-              </FormControl>
-
-              {/* Room Selection */}
-              <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Room</InputLabel>
-                <MuiSelect
-                  value={selectedRoom}
-                  onChange={(e) => setSelectedRoom(e.target.value)}
-                  label="Room"
-                  displayEmpty
-                  MenuProps={selectMenuProps}
-                  sx={fieldStyles}
-                  disabled={!selectedArea}
-                >
-                  <MenuItem value="">
-                    <em>Select Room</em>
-                  </MenuItem>
-                  {rooms.map((room) => (
-                    <MenuItem key={room.id} value={room.id.toString()}>
-                      {room.name}
+                  {users.map((u) => (
+                    <MenuItem key={u.id} value={u.id.toString()}>
+                      {u.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>

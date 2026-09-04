@@ -41,7 +41,6 @@ import { styled } from "@mui/material/styles";
 import { boxShadow } from "html2canvas/dist/types/css/property-descriptors/box-shadow";
 
 
-
 // Styled Components
 const CustomStepConnector = styled(StepConnector)(() => ({
   top: 20,
@@ -63,9 +62,9 @@ const StepPill = styled(Box)<{ $active?: boolean; $completed?: boolean }>(
     fontFamily: "Work Sans, sans-serif",
     whiteSpace: "nowrap",
     cursor: "pointer",
-    backgroundColor: $active || $completed ? "#C72030" : "#FFFFFF",
+    backgroundColor: $active || $completed ? "var(--color-primary, #da7756)" : "#FFFFFF",
     color: $active ? "#FFFFFF" : $completed ? "#fff" : "#333",
-    border: $active || $completed ? "2px solid #C72030" : "2px solid #E6E6E6",
+    border: $active || $completed ? "2px solid var(--color-primary, #da7756)" : "2px solid #E6E6E6",
   })
 );
 
@@ -100,30 +99,32 @@ const CustomStep = styled(Step)(() => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C72030",
-  color: "white",
+  backgroundColor: "var(--color-primary, #da7756)",
+  color: "white !important",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 16px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
-  boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
+  boxShadow: "0 2px 4px rgba(218, 119, 86, 0.2)",
   "&:hover": {
-    backgroundColor: "#B8252F",
-    boxShadow: "0 4px 8px rgba(199, 32, 48, 0.3)",
+    backgroundColor: "var(--color-primary-hover, rgba(218, 119, 86, 0.85))",
+    color: "white !important",
+    boxShadow: "0 4px 8px rgba(218, 119, 86, 0.3)",
   },
 }));
 
 const DraftButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#e7e3d9",
-  color: "#C72030",
+  backgroundColor: "var(--color-primary, #da7756)",
+  color: "white !important",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 16px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
   "&:hover": {
-    backgroundColor: "#d9d5c9",
+    backgroundColor: "var(--color-primary-hover, rgba(218, 119, 86, 0.85))",
+    color: "white !important",
   },
 }));
 
@@ -162,7 +163,7 @@ const IconWrapper = styled(Box)(({ theme }) => ({
 }));
 
 const RedIcon = styled(Settings)(({ theme }) => ({
-  color: "#C72030",
+  color: "var(--color-primary, #da7756)",
   fontSize: "24px",
 }));
 
@@ -247,6 +248,8 @@ interface OfferFormData {
   image_3_by_2?: any[];
   image_9_by_16?: any[];
   offer_pdf?: any[];
+  couponCode: string;
+  couponCodeDescription: string;
 }
 
 export default function AddOfferPage() {
@@ -259,6 +262,7 @@ export default function AddOfferPage() {
     "Basic Info",
     "Media & Display",
     "Applicability",
+    "Coupon",
     "Validity & Status",
     "Visibility",
   ];
@@ -280,6 +284,8 @@ export default function AddOfferPage() {
     image_3_by_2: [],
     image_9_by_16: [],
     offer_pdf: [],
+    couponCode: "",
+    couponCodeDescription: "",
   });
 
   // track thumbnail/pdf images temporarily during the flow
@@ -701,6 +707,8 @@ export default function AddOfferPage() {
         image_3_by_2: [],
         image_9_by_16: [],
         offer_pdf: [],
+        couponCode: offer.coupon_code || "",
+        couponCodeDescription: offer.coupon_code_description || "",
       });
 
       // Handle existing images by ratio
@@ -802,7 +810,10 @@ export default function AddOfferPage() {
         }
         return true;
 
-      case 3: // Validity & Status
+      case 3: // Coupon
+        return true;
+
+      case 4: // Validity & Status
         if (!formData.startDate) {
           toast.error("Please select start date");
           return false;
@@ -841,7 +852,7 @@ export default function AddOfferPage() {
         }
         return true;
 
-      case 4: // Visibility
+      case 5: // Visibility
         return true;
 
       default:
@@ -1021,6 +1032,8 @@ export default function AddOfferPage() {
         "offer[status]",
         formData.featuredOffer ? "1" : "0"
       );
+      formDataPayload.append("offer[coupon_code]", formData.couponCode || "");
+      formDataPayload.append("offer[coupon_code_description]", formData.couponCodeDescription || "");
 
       // Add template ID if selected
       if (formData.legalPoliciesTemplate) {
@@ -1175,7 +1188,7 @@ export default function AddOfferPage() {
               </Box>
             </SectionHeader>
             <SectionBody>
-              <Box sx={{ display: "flex", gap: 3 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 <TextField
                   label="Offer Title"
                   required
@@ -1185,106 +1198,76 @@ export default function AddOfferPage() {
                   }
                   placeholder="Enter Title"
                   sx={fieldStyles}
-                  style={{ width: "50%" }}
+                  fullWidth
                 />
-                <Box sx={{ position: "relative", flex: 1, border: "1px solid #ddd", borderRadius: "4px", backgroundColor: "#fff" }}>
-                  {/* Floating Label */}
-                  <label style={{
-                    position: "absolute",
-                    top: "-8px",
-                    left: "12px",
-                    backgroundColor: "white",
-                    padding: "0 4px",
-                    fontSize: "12.5px",
-                    color: "black",
-                    pointerEvents: "none",
-                  }}>
-                    Offer Description <span style={{ color: "#C72030" }}>*</span>
-                  </label>
-
-                  <div style={{ position: "relative", padding: "16px" }}>
-                    {/* Textarea with emoji picker */}
-                    <textarea
-                      value={formData.offerDescription}
-                      onChange={(e) =>
-                        handleInputChange("offerDescription", e.target.value)
-                      }
-                      placeholder="Enter Description"
-                      style={{
-                        width: "100%",
-                        border: "0",
-                        padding: "0",
-                        paddingRight: "32px",
-                        fontSize: "14px",
-                        outline: "none",
-                        resize: "none",
-                        backgroundColor: "transparent",
-                        fontFamily: "inherit",
-                        minHeight: "80px"
-                      }}
-                    />
-                    <div
-                      ref={descriptionEmojiPickerRef as any}
-                      style={{
-                        position: "absolute",
-                        bottom: "16px",
-                        right: "16px",
-                      }}
-                    >
-                      <Smile
-                        className="text-gray-500 cursor-pointer hover:text-gray-700"
-                        size={18}
-                        onClick={() =>
-                          setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
-                        }
-                      />
-                      {showDescriptionEmojiPicker && (
-                        <div style={{
-                          position: "absolute",
-                          bottom: "32px",
-                          right: "0",
-                          backgroundColor: "white",
-                          border: "1px solid #ddd",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                          padding: "12px",
-                          width: "256px",
-                          height: "192px",
-                          overflowY: "auto",
-                          zIndex: 50,
-                        }}>
+                <TextField
+                  label="Offer Description"
+                  required
+                  value={formData.offerDescription}
+                  onChange={(e) =>
+                    handleInputChange("offerDescription", e.target.value)
+                  }
+                  placeholder="Enter Description"
+                  sx={fieldStyles}
+                  fullWidth
+                  InputProps={{
+                    endAdornment: (
+                      <div ref={descriptionEmojiPickerRef as any} style={{ position: "relative" }}>
+                        <Smile
+                          className="text-gray-500 cursor-pointer hover:text-gray-700"
+                          size={18}
+                          onClick={() =>
+                            setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
+                          }
+                        />
+                        {showDescriptionEmojiPicker && (
                           <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(8, 1fr)",
-                            gap: "4px",
+                            position: "absolute",
+                            top: "32px",
+                            right: "0",
+                            backgroundColor: "white",
+                            border: "1px solid #ddd",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            padding: "12px",
+                            width: "256px",
+                            height: "192px",
+                            overflowY: "auto",
+                            zIndex: 50,
                           }}>
-                            {emojis.map((emoji, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                style={{
-                                  fontSize: "20px",
-                                  cursor: "pointer",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  padding: "4px",
-                                  backgroundColor: "transparent",
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                                onClick={() => {
-                                  handleDescriptionEmojiClick(emoji);
-                                }}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
+                            <div style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(8, 1fr)",
+                              gap: "4px",
+                            }}>
+                              {emojis.map((emoji, index) => (
+                                <button
+                                  key={index}
+                                  type="button"
+                                  style={{
+                                    fontSize: "20px",
+                                    cursor: "pointer",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    padding: "4px",
+                                    backgroundColor: "transparent",
+                                  }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+                                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                                  onClick={() => {
+                                    handleDescriptionEmojiClick(emoji);
+                                  }}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Box>
+                        )}
+                      </div>
+                    ),
+                  }}
+                />
               </Box>
               {/* <Box sx={{ mt: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                                 <FormControl fullWidth sx={fieldStyles}>
@@ -1970,7 +1953,51 @@ export default function AddOfferPage() {
           </SectionCard>
         );
 
-      case 3: // Validity & Status
+      case 3: // Coupon
+        return (
+          <SectionCard>
+            <SectionHeader>
+              <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <IconWrapper>
+                  <RedIcon />
+                </IconWrapper>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    fontFamily: "Work Sans, sans-serif",
+                    textTransform: "uppercase",
+                    fontSize: "18px",
+                  }}
+                >
+                  Coupon
+                </Typography>
+              </Box>
+            </SectionHeader>
+            <SectionBody>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                <TextField
+                  label="Coupon Code"
+                  value={formData.couponCode}
+                  onChange={(e) => handleInputChange("couponCode", e.target.value)}
+                  placeholder="Enter Coupon Code"
+                  sx={fieldStyles}
+                  fullWidth
+                />
+                <TextField
+                  label="Coupon Code Description"
+                  value={formData.couponCodeDescription}
+                  onChange={(e) => handleInputChange("couponCodeDescription", e.target.value)}
+                  placeholder="Enter Coupon Code Description"
+                  sx={fieldStyles}
+                  fullWidth
+                />
+              </Box>
+            </SectionBody>
+          </SectionCard>
+        );
+
+      case 4: // Validity & Status
         return (
           <SectionCard>
             <SectionHeader>
@@ -2045,7 +2072,7 @@ export default function AddOfferPage() {
           </SectionCard>
         );
 
-      case 4: // Visibility
+      case 5: // Visibility
         return (
           <SectionCard>
             <SectionHeader>
@@ -2706,6 +2733,44 @@ export default function AddOfferPage() {
                 <Box
                   sx={{
                     display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#999", fontSize: "12px", fontFamily: "Work Sans, sans-serif" }}
+                    >
+                      Coupon Code
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#333", fontSize: "14px", fontFamily: "Work Sans, sans-serif", mt: 0.5 }}
+                    >
+                      {formData.couponCode || "-"}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#999", fontSize: "12px", fontFamily: "Work Sans, sans-serif" }}
+                    >
+                      Coupon Code Description
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#333", fontSize: "14px", fontFamily: "Work Sans, sans-serif", mt: 0.5 }}
+                    >
+                      {formData.couponCodeDescription || "-"}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+              {stepIndex === 4 && (
+                <Box
+                  sx={{
+                    display: "grid",
                     gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
                     gap: 2,
                   }}
@@ -2781,7 +2846,7 @@ export default function AddOfferPage() {
                   </Box>
                 </Box>
               )}
-              {stepIndex === 4 && (
+              {stepIndex === 5 && (
                 <Box
                   sx={{
                     display: "grid",

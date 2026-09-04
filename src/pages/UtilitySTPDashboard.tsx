@@ -312,7 +312,12 @@ const UtilitySTPDashboard = () => {
         <h1 className="font-work-sans font-semibold text-base sm:text-2xl lg:text-[26px] leading-auto tracking-normal text-gray-900">STP ASSET LIST</h1>
       </div>
 
-      {error ? (
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#da7756]"></div>
+          <span className="ml-2 text-gray-600">Loading assets...</span>
+        </div>
+      ) : error ? (
         <div className="flex justify-center items-center py-8">
           <div className="text-red-500">Error: {error}</div>
         </div>

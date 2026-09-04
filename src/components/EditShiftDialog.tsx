@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface ShiftData {
   id: number;
@@ -171,7 +172,7 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
       console.log('🎯 Edit API Payload:', JSON.stringify(payload, null, 2));
 
       // Make the API call
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_shifts/${shift.id}.json`, {
+      const response = await fetch(getFullUrl(`/spree/manage/user_shifts/${shift.id}.json`), {
         method: 'PUT',
         headers: {
           'Accept': 'application/json',
@@ -222,7 +223,7 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} modal={false} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
@@ -239,102 +240,115 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Shift Timings From */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Shift Timings From <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-2 items-center">
-              <div className="flex-1">
-                <Select value={fromHour} onValueChange={setFromHour} disabled={isLoading}>
-                  <SelectTrigger className="w-full rounded-none border border-gray-300 h-10">
-                    <SelectValue placeholder="Hr" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white max-h-60 rounded-none">
-                    {['12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].map((hour) => (
-                      <SelectItem key={hour} value={hour}>
-                        {hour}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <span className="flex items-center text-gray-500 px-1">:</span>
-              <div className="flex-1">
-                <Select value={fromMinute} onValueChange={setFromMinute} disabled={isLoading}>
-                  <SelectTrigger className="w-full rounded-none border border-gray-300 h-10">
-                    <SelectValue placeholder="mm" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white max-h-60 rounded-none">
-                    {minutes.map((minute) => (
-                      <SelectItem key={minute} value={minute}>
-                        {minute}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-20">
-                <Select value={fromAmPm} onValueChange={setFromAmPm} disabled={isLoading}>
-                  <SelectTrigger className="w-full rounded-none border border-gray-300 h-10">
-                    <SelectValue placeholder="AM" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white rounded-none">
-                    <SelectItem value="AM">AM</SelectItem>
-                    <SelectItem value="PM">PM</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <div className="grid grid-cols-[1fr_auto_1fr_minmax(140px,140px)] gap-2 items-end mt-2">
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>From Hr *</InputLabel>
+              <MuiSelect
+                value={fromHour}
+                onChange={(e) => setFromHour(e.target.value)}
+                displayEmpty
+                label="From Hr *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Hr</em></MenuItem>
+                {['12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].map((hour) => (
+                  <MenuItem key={hour} value={hour}>{hour}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <span className="flex items-center text-gray-500 px-1 h-[45px]">:</span>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>From Min *</InputLabel>
+              <MuiSelect
+                value={fromMinute}
+                onChange={(e) => setFromMinute(e.target.value)}
+                displayEmpty
+                label="From Min *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Min</em></MenuItem>
+                {minutes.map((minute) => (
+                  <MenuItem key={minute} value={minute}>{minute}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>AM/PM *</InputLabel>
+              <MuiSelect
+                value={fromAmPm}
+                onChange={(e) => setFromAmPm(e.target.value)}
+                displayEmpty
+                label="AM/PM *"
+                sx={{
+                  ...fieldStyles,
+                  '& .MuiSelect-select': {
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  },
+                }}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="AM">AM</MenuItem>
+                <MenuItem value="PM">PM</MenuItem>
+              </MuiSelect>
+            </FormControl>
           </div>
-
-          {/* Shift Timings To */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Shift Timings To <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-2 items-center">
-              <div className="flex-1">
-                <Select value={toHour} onValueChange={setToHour} disabled={isLoading}>
-                  <SelectTrigger className="w-full rounded-none border border-gray-300 h-10">
-                    <SelectValue placeholder="Hr" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white max-h-60 rounded-none">
-                    {['12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].map((hour) => (
-                      <SelectItem key={hour} value={hour}>
-                        {hour}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <span className="flex items-center text-gray-500 px-1">:</span>
-              <div className="flex-1">
-                <Select value={toMinute} onValueChange={setToMinute} disabled={isLoading}>
-                  <SelectTrigger className="w-full rounded-none border border-gray-300 h-10">
-                    <SelectValue placeholder="mm" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white max-h-60 rounded-none">
-                    {minutes.map((minute) => (
-                      <SelectItem key={minute} value={minute}>
-                        {minute}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-20">
-                <Select value={toAmPm} onValueChange={setToAmPm} disabled={isLoading}>
-                  <SelectTrigger className="w-full rounded-none border border-gray-300 h-10">
-                    <SelectValue placeholder="PM" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white rounded-none">
-                    <SelectItem value="AM">AM</SelectItem>
-                    <SelectItem value="PM">PM</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <div className="grid grid-cols-[1fr_auto_1fr_minmax(140px,140px)] gap-2 items-end mt-4">
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>To Hr *</InputLabel>
+              <MuiSelect
+                value={toHour}
+                onChange={(e) => setToHour(e.target.value)}
+                displayEmpty
+                label="To Hr *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Hr</em></MenuItem>
+                {['12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].map((hour) => (
+                  <MenuItem key={hour} value={hour}>{hour}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <span className="flex items-center text-gray-500 px-1 h-[45px]">:</span>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>To Min *</InputLabel>
+              <MuiSelect
+                value={toMinute}
+                onChange={(e) => setToMinute(e.target.value)}
+                displayEmpty
+                label="To Min *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value=""><em>Select Min</em></MenuItem>
+                {minutes.map((minute) => (
+                  <MenuItem key={minute} value={minute}>{minute}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>AM/PM *</InputLabel>
+              <MuiSelect
+                value={toAmPm}
+                onChange={(e) => setToAmPm(e.target.value)}
+                displayEmpty
+                label="AM/PM *"
+                sx={{
+                  ...fieldStyles,
+                  '& .MuiSelect-select': {
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  },
+                }}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="AM">AM</MenuItem>
+                <MenuItem value="PM">PM</MenuItem>
+              </MuiSelect>
+            </FormControl>
           </div>
 
           {/* Check In Margin */}
@@ -360,34 +374,38 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Margin Time
                 </label>
-                <div className="flex gap-2 items-center">
-                  <Select value={hourMargin} onValueChange={setHourMargin} disabled={isLoading}>
-                    <SelectTrigger className="w-20 rounded-none border border-gray-300 h-10">
-                      <SelectValue placeholder="0" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white max-h-60 rounded-none">
+                <div className="flex gap-2 items-end">
+                  <FormControl fullWidth variant="outlined" disabled={isLoading}>
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Hr *</InputLabel>
+                    <MuiSelect
+                      value={hourMargin}
+                      onChange={(e) => setHourMargin(e.target.value)}
+                      displayEmpty
+                      label="Select Hr *"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                    >
                       {Array.from({ length: 13 }, (_, i) => String(i)).map((hour) => (
-                        <SelectItem key={hour} value={hour}>
-                          {hour}
-                        </SelectItem>
+                        <MenuItem key={hour} value={hour}>{hour}</MenuItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-sm text-gray-500">hours</span>
-                  
-                  <Select value={minMargin} onValueChange={setMinMargin} disabled={isLoading}>
-                    <SelectTrigger className="w-20 rounded-none border border-gray-300 h-10">
-                      <SelectValue placeholder="0" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white max-h-60 rounded-none">
+                    </MuiSelect>
+                  </FormControl>
+                  <span className="flex items-center text-gray-500 px-1 h-[45px]">:</span>
+                  <FormControl fullWidth variant="outlined" disabled={isLoading}>
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Min *</InputLabel>
+                    <MuiSelect
+                      value={minMargin}
+                      onChange={(e) => setMinMargin(e.target.value)}
+                      displayEmpty
+                      label="Select Min *"
+                      sx={fieldStyles}
+                      MenuProps={menuProps}
+                    >
                       {Array.from({ length: 60 }, (_, i) => String(i)).map((minute) => (
-                        <SelectItem key={minute} value={minute}>
-                          {minute}
-                        </SelectItem>
+                        <MenuItem key={minute} value={minute}>{minute}</MenuItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-sm text-gray-500">minutes</span>
+                    </MuiSelect>
+                  </FormControl>
                 </div>
               </div>
             )}

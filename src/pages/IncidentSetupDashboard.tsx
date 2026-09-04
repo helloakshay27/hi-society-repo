@@ -11,6 +11,17 @@ export const IncidentSetupDashboard = () => {
   // Get baseUrl and token from localStorage, ensure baseUrl starts with https://
   let baseUrl = localStorage.getItem('baseUrl') || '';
   const token = localStorage.getItem('token') || '';
+
+  const fetchByTagType = async (tagType) => {
+    const url = `${baseUrl}/incidence_tags.json?q[tag_type_eq]=${tagType}`;
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error(`Failed to fetch ${tagType}`);
+    const result = await response.json();
+    return result.data || [];
+  };
+
   if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
     baseUrl = 'https://' + baseUrl.replace(/^\/+/, '');
   }
@@ -18,37 +29,15 @@ export const IncidentSetupDashboard = () => {
   // Fetch SubSubSubCategories from API and map with category, subcategory, and subsubcategory names
   const fetchSubSubSubCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const allCategories = result.data.filter(item => item.tag_type === 'IncidenceCategory');
-        const allSubCategories = result.data.filter(item => item.tag_type === 'IncidenceSubCategory');
-        const allSubSubCategories = result.data.filter(item => item.tag_type === 'IncidenceSubSubCategory');
-        const subSubSubCats = result.data
-          .filter(item => item.tag_type === 'IncidenceSubSubSubCategory')
-          .map(item => {
-            const parentSubSub = allSubSubCategories.find(subsub => subsub.id === item.parent_id);
-            const parentSub = parentSubSub ? allSubCategories.find(sub => sub.id === parentSubSub.parent_id) : null;
-            const parentCat = parentSub ? allCategories.find(cat => cat.id === parentSub.parent_id) : null;
-            return {
-              id: item.id,
-              category: parentCat ? parentCat.name : '',
-              subCategory: parentSub ? parentSub.name : '',
-              subSubCategory: parentSubSub ? parentSubSub.name : '',
-              subSubSubCategory: item.name
-            };
-          });
-        setSubSubSubCategories(subSubSubCats);
-      } else {
-        console.error('Failed to fetch sub sub sub categories');
-      }
-    } catch (error) {
-      console.error('Error fetching sub sub sub categories:', error);
-    }
+      const data = await fetchByTagType('IncidenceSubSubSubCategory');
+      setSubSubSubCategories(data.map(item => ({
+        id: item.id,
+        category: item.category_name || '',
+        subCategory: item.sub_category_name || '',
+        subSubCategory: item.sub_sub_category_name || '',
+        subSubSubCategory: item.name
+      })));
+    } catch (e) { console.error(e); }
   };
   const [categoryName, setCategoryName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Category');
@@ -58,7 +47,16 @@ export const IncidentSetupDashboard = () => {
   const [selectedSubSubCategory, setSelectedSubSubCategory] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [editFormData, setEditFormData] = useState({
+  const [editFormData, setEditFormData] = useState<{
+    category: string;
+    subCategory: string;
+    subSubCategory: string;
+    name: string;
+    level: string;
+    escalateInDays: string;
+    users: string | string[];
+    id: string;
+  }>({
     category: '',
     subCategory: '',
     subSubCategory: '',
@@ -84,36 +82,22 @@ export const IncidentSetupDashboard = () => {
   const [escalations, setEscalations] = useState([]);
   const [escalationMatrix, setEscalationMatrix] = useState([]);
   // Fetch Escalations from API
-  // Only use /pms/incidence_tags.json?q[tag_type_eq]=EscaltionMatrix for escalations GET
   const fetchEscalations = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // Map API data to local escalation format
-        const mapped = (result.data || []).map(item => ({
-          id: item.id,
-          level: item.name,
-          escalateInDays: item.after_days ? String(item.after_days) : '',
-          users: Array.isArray(item.escalate_to_users) ? item.escalate_to_users.join(', ') : ''
-        }));
-        setEscalations(mapped);
-      } else {
-        setEscalations([]);
-      }
-    } catch (error) {
-      setEscalations([]);
-    }
+      const data = await fetchByTagType('EscaltionMatrix');
+      setEscalations(data.map(item => ({
+        id: item.id,
+        level: item.name,
+        escalateInDays: item.after_days ? String(item.after_days) : '',
+        users: Array.isArray(item.escalate_to_users) ? item.escalate_to_users.join(', ') : ''
+      })));
+    } catch (e) { setEscalations([]); }
   };
 
   // Fetch Escalation Matrix from API
   const fetchEscalationMatrix = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags/get_escalation_matrix.json`, {
+      const response = await fetch(`${baseUrl}/incidence_tags/get_escalation_matrix.json`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -155,37 +139,14 @@ export const IncidentSetupDashboard = () => {
   // Fetch Secondary Sub Sub Categories from API
   const fetchSecondarySubSubCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // Use API data for parent lookups
-        const allSecondaryCategories = (result.data || []).filter(item => item.tag_type === 'IncidenceSecondaryCategory');
-        const allSecondarySubCategories = (result.data || []).filter(item => item.tag_type === 'IncidenceSecondarySubCategory');
-        const subSubCats = (result.data || [])
-          .filter(item => item.tag_type === 'IncidenceSecondarySubSubCategory')
-          .map(item => {
-            const subCat = allSecondarySubCategories.find(sub => sub.id === item.parent_id);
-            const cat = subCat ? allSecondaryCategories.find(cat => cat.id === subCat.parent_id) : null;
-            return {
-              id: item.id,
-              secondaryCategory: cat?.name || '',
-              secondarySubCategory: subCat?.name || '',
-              secondarySubSubCategory: item.name
-            };
-          });
-        setSecondarySubSubCategories(subSubCats);
-      } else {
-        setSecondarySubSubCategories([]);
-        console.error('Failed to fetch secondary sub sub categories');
-      }
-    } catch (error) {
-      setSecondarySubSubCategories([]);
-      console.error('Error fetching secondary sub sub categories:', error);
-    }
+      const data = await fetchByTagType('IncidenceSecondarySubSubCategory');
+      setSecondarySubSubCategories(data.map(item => ({
+        id: item.id,
+        secondaryCategory: item.sub_category_name || '',
+        secondarySubCategory: item.parent_name || '',
+        secondarySubSubCategory: item.name
+      })));
+    } catch (e) { console.error(e); }
   };
   const [secondarySubSubSubCategories, setSecondarySubSubSubCategories] = useState([{
     id: 1,
@@ -198,40 +159,15 @@ export const IncidentSetupDashboard = () => {
   // Fetch Secondary Sub Sub Sub Categories from API (Secondary hierarchy)
   const fetchSecondarySubSubSubCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // Use API data for parent lookups in the Secondary hierarchy
-        const allSecondaryCategories = (result.data || []).filter(item => item.tag_type === 'IncidenceSecondaryCategory');
-        const allSecondarySubCategories = (result.data || []).filter(item => item.tag_type === 'IncidenceSecondarySubCategory');
-        const allSecondarySubSubCategories = (result.data || []).filter(item => item.tag_type === 'IncidenceSecondarySubSubCategory');
-        const subSubSubCats = (result.data || [])
-          .filter(item => item.tag_type === 'IncidenceSecondarySubSubSubCategory')
-          .map(item => {
-            const subSubCat = allSecondarySubSubCategories.find(subsub => subsub.id === item.parent_id);
-            const subCat = subSubCat ? allSecondarySubCategories.find(sub => sub.id === subSubCat.parent_id) : null;
-            const cat = subCat ? allSecondaryCategories.find(cat => cat.id === subCat.parent_id) : null;
-            return {
-              id: item.id,
-              secondaryCategory: cat?.name || '',
-              secondarySubCategory: subCat?.name || '',
-              secondarySubSubCategory: subSubCat?.name || '',
-              secondarySubSubSubCategory: item.name
-            };
-          });
-        setSecondarySubSubSubCategories(subSubSubCats);
-      } else {
-        setSecondarySubSubSubCategories([]);
-        console.error('Failed to fetch secondary sub sub sub categories');
-      }
-    } catch (error) {
-      setSecondarySubSubSubCategories([]);
-      console.error('Error fetching secondary sub sub sub categories:', error);
-    }
+      const data = await fetchByTagType('IncidenceSecondarySubSubSubCategory');
+      setSecondarySubSubSubCategories(data.map(item => ({
+        id: item.id,
+        secondaryCategory: item.category_name || '',
+        secondarySubCategory: item.sub_category_name || '',
+        secondarySubSubCategory: item.sub_sub_category_name || '',
+        secondarySubSubSubCategory: item.name
+      })));
+    } catch (e) { console.error(e); }
   };
   const [selectedSecondarySubSubCategory, setSelectedSecondarySubSubCategory] = useState('');
   const [whoGotInjured, setWhoGotInjured] = useState([]);
@@ -243,7 +179,12 @@ export const IncidentSetupDashboard = () => {
   const [correctiveActions, setCorrectiveActions] = useState([]);
   const [escalateToUsersList, setEscalateToUsersList] = useState([]);
   const [colorCode, setColorCode] = useState('#000000');
-  const menuItems = ['Category', 'Sub Category', 'Sub Sub Category', 'Sub Sub Sub Category', 'Incidence status', 'Incidence level', 'Escalations', 'Approval Setup', 'Secondary Category', 'Secondary Sub Category', 'Secondary Sub Sub Category', 'Secondary Sub Sub Sub Category', 'Who got injured', 'Property Damage Category', 'RCA Category', 'Substandard Act', 'Substandard Condition', 'Preventive Action', 'Corrective Action'];
+  const [categoryAttachment, setCategoryAttachment] = useState<File | null>(null);
+  const [categoryAttachmentPreview, setCategoryAttachmentPreview] = useState('');
+  const [editCategoryAttachment, setEditCategoryAttachment] = useState<File | null>(null);
+  const [editCategoryAttachmentPreview, setEditCategoryAttachmentPreview] = useState('');
+  const [originalCategoryIconUrl, setOriginalCategoryIconUrl] = useState('');
+  const menuItems = ['Category', 'Sub Category', 'Sub Sub Category', 'Sub Sub Sub Category', 'Incidence status', 'Incidence level', 'Escalations', 'Approval Setup', 'Secondary Category', 'Secondary Sub Category', 'Secondary Sub Sub Category', 'Secondary Sub Sub Sub Category', 'Who got injured', 'Property Damage Category', 'RCA Category'];
 
 
 
@@ -251,347 +192,161 @@ export const IncidentSetupDashboard = () => {
   // Fetch SubCategories from API and map with parent category name
   const fetchSubCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // Get all categories for mapping parent name
-        const allCategories = result.data.filter(item => item.tag_type === 'IncidenceCategory');
-        const subCats = result.data
-          .filter(item => item.tag_type === 'IncidenceSubCategory')
-          .map(item => {
-            const parent = allCategories.find(cat => cat.id === item.parent_id);
-            return {
-              id: item.id,
-              category: parent ? parent.name : '',
-              categoryId: parent ? parent.id : '',
-              subCategory: item.name
-            };
-          });
-        setSubCategories(subCats);
-      } else {
-        console.error('Failed to fetch sub categories');
-      }
-    } catch (error) {
-      console.error('Error fetching sub categories:', error);
-    }
+      const data = await fetchByTagType('IncidenceSubCategory');
+      setSubCategories(data.map(item => ({
+        id: item.id,
+        category: item.parent_name || '',
+        categoryId: item.parent_id || '',
+        subCategory: item.name
+      })));
+    } catch (e) { console.error(e); }
   };
 
   // Fetch SubSubCategories from API and map with category and subcategory names
   const fetchSubSubCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const allCategories = result.data.filter(item => item.tag_type === 'IncidenceCategory');
-        const allSubCategories = result.data.filter(item => item.tag_type === 'IncidenceSubCategory');
-        const subSubCats = result.data
-          .filter(item => item.tag_type === 'IncidenceSubSubCategory')
-          .map(item => {
-            const parentSub = allSubCategories.find(sub => sub.id === item.parent_id);
-            const parentCat = parentSub ? allCategories.find(cat => cat.id === parentSub.parent_id) : null;
-            return {
-              id: item.id,
-              category: parentCat ? parentCat.name : '',
-              categoryId: parentCat ? parentCat.id : '',
-              subCategory: parentSub ? parentSub.name : '',
-              subCategoryId: parentSub ? parentSub.id : '',
-              subSubCategory: item.name
-            };
-          });
-        setSubSubCategories(subSubCats);
-      } else {
-        console.error('Failed to fetch sub sub categories');
-      }
-    } catch (error) {
-      console.error('Error fetching sub sub categories:', error);
-    }
+      const data = await fetchByTagType('IncidenceSubSubCategory');
+      setSubSubCategories(data.map(item => ({
+        id: item.id,
+        subCategoryName: item.sub_category_name || '',
+        subCategory: item.parent_name || '',
+        subCategoryId: item.parent_id || '',
+        subSubCategory: item.name
+      })));
+    } catch (e) { console.error(e); }
   };
 
   const fetchIncidenceStatuses = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const statuses = result.data
-          .filter(item => item.tag_type === 'IncidenceStatus')
-          .map(({ id, name }) => ({ id, name }));
-        setIncidenceStatuses(statuses);
-      } else {
-        console.error('Failed to fetch incidence statuses');
-      }
-    } catch (error) {
-      console.error('Error fetching incidence statuses:', error);
-    }
+      const data = await fetchByTagType('IncidenceStatus');
+      setIncidenceStatuses(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   const fetchIncidenceLevels = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const rawLevels = result.data.filter(item => item.tag_type === 'IncidenceLevel');
-        console.log('Raw Incidence Levels from API:', rawLevels);
-        const levels = rawLevels.map(({ id, name, color_code }) => ({ id, name, color_code: color_code || '#000000' }));
-        console.log('Mapped Incidence Levels:', levels);
-        setIncidenceLevels(levels);
-      } else {
-        console.error('Failed to fetch incidence levels');
-      }
-    } catch (error) {
-      console.error('Error fetching incidence levels:', error);
-    }
+      const data = await fetchByTagType('IncidenceLevel');
+      setIncidenceLevels(data.map(({ id, name, color_code }) => ({
+        id,
+        name,
+        color_code: color_code || '#000000'
+      })));
+    } catch (e) { console.error(e); }
   };
 
   const fetchSecondaryCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const filtered = result.data
-          .filter(item => item.tag_type === 'IncidenceSecondaryCategory' && item.parent_id === null)
-          .map(({ id, name }) => ({ id, name }));
-        setSecondaryCategories(filtered);
-      } else {
-        console.error('Failed to fetch secondary categories');
-      }
-    } catch (error) {
-      console.error('Error fetching secondary categories:', error);
-    }
+      const data = await fetchByTagType('IncidenceSecondaryCategory');
+      setSecondaryCategories(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   const fetchSecondarySubCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const allSecondaryCategories = result.data.filter(item => item.tag_type === 'IncidenceSecondaryCategory');
-        const secondarySubCats = result.data
-          .filter(item => item.tag_type === 'IncidenceSecondarySubCategory')
-          .map(item => {
-            const parent = allSecondaryCategories.find(cat => cat.id === item.parent_id);
-            return {
-              id: item.id,
-              secondaryCategory: parent ? parent.name : '',
-              secondarySubCategory: item.name
-            };
-          });
-        setSecondarySubCategories(secondarySubCats);
-      } else {
-        console.error('Failed to fetch secondary sub categories');
-      }
-    } catch (error) {
-      console.error('Error fetching secondary sub categories:', error);
-    }
+      const data = await fetchByTagType('IncidenceSecondarySubCategory');
+      setSecondarySubCategories(data.map(item => ({
+        id: item.id,
+        secondaryCategory: item.parent_name || item.sub_sub_category_name || '',
+        secondaryCategoryId: item.parent_id || '',
+        secondarySubCategory: item.name
+      })));
+    } catch (e) { console.error(e); }
   };
 
   // Fetch RCACategory data from API
   const fetchRCACategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // Map the API response correctly for RCA categories
-        const rcaTypes = (result.data || [])
-          .filter(item => item.tag_type === 'RCACategory')
-          .map(item => ({ id: item.id, name: item.name }));
-        setRcaCategories(rcaTypes);
-      } else {
-        console.error('Failed to fetch RCA categories');
-      }
-    } catch (error) {
-      console.error('Error fetching RCA categories:', error);
-    }
+      const data = await fetchByTagType('RCACategory');
+      setRcaCategories(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   // Fetch SubstandardAct data from API
   const fetchSubstandardActCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const substandardActTypes = (result.data || [])
-          .filter(item => item.tag_type === 'SubstandardAct')
-          .map(item => ({ id: item.id, name: item.name }));
-        setSubstandardActCategories(substandardActTypes);
-      } else {
-        console.error('Failed to fetch Substandard Act categories');
-      }
-    } catch (error) {
-      console.error('Error fetching Substandard Act categories:', error);
-    }
+      const data = await fetchByTagType('SubstandardAct');
+      setSubstandardActCategories(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   // Fetch SubstandardCondition data from API
   const fetchSubstandardConditionCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const substandardConditionTypes = (result.data || [])
-          .filter(item => item.tag_type === 'SubstandardCondition')
-          .map(item => ({ id: item.id, name: item.name }));
-        setSubstandardConditionCategories(substandardConditionTypes);
-      } else {
-        console.error('Failed to fetch Substandard Condition categories');
-      }
-    } catch (error) {
-      console.error('Error fetching Substandard Condition categories:', error);
-    }
+      const data = await fetchByTagType('SubstandardCondition');
+      setSubstandardConditionCategories(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   // Fetch PreventiveAction data from API
   const fetchPreventiveActions = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const preventiveActionTypes = (result.data || [])
-          .filter(item => item.tag_type === 'PreventiveAction')
-          .map(item => ({ id: item.id, name: item.name }));
-        setPreventiveActions(preventiveActionTypes);
-      } else {
-        console.error('Failed to fetch Preventive Action categories');
-      }
-    } catch (error) {
-      console.error('Error fetching Preventive Action categories:', error);
-    }
+      const data = await fetchByTagType('PreventiveAction');
+      setPreventiveActions(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   // Fetch CorrectiveAction data from API
   const fetchCorrectiveActions = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const correctiveActionTypes = (result.data || [])
-          .filter(item => item.tag_type === 'CorrectiveAction')
-          .map(item => ({ id: item.id, name: item.name }));
-        setCorrectiveActions(correctiveActionTypes);
-      } else {
-        console.error('Failed to fetch Corrective Action categories');
-      }
-    } catch (error) {
-      console.error('Error fetching Corrective Action categories:', error);
-    }
+      const data = await fetchByTagType('CorrectiveAction');
+      setCorrectiveActions(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   // Fetch PropertyDamageCategory data from API
   const fetchPropertyDamageCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const propertyDamageTypes = result.data
-          .filter(item => item.tag_type === 'PropertyDamageCategory')
-          .map(({ id, name }) => ({ id, name }));
-        setPropertyDamageCategories(propertyDamageTypes);
-      } else {
-        console.error('Failed to fetch property damage categories');
-      }
-    } catch (error) {
-      console.error('Error fetching property damage categories:', error);
-    }
+      const data = await fetchByTagType('PropertyDamageCategory');
+      setPropertyDamageCategories(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
   // Fetch InjuredType data from API
   const fetchWhoGotInjured = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const injuredTypes = result.data
-          .filter(item => item.tag_type === 'InjuredType')
-          .map(({ id, name }) => ({ id, name }));
-        setWhoGotInjured(injuredTypes);
-      } else {
-        console.error('Failed to fetch injured types');
-      }
-    } catch (error) {
-      console.error('Error fetching injured types:', error);
-    }
+      const data = await fetchByTagType('InjuredType');
+      setWhoGotInjured(data.map(({ id, name }) => ({ id, name })));
+    } catch (e) { console.error(e); }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const filteredCategories = result.data
-          .filter(item => item.tag_type === 'IncidenceCategory' && item.parent_id === null)
-          .map(({ id, name }) => ({ id, name }));
-        setCategories(filteredCategories);
-      } else {
-        console.error('Failed to fetch categories');
-      }
+      const data = await fetchByTagType('IncidenceCategory');
+      const filteredCategories = data
+        .filter(item => item.parent_id === null)
+        .map(({ id, name, icon_url }) => ({ id, name, icon_url }));
+      setCategories(filteredCategories);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
+  // const fetchEscalateToUsers = async () => {
+  //   try {
+  //     const response = await fetch(`${baseUrl}/users/get_escalate_to_users.json`, {
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`
+  //       }
+  //     });
+  //     if (response.ok) {
+  //       const result = await response.json();
+  //       setEscalateToUsersList(result.users || []);
+  //     } else {
+  //       console.error('Failed to fetch escalate to users');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching escalate to users:', error);
+  //   }
+  // };
+
   const fetchEscalateToUsers = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/users/get_escalate_to_users.json`, {
+      const response = await fetch(`${baseUrl}/incidence_tags/get_users.json`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
         const result = await response.json();
-        setEscalateToUsersList(result.users || []);
+        setEscalateToUsersList(result.data || []);
       } else {
         console.error('Failed to fetch escalate to users');
       }
@@ -599,49 +354,27 @@ export const IncidentSetupDashboard = () => {
       console.error('Error fetching escalate to users:', error);
     }
   };
-
   const fetchApprovalSetups = async () => {
     try {
-      const response = await fetch(`${baseUrl}/pms/incidence_tags.json?tag_type=ApprovalSetup`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // Since we're filtering by tag_type in the URL, all data should be ApprovalSetup
-        const approvalSetupData = result.data || [];
-
-        // Extract user IDs from the name field (comma-separated string) of the most recent ApprovalSetup entry
-        if (approvalSetupData.length > 0) {
-          const latestApprovalSetup = approvalSetupData[approvalSetupData.length - 1];
-          const nameString = latestApprovalSetup.name || '';
-          // Split comma-separated string into array and convert to string array for dropdown
-          const userIds = nameString ? nameString.split(',').map(id => id.trim()) : [];
-          setSelectedApprovalUsers(userIds);
-          setExistingApprovalSetupId(latestApprovalSetup.id);
-        } else {
-          // If no existing approval setup, clear the selection
-          setSelectedApprovalUsers([]);
-          setExistingApprovalSetupId(null);
-        }
-
-        // Also update the approvalSetups state for the table display
-        const approvalSetupsForTable = approvalSetupData.map(setup => ({
-          id: setup.id,
-          users: setup.name ? setup.name.split(',').map(userId => {
-            // Find user in escalateToUsersList
-            const user = escalateToUsersList.find(u => String(u.id) === userId.trim());
-            return user ? user.full_name : `User ID: ${userId.trim()}`;
-          }).join(', ') : 'No users selected'
-        }));
-        setApprovalSetups(approvalSetupsForTable);
+      const data = await fetchByTagType('ApprovalSetup');
+      if (data.length > 0) {
+        const latest = data[data.length - 1];
+        const userIds = latest.name ? latest.name.split(',').map(id => id.trim()) : [];
+        setSelectedApprovalUsers(userIds);
+        setExistingApprovalSetupId(latest.id);
       } else {
-        console.error('Failed to fetch approval setups');
+        setSelectedApprovalUsers([]);
+        setExistingApprovalSetupId(null);
       }
-    } catch (error) {
-      console.error('Error fetching approval setups:', error);
-    }
+      const approvalSetupsForTable = data.map(setup => ({
+        id: setup.id,
+        users: setup.name ? setup.name.split(',').map(userId => {
+          const user = escalateToUsersList.find(u => String(u.id) === userId.trim());
+          return user ? user.full_name : `User ID: ${userId.trim()}`;
+        }).join(', ') : 'No users selected'
+      }));
+      setApprovalSetups(approvalSetupsForTable);
+    } catch (e) { console.error(e); }
   };
   useEffect(() => {
     if (selectedCategory === 'Category') {
@@ -781,24 +514,27 @@ export const IncidentSetupDashboard = () => {
 
     if (selectedCategory === 'Category') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+        const formData = new FormData();
+        formData.append('incidence_tag[tag_type]', 'IncidenceCategory');
+        formData.append('incidence_tag[active]', 'true');
+        formData.append('incidence_tag[name]', categoryName);
+        if (categoryAttachment) {
+          formData.append('attachment', categoryAttachment);
+        }
+
+        const response = await fetch(`${baseUrl}/incidence_tags.json`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({
-            incidence_tag: {
-              tag_type: 'IncidenceCategory',
-              active: true,
-              name: categoryName
-            }
-          })
+          body: formData
         });
 
         if (response.ok) {
           await fetchCategories();
           setCategoryName('');
+          setCategoryAttachment(null);
+          setCategoryAttachmentPreview('');
           toast.success('Category added successfully!');
         } else {
           console.error('Failed to add category:', response.statusText);
@@ -812,7 +548,7 @@ export const IncidentSetupDashboard = () => {
       // Use selectedParentCategory as the id directly
       if (selectedParentCategory && categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -845,7 +581,7 @@ export const IncidentSetupDashboard = () => {
       // Use selectedParentCategory as category_id and selectedSubCategory as parent_id
       if (selectedParentCategory && selectedSubCategory && categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -879,7 +615,7 @@ export const IncidentSetupDashboard = () => {
       // Use selectedParentCategory as category_id and selectedSubSubCategory (id) as parent_id
       if (selectedParentCategory && selectedSubCategory && selectedSubSubCategory && categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -920,7 +656,7 @@ export const IncidentSetupDashboard = () => {
             name: categoryName
           }
         };
-        const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags.json`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -952,7 +688,7 @@ export const IncidentSetupDashboard = () => {
           color_code: colorCode
         };
         console.log('Submitting Incidence Level with color:', colorCode, 'Body:', JSON.stringify(body, null, 2));
-        const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags.json`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -987,7 +723,7 @@ export const IncidentSetupDashboard = () => {
               escalate_to_users: usersArray
             }
           };
-          const response = await fetch(`${baseUrl}/pms/add_escalation.json`, {
+          const response = await fetch(`${baseUrl}/add_escalation.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1025,8 +761,8 @@ export const IncidentSetupDashboard = () => {
           // Determine if we're updating existing or creating new
           const isUpdate = existingApprovalSetupId !== null;
           const url = isUpdate
-            ? `${baseUrl}/pms/incidence_tags/${existingApprovalSetupId}.json`
-            : `${baseUrl}/pms/incidence_tags.json`;
+            ? `${baseUrl}/incidence_tags/${existingApprovalSetupId}.json`
+            : `${baseUrl}/incidence_tags.json`;
           const method = isUpdate ? 'PUT' : 'POST';
 
           // Convert user IDs array to comma-separated string
@@ -1064,7 +800,7 @@ export const IncidentSetupDashboard = () => {
     } else if (selectedCategory === 'Secondary Category') {
       if (categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1097,7 +833,7 @@ export const IncidentSetupDashboard = () => {
       const parentSecondaryCategoryObj = secondaryCategories.find(cat => cat.name === selectedSecondaryCategory);
       if (parentSecondaryCategoryObj && categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1133,7 +869,7 @@ export const IncidentSetupDashboard = () => {
       const parentSecondarySubCategoryObj = secondarySubCategories.find(sub => sub.secondarySubCategory === selectedSecondarySubCategory && sub.secondaryCategory === selectedSecondaryCategory);
       if (parentSecondaryCategoryObj && parentSecondarySubCategoryObj && categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1170,7 +906,7 @@ export const IncidentSetupDashboard = () => {
       const parentSecondarySubSubCategoryObj = secondarySubSubCategories.find(subsub => subsub.secondarySubSubCategory === selectedSecondarySubSubCategory && subsub.secondaryCategory === selectedSecondaryCategory && subsub.secondarySubCategory === selectedSecondarySubCategory);
       if (parentSecondaryCategoryObj && parentSecondarySubCategoryObj && parentSecondarySubSubCategoryObj && categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1215,7 +951,7 @@ export const IncidentSetupDashboard = () => {
       // API integration for InjuredType
       if (categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1247,7 +983,7 @@ export const IncidentSetupDashboard = () => {
       // API integration for PropertyDamageCategory
       if (categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1280,7 +1016,7 @@ export const IncidentSetupDashboard = () => {
       // API integration for RCACategory
       if (categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1312,7 +1048,7 @@ export const IncidentSetupDashboard = () => {
       // API integration for SubstandardAct
       if (categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1344,7 +1080,7 @@ export const IncidentSetupDashboard = () => {
       // API integration for SubstandardCondition
       if (categoryName.trim()) {
         try {
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1383,7 +1119,7 @@ export const IncidentSetupDashboard = () => {
               name: categoryName
             }
           };
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1416,7 +1152,7 @@ export const IncidentSetupDashboard = () => {
               name: categoryName
             }
           };
-          const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+          const response = await fetch(`${baseUrl}/incidence_tags.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1445,7 +1181,7 @@ export const IncidentSetupDashboard = () => {
     // Optionally, fetch all PropertyDamageCategory from API (for future use or refresh)
     // const fetchPropertyDamageCategories = async () => {
     //   try {
-    //     const response = await fetch(`${baseUrl}/pms/incidence_tags.json`, {
+    //     const response = await fetch(`${baseUrl}/incidence_tags.json`, {
     //       headers: {
     //         'Authorization': `Bearer ${token}`
     //       }
@@ -1531,6 +1267,15 @@ export const IncidentSetupDashboard = () => {
         users: '',
         id: ""
       });
+      if (type === 'Category') {
+        setEditCategoryAttachment(null);
+        setEditCategoryAttachmentPreview('');
+        setOriginalCategoryIconUrl(item.icon_url || '');
+      } else {
+        setEditCategoryAttachment(null);
+        setEditCategoryAttachmentPreview('');
+        setOriginalCategoryIconUrl('');
+      }
     } else if (type === 'Sub Sub Category') {
       setEditFormData({
         category: item.category || '',
@@ -1594,11 +1339,16 @@ export const IncidentSetupDashboard = () => {
 
       console.log(payload)
 
-      await axios.put(`${baseUrl}/pms/update_escalation.json`, payload, {
+      await axios.put(`${baseUrl}/update_escalation.json`, payload, {
         headers: {
           "Authorization": `Bearer ${token}`,
         }
       })
+
+      // Clear the add-new form states
+      setSelectedEscalationLevel('');
+      setEscalateInDays('');
+      setEscalateToUsers([]);
 
       handleEditBack();
       fetchEscalationMatrix();
@@ -1613,7 +1363,7 @@ export const IncidentSetupDashboard = () => {
 
     if (editingItem?.type === 'Who got injured') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1641,7 +1391,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Property Damage Category') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1668,7 +1418,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'RCA Category') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1696,7 +1446,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Secondary Category') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1724,21 +1474,25 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Category') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const formData = new FormData();
+        formData.append('incidence_tag[name]', editFormData.name);
+        if (editCategoryAttachment) {
+          formData.append('attachment', editCategoryAttachment);
+        }
+
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({
-            incidence_tag: {
-              name: editFormData.name
-            }
-          })
+          body: formData
         });
 
         if (response.ok) {
           await fetchCategories();
+          setEditCategoryAttachment(null);
+          setEditCategoryAttachmentPreview('');
+          setOriginalCategoryIconUrl('');
           toast.success('Category updated successfully!');
         } else {
           console.error('Failed to update category:', response.statusText);
@@ -1759,7 +1513,7 @@ export const IncidentSetupDashboard = () => {
       }
 
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1797,7 +1551,7 @@ export const IncidentSetupDashboard = () => {
       }
 
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1827,8 +1581,7 @@ export const IncidentSetupDashboard = () => {
     } else if (editingItem?.type === 'Sub Sub Sub Category') {
       const parentSubSubCategoryObj = subSubCategories.find(subsub =>
         subsub.subSubCategory === editFormData.subSubCategory &&
-        subsub.subCategory === editFormData.subCategory &&
-        subsub.category === editFormData.category
+        subsub.subCategory === editFormData.subCategory
       );
       if (!parentSubSubCategoryObj) {
         toast.error('Please select a valid Sub Sub Category');
@@ -1836,7 +1589,7 @@ export const IncidentSetupDashboard = () => {
       }
 
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1865,7 +1618,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Incidence status') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1893,7 +1646,7 @@ export const IncidentSetupDashboard = () => {
     } else if (editingItem?.type === 'Incidence level') {
       try {
         console.log('Updating Incidence Level with color:', colorCode);
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1923,7 +1676,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Substandard Act') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1951,7 +1704,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Substandard Condition') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -1979,7 +1732,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Preventive Action') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -2007,7 +1760,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Corrective Action') {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -2035,7 +1788,7 @@ export const IncidentSetupDashboard = () => {
       }
     } else if (editingItem?.type === 'Escalations') {
       try {
-        const response = await fetch(`${baseUrl}/pms/update_escalation.json`, {
+        const response = await fetch(`${baseUrl}/update_escalation.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -2074,7 +1827,7 @@ export const IncidentSetupDashboard = () => {
       }
 
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -2113,7 +1866,7 @@ export const IncidentSetupDashboard = () => {
       }
 
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -2152,7 +1905,7 @@ export const IncidentSetupDashboard = () => {
       }
 
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${editingItem.id}.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${editingItem.id}.json`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -2210,13 +1963,16 @@ export const IncidentSetupDashboard = () => {
       id: ""
     });
     setColorCode('#000000');
+    setEditCategoryAttachment(null);
+    setEditCategoryAttachmentPreview('');
+    setOriginalCategoryIconUrl('');
   };
 
   // Special function for escalation deletion using GET method
   const handleDeleteEscalation = async (escalation) => {
     if (window.confirm(`Are you sure you want to delete this escalation?`)) {
       try {
-        const response = await fetch(`${baseUrl}/pms/incidence_tags/${escalation.id}/escalation_destroy.json`, {
+        const response = await fetch(`${baseUrl}/incidence_tags/${escalation.id}/escalation_destroy.json`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -2238,7 +1994,7 @@ export const IncidentSetupDashboard = () => {
 
   const handleDelete = async (item, type) => {
     if (window.confirm(`Are you sure you want to delete this ${type.toLowerCase()}?`)) {
-      let url = `${baseUrl}/pms/incidence_tags/${item.id}.json`;
+      let url = `${baseUrl}/incidence_tags/${item.id}.json`;
       let fetchFn = null;
       if (type === 'Category') fetchFn = fetchCategories;
       else if (type === 'Sub Category') fetchFn = fetchSubCategories;
@@ -2354,7 +2110,12 @@ export const IncidentSetupDashboard = () => {
                     <TextField
                       type="number"
                       value={editFormData.escalateInDays}
-                      onChange={e => setEditFormData({ ...editFormData, escalateInDays: e.target.value })}
+                      onChange={e => {
+                        const value = e.target.value;
+                        if (/^\d*$/.test(value)) {
+                          setEditFormData({ ...editFormData, escalateInDays: value });
+                        }
+                      }}
                       placeholder="Please enter number of days"
                       variant="outlined"
                       size="small"
@@ -2373,10 +2134,14 @@ export const IncidentSetupDashboard = () => {
                         multiple
                         value={escalateToUsers}
                         onChange={(e) => {
-                          const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+                          // Handle value - ensure it's always an array of strings (user IDs)
+                          const value = typeof e.target.value === 'string'
+                            ? e.target.value.split(',')
+                            : e.target.value;
+
+                          // Update both states with the array of IDs
                           setEscalateToUsers(value);
-                          // Update editFormData.users for consistency (convert array to any for type compatibility)
-                          setEditFormData({ ...editFormData, users: value as any });
+                          setEditFormData({ ...editFormData, users: value });
                         }}
                         input={<OutlinedInput label="Escalate To Users" />}
                         renderValue={(selected) => {
@@ -2427,13 +2192,11 @@ export const IncidentSetupDashboard = () => {
                                 color="primary"
                                 variant="outlined"
                                 onDelete={() => {
+                                  // Filter out the deleted user ID
                                   const newUsers = escalateToUsers.filter(id => id !== userId);
+                                  // Update both states consistently with the array of IDs
                                   setEscalateToUsers(newUsers);
-                                  const userNames = newUsers.map(id => {
-                                    const u = escalateToUsersList.find(user => String(user.id) === String(id));
-                                    return u ? u.full_name : id;
-                                  }).join(', ');
-                                  setEditFormData({ ...editFormData, users: userNames });
+                                  setEditFormData({ ...editFormData, users: newUsers });
                                 }}
                                 style={{
                                   fontSize: '11px',
@@ -2449,7 +2212,7 @@ export const IncidentSetupDashboard = () => {
                   </div>
 
                   <div className="flex gap-3 pt-2">
-                    <Button onClick={handleEditEsclation} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2">
+                    <Button onClick={handleEditEsclation} className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                       Submit
                     </Button>
                     <Button onClick={handleEditBack} variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2">
@@ -2474,10 +2237,46 @@ export const IncidentSetupDashboard = () => {
                     />
                   </div>
 
+                  {editingItem?.type === 'Category' && (
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Icon
+                      </label>
+                      {originalCategoryIconUrl && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Current Icon:</p>
+                          <img src={originalCategoryIconUrl} alt="Current category icon" className="w-16 h-16 object-cover rounded border border-gray-300" />
+                        </div>
+                      )}
+                      {editCategoryAttachmentPreview && editCategoryAttachment && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">New Icon Preview:</p>
+                          <img src={editCategoryAttachmentPreview} alt="New category icon preview" className="w-16 h-16 object-cover rounded border border-gray-300" />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          if (file) {
+                            setEditCategoryAttachment(file);
+                            setEditCategoryAttachmentPreview(URL.createObjectURL(file));
+                          } else {
+                            setEditCategoryAttachment(null);
+                            setEditCategoryAttachmentPreview('');
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-[#C72030] file:text-white hover:file:bg-[#C72030]/90"
+                      />
+                      <p className="text-xs text-gray-500">Upload New Icon</p>
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
                     <Button
                       onClick={handleEditSubmit}
-                      className="bg-[#C72030] hover:bg-[#A01020] text-white px-6"
+                      className="px-6 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                     >
                       Submit
                     </Button>
@@ -2650,7 +2449,7 @@ export const IncidentSetupDashboard = () => {
                           }}
                         >
                           {subSubCategories
-                            .filter(subsub => subsub.category === editFormData.category && subsub.subCategory === editFormData.subCategory)
+                            .filter(subsub => subsub.subCategory === editFormData.subCategory)
                             .map(subSubCategory => (
                               <MenuItem key={subSubCategory.id} value={subSubCategory.subSubCategory}>
                                 {subSubCategory.subSubCategory}
@@ -2695,7 +2494,7 @@ export const IncidentSetupDashboard = () => {
                   )}
 
                   <div className="flex gap-3 pt-2">
-                    <Button onClick={handleEditSubmit} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2">
+                    <Button onClick={handleEditSubmit} className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                       Submit
                     </Button>
                     <Button onClick={handleEditBack} variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2">
@@ -2810,7 +2609,12 @@ export const IncidentSetupDashboard = () => {
                           label={<>Escalate In Days <span style={{ color: '#C72030' }}>*</span></>}
                           type="number"
                           value={escalateInDays}
-                          onChange={e => setEscalateInDays(e.target.value)}
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (/^\d*$/.test(value)) {
+                              setEscalateInDays(value);
+                            }
+                          }}
                           placeholder="Please enter number of days"
                           variant="outlined"
                           size="small"
@@ -3119,7 +2923,7 @@ export const IncidentSetupDashboard = () => {
                           }}
                         >
                           {subSubCategories
-                            .filter(subsub => String(subsub.categoryId) === String(selectedParentCategory) && String(subsub.subCategoryId) === String(selectedSubCategory))
+                            .filter(subsub => String(subsub.subCategoryId) === String(selectedSubCategory))
                             .map(subSubCategory => (
                               <MenuItem key={subSubCategory.id} value={String(subSubCategory.id)}>
                                 {subSubCategory.subSubCategory}
@@ -3163,6 +2967,55 @@ export const IncidentSetupDashboard = () => {
                       />
                     </div>
                   )}
+                  {/* {selectedCategory === 'Category' && (
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Icon *
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          if (file) {
+                            setCategoryAttachment(file);
+                            setCategoryAttachmentPreview(URL.createObjectURL(file));
+                          } else {
+                            setCategoryAttachment(null);
+                            setCategoryAttachmentPreview('');
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded file:border file:border-gray-600 file:text-sm file:font-medium file:bg-white file:text-gray-700 hover:file:bg-gray-50"
+                      />
+                      {categoryAttachmentPreview && (
+                        <div className="mt-2">
+                          <img src={categoryAttachmentPreview} alt="Category icon preview" className="w-16 h-16 object-cover rounded border border-gray-300" />
+                        </div>
+                      )}
+                    </div>
+                  )} */}
+
+                  {selectedCategory === 'Category' && (
+                    <div className="flex-1">
+                      <TextField
+                        label={<>Icon <span style={{ color: '#C72030' }}>*</span></>}
+                        type="file"
+                        inputProps={{ accept: 'image/*' }}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const file = e.target.files?.[0];
+                          setCategoryAttachment(file || null);
+                          setCategoryAttachmentPreview(file ? URL.createObjectURL(file) : '');
+                        }}
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                      />
+                      {categoryAttachmentPreview && (
+                        <img src={categoryAttachmentPreview} alt="preview" className="mt-1 h-8 w-8 object-cover rounded border" />
+                      )}
+                    </div>
+                  )}
                   {selectedCategory === 'Incidence level' && (
                     <div className="flex-1">
                       <TextField
@@ -3177,7 +3030,7 @@ export const IncidentSetupDashboard = () => {
                       />
                     </div>
                   )}
-                  <Button onClick={handleSubmit} className="bg-purple-600 hover:bg-purple-700 text-white px-8">
+                  <Button onClick={handleSubmit} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
                     {selectedCategory === 'Approval Setup' && existingApprovalSetupId ? 'Update' : 'Submit'}
                   </Button>
                 </div>
@@ -3268,6 +3121,12 @@ export const IncidentSetupDashboard = () => {
                               <TableHead className="px-4 py-3 text-left text-xs font-medium text-[#1a1a1a] uppercase tracking-wider">Sub Category</TableHead>
                               <TableHead className="px-4 py-3 text-left text-xs font-medium text-[#1a1a1a] uppercase tracking-wider">Action</TableHead>
                             </>
+                          ) : selectedCategory === 'Category' ? (
+                            <>
+                              <TableHead className="px-4 py-3 text-left text-xs font-medium text-[#1a1a1a] uppercase tracking-wider">Name</TableHead>
+                              <TableHead className="px-4 py-3 text-left text-xs font-medium text-[#1a1a1a] uppercase tracking-wider">Icon</TableHead>
+                              <TableHead className="px-4 py-3 text-left text-xs font-medium text-[#1a1a1a] uppercase tracking-wider">Action</TableHead>
+                            </>
                           ) : selectedCategory === 'Incidence level' ? (
                             <>
                               <TableHead className="px-4 py-3 text-left text-xs font-medium text-[#1a1a1a] uppercase tracking-wider">Name</TableHead>
@@ -3289,7 +3148,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{secondarySub.secondarySubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(secondarySub, 'Secondary Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(secondarySub, 'Secondary Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(secondarySub, 'Secondary Sub Category')}>
@@ -3305,7 +3164,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.secondarySubSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Secondary Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Secondary Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Secondary Sub Sub Category')}>
@@ -3322,7 +3181,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.secondarySubSubSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Secondary Sub Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Secondary Sub Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Secondary Sub Sub Sub Category')}>
@@ -3336,7 +3195,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Who got injured')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Who got injured')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Who got injured')}>
@@ -3350,7 +3209,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Property Damage Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Property Damage Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Property Damage Category')}>
@@ -3364,7 +3223,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'RCA Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'RCA Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'RCA Category')}>
@@ -3378,7 +3237,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Substandard Act')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Substandard Act')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Substandard Act')}>
@@ -3392,7 +3251,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Substandard Condition')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Substandard Condition')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Substandard Condition')}>
@@ -3406,10 +3265,10 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Preventive Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Preventive Action')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Preventive Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleDelete(item, 'Preventive Action')}>
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
@@ -3420,10 +3279,10 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Corrective Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Corrective Action')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Corrective Action')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleDelete(item, 'Corrective Action')}>
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
@@ -3436,7 +3295,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{approval.users}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(approval, 'Approval Setup')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(approval, 'Approval Setup')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(approval, 'Approval Setup')}>
@@ -3462,7 +3321,7 @@ export const IncidentSetupDashboard = () => {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(escalation, 'Escalations')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(escalation, 'Escalations')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDeleteEscalation(escalation)}>
@@ -3476,7 +3335,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{secondary.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(secondary, 'Secondary Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(secondary, 'Secondary Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(secondary, 'Secondary Category')}>
@@ -3499,7 +3358,7 @@ export const IncidentSetupDashboard = () => {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(level, 'Incidence level')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(level, 'Incidence level')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(level, 'Incidence level')}>
@@ -3513,7 +3372,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{status.name}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(status, 'Incidence status')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(status, 'Incidence status')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(status, 'Incidence status')}>
@@ -3530,7 +3389,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.subSubSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Sub Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Sub Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Sub Sub Sub Category')}>
@@ -3541,12 +3400,14 @@ export const IncidentSetupDashboard = () => {
                           </TableRow>
                         )) : selectedCategory === 'Sub Sub Category' ? subSubCategories.map(item => (
                           <TableRow key={item.id} className="hover:bg-gray-50 border-b border-[#D5DbDB]">
-                            <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{item.category}</TableCell>
+                            <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">
+                              {subCategories.find(s => String(s.id) === String(item.subCategoryId))?.category || item.subCategoryName || ''}
+                            </TableCell>
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.subCategory}</TableCell>
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.subSubCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Sub Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Sub Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Sub Sub Category')}>
@@ -3561,7 +3422,7 @@ export const IncidentSetupDashboard = () => {
                             <TableCell className="px-4 py-3 text-sm text-gray-600">{item.subCategory}</TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item, 'Sub Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(item, 'Sub Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(item, 'Sub Category')}>
@@ -3574,8 +3435,15 @@ export const IncidentSetupDashboard = () => {
                           <TableRow key={category.id} className="hover:bg-gray-50 border-b border-[#D5DbDB]">
                             <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">{category.name}</TableCell>
                             <TableCell className="px-4 py-3">
+                              {category.icon_url ? (
+                                <img src={category.icon_url} alt={`${category.name} icon`} className="w-8 h-8 object-cover rounded border border-gray-300" />
+                              ) : (
+                                <span className="text-sm text-gray-500 italic">No icon</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(category, 'Category')}>
+                                <Button variant="ghost" size="sm" className="bg-[#C72030] text-white hover:bg-[#C72030]/90" onClick={() => handleEdit(category, 'Category')}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => handleDelete(category, 'Category')}>

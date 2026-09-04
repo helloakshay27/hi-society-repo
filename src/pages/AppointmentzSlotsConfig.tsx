@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Autocomplete,
+  TextField,
+} from "@mui/material";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +27,21 @@ import {
   getSiteSchedules,
   createSiteSchedule,
   updateSiteSchedule,
-  SiteSchedule as APISiteSchedule,
-  getRMUsers,
+  getAllRMUsers,
 } from "@/services/appointmentzService";
+import { ScheduleSetupPanel } from "@/components/appointmentz/ScheduleSetupPanel";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 interface SlotConfig {
   id: number;
@@ -35,6 +51,10 @@ interface SlotConfig {
   endDate?: string;
   startTime: string;
   endTime: string;
+  startHour: string;
+  startMinute: string;
+  endHour: string;
+  endMinute: string;
   mon: number;
   tue: number;
   wed: number;
@@ -46,12 +66,30 @@ interface SlotConfig {
 
 const AppointmentzSlotsConfig = () => {
   const [data, setData] = useState<SlotConfig[]>([]);
+  const { shouldShow } = useDynamicPermissions();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [rmUsers, setRmUsers] = useState<{ id: number; name: string }[]>([]);
+  const [isRmDropdownOpen, setIsRmDropdownOpen] = useState(false);
+
+  const formatTimePart = (value: string | number | null | undefined) =>
+    String(value ?? 0).padStart(2, "0");
+
+  const normalizeDateForInput = (date?: string) => {
+    if (!date) return "";
+    if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.slice(0, 10);
+    if (date.includes("/")) {
+      const [day, month, year] = date.split("/");
+      return `${year}-${month}-${day}`;
+    }
+    return date;
+  };
 
   // Form Data State
   const [formData, setFormData] = useState({
@@ -81,8 +119,7 @@ const AppointmentzSlotsConfig = () => {
       const response = await getSiteSchedules();
 
       // Fetch users once to map names
-      const rmResponse = await getRMUsers();
-      const users = rmResponse.data;
+      const users = await getAllRMUsers();
 
       // Transform API data to component format
       const transformedData: SlotConfig[] = response.data.map((schedule) => {
@@ -99,6 +136,10 @@ const AppointmentzSlotsConfig = () => {
           endDate: schedule.end_date,
           startTime: startTime || "",
           endTime: endTime || "",
+          startHour: formatTimePart(schedule.start_hour),
+          startMinute: formatTimePart(schedule.start_minute),
+          endHour: formatTimePart(schedule.end_hour),
+          endMinute: formatTimePart(schedule.end_minute),
           mon: schedule.mon,
           tue: schedule.tue,
           wed: schedule.wed,
@@ -119,14 +160,15 @@ const AppointmentzSlotsConfig = () => {
     }
   }, []);
 
-  const fetchRMUsers = useCallback(async () => {
+  const fetchRMUsersList = useCallback(async () => {
     try {
-      const response = await getRMUsers();
-      const users = response.data.map((user) => ({
-        id: user.id,
-        name: user.full_name || `User ID: ${user.user_id}`,
-      }));
-      setRmUsers(users);
+      const users = await getAllRMUsers();
+      setRmUsers(
+        users.map((user) => ({
+          id: user.id,
+          name: user.full_name || `User ID: ${user.user_id}`,
+        }))
+      );
     } catch (error) {
       console.error("Error fetching RM users:", error);
     }
@@ -134,57 +176,12 @@ const AppointmentzSlotsConfig = () => {
 
   useEffect(() => {
     fetchSiteSchedules();
-    fetchRMUsers();
-  }, [fetchSiteSchedules, fetchRMUsers]);
-
-  const columns = [
-    { key: "actions", label: "Actions", sortable: false },
-    { key: "rmUser", label: "RM User", sortable: true },
-    { key: "startDate", label: "Start Date", sortable: true },
-    { key: "endDate", label: "End Date", sortable: true },
-    { key: "startTime", label: "Start Time", sortable: true },
-    { key: "endTime", label: "End Time", sortable: true },
-    { key: "mon", label: "MON", sortable: false },
-    { key: "tue", label: "TUE", sortable: false },
-    { key: "wed", label: "WED", sortable: false },
-    { key: "thu", label: "THU", sortable: false },
-    { key: "fri", label: "FRI", sortable: false },
-    { key: "sat", label: "SAT", sortable: false },
-    { key: "sun", label: "SUN", sortable: false },
-  ];
-
-  const handleGlobalSearch = (term: string) => {
-    setSearchTerm(term);
-    // Search is handled by the table or can be implemented as a filter on 'data'
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDayChange = (day: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      days: { ...prev.days, [day]: parseInt(value) || 0 },
-    }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    if (name === "rmUser") {
-      const selectedUser = rmUsers.find((u) => u.id.toString() === value);
-      setFormData((prev) => ({
-        ...prev,
-        rmUser: selectedUser?.name || "",
-        rmUserId: selectedUser?.id || 0,
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
+    fetchRMUsersList();
+  }, [fetchSiteSchedules, fetchRMUsersList]);
 
   const handleOpenAddModal = () => {
     setIsEditMode(false);
+    setSelectedId(null);
     setFormData({
       rmUser: "",
       rmUserId: 0,
@@ -210,22 +207,15 @@ const AppointmentzSlotsConfig = () => {
   const handleOpenEditModal = (item: SlotConfig) => {
     setIsEditMode(true);
     setSelectedId(item.id);
-
-    // Parse time
-    const startParts = item.startTime.split(/[: ]/);
-    const endParts = item.endTime.split(/[: ]/);
-
     setFormData({
       rmUser: item.rmUser,
       rmUserId: item.rmUserId,
-      startDate: item.startDate
-        ? item.startDate.split("/").reverse().join("-")
-        : "",
-      endDate: item.endDate ? item.endDate.split("/").reverse().join("-") : "",
-      startHour: startParts[0] || "00",
-      startMinute: startParts[1] || "00",
-      endHour: endParts[0] || "00",
-      endMinute: endParts[1] || "00",
+      startDate: normalizeDateForInput(item.startDate),
+      endDate: normalizeDateForInput(item.endDate),
+      startHour: item.startHour,
+      startMinute: item.startMinute,
+      endHour: item.endHour,
+      endMinute: item.endMinute,
       days: {
         mon: item.mon,
         tue: item.tue,
@@ -239,69 +229,233 @@ const AppointmentzSlotsConfig = () => {
     setIsAddModalOpen(true);
   };
 
+  const handleSelectChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleDayChange = (day: keyof typeof formData.days, value: string) => {
+    const numValue = parseInt(value) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      days: {
+        ...prev.days,
+        [day]: numValue,
+      },
+    }));
+  };
+
+  const handleDateChange = (field: "startDate" | "endDate", value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const handleSubmit = async () => {
     if (!formData.rmUserId) {
-      setTimeout(() => {
-        toast.error("Please select an RM User");
-      }, 0);
+      toast.error("Please select an RM User");
       return;
     }
 
-    try {
-      const payload = {
-        site_schedule: {
-          rm_user_ids: [formData.rmUserId],
-          start_date: formData.startDate || undefined,
-          end_date: formData.endDate || undefined,
-          start_hour: formData.startHour,
-          start_minute: formData.startMinute,
-          end_hour: formData.endHour,
-          end_minute: formData.endMinute,
-          mon: formData.days.mon,
-          tue: formData.days.tue,
-          wed: formData.days.wed,
-          thu: formData.days.thu,
-          fri: formData.days.fri,
-          sat: formData.days.sat,
-          sun: formData.days.sun,
-        },
-      };
+    if (!formData.startDate) {
+      toast.error("Please select a Start Date");
+      return;
+    }
 
+    if (!formData.endDate) {
+      toast.error("Please select an End Date");
+      return;
+    }
+
+    if (new Date(formData.startDate) > new Date(formData.endDate)) {
+      toast.error("Start Date must be before End Date");
+      return;
+    }
+
+    const payload = {
+      site_schedule: {
+        rm_user_id: formData.rmUserId,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        start_hour: parseInt(formData.startHour),
+        start_minute: parseInt(formData.startMinute),
+        end_hour: parseInt(formData.endHour),
+        end_minute: parseInt(formData.endMinute),
+        mon: formData.days.mon,
+        tue: formData.days.tue,
+        wed: formData.days.wed,
+        thu: formData.days.thu,
+        fri: formData.days.fri,
+        sat: formData.days.sat,
+        sun: formData.days.sun,
+      },
+    };
+
+    setIsSubmitting(true);
+    try {
       if (isEditMode && selectedId) {
         await updateSiteSchedule(selectedId, payload);
-        setTimeout(() => {
-          toast.success("Slot updated successfully!");
-        }, 0);
+        toast.success("Schedule updated successfully");
       } else {
         await createSiteSchedule(payload);
-        setTimeout(() => {
-          toast.success("Slot added successfully!");
-        }, 0);
+        toast.success("Schedule created successfully");
       }
-
-      // Refresh the list
-      await fetchSiteSchedules();
       setIsAddModalOpen(false);
+      await fetchSiteSchedules();
     } catch (error) {
-      console.error("Error saving slot:", error);
-      setTimeout(() => {
-        toast.error("Failed to save slot");
-      }, 0);
+      console.error("Error submitting schedule:", error);
+      toast.error(
+        isEditMode ? "Failed to update schedule" : "Failed to create schedule"
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const filteredData = data.filter((item) =>
+    Object.values(item).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
+  const columns = [
+    { key: "actions", label: "Actions", sortable: false },
+    { key: "rmUser", label: "Rm User", sortable: true },
+    { key: "startDate", label: "Start Date", sortable: true },
+    { key: "endDate", label: "End Date", sortable: true },
+    { key: "startTime", label: "Start Time", sortable: true },
+    { key: "endTime", label: "End Time", sortable: true },
+    { key: "mon", label: "M", sortable: false },
+    { key: "tue", label: "T", sortable: false },
+    { key: "wed", label: "W", sortable: false },
+    { key: "thu", label: "T", sortable: false },
+    { key: "fri", label: "F", sortable: false },
+    { key: "sat", label: "S", sortable: false },
+    { key: "sun", label: "S", sortable: false },
+  ];
 
   const renderCell = (item: SlotConfig, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-500 hover:text-blue-600"
-            onClick={() => handleOpenEditModal(item)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
+          shouldShow("Slots Configuration", "update") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="bg-transparent text-[#C72030] hover:bg-transparent"
+              onClick={() => handleOpenEditModal(item)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )
         );
       case "mon":
       case "tue":
@@ -329,230 +483,314 @@ const AppointmentzSlotsConfig = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-brand-bg min-h-screen">
+      <div className="bg-white border border-brand-border rounded-lg p-5 mb-6 shadow-system-sm">
+        <ScheduleSetupPanel />
+      </div>
+
       <EnhancedTable
-        data={data}
+        data={paginatedData}
         columns={columns}
         renderCell={renderCell}
-        pagination={true}
+        pagination={false}
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
         leftActions={
-          <Button
-            onClick={handleOpenAddModal}
-            className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
-          </Button>
+          shouldShow("Slots Configuration", "create") && (
+            <button
+              type="button"
+              onClick={handleOpenAddModal}
+              className="bg-[#C72030] text-white font-semibold h-9 px-4 text-xs rounded shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-white" />
+              <span>Add</span>
+            </button>
+          )
         }
         loading={loading}
       />
 
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[700px] bg-white p-0">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle className="text-center font-bold">
-              {isEditMode ? "Edit" : "Add"}
+      {data.length > 0 && (
+        <div className="mt-4 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+
+      {/* Add / Edit Slot Modal */}
+      <Dialog
+        open={isAddModalOpen}
+        onOpenChange={(open) => {
+          setIsRmDropdownOpen(false);
+          setIsAddModalOpen(open);
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-[700px] bg-white p-0"
+          onMouseDownCapture={(event) => {
+            const target = event.target as HTMLElement;
+            const isRmDropdownTarget =
+              target.closest(".rm-user-autocomplete") ||
+              target.closest(".rm-user-autocomplete-popper");
+
+            if (!isRmDropdownTarget) {
+              setIsRmDropdownOpen(false);
+            }
+          }}
+          onEscapeKeyDown={(event) => {
+            if (isRmDropdownOpen) {
+              event.preventDefault();
+              setIsRmDropdownOpen(false);
+            }
+          }}
+        >
+          <DialogHeader className="bg-[#f6f4ee] p-4 border-b border-[#D5DbDB]">
+            <DialogTitle className="text-center w-full font-bold text-lg text-[#1A1A1A]">
+              {isEditMode ? "Edit Schedule" : "Add Schedule"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="p-8 space-y-8">
-            {/* Row 1: RM User and Start Date */}
-            <div className="grid grid-cols-2 gap-8">
+          <div className="p-8 space-y-6 bg-white">
+            {/* Row 1: RM User & Start Date & End Date */}
+            <div className="grid grid-cols-3 gap-6">
               <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  Rm User
-                </label>
-                <Select
-                  onValueChange={(val) => handleSelectChange("rmUser", val)}
-                  value={formData.rmUserId ? formData.rmUserId.toString() : ""}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
-                    <SelectValue placeholder="Select Rm User" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rmUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  Start Date
-                </label>
-                <div className="relative">
-                  <Input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
-                    className="bg-white border-gray-300 pl-4 focus:border-[#C72030] focus:ring-0 h-10 text-gray-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: End Date and Start Time */}
-            <div className="grid grid-cols-2 gap-8">
-              <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  End Date
-                </label>
-                <Input
-                  type="date"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10 text-gray-500"
+                <Autocomplete
+                  open={isRmDropdownOpen}
+                  onOpen={() => setIsRmDropdownOpen(true)}
+                  onClose={() => setIsRmDropdownOpen(false)}
+                  options={rmUsers}
+                  getOptionLabel={(option) => option.name || ""}
+                  value={
+                    rmUsers.find((user) => user.id === formData.rmUserId) || null
+                  }
+                  onChange={(_, newValue) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      rmUser: newValue ? newValue.name : "",
+                      rmUserId: newValue ? newValue.id : 0,
+                    }));
+                  }}
+                  className="rm-user-autocomplete"
+                  slotProps={{
+                    popper: {
+                      className: "rm-user-autocomplete-popper z-[100000]",
+                      sx: { zIndex: 100000 },
+                    },
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="RM User"
+                      variant="outlined"
+                      size="small"
+                      required
+                      placeholder="Select RM"
+                      onClick={() => setIsRmDropdownOpen((prev) => !prev)}
+                      InputLabelProps={{
+                        shrink: true,
+                        sx: {
+                          "& .MuiFormLabel-asterisk": { color: "#C72030" },
+                        },
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          height: "36px",
+                          fontSize: "13px",
+                        },
+                      }}
+                    />
+                  )}
                 />
               </div>
 
+              <div>
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => handleDateChange("startDate", e.target.value)}
+                  fullWidth
+                  size="small"
+                  required
+                  InputLabelProps={{
+                    shrink: true,
+                    sx: {
+                      "& .MuiFormLabel-asterisk": { color: "#C72030" },
+                    },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: "36px",
+                      fontSize: "13px",
+                    },
+                  }}
+                />
+              </div>
+
+              <div>
+                <TextField
+                  label="End Date"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => handleDateChange("endDate", e.target.value)}
+                  fullWidth
+                  size="small"
+                  required
+                  InputLabelProps={{
+                    shrink: true,
+                    sx: {
+                      "& .MuiFormLabel-asterisk": { color: "#C72030" },
+                    },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: "36px",
+                      fontSize: "13px",
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Start Time & End Time */}
+            <div className="grid grid-cols-2 gap-8">
               <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
+                <label className="text-xs font-semibold text-gray-700 block mb-1">
                   Start Time
                 </label>
-                <div className="flex gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Select
-                    onValueChange={(val) =>
-                      handleSelectChange("startHour", val)
-                    }
+                    onValueChange={(val) => handleSelectChange("startHour", val)}
                     defaultValue={formData.startHour}
                     value={formData.startHour}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                    <SelectTrigger className="w-full bg-white border-[#D5DbDB] focus:border-[#C72030] h-9 text-xs">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                        (num) => (
-                          <SelectItem
-                            key={num}
-                            value={num.toString().padStart(2, "0")}
-                          >
-                            {num.toString().padStart(2, "0")}
-                          </SelectItem>
-                        )
-                      )}
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
+                      {Array.from({ length: 24 }, (_, i) => i).map((num) => (
+                        <SelectItem key={num} value={num.toString().padStart(2, "0")} className="text-xs">
+                          {num.toString().padStart(2, "0")}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select
-                    onValueChange={(val) =>
-                      handleSelectChange("startMinute", val)
-                    }
+                    onValueChange={(val) => handleSelectChange("startMinute", val)}
                     defaultValue={formData.startMinute}
                     value={formData.startMinute}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                    <SelectTrigger className="w-full bg-white border-[#D5DbDB] focus:border-[#C72030] h-9 text-xs">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="00">00</SelectItem>
-                      <SelectItem value="15">15</SelectItem>
-                      <SelectItem value="30">30</SelectItem>
-                      <SelectItem value="45">45</SelectItem>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
+                      <SelectItem value="00" className="text-xs">00</SelectItem>
+                      <SelectItem value="15" className="text-xs">15</SelectItem>
+                      <SelectItem value="30" className="text-xs">30</SelectItem>
+                      <SelectItem value="45" className="text-xs">45</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-            </div>
 
-            {/* Row 3: End Time (Half width, left aligned) */}
-            <div className="grid grid-cols-2 gap-8">
               <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
+                <label className="text-xs font-semibold text-gray-700 block mb-1">
                   End Time
                 </label>
-                <div className="flex gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Select
                     onValueChange={(val) => handleSelectChange("endHour", val)}
                     defaultValue={formData.endHour}
                     value={formData.endHour}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                    <SelectTrigger className="w-full bg-white border-[#D5DbDB] focus:border-[#C72030] h-9 text-xs">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                        (num) => (
-                          <SelectItem
-                            key={num}
-                            value={num.toString().padStart(2, "0")}
-                          >
-                            {num.toString().padStart(2, "0")}
-                          </SelectItem>
-                        )
-                      )}
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
+                      {Array.from({ length: 24 }, (_, i) => i).map((num) => (
+                        <SelectItem key={num} value={num.toString().padStart(2, "0")} className="text-xs">
+                          {num.toString().padStart(2, "0")}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select
-                    onValueChange={(val) =>
-                      handleSelectChange("endMinute", val)
-                    }
+                    onValueChange={(val) => handleSelectChange("endMinute", val)}
                     defaultValue={formData.endMinute}
                     value={formData.endMinute}
                   >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
+                    <SelectTrigger className="w-full bg-white border-[#D5DbDB] focus:border-[#C72030] h-9 text-xs">
                       <SelectValue placeholder="00" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="00">00</SelectItem>
-                      <SelectItem value="15">15</SelectItem>
-                      <SelectItem value="30">30</SelectItem>
-                      <SelectItem value="45">45</SelectItem>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px]">
+                      <SelectItem value="00" className="text-xs">00</SelectItem>
+                      <SelectItem value="15" className="text-xs">15</SelectItem>
+                      <SelectItem value="30" className="text-xs">30</SelectItem>
+                      <SelectItem value="45" className="text-xs">45</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div></div> {/* Empty column filler */}
             </div>
 
-            {/* Row 4: Days of Week */}
+            {/* Row 3: Days of Week */}
             <div className="space-y-2">
-              <div className="flex justify-between max-w-[500px]">
-                {["M", "T", "W", "T", "F", "S"].map((day, idx) => {
-                  const dayKey = ["mon", "tue", "wed", "thu", "fri", "sat"][
-                    idx
-                  ] as keyof typeof formData.days;
+              <label className="text-xs font-semibold text-gray-700 block">
+                Slots Count per Day
+              </label>
+              <div className="flex flex-wrap items-center gap-3">
+                {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((dayKey) => {
+                  const label = dayKey.toUpperCase().substring(0, 1);
                   return (
-                    <div key={idx} className="flex flex-col gap-1 w-[60px]">
-                      <span className="text-sm text-gray-600 font-medium">
-                        {day}
+                    <div key={dayKey} className="flex flex-col items-center gap-1 w-12">
+                      <span className={`text-xs font-bold ${dayKey === "sun" ? "text-[#C72030]" : "text-gray-700"}`}>
+                        {label}
                       </span>
                       <Input
-                        className="h-9 px-2 text-center border-gray-300"
-                        value={formData.days[dayKey]}
+                        className="h-8 px-1 text-center border-[#D5DbDB] text-xs font-semibold"
+                        value={formData.days[dayKey as keyof typeof formData.days]}
                         onChange={(e) =>
-                          handleDayChange(dayKey, e.target.value)
+                          handleDayChange(dayKey as keyof typeof formData.days, e.target.value)
                         }
                       />
                     </div>
                   );
                 })}
               </div>
-
-              <div className="flex flex-col gap-1 w-[60px] mt-4">
-                <span className="text-sm text-[#C72030] font-medium">S</span>
-                <Input
-                  className="h-9 px-2 text-center border-gray-300"
-                  value={formData.days.sun}
-                  onChange={(e) => handleDayChange("sun", e.target.value)}
-                />
-              </div>
             </div>
           </div>
 
-          <DialogFooter className="p-4 border-t flex justify-center bg-white">
+          <DialogFooter className="p-4 border-t border-[#D5DbDB] flex justify-end gap-2 bg-[#f6f4ee]">
+            <Button
+              variant="outline"
+              onClick={() => setIsAddModalOpen(false)}
+              className="border-[#D5DbDB] text-gray-700 hover:bg-white text-xs h-9 px-4"
+            >
+              Cancel
+            </Button>
             <Button
               onClick={handleSubmit}
-              className="bg-[#00B4D8] hover:bg-[#009bb8] text-white min-w-[100px]"
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#a81a28] text-white text-xs h-9 px-5 shadow-xs"
             >
-              Submit
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+              <span>{isEditMode ? "Update" : "Submit"}</span>
             </Button>
           </DialogFooter>
         </DialogContent>

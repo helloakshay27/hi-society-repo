@@ -19,6 +19,10 @@ import {
   MenuItem,
   Avatar,
   Switch,
+  Checkbox,
+  ListItemText,
+  Chip,
+  OutlinedInput,
 } from "@mui/material";
 import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon, Info } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
@@ -28,7 +32,6 @@ import { Button } from "react-day-picker";
 import { DeleteCompanyModal } from "@/components/DeleteCompanyModal";
 import { DeleteCountryModal } from "@/components/DeleteCountryModal";
 import { DeletePatrollingModal } from "@/components/DeletePatrollingModal";
-
 // Custom MultiValue component for react-select
 const CustomMultiValue = (props) => (
   <div
@@ -1456,7 +1459,6 @@ const ProjectDetailsCreate = () => {
           return;
         }
 
-        if (!validateFile(file, MAX_SIZES[name])) return;
         validFiles.push(file);
       });
 
@@ -2100,7 +2102,7 @@ const ProjectDetailsCreate = () => {
         );
       } else if (key.startsWith("image") && Array.isArray(value)) {
         value.forEach((img) => {
-          const backendField = key.replace("image", "project[image") + "]";
+          const backendField = `project[${key.replace("image_", "project_banners_")}]`;
           if (img.file instanceof File) {
             data.append(backendField, img.file);
           }
@@ -2249,7 +2251,8 @@ const ProjectDetailsCreate = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
+    <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28 project-details-create-page">
+      <style>{`.project-details-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header Section */}
       <div className="mb-8">
              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -2276,7 +2279,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Basic Information
             </h2>
@@ -2373,66 +2376,56 @@ const ProjectDetailsCreate = () => {
                 </MUISelect>
               </FormControl>
 
-              <div className="w-full">
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                    Configuration Type
-                  </label>
-                  <Select
-                    isMulti
-                    value={
-                      Array.isArray(formData.Configuration_Type)
-                        ? formData.Configuration_Type.map((c) => ({
-                            value: typeof c?.id === 'string' ? parseInt(c.id, 10) : c?.id || c,
-                            label: c?.name || configurations.find(config => config.id === c)?.name || '',
-                          })).filter((opt) => opt.value && opt.label)
-                        : []
-                    }
-                    onChange={(selected, actionMeta) => {
-                      // Handle adding new configurations
-                      if (actionMeta.action === 'select-option') {
-                        const newConfig = actionMeta.option;
-                        const config = configurations.find((c) => c.id === newConfig.value);
-                        if (config) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            Configuration_Type: [...prev.Configuration_Type, { id: config.id, name: config.name }],
-                          }));
-                        }
-                        return;
-                      }
-                      
-                      // Handle removal
-                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
-                        setFormData((prev) => ({
-                          ...prev,
-                          Configuration_Type: prev.Configuration_Type.filter(
-                            (c) => (c.id || c) !== actionMeta.removedValue.value
-                          ),
-                        }));
-                        return;
-                      }
-
-                      // Handle clear all
-                      if (actionMeta.action === 'clear') {
-                        setFormData((prev) => ({
-                          ...prev,
-                          Configuration_Type: [],
-                        }));
-                      }
-                    }}
-                    options={configurations.map((c) => ({ value: c.id, label: c.name }))}
-                    styles={customStyles}
-                    components={{
-                      MultiValue: CustomMultiValue,
-                    }}
-                    closeMenuOnSelect={false}
-                    placeholder="Select Configuration..."
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                </div>
-              </div>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
+              >
+                <InputLabel shrink>Configuration Type</InputLabel>
+                <MUISelect
+                  multiple
+                  value={
+                    Array.isArray(formData.Configuration_Type)
+                      ? formData.Configuration_Type.map((c) =>
+                          typeof c?.id === "string" ? parseInt(c.id, 10) : c?.id ?? c
+                        )
+                      : []
+                  }
+                  onChange={(e) => {
+                    const newIds = e.target.value as (string | number)[];
+                    const prevIds = Array.isArray(formData.Configuration_Type)
+                      ? formData.Configuration_Type.map((c) =>
+                          typeof c?.id === "string" ? parseInt(c.id, 10) : c?.id ?? c
+                        )
+                      : [];
+                    const added = newIds.filter((id) => !prevIds.includes(id));
+                    const finalIds = added.length > 0 ? [added[added.length - 1]] : newIds;
+                    const selectedConfigs = configurations
+                      .filter((c) => finalIds.includes(c.id))
+                      .map((c) => ({ id: c.id, name: c.name }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      Configuration_Type: selectedConfigs,
+                    }));
+                  }}
+                  input={<OutlinedInput label="Configuration Type" notched />}
+                  renderValue={(selected) =>
+                    (selected as (string | number)[])
+                      .map((id) => configurations.find((c) => c.id === id)?.name)
+                      .filter(Boolean)
+                      .join(", ")
+                  }
+                  label="Configuration Type"
+                  notched
+                  displayEmpty
+                >
+                  {configurations.map((option) => (
+                    <MenuItem key={option.id} value={option.id}>
+                      <ListItemText primary={option.name} />
+                    </MenuItem>
+                  ))}
+                </MUISelect>
+              </FormControl>
 
                 <TextField
                 label="Project Name"
@@ -3051,7 +3044,7 @@ const ProjectDetailsCreate = () => {
                       className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                       style={{ backgroundColor: "#E5E0D3" }}
                     >
-                      <FileText size={16} color="#C72030" />
+                      <FileText size={16} color="var(--color-primary,#da7756)" />
                     </span>
                     RERA Number
                   </h2>
@@ -3206,17 +3199,16 @@ const ProjectDetailsCreate = () => {
                             <button
                               type="button"
                               onClick={() => document.getElementById("qr-code-file-upload-0")?.click()}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                              style={{ backgroundColor: "#c4b89d59" }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
                             >
-                              <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                              <span className="font-medium text-sm text-white">Upload Files</span>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="16"
                                 height="16"
                                 viewBox="0 0 24 24"
                                 fill="none"
-                                stroke="#C72030"
+                                stroke="#FFFFFF"
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -3401,17 +3393,16 @@ const ProjectDetailsCreate = () => {
                                   <button
                                     type="button"
                                     onClick={() => document.getElementById(`qr-code-file-upload-${entryIndex}`)?.click()}
-                                    className="inline-flex  gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                                    style={{ backgroundColor: "#c4b89d59" }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
                                   >
-                                    <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                                    <span className="font-medium text-sm text-white">Upload Files</span>
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
                                       width="16"
                                       height="16"
                                       viewBox="0 0 24 24"
                                       fill="none"
-                                      stroke="#C72030"
+                                      stroke="#FFFFFF"
                                       strokeWidth="2"
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
@@ -3432,10 +3423,9 @@ const ProjectDetailsCreate = () => {
                       <div className="flex justify-end mt-4">
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors bg-[#C72030] hover:bg-[#A01828]"
                           style={{
                             height: "45px",
-                            backgroundColor: "#C4B89D59",
                           }}
                           onClick={() => {
                             // Add empty section - data will be saved when typing in the fields
@@ -3479,7 +3469,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Amenities
             </h2>
@@ -3487,34 +3477,43 @@ const ProjectDetailsCreate = () => {
           <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                    Amenities
-                  </label>
-                  <Select
-                    isMulti
-                    value={amenities
-                      .filter((a) => formData.Amenities.includes(a.id))
-                      .map((a) => ({ value: a.id, label: a.name }))}
-                    onChange={(selected) => {
-                      const selectedIds = selected ? selected.map((s) => s.value) : [];
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ "& .MuiInputBase-root": fieldStyles }}
+                >
+                  <InputLabel shrink>Amenities</InputLabel>
+                  <MUISelect
+                    multiple
+                    value={formData.Amenities}
+                    onChange={(e) => {
+                      const newIds = e.target.value as (string | number)[];
+                      const prevIds = Array.isArray(formData.Amenities) ? formData.Amenities : [];
+                      const added = newIds.filter((id) => !prevIds.includes(id));
+                      const finalIds = added.length > 0 ? [added[added.length - 1]] : newIds;
                       setFormData((prev) => ({
                         ...prev,
-                        Amenities: selectedIds,
+                        Amenities: finalIds,
                       }));
                     }}
-                    options={amenities.map((a) => ({ value: a.id, label: a.name }))}
-                    styles={customStyles}
-                    components={{
-                      MultiValue: CustomMultiValue,
-                      MultiValueRemove: () => null,
-                    }}
-                    closeMenuOnSelect={false}
-                    placeholder="Select Amenities..."
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                </div>
+                    input={<OutlinedInput label="Amenities" notched />}
+                    renderValue={(selected) =>
+                      (selected as (string | number)[])
+                        .map((id) => amenities.find((a) => a.id === id)?.name)
+                        .filter(Boolean)
+                        .join(", ")
+                    }
+                    label="Amenities"
+                    notched
+                    displayEmpty
+                  >
+                    {amenities.map((option) => (
+                      <MenuItem key={option.id} value={option.id}>
+                        <ListItemText primary={option.name} />
+                      </MenuItem>
+                    ))}
+                  </MUISelect>
+                </FormControl>
               </div>
             </div>
           </div>
@@ -3528,7 +3527,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={16} color="var(--color-primary,#da7756)" />
               </span>
               Connectivity
             </h2>
@@ -3885,12 +3884,8 @@ const ProjectDetailsCreate = () => {
               <button
                 type="button"
                 onClick={handleAddConnectivity}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md"
-                style={{
-                  backgroundColor: '#EDEAE3',
-                  border: '1px solid #C72030',
-                  color: '#C72030',
-                }}
+              //  variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
               >
                 <span>Add</span>
               </button>
@@ -4215,7 +4210,7 @@ const ProjectDetailsCreate = () => {
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <FileUpload sx={{ fontSize: 16, color: "#C72030" }} />
+                <FileUpload sx={{ fontSize: 16, color: "var(--color-primary,#da7756)" }} />
               </span>
               File Uploads
             </h2>
@@ -4245,8 +4240,8 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                    type="button"
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                     type="button"
                     onClick={() => setShowBannerModal(true)}
                   >
                     {/* <svg
@@ -4380,7 +4375,8 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    // variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -4551,7 +4547,8 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
                     type="button"
                     onClick={() => setShowGalleryModal(true)}
                   >
@@ -4758,7 +4755,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
@@ -4874,7 +4871,7 @@ const ProjectDetailsCreate = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipBrochure && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 5 MB
+                          No file size limit
                         </span>
                       )}
                     </span>
@@ -4882,8 +4879,8 @@ const ProjectDetailsCreate = () => {
 
                   <button
                     type="button"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                    onClick={(e) => {
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       document.getElementById("brochure")?.click();
@@ -4958,7 +4955,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_ppt").click()}
                         >
                          
@@ -5026,8 +5023,8 @@ const ProjectDetailsCreate = () => {
 
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={() => document.getElementById("project_layout").click()}
+                 variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={() => document.getElementById("project_layout").click()}
                         >
                          
                           <span>Add</span>
@@ -5102,7 +5099,7 @@ const ProjectDetailsCreate = () => {
 
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_creatives").click()}
                         >
                          
@@ -5178,7 +5175,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_creative_generics").click()}
                         >
                         
@@ -5252,8 +5249,8 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={(e) => {
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             document.getElementById("project_creative_offers").click();
@@ -5331,7 +5328,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_interiors").click()}
                         >
                          
@@ -5404,7 +5401,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_exteriors").click()}
                         >
                           
@@ -5477,7 +5474,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("project_emailer_templetes").click()}
                         >
                          
@@ -5541,7 +5538,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                           onClick={() => document.getElementById("KnwYrApt_Technical").click()}
                         >
                         
@@ -5606,8 +5603,8 @@ const ProjectDetailsCreate = () => {
                         </h5>
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={(e) => {
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             document.getElementById("videos").click();
@@ -5706,8 +5703,8 @@ const ProjectDetailsCreate = () => {
             </h2>
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-              onClick={(e) => {
+// variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleAddVirtualTour();
@@ -5845,7 +5842,7 @@ const ProjectDetailsCreate = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary,#da7756)' }} />
               </Avatar>
               Visibility
             </h2>
@@ -6044,18 +6041,17 @@ const ProjectDetailsCreate = () => {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-              disabled={loading}
+           className="btn-primary h-9 px-4 text-sm font-medium"               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit"}
             </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-            >
-              Cancel
-            </button>
+           <button
+  type="button"
+  onClick={handleCancel}
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+>
+  Cancel
+</button>
           </div>
         </div>
       </form>

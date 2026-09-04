@@ -26,16 +26,16 @@ const CMSFacilityBookings = () => {
         onValueChange={handleTabChange}
         className="w-full"
       >
-        <TabsList className="w-full bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
           <TabsTrigger
             value="list"
-            className="w-full font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
           >
             List
           </TabsTrigger>
           <TabsTrigger
             value="calender"
-            className="w-full font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
           >
             Calendar View
           </TabsTrigger>

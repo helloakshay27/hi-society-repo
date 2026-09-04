@@ -7,12 +7,17 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DateRange } from "react-day-picker";
+import { HelpdeskExportDialog } from "@/components/HelpdeskExportDialog";
 
 const BMSHelpdeskReport: React.FC = () => {
+  // Page-level date filter
   const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(2026, 0, 1),
-    to: new Date(2026, 0, 1),
+    from: new Date(2026, 3, 1),
+    to: new Date(2026, 3, 23),
   });
+
+  // Export dialog
+  const [exportOpen, setExportOpen] = useState(false);
 
   const handleApply = () => {
     if (date?.from && date?.to) {
@@ -25,19 +30,13 @@ const BMSHelpdeskReport: React.FC = () => {
   };
 
   const handleReset = () => {
-    setDate({
-      from: new Date(2026, 0, 1),
-      to: new Date(2026, 0, 1),
-    });
+    setDate({ from: new Date(2026, 3, 1), to: new Date(2026, 3, 23) });
     toast.info("Filters reset");
-  };
-
-  const handleExport = () => {
-    toast.success("Exporting helpdesk report...");
   };
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
+      {/* Page header bar */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[300px]">
@@ -46,7 +45,7 @@ const BMSHelpdeskReport: React.FC = () => {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal !bg-white !text-[#C72030] !border !border-[#C72030] [&_svg]:text-[#C72030]",
                     !date && "text-muted-foreground"
                   )}
                 >
@@ -77,13 +76,14 @@ const BMSHelpdeskReport: React.FC = () => {
             </Popover>
           </div>
           <div className="flex gap-2">
-            <Button
-              onClick={handleApply}
-              className="bg-teal-500 hover:bg-teal-600 text-white"
-            >
+            <Button onClick={handleApply} className="bg-[#C72030] hover:bg-[#A01828] !text-white">
               Apply
             </Button>
-            <Button onClick={handleReset} className="bg-cyan-400 hover:bg-cyan-500 text-white">
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="border-[#C72030] text-[#C72030] hover:bg-[#FDEFF1]"
+            >
               Reset
             </Button>
           </div>
@@ -91,14 +91,16 @@ const BMSHelpdeskReport: React.FC = () => {
 
         <div className="mt-6 pt-6 border-t border-gray-200">
           <Button
-            onClick={handleExport}
-            className="bg-cyan-400 hover:bg-cyan-500 text-white"
+            onClick={() => setExportOpen(true)}
+            className="bg-[#C72030] hover:bg-[#A01828] !text-white"
           >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
+
+      <HelpdeskExportDialog isOpen={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 };

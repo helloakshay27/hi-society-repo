@@ -53,26 +53,30 @@ const IconWrapper = styled(Box)(() => ({
 }));
 
 const RedButton = styled(MuiButton)(() => ({
-  backgroundColor: "#e7e3d9",
-  color: "#B8252F",
-  borderRadius: 0,
-  textTransform: "none",
-  padding: "8px 16px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
-}));
-
-const CancelButton = styled(MuiButton)(() => ({
-  backgroundColor: "#e7e3d9",
-  color: "#C72030",
+  backgroundColor: "#C72030",
+  color: "white",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 16px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
   "&:hover": {
-    backgroundColor: "#e7e3d9",
+    backgroundColor: "#C72030",
+    opacity: 0.9,
+  },
+}));
+
+const CancelButton = styled(MuiButton)(() => ({
+  backgroundColor: "#ffffff",
+  color: "#ED820E",
+  border: "1px solid #ED820E",
+  borderRadius: 0,
+  textTransform: "none",
+  padding: "8px 16px",
+  fontFamily: "Work Sans, sans-serif",
+  fontWeight: 500,
+  "&:hover": {
+    backgroundColor: "#f5f5f5",
   },
 }));
 
@@ -96,6 +100,9 @@ const fieldStyles = {
     "&.Mui-focused": {
       color: "#C72030",
     },
+  },
+  "& .MuiFormLabel-asterisk": {
+    color: "#da7756",
   },
   "& .MuiInputBase-input": {
     fontSize: "14px",
@@ -384,10 +391,12 @@ const PricingRuleCreate: React.FC = () => {
 
       {/* Action Buttons */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
-        <RedButton onClick={handleSubmit} disabled={submitting}>
+        <RedButton onClick={handleSubmit} disabled={submitting}
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
           {submitting ? "Submitting..." : "Submit"}
         </RedButton>
-        <CancelButton onClick={handleCancel} disabled={submitting}>
+        <CancelButton onClick={handleCancel} disabled={submitting}
+          className="px-6 sm:px-8 w-full sm:w-auto h-10">
           Cancel
         </CancelButton>
       </Box>

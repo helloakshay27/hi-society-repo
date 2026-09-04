@@ -4,12 +4,23 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Eye, Pencil } from "lucide-react";
-import { Switch } from "@mui/material";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationLink,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 const NoticeboardList = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+  const [allNoticeboards, setAllNoticeboards] = useState([]);
   const [noticeboards, setNoticeboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [noticeboardPermission, setNoticeboardPermission] = useState<{
@@ -20,6 +31,9 @@ const NoticeboardList = () => {
   }>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
   const getNoticeboardPermission = () => {
     try {
@@ -110,11 +124,13 @@ const NoticeboardList = () => {
           );
         }
 
-        setNoticeboards(filteredNoticeboards);
+        setAllNoticeboards(filteredNoticeboards);
+        setTotalPages(Math.ceil(filteredNoticeboards.length / itemsPerPage) || 1);
       } catch (error) {
         console.error("Error fetching noticeboards:", error);
         toast.error("Failed to fetch noticeboards");
-        setNoticeboards([]);
+        setAllNoticeboards([]);
+        setTotalPages(1);
       } finally {
         setLoading(false);
         setIsSearching(false);
@@ -127,8 +143,110 @@ const NoticeboardList = () => {
     fetchNoticeboards(searchTerm);
   }, [searchTerm, fetchNoticeboards]);
 
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    setNoticeboards(allNoticeboards.slice(startIndex, startIndex + itemsPerPage));
+  }, [allNoticeboards, currentPage]);
+
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleAddNoticeboard = () => {
@@ -216,7 +334,7 @@ const NoticeboardList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {noticeboardPermission.show === "true" && (
+            {shouldShow("Broadcast", "show") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -226,15 +344,19 @@ const NoticeboardList = () => {
                 <Eye className="w-4 h-4" />
               </Button>
             )}
-            {/* {noticeboardPermission.update === "true" && (
+            {shouldShow("Broadcast", "update") && (
               <Button variant="ghost" size="sm" onClick={() => handleEditNoticeboard(item.id)} title="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
-            )} */}
+            )}
           </div>
         );
       case "id":
-        return <span className="text-sm text-gray-700">{index + 1}</span>;
+        return (
+          <span className="text-sm text-gray-700">
+            {(currentPage - 1) * itemsPerPage + index + 1}
+          </span>
+        );
       case "notice_heading":
         return item.notice_heading || "-";
       case "notice_type":
@@ -263,23 +385,18 @@ const NoticeboardList = () => {
       case "active":
         return noticeboardPermission.destroy === "true" ? (
           <div className="flex items-center justify-center min-h-[32px]">
-            <Switch
-              checked={item.active ?? false}
-              onChange={() => handleToggleNoticeboard(item.id, item.active)}
-              size="small"
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: '#C72030',
-                },
-                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: '#C72030 !important',
-                },
-                '& .MuiSwitch-track': {
-                  backgroundColor: '#cbd5e1 !important',
-                  opacity: 1,
-                },
-              }}
-            />
+            <button
+              onClick={() => handleToggleNoticeboard(item.id, item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         ) : (
           <span className="text-sm text-gray-600 font-medium">
@@ -293,13 +410,15 @@ const NoticeboardList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      <Button
-        onClick={handleAddNoticeboard}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        Add
-      </Button>
+      {shouldShow("Broadcast", "create") && (
+        <Button
+          onClick={handleAddNoticeboard}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          Add
+        </Button>
+      )}
     </div>
   );
 
@@ -322,6 +441,27 @@ const NoticeboardList = () => {
           isSearching ? "Searching broadcasts..." : "Loading broadcasts..."
         }
       />
+      {allNoticeboards.length > 0 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 

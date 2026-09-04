@@ -569,9 +569,9 @@ const FitoutRequestAdd: React.FC = () => {
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
-                inputProps={{
-                  min: new Date().toISOString().split('T')[0]
-                }}
+                // inputProps={{
+                //   min: new Date().toISOString().split('T')[0]
+                // }}
               />
                 <TextField
               label={<>Description<span className='text-red-600'> *</span> </>}
@@ -815,15 +815,14 @@ const FitoutRequestAdd: React.FC = () => {
             type="button"
             onClick={handleCancel}
             variant="outline"
-            className="min-w-[120px]"
-          >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"          >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={loading}
-            className="bg-[#C72030] text-white hover:bg-[#A01B28] min-w-[120px]"
-          >
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"          >
             {loading ? 'Creating...' : 'Create'}
           </Button>
         </div>

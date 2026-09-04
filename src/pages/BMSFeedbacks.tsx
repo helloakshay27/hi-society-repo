@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Eye, Download, Filter, RefreshCw, Loader2 } from "lucide-react";
+import { Eye, Download, Filter, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
@@ -242,24 +242,22 @@ const BMSFeedbacks: React.FC = () => {
   // Render custom right actions
   const renderRightActions = () => (
     <div className="flex gap-2">
-      <Button
+      {/* <Button
         variant="outline"
         size="sm"
         onClick={handleRefresh}
         disabled={isLoading}
         className="h-9"
       >
-        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-        Refresh
-      </Button>
+        <RefreshCw className={`w-4 h-4 text-[#C72030]${isLoading ? "animate-spin" : ""}`} />
+      </Button> */}
       <Button
         variant="outline"
         size="sm"
         onClick={handleExport}
-        className="h-9"
+        className="h-9 rounded-lg"
       >
-        <Download className="w-4 h-4 mr-2" />
-        Export
+        <Download className="w-4 h-4 text-[#C72030]" />
       </Button>
     </div>
   );
@@ -315,22 +313,14 @@ const BMSFeedbacks: React.FC = () => {
         </div>
       )}
 
-      {/* Loading state overlay */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500">Loading feedbacks...</span>
-        </div>
-      )}
-
       {/* Error state */}
-      {isError && (
+      {!isLoading && isError && (
         <div className="flex justify-center items-center py-8">
           <div className="text-center">
             <p className="text-red-600 font-medium">Error loading feedbacks</p>
             <p className="text-sm text-gray-500 mt-1">{error?.message || "Please try again"}</p>
             <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-4 h-4 mr-2 text-[#C72030]" />
               Retry
             </Button>
           </div>

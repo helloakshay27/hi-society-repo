@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Trash2, Search } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -18,6 +18,7 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
+import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
 
 const HiSocNoticeCreate = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const HiSocNoticeCreate = () => {
     is_important: "",
     email_trigger_enabled: "",
     active: true,
-    publish: "",
+    // publish: "",
     notice_type: "General",
     project_id: "",
     flag_expire: false,
@@ -59,6 +60,9 @@ const HiSocNoticeCreate = () => {
   const [showCoverUploader, setShowCoverUploader] = useState(false);
   const [showBroadcastUploader, setShowBroadcastUploader] = useState(false);
   const previewUrlsRef = useRef(new Map());
+  const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
+  const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
+  const [individualSearchTerm, setIndividualSearchTerm] = useState("");
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -289,7 +293,7 @@ const HiSocNoticeCreate = () => {
     data.append("noticeboard[active]", "1");
     data.append("noticeboard[IsDelete]", formData.IsDelete ? "1" : "0");
     data.append("noticeboard[notice_type]", formData.notice_type || "General");
-    data.append("noticeboard[publish]", formData.publish);
+    // data.append("noticeboard[publish]", formData.publish);
     data.append("noticeboard[flag_expire]", formData.flag_expire ? "1" : "0");
     data.append("noticeboard[is_important]", formData.is_important ? "1" : "0");
     data.append("noticeboard[email_trigger_enabled]", formData.email_trigger_enabled ? "1" : "0");
@@ -367,20 +371,28 @@ const HiSocNoticeCreate = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(getFullUrl('/usergroups/get_members_list.json'), {
+  const fetchUsers = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        getFullUrl(`/usergroups/get_members_list.json${qs ? `?${qs}` : ""}`),
+        {
           headers: {
             Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
-        });
-        setUsers(response?.data || []);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
+        }
+      );
+      setUsers(response?.data || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, []);
   
@@ -406,29 +418,50 @@ const HiSocNoticeCreate = () => {
     navigate(-1);
   };
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get(getFullUrl('/crm/usergroups.json'), {
-         headers: {
-                                  Authorization: getAuthHeader(),
-                                  "Content-Type": "application/json",
-                                },
-        });
-        const groupsData = Array.isArray(response.data) ? response.data : response.data.usergroups || [];
-        setGroups(groupsData);
-      } catch (error) {
-        console.error("Error fetching Groups:", error);
-      }
-    };
+  const getMemberDisplayName = (member) => {
+    if (!member?.user) return "";
+    const name = `${member.user.firstname || ''} ${member.user.lastname || ''}`.trim();
+    const flat = member.user_flat?.flat ? ` - Flat ${member.user_flat.flat}` : '';
+    const block = member.user_flat?.block ? ` (${member.user_flat.block})` : '';
+    return name + flat + block;
+  };
 
-    if (formData.shared === "2" && groups.length === 0) {
-      fetchGroups();
+  const filteredUsers = users.filter((member) =>
+    getMemberDisplayName(member).toLowerCase().includes(individualSearchTerm.trim().toLowerCase())
+  );
+
+  const fetchGroups = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+    const qs = params.toString();
+    try {
+      const response = await axios.get(
+        getFullUrl(`/crm/usergroups.json${qs ? `?${qs}` : ""}`),
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const groupsData = Array.isArray(response.data) ? response.data : response.data.usergroups || [];
+      setGroups(groupsData);
+    } catch (error) {
+      console.error("Error fetching Groups:", error);
     }
-  }, [formData.shared, groups.length]);
+  };
+
+  useEffect(() => {
+    if (formData.shared === "2") {
+      fetchGroups(groupFilter);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.shared]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">
+    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto hi-soc-notice-create-page">
+      <style>{`.hi-soc-notice-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -448,7 +481,7 @@ const HiSocNoticeCreate = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section: Communication Information */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
@@ -529,7 +562,7 @@ const HiSocNoticeCreate = () => {
                 </MuiSelect>
               </FormControl>
               <TextField
-                label={<span>Expire Date<span className="text-red-500">*</span></span>}
+                label={<span>Expire Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="date"
                 value={formData.expire_date}
                 onChange={handleChange}
@@ -550,28 +583,36 @@ const HiSocNoticeCreate = () => {
               />
 
               {/* Description spanning 2 columns */}
-              <div className="md:col-span-2">
-                <TextField
-                  label={<span>Notice Description<span className="text-red-500">*</span></span>}
-                  placeholder="Enter Description"
+              <div className="md:col-span-2 relative w-full">
+                <textarea
+                  id="notice_text"
                   value={formData.notice_text}
                   onChange={handleChange}
                   name="notice_text"
-                  fullWidth
-                  variant="outlined"
-                  slotProps={{
-                    inputLabel: {
-                      shrink: true,
-                    },
-                  }}
-                  InputProps={{
-                    sx: fieldStyles,
-                  }}
+                  rows={3}
+                  placeholder=" "
+                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent 
+      focus:outline-none 
+      focus:border-[2px] 
+      focus:border-[rgb(25,118,210)] 
+      resize-vertical"
                 />
-                
+
+                <label
+                  htmlFor="notice_text"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+      peer-placeholder-shown:top-4
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-focus:-top-[10px]
+      peer-focus:text-sm
+      peer-focus:text-[rgb(25,118,210)]"
+                >
+                  Notice Description <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
+                </label>
               </div>
                <TextField
-                label={<span>Expire Time<span className="text-red-500">*</span></span>}
+                label={<span>Expire Time<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                 type="time"
                 value={formData.expire_time}
                 onChange={handleChange}
@@ -599,7 +640,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Mark Important */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -638,7 +679,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Send Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -720,7 +761,7 @@ const HiSocNoticeCreate = () => {
             {/* Share With */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Share With <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Share With <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
                     <input
@@ -779,65 +820,127 @@ const HiSocNoticeCreate = () => {
                   </label>
                 </div>
 
-                {/* Individual Select */}
+                {/* Individual Select with Checkboxes */}
                 {formData.shared === "1" && (
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    sx={{ '& .MuiInputBase-root': fieldStyles }}
-                  >
-                    <InputLabel shrink>Select Users</InputLabel>
-                    <MuiSelect
-                      multiple
-                      value={formData.user_ids}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          user_ids: Array.isArray(e.target.value) ? e.target.value : [],
-                        }))
-                      }
-                      label="Select Users"
-                      notched
-                      displayEmpty
-                      renderValue={(selected) => {
-                        if (!selected || selected.length === 0) {
-                          return <span style={{ color: '#999' }}>Select Users</span>;
-                        }
-                        return selected
-                          .map((id) => {
-                            const member = users.find((u) => u.id.toString() === id.toString());
-                            if (!member?.user) return '';
-                            const name = `${member.user.firstname || ''} ${member.user.lastname || ''}`.trim();
-                            const flat = member.user_flat?.flat ? ` - ${member.user_flat.flat}` : '';
-                            const block = member.user_flat?.block ? ` (${member.user_flat.block})` : '';
-                            return name + flat + block;
-                          })
-                          .filter(Boolean)
-                          .join(", ");
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        Select Users
-                      </MenuItem>
-                      {users.map((member) => {
-                        if (!member?.user) return null;
-                        const name = `${member.user.firstname || ''} ${member.user.lastname || ''}`.trim();
-                        const flat = member.user_flat?.flat ? ` - Flat ${member.user_flat.flat}` : '';
-                        const block = member.user_flat?.block ? ` (${member.user_flat.block})` : '';
-                        const displayName = name + flat + block;
-                        
-                        return (
-                          <MenuItem key={member.id} value={member.id}>
-                            {displayName}
-                          </MenuItem>
-                        );
-                      })}
-                    </MuiSelect>
-                  </FormControl>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter members by role or tower</span>
+                      <MemberFilterPanel
+                        value={memberFilter}
+                        onChange={(newFilters) => {
+                          setMemberFilter(newFilters);
+                          fetchUsers(newFilters);
+                        }}
+                      />
+                    </div>
+
+                    {/* Search Members */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={individualSearchTerm}
+                        onChange={(e) => setIndividualSearchTerm(e.target.value)}
+                        placeholder="Search members by name or flat..."
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030]"
+                      />
+                    </div>
+
+                    {/* Select All Checkbox */}
+                    {filteredUsers.length > 0 && (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
+                        <input
+                          type="checkbox"
+                          id="selectAllUsers"
+                          checked={filteredUsers.every((u) => formData.user_ids.includes(u.id))}
+                          onChange={(e) => {
+                            const filteredIds = filteredUsers.map((u) => u.id);
+                            if (e.target.checked) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                user_ids: Array.from(new Set([...prev.user_ids, ...filteredIds])),
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                user_ids: prev.user_ids.filter((id) => !filteredIds.includes(id)),
+                              }));
+                            }
+                          }}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: '#C72030' }}
+                        />
+                        <label htmlFor="selectAllUsers" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+                          Select All Members ({formData.user_ids.length}/{users.length})
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Members List with Checkboxes */}
+                    {users.length > 0 ? (
+                      filteredUsers.length > 0 ? (
+                        <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                          <div className="divide-y">
+                            {filteredUsers.map((member) => {
+                              const displayName = getMemberDisplayName(member);
+                              const isChecked = formData.user_ids.includes(member.id);
+
+                              return (
+                                <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    id={`user-${member.id}`}
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          user_ids: [...prev.user_ids, member.id],
+                                        }));
+                                      } else {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          user_ids: prev.user_ids.filter((id) => id !== member.id),
+                                        }));
+                                      }
+                                    }}
+                                    className="w-4 h-4 rounded"
+                                    style={{ accentColor: '#C72030' }}
+                                  />
+                                  <label htmlFor={`user-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+                                    {displayName}
+                                  </label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                          No members match "{individualSearchTerm}"
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                        No members available
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Group Select */}
                 {formData.shared === "2" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Filter groups by role or tower</span>
+                      <MemberFilterPanel
+                        value={groupFilter}
+                        onChange={(newFilters) => {
+                          setGroupFilter(newFilters);
+                          fetchGroups(newFilters);
+                        }}
+                      />
+                    </div>
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -878,6 +981,7 @@ const HiSocNoticeCreate = () => {
                       ))}
                     </MuiSelect>
                   </FormControl>
+                  </div>
                 )}
               </div>
             </div>
@@ -950,7 +1054,7 @@ const HiSocNoticeCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="bg-[#C72030] hover:bg-[#A01828] text-white h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
                   onClick={() => document.getElementById('coverImageInput')?.click()}
                 >
@@ -1071,7 +1175,7 @@ const HiSocNoticeCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="bg-[#C72030] hover:bg-[#A01828] text-white h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
                   onClick={() => document.getElementById('broadcastAttachmentInput')?.click()}
                 >
@@ -1146,11 +1250,10 @@ const HiSocNoticeCreate = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] flex items-center justify-center gap-2"
-          >
+           className="btn-primary h-9 px-4 text-sm font-medium"           >
             {loading ? (
               <>
-                <svg className="animate-spin h-4 w-4 text-[#C72030]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
@@ -1161,8 +1264,7 @@ const HiSocNoticeCreate = () => {
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-          >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"          >
             Cancel
           </button>
         </div>

@@ -15,6 +15,7 @@ import {
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -24,6 +25,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TextField, InputAdornment, Switch } from "@mui/material";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { startTransition, useRef } from "react";
 
 interface ContestRecord {
@@ -48,6 +50,7 @@ const statusCards = [
 
 export const ContestListPage: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
 
   const [contests, setContests] = useState<ContestRecord[]>([]);
   const [filteredContests, setFilteredContests] = useState<ContestRecord[]>([]);
@@ -305,6 +308,100 @@ export const ContestListPage: React.FC = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   const getShortText = (text: string, wordLimit = 10) => {
     if (!text) return "-";
     const words = text.split(" ");
@@ -401,6 +498,8 @@ export const ContestListPage: React.FC = () => {
           columns={columns}
           renderRow={contest => ({
             actions: (
+              <div className="flex gap-1">
+              {shouldShow("Contest", "show") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -408,6 +507,8 @@ export const ContestListPage: React.FC = () => {
               >
                 <Eye className="w-4 h-4" />
               </Button>
+              )}
+              </div>
             ),
             name: contest.name,
             description: (
@@ -430,6 +531,7 @@ export const ContestListPage: React.FC = () => {
             ),
             status: (
               <div className="flex items-center gap-2">
+                {shouldShow("Contest", "update") && (
                 <Switch
                   checked={contest.isActive}
                   onChange={() => handleToggleActive(contest.id, contest.isActive)}
@@ -444,6 +546,7 @@ export const ContestListPage: React.FC = () => {
                     },
                   }}
                 />
+                )}
                 <span className="text-sm font-medium">
                   {contest.isActive ? "Active" : "Inactive"}
                 </span>
@@ -460,13 +563,15 @@ export const ContestListPage: React.FC = () => {
           loadingMessage={searchLoading ? "Searching contests..." : "Loading contests..."}
           leftActions={
             <div className="flex items-center gap-2">
+              {shouldShow("Contest", "create") && (
               <Button
                 onClick={() => navigate("/contests/create")}
-                className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
+                className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2  transition-colors duration-200 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Create Contest
               </Button>
+              )}
             </div>
           }
           storageKey="contest-table"
@@ -475,33 +580,25 @@ export const ContestListPage: React.FC = () => {
       </div>
 
       {/* PAGINATION (READY FOR BACKEND) */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() =>
-                    setCurrentPage(prev => Math.max(1, prev - 1))
-                  }
-                />
-              </PaginationItem>
-
-              <PaginationItem>
-                <PaginationLink isActive>{currentPage}</PaginationLink>
-              </PaginationItem>
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage(prev => Math.min(totalPages, prev + 1))
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <div className="flex justify-center mt-6">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 };

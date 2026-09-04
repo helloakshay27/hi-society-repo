@@ -461,14 +461,14 @@ export const LockFunctionList = () => {
               <div className="flex items-center gap-2">
                 <Button 
                   onClick={handleAdd} 
-                  className="flex items-center gap-2 bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+                  className="flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                 >
                   <Plus className="w-4 h-4" />
                   Add
                 </Button>
                 <Button
                   onClick={handleImportClick}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={importing}
                 >
                   {importing ? (
@@ -568,7 +568,7 @@ export const LockFunctionList = () => {
                   disabled={currentPage === totalPages}
                 >
                   Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 bg-[#C72030] text-white hover:bg-[#C72030]/90" />
                 </Button>
               </div>
             </div>

@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
@@ -205,7 +204,7 @@ const NotificationsPage = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6" >
       {/* Header */}
-        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
+        <div className=" mb-6">
         <div className="px-6 py-4">
            
           <h1 className="text-2xl font-semibold text-gray-900">Send Notifications</h1>
@@ -214,11 +213,11 @@ const NotificationsPage = () => {
     {/* Form Card */}
       <div className="bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit} className="p-8">
-          <div className="max-w-3xl space-y-6">
+          <div className="w-full space-y-6">
            
             {/* Title Field */}
            <div className="p-2">
-             <div className="grid grid-cols-3 md:grid-cols-2 gap-6 items-center">
+             <div className="w-full items-center">
                 <TextField
                  label="Title"
                  name="title"
@@ -342,35 +341,41 @@ const NotificationsPage = () => {
                 <span className="text-sm font-semibold text-gray-900 tracking-wide">SHARE WITH</span>
               </div>
               
-              <RadioGroup
-                value={formData.shareWith}
-                onValueChange={(value) => setFormData({ 
-                  ...formData, 
-                  shareWith: value,
-                  user_id: value !== 'individuals' ? [] : formData.user_id,
-                  group_id: value !== 'groups' ? [] : formData.group_id,
-                })}
-                className="flex gap-8"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="all" className="border-gray-400" />
-                  <Label htmlFor="all" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    All
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="individuals" id="individuals" className="border-gray-400" />
-                  <Label htmlFor="individuals" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Individuals
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="groups" id="groups" className="border-gray-400" />
-                  <Label htmlFor="groups" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Groups
-                  </Label>
-                </div>
-              </RadioGroup>
+              <div className="flex gap-8">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="shareWith"
+                    checked={formData.shareWith === 'all'}
+                    onChange={() => setFormData({ ...formData, shareWith: 'all', user_id: [], group_id: [] })}
+                    className="w-4 h-4"
+                    style={{ accentColor: "#C72030" }}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">All</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="shareWith"
+                    checked={formData.shareWith === 'individuals'}
+                    onChange={() => setFormData({ ...formData, shareWith: 'individuals', group_id: [] })}
+                    className="w-4 h-4"
+                    style={{ accentColor: "#C72030" }}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="shareWith"
+                    checked={formData.shareWith === 'groups'}
+                    onChange={() => setFormData({ ...formData, shareWith: 'groups', user_id: [] })}
+                    className="w-4 h-4"
+                    style={{ accentColor: "#C72030" }}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Groups</span>
+                </label>
+              </div>
 
               {/* Individual Users Dropdown */}
               {formData.shareWith === "individuals" && (
@@ -462,10 +467,31 @@ const NotificationsPage = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-center pt-6 border-t">
+            <div className="flex justify-center gap-4 pt-6 border-t">
+              <Button
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    title: '',
+                    text: '',
+                    file: null,
+                    shareWith: 'all',
+                    user_id: [],
+                    group_id: [],
+                  });
+                  const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+                  if (fileInput) {
+                    fileInput.value = '';
+                  }
+                }}
+                className="!bg-white border border-brand text-brand px-4 py-2.5 text-base font-medium"
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
-                className="bg-[#C72030] hover:bg-[#A01828] text-white px-12 py-2.5 text-base font-medium"
+               variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium" 
               >
                 Submit
               </Button>

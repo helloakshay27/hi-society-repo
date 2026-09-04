@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, Plus, Trash2, ArrowLeft, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -8,9 +8,6 @@ import {
   Paper,
   Container,
   InputAdornment,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Card,
   IconButton,
   Stack,
@@ -30,11 +27,16 @@ import { fetchUserGroups } from '@/store/slices/userGroupSlice';
 import axios from 'axios';
 import { toast } from 'sonner';
 import CircularProgress from "@mui/material/CircularProgress";
+import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
 
 interface User {
   id: number;
   name: string;
-  // add other fields if needed
+  user: {
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
 }
 
 const AddPollPage = () => {
@@ -58,27 +60,64 @@ const AddPollPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [groupSearch, setGroupSearch] = useState('');
+const [memberFilter, setMemberFilter] = useState<MemberFilterState>({
+  roles: [],
+  towers: [],
+});
+
+const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
+  roles: [],
+  towers: [],
+});
+
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         `https://${baseUrl}/usergroups/get_members_list.json`,
+  //         {
+  //           params: { token }
+  //         }
+  //       );
+
+  //       console.log("Users API response+++++++:", res.data);
+
+  //       // ⚠️ adjust if API response structure differs
+  //       setUsers(res.data || []);
+
+  //     } catch (error) {
+  //       console.error("Failed to fetch users", error);
+  //     }
+  //   };
 
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(
-          `https://${baseUrl}/usergroups/get_members_list.json`,
-          {
-            params: { token }
-          }
-        );
+    const fetchUsers = async (
+  activeFilters: MemberFilterState = { roles: [], towers: [] }
+) => {
+  const params = new URLSearchParams();
 
-        console.log("Users API response+++++++:", res.data);
+  activeFilters.roles.forEach((r) =>
+    params.append("values[]", r)
+  );
 
-        // ⚠️ adjust if API response structure differs
-        setUsers(res.data || []);
+  activeFilters.towers.forEach((tid) =>
+    params.append("block_ids[]", tid)
+  );
 
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      }
-    };
+  params.append("token", token || "");
+
+  try {
+    const res = await axios.get(
+      `https://${baseUrl}/usergroups/get_members_list.json?${params.toString()}`
+    );
+
+    setUsers(res.data || []);
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+  }
+};
 
     // const fetchGroups = async () => {
     //   try {
@@ -90,28 +129,59 @@ const AddPollPage = () => {
     // };
 
 
-    const fetchGroups = async () => {
-      try {
-        const res = await axios.get(
-          `https://${baseUrl}/crm/usergroups.json`,
-          {
-            params: { token }
-          }
-        );
+    // const fetchGroups = async () => {
+    //   try {
+    //     const res = await axios.get(
+    //       `https://${baseUrl}/crm/usergroups.json`,
+    //       {
+    //         params: { token }
+    //       }
+    //     );
 
-        console.log("groups API response+++++++:", res.data);
+    //     console.log("groups API response+++++++:", res.data);
 
-        // ⚠️ adjust if API response structure differs
-        setGroups(res.data.usergroups || []);
+    //     // ⚠️ adjust if API response structure differs
+    //     setGroups(res.data.usergroups || []);
 
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      }
-    };
+    //   } catch (error) {
+    //     console.error("Failed to fetch users", error);
+    //   }
+    // };
 
-    fetchUsers();
-    fetchGroups();
-  }, [dispatch, token, baseUrl]);
+    const fetchGroups = async (
+  activeFilters: MemberFilterState = { roles: [], towers: [] }
+) => {
+  const params = new URLSearchParams();
+
+  activeFilters.roles.forEach((r) =>
+    params.append("values[]", r)
+  );
+
+  activeFilters.towers.forEach((tid) =>
+    params.append("block_ids[]", tid)
+  );
+
+  params.append("token", token || "");
+
+  try {
+    const res = await axios.get(
+      `https://${baseUrl}/crm/usergroups.json?${params.toString()}`
+    );
+
+    setGroups(res.data.usergroups || []);
+  } catch (error) {
+    console.error("Failed to fetch groups", error);
+  }
+};
+
+  //   fetchUsers();
+  //   fetchGroups();
+  // }, [dispatch, token, baseUrl]);
+
+  useEffect(() => {
+  fetchUsers();
+  fetchGroups();
+}, []);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -166,15 +236,27 @@ const AddPollPage = () => {
     setSelectedShareWith(value);
     if (value !== 'individual') {
       setSelectedUsers([]);
+      setUserSearch('');
     }
     if (value !== 'group') {
       setSelectedGroups([]);
+      setGroupSearch('');
     }
   };
 
   const toMinutes = (time: string) => {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
+  };
+
+  const formatAmPm = (time: string) => {
+    // Already has AM/PM (e.g. "04:00 AM")
+    if (time.includes('AM') || time.includes('PM')) return time;
+    // 24-hour format from <input type="time"> (e.g. "16:30")
+    const [h, m] = time.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${String(hour12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
   };
 
   const isNextDay = (start: string, end: string) => {
@@ -231,12 +313,11 @@ const AddPollPage = () => {
 
     setLoading(true);
     // Format dates and times for API
+    // time is always in 24-hour "HH:MM" from <input type="time">
     const formatDateTime = (date, time) => {
-      const [hours, minutes] = time.split(/[: ]/);
-      const period = time.includes('PM') ? 12 : 0;
-      const hour = parseInt(hours) % 12 + period;
+      const [hours, minutes] = time.split(':').map(Number);
       const dateTime = new Date(date);
-      dateTime.setHours(hour, parseInt(minutes));
+      dateTime.setHours(hours, minutes);
       const year = dateTime.getFullYear();
       const month = String(dateTime.getMonth() + 1).padStart(2, '0');
       const day = String(dateTime.getDate()).padStart(2, '0');
@@ -252,6 +333,8 @@ const AddPollPage = () => {
       enddate: formData.endDate ? formData.endDate.replace(/-/g, '/') : '',
       start: formData.startDate && formData.startTime ? formatDateTime(formData.startDate, formData.startTime) : '',
       end: formData.endDate && formData.endTime ? formatDateTime(formData.endDate, formData.endTime) : '',
+      starttime: formData.startTime ? formatAmPm(formData.startTime) : '',
+      endtime: formData.endTime ? formatAmPm(formData.endTime) : '',
       vote_limit: 'All',
       options: formData.options.filter(opt => opt.trim() !== '').map(name => ({ name })),
       shared: selectedShareWith.charAt(0).toUpperCase() + selectedShareWith.slice(1),
@@ -458,7 +541,7 @@ const AddPollPage = () => {
                       {formData.options.length > 2 && (
                         <IconButton
                           onClick={() => removeOption(index)}
-                          sx={{ color: 'error.main' }}
+                          sx={{ color: '#C72030' }}
                           size="small"
                         >
                           <Trash2 size={18} />
@@ -496,41 +579,124 @@ const AddPollPage = () => {
                 >
                   Share With
                 </Typography>
-                <RadioGroup
-                  row
-                  value={selectedShareWith}
-                  onChange={(e) => handleShareWithChange(e.target.value)}
-                  sx={{
-                    mb: 3,
-                    '& .MuiRadio-root': {
-                      color: 'rgba(199, 32, 48, 0.6)',
-                      '&.Mui-checked': {
-                        color: '#C72030'
-                      }
-                    }
-                  }}
-                >
-                  <FormControlLabel
-                    value="all"
-                    control={<Radio size="small" />}
-                    label="All"
-                  />
-                  <FormControlLabel
-                    value="individual"
-                    control={<Radio size="small" />}
-                    label="Individual"
-                  />
-                  <FormControlLabel
-                    value="group"
-                    control={<Radio size="small" />}
-                    label="Group"
-                  />
-                </RadioGroup>
+                <div className="flex gap-6 mb-6">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="shareWith"
+                        checked={selectedShareWith === 'all'}
+                        onChange={() => handleShareWithChange('all')}
+                        className="w-4 h-4"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">All</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="shareWith"
+                        checked={selectedShareWith === 'individual'}
+                        onChange={() => handleShareWithChange('individual')}
+                        className="w-4 h-4"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Individual</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="shareWith"
+                        checked={selectedShareWith === 'group'}
+                        onChange={() => handleShareWithChange('group')}
+                        className="w-4 h-4"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Group</span>
+                    </label>
+                  </div>
                 {selectedShareWith === 'individual' && (
                   <Box sx={{ mt: 2 }}>
+                    <Box
+  sx={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    mb: 2,
+  }}
+>
+  <Typography variant="body2" color="text.secondary">
+    Filter members by role or tower
+  </Typography>
+
+  <MemberFilterPanel
+    value={memberFilter}
+    onChange={(newFilters) => {
+      setMemberFilter(newFilters);
+      fetchUsers(newFilters);
+    }}
+  />
+</Box>
                     <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                       Select Users ({selectedUsers.length} selected)
                     </Typography>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Search users..."
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      sx={{ mb: 1 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search size={16} color="#9e9e9e" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: userSearch ? (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={() => setUserSearch('')} edge="end">
+                              <X size={14} />
+                            </IconButton>
+                          </InputAdornment>
+                        ) : null,
+                      }}
+                    />
+                    {users.length > 0 && (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      p: 1.5,
+      border: "1px solid #e0e0e0",
+      borderRadius: 1,
+      mb: 1,
+      bgcolor: "#fafafa",
+    }}
+  >
+    <Checkbox
+      checked={
+        selectedUsers.length === users.length &&
+        users.length > 0
+      }
+      onChange={(e) => {
+        if (e.target.checked) {
+          setSelectedUsers(users.map((u) => u.id));
+        } else {
+          setSelectedUsers([]);
+        }
+      }}
+      sx={{
+        "&.Mui-checked": {
+          color: "#C72030",
+        },
+      }}
+    />
+
+    <Typography variant="body2" fontWeight={500}>
+      Select All Members ({selectedUsers.length}/{users.length})
+    </Typography>
+  </Box>
+)}
                     <Paper
                       variant="outlined"
                       sx={{
@@ -541,7 +707,12 @@ const AddPollPage = () => {
                       }}
                     >
                       <List dense>
-                        {users.map((user) => (
+                        {users.filter((user) => {
+                          const fullName = `${user?.user?.firstname ?? ''} ${user?.user?.lastname ?? ''}`.toLowerCase();
+                          const email = user?.user?.email?.toLowerCase() ?? '';
+                          const q = userSearch.toLowerCase();
+                          return fullName.includes(q) || email.includes(q);
+                        }).map((user) => (
                           <ListItem key={user.id} disablePadding>
                             <ListItemButton
                               onClick={() => handleUserSelection(user.id)}
@@ -614,9 +785,51 @@ const AddPollPage = () => {
                 )}
                 {selectedShareWith === 'group' && (
                   <Box sx={{ mt: 2 }}>
+                    <Box
+  sx={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    mb: 2,
+  }}
+>
+  <Typography variant="body2" color="text.secondary">
+    Filter groups by role or tower
+  </Typography>
+
+  <MemberFilterPanel
+    value={groupFilter}
+    onChange={(newFilters) => {
+      setGroupFilter(newFilters);
+      fetchGroups(newFilters);
+    }}
+  />
+</Box>
                     <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                       Select Groups ({selectedGroups.length} selected)
                     </Typography>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Search groups..."
+                      value={groupSearch}
+                      onChange={(e) => setGroupSearch(e.target.value)}
+                      sx={{ mb: 1 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search size={16} color="#9e9e9e" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: groupSearch ? (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={() => setGroupSearch('')} edge="end">
+                              <X size={14} />
+                            </IconButton>
+                          </InputAdornment>
+                        ) : null,
+                      }}
+                    />
                     <Paper
                       variant="outlined"
                       sx={{
@@ -627,7 +840,9 @@ const AddPollPage = () => {
                       }}
                     >
                       <List dense>
-                        {groups.map((group) => (
+                        {groups.filter((group) =>
+                          group.name?.toLowerCase().includes(groupSearch.toLowerCase())
+                        ).map((group) => (
                           <ListItem key={group.id} disablePadding>
                             <ListItemButton
                               onClick={() => handleGroupSelection(group.id)}

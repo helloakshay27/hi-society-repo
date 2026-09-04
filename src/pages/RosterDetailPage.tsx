@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, MapPin, Building2, Clock, Users, Edit, Download, Trash2, Eye } from 'lucide-react';
-import { Chip, Box } from '@mui/material';
 import { toast } from 'sonner';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { departmentService, Department } from '@/services/departmentService';
 import { RootState } from '@/store/store';
 
 // Section component for consistent layout matching TaskDetailsPage
@@ -70,7 +68,12 @@ interface RosterTemplate {
 
 export const RosterDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
+  const rosterBasePath = location.pathname.startsWith("/smartsecure/roster")
+    ? "/smartsecure/roster"
+    : "/settings/account/roster";
+  const isSmartSecureRoster = rosterBasePath === "/smartsecure/roster";
 
   // Redux state for site information
   const { selectedSite } = useSelector((state: RootState) => state.site);
@@ -83,7 +86,6 @@ export const RosterDetailPage: React.FC = () => {
   // Data states
   const [rosterTemplate, setRosterTemplate] = useState<RosterTemplate | null>(null);
   const [fmUsers, setFMUsers] = useState<FMUser[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [currentLocation, setCurrentLocation] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,6 @@ export const RosterDetailPage: React.FC = () => {
     if (id) {
       fetchRosterTemplate();
       fetchFMUsers();
-      fetchDepartments();
       fetchShifts();
       fetchCurrentLocation();
     }
@@ -103,7 +104,12 @@ export const RosterDetailPage: React.FC = () => {
   const fetchRosterTemplate = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`, {
+      const apiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
+      );
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +124,10 @@ export const RosterDetailPage: React.FC = () => {
 
       const data = await response.json();
       console.log('📝 Roster Template API Response:', data);
-      setRosterTemplate(data);
+      setRosterTemplate({
+        ...data,
+        active: data.active !== undefined ? data.active : true,
+      });
     } catch (error) {
       console.error('Error fetching roster template:', error);
       toast.error('Failed to load roster template details');
@@ -157,17 +166,6 @@ export const RosterDetailPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching FM Users:', error);
       setFMUsers([]);
-    }
-  };
-
-  // Fetch Departments
-  const fetchDepartments = async () => {
-    try {
-      const departmentData = await departmentService.fetchDepartments();
-      setDepartments(departmentData);
-    } catch (error) {
-      console.error('Error fetching departments:', error);
-      setDepartments([]);
     }
   };
 
@@ -253,7 +251,12 @@ export const RosterDetailPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pms/admin/user_roasters/${id}.json`, {
+      const apiUrl = getFullUrl(
+        isSmartSecureRoster
+          ? `/spree/manage/user_roasters/${id}.json`
+          : `/pms/admin/user_roasters/${id}.json`
+      );
+      const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +269,7 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       toast.success('Roster template deleted successfully!');
-      navigate('/roster');
+      navigate(rosterBasePath);
     } catch (error) {
       console.error('Error deleting roster template:', error);
       toast.error('Failed to delete roster template');
@@ -275,7 +278,7 @@ export const RosterDetailPage: React.FC = () => {
 
   // Handle edit
   const handleEdit = () => {
-    navigate(`/settings/account/roster/edit/${id}`);
+    navigate(`${rosterBasePath}/edit/${id}`);
   };
 
   // Handle export
@@ -284,25 +287,6 @@ export const RosterDetailPage: React.FC = () => {
   };
 
   // Helper functions
-  const getSelectedDepartments = () => {
-    if (!rosterTemplate) return [];
-    
-    // First try to get from new API response structure
-    if (rosterTemplate.departments && Array.isArray(rosterTemplate.departments)) {
-      return rosterTemplate.departments.map(dept => ({
-        id: dept.id,
-        department_name: dept.name
-      }));
-    }
-    
-    // Fallback to old structure
-    if (!rosterTemplate.department_id) return [];
-    const deptIds = Array.isArray(rosterTemplate.department_id) 
-      ? rosterTemplate.department_id 
-      : [rosterTemplate.department_id];
-    return departments.filter(dept => deptIds.includes(dept.id!));
-  };
-
   const getSelectedEmployees = () => {
     if (!rosterTemplate) return [];
     
@@ -416,7 +400,7 @@ export const RosterDetailPage: React.FC = () => {
       <div className="p-6 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Roster template not found</p>
-          <Button onClick={() => navigate('/roster')} variant="outline">
+          <Button onClick={() => navigate(rosterBasePath)} variant="outline">
             Back to Roster Management
           </Button>
         </div>
@@ -430,7 +414,7 @@ export const RosterDetailPage: React.FC = () => {
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/settings/account/roster/')}
+            onClick={() => navigate(rosterBasePath)}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             title="Back to Roster Management"
           >
@@ -438,7 +422,7 @@ export const RosterDetailPage: React.FC = () => {
           </button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#C72030]/10 text-[#C72030] flex items-center justify-center">
-              <Eye className="w-5 h-5" />
+              <Eye className="w-5 h-5" style={{ color: '#fff' }} />
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-wide uppercase">Roster Template Details</h1>
@@ -457,7 +441,7 @@ export const RosterDetailPage: React.FC = () => {
         <div className="flex items-center gap-3">
          
           <Button onClick={handleEdit} variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
+            <Edit className="w-4 h-4 mr-2" style={{ color: '#da7756' }} />
             Edit
           </Button>
           {/* <Button onClick={handleDelete} variant="destructive" size="sm">
@@ -534,27 +518,14 @@ export const RosterDetailPage: React.FC = () => {
           </div>
         </Section>
 
-        {/* Location & Department */}
-        <Section title="Location & Department" icon={MapPin}>
+        {/* Location */}
+        <Section title="Location" icon={MapPin}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-2">Location</label>
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-900">{rosterTemplate.location || currentLocation}</span>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Departments</label>
-              <div className="flex flex-wrap gap-2">
-                {getSelectedDepartments().map((dept) => (
-                  <Chip 
-                    key={dept.id}
-                    label={dept.department_name}
-                    size="small"
-                    sx={{ backgroundColor: '#C72030', color: 'white' }}
-                  />
-                ))}
               </div>
             </div>
           </div>
@@ -596,11 +567,6 @@ export const RosterDetailPage: React.FC = () => {
                         <div className="font-medium text-gray-900">{employee.name || 'No name available'}</div>
                         <div className="text-sm text-gray-600">{employee.email}</div>
                       </div>
-                      {employee.department && (
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                          {employee.department}
-                        </span>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -630,11 +596,11 @@ export const RosterDetailPage: React.FC = () => {
 
       {/* Footer Actions */}
       <div className="flex items-center gap-3 justify-center pt-2 border-t border-gray-200">
-        <Button onClick={handleEdit} className="px-8">
+        <Button onClick={handleEdit} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2">
           <Edit className="w-4 h-4 mr-2" />
           Edit Template
         </Button>
-        <Button onClick={() => navigate('/roster')} variant="outline" className="px-8">
+        <Button onClick={() => navigate(rosterBasePath)} variant="outline" className="px-8">
           Back to Roster List
         </Button>
       </div>

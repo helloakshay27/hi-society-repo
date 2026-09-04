@@ -1,0 +1,1252 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Edit, Trash2, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
+import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { apiClient } from '@/utils/apiClient';
+import { toast } from 'sonner';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface SubCategory {
+  id: number;
+  name: string;
+  osr_categories_id: number;
+  active: number;
+  price: number | null;
+  created_by: number;
+  description?: string | null;
+}
+
+interface FlatType {
+  id: number;
+  society_flat_type: string;
+  active: number;
+}
+
+interface StatusItem {
+  id: number;
+  name: string;
+  color_code?: string;
+  order_as?: number;
+  can_cancel?: number;
+  second_visit?: number;
+  active?: number;
+}
+
+const FIELD_CLASS =
+  'w-full h-[36px] border-0 rounded-none bg-transparent px-0 py-0 text-base font-normal text-black placeholder:font-normal placeholder:text-gray-400 shadow-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none';
+const LABEL_CLASS = 'text-gray-500 font-medium text-sm';
+
+const FieldBox: React.FC<{ label: React.ReactNode; className?: string; children: React.ReactNode }> = ({ label, className, children }) => (
+  <fieldset className={`border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030] ${className ?? ''}`}>
+    <legend className={`px-1 ${LABEL_CLASS}`}>{label}</legend>
+    {children}
+  </fieldset>
+);
+
+const ITEMS_PER_PAGE = 10;
+
+function usePagedSearch<T>(items: T[]) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const filtered = React.useMemo(() => {
+    if (!searchTerm.trim()) return items;
+    const query = searchTerm.toLowerCase();
+    return items.filter((item) =>
+      Object.values(item as Record<string, unknown>).some((v) => String(v ?? '').toLowerCase().includes(query))
+    );
+  }, [items, searchTerm]);
+
+  const totalCount = filtered.length;
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE) || 1;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paged = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  return { searchTerm, currentPage, totalCount, totalPages, startIndex, paged, handleSearch, handlePageChange };
+}
+
+const renderPaginationItems = (currentPage: number, totalPages: number, handlePageChange: (p: number) => void) => {
+  if (!totalPages || totalPages <= 0) return null;
+  const items = [];
+  const showEllipsis = totalPages > 5;
+
+  if (showEllipsis) {
+    items.push(
+      <PaginationItem key={1} className="cursor-pointer">
+        <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    if (currentPage > 4) {
+      items.push(
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage > 3 && currentPage < totalPages - 2) {
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage < totalPages - 3) {
+      items.push(
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+        if (!items.find((item) => item.key === i.toString())) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+    }
+
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key={totalPages} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  } else {
+    for (let i = 1; i <= totalPages; i++) {
+      items.push(
+        <PaginationItem key={i} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  }
+
+  return items;
+};
+
+const PaginationBar: React.FC<{ currentPage: number; totalPages: number; totalCount: number; onPageChange: (p: number) => void }> = ({
+  currentPage, totalPages, totalCount, onPageChange,
+}) => {
+  if (totalCount <= 0) return null;
+  return (
+    <div className="flex items-center justify-center mt-4">
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => onPageChange(currentPage - 1)}
+              className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+          {renderPaginationItems(currentPage, totalPages, onPageChange)}
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => onPageChange(currentPage + 1)}
+              className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
+  );
+};
+
+// ─── Tab 1: Category ─────────────────────────────────────────────────────────
+
+const CategoryTab: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [inputVal, setInputVal] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editVal, setEditVal] = useState('');
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_categories ?? [];
+      setCategories(Array.isArray(raw) ? raw : []);
+    } catch {
+      toast.error('Failed to load categories.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleAdd = async () => {
+    if (!inputVal.trim()) { toast.error('Please enter a category name.'); return; }
+    setSubmitting(true);
+    try {
+      await apiClient.post('/crm/admin/create_osr_category.json', {
+        name: inputVal.trim(),
+        active: 1,
+      });
+      toast.success('Category added successfully.');
+      setInputVal('');
+      setAddOpen(false);
+      load();
+    } catch {
+      toast.error('Failed to add category.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEdit = (cat: Category) => {
+    setEditId(cat.id);
+    setEditVal(cat.name);
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editVal.trim()) { toast.error('Please enter a category name.'); return; }
+    setEditSubmitting(true);
+    try {
+      await apiClient.post('/crm/admin/modify_osr_category.json', {
+        id: editId,
+        name: editVal.trim(),
+        active: 1,
+      });
+      toast.success('Category updated successfully.');
+      setEditOpen(false);
+      load();
+    } catch {
+      toast.error('Failed to update category.');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await apiClient.delete(`/crm/admin/helpdesk_categories/${id}.json`);
+      toast.success('Category deleted successfully.');
+      load();
+    } catch {
+      toast.error('Failed to delete category.');
+    }
+  };
+
+  const { searchTerm, currentPage, totalCount, totalPages, startIndex, paged: pagedCategories, handleSearch, handlePageChange } = usePagedSearch(categories);
+
+  const catColumns = [
+    { key: 'srno',  label: 'S.No.',    sortable: false },
+    { key: 'name',  label: 'Category', sortable: true  },
+  ];
+
+  const renderCatCell = (item: Category, columnKey: string, index: number) => {
+    if (columnKey === 'srno') return startIndex + index + 1;
+    if (columnKey === 'name') return item.name;
+    return '--';
+  };
+
+  const renderCatActions = (item: Category) => (
+    <div className="flex gap-1">
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-gray-100">
+        <Edit className="h-4 w-4 text-black" />
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+            <Trash2 className="h-4 w-4 text-black" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{item.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(item.id)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <EnhancedTable
+          data={pagedCategories}
+          columns={catColumns}
+          renderCell={renderCatCell}
+          renderActions={renderCatActions}
+          storageKey="osr-category-table"
+          searchPlaceholder="Search categories..."
+          enableGlobalSearch
+          onGlobalSearch={handleSearch}
+          loading={loading}
+          emptyMessage="No categories found."
+          leftActions={
+            <Button
+              onClick={() => setAddOpen(true)}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
+              <Plus className="w-4 h-4" /> Add
+            </Button>
+          }
+        />
+        <PaginationBar currentPage={currentPage} totalPages={totalPages} totalCount={totalCount} onPageChange={handlePageChange} />
+      </div>
+
+      {/* Add Dialog */}
+      <Dialog modal={false} open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) setInputVal(''); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Add Category</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <FieldBox label={<>Category Name <span className="text-red-500">*</span></>}>
+              <Input
+                value={inputVal}
+                onChange={e => setInputVal(e.target.value)}
+                placeholder="Enter category name"
+                onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                autoFocus
+                className={FIELD_CLASS}
+              />
+            </FieldBox>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => { setAddOpen(false); setInputVal(''); }}>Cancel</Button>
+              <Button onClick={handleAdd} disabled={submitting} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
+                {submitting ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog modal={false} open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <FieldBox label="Category Name">
+              <Input
+                value={editVal}
+                onChange={e => setEditVal(e.target.value)}
+                placeholder="Enter category name"
+                autoFocus
+                className={FIELD_CLASS}
+              />
+            </FieldBox>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button
+                onClick={handleUpdate}
+                disabled={editSubmitting}
+                className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              >
+                {editSubmitting ? 'Updating...' : 'Update'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ─── Tab 2: Sub Category ─────────────────────────────────────────────────────
+
+const SubCategoryTab: React.FC = () => {
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeCatId, setActiveCatId] = useState<number | 'all'>('all');
+  const [flatTypes, setFlatTypes] = useState<FlatType[]>([]);
+
+  // Add modal state
+  const [addOpen, setAddOpen] = useState(false);
+  const [inputVal, setInputVal] = useState('');
+  const [description, setDescription] = useState('');
+  const [prices, setPrices] = useState<Record<number, string>>({});
+  const [selectedCatId, setSelectedCatId] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ category?: boolean; name?: boolean }>({});
+
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editVal, setEditVal] = useState('');
+  const [editCatId, setEditCatId] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPrices, setEditPrices] = useState<Record<number, string>>({});
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+
+  const loadCategories = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_categories ?? [];
+      setCategories(Array.isArray(raw) ? raw : []);
+    } catch { /* silent */ }
+  }, []);
+
+  const loadFlatTypes = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/flat_types.json');
+      const raw = res.data ?? [];
+      const active = (Array.isArray(raw) ? raw : []).filter((ft: FlatType) => ft.active === 1);
+      setFlatTypes(active);
+    } catch { /* silent */ }
+  }, []);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_sub_categories ?? [];
+      setSubCategories(Array.isArray(raw) ? raw : []);
+    } catch {
+      toast.error('Failed to load sub-categories.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+    loadFlatTypes();
+    load();
+  }, [loadCategories, loadFlatTypes, load]);
+
+  const openAdd = () => {
+    setInputVal('');
+    setDescription('');
+    setPrices(Object.fromEntries(flatTypes.map(ft => [ft.id, ''])));
+    setSelectedCatId('');
+    setFormErrors({});
+    setAddOpen(true);
+  };
+
+  const handleAdd = async () => {
+    const errors = { category: !selectedCatId, name: !inputVal.trim() };
+    setFormErrors(errors);
+    if (errors.category || errors.name) return;
+    setSubmitting(true);
+    try {
+      const osr_subcat_flats_attributes = flatTypes
+        .map(ft => ({ flat_type_id: ft.id, price: Number(prices[ft.id]) }))
+        .filter(f => f.price > 0);
+      const payload: Record<string, any> = {
+        osr_categories_id: Number(selectedCatId),
+        name: inputVal.trim(),
+        active: 1,
+      };
+      if (description.trim()) payload.description = description.trim();
+      if (osr_subcat_flats_attributes.length) payload.osr_subcat_flats_attributes = osr_subcat_flats_attributes;
+      await apiClient.post('/crm/admin/create_osr_sub_category.json', payload);
+      toast.success('Sub-category added successfully.');
+      setAddOpen(false);
+      load();
+    } catch {
+      toast.error('Failed to add sub-category.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEdit = async (sc: SubCategory) => {
+    setEditId(sc.id);
+    setEditOpen(true);
+    setEditLoading(true);
+    try {
+      const res = await apiClient.get(`/get_sub_cat.json?id=${sc.id}`);
+      const data = res.data?.osr_sub_category;
+      if (data) {
+        setEditVal(data.name ?? sc.name);
+        setEditCatId(String(data.osr_categories_id ?? sc.osr_categories_id));
+        setEditDescription(data.description ?? '');
+
+        const pricesMap: Record<number, string> = {};
+        if (data.osr_subcat_flats && Array.isArray(data.osr_subcat_flats)) {
+          data.osr_subcat_flats.forEach((f: any) => {
+            pricesMap[f.flat_type_id] = String(f.price ?? '');
+          });
+        } else if (data.price != null) {
+          pricesMap[flatTypes[0]?.id] = String(data.price);
+        }
+        flatTypes.forEach(ft => {
+          if (!(ft.id in pricesMap)) {
+            pricesMap[ft.id] = '';
+          }
+        });
+        setEditPrices(pricesMap);
+      }
+    } catch {
+      toast.error('Failed to load sub-category details.');
+      setEditOpen(false);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editVal.trim()) { toast.error('Please enter a name.'); return; }
+    setEditSubmitting(true);
+    try {
+      const osr_subcat_flats_attributes = flatTypes
+        .map(ft => ({ flat_type_id: ft.id, price: Number(editPrices[ft.id]) }))
+        .filter(f => f.price > 0);
+      const payload: Record<string, any> = {
+        osr_categories_id: Number(editCatId),
+        name: editVal.trim(),
+        active: 1,
+      };
+      if (editDescription.trim()) payload.description = editDescription.trim();
+      if (osr_subcat_flats_attributes.length) payload.osr_subcat_flats_attributes = osr_subcat_flats_attributes;
+      await apiClient.post(`/crm/admin/modify_osr_sub_category.json?id=${editId}`, payload);
+      toast.success('Sub-category updated successfully.');
+      setEditOpen(false);
+      load();
+    } catch {
+      toast.error('Failed to update sub-category.');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await apiClient.post(`/crm/admin/modify_osr_sub_category.json?id=${id}`, { active: 0 });
+      toast.success('Sub-category deleted successfully.');
+      load();
+    } catch {
+      toast.error('Failed to delete sub-category.');
+    }
+  };
+
+  // Filter sub-categories based on selected category pill
+  const filteredSubs = activeCatId === 'all'
+    ? subCategories
+    : subCategories.filter(s => s.osr_categories_id === activeCatId);
+
+  const { searchTerm, currentPage, totalCount, totalPages, startIndex, paged: pagedSubs, handleSearch, handlePageChange } = usePagedSearch(filteredSubs);
+
+  // Columns — hide Category column when a specific category is selected
+  const scColumns = activeCatId === 'all'
+    ? [
+        { key: 'srno',          label: 'S.No.',       sortable: false },
+        { key: 'category_name', label: 'Category',     sortable: true  },
+        { key: 'name',          label: 'Sub Category', sortable: true  },
+      ]
+    : [
+        { key: 'srno', label: 'S.No.',       sortable: false },
+        { key: 'name', label: 'Sub Category', sortable: true  },
+      ];
+
+  const renderScCell = (item: SubCategory, columnKey: string, index: number) => {
+    if (columnKey === 'srno') return startIndex + index + 1;
+    if (columnKey === 'category_name')
+      return categories.find(c => c.id === item.osr_categories_id)?.name ?? '—';
+    if (columnKey === 'name') return item.name;
+    return '--';
+  };
+
+  const renderScActions = (item: SubCategory) => (
+    <div className="flex gap-1">
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-gray-100">
+        <Edit className="h-4 w-4 text-black" />
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+            <Trash2 className="h-4 w-4 text-black" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Sub Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{item.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(item.id)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+
+      {/* ── Table ─────────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <EnhancedTable
+          data={pagedSubs}
+          columns={scColumns}
+          renderCell={renderScCell}
+          renderActions={renderScActions}
+          storageKey={`osr-sub-category-${activeCatId}`}
+          searchPlaceholder="Search sub-categories..."
+          enableGlobalSearch
+          onGlobalSearch={handleSearch}
+          loading={loading}
+          emptyMessage={activeCatId === 'all' ? 'No sub-categories found.' : 'No sub-categories for this category.'}
+          leftActions={
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                onClick={openAdd}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"               >
+                <Plus className="w-4 h-4" /> Add
+              </Button>
+              {/* <div className="flex items-center gap-1 flex-wrap">
+                <button
+                  onClick={() => setActiveCatId('all')}
+                  className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
+                    activeCatId === 'all'
+                      ? 'bg-[#C72030] text-white border-[#C72030]'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-[#C72030] hover:text-[#C72030]'
+                  }`}
+                >
+                  All ({subCategories.length})
+                </button>
+                {categories.map(cat => {
+                  const count = subCategories.filter(s => s.osr_categories_id === cat.id).length;
+                  const isActive = activeCatId === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCatId(cat.id)}
+                      className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
+                        isActive
+                          ? 'bg-[#C72030] text-white border-[#C72030]'
+                          : 'bg-white text-gray-600 border-gray-300 hover:border-[#C72030] hover:text-[#C72030]'
+                      }`}
+                    >
+                      {cat.name} ({count})
+                    </button>
+                  );
+                })}
+              </div> */}
+            </div>
+          }
+        />
+        <PaginationBar currentPage={currentPage} totalPages={totalPages} totalCount={totalCount} onPageChange={handlePageChange} />
+      </div>
+
+      {/* Add Modal */}
+      <Dialog modal={false} open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setFormErrors({}); } }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Add Sub Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Row 1: Category + Name */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <MuiFormControl fullWidth variant="outlined" error={formErrors.category}>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedCatId}
+                    onChange={e => { setSelectedCatId(e.target.value); setFormErrors(p => ({ ...p, category: false })); }}
+                    displayEmpty
+                    label="Category *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+                    {categories.map(c => (
+                      <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
+                {formErrors.category && <p className="text-xs text-red-500 mt-1">Please select a category.</p>}
+              </div>
+              <div className="flex-1">
+                <TextField
+                  label={<>Sub Category Name <span style={{ color: 'red' }}>*</span></>}
+                  placeholder="Enter Sub Category"
+                  value={inputVal}
+                  onChange={e => { setInputVal(e.target.value); setFormErrors(p => ({ ...p, name: false })); }}
+                  error={formErrors.name}
+                  autoFocus
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
+                {formErrors.name && <p className="text-xs text-red-500 mt-1">Please enter a sub-category name.</p>}
+              </div>
+            </div>
+
+            {/* Row 2: Prices by Flat Type */}
+            <div className="space-y-1.5">
+              <Label className={LABEL_CLASS}>Prices by Flat Type</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {flatTypes.filter(ft => ft.active === 1).map(ft => (
+                  <TextField
+                    key={ft.id}
+                    label={ft.society_flat_type}
+                    placeholder="0"
+                    type="number"
+                    value={prices[ft.id] ?? ''}
+                    onChange={e => setPrices(prev => ({ ...prev, [ft.id]: e.target.value }))}
+                    inputProps={{ min: 0 }}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Row 3: Description */}
+            <TextField
+              label="Description"
+              placeholder="Enter Description"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              multiline
+              rows={4}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
+              <Button onClick={handleAdd} disabled={submitting} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
+                {submitting ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog modal={false} open={editOpen} onOpenChange={open => { if (!open) setEditOpen(false); }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Sub Category</DialogTitle>
+          </DialogHeader>
+          {editLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C72030] border-t-transparent" />
+              <span className="ml-3 text-sm text-gray-500">Loading details...</span>
+            </div>
+          ) : (
+          <div className="space-y-4 py-2">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <FieldBox label={<>Category <span className="text-red-500">*</span></>}>
+                  <Select value={editCatId} onValueChange={setEditCatId}>
+                    <SelectTrigger className={FIELD_CLASS}>
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FieldBox>
+              </div>
+              <div className="flex-1">
+                <FieldBox label={<>Sub Category Name <span className="text-red-500">*</span></>}>
+                  <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter name" className={FIELD_CLASS} />
+                </FieldBox>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className={LABEL_CLASS}>Prices by Flat Type</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {flatTypes.filter(ft => ft.active === 1).map(ft => (
+                  <FieldBox key={ft.id} label={ft.society_flat_type}>
+                    <Input
+                      value={editPrices[ft.id] ?? ''}
+                      onChange={e => setEditPrices(prev => ({ ...prev, [ft.id]: e.target.value }))}
+                      placeholder="0"
+                      type="number"
+                      min="0"
+                      className={FIELD_CLASS}
+                    />
+                  </FieldBox>
+                ))}
+              </div>
+            </div>
+
+            <FieldBox label="Description">
+              <Textarea
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                placeholder="Enter Description"
+                className="h-[120px] resize-none text-sm border-0 p-0 shadow-none focus-visible:ring-0 focus-visible:outline-none"
+              />
+            </FieldBox>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button
+                onClick={handleUpdate}
+                disabled={editSubmitting}
+                className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              >
+                {editSubmitting ? 'Updating...' : 'Update'}
+              </Button>
+            </div>
+          </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ─── Tab 3: Status ───────────────────────────────────────────────────────────
+
+const StatusTab: React.FC = () => {
+  const [statuses, setStatuses] = useState<StatusItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [inputVal, setInputVal] = useState('');
+  const [colorVal, setColorVal] = useState('#C72030');
+  const [orderVal, setOrderVal] = useState('');
+  const [canCancel, setCanCancel] = useState(false);
+  const [secondVisit, setSecondVisit] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editVal, setEditVal] = useState('');
+  const [editColor, setEditColor] = useState('#C72030');
+  const [editOrder, setEditOrder] = useState('');
+  const [editCanCancel, setEditCanCancel] = useState(false);
+  const [editSecondVisit, setEditSecondVisit] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/crm/admin/osr_setup.json');
+      const raw = res.data?.osr_statuses ?? [];
+      setStatuses(Array.isArray(raw) ? raw : []);
+    } catch {
+      toast.error('Failed to load statuses.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleAdd = async () => {
+    if (!inputVal.trim()) { toast.error('Please enter a status name.'); return; }
+    setSubmitting(true);
+    try {
+      await apiClient.post('/crm/admin/create_osr_status.json', {
+        name: inputVal.trim(),
+        color_code: colorVal,
+        order_as: Number(orderVal) || 0,
+        can_cancel: canCancel ? 1 : 0,
+        second_visit: secondVisit ? 1 : 0,
+        active: 1,
+      });
+      toast.success('Status added successfully.');
+      setInputVal('');
+      setColorVal('#C72030');
+      setOrderVal('');
+      setCanCancel(false);
+      setSecondVisit(false);
+      setAddOpen(false);
+      load();
+    } catch {
+      toast.error('Failed to add status.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEdit = (s: StatusItem) => {
+    setEditId(s.id);
+    setEditVal(s.name);
+    setEditColor(s.color_code ?? '#C72030');
+    setEditOrder(String(s.order_as ?? ''));
+    setEditCanCancel(Boolean(s.can_cancel));
+    setEditSecondVisit(Boolean(s.second_visit));
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editVal.trim()) { toast.error('Please enter a status name.'); return; }
+    setEditSubmitting(true);
+    try {
+      await apiClient.post(`/crm/admin/modify_osr_status.json?id=${editId}`, {
+        name: editVal.trim(),
+        color_code: editColor,
+        order_as: Number(editOrder) || 0,
+        can_cancel: editCanCancel ? 1 : 0,
+        second_visit: editSecondVisit ? 1 : 0,
+        active: 1,
+      });
+      toast.success('Status updated successfully.');
+      setEditOpen(false);
+      load();
+    } catch {
+      toast.error('Failed to update status.');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await apiClient.post(`/crm/admin/modify_osr_status.json?id=${id}`, { active: 0 });
+      toast.success('Status deleted successfully.');
+      load();
+    } catch {
+      toast.error('Failed to delete status.');
+    }
+  };
+
+  const { searchTerm, currentPage, totalCount, totalPages, startIndex, paged: pagedStatuses, handleSearch, handlePageChange } = usePagedSearch(statuses);
+
+  const stColumns = [
+    { key: 'srno',       label: 'S.No.',  sortable: false },
+    { key: 'name',       label: 'Status', sortable: true  },
+    { key: 'order_as',   label: 'Order',  sortable: true  },
+    { key: 'color_code', label: 'Color',  sortable: false },
+  ];
+
+  const renderStCell = (item: StatusItem, columnKey: string, index: number) => {
+    if (columnKey === 'srno') return startIndex + index + 1;
+    if (columnKey === 'name') return item.name;
+    if (columnKey === 'order_as') return item.order_as ?? '-';
+    if (columnKey === 'color_code') {
+      return (
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block w-5 h-5 rounded-full border border-gray-200 shrink-0"
+            style={{ backgroundColor: item.color_code ?? '#C72030' }}
+          />
+          <span className="text-xs text-gray-500">{item.color_code}</span>
+        </div>
+      );
+    }
+    return '--';
+  };
+
+  const renderStActions = (item: StatusItem) => (
+    <div className="flex gap-1">
+      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="hover:bg-gray-100">
+        <Edit className="h-4 w-4 text-black" />
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+            <Trash2 className="h-4 w-4 text-black" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Status</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{item.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(item.id)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <EnhancedTable
+          data={pagedStatuses}
+          columns={stColumns}
+          renderCell={renderStCell}
+          renderActions={renderStActions}
+          storageKey="osr-status-table"
+          searchPlaceholder="Search statuses..."
+          enableGlobalSearch
+          onGlobalSearch={handleSearch}
+          loading={loading}
+          emptyMessage="No statuses found."
+          leftActions={
+            <Button
+              onClick={() => setAddOpen(true)}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
+              <Plus className="w-4 h-4" /> Add
+            </Button>
+          }
+        />
+        <PaginationBar currentPage={currentPage} totalPages={totalPages} totalCount={totalCount} onPageChange={handlePageChange} />
+      </div>
+
+      {/* Add Dialog */}
+      <Dialog modal={false} open={addOpen} onOpenChange={open => { setAddOpen(open); if (!open) { setInputVal(''); setColorVal('#C72030'); setOrderVal(''); setCanCancel(false); setSecondVisit(false); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Add Status</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <FieldBox label={<>Status Name <span className="text-red-500">*</span></>}>
+              <Input
+                value={inputVal}
+                onChange={e => setInputVal(e.target.value)}
+                placeholder="Enter status name"
+                onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                autoFocus
+                className={FIELD_CLASS}
+              />
+            </FieldBox>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <FieldBox label="Order">
+                  <Input
+                    value={orderVal}
+                    onChange={e => setOrderVal(e.target.value)}
+                    placeholder="Enter order"
+                    type="number"
+                    min="0"
+                    className={FIELD_CLASS}
+                  />
+                </FieldBox>
+              </div>
+              <div className="space-y-1.5">
+                <Label className={LABEL_CLASS}>Color</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={colorVal}
+                    onChange={e => setColorVal(e.target.value)}
+                    className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5"
+                  />
+                  <span className="text-sm text-gray-600">{colorVal}</span>
+                </div>
+              </div>
+            </div>
+            {/* <div className="flex gap-4 pt-1">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={canCancel} onChange={e => setCanCancel(e.target.checked)} className="rounded" />
+                Can Cancel
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={secondVisit} onChange={e => setSecondVisit(e.target.checked)} className="rounded" />
+                Second Visit
+              </label>
+            </div> */}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => { setAddOpen(false); setInputVal(''); setColorVal('#C72030'); setOrderVal(''); setCanCancel(false); setSecondVisit(false); }}>Cancel</Button>
+              <Button onClick={handleAdd} disabled={submitting} className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90">
+                {submitting ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog modal={false} open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Status</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <FieldBox label="Status Name">
+              <Input value={editVal} onChange={e => setEditVal(e.target.value)} placeholder="Enter status name" autoFocus className={FIELD_CLASS} />
+            </FieldBox>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <FieldBox label="Order">
+                  <Input
+                    value={editOrder}
+                    onChange={e => setEditOrder(e.target.value)}
+                    placeholder="Enter order"
+                    type="number"
+                    min="0"
+                    className={FIELD_CLASS}
+                  />
+                </FieldBox>
+              </div>
+              <div className="space-y-1.5">
+                <Label className={LABEL_CLASS}>Color</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={editColor}
+                    onChange={e => setEditColor(e.target.value)}
+                    className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5"
+                  />
+                  <span className="text-sm text-gray-600">{editColor}</span>
+                </div>
+              </div>
+            </div>
+            {/* <div className="flex gap-4 pt-1">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={editCanCancel} onChange={e => setEditCanCancel(e.target.checked)} className="rounded" />
+                Can Cancel
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={editSecondVisit} onChange={e => setEditSecondVisit(e.target.checked)} className="rounded" />
+                Second Visit
+              </label>
+            </div> */}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button
+                onClick={handleUpdate}
+                disabled={editSubmitting}
+                className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              >
+                {editSubmitting ? 'Updating...' : 'Update'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+const TRIGGER_CLASS =
+  'group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold';
+
+export const OSRSetupPage: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* ── Page Header ───────────────────────────────────────────────── */}
+      <div className="bg-white px-6 py-4 border-b border-gray-200">
+        <h1 className="text-xl font-semibold text-gray-900">OSR Setup</h1>
+      </div>
+
+      <div className="p-6 space-y-6">
+        <Tabs defaultValue="category" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200">
+            <TabsTrigger value="category" className={TRIGGER_CLASS}>
+              Category
+            </TabsTrigger>
+            <TabsTrigger value="sub-category" className={TRIGGER_CLASS}>
+              Sub Category
+            </TabsTrigger>
+            <TabsTrigger value="status" className={TRIGGER_CLASS}>
+              Status
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="category" className="mt-6">
+            <CategoryTab />
+          </TabsContent>
+          <TabsContent value="sub-category" className="mt-6">
+            <SubCategoryTab />
+          </TabsContent>
+          <TabsContent value="status" className="mt-6">
+            <StatusTab />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      {/* <div className="py-4 flex justify-center border-t border-gray-200 bg-white">
+        <span className="text-sm text-gray-600">
+          Powered by <span className="font-semibold">LOCKATED</span>
+        </span>
+      </div> */}
+    </div>
+  );
+};
+
+export default OSRSetupPage;

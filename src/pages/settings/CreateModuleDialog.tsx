@@ -210,7 +210,7 @@ export const CreateModuleDialog = ({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#A11D2A] text-white"
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             >
               {isSubmitting ? (
                 <>

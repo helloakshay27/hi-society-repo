@@ -4,9 +4,17 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Plus, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import Switch from "@mui/material/Switch";
 import axios from "axios";
 import { BMSBusinessDirectoryFilterModal } from "@/components/BMSBusinessDirectoryFilterModal";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface BusinessDirectory {
   id: string;
@@ -18,6 +26,102 @@ interface BusinessDirectory {
   key_offering: string;
   active: boolean;
 }
+
+const PAGE_SIZE = 10;
+
+const renderPaginationItems = (
+  currentPage: number,
+  totalPages: number,
+  onPageChange: (page: number) => void
+) => {
+  if (!totalPages || totalPages <= 0) {
+    return null;
+  }
+  const items = [];
+  const showEllipsis = totalPages > 5;
+
+  if (showEllipsis) {
+    items.push(
+      <PaginationItem key={1} className="cursor-pointer">
+        <PaginationLink onClick={() => onPageChange(1)} isActive={currentPage === 1}>
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    if (currentPage > 4) {
+      items.push(
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage > 3 && currentPage < totalPages - 2) {
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    if (currentPage < totalPages - 3) {
+      items.push(
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    } else {
+      for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+        if (!items.find((item) => item.key === i.toString())) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+    }
+
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key={totalPages} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(totalPages)} isActive={currentPage === totalPages}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  } else {
+    for (let i = 1; i <= totalPages; i++) {
+      items.push(
+        <PaginationItem key={i} className="cursor-pointer">
+          <PaginationLink onClick={() => onPageChange(i)} isActive={currentPage === i}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+  }
+
+  return items;
+};
 
 const columns = [
   { key: "company_name", label: "Company Name", sortable: true },
@@ -42,6 +146,35 @@ const BMSBusinessDirectoryList: React.FC = () => {
     subCategory: '',
     status: '',
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const filteredDirectories = React.useMemo(() => {
+    if (!searchTerm.trim()) return directories;
+    const query = searchTerm.toLowerCase();
+    return directories.filter((item) =>
+      Object.values(item).some((value) =>
+        String(value).toLowerCase().includes(query)
+      )
+    );
+  }, [directories, searchTerm]);
+
+  const totalPages = Math.ceil(filteredDirectories.length / PAGE_SIZE) || 1;
+  const paginatedDirectories = filteredDirectories.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const fetchDirectories = async (filters = appliedFilters) => {
     try {
@@ -78,7 +211,7 @@ const BMSBusinessDirectoryList: React.FC = () => {
   }, [])
 
   const handleAdd = () => {
-    navigate("/business-directory/add");
+    navigate("/bms/business-directory/add");
   };
 
   const handleFilters = () => {
@@ -138,25 +271,20 @@ const BMSBusinessDirectoryList: React.FC = () => {
         );
       case "active":
         return (
-          <Switch
-            checked={item.active}
-            onChange={(e) => handleToggleStatus(item, e.target.checked)}
-            size="small"
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#04A231',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#04A231',
-              },
-              '& .MuiSwitch-switchBase:not(.Mui-checked)': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
-                backgroundColor: 'rgba(199, 32, 48, 0.5)',
-              },
-            }}
-          />
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleStatus(item, !item.active)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         );
       default:
         return item[columnKey as keyof BusinessDirectory];
@@ -167,7 +295,7 @@ const BMSBusinessDirectoryList: React.FC = () => {
     <div className="flex gap-2">
       <Button
         onClick={handleAdd}
-        className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
+        className="bg-[#C72030] hover:bg-[#A01828] !text-white"
       >
         <Plus className="w-4 h-4 mr-2" />
         Add
@@ -178,19 +306,40 @@ const BMSBusinessDirectoryList: React.FC = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <EnhancedTable
-        data={directories}
+        data={paginatedDirectories}
         columns={columns}
         renderActions={renderActions}
         renderCell={renderCell}
         searchPlaceholder="Search"
         enableSearch={true}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
         onFilterClick={handleFilters}
         leftActions={renderLeftActions}
         loading={loading}
         emptyMessage="No businesses found"
-        pagination={true}
-        pageSize={10}
+        pagination={false}
       />
+
+      <div className="mt-4 flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems(currentPage, totalPages, handlePageChange)}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
 
       <BMSBusinessDirectoryFilterModal
         open={isFilterModalOpen}

@@ -62,6 +62,35 @@ interface LocationItem {
   name: string;
 }
 
+const mapQuestionTypeToInputType = (qtype?: string) => {
+  switch ((qtype || "").trim().toLowerCase()) {
+    case "multiple":
+      return "multiple_choice";
+    case "yesno":
+    case "yes_no":
+    case "boolean":
+      return "yes_no";
+    case "rating":
+      return "rating";
+    case "input":
+    case "text":
+      return "text_input";
+    case "input_box":
+      return "input_box";
+    case "description":
+    case "textarea":
+      return "description";
+    case "numeric":
+      return "numeric";
+    case "emoji":
+      return "emoji";
+    case "smiley":
+      return "smiley";
+    default:
+      return "";
+  }
+};
+
 interface SurveyMapping {
   id: string;
   selectedLocation: {
@@ -450,7 +479,6 @@ export const AddSurveyMapping = () => {
       }
 
       const surveyData = await response.json();
-      console.log("Surveys data response:", surveyData);
 
       // Filter only active surveys
       const activeSurveys = (surveyData || []).filter(
@@ -541,33 +569,7 @@ export const AddSurveyMapping = () => {
     if (selectedSurvey && selectedSurvey.snag_questions) {
       const mappedQuestions = selectedSurvey.snag_questions.map(
         (q: SnagQuestion) => {
-          // Map API question types to UI input types
-          let inputType = "";
-          switch (q.qtype) {
-            case "multiple":
-              inputType = "multiple_choice";
-              break;
-            case "yesno":
-              inputType = "yes_no";
-              break;
-            case "rating":
-              inputType = "rating";
-              break;
-            case "input":
-              inputType = "text_input";
-              break;
-            case "input_box":
-              inputType = "input_box";
-              break;
-            case "description":
-              inputType = "description";
-              break;
-            case "emoji":
-              inputType = "emoji";
-              break;
-            default:
-              inputType = "";
-          }
+          const inputType = mapQuestionTypeToInputType(q.qtype);
 
           return {
             id: q.id.toString(),
@@ -607,115 +609,24 @@ export const AddSurveyMapping = () => {
       return;
     }
 
-    surveyMappings.forEach((mapping, index) => {
-      // Check if site is selected (mandatory)
-      if (!mapping.selectedLocation.site) {
-        invalidMappings.push(
-          `Location Configuration ${index + 1}: Site selection is required`
-        );
-        return; // Skip further validation for this mapping
-      }
-
-      // Check if building is selected (mandatory)
-      if (!mapping.selectedLocation.building) {
-        invalidMappings.push(
-          `Location Configuration ${index + 1}: Building selection is required`
-        );
-        return; // Skip further validation for this mapping
-      }
-
-      // If both site and building are selected, the mapping is valid
-      validMappings.push(mapping);
-    });
-
-    if (invalidMappings.length > 0) {
-      toast.error(invalidMappings.join("\n"), {
-        duration: 7000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (validMappings.length === 0) {
-      toast.error(
-        "Please add at least one valid survey mapping with selected locations",
-        {
-          duration: 5000,
-        }
-      );
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Check for duplicate locations
-    const locationCombinations = validMappings.map(
-      (mapping) => mapping.selectedLocation
-    );
-    const uniqueLocations = new Set();
-    const duplicateFound = locationCombinations.some((location) => {
-      const locationKey = `${location.site}-${location.building}-${location.wing || ""}-${location.area || ""}-${location.floor || ""}-${location.room || ""}`;
-      if (uniqueLocations.has(locationKey)) {
-        return true;
-      }
-      uniqueLocations.add(locationKey);
-      return false;
-    });
-
-    if (duplicateFound) {
-      toast.error("Please enter different location", {
-        description:
-          "You have selected the same location multiple times. Please select different locations for each configuration.",
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // Build survey_mappings array in the new format
-      const surveyMappingsPayload = validMappings.map((mapping) => {
-        const mappingData: {
-          survey_id: number;
-          site_id?: number;
-          building_id?: number;
-          wing_id?: number;
-          area_id?: number;
-          floor_id?: number;
-          room_id?: number;
-          active: boolean;
-        } = {
-          survey_id: selectedSurveyId, // Use the same survey for all mappings
-          active: true,
-        };
-
-        // Add location IDs if they exist
-        if (mapping.selectedLocation.site) {
-          mappingData.site_id = parseInt(mapping.selectedLocation.site);
-        }
-        if (mapping.selectedLocation.building) {
-          mappingData.building_id = parseInt(mapping.selectedLocation.building);
-        }
-        if (mapping.selectedLocation.wing) {
-          mappingData.wing_id = parseInt(mapping.selectedLocation.wing);
-        }
-        if (mapping.selectedLocation.area) {
-          mappingData.area_id = parseInt(mapping.selectedLocation.area);
-        }
-        if (mapping.selectedLocation.floor) {
-          mappingData.floor_id = parseInt(mapping.selectedLocation.floor);
-        }
-        if (mapping.selectedLocation.room) {
-          mappingData.room_id = parseInt(mapping.selectedLocation.room);
-        }
-
-        return mappingData;
-      });
+      // Get society_id from localStorage (same pattern as other pages)
+      const societyId = parseInt(
+        localStorage.getItem("selectedSocietyId") ||
+        localStorage.getItem("society_id") ||
+        localStorage.getItem("org_id") ||
+        "0"
+      );
 
       const requestData = {
-        survey_mappings: surveyMappingsPayload,
+        survey_mappings: [
+          {
+            survey_id: selectedSurveyId,
+            society_id: societyId,
+            active: true,
+          },
+        ],
       };
-
-      console.log("Submitting survey mappings:", requestData);
 
       const response = await fetch(
         getFullUrl("/survey_mappings/create_survey_mappings.json"),
@@ -734,7 +645,6 @@ export const AddSurveyMapping = () => {
       }
 
       const result = await response.json();
-      console.log("Survey mappings created successfully:", result);
 
       const totalMappings = validMappings.length;
       const successMessage =
@@ -762,33 +672,24 @@ export const AddSurveyMapping = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-4 sm:p-6 space-y-6 relative min-h-screen overflow-y-auto">
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
         </div>
       )}
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(-1)}
-            className="h-8 w-8 p-0 hover:bg-gray-100"
-            aria-label="Go back"
+            onClick={() => navigate("/maintenance/survey/mapping")}
+            className="p-2"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-bold tracking-wide uppercase">
-            Survey Mapping
-          </h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Create Survey Mapping</h1>
         </div>
-        {/* <div className="text-sm text-gray-600">
-          {surveyMappings.length === 1 
-            ? '1 Location Configured' 
-            : `${surveyMappings.length} Location Configurations`
-          }
-        </div> */}
       </header>
 
       <Section title="Survey Selection" icon={<List className="w-3.5 h-3.5" />}>
@@ -814,6 +715,20 @@ export const AddSurveyMapping = () => {
                     notched
                     displayEmpty
                     disabled={loadingSurveys}
+                    MenuProps={{
+                      anchorOrigin: { vertical: "bottom", horizontal: "left" },
+                      transformOrigin: { vertical: "top", horizontal: "left" },
+                      PaperProps: {
+                        sx: {
+                          mt: 1,
+                          maxHeight: 300,
+                          "& .MuiList-root": {
+                            display: "flex",
+                            flexDirection: "column",
+                          },
+                        },
+                      },
+                    }}
                   >
                     {selectedSurveyId === null && (
                       <MenuItem disabled value="">
@@ -862,6 +777,9 @@ export const AddSurveyMapping = () => {
         </div>
       </Section>
 
+      {/* Location Configuration section is temporarily hidden.
+          To re-enable, change `false` to `true` below. */}
+      {(false as boolean) && (
       <Section
         title="Location Configuration"
         icon={<MapPin className="w-3.5 h-3.5" />}
@@ -895,7 +813,7 @@ export const AddSurveyMapping = () => {
                 )}
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Site */}
                 <FormControl
                   fullWidth
@@ -1147,6 +1065,7 @@ export const AddSurveyMapping = () => {
           </div>
         </div>
       </Section>
+      )}
 
       {/* Survey Questions Section */}
       {selectedSurveyQuestions.length > 0 && (
@@ -1184,7 +1103,7 @@ export const AddSurveyMapping = () => {
                 </div>
 
                 {/* Second Row - Task and Input Type */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <FormControl
                       fullWidth
@@ -1224,7 +1143,9 @@ export const AddSurveyMapping = () => {
                         <MenuItem value="text_input">Text Input</MenuItem>
                         <MenuItem value="input_box">Input Box</MenuItem>
                         <MenuItem value="description">Description</MenuItem>
+                        <MenuItem value="numeric">Numeric</MenuItem>
                         <MenuItem value="emoji">Emoji</MenuItem>
+                        <MenuItem value="smiley">Smiley</MenuItem>
                       </Select>
                     </FormControl>
                   </div>
@@ -1278,10 +1199,10 @@ export const AddSurveyMapping = () => {
         </Section>
       )}
 
-      <div className="flex items-center gap-3 justify-center pt-2">
+      <div className="flex flex-col sm:flex-row items-center gap-3 justify-center pt-2">
         <Button
-          variant="destructive"
-          className="px-8"
+        variant="ghost"
+          className="btn-primary h-9 px-4 text-sm font-medium"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
@@ -1296,7 +1217,7 @@ export const AddSurveyMapping = () => {
         </Button>
         <Button
           variant="outline"
-          className="px-8"
+          className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
           onClick={() => navigate("/maintenance/survey/mapping")}
           disabled={isSubmitting}
         >

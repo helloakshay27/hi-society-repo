@@ -31,7 +31,7 @@ interface PermissionCache {
 
 class SimplePermissionCache {
   private static readonly CACHE_KEY = "permission_cache";
-  private static readonly CACHE_DURATION = 5 * 1000; // 5 seconds (effectively real-time but prevents flicker on rapid re-renders)
+  private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes — avoids re-fetch on every route change/refresh
 
   // Store permissions in localStorage
   store(userRole: UserRoleResponse): void {

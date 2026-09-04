@@ -52,12 +52,25 @@ const fieldStyles = {
     },
 };
 
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            // Extract base64 string from data URL
+            const base64String = (reader.result as string);
+            resolve(base64String);
+        };
+        reader.onerror = (error) => reject(error);
+    });
+};
+
 const AddCMSClubMembers = () => {
     const navigate = useNavigate();
 
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
-    const societyId = localStorage.getItem("selectedUserSociety");
+    const societyId = localStorage.getItem("selectedSocietyId");
 
     const [towers, setTowers] = useState([]);
     const [flats, setFlats] = useState([]);
@@ -396,7 +409,42 @@ const AddCMSClubMembers = () => {
             formData.append("club_member_allocation[allocation_payment_detail_attributes][payment_status]", "pending");
             // formData.append("club_member_allocation[allocation_payment_detail_attributes][payment_mode]", "online");
 
-            members.forEach((member, idx) => {
+            // members.forEach((member, idx) => {
+            //     formData.append(
+            //         `members[${idx}][user_society_id]`,
+            //         member.selectedUser
+            //     );
+            //     formData.append(`members[${idx}][first_name]`, member.firstName);
+            //     formData.append(`members[${idx}][last_name]`, member.lastName);
+            //     formData.append(`members[${idx}][email]`, member.email);
+            //     formData.append(`members[${idx}][mobile]`, member.mobile);
+            //     formData.append(`members[${idx}][resident_type]`, member.residentType);
+            //     formData.append(
+            //         `members[${idx}][club_member_check]`,
+            //         member.isClubMembership ? "true" : "false"
+            //     );
+            //     formData.append(
+            //         `members[${idx}][membership_number]`,
+            //         member.membershipNumber
+            //     );
+            //     formData.append(
+            //         `members[${idx}][access_card_check]`,
+            //         member.isAccessCardAllocated ? "true" : "false"
+            //     );
+            //     formData.append(`members[${idx}][access_card_id]`, member.accessCardId);
+            //     formData.append(
+            //         `members[${idx}][identification_image_attributes][document]`,
+            //         member.idCard
+            //     );
+            //     formData.append(
+            //         `members[${idx}][flat_attachments][document]`,
+            //         member.residentPhoto
+            //     );
+            // });
+
+            for (let idx = 0; idx < members.length; idx++) {
+                const member = members[idx];
+
                 formData.append(
                     `members[${idx}][user_society_id]`,
                     member.selectedUser
@@ -406,28 +454,42 @@ const AddCMSClubMembers = () => {
                 formData.append(`members[${idx}][email]`, member.email);
                 formData.append(`members[${idx}][mobile]`, member.mobile);
                 formData.append(`members[${idx}][resident_type]`, member.residentType);
+
                 formData.append(
                     `members[${idx}][club_member_check]`,
                     member.isClubMembership ? "true" : "false"
                 );
+
                 formData.append(
                     `members[${idx}][membership_number]`,
                     member.membershipNumber
                 );
+
                 formData.append(
                     `members[${idx}][access_card_check]`,
                     member.isAccessCardAllocated ? "true" : "false"
                 );
-                formData.append(`members[${idx}][access_card_id]`, member.accessCardId);
+
                 formData.append(
-                    `members[${idx}][identification_image_attributes][document]`,
-                    member.idCard
+                    `members[${idx}][access_card_id]`,
+                    member.accessCardId
                 );
-                formData.append(
-                    `members[${idx}][profile_image_attributes][document]`,
-                    member.residentPhoto
-                );
-            });
+
+                if (member.idCard) {
+                    formData.append(
+                        `members[${idx}][identification_image_attributes][document]`,
+                        member.idCard
+                    );
+                }
+
+                if (member.residentPhoto) {
+                    const photoBase64 = await fileToBase64(member.residentPhoto);
+                    formData.append(
+                        `members[${idx}][flat_attachments][]`,
+                        photoBase64
+                    );
+                }
+            }
 
             await axios.post(
                 `https://${baseUrl}/club_member_allocations.json`,
@@ -749,12 +811,10 @@ const AddCMSClubMembers = () => {
                                 {index > 0 && (
                                     <div className="flex justify-end mb-2">
                                         <Button
-                                            variant="ghost"
-                                            size="sm"
                                             onClick={() => removeMember(member.id)}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                                         >
-                                            <X className="w-4 h-4 mr-1" /> Remove Member
+                                            Remove Member
                                         </Button>
                                     </div>
                                 )}
@@ -1057,7 +1117,7 @@ const AddCMSClubMembers = () => {
                     <div className="flex justify-center gap-4 pt-4">
                         <Button
                             variant="outline"
-                            className="border-green-600 text-green-600 hover:bg-green-50 min-w-[120px]"
+                            className="!bg-white !text-[#da7756] !border !border-[#da7756] [&_svg]:text-[#da7756] hover:bg-orange-50 min-w-[120px]"
                             onClick={addMember}
                             disabled={members.length === 8}
                         >
@@ -1065,11 +1125,11 @@ const AddCMSClubMembers = () => {
                         </Button>
                         <Button
                             variant="default"
-                            className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
+                            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? "Submitting..." : "Submit"}
+                            {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Submit"}
                         </Button>
                     </div>
                 </div>

@@ -38,7 +38,7 @@ export const ApprovalMatrixDashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <Button 
             onClick={handleAddClick}
-            className="bg-[#C72030] hover:bg-[#A01020] text-white px-4 py-2 text-sm"
+            className="px-4 py-2 text-sm bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             + Add
           </Button>
@@ -81,7 +81,7 @@ export const ApprovalMatrixDashboard = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-gray-600 hover:text-gray-900 p-1"
+                      className="p-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
                       onClick={() => handleEditClick(approval.id)}
                     >
                       <Edit className="w-4 h-4" />

@@ -335,16 +335,16 @@ export const AddPaymentPlan = () => {
         {/* Action Buttons */}
         <div className="flex gap-3 justify-center pt-4">
           <Button
-            variant="outline"
             onClick={() => navigate('/settings/payment-plan/setup')}
             disabled={loading}
+            className="disabled:opacity-60 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
           >
             Cancel
           </Button>
           <Button
-            className="bg-[#C72030] hover:bg-[#A01020] text-white"
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
             onClick={handleSubmit}
-            disabled={loading || totalPercentage !== 100}
+            disabled={loading}
           >
             {isEditMode ? 'Update Plan' : 'Create Plan'}
           </Button>

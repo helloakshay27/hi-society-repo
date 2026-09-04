@@ -550,7 +550,7 @@ const LMCDashboard = () => {
                     </div>
                 )}
             </div>
-            {error && <div className="mt-4 text-sm text-red-600">{error}</div>}
+            {!loading && error && <div className="mt-4 text-sm text-red-600">{error}</div>}
             {/* Filter modal using MUI fields and Button */}
             <Dialog open={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} maxWidth="xs" fullWidth>
                 <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700, fontSize: 20, borderBottom: '1px solid #eee', pb: 1.5 }}>

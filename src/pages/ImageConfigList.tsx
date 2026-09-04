@@ -7,11 +7,13 @@ import { Toaster } from "@/components/ui/sonner";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Switch } from "@mui/material";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 
 const ImageConfig = () => {
+  const { shouldShow } = useDynamicPermissions();
   const baseURL = API_CONFIG.BASE_URL;
   const [imageConfigs, setImageConfigs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,6 +98,94 @@ const ImageConfig = () => {
     }
   };
 
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   const handleAdd = () => {
     navigate("/settings/image-config-create");
   };
@@ -169,7 +259,7 @@ const ImageConfig = () => {
     { key: "name", label: "Name", sortable: true },
     { key: "value", label: "Value", sortable: true },
     { key: "description", label: "Description", sortable: false },
-    { key: "active", label: "Active/Inactive", sortable: false },
+    // { key: "active", label: "Active/Inactive", sortable: false },
   ];
 
   const renderCell = (item, columnKey) => {
@@ -180,14 +270,16 @@ const ImageConfig = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(item.id)}
-              className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            {shouldShow("ImageConfig", "update") && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(item.id)}
+                className="h-8 w-8 text-gray-600 hover:text-black hover:bg-gray-100"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
             {/* <Button
               variant="ghost"
               size="icon"
@@ -227,13 +319,17 @@ const ImageConfig = () => {
   };
 
   const renderCustomActions = () => (
-    <Button
-      onClick={handleAdd}
-      className="bg-[#C72030] hover:bg-[#A01828] text-white"
-    >
-      <Plus className="h-4 w-4 mr-2" />
-      Add
-    </Button>
+    <>
+      {shouldShow("ImageConfig", "create") && (
+        <Button
+          onClick={handleAdd}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
+          <Plus className="h-4 w-4 mr-2" />
+          Add
+        </Button>
+      )}
+    </>
   );
 
   const renderListTab = () => (
@@ -249,33 +345,21 @@ const ImageConfig = () => {
         loading={loading}
         loadingMessage="Loading image configurations..."
       />
-      {!loading && imageConfigs.length > 0 && totalPages > 1 && (
+      {totalCount > 0 && (
         <div className="flex items-center justify-center mt-6">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <PaginationItem key={page}>
-                  <PaginationLink 
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {renderPaginationItems()}
               <PaginationItem>
                 <PaginationNext
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
             </PaginationContent>

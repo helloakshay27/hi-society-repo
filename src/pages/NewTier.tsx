@@ -49,6 +49,8 @@ const validationSchema = Yup.object().shape({
         return true;
       }
     }),
+  title: Yup.string().required("Title is required"),
+  description: Yup.string(),
   exit_points: Yup.number()
     .required("Exit points are required")
     .positive("Exit points must be a positive number"),
@@ -62,6 +64,8 @@ const validationSchema = Yup.object().shape({
   tiers: Yup.array().of(
     Yup.object().shape({
       name: Yup.string().required("Tier name is required"),
+      title: Yup.string().required("Title is required"),
+      description: Yup.string(),
       exit_points: Yup.number()
         .required("Exit points are required")
         .positive("Exit points must be a positive number"),
@@ -141,6 +145,8 @@ const NewTier = () => {
       const formattedTiers = values.tiers?.map((tier) => ({
         loyalty_type_id: 1,
         name: tier.name,
+        title: tier.title,
+        description: tier.description,
         exit_points: Number(tier.exit_points),
         // multipliers: Number(tier.multipliers),
         welcome_bonus: Number(tier.welcome_bonus),
@@ -149,6 +155,8 @@ const NewTier = () => {
       const newTier = {
         loyalty_type_id: 1,
         name: values.name,
+        title: values.title,
+        description: values.description,
         exit_points: Number(values.exit_points),
         // multipliers: Number(values.multipliers),
         welcome_bonus: Number(values.welcome_bonus),
@@ -304,15 +312,13 @@ const NewTier = () => {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium"
-                  >
+           className="btn-primary h-9 px-4 text-sm font-medium"                  >
                     Next
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate("/loyalty/loyalty-tiers-list")}
-                    className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                  >
+  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"                  >
                     Cancel
                   </button>
                 </div>
@@ -354,6 +360,8 @@ const NewTier = () => {
                 <Formik
                   initialValues={{
                     name: "",
+                    title: "",
+                    description: "",
                     exit_points: "",
                     // multipliers: "",
                     welcome_bonus: "",
@@ -365,7 +373,7 @@ const NewTier = () => {
                 >
                   {({ values, isSubmitting }) => (
                     <Form>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                         {/* Tier Name */}
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-700">
@@ -379,6 +387,24 @@ const NewTier = () => {
                           />
                           <ErrorMessage
                             name="name"
+                            component="div"
+                            className="text-red-500 text-xs mt-1"
+                          />
+                        </div>
+
+                        {/* Title */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Title
+                            <span className="text-red-500 ml-1">*</span>
+                          </label>
+                          <Field
+                            name="title"
+                            placeholder="Enter title"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                          />
+                          <ErrorMessage
+                            name="title"
                             component="div"
                             className="text-red-500 text-xs mt-1"
                           />
@@ -403,25 +429,6 @@ const NewTier = () => {
                           />
                         </div>
 
-                        {/* Multipliers */}
-                        {/* <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Multipliers
-                            <span className="text-red-500 ml-1">*</span>
-                          </label>
-                          <Field
-                            name="multipliers"
-                            type="number"
-                            placeholder="Enter multipliers"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                          />
-                          <ErrorMessage
-                            name="multipliers"
-                            component="div"
-                            className="text-red-500 text-xs mt-1"
-                          />
-                        </div> */}
-
                         {/* Welcome Bonus */}
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-700">
@@ -440,6 +447,25 @@ const NewTier = () => {
                             className="text-red-500 text-xs mt-1"
                           />
                         </div>
+                      </div>
+
+                      {/* Description - full width */}
+                      <div className="space-y-2 mb-6">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Description
+                        </label>
+                        <Field
+                          as="textarea"
+                          name="description"
+                          rows={3}
+                          placeholder="Enter description"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
+                        />
+                        <ErrorMessage
+                          name="description"
+                          component="div"
+                          className="text-red-500 text-xs mt-1"
+                        />
                       </div>
 
                       {/* Additional Tiers */}
@@ -465,7 +491,7 @@ const NewTier = () => {
                                   <X className="w-4 h-4" />
                                 </button>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">
                                       Tier Name
@@ -480,6 +506,24 @@ const NewTier = () => {
                                     />
                                     <ErrorMessage
                                       name={`tiers[${index}].name`}
+                                      component="div"
+                                      className="text-red-500 text-xs mt-1"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                      Title
+                                      <span className="text-red-500 ml-1">
+                                        *
+                                      </span>
+                                    </label>
+                                    <Field
+                                      name={`tiers[${index}].title`}
+                                      placeholder="Enter title"
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                                    />
+                                    <ErrorMessage
+                                      name={`tiers[${index}].title`}
                                       component="div"
                                       className="text-red-500 text-xs mt-1"
                                     />
@@ -503,25 +547,6 @@ const NewTier = () => {
                                       className="text-red-500 text-xs mt-1"
                                     />
                                   </div>
-                                  {/* <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-700">
-                                      Multipliers
-                                      <span className="text-red-500 ml-1">
-                                        *
-                                      </span>
-                                    </label>
-                                    <Field
-                                      name={`tiers[${index}].multipliers`}
-                                      type="number"
-                                      placeholder="Enter multipliers"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                                    />
-                                    <ErrorMessage
-                                      name={`tiers[${index}].multipliers`}
-                                      component="div"
-                                      className="text-red-500 text-xs mt-1"
-                                    />
-                                  </div> */}
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">
                                       Welcome Bonus
@@ -542,6 +567,24 @@ const NewTier = () => {
                                     />
                                   </div>
                                 </div>
+                                {/* Description - full width */}
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-gray-700">
+                                    Description
+                                  </label>
+                                  <Field
+                                    as="textarea"
+                                    name={`tiers[${index}].description`}
+                                    rows={2}
+                                    placeholder="Enter description"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
+                                  />
+                                  <ErrorMessage
+                                    name={`tiers[${index}].description`}
+                                    component="div"
+                                    className="text-red-500 text-xs mt-1"
+                                  />
+                                </div>
                               </div>
                             ))}
                             <button
@@ -549,6 +592,8 @@ const NewTier = () => {
                               onClick={() =>
                                 push({
                                   name: "",
+                                  title: "",
+                                  description: "",
                                   exit_points: "",
                                   // multipliers: "",
                                   welcome_bonus: "",

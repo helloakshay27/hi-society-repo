@@ -32,10 +32,6 @@ interface EditOrganizationModalProps {
 interface OrganizationFormData {
   name: string;
   description: string;
-  domain: string;
-  sub_domain: string;
-  front_domain: string;
-  front_subdomain: string;
   country_id: string;
   active: boolean;
   logo: File | null;
@@ -43,6 +39,23 @@ interface OrganizationFormData {
   logoUrl?: string | null;
   poweredByLogoUrl?: string | null;
 }
+
+interface ProductEntry {
+  id?: number;
+  product_name: string;
+  product_code: string;
+  domain: string;
+  sub_domain: string;
+  front_domain: string;
+  front_subdomain: string;
+  _destroy?: boolean;
+}
+
+const PRODUCT_OPTIONS = [
+  { label: "HiSociety", value: "HiSociety", code: "HS" },
+  { label: "FM Matrix", value: "FM Matrix", code: "FM" },
+  { label: "Snagging", value: "Snagging", code: "Snag" },
+];
 
 interface WelcomeDescription {
   description: string;
@@ -104,16 +117,46 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
   const [formData, setFormData] = useState<OrganizationFormData>({
     name: "",
     description: "",
-    domain: "",
-    sub_domain: "",
-    front_domain: "",
-    front_subdomain: "",
     country_id: "",
     active: true,
     logo: null,
     powered_by_logo: null,
   });
+  const [products, setProducts] = useState<ProductEntry[]>([
+    { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+  ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const addProduct = () => {
+    setProducts((prev) => [
+      ...prev,
+      { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+    ]);
+  };
+
+  const updateProduct = (index: number, field: keyof ProductEntry, value: string) => {
+    setProducts((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const updated = { ...item, [field]: value };
+        if (field === "product_name") {
+          const opt = PRODUCT_OPTIONS.find((o) => o.value === value);
+          updated.product_code = opt?.code || "";
+        }
+        return updated;
+      })
+    );
+  };
+
+  const removeProduct = (index: number) => {
+    setProducts((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        if (item.id) return { ...item, _destroy: true };
+        return null;
+      }).filter(Boolean) as ProductEntry[]
+    );
+  };
   const [welcomeDescriptions, setWelcomeDescriptions] = useState<WelcomeDescription[]>([
     { description: "", active: false },
   ]);
@@ -224,23 +267,16 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     }
   };
 
-  // Validate domains like example.com and with more segments (e.g., app.example.co.in)
-  const isValidDomain = (value: string) => {
-    if (!value) return false;
-    const domainRegex =
-      /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
-    return domainRegex.test(value.trim());
-  };
-const mapDescriptionObjectToArray = (
-  descriptionObj?: Record<string, { text: string; bold: string }>
-) => {
-  if (!descriptionObj) return [{ description: "", active: false }];
+  const mapDescriptionObjectToArray = (
+    descriptionObj?: Record<string, { text: string; bold: string }>
+  ) => {
+    if (!descriptionObj) return [{ description: "", active: false }];
 
-  return Object.keys(descriptionObj).map((key) => ({
-    description: descriptionObj[key].text || "",
-    active: descriptionObj[key].bold === "true",
-  }));
-};
+    return Object.keys(descriptionObj).map((key) => ({
+      description: descriptionObj[key].text || "",
+      active: descriptionObj[key].bold === "true",
+    }));
+  };
 
   const fetchOrganizationData = useCallback(async () => {
     setIsLoading(true);
@@ -265,10 +301,6 @@ const mapDescriptionObjectToArray = (
         setFormData({
           name: org?.name || "",
           description: org?.description || "",
-          domain: org?.domain || "",
-          sub_domain: org?.sub_domain || "",
-          front_domain: org?.front_domain || "",
-          front_subdomain: org?.front_subdomain || "",
           country_id: org?.country_id ? org.country_id.toString() : "",
           active: org?.active !== undefined ? org.active : true,
           logo: null,
@@ -276,6 +308,19 @@ const mapDescriptionObjectToArray = (
           logoUrl: org?.attachfile?.document_url || null,
           poweredByLogoUrl: org?.powered_by_attachfile?.document_url || null,
         });
+
+        const existingProducts: ProductEntry[] = Array.isArray(org?.organization_products) && org.organization_products.length > 0
+          ? org.organization_products.map((p: { id?: number; product_name?: string; product_code?: string; domain?: string; sub_domain?: string; front_domain?: string; front_subdomain?: string }) => ({
+            id: p.id,
+            product_name: p.product_name || "HiSociety",
+            product_code: p.product_code || "HS",
+            domain: p.domain || "",
+            sub_domain: p.sub_domain || "",
+            front_domain: p.front_domain || "",
+            front_subdomain: p.front_subdomain || "",
+          }))
+          : [{ product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" }];
+        setProducts(existingProducts);
 
         setWelcomeDescriptions(
           mapDescriptionObjectToArray(otherConfig?.welcome?.description)
@@ -291,7 +336,7 @@ const mapDescriptionObjectToArray = (
           name: otherConfig?.ceo_info?.name || "",
           designation: otherConfig?.ceo_info?.designation || "CEO",
           description: otherConfig?.ceo_info?.description || "",
-          photo:  null, // file cannot be prefilled
+          photo: null, // file cannot be prefilled
           photoPreviewUrl: org?.ceo_photo.document_url || null, // optional: set if API gives image URL
           video: null, // file cannot be prefilled
           videoUrl: org?.ceo_video?.document_url || null, // optional: set if API gives video URL
@@ -303,7 +348,7 @@ const mapDescriptionObjectToArray = (
       }
     } catch (error) {
       console.error("Error fetching organization:", error);
-      toast.error("Error fetching organization data");
+      // toast.error("Error fetching organization data");
     } finally {
       setIsLoading(false);
     }
@@ -321,34 +366,13 @@ const mapDescriptionObjectToArray = (
     if (!formData.name.trim()) {
       newErrors.name = "Organization name is required";
     }
-    if (!formData.domain.trim()) {
-      newErrors.domain = "Main domain is required";
-    }
-    if (!formData.sub_domain.trim()) {
-      newErrors.sub_domain = "Sub domain is required";
-    }
-
-    // Domain validation
-    const domainRegex =
-      /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\.[a-zA-Z]{2,})+$/;
-
-    if (formData.domain && !domainRegex.test(formData.domain)) {
-      newErrors.domain = "Please enter a valid main domain (e.g., example.com)";
-    }
-
-    // if (formData.front_domain && !domainRegex.test(formData.front_domain)) {
-    //   newErrors.front_domain = "Please enter a valid frontend domain (e.g., www.example.com)";
-    // }
-
-    // if (
-    //   formData.front_subdomain &&
-    //   !domainRegex.test(formData.front_subdomain)
-    // ) {
-    //   newErrors.front_subdomain = "Please enter a valid frontend subdomain (e.g., portal.example.com)";
-    // }
+    products.filter((p) => !p._destroy).forEach((p, i) => {
+      const realIndex = products.indexOf(p);
+      if (!p.domain.trim()) newErrors[`product_${realIndex}_domain`] = "Domain is required";
+      if (!p.sub_domain.trim()) newErrors[`product_${realIndex}_sub_domain`] = "Sub domain is required";
+    });
 
     setErrors(newErrors);
-    console.warn("Validation errors:", newErrors);
     if (Object.keys(newErrors).length > 0) {
       toast.error("Please fix the highlighted errors");
       return;
@@ -364,13 +388,21 @@ const mapDescriptionObjectToArray = (
     const submitFormData = new FormData();
     submitFormData.append("organization[name]", formData.name);
     submitFormData.append("organization[description]", formData.description);
-    submitFormData.append("organization[domain]", formData.domain);
-    submitFormData.append("organization[sub_domain]", formData.sub_domain);
-    submitFormData.append("organization[front_domain]", formData.front_domain);
-    submitFormData.append(
-      "organization[front_subdomain]",
-      formData.front_subdomain
-    );
+    products.forEach((product, index) => {
+      if (product.id) {
+        submitFormData.append(`organization[organization_products_attributes][${index}][id]`, product.id.toString());
+      }
+      if (product._destroy) {
+        submitFormData.append(`organization[organization_products_attributes][${index}][_destroy]`, "true");
+        return;
+      }
+      submitFormData.append(`organization[organization_products_attributes][${index}][product_name]`, product.product_name);
+      submitFormData.append(`organization[organization_products_attributes][${index}][product_code]`, product.product_code);
+      submitFormData.append(`organization[organization_products_attributes][${index}][domain]`, product.domain);
+      submitFormData.append(`organization[organization_products_attributes][${index}][sub_domain]`, product.sub_domain);
+      submitFormData.append(`organization[organization_products_attributes][${index}][front_domain]`, product.front_domain);
+      submitFormData.append(`organization[organization_products_attributes][${index}][front_subdomain]`, product.front_subdomain);
+    });
     if (formData.country_id && formData.country_id !== "none") {
       submitFormData.append("organization[country_id]", formData.country_id);
     }
@@ -387,7 +419,7 @@ const mapDescriptionObjectToArray = (
     }
 
 
-     if (welcomeDescriptions && welcomeDescriptions.length > 0) {
+    if (welcomeDescriptions && welcomeDescriptions.length > 0) {
       welcomeDescriptions.forEach((desc, index) => {
         submitFormData.append(
           `organization[other_config][welcome][description][${index}][text]`,
@@ -427,40 +459,40 @@ const mapDescriptionObjectToArray = (
     }
 
     // ---------------------
-// Add CEO info if present
-// ---------------------
-if (ceoInfo) {
-  submitFormData.append(
-    "organization[other_config][ceo_info][name]",
-    ceoInfo.name
-  );
-  submitFormData.append(
-    "organization[other_config][ceo_info][designation]",
-    "CEO" // or ceoInfo.designation if dynamic
-  );
-  submitFormData.append(
-    "organization[other_config][ceo_info][description]",
-    ceoInfo.description
-  );
+    // Add CEO info if present
+    // ---------------------
+    if (ceoInfo) {
+      submitFormData.append(
+        "organization[other_config][ceo_info][name]",
+        ceoInfo.name
+      );
+      submitFormData.append(
+        "organization[other_config][ceo_info][designation]",
+        "CEO" // or ceoInfo.designation if dynamic
+      );
+      submitFormData.append(
+        "organization[other_config][ceo_info][description]",
+        ceoInfo.description
+      );
 
-  // These are references; your API may use relation names for files
-  submitFormData.append(
-    "organization[other_config][ceo_info][photo_relation]",
-    "CEOPhoto"
-  );
-  submitFormData.append(
-    "organization[other_config][ceo_info][video_relation]",
-    "CEOVideo"
-  );
+      // These are references; your API may use relation names for files
+      submitFormData.append(
+        "organization[other_config][ceo_info][photo_relation]",
+        "CEOPhoto"
+      );
+      submitFormData.append(
+        "organization[other_config][ceo_info][video_relation]",
+        "CEOVideo"
+      );
 
-  // Actual files
-  if (ceoInfo.photo) {
-    submitFormData.append("organization[ceo_photo]", ceoInfo.photo);
-  }
-  if (ceoInfo.video) {
-    submitFormData.append("organization[ceo_video]", ceoInfo.video);
-  }
-}
+      // Actual files
+      if (ceoInfo.photo) {
+        submitFormData.append("organization[ceo_photo]", ceoInfo.photo);
+      }
+      if (ceoInfo.video) {
+        submitFormData.append("organization[ceo_video]", ceoInfo.video);
+      }
+    }
 
 
     try {
@@ -480,7 +512,12 @@ if (ceoInfo) {
         onSuccess();
       } else {
         const errorData = await response.json().catch(() => ({}));
-        toast.error(errorData.message || "Failed to update organization");
+        const firstError = Object.entries(errorData as Record<string, string[]>)
+          .map(([key, msgs]) => {
+            const label = key.replace("organization_products.", "Product ").replace(/_/g, " ");
+            return `${label}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`;
+          })[0];
+        toast.error(firstError || errorData.message || "Failed to update organization");
       }
     } catch (error) {
       console.error("Error updating organization:", error);
@@ -518,10 +555,6 @@ if (ceoInfo) {
     setFormData({
       name: "",
       description: "",
-      domain: "",
-      sub_domain: "",
-      front_domain: "",
-      front_subdomain: "",
       country_id: "",
       active: true,
       logo: null,
@@ -529,6 +562,7 @@ if (ceoInfo) {
       logoUrl: null,
       poweredByLogoUrl: null,
     });
+    setProducts([{ product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" }]);
     setErrors({});
   };
 
@@ -606,7 +640,7 @@ if (ceoInfo) {
                   variant="outlined"
                   InputLabelProps={{
                     shrink: true,
-                    sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } },
+                    sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } },
                   }}
                   InputProps={{ sx: fieldStyles }}
                   required
@@ -618,7 +652,7 @@ if (ceoInfo) {
                 <FormControl fullWidth variant="outlined">
                   <InputLabel
                     shrink
-                    sx={{ "& .MuiFormLabel-asterisk": { color: "#BD2828" } }}
+                    sx={{ "& .MuiFormLabel-asterisk": { color: "#DA7756" } }}
                   >
                     Country
                   </InputLabel>
@@ -644,7 +678,7 @@ if (ceoInfo) {
                   </MuiSelect>
                 </FormControl>
               </div>
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <TextField
                   label="Description"
                   placeholder="Enter organization description"
@@ -677,7 +711,7 @@ if (ceoInfo) {
                   rows={3}
                   disabled={isSubmitting}
                 />
-              </div>
+              </div> */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-6">
                 <div className="space-y-1">
                   <span className="text-sm font-medium">Status</span>
@@ -705,105 +739,113 @@ if (ceoInfo) {
               <h3 className="text-sm font-medium text-[#C72030] mb-4">
                 Domain Configuration
               </h3>
-              <div className="grid grid-cols-2 gap-6">
-                <TextField
-                  label="Main Domain"
-                  placeholder="example.com"
-                  value={formData.domain}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData({ ...formData, domain: val });
-                    setErrors((prev) => ({
-                      ...prev,
-                      domain: isValidDomain(val) ? "" : prev.domain,
-                    }));
-                  }}
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{
-                    shrink: true,
-                    required: true,
-                    sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } },
-                  }}
-                  InputProps={{ sx: fieldStyles }}
-                  disabled={isSubmitting}
-                  required
-                  error={!!errors.domain}
-                  helperText={
-                    errors.domain || "Enter a valid domain (e.g., example.com)"
-                  }
-                />
-
-                <TextField
-                  label="Sub Domain"
-                  placeholder="app.example.com"
-                  value={formData.sub_domain}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData({ ...formData, sub_domain: val });
-                    setErrors((prev) => ({
-                      ...prev,
-                      sub_domain: "",
-                    }));
-                  }}
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{
-                    shrink: true,
-                    required: true,
-                    sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } },
-                  }}
-                  InputProps={{ sx: fieldStyles }}
-                  disabled={isSubmitting}
-                  required
-                  error={!!errors.sub_domain}
-                  helperText={
-                    errors.sub_domain ||
-                    "Enter subdomain (e.g., app.example.com)"
-                  }
-                />
+              <div className="space-y-4">
+                {products.filter((p) => !p._destroy).map((product, visibleIndex) => {
+                  const realIndex = products.indexOf(product);
+                  return (
+                    <div key={realIndex} className="border rounded-lg p-4 bg-gray-50 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Product {visibleIndex + 1}</span>
+                        {products.filter((p) => !p._destroy).length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeProduct(realIndex)}
+                            style={{ padding: 0, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}
+                            disabled={isSubmitting}
+                          >
+                            <X style={{ color: "red", width: 16, height: 16 }} />
+                          </Button>
+                        )}
+                      </div>
+                      <FormControl fullWidth variant="outlined">
+                        <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#DA7756" } }}>Product</InputLabel>
+                        <MuiSelect
+                          value={product.product_name}
+                          onChange={(e) => updateProduct(realIndex, "product_name", e.target.value)}
+                          label="Product"
+                          displayEmpty
+                          MenuProps={selectMenuProps}
+                          sx={fieldStyles}
+                          disabled={isSubmitting}
+                        >
+                          {PRODUCT_OPTIONS.map((opt) => (
+                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                      <div className="grid grid-cols-2 gap-4">
+                        <TextField
+                          label="Domain"
+                          placeholder="example.com"
+                          value={product.domain}
+                          onChange={(e) => {
+                            updateProduct(realIndex, "domain", e.target.value);
+                            setErrors((prev) => ({ ...prev, [`product_${realIndex}_domain`]: "" }));
+                          }}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } } }}
+                          InputProps={{ sx: fieldStyles }}
+                          disabled={isSubmitting}
+                          required
+                          error={!!errors[`product_${realIndex}_domain`]}
+                          helperText={errors[`product_${realIndex}_domain`] || ""}
+                        />
+                        <TextField
+                          label="Sub Domain"
+                          placeholder="app"
+                          value={product.sub_domain}
+                          onChange={(e) => {
+                            updateProduct(realIndex, "sub_domain", e.target.value);
+                            setErrors((prev) => ({ ...prev, [`product_${realIndex}_sub_domain`]: "" }));
+                          }}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } } }}
+                          InputProps={{ sx: fieldStyles }}
+                          disabled={isSubmitting}
+                          required
+                          error={!!errors[`product_${realIndex}_sub_domain`]}
+                          helperText={errors[`product_${realIndex}_sub_domain`] || ""}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <TextField
+                          label="Frontend Domain"
+                          placeholder="example.com"
+                          value={product.front_domain}
+                          onChange={(e) => updateProduct(realIndex, "front_domain", e.target.value)}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                          disabled={isSubmitting}
+                        />
+                        <TextField
+                          label="Frontend Subdomain"
+                          placeholder="web"
+                          value={product.front_subdomain}
+                          onChange={(e) => updateProduct(realIndex, "front_subdomain", e.target.value)}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className="grid grid-cols-2 gap-6 mt-6">
-                <TextField
-                  label="Frontend Domain"
-                  placeholder="www.example.com"
-                  value={formData.front_domain}
-                  onChange={(e) =>
-                    setFormData({ ...formData, front_domain: e.target.value })
-                  }
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } },
-                  }}
-                  InputProps={{ sx: fieldStyles }}
-                  disabled={isSubmitting}
-                  helperText="Enter frontend domain (e.g., www.example.com)"
-                />
-
-                <TextField
-                  label="Frontend Subdomain"
-                  placeholder="portal.example.com"
-                  value={formData.front_subdomain}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      front_subdomain: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: { "& .MuiFormLabel-asterisk": { color: "#BD2828" } },
-                  }}
-                  InputProps={{ sx: fieldStyles }}
-                  disabled={isSubmitting}
-                  helperText="Enter frontend subdomain (e.g., portal.example.com)"
-                />
-              </div>
+              <Button
+                type="button"
+                onClick={addProduct}
+                className="mt-4 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                disabled={isSubmitting}
+              >
+                + Add Product
+              </Button>
             </div>
 
             {/* Logo Upload Section */}
@@ -819,7 +861,7 @@ if (ceoInfo) {
                     onChange={handleLogoChange}
                     accept="image/*"
                     disabled={isSubmitting}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                   />
                   {(formData.logoUrl || formData.logo) && (
                     <div className="flex items-center gap-2 mt-2">
@@ -859,7 +901,7 @@ if (ceoInfo) {
                     onChange={handlePoweredByLogoChange}
                     accept="image/*"
                     disabled={isSubmitting}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                   />
                   {(formData.poweredByLogoUrl || formData.powered_by_logo) && (
                     <div className="flex items-center gap-2 mt-2">
@@ -893,7 +935,7 @@ if (ceoInfo) {
                 </div>
               </div>
 
-              <div className="bg-[#BD2828] border border-transparent rounded-lg p-4 mt-4 text-white">
+              <div className="bg-[#DA7756] border border-transparent rounded-lg p-4 mt-4 text-white">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                     <Image className="w-4 h-4 text-white" />
@@ -912,7 +954,7 @@ if (ceoInfo) {
 
 
               {/* Welcome Description Section */}
-              <div className="mt-5">
+              {/* <div className="mt-5">
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
                   Welcome Description
                 </h3>
@@ -996,10 +1038,10 @@ if (ceoInfo) {
                 >
                   + Add Description
                 </Button>
-              </div>
+              </div> */}
 
               {/* Vision Section */}
-              <div className="mt-8">
+              {/* <div className="mt-8">
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
                   Vision
                 </h3>
@@ -1066,7 +1108,7 @@ if (ceoInfo) {
                             // className="text-red-600 hover:text-red-700"
                             style={{ padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            {/* Remove */}
+                         
                             <X style={{ color: 'red', width: 16, height: 16 }} />
                           </Button>
                         )}
@@ -1083,9 +1125,9 @@ if (ceoInfo) {
                 >
                   + Add Vision
                 </Button>
-              </div>
+              </div> */}
               {/* Mission Section */}
-              <div className="mt-8">
+              {/* <div className="mt-8">
                 <h3 className="text-sm font-medium text-[#C72030] mb-4">
                   Mission
                 </h3>
@@ -1156,7 +1198,7 @@ if (ceoInfo) {
                             // className="text-red-600 hover:text-red-700"
                             style={{ padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            {/* Remove */}
+                          
                             <X style={{ color: 'red', width: 16, height: 16 }} />
                           </Button>
                         )}
@@ -1173,14 +1215,14 @@ if (ceoInfo) {
                 >
                   + Add Mission
                 </Button>
-              </div>
+              </div> */}
 
               {/* CEO Info Section */}
               <div className="mt-8">
-                <h3 className="text-sm font-medium text-[#C72030] mb-4">CEO Info</h3>
-
+                {/* <h3 className="text-sm font-medium text-[#C72030] mb-4">CEO Info</h3> */}
+                {/* 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Name */}
+                 
                   <TextField
                     label="Name"
                     placeholder="Enter CEO name"
@@ -1194,7 +1236,7 @@ if (ceoInfo) {
                     disabled={isSubmitting}
                   />
 
-                  {/* Designation */}
+                 
                   <TextField
                     label="Designation"
                     value={ceoInfo.designation}
@@ -1203,7 +1245,7 @@ if (ceoInfo) {
                     InputLabelProps={{ shrink: true }}
                     disabled
                   />
-                </div>
+                </div> */}
 
                 {/* Description */}
                 {/* <div className="mt-4">
@@ -1224,7 +1266,7 @@ if (ceoInfo) {
                           </div> */}
 
                 {/* CEO Description */}
-                <div className="mt-6">
+                {/* <div className="mt-6">
                   <TextField
                     label="Description"
                     placeholder="Enter CEO description"
@@ -1257,7 +1299,7 @@ if (ceoInfo) {
                     rows={3}
                     disabled={isSubmitting}
                   />
-                </div>
+                </div> */}
 
 
                 {/* Photo Upload */}
@@ -1268,7 +1310,7 @@ if (ceoInfo) {
                     accept="image/*"
                     onChange={handleCeoPhotoChange}
                     disabled={isSubmitting}
-                    className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                    className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
                   />
                   {ceoInfo.photoPreviewUrl && (
                     <img
@@ -1279,7 +1321,7 @@ if (ceoInfo) {
                   )}
                 </div> */}
 
-                <div className="mt-4 space-y-2">
+                {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Photo</span>
 
               <input
@@ -1287,7 +1329,7 @@ if (ceoInfo) {
                 accept="image/*"
                 onChange={handleCeoPhotoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
 
               {ceoInfo.photoPreviewUrl && (
@@ -1306,7 +1348,7 @@ if (ceoInfo) {
                     <button
                       type="button"
                       onClick={removeCeoPhoto}
-                      className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                      className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                       aria-label="Remove photo"
                     >
                       ×
@@ -1314,12 +1356,11 @@ if (ceoInfo) {
                   </div>
                 </div>
               )}
-            </div>
-{console.log('ceoInfo.videoUrl', ceoInfo.videoUrl)}
+            </div> */}
                 {/* Video Upload */}
-              
 
-                <div className="mt-4 space-y-2">
+
+                {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Video</span>
 
               <input
@@ -1327,7 +1368,7 @@ if (ceoInfo) {
                 accept="video/*"
                 onChange={handleCeoVideoChange}
                 disabled={isSubmitting}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#BD2828] file:text-white hover:file:bg-[#a52121]"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#DA7756] file:text-white hover:file:bg-[#C56A4B]"
               />
 
               {(ceoInfo.videoUrl || ceoInfo.video) && (
@@ -1345,7 +1386,7 @@ if (ceoInfo) {
                     <button
                       type="button"
                       onClick={removeCeoVideo}
-                      className="absolute -top-1.5 -right-1.5 bg-white text-[#BD2828] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#BD2828] hover:text-white"
+                      className="absolute -top-1.5 -right-1.5 bg-white text-[#DA7756] border border-gray-200 rounded-full w-5 h-5 text-xs flex items-center justify-center shadow hover:bg-[#DA7756] hover:text-white"
                       aria-label="Remove video"
                     >
                       ×
@@ -1364,9 +1405,9 @@ if (ceoInfo) {
                   )}
                 </div>
               )}
-            </div>
+            </div> */}
 
-                </div>
+              </div>
             </div>
           </div>
         )}

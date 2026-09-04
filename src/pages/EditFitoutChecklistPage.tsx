@@ -595,7 +595,10 @@ export const EditFitoutChecklistPage = () => {
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7', position: 'relative' }}>
       {initialLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
-          <div className="text-center py-8 text-lg font-medium text-gray-700">Loading checklist data...</div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading checklist data...</p>
+          </div>
         </div>
       )}
       {/* Header */}
@@ -649,7 +652,7 @@ export const EditFitoutChecklistPage = () => {
               </Select>
             </FormControl>
 
-            <FormControl
+            {/* <FormControl
               fullWidth
               sx={fieldStyles}
               disabled={!category || loadingSubCategories}
@@ -666,7 +669,7 @@ export const EditFitoutChecklistPage = () => {
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
+            </FormControl> */}
 
             <FormControl fullWidth sx={fieldStyles}>
               <InputLabel>Checklist Type <span className="text-red-600">*</span></InputLabel>
@@ -777,9 +780,9 @@ export const EditFitoutChecklistPage = () => {
                                 )
                               }
                               sx={{
-                                color: "#C72030",
+                                color: "#f97316",
                                 "&.Mui-checked": {
-                                  color: "#C72030",
+                                  color: "#f97316",
                                 },
                               }}
                             />
@@ -798,9 +801,9 @@ export const EditFitoutChecklistPage = () => {
                                 )
                               }
                               sx={{
-                                color: "#C72030",
+                                color: "#f97316",
                                 "&.Mui-checked": {
-                                  color: "#C72030",
+                                  color: "#f97316",
                                 },
                               }}
                             />
@@ -819,10 +822,9 @@ export const EditFitoutChecklistPage = () => {
                           <Button
                             type="button"
                             onClick={() => handleAddAnswerOption(question.id!)}
-                            variant="outline"
-                            size="sm"
+                            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <Plus className="w-3 h-3 mr-1" />
+                            <Plus className="w-4 h-4 mr-2" />
                             Add Option
                           </Button>
                         </div>

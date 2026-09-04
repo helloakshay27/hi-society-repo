@@ -51,14 +51,21 @@ const IconWrapper = styled(Box)(() => ({
 }));
 
 const RedButton = styled(MuiButton)(() => ({
-    backgroundColor: '#e7e3d9',
-    color: '#B8252F',
+    backgroundColor: '#DA7756 !important',
+    color: 'white !important',
     borderRadius: 0,
     textTransform: 'none',
     padding: '8px 16px',
     fontFamily: 'Work Sans, sans-serif',
     fontWeight: 500,
-    boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
+    '&:hover': {
+      
+        opacity: 1,
+    },
+    '&.Mui-disabled': {
+        backgroundColor: '#e0a0a5 !important',
+        color: 'white !important',
+    },
 }));
 
 const CancelButton = styled(MuiButton)(() => ({
@@ -94,6 +101,9 @@ const fieldStyles = {
         '&.Mui-focused': {
             color: '#C72030',
         },
+    },
+    '& .MuiFormLabel-asterisk': {
+        color: '#da7756',
     },
     '& .MuiInputBase-input': {
         fontSize: '14px',
@@ -346,7 +356,10 @@ export default function AddTemplatePage() {
                 <RedButton onClick={handleSubmit} disabled={submitting}>
                     {submitting ? 'Submitting...' : 'Submit'}
                 </RedButton>
-                <CancelButton onClick={handleCancel} disabled={submitting}>
+                <CancelButton 
+                variant="outlined"
+                 className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"
+                onClick={handleCancel} disabled={submitting}>
                     Cancel
                 </CancelButton>
             </Box>

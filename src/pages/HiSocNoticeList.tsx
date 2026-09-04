@@ -3,12 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, Pencil } from "lucide-react";
+import { Plus, Eye, Pencil, X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { NoticeFilterDialog, NoticeFilters } from "@/components/NoticeFilterDialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationLink,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const HiSocNoticeList = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [noticeboards, setNoticeboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [noticeboardPermission, setNoticeboardPermission] = useState<{
@@ -19,6 +31,11 @@ const HiSocNoticeList = () => {
   }>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<NoticeFilters | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PER_PAGE = 10;
 
   const getNoticeboardPermission = () => {
     try {
@@ -62,11 +79,46 @@ const HiSocNoticeList = () => {
   }, []);
 
   const fetchNoticeboards = useCallback(
-    async (search: string) => {
+    async (search: string, filters?: NoticeFilters | null, page = 1) => {
       setLoading(true);
       setIsSearching(!!search);
       try {
-        const response = await fetch(getFullUrl('/crm/admin/noticeboards.json'), {
+        // Build query string from active filters
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("per_page", String(PER_PAGE));
+        params.set("q[s]", "created_at desc");
+        if (search) {
+          params.set("q[notice_heading_or_notice_text_cont]", search);
+        }
+        if (filters) {
+          filters.tower_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_society_block_id_in][]",
+              id
+            )
+          );
+          filters.flat_ids.forEach((id) =>
+            params.append(
+              "q[user_society_user_flat_society_flat_id_in][]",
+              id
+            )
+          );
+          filters.shared_in.forEach((v) =>
+            params.append("q[shared_in][]", v)
+          );
+          if (filters.date_range) {
+            params.append("q[date_range]", filters.date_range);
+          }
+          filters.publish_in.forEach((v) =>
+            params.append("q[publish_in][]", v)
+          );
+        }
+        const qs = params.toString();
+        const url = getFullUrl(
+          `/crm/admin/noticeboards.json${qs ? `?${qs}` : ""}`
+        );
+        const response = await fetch(url, {
           headers: {
             Authorization: getAuthHeader(),
           },
@@ -88,28 +140,16 @@ const HiSocNoticeList = () => {
           noticeboardsData = data.data;
         }
 
-        let filteredNoticeboards = noticeboardsData;
-        if (search) {
-          const searchLower = search.toLowerCase();
-          filteredNoticeboards = noticeboardsData.filter(
-            (noticeboard) =>
-              (noticeboard.notice_heading || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.notice_text || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.notice_type || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.society_name || "")
-                .toLowerCase()
-                .includes(searchLower) ||
-              (noticeboard.user_name || "").toLowerCase().includes(searchLower)
-          );
+        // Update pagination from response metadata if available
+        if (data.pagination) {
+          setTotalPages(data.pagination.total_pages || 1);
+        } else if (data.meta) {
+          setTotalPages(data.meta.total_pages || 1);
+        } else {
+          setTotalPages(1);
         }
 
-        setNoticeboards(filteredNoticeboards);
+        setNoticeboards(noticeboardsData);
       } catch (error) {
         console.error("Error fetching noticeboards:", error);
         toast.error("Failed to fetch noticeboards");
@@ -123,10 +163,121 @@ const HiSocNoticeList = () => {
   );
 
   useEffect(() => {
-    fetchNoticeboards(searchTerm);
-  }, [searchTerm, fetchNoticeboards]);
+    fetchNoticeboards(searchTerm, activeFilters, currentPage);
+  }, [searchTerm, activeFilters, currentPage, fetchNoticeboards]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
+  const handleApplyFilters = (filters: NoticeFilters) => {
+    const hasFilters =
+      filters.tower_ids.length > 0 ||
+      filters.flat_ids.length > 0 ||
+      filters.shared_in.length > 0 ||
+      filters.date_range !== "" ||
+      filters.publish_in.length > 0;
+    setCurrentPage(1);
+    setActiveFilters(hasFilters ? filters : null);
+  };
+
+  const handleClearFilters = () => {
+    setCurrentPage(1);
+    setActiveFilters(null);
+  };
 
   const handleGlobalSearch = (term: string) => {
+    setCurrentPage(1);
     setSearchTerm(term);
   };
 
@@ -157,7 +308,7 @@ const HiSocNoticeList = () => {
         throw new Error("Failed to update noticeboard status");
       }
 
-      fetchNoticeboards(searchTerm);
+      fetchNoticeboards(searchTerm, activeFilters, currentPage);
       toast.success("Status updated successfully!");
     } catch (error) {
       console.error("Error toggling noticeboard status:", error);
@@ -186,11 +337,13 @@ const HiSocNoticeList = () => {
     { key: "id", label: "Sr No", sortable: true },
     { key: "notice_heading", label: "Notice Heading", sortable: true },
     { key: "notice_type", label: "Notice Type", sortable: true },
+    { key: "block", label: "Block", sortable: true },
+    // { key: "flat", label: "Flat", sortable: true },
     { key: "user_name", label: "Created By", sortable: true },
     { key: "society_name", label: "Society", sortable: true },
     { key: "is_important", label: "Important", sortable: false },
     { key: "expire_time", label: "Expire Time", sortable: false },
-    // { key: "active", label: "Status", sortable: false },
+    { key: "active", label: "Status", sortable: false },
   ];
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -217,7 +370,7 @@ const HiSocNoticeList = () => {
       case "actions":
         return (
           <div className="flex gap-1">
-            {noticeboardPermission.show === "true" && (
+            {noticeboardPermission.show === "true" && shouldShow("Notice","show") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -226,8 +379,9 @@ const HiSocNoticeList = () => {
               >
                 <Eye className="w-4 h-4" />
               </Button>
+  
             )}
-            {noticeboardPermission.update === "true" && (
+            {noticeboardPermission.update === "true" && shouldShow("Notice","update") &&(
               <Button
                 variant="ghost"
                 size="sm"
@@ -248,6 +402,10 @@ const HiSocNoticeList = () => {
           ? item.notice_type.charAt(0).toUpperCase() +
               item.notice_type.slice(1).toLowerCase()
           : "-";
+      case "block":
+         return [item.block, item.flat]
+        .filter(Boolean)
+        .join(" - ") || "-";
       case "user_name":
         return item.user_name || "-";
       case "society_name":
@@ -268,132 +426,19 @@ const HiSocNoticeList = () => {
         return formatDateTimeManual(item.expire_time);
       case "active":
         return noticeboardPermission.destroy === "true" ? (
-          <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-            <div
-              role="switch"
-              aria-checked={item.active}
-              aria-label={
-                item.active ? "Deactivate noticeboard" : "Activate noticeboard"
-              }
-              tabIndex={0}
+          <div className="flex items-center justify-center">
+            <button
               onClick={() => handleToggleNoticeboard(item.id, item.active)}
-              onKeyDown={(e) =>
-                (e.key === "Enter" || e.key === " ") &&
-                handleToggleNoticeboard(item.id, item.active)
-              }
-              className="cursor-pointer"
-              style={{ transform: item.active ? "scaleX(1)" : "scaleX(-1)" }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                item.active ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="20"
-                viewBox="0 0 22 14"
-                fill="none"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z"
-                  fill="#DEDEDE"
-                />
-                <g filter={`url(#filter0_dd_noticeboard_status_${item.id})`}>
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z"
-                    fill="#C72030"
-                  />
-                  <path
-                    d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z"
-                    stroke={`url(#paint0_linear_noticeboard_status_${item.id})`}
-                    strokeWidth="0.255453"
-                  />
-                  <path
-                    d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z"
-                    stroke={`url(#paint1_linear_noticeboard_status_${item.id})`}
-                    strokeWidth="0.255453"
-                  />
-                </g>
-                <defs>
-                  <filter
-                    id={`filter0_dd_noticeboard_status_${item.id}`}
-                    x="-8.54731e-05"
-                    y="-0.000329614"
-                    width="12.2619"
-                    height="13.2842"
-                    filterUnits="userSpaceOnUse"
-                    colorInterpolationFilters="sRGB"
-                  >
-                    <feFlood floodOpacity="0" result="BackgroundImageFix" />
-                    <feColorMatrix
-                      in="SourceAlpha"
-                      type="matrix"
-                      values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                      result="hardAlpha"
-                    />
-                    <feOffset dy="1.02181" />
-                    <feGaussianBlur stdDeviation="0.510907" />
-                    <feColorMatrix
-                      type="matrix"
-                      values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"
-                    />
-                    <feBlend
-                      mode="normal"
-                      in2="BackgroundImageFix"
-                      result="effect1_dropShadow_noticeboard_status"
-                    />
-                    <feColorMatrix
-                      in="SourceAlpha"
-                      type="matrix"
-                      values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                      result="hardAlpha"
-                    />
-                    <feOffset />
-                    <feGaussianBlur stdDeviation="0.510907" />
-                    <feColorMatrix
-                      type="matrix"
-                      values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"
-                    />
-                    <feBlend
-                      mode="normal"
-                      in2="effect1_dropShadow_noticeboard_status"
-                      result="effect2_dropShadow_noticeboard_status"
-                    />
-                    <feBlend
-                      mode="normal"
-                      in="SourceGraphic"
-                      in2="effect2_dropShadow_noticeboard_status"
-                      result="shape"
-                    />
-                  </filter>
-                  <linearGradient
-                    id={`paint0_linear_noticeboard_status_${item.id}`}
-                    x1="1.07172"
-                    y1="1.02148"
-                    x2="1.07172"
-                    y2="11.1396"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopOpacity="0" />
-                    <stop offset="0.8" stopOpacity="0.02" />
-                    <stop offset="1" stopOpacity="0.04" />
-                  </linearGradient>
-                  <linearGradient
-                    id={`paint1_linear_noticeboard_status_${item.id}`}
-                    x1="1.02173"
-                    y1="1.02148"
-                    x2="1.02173"
-                    y2="11.2396"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="white" stopOpacity="0.12" />
-                    <stop offset="0.2" stopColor="white" stopOpacity="0.06" />
-                    <stop offset="1" stopColor="white" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  item.active ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         ) : (
           <span className="text-sm text-gray-500">
@@ -406,7 +451,8 @@ const HiSocNoticeList = () => {
   };
 
   const renderCustomActions = () => (
-    <div className="flex flex-wrap">
+    <div className="flex flex-wrap gap-2">
+      {shouldShow("Notice","create")&&(
       <Button
         onClick={handleAddNoticeboard}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -414,6 +460,7 @@ const HiSocNoticeList = () => {
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
       </Button>
+      )}
     </div>
   );
 
@@ -431,11 +478,44 @@ const HiSocNoticeList = () => {
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search broadcasts..."
         leftActions={renderCustomActions()}
+        rightActions={
+          activeFilters ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="h-8 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              title="Clear filters"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          ) : undefined
+        }
+        onFilterClick={() => setIsFilterOpen(true)}
         loading={isSearching || loading}
         loadingMessage={
           isSearching ? "Searching broadcasts..." : "Loading broadcasts..."
         }
       />
+      <div className="mt-6 flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 
@@ -443,6 +523,11 @@ const HiSocNoticeList = () => {
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
       <div className="w-full">{renderListTab()}</div>
+      <NoticeFilterDialog
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApplyFilters={handleApplyFilters}
+      />
     </div>
   );
 };

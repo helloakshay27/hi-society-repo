@@ -417,17 +417,15 @@ if (!formData.answer.trim()) {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+           className="btn-primary h-9 px-4 text-sm font-medium"             >
               {loading ? 'Submitting...' : 'Submit'}
             </button>
             <button
               type="button"
               onClick={() => navigate("/maintenance/faq-list")}
               disabled={loading}
-              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
+className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"    >       
+   Cancel
             </button>
           </div>
         </form>

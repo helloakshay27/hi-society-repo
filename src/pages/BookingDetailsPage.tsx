@@ -390,14 +390,14 @@ const BookingDetailsPage = () => {
               {(bookings?.pg_state === "Pending" || bookings?.pg_state === "NA") && (
                 <Button
                   onClick={() => setIsCaptureDialogOpen(true)}
-                  className="bg-[#16B364] hover:bg-[#129a55] text-white text-xs font-semibold px-4 py-2 h-auto"
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                 >
                   Capture Payment
                 </Button>
               )}
               {bookings?.current_status === "Confirmed" &&
                 bookings?.pg_state === "Pending" && (
-                  <Button onClick={sendPaymentRequest} className="bg-[#F7941D] hover:bg-[#e0861a] text-white text-xs font-semibold px-4 py-2 h-auto">
+                  <Button onClick={sendPaymentRequest} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2">
                     Payment Request
                   </Button>
                 )}
@@ -794,7 +794,7 @@ const BookingDetailsPage = () => {
                     disabled={downloadingReceipt}
                     onClick={() => handleDownloadReceipt(bookings.lock_payment.id || bookings.lock_payment.pg_transaction_id)}
                     variant="outline"
-                    className="w-full border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white"
+                    className="w-full"
                     size="sm"
                   >
                     {
@@ -802,6 +802,76 @@ const BookingDetailsPage = () => {
                     }
                     Download Receipt
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Refund Details Card */}
+            {bookings?.lock_payment && bookings.lock_payment.refunded_amount && bookings.lock_payment.refunded_amount > 0 && (
+              <div className="mt-10">
+                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">
+                  Refund Details
+                </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                  {/* Header with Refund ID and Status */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                        Refund Processing
+                      </h4>
+                      <p className="text-xs text-gray-500">Status: Refunded</p>
+                    </div>
+                    <Badge
+                      className="px-3 py-1 text-xs font-semibold rounded-full border capitalize bg-green-100 text-green-800 border-green-200"
+                    >
+                      Completed
+                    </Badge>
+                  </div>
+
+                  {/* Refund Details Grid */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Refund Amount</span>
+                      <span className="text-lg font-bold text-[#16B364]">
+                        ₹{(bookings.lock_payment.refunded_amount || 0).toLocaleString('en-IN', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Refund Mode</span>
+                      <span className="text-gray-900 font-medium capitalize">{bookings.lock_payment.refund_mode || '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Transaction Number</span>
+                      <span className="text-gray-900 font-medium">{bookings.lock_payment.refund_transaction_no || '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Refunded By</span>
+                      <span className="text-gray-900 font-medium">{bookings.lock_payment.refunded_by_user || '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Refunded On</span>
+                      <span className="text-gray-900 font-medium">
+                        {bookings.lock_payment.refunded_on
+                          ? new Date(bookings.lock_payment.refunded_on).toLocaleString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                          : '-'}
+                      </span>
+                    </div>
+                    {bookings.lock_payment.refund_note && (
+                      <div className="flex items-start justify-between text-sm pt-3 border-t border-gray-100">
+                        <span className="text-gray-600">Refund Note</span>
+                        <span className="text-gray-900 font-medium text-right max-w-xs">{bookings.lock_payment.refund_note}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -815,7 +885,7 @@ const BookingDetailsPage = () => {
       content: (
         <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
               <Logs className="w-4 h-4" />
             </div>
             <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
@@ -854,7 +924,14 @@ const BookingDetailsPage = () => {
   }
 
   if (!bookings) {
-    return <div className="p-10 text-gray-600">Loading booking details...</div>;
+    return (
+      <div className="bg-gray-50 h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading booking details...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1025,7 +1102,7 @@ const BookingDetailsPage = () => {
           <Button
             onClick={handleCaptureSubmit}
             disabled={isSubmitting}
-            className="bg-[#00A65A] hover:bg-[#008d4c] text-white px-8 py-2 font-semibold"
+            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>

@@ -29,7 +29,6 @@ import {
   TableRow,
 } from "../../components/ui/table";
 import SelectBox from "@/components/ui/select-box";
-
 const EventCommunicationEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -1679,7 +1678,7 @@ const EventCommunicationEdit = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
               </Avatar>
               Event Details
             </h2>
@@ -2035,7 +2034,7 @@ const EventCommunicationEdit = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Visibility
               </h2>
@@ -2137,7 +2136,7 @@ const EventCommunicationEdit = () => {
                     mr: 1.5
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                 </Avatar>
                 Invite CPs
               </h2>
@@ -2446,7 +2445,7 @@ const EventCommunicationEdit = () => {
                   mr: 1.5
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
               </Avatar>
               Event Related Images
             </h2>
@@ -2803,14 +2802,14 @@ const EventCommunicationEdit = () => {
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Proceed to save
               </button>
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
               >
                 Save to draft
               </button>
@@ -2845,7 +2844,7 @@ const EventCommunicationEdit = () => {
                               mr: 1.5
                             }}
                           >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                           </Avatar>
                           Event Details
                         </h2>
@@ -2978,7 +2977,7 @@ const EventCommunicationEdit = () => {
                               mr: 1.5
                             }}
                           >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                           </Avatar>
                           Visibility
                         </h2>
@@ -3084,7 +3083,7 @@ const EventCommunicationEdit = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Event Related Images
                       </h2>
@@ -3223,7 +3222,7 @@ const EventCommunicationEdit = () => {
                             mr: 1.5
                           }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                         </Avatar>
                         Invite CPs
                       </h2>
@@ -3339,7 +3338,7 @@ const EventCommunicationEdit = () => {
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                       </Avatar>
                       Event Details
                     </h2>
@@ -3475,7 +3474,7 @@ const EventCommunicationEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Visibility
                   </h2>
@@ -3588,7 +3587,7 @@ const EventCommunicationEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Event Related Images
                   </h2>
@@ -3726,7 +3725,7 @@ const EventCommunicationEdit = () => {
                         mr: 1.5
                       }}
                     >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
                     </Avatar>
                     Invite CPs
                   </h2>
@@ -3827,14 +3826,14 @@ const EventCommunicationEdit = () => {
                   type="submit"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Submitting...' : 'Submit Event'}
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
                 >
                   Cancel
                 </button>

@@ -260,7 +260,7 @@ const LMCUserDetail = () => {
                     {groupedCheckpoints.length === 0 && (
                         <div className="text-gray-500 text-sm">No checkpoints available.</div>
                     )}
-                    {error && <div className="text-sm text-red-600 mt-4">{error}</div>}
+                    {!loading && error && <div className="text-sm text-red-600 mt-4">{error}</div>}
                 </div>
             </div>
         </div>

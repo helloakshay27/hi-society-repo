@@ -8,12 +8,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 import {
@@ -41,6 +50,8 @@ export const WalletManagement = () => {
   const ITEMS_PER_PAGE = 10; // fixed page size used only for UI
 
   const [timeRange, setTimeRange] = useState("10");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [draftTimeRange, setDraftTimeRange] = useState("10");
   const [loading, setLoading] = useState(false);
   const [cardsData, setCardsData] = useState<any>([]);
   const [activeTab, setActiveTab] = useState("wallet-management");
@@ -133,7 +144,7 @@ export const WalletManagement = () => {
   const renderPaginationItems = () => {
     if (!totalPages || totalPages <= 0) return null;
     const items = [];
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 5;
     if (showEllipsis) {
       items.push(
         <PaginationItem key={1} className="cursor-pointer">
@@ -447,8 +458,8 @@ export const WalletManagement = () => {
             </div>
           </div>
 
-          {/* Top Stats Cards - 4 Column Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Top Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* <StatsCard
               title="Opening Balance"
               value={stats.openingBalance}
@@ -553,26 +564,9 @@ export const WalletManagement = () => {
 
           {/* Recent Transactions Table (API) */}
           <div className="space-y-4">
-            <div className="flex align-items-center justify-between w-full bg-[#f6f4ee] p-3">
+            {/* <div className="flex align-items-center justify-between w-full bg-[#f6f4ee] p-3">
               <p className="text-lg font-bold my-auto ">Recent Transactions</p>
-              <Select
-                value={timeRange}
-                onValueChange={(val) => {
-                  setTimeRange(val);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-[150px] border-[#e5e1d8] bg-white">
-                  <SelectValue placeholder="Select range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Last 7 days</SelectItem>
-                  <SelectItem value="10">Last 10 days</SelectItem>
-                  <SelectItem value="30">Last 30 days</SelectItem>
-                  <SelectItem value="90">Last 90 days</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            </div> */}
             <EnhancedTable
               data={transactions}
               columns={apiColumns}
@@ -583,8 +577,12 @@ export const WalletManagement = () => {
               enableExport={true}
               exportFileName="wallet-transactions"
               storageKey="wallet-management-table"
+              onFilterClick={() => {
+                setDraftTimeRange(timeRange);
+                setIsFilterOpen(true);
+              }}
             />
-            {totalPages > 1 && (
+            {totalCount > 0 && (
               <div className="flex flex-col items-center gap-2 mt-4">
                 <Pagination>
                   <PaginationContent>
@@ -609,6 +607,63 @@ export const WalletManagement = () => {
               </div>
             )}
           </div>
+
+          <Dialog open={isFilterOpen} modal={false} onOpenChange={setIsFilterOpen}>
+            <DialogContent className="max-w-sm bg-white">
+              <DialogHeader>
+                <DialogTitle className="text-brand-h2 text-brand-text">
+                  Filter Transactions
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="py-2">
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>
+                    Select range
+                  </InputLabel>
+                  <MuiSelect
+                    value={draftTimeRange}
+                    onChange={(e) => setDraftTimeRange(e.target.value)}
+                    displayEmpty
+                    label="Select range"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="7">Last 7 days</MenuItem>
+                    <MenuItem value="10">Last 10 days</MenuItem>
+                    <MenuItem value="30">Last 30 days</MenuItem>
+                    <MenuItem value="90">Last 90 days</MenuItem>
+                  </MuiSelect>
+                </FormControl>
+              </div>
+
+              <DialogFooter className="gap-2 sm:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDraftTimeRange("10");
+                    setTimeRange("10");
+                    setCurrentPage(1);
+                    setIsFilterOpen(false);
+                  }}
+                  className="border-brand-card-border text-brand-text hover:bg-brand-selected"
+                >
+                  Reset
+                </Button>
+                <Button
+                  onClick={() => {
+                    setTimeRange(draftTimeRange);
+                    setCurrentPage(1);
+                    setIsFilterOpen(false);
+                  }}
+                  style={{ color: "#fff" }}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"                 >
+                  Apply
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="auto-top-up" className="space-y-6 mt-6">

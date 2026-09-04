@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
-import Select from "react-select";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { OrdersListFilterModal } from "@/components/OrdersListFilterModal";
 import {
   Pagination,
   PaginationContent,
@@ -61,6 +61,7 @@ const OrdersList = () => {
     { value: "2024", label: "2024" },
   ]);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const statusOptions = [
     { label: "All Statuses", value: "" },
@@ -204,6 +205,13 @@ const OrdersList = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+  };
+
+  const handleApplyFilter = (data: { status: string[]; paymentStatus: string[]; orderDate: string }) => {
+    setStatusFilter(data.status);
+    setPaymentStatusFilter(data.paymentStatus);
+    setOrderDateFilter(data.orderDate || "last_30_days");
     setPagination((prev) => ({ ...prev, current_page: 1 }));
   };
 
@@ -441,152 +449,8 @@ const OrdersList = () => {
     }
   }
 
-  const CustomMultiValue = (props: any) => (
-    <div
-      style={{
-        position: "relative",
-        backgroundColor: "#E5E0D3",
-        borderRadius: "2px",
-        margin: "3px",
-        marginTop: "10px",
-        padding: "4px 10px 6px 10px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        paddingRight: "28px",
-      }}
-    >
-      <span
-        style={{
-          color: "#1a1a1a8a",
-          fontSize: "13px",
-          fontWeight: "500",
-        }}
-      >
-        {props.data.label}
-      </span>
-      <button
-        onClick={e => {
-          e.stopPropagation();
-          props.removeProps.onClick(e);
-        }}
-        onMouseDown={e => {
-          e.stopPropagation();
-          props.removeProps.onMouseDown(e);
-        }}
-        onTouchEnd={e => {
-          e.stopPropagation();
-          props.removeProps.onTouchEnd(e);
-        }}
-        style={{
-          position: "absolute",
-          right: "-10px",
-          top: "-5px",
-          transform: "translateY(-50%), translateX(-50%)",
-          background: "transparent",
-          border: "1px solid #ccc",
-          borderRadius: "50%",
-          cursor: "pointer",
-          padding: "0",
-          display: "flex",
-          alignItems: "start",
-          justifyContent: "center",
-          color: "#666",
-          fontSize: "12px",
-          lineHeight: "1",
-          width: "16px",
-          height: "16px",
-          transition: "background 0.2s, color 0.2s, border-color 0.2s",
-        }}
-        type="button"
-        onMouseOver={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
-          (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
-        }}
-        onMouseOut={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-          (e.currentTarget as HTMLButtonElement).style.color = "#666";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
-        }}
-      >
-        ×
-      </button>
-    </div>
-  );
-
-  const CustomMultiValueRemove = (props: any) => null;
-
-  const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      minHeight: "44px",
-      borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
-      boxShadow: "none",
-      fontSize: "14px",
-      paddingTop: "6px",
-      backgroundColor: "transparent",
-      "&:hover": { borderColor: "#C72030" },
-    }),
-    valueContainer: (provided: any) => ({
-      ...provided,
-      padding: "4px 6px",
-      flexWrap: "wrap",
-      backgroundColor: "transparent",
-    }),
-    dropdownIndicator: (provided: any, state: any) => ({
-      ...provided,
-      padding: "4px 8px",
-      color: state.isFocused ? "#C72030" : "#666",
-      "&:hover": { color: "#C72030" },
-    }),
-    indicatorSeparator: () => ({ display: "none" }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "#999",
-      fontSize: "14px",
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      zIndex: 9999,
-      fontSize: "14px",
-      backgroundColor: "#fff",
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "#C72030"
-        : state.isFocused
-          ? "#F6F4EE"
-          : "#fff",
-      color: state.isSelected ? "#fff" : "#1A1A1A",
-      fontSize: "14px",
-      padding: "8px 12px",
-      cursor: "pointer",
-      "&:hover": {
-        backgroundColor: "#F6F4EE",
-        color: "#1A1A1A",
-      },
-      "&:active": {
-        backgroundColor: "#C72030",
-        color: "#fff",
-      },
-    }),
-    multiValue: (provided: any) => ({
-      ...provided,
-      backgroundColor: "transparent",
-    }),
-    multiValueLabel: (provided: any) => ({
-      ...provided,
-      color: "#1a1a1a8a",
-      fontSize: "13px",
-      fontWeight: "500",
-    }),
-  };
-
   const renderListTab = () => (
     <div className="space-y-4">
-      {renderCustomFilters()}
       <EnhancedTable
         data={orders}
         columns={columns}
@@ -598,9 +462,10 @@ const OrdersList = () => {
         storageKey="orders-table"
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
-        searchPlaceholder="Search orders (ID, number, customer name/email)..."
+        searchPlaceholder="Search orders"
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
+        onFilterClick={() => setIsFilterOpen(true)}
       />
       <div className="flex justify-center mt-6">
         <Pagination>
@@ -716,94 +581,6 @@ const OrdersList = () => {
     }
   };
 
-  const renderCustomFilters = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      {/* Clear Filter Button */}
-      <div className="col-span-3 flex justify-end mb-2">
-        <button
-          className="px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#A01828] transition-colors"
-          onClick={() => {
-            setStatusFilter([]);
-            setPaymentStatusFilter([]);
-            setOrderDateFilter("last_30_days");
-            setSearchTerm("");
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-        >
-          Clear Filter
-        </button>
-      </div>
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Status Filter</label>
-        <Select
-          isMulti
-          value={statusOptions.filter(opt => Array.isArray(statusFilter) && statusFilter.includes(opt.value))}
-          onChange={selected => {
-            const values = selected ? selected.map(s => s.value) : [];
-            setStatusFilter(values);
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-          options={statusOptions.filter(opt => opt.value !== "")}
-          styles={customStyles}
-          components={{
-            MultiValue: CustomMultiValue,
-            MultiValueRemove: CustomMultiValueRemove,
-          }}
-          closeMenuOnSelect={false}
-          placeholder="Select Status..."
-          isClearable
-          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
-          menuPosition="fixed"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Payment Status</label>
-        <Select
-          isMulti
-          value={paymentStatusOptions.filter(opt => Array.isArray(paymentStatusFilter) && paymentStatusFilter.includes(opt.value))}
-          onChange={selected => {
-            const values = selected ? selected.map(s => s.value) : [];
-            setPaymentStatusFilter(values);
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-          options={paymentStatusOptions.filter(opt => opt.value !== "")}
-          styles={customStyles}
-          components={{
-            MultiValue: CustomMultiValue,
-            MultiValueRemove: CustomMultiValueRemove,
-          }}
-          closeMenuOnSelect={false}
-          placeholder="Select Payment Status..."
-          isClearable
-          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
-          menuPosition="fixed"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Order Date
-        </label>
-        <Select
-          value={orderDateOptions.find((opt) => opt.value === orderDateFilter)}
-          onChange={(opt) => {
-            setOrderDateFilter(opt?.value || "last_30_days");
-            setPagination((prev) => ({ ...prev, current_page: 1 }));
-          }}
-          options={orderDateOptions}
-          isSearchable={false}
-          styles={customStyles}
-          placeholder="Select Date Range..."
-          isClearable
-          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
-          menuPosition="fixed"
-        />
-      </div>
-    </div>)
-  // --- CustomMultiValue and customStyles for filter dropdowns (copied from AddOfferPage) ---
-
-
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
@@ -811,6 +588,18 @@ const OrdersList = () => {
         <h1 className="text-2xl font-bold text-gray-900">ORDERS ({pagination.total_count} total)</h1>
       </div>
       {renderListTab()}
+
+      <OrdersListFilterModal
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        initialStatus={statusFilter}
+        initialPaymentStatus={paymentStatusFilter}
+        initialOrderDate={orderDateFilter}
+        statusOptions={statusOptions}
+        paymentStatusOptions={paymentStatusOptions}
+        orderDateOptions={orderDateOptions}
+        onApply={handleApplyFilter}
+      />
     </div>
   );
 };

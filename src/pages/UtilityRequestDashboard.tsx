@@ -825,7 +825,7 @@ export const UtilityRequestDashboard = () => {
 
 
       {/* Display error message if any */}
-      {error && <div className="p-4 bg-red-100 text-red-800 rounded">{error}</div>}
+      {!loading && error && <div className="p-4 bg-red-100 text-red-800 rounded">{error}</div>}
 
       {/* Loading state */}
       {loading ? (

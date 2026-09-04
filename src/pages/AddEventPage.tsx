@@ -47,6 +47,7 @@ export const AddEventPage = () => {
   const [formData, setFormData] = useState({
     eventName: "",
     eventType: "",
+    payAt: "internal",
     amountPerPerson: "",
     fromDate: "",
     toDate: "",
@@ -58,13 +59,13 @@ export const AddEventPage = () => {
     rsvp: "yes",
     showOnHomeScreen: "no",
     eventDescription: "",
+    externalLink: "",
     approvalRequired: "no",
     shareWith: "all",
     shareWithCommunities: "no",
-    attachment: null as File | null,
   });
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<Array<{ file: File, preview: string | null }>>([]);
   const [isActive, setIsActive] = useState(true);
 
   // Tech Park Modal State
@@ -95,6 +96,8 @@ export const AddEventPage = () => {
     const savedEventDescription = localStorage.getItem('eventDescription');
     const savedShareWith = localStorage.getItem('shareWith');
     const savedSelectedTechParks = localStorage.getItem('selectedTechParks');
+    const savedPayAt = localStorage.getItem('payAt');
+    const savedExternalLink = localStorage.getItem('externalLink');
 
     // If any saved data exists, restore it
     if (savedEventName || savedEventDescription || savedFromDate) {
@@ -115,6 +118,8 @@ export const AddEventPage = () => {
         approvalRequired: savedApprovalRequired || prev.approvalRequired,
         eventDescription: savedEventDescription || prev.eventDescription,
         shareWith: savedShareWith || prev.shareWith,
+        payAt: savedPayAt || prev.payAt,
+        externalLink: savedExternalLink || prev.externalLink,
       }));
     }
 
@@ -145,6 +150,8 @@ export const AddEventPage = () => {
     localStorage.removeItem('eventDescription');
     localStorage.removeItem('shareWith');
     localStorage.removeItem('selectedTechParks');
+    localStorage.removeItem('payAt');
+    localStorage.removeItem('externalLink');
 
     // Check if returning from community selection
     const savedCommunities = localStorage.getItem('selectedCommunityIds');
@@ -235,6 +242,8 @@ export const AddEventPage = () => {
       localStorage.setItem('approvalRequired', formData.approvalRequired);
       localStorage.setItem('eventDescription', formData.eventDescription);
       localStorage.setItem('shareWith', formData.shareWith);
+      localStorage.setItem('payAt', formData.payAt);
+      localStorage.setItem('externalLink', formData.externalLink);
       localStorage.setItem('selectedTechParks', JSON.stringify(selectedTechParks));
       navigate('/pulse/community?mode=selection&from=add-event');
     }
@@ -243,20 +252,25 @@ export const AddEventPage = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        attachment: file,
-      }));
-      // Create preview for image files
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setImagePreview(null);
+      // Validate that file is an image
+      if (!file.type.startsWith('image/')) {
+        toast.error("Only image files are allowed. Please select an image.");
+        if (attachmentInputRef.current) {
+          attachmentInputRef.current.value = "";
+        }
+        return;
       }
+
+      // Create preview for image files
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachments(prev => [...prev, { file, preview: reader.result as string }]);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset the input
+    if (attachmentInputRef.current) {
+      attachmentInputRef.current.value = "";
     }
   };
 
@@ -264,16 +278,11 @@ export const AddEventPage = () => {
     attachmentInputRef.current?.click();
   };
 
-  const handleRemoveImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFormData((prev) => ({
-      ...prev,
-      attachment: null,
-    }));
-    setImagePreview(null);
-    if (attachmentInputRef.current) {
-      attachmentInputRef.current.value = "";
+  const handleRemoveAttachment = (index: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
     }
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const validateForm = () => {
@@ -335,6 +344,8 @@ export const AddEventPage = () => {
       formDataToSend.append('event[of_atype_id]', localStorage.getItem("selectedSiteId") || "");
       formDataToSend.append('event[share_with]', formData.shareWith);
       formDataToSend.append('event[is_paid]', formData.eventType);
+      formData.eventType === "1" && formDataToSend.append('event[pay_at]', formData.payAt);
+      formData.eventType === "1" && formData.payAt === "external" && formDataToSend.append('event[payment_link]', formData.externalLink);
 
       if (formData.shareWith === 'individual') {
         selectedTechParks.forEach(id => {
@@ -349,8 +360,11 @@ export const AddEventPage = () => {
         });
       }
 
-      if (formData.attachment) {
-        formDataToSend.append("event[documents][]", formData.attachment);
+      // Add all attachments
+      if (attachments.length > 0) {
+        attachments.forEach(({ file }) => {
+          formDataToSend.append("event[documents][]", file);
+        });
       }
 
       await dispatch(createEvent({ baseUrl, token, data: formDataToSend })).unwrap();
@@ -373,6 +387,8 @@ export const AddEventPage = () => {
       localStorage.removeItem('shareWith');
       localStorage.removeItem('selectedTechParks');
       localStorage.removeItem('selectedCommunityIds');
+      localStorage.removeItem('payAt');
+      localStorage.removeItem('externalLink');
 
       toast.success("Event created successfully");
       navigate(`/pulse/events`);
@@ -464,6 +480,33 @@ export const AddEventPage = () => {
                 </FormControl>
               </div>
 
+              {
+                formData.eventType === "1" && (
+                  <div className="flex flex-col gap-1.5">
+                    <FormControl fullWidth size="small">
+                      <InputLabel shrink>Pay at<span className="text-[#C72030]">*</span></InputLabel>
+                      <MuiSelect
+                        name="payAt"
+                        value={formData.payAt}
+                        onChange={(e) => handleSelectChange("payAt", e.target.value)}
+                        label="Pay at*"
+                        displayEmpty
+                        sx={{
+                          backgroundColor: '#FAFAFA',
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#C72030',
+                          },
+                        }}
+                      >
+                        <MenuItem value="" disabled>Select pay at...</MenuItem>
+                        <MenuItem value="internal">Internal</MenuItem>
+                        <MenuItem value="external">External</MenuItem>
+                      </MuiSelect>
+                    </FormControl>
+                  </div>
+                )
+              }
+
               <div className="flex flex-col gap-1.5">
                 <TextField
                   label={<>Event Amount Per Person</>}
@@ -492,10 +535,7 @@ export const AddEventPage = () => {
                   }}
                 />
               </div>
-            </div>
 
-            {/* Row 2: From Date, To Date, Event Time */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="flex flex-col gap-1.5">
                 <TextField
                   label={<>From Date<span className="text-[#C72030]">*</span></>}
@@ -508,9 +548,6 @@ export const AddEventPage = () => {
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                   size="small"
-                  inputProps={{
-                    min: new Date().toISOString().split('T')[0],
-                  }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: '#FAFAFA',
@@ -570,10 +607,7 @@ export const AddEventPage = () => {
                   }}
                 />
               </div>
-            </div>
 
-            {/* Row 3: Event Location, Member Capacity, Per Member Limit */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
               <div className="flex flex-col gap-1.5">
                 <TextField
                   label={<>Event Location<span className="text-[#C72030]">*</span></>}
@@ -625,7 +659,7 @@ export const AddEventPage = () => {
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              {/* <div className="flex flex-col gap-1.5">
                 <TextField
                   label={<>Per Member Limit<span className="text-[#C72030]">*</span></>}
                   id="perMemberLimit"
@@ -652,7 +686,7 @@ export const AddEventPage = () => {
                     },
                   }}
                 />
-              </div>
+              </div> */}
             </div>
 
             {/* Radio Groups Row */}
@@ -679,12 +713,12 @@ export const AddEventPage = () => {
                   <FormControlLabel
                     value="panasche"
                     control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' }, '& .MuiSvgIcon-root': { fontSize: 16 } }} />}
-                    label={<span className="text-[12px] text-gray-600">Panasche</span>}
+                    label={<span className="text-[12px] text-gray-600">Panache</span>}
                   />
                   <FormControlLabel
                     value="persuit"
                     control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' }, '& .MuiSvgIcon-root': { fontSize: 16 } }} />}
-                    label={<span className="text-[12px] text-gray-600">Persuit</span>}
+                    label={<span className="text-[12px] text-gray-600">Pursuit</span>}
                   />
                 </RadioGroup>
               </div>
@@ -800,8 +834,32 @@ export const AddEventPage = () => {
     "
                 />
               </div>
-
             </div>
+
+            {
+              formData.payAt === "external" && (
+                <TextField
+                  label={<>External Link<span className="text-[#C72030]">*</span></>}
+                  id="externalLink"
+                  name="externalLink"
+                  value={formData.externalLink}
+                  onChange={handleInputChange}
+                  placeholder="Enter external link..."
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  size="small"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#FAFAFA',
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#C72030',
+                      },
+                    },
+                    marginTop: 2,
+                  }}
+                />
+              )
+            }
           </div>
         </div>
 
@@ -936,28 +994,36 @@ export const AddEventPage = () => {
                   Upload Document
                 </Label>
 
-                {formData.attachment ? (
-                  <div className="relative border-2 border-dashed border-gray-400 rounded-lg w-full max-w-[200px] h-40 flex items-center justify-center bg-white">
-                    <span className="absolute top-2 left-3 text-sm font-medium text-gray-700 truncate max-w-[80%]">
-                      {formData.attachment.name}
-                    </span>
-                    <button
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 text-gray-600 hover:text-red-500 transition-colors"
+                <div className="flex flex-wrap gap-6">
+                  {/* Display existing attachments */}
+                  {attachments.map((attachment, index) => (
+                    <div
+                      key={index}
+                      className="relative border-2 border-dashed border-gray-400 rounded-lg w-full max-w-[200px] h-40 flex items-center justify-center bg-white"
                     >
-                      <XCircle size={20} />
-                    </button>
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-20 h-20 object-contain mt-6"
-                      />
-                    ) : (
-                      <File size={40} className="text-gray-400 mt-6" />
-                    )}
-                  </div>
-                ) : (
+                      <span className="absolute top-2 left-3 text-sm font-medium text-gray-700 truncate max-w-[80%]">
+                        {attachment.file.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveAttachment(index, e)}
+                        className="absolute top-2 right-2 text-gray-600 hover:text-red-500 transition-colors"
+                      >
+                        <XCircle size={20} />
+                      </button>
+                      {attachment.preview ? (
+                        <img
+                          src={attachment.preview}
+                          alt={`Preview ${index}`}
+                          className="w-20 h-20 object-contain mt-6"
+                        />
+                      ) : (
+                        <File size={40} className="text-gray-400 mt-6" />
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Add new attachment box */}
                   <div
                     onClick={triggerFileInput}
                     className="border-2 border-dashed border-gray-300 rounded-lg p-8 w-full max-w-[200px] h-40 relative flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -993,7 +1059,7 @@ export const AddEventPage = () => {
                       Browse
                     </Button>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

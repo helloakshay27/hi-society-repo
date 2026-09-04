@@ -26,6 +26,9 @@ const fieldStyles = {
   height: { xs: 28, sm: 36, md: 45 },
   '& .MuiInputBase-input, & .MuiSelect-select': {
     padding: { xs: '8px', sm: '10px', md: '12px' },
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
 };
 
@@ -33,11 +36,20 @@ const selectMenuProps = {
   PaperProps: {
     style: {
       maxHeight: 224,
+      maxWidth: 280,
       backgroundColor: 'white',
       border: '1px solid #e2e8f0',
       borderRadius: '8px',
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
       zIndex: 9999,
+    },
+    sx: {
+      '& .MuiMenuItem-root': {
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        display: 'block',
+      },
     },
   },
   disablePortal: false,
@@ -157,7 +169,7 @@ export const SiteFilterModal: React.FC<SiteFilterModalProps> = ({
                   <em>All Companies</em>
                 </MenuItem>
                 {companiesDropdown.map((company) => (
-                  <MenuItem key={company.id} value={company.id.toString()}>
+                  <MenuItem key={company.id} value={company.id.toString()} title={company.name}>
                     {company.name}
                   </MenuItem>
                 ))}
@@ -178,7 +190,7 @@ export const SiteFilterModal: React.FC<SiteFilterModalProps> = ({
                   <em>All Regions</em>
                 </MenuItem>
                 {regionsDropdown.map((region) => (
-                  <MenuItem key={region.id} value={region.id.toString()}>
+                  <MenuItem key={region.id} value={region.id.toString()} title={region.name}>
                     {region.name}
                   </MenuItem>
                 ))}
@@ -200,7 +212,7 @@ export const SiteFilterModal: React.FC<SiteFilterModalProps> = ({
                   <em>All Countries</em>
                 </MenuItem>
                 {headquartersDropdown.map((country) => (
-                  <MenuItem key={country.id} value={country.id.toString()}>
+                  <MenuItem key={country.id} value={country.id.toString()} title={country.name}>
                     {country.name}
                   </MenuItem>
                 ))}
@@ -323,7 +335,7 @@ export const SiteFilterModal: React.FC<SiteFilterModalProps> = ({
             variant="outline" 
             onClick={handleClear}
             disabled={!hasActiveFilters}
-            className="text-gray-600"
+            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Clear All
           </Button>
@@ -334,7 +346,7 @@ export const SiteFilterModal: React.FC<SiteFilterModalProps> = ({
             </Button>
             <Button 
               onClick={handleApply}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Apply Filters
             </Button>

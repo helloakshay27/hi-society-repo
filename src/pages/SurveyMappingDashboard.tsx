@@ -18,6 +18,7 @@ import {
   Loader2,
   Download,
   Upload,
+  QrCode,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -94,6 +95,10 @@ interface SurveyMappingItem {
     tag_created_at: string;
     tag_updated_at: string;
   };
+  society_name: string | null;
+  tower_name: string | null;
+  flat_no: string | null;
+  user_name: string | null;
 }
 
 // Survey group from the API
@@ -157,6 +162,10 @@ export const SurveyMappingDashboard = () => {
   const [columns, setColumns] = useState([
     { key: "actions", label: "Actions", visible: true },
     { key: "survey_title", label: "Survey Title", visible: true },
+    { key: "society_name", label: "Society", visible: true },
+    { key: "tower_name", label: "Tower", visible: true },
+    { key: "flat_no", label: "Flat", visible: true },
+    { key: "user_name", label: "User", visible: true },
     { key: "building_name", label: "Building", visible: true },
     { key: "wing_name", label: "Wing", visible: true },
     { key: "floor_name", label: "Floor", visible: true },
@@ -235,10 +244,30 @@ export const SurveyMappingDashboard = () => {
           }
         }
 
+        // If the dialog provided a prebuilt mappingListQuery, use it (but allow search to be appended)
+        let requestUrl = `/survey_mappings/mappings_list.json?${queryParams}`;
+        if ((filters as any).mappingListQuery) {
+          // Use mappingListQuery from the filter dialog as base
+          requestUrl = (filters as any).mappingListQuery;
+          // If search term present, append it
+          if (search && search.trim()) {
+            requestUrl += `&q[name_cont]=${encodeURIComponent(search.trim())}`;
+          }
+        } else {
+          // Support convenience fields from the dialog (buildingIdEq / wingIdEq / userSocietyIdEq)
+          if ((filters as any).buildingIdEq) {
+            requestUrl += `&q[building_id_eq]=${encodeURIComponent((filters as any).buildingIdEq)}`;
+          }
+          if ((filters as any).wingIdEq) {
+            requestUrl += `&q[wing_id_eq]=${encodeURIComponent((filters as any).wingIdEq)}`;
+          }
+          if ((filters as any).userSocietyIdEq) {
+            requestUrl += `&q[user_society_id_eq]=${encodeURIComponent((filters as any).userSocietyIdEq)}`;
+          }
+        }
+
         // Use the new mappings_list endpoint with pagination and search
-        const response = await apiClient.get(
-          `/survey_mappings/mappings_list.json?${queryParams}`
-        );
+        const response = await apiClient.get(requestUrl);
         console.log("Survey mapping API response:", response.data);
 
         const responseData: SurveyMappingApiResponse = response.data;
@@ -494,6 +523,10 @@ export const SurveyMappingDashboard = () => {
     navigate("/maintenance/survey/mapping/add");
   };
 
+  const handleUserQRSetup = () => {
+    navigate("/maintenance/survey/user-qr-setup");
+  };
+
   const handleExport = async (visibility?: Record<string, boolean>) => {
     try {
       // Collect selected columns based on visibility
@@ -627,6 +660,121 @@ export const SurveyMappingDashboard = () => {
     fetchSurveyMappingsData(1, searchTerm.trim() || undefined, filters, true);
   };
 
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 5;
+    const disabled = loading || searchLoading;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => !disabled && handlePageChange(1)}
+            isActive={currentPage === 1}
+            className={disabled ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => !disabled && handlePageChange(i)}
+                isActive={currentPage === i}
+                className={disabled ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => !disabled && handlePageChange(i)}
+                  isActive={currentPage === i}
+                  className={disabled ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => !disabled && handlePageChange(i)}
+              isActive={currentPage === i}
+              className={disabled ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   // Handle page change for server-side pagination
   const handlePageChange = async (page: number) => {
     try {
@@ -661,6 +809,42 @@ export const SurveyMappingDashboard = () => {
         hideable: false,
       },
       {
+        key: "user_name",
+        label: "Customer",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+        visible: isColumnVisible("user_name"),
+        hideable: true,
+      },
+      {
+        key: "flat_no",
+        label: "Flat",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+        visible: isColumnVisible("flat_no"),
+        hideable: true,
+      },
+      {
+        key: "tower_name",
+        label: "Tower",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+        visible: isColumnVisible("tower_name"),
+        hideable: true,
+      },
+      {
+        key: "society_name",
+        label: "Society",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+        visible: isColumnVisible("society_name"),
+        hideable: true,
+      },
+      {
         key: "survey_title",
         label: "Survey Title",
         sortable: true,
@@ -669,51 +853,51 @@ export const SurveyMappingDashboard = () => {
         visible: isColumnVisible("survey_title"),
         hideable: true,
       },
-      {
-        key: "building_name",
-        label: "Building",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("building_name"),
-        hideable: true,
-      },
-      {
-        key: "wing_name",
-        label: "Wing",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("wing_name"),
-        hideable: true,
-      },
-      {
-        key: "floor_name",
-        label: "Floor",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("floor_name"),
-        hideable: true,
-      },
-      {
-        key: "area_name",
-        label: "Area",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("area_name"),
-        hideable: true,
-      },
-      {
-        key: "room_name",
-        label: "Room",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-        visible: isColumnVisible("room_name"),
-        hideable: true,
-      },
+      // {
+      //   key: "building_name",
+      //   label: "Building",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("building_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "wing_name",
+      //   label: "Wing",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("wing_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "floor_name",
+      //   label: "Floor",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("floor_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "area_name",
+      //   label: "Area",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("area_name"),
+      //   hideable: true,
+      // },
+      // {
+      //   key: "room_name",
+      //   label: "Room",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      //   visible: isColumnVisible("room_name"),
+      //   hideable: true,
+      // },
       // { key: 'check_type', label: 'Check Type', sortable: true, draggable: true, defaultVisible: true, visible: isColumnVisible('check_type'), hideable: true },
       {
         key: "questions_count",
@@ -830,7 +1014,7 @@ export const SurveyMappingDashboard = () => {
       case "actions":
         return (
           <div className="flex justify-center items-center gap-2">
-            {shouldShow("survey_mapping", "view") && (
+            {shouldShow("Survey Mapping", "show") && (
               <button
                 onClick={() => handleViewClick(item)}
                 className="p-1 text-black-600 hover:text-black-800 transition-colors"
@@ -839,7 +1023,7 @@ export const SurveyMappingDashboard = () => {
                 <Eye className="w-4 h-4" />
               </button>
             )}
-            {shouldShow("survey_mapping", "edit") && (
+            {shouldShow("Survey Mapping", "update") && (
               <button
                 onClick={() => handleEditClick(item)}
                 className="p-1 text-black-600 hover:text-black-800 transition-colors"
@@ -858,6 +1042,34 @@ export const SurveyMappingDashboard = () => {
         );
       case "site_name":
         return <span className="text-sm text-black">{item.site_name}</span>;
+      case "society_name": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allSocieties = surveyData
+          ? surveyData.mappings.map((m) => m.society_name)
+          : [item.society_name];
+        return renderFirstWithHover(allSocieties, item.society_name);
+      }
+      case "tower_name": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allTowers = surveyData
+          ? surveyData.mappings.map((m) => m.tower_name)
+          : [item.tower_name];
+        return renderFirstWithHover(allTowers, item.tower_name);
+      }
+      case "flat_no": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allFlats = surveyData
+          ? surveyData.mappings.map((m) => m.flat_no)
+          : [item.flat_no];
+        return renderFirstWithHover(allFlats, item.flat_no);
+      }
+      case "user_name": {
+        const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
+        const allUsers = surveyData
+          ? surveyData.mappings.map((m) => m.user_name)
+          : [item.user_name];
+        return renderFirstWithHover(allUsers, item.user_name);
+      }
       case "building_name": {
         const surveyData = allMappingsData.find((s) => s.id === item.survey_id);
         const allBuildings = surveyData
@@ -941,7 +1153,7 @@ export const SurveyMappingDashboard = () => {
             <button
               onClick={() => handleStatusToggle(item)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isActive ? "bg-green-500" : "bg-gray-300"
+                isActive ? "bg-[#C72030]" : "bg-gray-300"
               }`}
             >
               <div
@@ -1003,20 +1215,29 @@ export const SurveyMappingDashboard = () => {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <Heading level="h1" variant="default">
-            Survey Mapping
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="w-full sm:w-auto">
+          <Heading level="h1" variant="default" className="text-lg sm:text-2xl">
+            Survey Configuration
           </Heading>
         </div>
       </div>
 
       {showActionPanel && (
         <SelectionPanel
-          actions={[]}
+          className="selection-panel--end"
+          actions={[
+            {
+              label: "Customer QR Setup",
+              icon: QrCode,
+              onClick: handleUserQRSetup,
+            },
+          ]}
           onAdd={handleAddMapping}
+          addLabel="Company QR Setup"
           onImport={() => setShowImportModal(true)}
           onClearSelection={() => setShowActionPanel(false)}
+          subtitle={null}
         />
       )}
 
@@ -1031,166 +1252,88 @@ export const SurveyMappingDashboard = () => {
         )}
 
         {/* Survey Mapping Table using EnhancedTable */}
-        <EnhancedTable
-          data={mappings}
-          columns={enhancedTableColumns}
-          selectable={false}
-          renderCell={renderCell}
-          storageKey="survey-mapping-table"
-          enableExport={true}
-          handleExport={handleExport}
-          exportFileName="survey-mapping-data"
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          searchPlaceholder="Search survey mappings..."
-          pagination={false}
-          pageSize={perPage}
-          hideColumnsButton={false}
-          hideTableExport={false}
-          loading={loading}
-          leftActions={
-            <div className="flex flex-wrap items-center gap-2 md:gap-4">
-              {shouldShow("survey_mapping", "add") && (
-                <Button
-                  onClick={() => setShowActionPanel(!showActionPanel)}
-                  className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
-                >
-                  <Plus className="w-4 h-4" />
-                  Action
-                </Button>
-              )}
-            </div>
-          }
-          rightActions={null}
-          onFilterClick={() => setIsFilterOpen(true)}
-        />
+        <div className="min-w-full sm:min-w-0">
+          <EnhancedTable
+            data={mappings}
+            columns={enhancedTableColumns}
+            selectable={false}
+            renderCell={renderCell}
+            storageKey="survey-mapping-table"
+            enableExport={true}
+            handleExport={handleExport}
+            exportFileName="survey-mapping-data"
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search survey mappings..."
+            pagination={false}
+            pageSize={perPage}
+            hideColumnsButton={false}
+            hideTableExport={false}
+            loading={loading}
+            leftActions={
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                {shouldShow("Survey Mapping", "create") && (
+                  <Button
+                    onClick={() => setShowActionPanel(!showActionPanel)}
+                    className="flex items-center gap-2 bg-[#C72030] text-white border-0 hover:bg-[#A01828] text-sm px-2 sm:px-3 py-2 h-auto"
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Action</span>
+                  </Button>
+                )}
+              </div>
+            }
+            rightActions={null}
+            onFilterClick={() => setIsFilterOpen(true)}
+          />
+        </div>
 
         {/* Server-side Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-6">
-            <Pagination>
-              <PaginationContent>
-                {/* Previous Button */}
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => {
-                      if (currentPage > 1 && !loading && !searchLoading) {
-                        handlePageChange(currentPage - 1);
-                      }
-                    }}
-                    className={
-                      currentPage === 1 || loading || searchLoading
-                        ? "pointer-events-none opacity-50"
-                        : ""
+        <div className="mt-6 overflow-x-auto">
+          <Pagination className="flex-wrap justify-center gap-1 sm:gap-2">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => {
+                    if (currentPage > 1 && !loading && !searchLoading) {
+                      handlePageChange(currentPage - 1);
                     }
-                  />
-                </PaginationItem>
-
-                {/* First Page */}
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={() => {
-                      if (!loading && !searchLoading) {
-                        handlePageChange(1);
-                      }
-                    }}
-                    isActive={currentPage === 1}
-                    className={
-                      loading || searchLoading
-                        ? "pointer-events-none opacity-50"
-                        : ""
+                  }}
+                  className={
+                    currentPage === 1 || loading || searchLoading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => {
+                    if (
+                      currentPage < totalPages &&
+                      !loading &&
+                      !searchLoading
+                    ) {
+                      handlePageChange(currentPage + 1);
                     }
-                  >
-                    1
-                  </PaginationLink>
-                </PaginationItem>
+                  }}
+                  className={
+                    currentPage === totalPages || loading || searchLoading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
 
-                {/* Ellipsis before current range */}
-                {currentPage > 4 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-
-                {/* Dynamic middle pages */}
-                {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i)
-                  .filter((page) => page > 1 && page < totalPages)
-                  .map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => {
-                          if (!loading && !searchLoading) {
-                            handlePageChange(page);
-                          }
-                        }}
-                        isActive={currentPage === page}
-                        className={
-                          loading || searchLoading
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                {/* Ellipsis after current range */}
-                {currentPage < totalPages - 3 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-
-                {/* Last Page (if not same as first) */}
-                {totalPages > 1 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      onClick={() => {
-                        if (!loading && !searchLoading) {
-                          handlePageChange(totalPages);
-                        }
-                      }}
-                      isActive={currentPage === totalPages}
-                      className={
-                        loading || searchLoading
-                          ? "pointer-events-none opacity-50"
-                          : ""
-                      }
-                    >
-                      {totalPages}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-
-                {/* Next Button */}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => {
-                      if (
-                        currentPage < totalPages &&
-                        !loading &&
-                        !searchLoading
-                      ) {
-                        handlePageChange(currentPage + 1);
-                      }
-                    }}
-                    className={
-                      currentPage === totalPages || loading || searchLoading
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-
-            <div className="text-center mt-2 text-sm text-gray-600">
-              Showing page {currentPage} of {totalPages} ({totalCount} total
-              survey mappings)
-            </div>
-          </div>
-        )}
+          {/* <div className="text-center mt-2 text-sm text-gray-600">
+            Showing page {currentPage} of {totalPages} ({totalCount} total
+            survey mappings)
+          </div> */}
+        </div>
       </div>
 
       {/* Bulk Upload Modal */}

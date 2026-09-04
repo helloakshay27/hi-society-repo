@@ -256,7 +256,7 @@ class EmployeeTicketAPI {
       });
     }
 
-    const url = `/pms/admin/ticket_summary.json?${queryParams.toString()}`;
+    const url = `/crm/admin/ticket_summary.json?${queryParams.toString()}`;
     console.log('🔵 Employee API Final summary URL:', url);
     
     const response = await apiClient.get(url);
@@ -324,7 +324,7 @@ class EmployeeTicketAPI {
   // Get response TAT timings for an employee ticket by ID
   async getResponseTatTimings(ticketId: string) {
     try {
-      const response = await apiClient.get(`/response_tat_timings?id=${ticketId}`);
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}/resolution_tat_timings.json`);
       return response.data;
     } catch (error) {
       console.error('Error fetching response TAT timings:', error);

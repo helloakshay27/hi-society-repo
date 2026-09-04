@@ -427,7 +427,7 @@ export const EditSubCategoryModal: React.FC<EditSubCategoryModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} modal={false} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Sub-Category</DialogTitle>

@@ -466,7 +466,9 @@ const ProjectFilterModal = ({
                     onChange={(e) => setManagerSearch(e.target.value)}
                   />
                 </div>
-                {fetchUsersError ? (
+                {fmUsersState.loading ? (
+                  <div className="text-center text-gray-500 text-sm py-2">Loading managers...</div>
+                ) : fetchUsersError ? (
                   <div className="text-center text-red-500 text-sm py-2">
                     Failed to load managers: {fetchUsersError}
                   </div>

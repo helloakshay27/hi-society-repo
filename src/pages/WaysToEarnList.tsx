@@ -1,0 +1,690 @@
+import React, { useState, useEffect, useRef } from "react";
+import { Plus, Pencil, Trash2, TrendingUp, X, ImageIcon } from "lucide-react";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { Switch, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+
+interface WaysToEarn {
+  id: number;
+  title: string;
+  description: string;
+  points: string;
+  position: number;
+  active: string | boolean;
+  image_url: string | null;
+}
+
+interface FormState {
+  title: string;
+  description: string;
+  points: string;
+  position: string;
+  active: boolean;
+  image: File | null;
+}
+
+const TITLE_OPTIONS = ["Refer a friend", "Pay a milestone", "Play & earn"];
+
+const emptyForm: FormState = {
+  title: "",
+  description: "",
+  points: "",
+  position: "",
+  active: true,
+  image: null,
+};
+
+const WaysToEarnList: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
+  const token = API_CONFIG.TOKEN || "";
+
+  const [data, setData] = useState<WaysToEarn[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchList = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const url = getFullUrl(`/admin/ways_to_earn_configs?token=${token}`);
+      const res = await fetch(url, {
+        headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      setData(Array.isArray(json.ways_to_earn) ? json.ways_to_earn : []);
+    } catch {
+      toast.error("Failed to load Ways to Earn list");
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchList();
+  }, [fetchList]);
+
+  const filteredData = React.useMemo(() => {
+    if (!searchTerm.trim()) return data;
+    const query = searchTerm.toLowerCase();
+    return data.filter((item) =>
+      Object.values(item).some((v) => String(v ?? "").toLowerCase().includes(query))
+    );
+  }, [data, searchTerm]);
+
+  const totalCount = filteredData.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 5;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
+  const openAddDialog = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setImagePreview(null);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (item: WaysToEarn) => {
+    setEditingId(item.id);
+    setForm({
+      title: item.title || "",
+      description: item.description || "",
+      points: item.points || "",
+      position: String(item.position ?? ""),
+      active: item.active === true || item.active === "true",
+      image: null,
+    });
+    setImagePreview(item.image_url || null);
+    setDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setEditingId(null);
+    setForm(emptyForm);
+    setImagePreview(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setForm((prev) => ({ ...prev, image: file }));
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+
+    const isDuplicate = data.some(
+      (item) => item.title === form.title && item.id !== editingId
+    );
+    if (isDuplicate) {
+      toast.error("This option has already been added");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = new FormData();
+      payload.append("ways_to_earn_config[title]", form.title);
+      payload.append("ways_to_earn_config[description]", form.description);
+      payload.append("ways_to_earn_config[points]", form.points);
+      payload.append("ways_to_earn_config[position]", form.position);
+      payload.append("ways_to_earn_config[active]", form.active ? "true" : "false");
+      if (form.image) {
+        payload.append("ways_to_earn_config[image]", form.image);
+      }
+
+      const isEdit = editingId !== null;
+      const url = getFullUrl(
+        isEdit
+          ? `/admin/ways_to_earn_configs/${editingId}?token=${token}`
+          : `/admin/ways_to_earn_configs?token=${token}`
+      );
+      const res = await fetch(url, {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { Authorization: getAuthHeader() },
+        body: payload,
+      });
+
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+
+      toast.success(isEdit ? "Updated successfully" : "Created successfully");
+      closeDialog();
+      fetchList();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openDeleteDialog = (id: number) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (deletingId === null) return;
+    setDeleting(true);
+    try {
+      const url = getFullUrl(`/admin/ways_to_earn_configs/${deletingId}?token=${token}`);
+      const res = await fetch(url, {
+        method: "DELETE",
+        headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+      toast.success("Deleted successfully");
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+      fetchList();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleToggleActive = async (item: WaysToEarn) => {
+    const newActive = !(item.active === true || item.active === "true");
+    try {
+      const payload = new FormData();
+      payload.append("ways_to_earn_config[active]", newActive ? "true" : "false");
+      const url = getFullUrl(`/admin/ways_to_earn_configs/${item.id}?token=${token}`);
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { Authorization: getAuthHeader() },
+        body: payload,
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      toast.success("Status updated");
+      fetchList();
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const columns = [
+    { key: "srNo", label: "Sr. No.", sortable: false },
+    { key: "actions", label: "Actions", sortable: false },
+    { key: "title", label: "Title", sortable: true },
+    { key: "description", label: "Description", sortable: false },
+    { key: "points", label: "Points", sortable: true },
+    { key: "position", label: "Position", sortable: true },
+    { key: "image", label: "Image", sortable: false },
+    { key: "active", label: "Status", sortable: false },
+  ];
+
+  const renderCell = (item: WaysToEarn, columnKey: string, index?: number) => {
+    switch (columnKey) {
+      case "srNo":
+        return startIndex + (index !== undefined ? index : paginatedData.findIndex((d) => d.id === item.id)) + 1;
+
+      case "actions":
+        return (
+          <div className="flex items-center gap-1">
+            {shouldShow("WaysToEarn", "update") && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-black hover:text-black hover:bg-gray-100"
+                onClick={() => openEditDialog(item)}
+                title="Edit"
+              >
+                <Pencil className="h-4 w-4" style={{ color: '#000000' }} />
+              </Button>
+            )}
+            {/* {shouldShow("WaysToEarn", "destroy") && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-gray-100"
+                onClick={() => openDeleteDialog(item.id)}
+                title="Delete"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )} */}
+          </div>
+        );
+
+      case "title":
+        return <span className="font-medium">{item.title || "-"}</span>;
+
+      case "description":
+        return (
+          <span className="text-gray-600 line-clamp-2 max-w-xs">
+            {item.description || "-"}
+          </span>
+        );
+
+      case "points":
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-[#C72030]">
+            <TrendingUp className="h-3.5 w-3.5" />
+            {item.points || "-"}
+          </span>
+        );
+
+      case "position":
+        return <span>{item.position ?? "-"}</span>;
+
+      case "image":
+        return item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.title}
+            className="h-10 w-10 rounded object-cover border border-[#e5e1d8]"
+          />
+        ) : (
+          <div className="h-10 w-10 rounded bg-[#f6f4ee] border border-[#e5e1d8] flex items-center justify-center">
+            <ImageIcon className="h-4 w-4 text-gray-400" />
+          </div>
+        );
+
+      case "active":
+        const isActive = item.active === true || item.active === "true";
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleToggleActive(item)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isActive ? "bg-[#C72030]" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isActive ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        );
+
+      default:
+        return "-";
+    }
+  };
+
+  const renderCustomActions = () => (
+    <div className="flex gap-2">
+      {shouldShow("WaysToEarn", "create") && (
+        <Button
+          onClick={openAddDialog}
+variant="ghost"
+           className="btn-primary h-9 px-4 text-sm font-medium"         >
+          <Plus className="w-4 h-4 mr-2" />
+          Add
+        </Button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-[#1A1A1A]">Ways to Earn</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Manage the ways users can earn loyalty points
+        </p>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto animate-fade-in">
+        <EnhancedTable
+          data={paginatedData}
+          columns={columns}
+          renderCell={renderCell}
+          pagination={false}
+          enableExport={true}
+          exportFileName="ways-to-earn"
+          storageKey="ways-to-earn-table"
+          enableSelection={false}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleGlobalSearch}
+          leftActions={renderCustomActions()}
+          rightActions={null}
+          searchPlaceholder="Search Ways to Earn"
+          hideTableExport={false}
+          hideColumnsButton={false}
+          className="transition-all duration-500 ease-in-out"
+          loading={loading}
+          loadingMessage="Loading..."
+          getItemId={(item) => String(item.id)}
+        />
+        {totalCount > 0 && (
+          <div className="flex items-center justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
+
+      {/* Add / Edit Dialog */}
+      <Dialog modal={false} open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
+        <DialogContent className="max-w-lg w-full p-0 overflow-hidden rounded-lg">
+          <DialogHeader className="border-b border-[#D9D9D9] px-6 py-4 flex flex-row items-center justify-between">
+            <DialogTitle className="text-base font-semibold text-[#1A1A1A] uppercase tracking-wide">
+              {editingId ? "Edit Ways to Earn" : "Add Ways to Earn"}
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={closeDialog}
+              className="text-gray-500 hover:text-gray-800 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </DialogHeader>
+
+          <div className="px-6 py-5 space-y-4 bg-white">
+            {/* Title */}
+            <MuiFormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Title <span style={{ color: 'red' }}>*</span></InputLabel>
+              <MuiSelect
+                value={form.title}
+                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                displayEmpty
+                label="Title *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select title</em></MenuItem>
+                {TITLE_OPTIONS.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </MuiFormControl>
+
+            {/* Description */}
+            <div className="relative">
+              <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10">
+                Description
+              </Label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                placeholder="Enter description"
+                rows={3}
+                className="w-full border border-[#D9D9D9] rounded-md px-3 py-2.5 text-sm font-medium text-gray-800 focus:outline-none focus:ring-0 focus:border-[#C72030] resize-none"
+              />
+            </div>
+
+            {/* Points + Position */}
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                label="Points"
+                type="number"
+                placeholder="e.g. 1000"
+                value={form.points}
+                onChange={(e) => setForm((p) => ({ ...p, points: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Position"
+                type="number"
+                placeholder="e.g. 1"
+                value={form.position}
+                onChange={(e) => setForm((p) => ({ ...p, position: e.target.value }))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+
+            {/* Image Upload */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-[#1A1A1A]">Image</Label>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-[#D9D9D9] rounded-md p-4 cursor-pointer hover:border-[#C72030] transition-colors flex items-center gap-4"
+              >
+                {imagePreview ? (
+                  <>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="h-14 w-14 object-cover rounded border border-[#e5e1d8]"
+                    />
+                    <span className="text-sm text-gray-500">Click to change image</span>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-3 text-gray-400">
+                    <ImageIcon className="h-8 w-8" />
+                    <span className="text-sm">Click to upload image</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                title="Upload image"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+            </div>
+
+            {/* Active toggle */}
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-[#1A1A1A]">Active</Label>
+              <Switch
+                checked={form.active}
+                onChange={(e) => setForm((p) => ({ ...p, active: e.target.checked }))}
+                sx={{
+                  "& .MuiSwitch-switchBase.Mui-checked": { color: "#04a231" },
+                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: "#7fce95" },
+                  "& .MuiSwitch-track": { backgroundColor: "#d2d2d2" },
+                  "& .MuiSwitch-switchBase": { color: "#c72030" },
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#D9D9D9]">
+            <Button
+              variant="outline"
+              onClick={closeDialog}
+              className="border-[#D9D9D9] text-[#1A1A1A] hover:bg-[#e5e1d8]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            >
+              {saving ? "Saving..." : editingId ? "Update" : "Create"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog modal={false} open={deleteDialogOpen} onOpenChange={(open) => { if (!open) { setDeleteDialogOpen(false); setDeletingId(null); } }}>
+        <DialogContent className="max-w-sm w-full p-0 overflow-hidden rounded-lg">
+          <DialogHeader className="bg-[#F6F4EE] border-b border-[#D9D9D9] px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-[#1A1A1A]">
+              Confirm Delete
+            </DialogTitle>
+          </DialogHeader>
+          <div className="px-6 py-5 bg-white">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete this entry? This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 px-6 py-4 bg-[#F6F4EE] border-t border-[#D9D9D9]">
+            <Button
+              variant="outline"
+              onClick={() => { setDeleteDialogOpen(false); setDeletingId(null); }}
+              className="border-[#D9D9D9] text-[#1A1A1A] hover:bg-[#e5e1d8]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default WaysToEarnList;

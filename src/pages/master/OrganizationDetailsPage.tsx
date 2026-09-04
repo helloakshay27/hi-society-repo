@@ -13,6 +13,19 @@ import {
 import { toast } from "sonner";
 import { useApiConfig } from "@/hooks/useApiConfig";
 
+interface OrganizationProduct {
+  id: number;
+  product_name: string;
+  product_code: string;
+  domain: string;
+  sub_domain: string;
+  front_domain: string;
+  front_subdomain: string;
+  backend_url: string;
+  frontend_url: string;
+  active: boolean;
+}
+
 interface OrganizationDetails {
   id: number;
   name: string;
@@ -27,6 +40,7 @@ interface OrganizationDetails {
   created_at: string;
   updated_at: string;
   url: string;
+  organization_products?: OrganizationProduct[];
   attachfile?: {
     id: number;
     document_file_name: string;
@@ -85,7 +99,7 @@ export const OrganizationDetailsPage: React.FC = () => {
         toast.error("This organization is inactive and cannot be accessed", {
           duration: 5000,
         });
-        navigate("/ops-console/master/location/account");
+        navigate("/ops-console/master/location/account?tab=organization");
         return;
       }
 
@@ -147,7 +161,7 @@ export const OrganizationDetailsPage: React.FC = () => {
             {error || "The requested organization could not be found."}
           </p>
           <Button
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=organization")}
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -165,7 +179,7 @@ export const OrganizationDetailsPage: React.FC = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/ops-console/master/location/account")}
+            onClick={() => navigate("/ops-console/master/location/account?tab=organization")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -237,7 +251,7 @@ export const OrganizationDetailsPage: React.FC = () => {
                       Created By
                     </label>
                     <p className="text-gray-900">
-                      User ID: {organization.created_by_id}
+                      {organization.created_by_name}
                     </p>
                   </div>
                 </div>
@@ -250,40 +264,72 @@ export const OrganizationDetailsPage: React.FC = () => {
                 <Globe className="w-5 h-5 text-[#C72030]" />
                 Domain Configuration
               </h2>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Main Domain
-                  </label>
-                  <p className="text-gray-900 font-mono break-all">
-                    {organization.domain || "Not specified"}
-                  </p>
+
+              {organization.organization_products && organization.organization_products.length > 0 ? (
+                <div className="space-y-4">
+                  {organization.organization_products.map(product => (
+                    <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#C72030]" />
+                        {product.product_name}
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">Main Domain</label>
+                          <p className="text-sm text-gray-900 font-mono break-all">{product.domain || "Not specified"}</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">Sub Domain</label>
+                          <p className="text-sm text-gray-900 font-mono break-all">{product.sub_domain || "Not specified"}</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">Frontend Domain</label>
+                          <p className="text-sm text-gray-900 font-mono break-all">{product.front_domain || "Not specified"}</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">Frontend Subdomain</label>
+                          <p className="text-sm text-gray-900 font-mono break-all">{product.front_subdomain || "Not specified"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sub Domain
-                  </label>
-                  <p className="text-gray-900 font-mono break-all">
-                    {organization.sub_domain || "Not specified"}
-                  </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Main Domain
+                    </label>
+                    <p className="text-gray-900 font-mono break-all">
+                      {organization.domain || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sub Domain
+                    </label>
+                    <p className="text-gray-900 font-mono break-all">
+                      {organization.sub_domain || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Frontend Domain
+                    </label>
+                    <p className="text-gray-900 font-mono break-all">
+                      {organization.front_domain || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Frontend Subdomain
+                    </label>
+                    <p className="text-gray-900 font-mono break-all">
+                      {organization.front_subdomain || "Not specified"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Frontend Domain
-                  </label>
-                  <p className="text-gray-900 font-mono break-all">
-                    {organization.front_domain || "Not specified"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Frontend Subdomain
-                  </label>
-                  <p className="text-gray-900 font-mono break-all">
-                    {organization.front_subdomain || "Not specified"}
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Logos Card */}
