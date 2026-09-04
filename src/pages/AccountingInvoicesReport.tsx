@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,19 @@ interface InvoiceReportRow {
   ageing15: number | null;
 }
 
+interface OptionItem {
+  id: number;
+  name: string;
+}
+
+interface FilterState {
+  towerId: string;
+  towerName: string;
+  flatId: string;
+  flatName: string;
+  dueDate?: Date;
+}
+
 const pick = (obj: Record<string, unknown>, keys: string[]): unknown => {
   for (const key of keys) {
     if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
@@ -48,6 +61,22 @@ const toNumberOrNull = (value: unknown): number | null => {
   if (value === undefined || value === null || value === "") return null;
   const num = Number(value);
   return Number.isNaN(num) ? null : num;
+};
+
+const pickList = (data: Record<string, unknown> | undefined, keys: string[]): unknown[] => {
+  if (!data) return [];
+  for (const key of keys) {
+    if (Array.isArray(data[key])) return data[key] as unknown[];
+  }
+  return [];
+};
+
+const toOptionList = (raw: unknown, nameKeys: string[]): OptionItem[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const obj = item as Record<string, unknown>;
+    return { id: Number(obj.id), name: String(pick(obj, nameKeys) ?? obj.id ?? "") };
+  });
 };
 
 const normalizeInvoiceRow = (item: Record<string, unknown>, index: number): InvoiceReportRow => ({
@@ -106,39 +135,93 @@ const columns: ColumnConfig[] = [
 const formatBillAmount = (value: number | null) => (value === null || value === undefined ? "" : value.toFixed(1));
 const formatOutstanding = (value: number | null) => (value === null || value === undefined ? "" : value.toFixed(2));
 
-interface FilterState {
-  tower: string;
-  flat: string;
-  dueDate?: Date;
-}
+const EMPTY_FILTERS: FilterState = { towerId: "", towerName: "", flatId: "", flatName: "", dueDate: undefined };
 
 const AccountingInvoicesReport: React.FC = () => {
   const [rows, setRows] = useState<InvoiceReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-const lock_account_id = localStorage.getItem("lock_account_id") || "3";
 
-  const [filterValues, setFilterValues] = useState<FilterState>({
-    tower: "",
-    flat: "",
-    dueDate: undefined,
-  });
+  const [towers, setTowers] = useState<OptionItem[]>([]);
+  const [flats, setFlats] = useState<OptionItem[]>([]);
+  const [flatsLoading, setFlatsLoading] = useState(false);
 
-  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
-    tower: "",
-    flat: "",
-    dueDate: undefined,
-  });
+  const [filterValues, setFilterValues] = useState<FilterState>(EMPTY_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>(EMPTY_FILTERS);
 
-  const lockAccountId = localStorage.getItem("lock_account_id")|| "3";
+  const fetchTowers = useCallback(async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const res = await axios.get(`${baseUrl}/account/soc_flat_charges/form_options.json`, {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const data = (res.data || {}) as Record<string, unknown>;
+      setTowers(toOptionList(pickList(data, ["towers"]), ["name"]));
+    } catch (error) {
+      console.error("Error fetching towers:", error);
+      toast.error("Failed to load towers");
+    }
+  }, []);
 
-  const fetchInvoiceReport = useCallback(async () => {
+  useEffect(() => {
+    fetchTowers();
+  }, [fetchTowers]);
+
+  useEffect(() => {
+    setFlats([]);
+    setFilterValues((prev) => ({ ...prev, flatId: "", flatName: "" }));
+    if (!filterValues.towerId) return;
+
+    const fetchFlats = async () => {
+      setFlatsLoading(true);
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/crm/admin/society_flats.json`, {
+          params: { "q[society_block_id_eq]": filterValues.towerId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list = Array.isArray(data) ? data : Array.isArray(data?.society_flats) ? data.society_flats : [];
+        setFlats(
+          list.map((item: Record<string, unknown>) => ({
+            id: Number(item.id),
+            name: String(item.flat_no ?? item.name ?? item.id ?? ""),
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching flats:", error);
+        toast.error("Failed to load flats for the selected tower");
+        setFlats([]);
+      } finally {
+        setFlatsLoading(false);
+      }
+    };
+    fetchFlats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterValues.towerId]);
+
+  const fetchInvoiceReport = useCallback(async (filters: FilterState) => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
+      const currentLockAccountId = localStorage.getItem("lock_account_id");
+      const params: Record<string, string> = {};
+      if (currentLockAccountId) params.lock_account_id = currentLockAccountId;
+      if (filters.towerId) params["q[society_block_id_eq]"] = filters.towerId;
+      if (filters.flatId) params["q[society_flat_id_eq]"] = filters.flatId;
+      if (filters.dueDate) params["q[due_date_eq]"] = format(filters.dueDate, "yyyy-MM-dd");
+
       const response = await axios.get(`${baseUrl}/bills_invoice_report.json`, {
-        params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
+        params,
         headers: {
           Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -153,55 +236,44 @@ const lock_account_id = localStorage.getItem("lock_account_id") || "3";
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId]);
+  }, []);
 
   useEffect(() => {
-    fetchInvoiceReport();
-  }, [fetchInvoiceReport]);
-
-  const towerOptions = useMemo(
-    () => Array.from(new Set(rows.map((row) => row.tower).filter(Boolean))).sort(),
-    [rows]
-  );
-  const flatOptions = useMemo(
-    () => Array.from(new Set(rows.map((row) => row.flat).filter(Boolean))).sort(),
-    [rows]
-  );
+    fetchInvoiceReport(EMPTY_FILTERS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleOpenFilter = () => setFilterDialogOpen(true);
   const handleCloseFilter = () => setFilterDialogOpen(false);
 
   const handleApplyFilters = () => {
-    setAppliedFilters({ ...filterValues });
+    const next = { ...filterValues };
+    setAppliedFilters(next);
+    fetchInvoiceReport(next);
     setFilterDialogOpen(false);
   };
 
   const handleResetFilters = () => {
-    setFilterValues({ tower: "", flat: "", dueDate: undefined });
-    setAppliedFilters({ tower: "", flat: "", dueDate: undefined });
+    setFilterValues(EMPTY_FILTERS);
+    setAppliedFilters(EMPTY_FILTERS);
+    fetchInvoiceReport(EMPTY_FILTERS);
     setFilterDialogOpen(false);
   };
 
-  const removeAppliedFilter = (key: keyof FilterState) => {
-    const updated = { ...appliedFilters, [key]: key === "dueDate" ? undefined : "" };
-    setAppliedFilters(updated);
-    setFilterValues(updated);
+  const removeAppliedFilter = (key: "tower" | "flat" | "dueDate") => {
+    const next: FilterState = {
+      ...appliedFilters,
+      ...(key === "tower" ? { towerId: "", towerName: "" } : {}),
+      ...(key === "flat" ? { flatId: "", flatName: "" } : {}),
+      ...(key === "dueDate" ? { dueDate: undefined } : {}),
+    };
+    setAppliedFilters(next);
+    setFilterValues(next);
+    fetchInvoiceReport(next);
   };
 
-  const filteredRows = useMemo(() => {
-    return rows.filter((row) => {
-      if (appliedFilters.tower && row.tower !== appliedFilters.tower) return false;
-      if (appliedFilters.flat && row.flat !== appliedFilters.flat) return false;
-      if (appliedFilters.dueDate) {
-        const formatted = format(appliedFilters.dueDate, "yyyy-MM-dd");
-        if (row.dueDate !== formatted) return false;
-      }
-      return true;
-    });
-  }, [rows, appliedFilters]);
-
   const hasAppliedFilters = Boolean(
-    appliedFilters.tower || appliedFilters.flat || appliedFilters.dueDate
+    appliedFilters.towerId || appliedFilters.flatId || appliedFilters.dueDate
   );
 
   const renderCell = (item: InvoiceReportRow, columnKey: string) => {
@@ -234,15 +306,15 @@ const lock_account_id = localStorage.getItem("lock_account_id") || "3";
           <span className="text-brand-body-4 font-medium text-brand-text-light">
             Applied Filters:
           </span>
-          {appliedFilters.tower && (
+          {appliedFilters.towerId && (
             <span className="inline-flex items-center gap-1 rounded-full border border-brand-card-border bg-brand-light px-3 py-1 text-xs text-brand-text">
-              Tower: {appliedFilters.tower}
+              Tower: {appliedFilters.towerName}
               <X className="h-3 w-3 cursor-pointer" onClick={() => removeAppliedFilter("tower")} />
             </span>
           )}
-          {appliedFilters.flat && (
+          {appliedFilters.flatId && (
             <span className="inline-flex items-center gap-1 rounded-full border border-brand-card-border bg-brand-light px-3 py-1 text-xs text-brand-text">
-              Flat: {appliedFilters.flat}
+              Flat: {appliedFilters.flatName}
               <X className="h-3 w-3 cursor-pointer" onClick={() => removeAppliedFilter("flat")} />
             </span>
           )}
@@ -256,7 +328,7 @@ const lock_account_id = localStorage.getItem("lock_account_id") || "3";
       )}
 
       <EnhancedTable
-        data={filteredRows}
+        data={rows}
         columns={columns}
         renderCell={renderCell}
         getItemId={(item) => String(item.sr)}
@@ -288,10 +360,12 @@ const lock_account_id = localStorage.getItem("lock_account_id") || "3";
                   Select Tower
                 </InputLabel>
                 <MuiSelect
-                  value={filterValues.tower}
-                  onChange={(e) =>
-                    setFilterValues((prev) => ({ ...prev, tower: e.target.value }))
-                  }
+                  value={filterValues.towerId}
+                  onChange={(e) => {
+                    const towerId = e.target.value as string;
+                    const towerName = towers.find((t) => String(t.id) === towerId)?.name ?? "";
+                    setFilterValues((prev) => ({ ...prev, towerId, towerName }));
+                  }}
                   displayEmpty
                   label="Select Tower"
                   sx={fieldStyles}
@@ -300,9 +374,9 @@ const lock_account_id = localStorage.getItem("lock_account_id") || "3";
                   <MenuItem value="">
                     <em>All Towers</em>
                   </MenuItem>
-                  {towerOptions.map((tower) => (
-                    <MenuItem key={tower} value={tower}>
-                      {tower}
+                  {towers.map((tower) => (
+                    <MenuItem key={tower.id} value={String(tower.id)}>
+                      {tower.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -313,21 +387,24 @@ const lock_account_id = localStorage.getItem("lock_account_id") || "3";
                   Select Flat
                 </InputLabel>
                 <MuiSelect
-                  value={filterValues.flat}
-                  onChange={(e) =>
-                    setFilterValues((prev) => ({ ...prev, flat: e.target.value }))
-                  }
+                  value={filterValues.flatId}
+                  onChange={(e) => {
+                    const flatId = e.target.value as string;
+                    const flatName = flats.find((f) => String(f.id) === flatId)?.name ?? "";
+                    setFilterValues((prev) => ({ ...prev, flatId, flatName }));
+                  }}
                   displayEmpty
                   label="Select Flat"
                   sx={fieldStyles}
                   MenuProps={menuProps}
+                  disabled={!filterValues.towerId || flatsLoading}
                 >
                   <MenuItem value="">
-                    <em>All Flats</em>
+                    <em>{filterValues.towerId ? "All Flats" : "Select tower first"}</em>
                   </MenuItem>
-                  {flatOptions.map((flat) => (
-                    <MenuItem key={flat} value={flat}>
-                      {flat}
+                  {flats.map((flat) => (
+                    <MenuItem key={flat.id} value={String(flat.id)}>
+                      {flat.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>

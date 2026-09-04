@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Eye, FileClock, Plus, Trash2 } from "lucide-react";
+import { Eye, Plus, Trash2 } from "lucide-react";
 
 interface FlatChargeMapping {
   id: number;
@@ -20,10 +20,10 @@ interface FlatChargeMapping {
 const columns: ColumnConfig[] = [
   { key: "actions", label: "Actions", sortable: false },
   { key: "id", label: "ID", sortable: true },
-  { key: "bill_cycle_name", label: "Bill Cycle", sortable: true },
-  { key: "tower_name", label: "Tower", sortable: true },
-  { key: "possession_status", label: "Possession Status", sortable: true },
-  { key: "flat_names", label: "Flats", sortable: false },
+  { key: "society_bill_cycle_name", label: "Bill Cycle", sortable: true },
+  // { key: "tower_name", label: "Tower", sortable: true },
+  // { key: "possession_status", label: "Possession Status", sortable: true },
+  { key: "flat_no", label: "Flats", sortable: false },
   { key: "created_at", label: "Created On", sortable: true },
 ];
 
@@ -142,15 +142,6 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
             onClick={() => navigate("/accounting/units-bill-cycle-mapping/add")}
           >
             <Plus className="w-4 h-4 mr-2" /> Add
-          </Button>
-        }
-        rightActions={
-          <Button
-            variant="outline"
-            className="h-9 px-4 text-sm font-medium"
-            onClick={() => navigate("/accounting/units-bill-cycle-mapping/log")}
-          >
-            <FileClock className="w-4 h-4 mr-2" /> Audit Log
           </Button>
         }
         loading={loading}
