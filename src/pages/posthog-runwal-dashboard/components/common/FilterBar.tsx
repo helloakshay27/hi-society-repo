@@ -26,7 +26,6 @@ interface FilterBarProps {
   showResidentSegment?: boolean;
   residentSegment?: 'all' | 'pre' | 'post';
   onSelectResidentSegment?: (segment: 'all' | 'pre' | 'post') => void;
-  onRefresh?: () => void;
   // Admin scope (Tower Admin vs Super Admin) — Godrej-only, UI display filter.
   // PROPOSED: there is no confirmed backend field to scope real data by this
   // dimension yet, so selecting a tier here does not change the numbers shown.
@@ -61,7 +60,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   showResidentSegment = false,
   residentSegment = 'all',
   onSelectResidentSegment,
-  onRefresh,
   showAdminScope = false,
   adminScope = 'all',
   onSelectAdminScope,
@@ -309,6 +307,31 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       >
         <span className={`ic${isFetching ? ' refresh-spin' : ''}`}>⟳</span> Refresh
       </button>
+
+      {showRefresh && (
+        <>
+          <style>{`
+            @keyframes filterbar-refresh-spin { to { transform: rotate(360deg); } }
+          `}</style>
+          <button
+            type="button"
+            className="ctrl"
+            id="refreshBtn"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            title="Refresh live data"
+            aria-label="Refresh live data"
+          >
+            <span
+              className="ic"
+              style={isRefreshing ? { display: 'inline-block', animation: 'filterbar-refresh-spin 0.8s linear infinite' } : undefined}
+            >
+              ⟳
+            </span>{' '}
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </>
+      )}
 
       {showRefresh && (
         <>

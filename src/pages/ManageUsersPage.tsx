@@ -941,11 +941,14 @@ const ManageUsersPage = () => {
         </div>
 
         {/* Action Panel */}
-        {showActionPanel && (
+        {(showActionPanel || selectedUsers.length > 0) && (
           <SelectionPanel
             onAdd={handleAddUser}
             onImport={handleImport}
-            onClearSelection={() => setShowActionPanel(false)}
+            onClearSelection={() => {
+              setShowActionPanel(false);
+              setSelectedUsers([]);
+            }}
             actions={[
               { label: "Send Email", icon: Mail, onClick: handleSendEmailAction },
             ]}
