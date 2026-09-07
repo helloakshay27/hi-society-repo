@@ -1399,6 +1399,12 @@ export const HiSocietySidebar: React.FC = () => {
             },
           ],
         },
+         {
+          id: "email-templates",
+          label: "Email Templates",
+          icon: FileText,
+          path: "/settings/email-templates",
+        },
         {
           id: "question-bank",
           label: "Question Bank",
