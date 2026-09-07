@@ -297,42 +297,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <span className="ic">↺</span> Previous period {prev ? '✓' : ''}
       </button>
 
-      <button
-        type="button"
-        className="ctrl"
-        id="refreshBtn"
-        onClick={onRefresh}
-        disabled={isFetching}
-        title="Refresh"
-      >
-        <span className={`ic${isFetching ? ' refresh-spin' : ''}`}>⟳</span> Refresh
-      </button>
-
-      {showRefresh && (
-        <>
-          <style>{`
-            @keyframes filterbar-refresh-spin { to { transform: rotate(360deg); } }
-          `}</style>
-          <button
-            type="button"
-            className="ctrl"
-            id="refreshBtn"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Refresh live data"
-            aria-label="Refresh live data"
-          >
-            <span
-              className="ic"
-              style={isRefreshing ? { display: 'inline-block', animation: 'filterbar-refresh-spin 0.8s linear infinite' } : undefined}
-            >
-              ⟳
-            </span>{' '}
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
-        </>
-      )}
-
       {showRefresh && (
         <>
           <style>{`
