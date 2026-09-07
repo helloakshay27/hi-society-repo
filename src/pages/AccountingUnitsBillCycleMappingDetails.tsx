@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Building2 } from "lucide-react";
+import axios from "axios";
+import { ArrowLeft, Building2, Logs } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LogsTimeline, LogEntry } from "@/components/LogTimeline";
+import { API_CONFIG } from "@/config/apiConfig";
 
 interface MappingDetail {
   id: number;
@@ -16,7 +19,43 @@ const formatDateTime = (value?: string) => {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return `${date.toLocaleDateString("en-GB")} ${date.toLocaleTimeString()}`;
+  const datePart = date.toLocaleDateString("en-GB"); // DD/MM/YYYY
+  const timePart = date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${datePart} ${timePart}`;
+};
+
+const pick = (obj: Record<string, unknown>, keys: string[]): unknown => {
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return undefined;
+};
+
+const toLogEntries = (data: unknown, mappingId?: string): LogEntry[] => {
+  const list: Record<string, unknown>[] = Array.isArray(data)
+    ? (data as Record<string, unknown>[])
+    : Array.isArray((data as Record<string, unknown>)?.logs)
+      ? ((data as Record<string, unknown>).logs as Record<string, unknown>[])
+      : Array.isArray((data as Record<string, unknown>)?.society_flat_charge_logs)
+        ? ((data as Record<string, unknown>).society_flat_charge_logs as Record<string, unknown>[])
+        : [];
+
+  const relevant = mappingId
+    ? list.filter((item) => {
+        const relatedId = pick(item, ["soc_flat_charge_id", "charge_id", "record_id"]);
+        return relatedId === undefined || String(relatedId) === String(mappingId);
+      })
+    : list;
+
+  return relevant.map((item, index) => ({
+    id: String(pick(item, ["id"]) ?? index),
+    description: String(pick(item, ["description", "action", "message", "text", "log", "activity"]) ?? ""),
+    timestamp: formatDateTime(String(pick(item, ["created_at", "timestamp", "date"]) ?? "") || undefined),
+  }));
 };
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -50,6 +89,31 @@ const AccountingUnitsBillCycleMappingDetails: React.FC = () => {
   const location = useLocation();
   const detail = (location.state as { mapping?: MappingDetail } | null)?.mapping;
 
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+
+  const fetchLogs = useCallback(async () => {
+    setLogsLoading(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/account/soc_flat_charges/society_flat_charge_log.json`,
+        { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
+      );
+      setLogs(toLogEntries(response.data, id));
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+      setLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
   return (
     <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden">
       <button
@@ -79,7 +143,25 @@ const AccountingUnitsBillCycleMappingDetails: React.FC = () => {
             </div>
           </SectionCard>
 
-          <div className="flex justify-start gap-3">
+          <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
+                <Logs className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Logs</h3>
+            </div>
+            <div className="overflow-x-auto px-3">
+              {logsLoading ? (
+                <p className="text-sm text-gray-500">Loading logs...</p>
+              ) : logs.length === 0 ? (
+                <p className="text-sm text-gray-500">No log entries found</p>
+              ) : (
+                <LogsTimeline logs={logs} />
+              )}
+            </div>
+          </div>
+
+          {/* <div className="flex justify-start gap-3">
             <Button
               type="button"
               variant="outline"
@@ -88,7 +170,7 @@ const AccountingUnitsBillCycleMappingDetails: React.FC = () => {
             >
               Back
             </Button>
-          </div>
+          </div> */}
         </div>
       )}
     </div>

@@ -276,17 +276,17 @@ export function buildAdoption(
   const totalModules = engagementQ?.module_breadth?.total ?? TOTAL_MODULES;
 
   const tiles: TileSpec[] = [
-    {
-      id: 'seatUtil',
-      label: 'Seat Utilisation',
-      val: seatVal,
-      dir: (engagementQ?.seat_utilisation?.delta_pct != null && engagementQ.seat_utilisation.delta_pct < 0 ? 'dn' : 'up') as 'up' | 'dn' | 'flat',
-      delta: seatDelta,
-      sub: 'active ÷ registered gate staff',
-      raw: seatUtil != null ? seatUtil * 100 : 0,
-      unit: '%',
-      goodUp: true,
-    },
+    // {
+    //   id: 'seatUtil',
+    //   label: 'Seat Utilisation',
+    //   val: seatVal,
+    //   dir: (engagementQ?.seat_utilisation?.delta_pct != null && engagementQ.seat_utilisation.delta_pct < 0 ? 'dn' : 'up') as 'up' | 'dn' | 'flat',
+    //   delta: seatDelta,
+    //   sub: 'active ÷ registered gate staff',
+    //   raw: seatUtil != null ? seatUtil * 100 : 0,
+    //   unit: '%',
+    //   goodUp: true,
+    // },
     {
       id: 'stickiness',
       label: 'Stickiness',

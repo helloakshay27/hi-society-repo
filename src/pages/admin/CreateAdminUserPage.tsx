@@ -94,7 +94,6 @@ export const CreateAdminUserPage = () => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,30 +108,20 @@ export const CreateAdminUserPage = () => {
   // Fetch organizations on component mount
   useEffect(() => {
     fetchOrganizations();
-    fetchCompanies();
   }, []);
 
-  // Filter companies when organization is selected
+  // Fetch companies scoped to the selected organization (server-side, via
+  // q[organization_id_eq]) — fires a fresh network request every time the
+  // organization selection changes, rather than filtering a single
+  // upfront fetch-all-companies response client-side.
   useEffect(() => {
-    if (formData.organization_id) {
-      const filtered = companies.filter(
-        (company) =>
-          company.organization_id !== null &&
-          company.organization_id.toString() === formData.organization_id
-      );
-      setFilteredCompanies(filtered);
-      // Reset company selection if current selection is not in filtered list
-      if (
-        formData.company_id &&
-        !filtered.find((c) => c.id.toString() === formData.company_id)
-      ) {
-        setFormData((prev) => ({ ...prev, company_id: "" }));
-      }
-    } else {
+    if (!formData.organization_id) {
       setFilteredCompanies([]);
-      setFormData((prev) => ({ ...prev, company_id: "" }));
+      setFormData((prev) => (prev.company_id ? { ...prev, company_id: "" } : prev));
+      return;
     }
-  }, [formData.organization_id, formData.company_id, companies]);
+    fetchCompanies(formData.organization_id);
+  }, [formData.organization_id]);
 
   const fetchOrganizations = async () => {
     setLoadingOrganizations(true);
@@ -155,22 +144,28 @@ export const CreateAdminUserPage = () => {
     }
   };
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = async (organizationId: string) => {
     setLoadingCompanies(true);
     try {
-      const result = await getCompanies();
+      const result = await getCompanies(organizationId);
 
       if (result.success && result.data) {
-        setCompanies(result.data);
+        const list = result.data;
+        setFilteredCompanies(list);
+        setFormData((prev) =>
+          prev.company_id && !list.find((c) => c.id.toString() === prev.company_id)
+            ? { ...prev, company_id: "" }
+            : prev
+        );
       } else {
         console.error("Failed to fetch companies:", result.error);
         toast.error(result.error || "Failed to load companies");
-        setCompanies([]);
+        setFilteredCompanies([]);
       }
     } catch (error) {
       console.error("Error fetching companies:", error);
       toast.error("Error loading companies");
-      setCompanies([]);
+      setFilteredCompanies([]);
     } finally {
       setLoadingCompanies(false);
     }
