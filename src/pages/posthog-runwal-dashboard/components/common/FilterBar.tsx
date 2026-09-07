@@ -26,7 +26,6 @@ interface FilterBarProps {
   showResidentSegment?: boolean;
   residentSegment?: 'all' | 'pre' | 'post';
   onSelectResidentSegment?: (segment: 'all' | 'pre' | 'post') => void;
-  onRefresh?: () => void;
   // Admin scope (Tower Admin vs Super Admin) — Godrej-only, UI display filter.
   // PROPOSED: there is no confirmed backend field to scope real data by this
   // dimension yet, so selecting a tier here does not change the numbers shown.
@@ -61,7 +60,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   showResidentSegment = false,
   residentSegment = 'all',
   onSelectResidentSegment,
-  onRefresh,
   showAdminScope = false,
   adminScope = 'all',
   onSelectAdminScope,
