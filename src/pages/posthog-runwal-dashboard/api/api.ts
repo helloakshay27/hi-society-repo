@@ -87,7 +87,7 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
     parts.push(`${k}=${encodeURIComponent(v)}`);
   }
 
-  const appId = getAppIdFromUrl();
+  const appId = filters.appId || getAppIdFromUrl();
   if (appId) parts.push(`app_id=${encodeURIComponent(appId)}`);
 
   // Sent unescaped (matches the site_id convention below) — the value is

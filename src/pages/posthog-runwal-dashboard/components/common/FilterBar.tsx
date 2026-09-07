@@ -26,6 +26,17 @@ interface FilterBarProps {
   showResidentSegment?: boolean;
   residentSegment?: 'all' | 'pre' | 'post';
   onSelectResidentSegment?: (segment: 'all' | 'pre' | 'post') => void;
+  onRefresh?: () => void;
+  // Admin scope (Tower Admin vs Super Admin) — Godrej-only, UI display filter.
+  // PROPOSED: there is no confirmed backend field to scope real data by this
+  // dimension yet, so selecting a tier here does not change the numbers shown.
+  showAdminScope?: boolean;
+  adminScope?: 'all' | 'tower' | 'super';
+  onSelectAdminScope?: (scope: 'all' | 'tower' | 'super') => void;
+  // Manual refresh — re-fetches live data for whichever page is on screen.
+  showRefresh?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -50,6 +61,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   showResidentSegment = false,
   residentSegment = 'all',
   onSelectResidentSegment,
+  onRefresh,
+  showAdminScope = false,
+  adminScope = 'all',
+  onSelectAdminScope,
+  showRefresh = false,
+  onRefresh,
+  isRefreshing = false,
 }) => {
   const [isDateOpen, setIsDateOpen] = useState(false);
   const [customFrom, setCustomFrom] = useState(rangeFrom);
@@ -168,6 +186,55 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
 
+      {/* Society / Project dropdown — commented out for now.
+      <label className="ctrl" title="Society / Project">
+        <span className="ic">🏢</span>
+        <select
+          value={selectedSiteId}
+          onChange={(e) => onSelectSite(e.target.value)}
+          disabled={isSitesLoading}
+        >
+          <option value="all">All Societies</option>
+          {sites.map((site) => (
+            <option key={site.id} value={site.id}>
+              {site.name}
+            </option>
+          ))}
+        </select>
+        <span className="chev">▾</span>
+      </label>
+      */}
+
+      {/* Admin Scope toggle (All admins / Tower Admin / Super Admin) — commented out for now.
+      {showAdminScope && (
+        <div className="devtoggle" id="scopeToggle" title="Admin scope">
+          <button
+            type="button"
+            className={adminScope === 'all' ? 'on' : ''}
+            onClick={() => onSelectAdminScope?.('all')}
+          >
+            All admins
+          </button>
+          <button
+            type="button"
+            className={adminScope === 'tower' ? 'on' : ''}
+            onClick={() => onSelectAdminScope?.('tower')}
+            title="Tower/wing admins — access limited to their own tower or wing"
+          >
+            Tower Admin
+          </button>
+          <button
+            type="button"
+            className={adminScope === 'super' ? 'on' : ''}
+            onClick={() => onSelectAdminScope?.('super')}
+            title="Super admins — access to the whole society, all towers/wings"
+          >
+            Super Admin
+          </button>
+        </div>
+      )}
+      */}
+
       {showResidentSegment && (
         <div className="devtoggle" id="residentToggle" title="Resident Segment">
           <button
@@ -231,6 +298,42 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       >
         <span className="ic">↺</span> Previous period {prev ? '✓' : ''}
       </button>
+
+      <button
+        type="button"
+        className="ctrl"
+        id="refreshBtn"
+        onClick={onRefresh}
+        disabled={isFetching}
+        title="Refresh"
+      >
+        <span className={`ic${isFetching ? ' refresh-spin' : ''}`}>⟳</span> Refresh
+      </button>
+
+      {showRefresh && (
+        <>
+          <style>{`
+            @keyframes filterbar-refresh-spin { to { transform: rotate(360deg); } }
+          `}</style>
+          <button
+            type="button"
+            className="ctrl"
+            id="refreshBtn"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            title="Refresh live data"
+            aria-label="Refresh live data"
+          >
+            <span
+              className="ic"
+              style={isRefreshing ? { display: 'inline-block', animation: 'filterbar-refresh-spin 0.8s linear infinite' } : undefined}
+            >
+              ⟳
+            </span>{' '}
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </>
+      )}
 
       <div className="spacer"></div>
 

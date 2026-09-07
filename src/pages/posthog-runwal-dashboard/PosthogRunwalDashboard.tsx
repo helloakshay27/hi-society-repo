@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageId, DevicePlatform } from './types';
 import { BM_DEFAULTS } from './data/constants';
 import { DashboardProvider } from './context/DashboardContext';
@@ -25,6 +26,7 @@ function dateRangeFor(days: number) {
 }
 
 function PosthogRunwalDashboardContent() {
+  const queryClient = useQueryClient();
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const saved = localStorage.getItem('runwal-theme');
@@ -141,8 +143,9 @@ function PosthogRunwalDashboardContent() {
       subModule: null,
       url: dynamicTenantUrl,
       displayView,
+      appId: appId || undefined,
     };
-  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl, showResidentSegment, residentSegment]);
+  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl, showResidentSegment, residentSegment, appId]);
 
   // Traffic Session query for global live counter & badge
   const {
@@ -226,6 +229,13 @@ function PosthogRunwalDashboardContent() {
     setRangeLabel(label);
     setRangeFrom(from);
     setRangeTo(to);
+  };
+
+  // Refetch every active query on this dashboard (PostHog adoption + FM
+  // Matrix) with the current filters, instead of waiting for cache staleness.
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['fm-adoption'] });
+    queryClient.invalidateQueries({ queryKey: ['fm-dashboard'] });
   };
 
   // Dynamic User and Organization Info
@@ -362,6 +372,7 @@ function PosthogRunwalDashboardContent() {
             onSelectResidentSegment={setResidentSegment}
             prev={showPrev}
             onTogglePrev={() => setShowPrev((p) => !p)}
+            onRefresh={handleRefresh}
             recentlyOnlineCount={recentlyOnlineCount}
             isFetching={isTrafficFetching}
             isError={isTrafficError}

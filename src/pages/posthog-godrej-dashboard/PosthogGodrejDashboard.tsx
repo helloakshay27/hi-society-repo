@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 // Everything below except TopBar/SideBar is brand-agnostic — reused directly
 // from the Runwal dashboard rather than duplicated, so chart/table/page logic
-// has a single source of truth across both dashboards.
+// has a single source of truth across all tenant dashboards.
 import { PageId, DevicePlatform } from '../posthog-runwal-dashboard/types';
 import { BM_DEFAULTS } from '../posthog-runwal-dashboard/data/constants';
 import { DashboardProvider } from '../posthog-runwal-dashboard/context/DashboardContext';
@@ -9,12 +10,18 @@ import { InfoPopover } from '../posthog-runwal-dashboard/components/common/InfoP
 import { TopBar } from './components/common/TopBar';
 import { SideBar } from './components/common/SideBar';
 import { FilterBar } from '../posthog-runwal-dashboard/components/common/FilterBar';
-import { TrafficSessionPage } from '../posthog-runwal-dashboard/components/pages/TrafficSessionPage';
-import { AdoptionEngagementPage } from '../posthog-runwal-dashboard/components/pages/AdoptionEngagementPage';
-import { WorkflowUsagePage } from '../posthog-runwal-dashboard/components/pages/WorkflowUsagePage';
+// Page bodies are Godrej-specific (not reused from Runwal) so this dashboard
+// can carry the extra wireframe sections (Admin Tiers, Society league table,
+// bucket-tab module nav) Runwal's own pages don't have — but they call the
+// exact same live PostHog/FM Matrix hooks/APIs as Runwal underneath.
+import { TrafficSessionPage } from './components/pages/TrafficSessionPage';
+import { AdoptionEngagementPage } from './components/pages/AdoptionEngagementPage';
+import { WorkflowUsagePage } from './components/pages/WorkflowUsagePage';
 import { useDashboardSites, useTrafficSession } from '../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
+import { useEnsureAppId } from '../posthog-runwal-dashboard/hooks/useEnsureAppId';
 import { DashboardFilters } from '../posthog-runwal-dashboard/api/types';
 import { getToken, getUser } from '../../utils/auth';
+import { AdminScope } from './data/wireframeData';
 import '../posthog-runwal-dashboard/styles/dashboard.css';
 
 function dateRangeFor(days: number) {
@@ -26,12 +33,18 @@ function dateRangeFor(days: number) {
   return { from: ymd(from), to: ymd(to) };
 }
 
-function PosthogMyPiramalDashboardContent() {
+// No confirmed live app_id for this tenant is inferred from anywhere else —
+// pinned per the explicit real value given for this dashboard.
+const GODREJ_APP_ID = '29';
+
+function PosthogGodrejDashboardContent() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
-      const saved = localStorage.getItem('my-piramal-theme');
+      const saved = localStorage.getItem('godrej-theme');
       if (saved === 'dark' || saved === 'light') return saved;
-    } catch {}
+    } catch {
+      /* ignore */
+    }
     if (
       typeof window !== 'undefined' &&
       window.matchMedia &&
@@ -44,7 +57,7 @@ function PosthogMyPiramalDashboardContent() {
 
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('my-piramal-nav') === 'collapsed';
+      return localStorage.getItem('godrej-nav') === 'collapsed';
     } catch {
       return false;
     }
@@ -57,6 +70,10 @@ function PosthogMyPiramalDashboardContent() {
   const initialRange = useMemo(() => dateRangeFor(30), []);
 
   const [activePage, setActivePage] = useState<PageId>('pgTraffic');
+  // PROPOSED: no confirmed backend field distinguishes Tower vs Super admins
+  // yet, so this only drives the filter bar's UI state — it does not change
+  // any of the real numbers shown below.
+  const [adminScope, setAdminScope] = useState<AdminScope>('all');
   const [devPlatform, setDevPlatform] = useState<DevicePlatform>('all');
   const [showPrev, setShowPrev] = useState<boolean>(true);
   const [rangeDays, setRangeDays] = useState<number>(30);
@@ -82,9 +99,6 @@ function PosthogMyPiramalDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
-      // My Piramal is a fixed PostHog tenant app — unlike Runwal (which reads
-      // ?app_id= from the URL), it always sends app_id=38.
-      appId: '38',
     };
   }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
 
@@ -102,8 +116,10 @@ function PosthogMyPiramalDashboardContent() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try {
-      localStorage.setItem('my-piramal-theme', theme);
-    } catch {}
+      localStorage.setItem('godrej-theme', theme);
+    } catch {
+      /* ignore */
+    }
   }, [theme]);
 
   // Sync keyboard shortcut '[' for nav rail toggle
@@ -117,8 +133,10 @@ function PosthogMyPiramalDashboardContent() {
       setIsNavCollapsed((prev) => {
         const next = !prev;
         try {
-          localStorage.setItem('my-piramal-nav', next ? 'collapsed' : 'open');
-        } catch {}
+          localStorage.setItem('godrej-nav', next ? 'collapsed' : 'open');
+        } catch {
+      /* ignore */
+    }
         return next;
       });
     };
@@ -135,8 +153,10 @@ function PosthogMyPiramalDashboardContent() {
     setIsNavCollapsed((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem('my-piramal-nav', next ? 'collapsed' : 'open');
-      } catch {}
+        localStorage.setItem('godrej-nav', next ? 'collapsed' : 'open');
+      } catch {
+      /* ignore */
+    }
       return next;
     });
   };
@@ -172,6 +192,21 @@ function PosthogMyPiramalDashboardContent() {
     setRangeTo(to);
   };
 
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['fm-adoption'] }),
+        queryClient.invalidateQueries({ queryKey: ['fm-dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard-sites'] }),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [queryClient]);
+
   // Dynamic User and Organization Info
   const user = useMemo(() => {
     try {
@@ -187,7 +222,9 @@ function PosthogMyPiramalDashboardContent() {
         const parsed = JSON.parse(acc);
         return parsed?.user || parsed;
       }
-    } catch {}
+    } catch {
+      /* ignore */
+    }
     return null;
   }, []);
 
@@ -200,7 +237,9 @@ function PosthogMyPiramalDashboardContent() {
           const name = [parsed.firstname, parsed.lastname].filter(Boolean).join(' ');
           if (name) return name;
         }
-      } catch {}
+      } catch {
+      /* ignore */
+    }
       return 'Logged-in User';
     }
     const name = [user.firstname, user.lastname].filter(Boolean).join(' ');
@@ -221,7 +260,9 @@ function PosthogMyPiramalDashboardContent() {
           return parsed.user_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
         }
       }
-    } catch {}
+    } catch {
+      /* ignore */
+    }
     return user?.lock_role?.display_name || user?.lock_role?.name || user?.user_type || 'Analytics Admin';
   }, [user]);
 
@@ -229,20 +270,11 @@ function PosthogMyPiramalDashboardContent() {
     return user?.email || '';
   }, [user]);
 
-  const orgName = useMemo(() => {
-    try {
-      const acc = localStorage.getItem('hiSocietyAccount');
-      if (acc) {
-        const parsed = JSON.parse(acc);
-        if (parsed?.organization?.name) return parsed.organization.name;
-        if (parsed?.selected_user_society_name) return parsed.selected_user_society_name;
-        if (parsed?.society?.building_name) return parsed.society.building_name;
-      }
-      const savedOrg = localStorage.getItem('org_name') || localStorage.getItem('organization_name');
-      if (savedOrg) return savedOrg;
-    } catch {}
-    return 'My Piramal';
-  }, []);
+  // Fixed brand name — this is a dedicated Godrej-branded dashboard page, so
+  // it should not switch to whatever org happens to be on the logged-in
+  // test account (unlike Runwal/Piramal, which are meant to reflect the
+  // logged-in account's own org).
+  const orgName = 'Godrej Living';
 
   const PAGE_TITLES: Record<PageId, string> = {
     pgTraffic: 'Traffic & Session',
@@ -299,10 +331,16 @@ function PosthogMyPiramalDashboardContent() {
             selectedSiteId={selectedSiteId}
             onSelectSite={setSelectedSiteId}
             isSitesLoading={isSitesLoading}
+            showAdminScope
+            adminScope={adminScope}
+            onSelectAdminScope={setAdminScope}
             dev={devPlatform}
             onSelectDev={setDevPlatform}
             prev={showPrev}
             onTogglePrev={() => setShowPrev((p) => !p)}
+            showRefresh
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
             recentlyOnlineCount={recentlyOnlineCount}
             isFetching={isTrafficFetching}
             isError={isTrafficError}
@@ -325,6 +363,8 @@ function PosthogMyPiramalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              sites={sites}
+              adminScope={adminScope}
             />
           )}
 
@@ -350,13 +390,23 @@ function PosthogMyPiramalDashboardContent() {
   );
 }
 
-export const PosthogMyPiramalDashboard: React.FC = () => {
+// Ensures the URL carries app_id=29 before any of the content's data-fetching
+// hooks mount — several of them (useDashboardSites in particular) have no
+// `enabled` gate and cache under a query key that doesn't depend on the URL,
+// so firing them even once before the URL is corrected would permanently
+// cache results scoped to the wrong (missing) app_id.
+function PosthogGodrejDashboardGate() {
+  const appIdReady = useEnsureAppId(GODREJ_APP_ID);
+  if (!appIdReady) return null;
+  return <PosthogGodrejDashboardContent />;
+}
+
+export const PosthogGodrejDashboard: React.FC = () => {
   return (
     <DashboardProvider>
-      <PosthogMyPiramalDashboardContent />
+      <PosthogGodrejDashboardGate />
     </DashboardProvider>
   );
 };
 
-export default PosthogMyPiramalDashboard;
-
+export default PosthogGodrejDashboard;
