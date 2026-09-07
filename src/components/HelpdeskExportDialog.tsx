@@ -539,7 +539,7 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({ isOp
           <Button
             onClick={handleExport}
             disabled={exporting}
-            className="bg-cyan-400 hover:bg-cyan-500 text-white px-8 disabled:opacity-70"
+            className="px-8 disabled:opacity-70"
           >
             <Download className="w-4 h-4 mr-2" />
             {exporting ? "Exporting..." : "Export"}
