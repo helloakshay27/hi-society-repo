@@ -98,6 +98,12 @@ export interface Society {
   ivr_api_key?: string | null;
   ivr_name?: string | null;
   ivr_caller_id?: string | null;
+  incident_enabled?: boolean;
+  complaint_feedback_enabled?: boolean;
+  leave_at_gate_enabled?: boolean;
+  feedback_enabled?: boolean;
+  flat_feedback_enabled?: boolean;
+  auto_complaint_close?: boolean;
 }
 
 export interface SocietyListResponse {
@@ -156,6 +162,12 @@ export interface SocietyFormData {
   ivr_api_key?: string;
   ivr_name?: string;
   ivr_caller_id?: string;
+  incident_enabled?: boolean;
+  complaint_feedback_enabled?: boolean;
+  leave_at_gate_enabled?: boolean;
+  feedback_enabled?: boolean;
+  flat_feedback_enabled?: boolean;
+  auto_complaint_close?: boolean;
 }
 
 export interface Headquarter {
