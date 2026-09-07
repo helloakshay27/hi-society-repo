@@ -232,7 +232,8 @@ const AccountingUnitsBillCycleMappingCreation: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden">
+    <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden mapping-form-page">
+      <style>{`.mapping-form-page .MuiFormLabel-asterisk { color: #da7756 !important; }`}</style>
       <button
         onClick={() => navigate("/accounting/units-bill-cycle-mapping")}
         className="mb-6 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
@@ -303,7 +304,7 @@ const AccountingUnitsBillCycleMappingCreation: React.FC = () => {
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
             Select Flats
-            <span className="text-red-500"> *</span>
+            <span style={{ color: "#da7756" }}> *</span>
           </label>
           <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
             <Select
@@ -338,7 +339,7 @@ const AccountingUnitsBillCycleMappingCreation: React.FC = () => {
         </div>
       </SectionCard>
 
-      <div className="mt-6 flex justify-start gap-3">
+      <div className="mt-6 flex justify-center gap-3">
         <Button
           onClick={handleSubmit}
           disabled={submitting}
