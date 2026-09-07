@@ -26,6 +26,7 @@ interface FilterBarProps {
   showResidentSegment?: boolean;
   residentSegment?: 'all' | 'pre' | 'post';
   onSelectResidentSegment?: (segment: 'all' | 'pre' | 'post') => void;
+  onRefresh?: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -50,6 +51,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   showResidentSegment = false,
   residentSegment = 'all',
   onSelectResidentSegment,
+  onRefresh,
 }) => {
   const [isDateOpen, setIsDateOpen] = useState(false);
   const [customFrom, setCustomFrom] = useState(rangeFrom);
@@ -230,6 +232,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         onClick={onTogglePrev}
       >
         <span className="ic">↺</span> Previous period {prev ? '✓' : ''}
+      </button>
+
+      <button
+        type="button"
+        className="ctrl"
+        id="refreshBtn"
+        onClick={onRefresh}
+        disabled={isFetching}
+        title="Refresh"
+      >
+        <span className={`ic${isFetching ? ' refresh-spin' : ''}`}>⟳</span> Refresh
       </button>
 
       <div className="spacer"></div>
