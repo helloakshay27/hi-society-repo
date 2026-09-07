@@ -333,6 +333,31 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </>
       )}
 
+      {showRefresh && (
+        <>
+          <style>{`
+            @keyframes filterbar-refresh-spin { to { transform: rotate(360deg); } }
+          `}</style>
+          <button
+            type="button"
+            className="ctrl"
+            id="refreshBtn"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            title="Refresh live data"
+            aria-label="Refresh live data"
+          >
+            <span
+              className="ic"
+              style={isRefreshing ? { display: 'inline-block', animation: 'filterbar-refresh-spin 0.8s linear infinite' } : undefined}
+            >
+              ⟳
+            </span>{' '}
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </>
+      )}
+
       <div className="spacer"></div>
 
       {/* <LiveApiBadge
