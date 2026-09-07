@@ -49,6 +49,7 @@ export interface QueryFilters {
   token: string;
   /** Dynamic tenant base URL passed to PostHog analytics */
   url?: string;
+  projectCode?: string;
 }
 
 function ymd(d: Date): string {
@@ -70,6 +71,8 @@ const range = (f: QueryFilters): RangeFilters => ({
   to: f.to,
   siteIds: f.siteIds,
   devices: f.devices,
+  url: f.url,
+  projectCode: f.projectCode,
 });
 
 /** Analytics is read-mostly and each call is a multi-second ClickHouse scan — cache generously. */
@@ -82,6 +85,8 @@ const CACHE = {
 } as const;
 
 const keyBase = (f: QueryFilters) => [
+  f.url,
+  f.projectCode,
   f.from,
   f.to,
   f.siteIds.join(','),
@@ -173,6 +178,8 @@ export function useAdoptionTrend(f: QueryFilters) {
         weeks: TREND_WEEKS,
         siteIds: f.siteIds,
         devices: f.devices,
+        url: f.url,
+        projectCode: f.projectCode,
       }),
     enabled: f.enabled,
     ...CACHE,
@@ -183,7 +190,7 @@ export function useGrowth(f: QueryFilters) {
   return useQuery({
     queryKey: ['fm-adoption', 'growth', f.to, f.siteIds.join(','), f.devices.join(','), f.requestId ?? 0],
     queryFn: () =>
-      fetchGrowth({ to: f.to, weeks: GROWTH_WEEKS, siteIds: f.siteIds, devices: f.devices }),
+      fetchGrowth({ to: f.to, weeks: GROWTH_WEEKS, siteIds: f.siteIds, devices: f.devices, url: f.url, projectCode: f.projectCode }),
     enabled: f.enabled,
     ...CACHE,
   });
@@ -193,7 +200,7 @@ export function useRetention(f: QueryFilters) {
   return useQuery({
     queryKey: ['fm-adoption', 'retention', f.to, f.siteIds.join(','), f.devices.join(','), f.requestId ?? 0],
     queryFn: () =>
-      fetchRetention({ to: f.to, weeks: RETENTION_WEEKS, siteIds: f.siteIds, devices: f.devices }),
+      fetchRetention({ to: f.to, weeks: RETENTION_WEEKS, siteIds: f.siteIds, devices: f.devices, url: f.url, projectCode: f.projectCode }),
     enabled: f.enabled,
     ...CACHE,
   });

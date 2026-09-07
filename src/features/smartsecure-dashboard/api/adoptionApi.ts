@@ -40,6 +40,8 @@ export interface RangeFilters {
   siteIds?: string[];
   devices?: DeviceType[];
   url?: string;
+  appId?: string;
+  os?: string;
 }
 
 /** Filters for the three look-back endpoints (adoption_trend / growth / retention). */
@@ -49,21 +51,23 @@ export interface WeeklyFilters {
   siteIds?: string[];
   devices?: DeviceType[];
   url?: string;
+  appId?: string;
+  os?: string;
 }
 
-function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: string) {
-  const p: Record<string, string> = { url: customUrl || getDynamicTenantUrl() };
-  if (siteIds?.length) p.site_id = siteIds.join(',');
+function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: string, appId?: string, os?: string) {
+  const p: Record<string, string> = {};
   if (devices?.length) p.device_type = devices.join(',');
+  if (os) p.os = os;
   return p;
 }
 
 function rangeParams(f: RangeFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url), from: f.from, to: f.to };
+  return { ...baseParams(f.siteIds, f.devices, f.url, f.appId, f.os), from: f.from, to: f.to };
 }
 
 function weeklyParams(f: WeeklyFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url), to: f.to, weeks: String(f.weeks) };
+  return { ...baseParams(f.siteIds, f.devices, f.url, f.appId, f.os), to: f.to, weeks: String(f.weeks) };
 }
 
 async function get<T>(path: string, params: Record<string, string>): Promise<T> {

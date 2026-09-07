@@ -121,6 +121,12 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
     ivr_api_key: "",
     ivr_name: "",
     ivr_caller_id: "",
+    incident_enabled: false,
+    complaint_feedback_enabled: false,
+    leave_at_gate_enabled: false,
+    feedback_enabled: false,
+    flat_feedback_enabled: false,
+    auto_complaint_close: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -205,6 +211,12 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
         ivr_api_key: data.ivr_api_key || "",
         ivr_name: data.ivr_name || "",
         ivr_caller_id: data.ivr_caller_id || "",
+        incident_enabled: data.incident_enabled ?? false,
+        complaint_feedback_enabled: data.complaint_feedback_enabled ?? false,
+        leave_at_gate_enabled: data.leave_at_gate_enabled ?? false,
+        feedback_enabled: data.feedback_enabled ?? false,
+        flat_feedback_enabled: data.flat_feedback_enabled ?? false,
+        auto_complaint_close: data.auto_complaint_close ?? false,
       });
     } catch (error) {
       console.error("Error fetching society details:", error);
@@ -904,6 +916,84 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+          </div>
+
+          {/* Society Configuration Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Society Configuration
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.incident_enabled ?? false}
+                    onChange={(e) =>
+                      handleChange("incident_enabled", e.target.checked)
+                    }
+                  />
+                }
+                label="Incident Enabled"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.complaint_feedback_enabled ?? false}
+                    onChange={(e) =>
+                      handleChange(
+                        "complaint_feedback_enabled",
+                        e.target.checked
+                      )
+                    }
+                  />
+                }
+                label="Complaint Feedback Enabled"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.leave_at_gate_enabled ?? false}
+                    onChange={(e) =>
+                      handleChange("leave_at_gate_enabled", e.target.checked)
+                    }
+                  />
+                }
+                label="Leave At Gate Enabled"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.feedback_enabled ?? false}
+                    onChange={(e) =>
+                      handleChange("feedback_enabled", e.target.checked)
+                    }
+                  />
+                }
+                label="Feedback Enabled"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.flat_feedback_enabled ?? false}
+                    onChange={(e) =>
+                      handleChange("flat_feedback_enabled", e.target.checked)
+                    }
+                  />
+                }
+                label="Flat Feedback Enabled"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.auto_complaint_close ?? false}
+                    onChange={(e) =>
+                      handleChange("auto_complaint_close", e.target.checked)
+                    }
+                  />
+                }
+                label="Auto Complaint Close"
               />
             </div>
           </div>

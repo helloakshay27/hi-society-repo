@@ -937,6 +937,8 @@ const FitoutRequestAdd = lazy(() => import("./pages/FitoutRequestAdd"));
 
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
 const PosthogRunwalDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalDashboard"));
+const PosthogGodrejDashboard = lazy(() => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard"));
+const PosthogKRahejaDashboard = lazy(() => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard"));
 const ViewUserPage = lazy(() => import("./pages/ViewUserPage").then(m => ({ default: m.ViewUserPage })));
 const FioutMobileView = lazy(() => import("./pages/FioutMobileView"));
 const FitoutRequestDetailsPageMobile = lazy(() => import("./pages/FitoutRequestDetailsPageMobile"));
@@ -1172,6 +1174,7 @@ const EditLockFeesPage = lazy(() => import("./pages/EditLockFeesPage"));
 const SocietyDetailsPage = lazy(() => import("./pages/master/SocietyDetailsPage"));
 const BlockDetailsPage = lazy(() => import("./pages/master/BlockDetailsPage"));
 const SmartSecureDashboardPage = lazy(() => import("./features/smartsecure-dashboard/SmartSecureDashboardPage"));
+const QuickgateDashboardPage = lazy(() => import("./features/smartsecure-dashboard/QuickgateDashboardPage"));
 const HiSocietyUsageDashboard = lazy(() => import("./pages/HiSocietyUsageDashboard"));
 
 
@@ -1588,8 +1591,20 @@ function App() {
                         element={<PosthogMyPiramalDashboard />}
                       />
                       <Route
+                        path="/posthog-godrej-dashboard"
+                        element={<PosthogGodrejDashboard />}
+                      />
+                      <Route
+                        path="/posthog-kraheja-dashboard"
+                        element={<PosthogKRahejaDashboard />}
+                      />
+                      <Route
                         path="/smartsecure-dashboard"
                         element={<SmartSecureDashboardPage />}
+                      />
+                      <Route
+                        path="/quickgate-dashboard"
+                        element={<QuickgateDashboardPage />}
                       />
                       <Route
                         path="/hi-society-usage-dashboard"

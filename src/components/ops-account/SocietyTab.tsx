@@ -116,6 +116,13 @@ const columns: ColumnConfig[] = [
     hideable: true,
     draggable: true,
   },
+  {
+    key: "incident_enabled",
+    label: "Incident Enabled",
+    sortable: false,
+    hideable: true,
+    draggable: true,
+  },
 ];
 
 export const SocietyTab: React.FC<SocietyTabProps> = ({
@@ -340,6 +347,36 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
     }
   };
 
+  const handleIncidentToggle = async (id: number, currentStatus: boolean) => {
+    try {
+      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
+      const token = HI_SOCIETY_CONFIG.TOKEN;
+      const url = `${baseUrl}/admin/societies/${id}.json?token=${token}`;
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          society: {
+            incident_enabled: !currentStatus,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update incident status");
+      }
+
+      toast.success(`Incident ${!currentStatus ? "enabled" : "disabled"} successfully`);
+      fetchSocieties(currentPage, perPage, debouncedSearchQuery);
+    } catch (error: any) {
+      console.error("Error updating incident status:", error);
+      toast.error(error.message || "Failed to update incident status");
+    }
+  };
+
   const handleIvrToggle = async (id: number, currentIvr: boolean) => {
     if (currentIvr) {
       // Disabling — call API directly, no modal
@@ -463,6 +500,13 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       <Switch
         checked={society.ivr_enabled === true}
         onCheckedChange={() => handleIvrToggle(society.id, society.ivr_enabled === true)}
+        disabled={!canEditSociety}
+      />
+    ),
+    incident_enabled: (
+      <Switch
+        checked={society.incident_enabled === true}
+        onCheckedChange={() => handleIncidentToggle(society.id, society.incident_enabled === true)}
         disabled={!canEditSociety}
       />
     ),

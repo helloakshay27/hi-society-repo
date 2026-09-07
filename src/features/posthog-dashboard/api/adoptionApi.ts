@@ -13,11 +13,42 @@ export function getApiBaseUrl(): string {
 }
 
 /**
- * Tenant URL to query PostHog analytics for — the org's baseUrl from localStorage.
+ * Tenant URL to query PostHog analytics for.
+ * Checks explicit tenant override, then org baseUrl, then hostname fallback.
  */
 export function getDynamicTenantUrl(): string {
-  const baseUrl = localStorage.getItem('baseUrl') || '';
-  return baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  // 1. Explicit override in localStorage
+  const explicit =
+    localStorage.getItem('posthog_tenant_url') ||
+    localStorage.getItem('tenant_url') ||
+    localStorage.getItem('hi_society_tenant_url');
+  if (explicit) {
+    return explicit.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  }
+
+  // 2. Base URL stored during login
+  const baseUrl = localStorage.getItem('baseUrl') || localStorage.getItem('base_url') || '';
+  if (baseUrl) {
+    let cleaned = baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    // If backend returns an api subdomain (e.g. hisociety-api.lockated.com), normalize to tenant web domain
+    if (cleaned.includes('-api.')) {
+      cleaned = cleaned.replace('-api.', '.');
+    }
+    if (cleaned && cleaned !== 'localhost' && cleaned !== '127.0.0.1') {
+      return cleaned;
+    }
+  }
+
+  // 3. Current window hostname if on live domain
+  if (typeof window !== 'undefined' && window.location.hostname) {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return host;
+    }
+  }
+
+  // 4. Default Hi-Society tenant domain
+  return 'web.hisociety.lockated.com';
 }
 
 const client = axios.create({ timeout: 60_000 });
@@ -39,6 +70,7 @@ export interface RangeFilters {
   siteIds?: string[];
   devices?: DeviceType[];
   url?: string;
+  projectCode?: string;
 }
 
 /** Filters for the three look-back endpoints (adoption_trend / growth / retention). */
@@ -48,21 +80,22 @@ export interface WeeklyFilters {
   siteIds?: string[];
   devices?: DeviceType[];
   url?: string;
+  projectCode?: string;
 }
 
-function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: string) {
-  const p: Record<string, string> = { url: customUrl || getDynamicTenantUrl() };
-  if (siteIds?.length) p.site_id = siteIds.join(',');
+function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: string, projectCode?: string) {
+  const p: Record<string, string> = {};
   if (devices?.length) p.device_type = devices.join(',');
+  if (projectCode) p.project_code = projectCode;
   return p;
 }
 
 function rangeParams(f: RangeFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url), from: f.from, to: f.to };
+  return { ...baseParams(f.siteIds, f.devices, f.url, f.projectCode), from: f.from, to: f.to };
 }
 
 function weeklyParams(f: WeeklyFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url), to: f.to, weeks: String(f.weeks) };
+  return { ...baseParams(f.siteIds, f.devices, f.url, f.projectCode), to: f.to, weeks: String(f.weeks) };
 }
 
 async function get<T>(path: string, params: Record<string, string>): Promise<T> {

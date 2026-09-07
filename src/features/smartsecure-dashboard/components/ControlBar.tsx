@@ -65,7 +65,7 @@ function DateRangeControl() {
 }
 
 export function ControlBar() {
-  const { state, setDev, togglePrev, setSociety } = useSmartSecureDashboard();
+  const { state, setDev, togglePrev, setSociety, sites } = useSmartSecureDashboard();
 
   return (
     <div className="filterbar">
@@ -74,8 +74,8 @@ export function ControlBar() {
       <label className="ctrl">
         <span className="ic">🏘</span>
         <select value={state.society} onChange={(e) => setSociety(e.target.value)}>
-          <option>All Societies</option>
-          {PROJECTS.map((p) => <option key={p}>{p}</option>)}
+          <option value="All Societies">All Societies</option>
+          {sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <span className="chev">▾</span>
       </label>
