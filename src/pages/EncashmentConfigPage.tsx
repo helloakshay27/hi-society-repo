@@ -222,8 +222,7 @@ export const EncashmentConfigPage: React.FC = () => {
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-[#1A1A1A]">Encashment Config</h1>
         <Button onClick={handleOpenEdit} variant="ghost" className="btn-primary h-9 px-4 text-sm font-medium">
-          <Pencil className="w-3.5 h-3.5 mr-2" />
-          Edit Settings
+          <Pencil className="w-3.5 h-3.5" />
         </Button>
       </div>
 

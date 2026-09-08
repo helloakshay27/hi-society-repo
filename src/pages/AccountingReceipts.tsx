@@ -37,6 +37,14 @@ interface LockPaymentAPI {
   flat_name?: string;
   unit_name?: string;
   ledger_name?: string;
+  tower_name?: string;
+  block_name?: string;
+  wing_name?: string;
+  bill_number?: string;
+  notes?: string;
+  remarks?: string;
+  narration?: string;
+  description?: string;
   created_at?: string;
   bill_payments?: BillPaymentAPI[];
 }
@@ -45,24 +53,29 @@ interface ReceiptRow {
   id: number;
   receiptNumber: string;
   invoiceNumber: string;
+  tower: string;
   flat: string;
   customerName: string;
   amountReceived: number;
   paymentMode: string;
   transactionNumber: string;
   paymentDate: string;
+  notes: string;
 }
 
 const columns: ColumnConfig[] = [
-  { key: "actions", label: "Actions", sortable: false },
+  // { key: "actions", label: "Actions", sortable: false },
   { key: "receiptNumber", label: "Receipt Number", sortable: true },
-  { key: "invoiceNumber", label: "Invoice Number", sortable: true },
+  { key: "tower", label: "Tower", sortable: true },
   { key: "flat", label: "Flat", sortable: true },
-  { key: "customerName", label: "Customer Name", sortable: true },
-  { key: "amountReceived", label: "Amount Received ₹", sortable: true },
-  { key: "paymentMode", label: "Payment Mode", sortable: true },
-  { key: "transactionNumber", label: "Transaction Number", sortable: true },
-  { key: "paymentDate", label: "Payment Date", sortable: true },
+  { key: "bill_number", label: "Invoice Number", sortable: true },
+  { key: "customer_name", label: "Customer Name", sortable: true },
+  { key: "payment_date", label: "Payment Date", sortable: true },
+  { key: "amount_received", label: "Amount Paid ₹", sortable: true },
+  { key: "payment_mode", label: "Payment Mode", sortable: true },
+  { key: "transaction_number", label: "Transaction Number", sortable: true },
+  { key: "notes", label: "Notes", sortable: true },
+  
 ];
 
 const formatDate = (value?: string) => {
@@ -79,14 +92,16 @@ const formatDate = (value?: string) => {
 const toRow = (lp: LockPaymentAPI): ReceiptRow => ({
   id: lp.id,
   receiptNumber: lp.receipt_number || lp.payment_number || String(lp.id),
-  invoiceNumber: lp.bill_payments?.[0]?.formatted_number || lp.order_number || "",
-  flat: lp.flat_name || lp.unit_name || lp.ledger_name || lp.bill_payments?.[0]?.ledger_name || "",
+  invoiceNumber: lp.bill_number || lp.bill_payments?.[0]?.formatted_number || lp.order_number || "",
+  tower: lp.tower || lp.block_name || lp.wing_name || "",
+  flat: lp.flat || lp.unit_name || lp.ledger_name || lp.bill_payments?.[0]?.ledger_name || "",
   customerName: lp.resident_name || "",
   amountReceived:
-    parseFloat(String(lp.paid_amount || lp.payment_amount || lp.total_amount || "0")) || 0,
+    parseFloat(String(lp.amount_received || lp.payment_amount || lp.total_amount || "0")) || 0,
   paymentMode: lp.payment_mode || lp.payment_method || "",
-  transactionNumber: lp.neft_reference || lp.pg_transaction_id || lp.order_number || "",
-  paymentDate: lp.bill_payments?.[0]?.payment_date || lp.created_at || "",
+  transactionNumber: lp.transaction_number || lp.pg_transaction_id || lp.order_number || "",
+  paymentDate: lp.payment_date || lp.created_at || "",
+  notes: lp.notes || lp.remarks || lp.narration || lp.description || "",
 });
 
 const AccountingReceipts: React.FC = () => {
@@ -230,28 +245,37 @@ const AccountingReceipts: React.FC = () => {
           />
         );
       case "receiptNumber":
-        return item.receiptNumber;
-      case "invoiceNumber":
-        return item.invoiceNumber ? `#${item.invoiceNumber}` : "";
+        return item.receiptNumber || "-";
+      case "tower":
+        return item.tower || "-";
       case "flat":
-        return item.flat;
-      case "customerName":
-        return item.customerName;
-      case "amountReceived":
-        return item.amountReceived.toFixed(1);
-      case "paymentMode":
-        return item.paymentMode;
-      case "transactionNumber":
-        return item.transactionNumber;
-      case "paymentDate":
-        return formatDate(item.paymentDate);
+        return item.flat || "-";
+      case "bill_number":
+        return item.invoiceNumber || "-";
+      case "payment_date":
+        return item.paymentDate ? formatDate(item.paymentDate) : "-";
+      case "customer_name":
+        return item.customerName || "-";
+      case "amount_received":
+        return item.amountReceived > 0 ? item.amountReceived.toFixed(1) : "-";
+      case "payment_mode":
+        return item.paymentMode || "-";
+      case "transaction_number":
+        return item.transactionNumber || "-";
+      case "notes":
+        return item.notes || "-";
       default:
-        return "";
+        return "-";
     }
   };
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          Receipt
+        </h1>
+      </div>
       <EnhancedTable
         data={rows}
         columns={columns}
