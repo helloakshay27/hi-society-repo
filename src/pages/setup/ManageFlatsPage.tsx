@@ -341,7 +341,7 @@ export const ManageFlatsPage = () => {
   const handleDownloadSample = async () => {
     setIsDownloadingSample(true)
     try {
-      const response = await axios.get(`https://${baseUrl}/assets/sample_flats.xlsx`, {
+      const response = await axios.get(`https://${baseUrl}/sample_flats.xlsx`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -444,14 +444,12 @@ export const ManageFlatsPage = () => {
           <div className="flex items-center justify-center">
             <button
               onClick={() => handleToggleStatus(flat.id, isActive)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isActive ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isActive ? "bg-[#C72030]" : "bg-gray-300"
+                }`}
             >
               <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isActive ? "translate-x-6" : "translate-x-1"
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isActive ? "translate-x-6" : "translate-x-1"
+                  }`}
               />
             </button>
           </div>
