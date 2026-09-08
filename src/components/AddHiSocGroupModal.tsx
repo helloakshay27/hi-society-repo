@@ -471,7 +471,7 @@ variant="ghost"
           </Button>
           <Button
             onClick={handleClose}
-  className="btn-cancel h-9 px-4 text-sm font-medium !bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"   disabled={loading}
+  className="btn-cancel h-9 px-4 text-sm font-medium !bg-white border border-[#da7756] !text-[#da7756] hover:bg-gray-100"   disabled={loading}
           >
             Cancel
           </Button>

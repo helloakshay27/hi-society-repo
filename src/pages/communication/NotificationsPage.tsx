@@ -306,26 +306,10 @@ const NotificationsPage = () => {
 
     <label
       htmlFor="file-upload"
-      className="
-        inline-flex
-        items-center
-        gap-3
-        px-5
-        py-2
-        bg-[#e0d9c859]
-        border
-        border-gray-300
-        rounded-md
-        cursor-pointer
-        hover:bg-[#ECECEC]
-        transition-colors
-      "
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition shrink-0 cursor-pointer"
     >
-      <span className="text-sm font-medium text-gray-800">
-        Upload Files
-      </span>
-
-      <Upload className="w-4 h-4 text-[#C72030]" />
+      <span className="font-medium text-sm text-white">Upload Files</span>
+      <Upload className="w-4 h-4 text-white" />
     </label>
 
     <span className="text-sm text-gray-600">
@@ -484,7 +468,7 @@ const NotificationsPage = () => {
                     fileInput.value = '';
                   }
                 }}
-                className="!bg-white border border-brand text-brand px-4 py-2.5 text-base font-medium"
+                className="!bg-white border border-brand !text-[#DA7756] px-4 py-2.5 text-base font-medium"
               >
                 Cancel
               </Button>
