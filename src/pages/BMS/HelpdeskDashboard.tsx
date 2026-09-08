@@ -1638,8 +1638,11 @@ export const TicketDashboard = () => {
                     className={`bg-[#F6F4EE] p-4 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-3 cursor-pointer hover:shadow-lg transition-shadow ${isActive ? 'ring-2 ring-[#C72030]' : ''}`}
                     onClick={() => item.type && handleStatusCardClick(item.type)}
                   >
-                    <div className={`w-10 h-10 flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-[#C72030]/10' : 'bg-[#C4B89D54]'}`}>
-                      <IconComponent className="w-5 h-5 text-[#C72030]" />
+                    <div 
+                      className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: 'rgba(196, 184, 157, 0.33)' }}
+                    >
+                      <IconComponent className="w-5 h-5" style={{ color: '#C72030' }} />
                     </div>
                     <div className="min-w-0">
                       <div className="text-xl font-semibold text-[#1A1A1A]">{item.value}</div>
