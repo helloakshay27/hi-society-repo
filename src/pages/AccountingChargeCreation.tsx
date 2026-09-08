@@ -298,7 +298,7 @@ const AccountingChargeCreation: React.FC = () => {
           </div>
         </SectionCard>
 
-        <div className="flex justify-start gap-3">
+        <div className="flex justify-center gap-3">
           <Button
             type="submit"
             disabled={submitting}
