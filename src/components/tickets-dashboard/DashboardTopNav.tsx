@@ -176,7 +176,7 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({
                 key={pill.key}
                 type="button"
                 onClick={() => onTabChange(pill.key)}
-                className={`whitespace-nowrap rounded-full border px-3 py-1 text-brand-caption font-semibold transition-colors ${
+                className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-brand-body-4 font-semibold transition-colors ${
                   active
                     ? 'border-brand bg-brand text-white'
                     : 'border-brand-sidebar bg-white text-brand-green hover:bg-brand-light'

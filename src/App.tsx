@@ -2172,7 +2172,7 @@ function App() {
 
                         {/* Setup - KYC Detail View Route */}
                         <Route
-                          path="/kyc-details/:id"
+                          path="/settings/kyc-details/:id"
                           element={<KYCDetailView />}
                         />
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Eye, Pencil, X } from "lucide-react";
+import { Plus, Eye, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import {
   Pagination,
   PaginationContent,
@@ -31,35 +33,18 @@ interface KYCDetail {
   userMobile: string;
 }
 
-// Sample data to match the reference image
-const sampleKYCDetails: KYCDetail[] = [
-  {
-    id: "kyc-1",
-    userName: "Nupura Waradkar",
-    userEmail: "Nupura@Stnc.In",
-    userMobile: "9864181000",
-  },
-  {
-    id: "kyc-2",
-    userName: "Demo Demo",
-    userEmail: "Demo@Lockated.Com",
-    userMobile: "5889965447",
-  },
-];
-
 export const KYCDetailsDashboard = () => {
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
-  
-  // Sample data populated from reference image
-  const [kycDetails, setKycDetails] = useState<KYCDetail[]>(sampleKYCDetails);
-  
+
+  const [kycDetails, setKycDetails] = useState<KYCDetail[]>([]);
+
   const [selectedKYCDetails, setSelectedKYCDetails] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     userName: "",
@@ -89,18 +74,57 @@ export const KYCDetailsDashboard = () => {
     },
   ];
 
-  // Simulate initial fetch
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Data is already set from sampleKYCDetails via useState initializer
-        // Replace this with an actual API call as needed
-      } finally {
-        setLoading(false);
+  const fetchKYCDetails = async () => {
+    setLoading(true);
+    try {
+      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
+      const token = HI_SOCIETY_CONFIG.TOKEN;
+
+      if (!baseUrl) {
+        throw new Error("Base URL is not configured");
       }
-    };
-    fetchData();
+      if (!token) {
+        throw new Error("Authentication token is missing. Please login again.");
+      }
+
+      const url = `${baseUrl}/crm/admin/kyc_details.json`;
+      const response = await axios.get(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = response.data;
+      const list: any[] = Array.isArray(data)
+        ? data
+        : data.data?.kyc_details || data.kyc_details || [];
+
+      const transformed: KYCDetail[] = list.map((item: any, index: number) => {
+        const user = item || {};
+        return {
+          id: String(item.id ?? index),
+          userName:
+            user.full_name ||
+            [user.firstname, user.lastname].filter(Boolean).join(" ") ||
+            "",
+          userEmail: user.email || "",
+          userMobile: user.mobile || "",
+        };
+      });
+
+      setKycDetails(transformed);
+    } catch (error: any) {
+      console.error("Error fetching KYC details:", error);
+      toast.error(error.message || "Failed to load KYC details");
+      setKycDetails([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchKYCDetails();
   }, []);
 
   // Handlers
@@ -169,11 +193,7 @@ export const KYCDetailsDashboard = () => {
   };
 
   const handleViewKYCDetail = (kycDetailId: string) => {
-    navigate(`/kyc-details/${kycDetailId}`);
-  };
-
-  const handleEditKYCDetail = (kycDetailId: string) => {
-    navigate(`/kyc-details/edit/${kycDetailId}`);
+    navigate(`/settings/kyc-details/${kycDetailId}`);
   };
 
   const totalPages = Math.ceil(kycDetails.length / PAGE_SIZE) || 1;
@@ -289,15 +309,6 @@ export const KYCDetailsDashboard = () => {
             <Eye className="w-4 h-4" />
           </button>
         )}
-        {shouldShow("KYC Details", "update") && (
-          <button
-            onClick={() => handleEditKYCDetail(item.id)}
-            className="text-black hover:text-gray-700"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        )}
       </div>
     );
   };
@@ -319,8 +330,8 @@ export const KYCDetailsDashboard = () => {
   return (
     <div className="p-6 bg-[#fafafa] min-h-screen">
       {/* Separate Header */}
-      <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-3">
-        <div className="px-6 py-4">
+      <div className="mb-3">
+        <div className="py-4">
           <h1 className="text-2xl font-semibold text-gray-900">
             KYC Details
           </h1>
@@ -328,7 +339,7 @@ export const KYCDetailsDashboard = () => {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="">
         <EnhancedTable
           data={paginatedKycDetails}
           columns={columns}
@@ -346,8 +357,8 @@ export const KYCDetailsDashboard = () => {
           leftActions={
             <Button
               onClick={handleAddKYCDetail}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"             >
               <Plus className="w-4 h-4 mr-2" />
               Add
             </Button>
@@ -443,7 +454,7 @@ variant="ghost"
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"                
+              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"
               onClick={() => {
                 setShowAddDialog(false);
                 setFormData({ userName: "", userEmail: "", userMobile: "" });
