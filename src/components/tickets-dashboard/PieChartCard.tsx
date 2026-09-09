@@ -68,9 +68,9 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
       className={className}
     >
       {total === 0 ? (
-        <div className="flex h-48 items-center justify-center text-brand-body-5 text-brand-text-light">{emptyMessage}</div>
+        <div className="flex h-full min-h-48 items-center justify-center text-brand-body-5 text-brand-text-light">{emptyMessage}</div>
       ) : (
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+        <div className="flex h-full flex-col items-center justify-center gap-6 sm:flex-row sm:items-center">
           <div className="relative flex-shrink-0" style={{ width: 200, height: 200 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

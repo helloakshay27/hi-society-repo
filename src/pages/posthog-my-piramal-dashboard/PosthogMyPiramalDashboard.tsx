@@ -12,7 +12,7 @@ import { FilterBar } from '../posthog-runwal-dashboard/components/common/FilterB
 import { TrafficSessionPage } from '../posthog-runwal-dashboard/components/pages/TrafficSessionPage';
 import { AdoptionEngagementPage } from '../posthog-runwal-dashboard/components/pages/AdoptionEngagementPage';
 import { WorkflowUsagePage } from '../posthog-runwal-dashboard/components/pages/WorkflowUsagePage';
-import { useDashboardSites, useTrafficSession } from '../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
+import { useDashboardSites, useTrafficSession, useUserAccountSiteId } from '../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
 import { DashboardFilters } from '../posthog-runwal-dashboard/api/types';
 import { getToken, getUser } from '../../utils/auth';
 import '../posthog-runwal-dashboard/styles/dashboard.css';
@@ -54,6 +54,11 @@ function PosthogMyPiramalDashboardContent() {
   const { sites, sitesSettled, allSiteIds, isLoading: isSitesLoading } = useDashboardSites();
   const [selectedSiteId, setSelectedSiteId] = useState<string>('all');
 
+  // Dynamic site scope: fetched from the logged-in user's own account
+  // (site_id on /api/users/account.json) rather than a manual picker, since
+  // the site dropdown was removed from the filter bar.
+  const { data: accountSiteId } = useUserAccountSiteId();
+
   const initialRange = useMemo(() => dateRangeFor(30), []);
 
   const [activePage, setActivePage] = useState<PageId>('pgTraffic');
@@ -70,8 +75,9 @@ function PosthogMyPiramalDashboardContent() {
 
   // Centralized Filter State
   const filters: DashboardFilters = useMemo(() => {
-    // When "all" is selected, siteIds must be [] so PostHog returns tenant-wide aggregate live data
-    const siteIds = selectedSiteId && selectedSiteId !== 'all' ? [selectedSiteId] : [];
+    // Site scope comes from the logged-in user's own account (site_id),
+    // not a manual picker — falls back to [] (tenant-wide) until it loads.
+    const siteIds = accountSiteId ? [accountSiteId] : [];
 
     return {
       siteIds,
@@ -86,7 +92,7 @@ function PosthogMyPiramalDashboardContent() {
       // ?app_id= from the URL), it always sends app_id=38.
       appId: '38',
     };
-  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
+  }, [accountSiteId, devPlatform, rangeFrom, rangeTo]);
 
   // Traffic Session query for global live counter & badge
   const {
@@ -250,10 +256,9 @@ function PosthogMyPiramalDashboardContent() {
     pgFlows: 'Workflow Usage',
   };
 
-  const currentSiteName =
-    selectedSiteId === 'all'
-      ? 'All Live Sites / Projects'
-      : sites.find((s) => String(s.id) === selectedSiteId)?.name || `Site ${selectedSiteId}`;
+  const currentSiteName = accountSiteId
+    ? sites.find((s) => String(s.id) === accountSiteId)?.name || `Site ${accountSiteId}`
+    : 'All Live Sites / Projects';
 
   return (
     <div

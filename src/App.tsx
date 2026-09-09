@@ -1687,7 +1687,7 @@ function App() {
                       />
 
                       <Route
-                        path="/tickets-dashboard"
+                        path="/hi-society-dashboard"
                         element={
                           <ProtectedRoute>
                             <TicketsDashboardPage />
