@@ -9,25 +9,20 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { formatAmount } from "@/utils/financialStatement";
 
 // Real response shape returned by GET /lock_account_transactions/gst_payable
-// It only returns the chart-of-accounts scaffold (no GST %/amount figures)
-// split into the Income and Expense sides.
-interface GstPayableLedgerAPI {
-  id: number;
-  name: string;
-  account_code?: string | null;
-}
-
-interface GstPayableGroupAPI {
-  id: number;
-  group_name: string;
-  ledgers?: GstPayableLedgerAPI[];
+interface GstPayableRecordAPI {
+  ledger_id?: number;
+  ledger_name?: string;
+  gst_percentage?: string | number | null;
+  total_amount?: number | null;
+  gst_amount?: number | null;
 }
 
 interface GstPayableApiResponse {
   code?: number;
   report?: string;
-  income?: GstPayableGroupAPI;
-  expense?: GstPayableGroupAPI;
+  date_range?: string[];
+  lock_account?: { id: number; name: string };
+  records?: GstPayableRecordAPI[];
 }
 
 interface GstPayableRow {
@@ -74,17 +69,16 @@ const AccountingGSTPayable: React.FC = () => {
         }
       );
       const data = response.data;
-      // The API doesn't return gst_percent/total_amount/gst_amount yet — only
-      // the ledger scaffold — so those columns render blank until it does.
-      const toRows = (group: GstPayableGroupAPI | undefined): GstPayableRow[] =>
-        (group?.ledgers || []).map((ledger) => ({
-          id: ledger.id,
-          ledgerName: ledger.name,
-          gstPercent: "",
-          totalAmount: null,
-          gstAmount: null,
-        }));
-      setRows([...toRows(data.income), ...toRows(data.expense)]);
+      const records = data.records || [];
+      setRows(
+        records.map((record) => ({
+          id: record.ledger_id ?? 0,
+          ledgerName: record.ledger_name || "",
+          gstPercent: record.gst_percentage != null ? `${record.gst_percentage}` : "",
+          totalAmount: record.total_amount ?? null,
+          gstAmount: record.gst_amount ?? null,
+        }))
+      );
     } catch (err) {
       console.error("Error fetching GST payable:", err);
       setError("Failed to load GST payable data");

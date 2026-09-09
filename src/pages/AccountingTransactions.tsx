@@ -246,7 +246,7 @@ const AccountingTransactions: React.FC = () => {
             </TabsTrigger>
           ))}
         </TabsList>
-
+,,
         <div className="mt-4">
           <EnhancedTable
             data={filteredRows}
