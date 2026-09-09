@@ -49,9 +49,14 @@ const mergeWithDefaults = (
         maxH: d.maxH,
       };
     }
+    // Column span and grid position are structural — always follow the shipped
+    // default so layout revisions actually take effect. Only the user's row
+    // height stays sticky.
     return {
       ...savedItem,
-      w: Math.max(savedItem.w ?? d.w, d.minW ?? 1),
+      x: d.x,
+      y: d.y,
+      w: d.w,
       h: Math.max(savedItem.h ?? d.h, d.minH ?? 1),
       minW: d.minW,
       minH: d.minH,

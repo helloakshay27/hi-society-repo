@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient';
 import type { TicketReportDateRange } from './ticketReportsAPI';
+import { getDynamicScopeParams } from './reportScopeParams';
 
 // Per FM-HI-SOCIETY-DASHBOARD-APIS.md § 4 "Utility". Unlike Visitors/Escalation,
 // Utility has no single "overview"/"kpi" endpoint that covers every field the
@@ -62,15 +63,6 @@ const formatDateForAPI = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-const getDynamicScopeParams = (): Record<string, string> => {
-  const params: Record<string, string> = {};
-  const siteId = localStorage.getItem('selectedSiteId');
-  const societyId = localStorage.getItem('selectedSocietyId') || localStorage.getItem('selectedUserSociety');
-  if (siteId) params.site_id = siteId;
-  if (societyId) params.society_id = societyId;
-  return params;
-};
-
 const buildParams = ({ fromDate, toDate }: TicketReportDateRange): Record<string, string> => ({
   ...getDynamicScopeParams(),
   from_date: formatDateForAPI(fromDate),
@@ -99,7 +91,52 @@ const pick = (obj: Record<string, unknown>, keys: string[]): number => {
   return 0;
 };
 
-const normalizeNamedCounts = (raw: unknown): { name: string; value: number }[] => {
+/** A `[amount, "Label"]` / `["Label", amount]` pair, or `{ value/unit: n }`. */
+const pairValue = (entry: unknown): number => {
+  if (Array.isArray(entry)) {
+    const num = entry.find((v) => typeof v === 'number');
+    return toNumber(num ?? entry[0]);
+  }
+  if (entry && typeof entry === 'object') {
+    const row = entry as Record<string, unknown>;
+    return toNumber(row.value ?? row.count ?? row.total ?? row.unit ?? row.amount);
+  }
+  return toNumber(entry);
+};
+
+// Keys that are ratios / per-area figures, not additive consumption amounts.
+const DERIVED_KEY = /percent|per_sq|persq|ratio|_pct|average|avg/i;
+
+/** Collapses one site's value into a single number:
+ *  - `[[amount, "Commodity"], ...]`         -> sum of amounts  (dry-waste)
+ *  - `{ ev: n }` / `{ domestic, flushing }` -> sum of `sumKeys`, else sum of
+ *    every plain numeric field that isn't a percentage / per-sqft ratio
+ *  - scalar                                 -> the number itself */
+const siteValue = (value: unknown, sumKeys?: string[]): number => {
+  if (Array.isArray(value)) {
+    return value.reduce((sum: number, entry) => sum + pairValue(entry), 0);
+  }
+  if (value && typeof value === 'object') {
+    const row = value as Record<string, unknown>;
+    if (sumKeys && sumKeys.length > 0) {
+      return sumKeys.reduce((sum, key) => sum + toNumber(row[key]), 0);
+    }
+    return Object.entries(row).reduce((sum, [key, v]) => {
+      if (DERIVED_KEY.test(key)) return sum;
+      if (typeof v === 'number') return sum + v;
+      if (typeof v === 'string' && v.trim() !== '' && !v.includes('%') && Number.isFinite(Number(v))) {
+        return sum + Number(v);
+      }
+      return sum;
+    }, 0);
+  }
+  return toNumber(value);
+};
+
+const normalizeNamedCounts = (
+  raw: unknown,
+  sumKeys?: string[]
+): { name: string; value: number }[] => {
   const payload = raw as Record<string, unknown>;
   const response = payload?.response ?? payload;
 
@@ -124,11 +161,25 @@ const normalizeNamedCounts = (raw: unknown): { name: string; value: number }[] =
         value: toNumber((obj.values as unknown[])[i]),
       }));
     }
-    return Object.entries(obj).map(([name, value]) => ({ name, value: toNumber(value) }));
+    // Site-keyed map — value is a scalar, a `[amount, label]` list, or a
+    // `{ dg, solar, main, ... }`-style breakdown object.
+    return Object.entries(obj).map(([name, value]) => ({
+      name: name.trim(),
+      value: siteValue(value, sumKeys),
+    }));
   }
 
   return [];
 };
+
+/** Drop empty sites and sort so the biggest contributors lead the bar chart. */
+const rankedSiteTotals = (
+  raw: unknown,
+  sumKeys?: string[]
+): { name: string; value: number }[] =>
+  normalizeNamedCounts(raw, sumKeys)
+    .filter((row) => row.value > 0)
+    .sort((a, b) => b.value - a.value);
 
 export const utilityReportsAPI = {
   /** Fans out to the five real KPI-bearing routes and merges them into the
@@ -195,38 +246,62 @@ export const utilityReportsAPI = {
     };
   },
 
+  /** Response: `{ "<site>": { dg, solar, main, consumption_per_sq_feet, *_percentage } }`
+   * — bar value is DG + Solar + Mains (the additive amounts, not the ratios). */
   async getPowerBar(range: TicketReportDateRange): Promise<UtilityNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/card_site_wise_power_consumption`, { params: buildParams(range) });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
+      response: rankedSiteTotals(data ?? {}, ['dg', 'solar', 'main']),
       info: data?.info,
     };
   },
 
+  /** Response: `{ "<site>": { domestic, flushing, irrigation } }` — bar value is their sum. */
   async getWaterBar(range: TicketReportDateRange): Promise<UtilityNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/site_wise_water_consumption`, { params: buildParams(range) });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
+      response: rankedSiteTotals(data ?? {}, ['domestic', 'flushing', 'irrigation']),
       info: data?.info,
     };
   },
 
-  /** No dedicated "renewable sources" breakdown route exists — derived
-   * client-side from energy_kpis (renewable vs. mains+DG) instead. */
+  /** energy_kpis carries a renewable breakdown in `response.pie`
+   * (`{ Solar, Wind, Hydro }`); fall back to the flat solar/wind/hydro fields,
+   * then to a renewable-vs-non-renewable split if neither is present. */
   async getRenewableSources(range: TicketReportDateRange): Promise<UtilityNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/energy_kpis`, { params: buildParams(range) });
     const r = responseOf(data);
-    const renewable = pick(r, ['power_renewable_kwh', 'renewable', 'renewable_kwh']);
-    const nonRenewable =
-      pick(r, ['power_mains_kwh', 'mains', 'mains_kwh']) + pick(r, ['power_dg_kwh', 'dg', 'dg_kwh']);
-    const response = [
-      { name: 'Renewable', value: renewable },
-      { name: 'Non-renewable', value: nonRenewable },
-    ].filter((row) => row.value > 0);
+
+    const pie = (r.pie ?? r.renewable_pie ?? r.renewable_sources) as Record<string, unknown> | undefined;
+    let response: { name: string; value: number }[] = [];
+
+    if (pie && typeof pie === 'object' && !Array.isArray(pie)) {
+      response = Object.entries(pie).map(([name, value]) => ({ name, value: toNumber(value) }));
+    } else {
+      response = [
+        { name: 'Solar', value: pick(r, ['solar', 'solar_kwh', 'power_solar_kwh']) },
+        { name: 'Wind', value: pick(r, ['wind', 'wind_kwh']) },
+        { name: 'Hydro', value: pick(r, ['hydro', 'hydro_kwh']) },
+      ];
+    }
+
+    response = response.filter((row) => row.value > 0).sort((a, b) => b.value - a.value);
+
+    if (response.length === 0) {
+      const renewable = pick(r, ['renewable_total', 'power_renewable_kwh', 'renewable', 'renewable_kwh']);
+      const nonRenewable =
+        pick(r, ['power_consumption', 'power_mains_kwh', 'mains', 'mains_kwh']) +
+        pick(r, ['dg_total', 'power_dg_kwh', 'dg', 'dg_kwh']);
+      response = [
+        { name: 'Renewable', value: renewable },
+        { name: 'Non-renewable', value: nonRenewable },
+      ].filter((row) => row.value > 0);
+    }
+
     return { success: data?.success ?? 1, message: data?.message ?? '', response, info: data?.info };
   },
 
@@ -237,7 +312,7 @@ export const utilityReportsAPI = {
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
+      response: rankedSiteTotals(data ?? {}, ['dg', 'solar', 'main']),
       info: data?.info,
     };
   },
@@ -247,27 +322,29 @@ export const utilityReportsAPI = {
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
+      response: rankedSiteTotals(data ?? {}, ['domestic', 'flushing', 'irrigation']),
       info: data?.info,
     };
   },
 
+  /** Response: `{ "<site>": [[amount, "<commodity>"], ...] }` — bar value sums the commodities. */
   async getDrySegregation(range: TicketReportDateRange): Promise<UtilityNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/site_wise_dry_waste_segregation`, { params: buildParams(range) });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
+      response: rankedSiteTotals(data ?? {}),
       info: data?.info,
     };
   },
 
+  /** Response: `{ "<site>": { ev: <kWh> } }`. */
   async getEvConsumption(range: TicketReportDateRange): Promise<UtilityNamedCountsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/site_wise_ev_consumption`, { params: buildParams(range) });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
+      response: rankedSiteTotals(data ?? {}, ['ev']),
       info: data?.info,
     };
   },

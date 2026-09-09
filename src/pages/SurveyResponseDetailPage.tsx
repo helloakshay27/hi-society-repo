@@ -4930,7 +4930,7 @@ export const SurveyResponseDetailPage = () => {
                   setSummaryFormFilters(summaryCurrentFilters);
                   setShowFilterModal(true);
                 }}
-                className="flex items-center gap-1 relative !bg-white !text-[#ED820E] !border !border-[#ED820E] [&_svg]:text-[#ED820E]"
+                className="flex items-center gap-1 relative !bg-white !text-[#DA7756] !border !border-[#DA7756] [&_svg]:text-[#DA7756]"
               >
                 <Filter className="w-4 h-4" />
                 {Object.keys(summaryCurrentFilters).length > 0 && (
