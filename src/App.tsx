@@ -1586,7 +1586,7 @@ function App() {
                         path="/posthog-runwal-dashboard"
                         element={<PosthogRunwalDashboard />}
                       />
-                         <Route
+                      <Route
                         path="/posthog-my-piramal-dashboard"
                         element={<PosthogMyPiramalDashboard />}
                       />
@@ -2172,7 +2172,7 @@ function App() {
 
                         {/* Setup - KYC Detail View Route */}
                         <Route
-                          path="/kyc-details/:id"
+                          path="/settings/kyc-details/:id"
                           element={<KYCDetailView />}
                         />
 
@@ -7388,4 +7388,3 @@ function App() {
 
 export default App;
 
- 
