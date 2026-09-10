@@ -129,7 +129,13 @@ export type TicketExportType =
   | 'unit_category'
   | 'resolution_tat'
   | 'response_tat'
-  | 'proactive_reactive';
+  | 'proactive_reactive'
+  // Added per "new download api for ticket and visitor for hisociety.md".
+  | 'unit_category_proactive'
+  | 'common_area_category'
+  | 'common_area_category_proactive'
+  | 'fm_vs_project'
+  | 'complaint_mode';
 
 /**
  * `path` is the chart endpoint each export's card already reads, per the doc's
@@ -148,6 +154,20 @@ const TICKET_EXPORTS: Record<TicketExportType, { path: string; filename: string 
     path: 'overview',
     filename: 'tickets_proactive_reactive_<stamp>.csv',
   },
+  unit_category_proactive: {
+    path: 'category-breakdown',
+    filename: 'FM_UnitCategoryWiseProactiveTicket_<stamp>.xlsx',
+  },
+  common_area_category: {
+    path: 'category-breakdown',
+    filename: 'FM_CommonAreaCategoryWiseTicket_<stamp>.xlsx',
+  },
+  common_area_category_proactive: {
+    path: 'category-breakdown',
+    filename: 'FM_CommonAreaCategoryWiseProactiveTicket_<stamp>.xlsx',
+  },
+  fm_vs_project: { path: 'overview', filename: 'FM_FmVsProjectTicket_<stamp>.xlsx' },
+  complaint_mode: { path: 'distribution', filename: 'FM_ComplaintModeTicket_<stamp>.xlsx' },
 };
 
 const buildParams = (

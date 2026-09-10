@@ -106,20 +106,22 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
       className={className}
       maxVisibleSegments={metric === 'delivery-visitors' ? 6 : undefined}
       rightSlot={
-        // The Visitors module documents a single export — `kpis?export=true` —
-        // covering the whole KPI payload, so it hangs off the two cards that render
-        // that payload's headline splits. Delivery is a sub-slice, so it has none.
-        metric === 'delivery-visitors' ? undefined : (
-          <CardDownloadButton
-            label="Download Visitor Details"
-            onDownload={() =>
-              visitorReportsAPI.downloadKpisExport({
-                fromDate: dateRange.startDate,
-                toDate: dateRange.endDate,
-              })
-            }
-          />
-        )
+        // Delivery has its own export (`kpis?export=delivery_visitors`); the other
+        // two cards render the headline splits of the full KPI payload, which is
+        // what `kpis?export=true` covers.
+        <CardDownloadButton
+          label={
+            metric === 'delivery-visitors'
+              ? 'Download Delivery Visitors'
+              : 'Download Visitor Details'
+          }
+          onDownload={() => {
+            const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
+            return metric === 'delivery-visitors'
+              ? visitorReportsAPI.downloadDeliveryVisitorsExport(range)
+              : visitorReportsAPI.downloadKpisExport(range);
+          }}
+        />
       }
     />
   );

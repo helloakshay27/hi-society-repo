@@ -164,7 +164,7 @@ export const visitorReportsAPI = {
   },
 
   /**
-   * `kpis?export=true` — the module's only export (staff_kpi has no download).
+   * `kpis?export=true` — the full visitor/gate-pass card export.
    * `from_date` / `to_date` are mandatory here (the JSON call tolerates their
    * absence, the export 422s without them); `buildParams` always sends both.
    * Note the file has one extra row per additional visitor, so its row count is
@@ -177,6 +177,21 @@ export const visitorReportsAPI = {
         responseType: 'blob',
       }),
       `FM_card_visitors_${formatDateForAPI(range.fromDate)}_to_${formatDateForAPI(range.toDate)}.xlsx`
+    );
+  },
+
+  /**
+   * `kpis?export=delivery_visitors` — one row per delivery visit, plus a per-provider
+   * summary. Additional to the full-card export above, not a replacement. Row counts
+   * match the delivery_visitors breakdown, not the overall visitor total.
+   */
+  async downloadDeliveryVisitorsExport(range: TicketReportDateRange): Promise<void> {
+    await saveReportDownload(
+      apiClient.get(`${BASE_PATH}/kpis`, {
+        params: { ...buildParams(range), export: 'delivery_visitors' },
+        responseType: 'blob',
+      }),
+      `FM_DeliveryVisitors_${formatDateForAPI(range.fromDate)}_to_${formatDateForAPI(range.toDate)}.xlsx`
     );
   },
 };
