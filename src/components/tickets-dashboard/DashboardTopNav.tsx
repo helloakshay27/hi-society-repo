@@ -14,20 +14,21 @@ import { TicketsDashboardDateRange } from './types';
 export type DashboardTab =
   | 'tickets'
   | 'utility'
-  | 'escalation'
   | 'visitor'
   | 'assets'
   | 'checklist'
-  | 'incident';
+  | 'incident'
+  | 'manage-users';
 
 const SECTION_PILLS: { key: DashboardTab; label: string }[] = [
   { key: 'tickets', label: 'Tickets' },
-  { key: 'utility', label: 'Utility' },
-  { key: 'escalation', label: 'Escalation' },
+  // { key: 'utility', label: 'Utility' },
+  // Escalation is no longer its own tab — its cards live under Tickets.
   { key: 'visitor', label: 'Visitor' },
   { key: 'assets', label: 'Assets' },
   { key: 'checklist', label: 'Checklist' },
   { key: 'incident', label: 'Incident' },
+  { key: 'manage-users', label: 'Manage Users' },
 ];
 
 const toInputValue = (date: Date): string => {

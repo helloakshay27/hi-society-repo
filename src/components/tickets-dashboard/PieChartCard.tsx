@@ -21,6 +21,8 @@ interface PieChartCardProps {
   centerLabel?: string;
   /** Collapse smaller slices into "Others" when segment count exceeds this (pie + legend). */
   maxVisibleSegments?: number;
+  /** Header-right slot, e.g. a `CardDownloadButton`. */
+  rightSlot?: React.ReactNode;
 }
 
 const OTHERS_COLOR = '#D3D1C7';
@@ -51,6 +53,7 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
   centerValue,
   centerLabel = 'Total',
   maxVisibleSegments,
+  rightSlot,
 }) => {
   const displaySegments = useMemo(
     () => (maxVisibleSegments ? collapsePieSegments(segments, maxVisibleSegments) : segments),
@@ -66,6 +69,7 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
       subtitle={subtitle}
       loading={loading}
       className={className}
+      rightSlot={rightSlot}
     >
       {total === 0 ? (
         <div className="flex h-full min-h-48 items-center justify-center text-brand-body-5 text-brand-text-light">{emptyMessage}</div>

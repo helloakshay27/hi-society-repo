@@ -154,6 +154,13 @@ export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({
       containerPadding={[0, 0]}
       compactType="vertical"
       isDraggable
+      // Without this the whole card is a drag handle, and react-draggable's
+      // mousedown/touchstart handler swallows clicks on anything inside it — which
+      // is why the card download buttons never fired. The selector is matched
+      // against the event target *and its parents* up to the grid item, so clicking
+      // the icon inside a button still cancels the drag. `[data-no-drag]` is the
+      // escape hatch for non-interactive elements that also shouldn't drag.
+      draggableCancel="button,a,input,select,textarea,[data-no-drag]"
       isResizable
       resizeHandles={['se']}
       useCSSTransforms

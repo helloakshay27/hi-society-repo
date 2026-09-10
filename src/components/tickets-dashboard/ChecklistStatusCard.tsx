@@ -1,33 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartCardShell } from './ChartCardShell';
 import { CardDownloadButton } from './CardDownloadButton';
 import {
-  checklistReportsAPI,
-  ChecklistExportKind,
+  checklistDashboardAnalyticsAPI,
   ChecklistStatusRow,
-} from '@/services/checklistReportsAPI';
-import { getTicketsChartColor } from './colors';
+} from '@/services/checklistDashboardAnalyticsAPI';
 import { TicketsDashboardDateRange } from './types';
 
 export type ChecklistStatusVariant = 'technical' | 'non-technical' | 'site-wise';
 
-const VARIANT_META: Record<
-  ChecklistStatusVariant,
-  { title: string; firstColumn: string; exportKind: ChecklistExportKind }
-> = {
-  technical: { title: 'Technical Checklist', firstColumn: 'Category', exportKind: 'technical' },
-  'non-technical': { title: 'Non-Technical Checklist', firstColumn: 'Category', exportKind: 'non_technical' },
-  'site-wise': { title: 'Site-wise Checklist Status', firstColumn: 'Site', exportKind: 'combined' },
-};
+/** Status bar colors, matching the FM Matrix `/maintenance/task` analytics cards. */
+const STATUS_COLORS = {
+  open: '#9EC8BA',
+  closed: '#76CDC1',
+  work_in_progress: '#CDCAF5',
+  overdue: '#E39090',
+} as const;
 
-const STATUS_COLUMNS: { key: keyof ChecklistStatusRow; label: string }[] = [
+const STATUS_BARS: { key: keyof typeof STATUS_COLORS; label: string }[] = [
   { key: 'open', label: 'Open' },
   { key: 'closed', label: 'Closed' },
-  { key: 'wip', label: 'WIP' },
+  { key: 'work_in_progress', label: 'Work in Progress' },
+  { key: 'overdue', label: 'Overdue' },
+];
+
+const TABLE_COLUMNS: { key: keyof ChecklistStatusRow; label: string }[] = [
+  { key: 'open', label: 'Open' },
+  { key: 'closed', label: 'Closed' },
+  { key: 'work_in_progress', label: 'WIP' },
   { key: 'overdue', label: 'Overdue' },
   { key: 'total', label: 'Total' },
 ];
+
+const VARIANT_META: Record<
+  ChecklistStatusVariant,
+  {
+    title: string;
+    subtitle: string;
+    firstColumn: string;
+    kind: 'technical' | 'nonTechnical' | 'siteWise';
+  }
+> = {
+  technical: {
+    title: 'Technical Checklist',
+    subtitle: 'Status breakdown by category',
+    firstColumn: 'Category',
+    kind: 'technical',
+  },
+  'non-technical': {
+    title: 'Non-Technical Checklist',
+    subtitle: 'Status breakdown by category',
+    firstColumn: 'Category',
+    kind: 'nonTechnical',
+  },
+  'site-wise': {
+    title: 'Site-wise Checklist',
+    subtitle: 'Status breakdown by site',
+    firstColumn: 'Site',
+    kind: 'siteWise',
+  },
+};
 
 interface ChecklistStatusCardProps {
   variant: ChecklistStatusVariant;
@@ -35,110 +68,123 @@ interface ChecklistStatusCardProps {
   className?: string;
 }
 
-const fetchByVariant = (variant: ChecklistStatusVariant, range: { fromDate: Date; toDate: Date }) => {
-  if (variant === 'technical') return checklistReportsAPI.getTechnicalMonthly(range);
-  if (variant === 'non-technical') return checklistReportsAPI.getNonTechnicalMonthly(range);
-  return checklistReportsAPI.getSiteWise(range);
-};
-
-/** Chart + status table card for the technical / non-technical / site-wise checklist views. */
-export const ChecklistStatusCard: React.FC<ChecklistStatusCardProps> = ({ variant, dateRange, className }) => {
+/**
+ * Technical / Non-Technical / Site-wise checklist card — a stacked Open/Closed/WIP/
+ * Overdue bar chart over a matching table, ported from the FM Matrix
+ * `/maintenance/task` Analytics tab (`TaskAnalyticsCard`).
+ */
+export const ChecklistStatusCard: React.FC<ChecklistStatusCardProps> = ({
+  variant,
+  dateRange,
+  className,
+}) => {
   const meta = VARIANT_META[variant];
-  const [chart, setChart] = useState<{ name: string; value: number }[]>([]);
   const [rows, setRows] = useState<ChecklistStatusRow[]>([]);
+  const [info, setInfo] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchByVariant(variant, { fromDate: dateRange.startDate, toDate: dateRange.endDate })
+
+    checklistDashboardAnalyticsAPI
+      .getStatus(VARIANT_META[variant].kind, {
+        fromDate: dateRange.startDate,
+        toDate: dateRange.endDate,
+      })
       .then((res) => {
         if (cancelled) return;
-        setChart(res.chart);
         setRows(res.response);
+        setInfo(res.info);
       })
       .catch(() => {
         if (!cancelled) {
-          setChart([]);
           setRows([]);
+          setInfo(undefined);
         }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
   }, [variant, dateRange.startDate, dateRange.endDate]);
 
-  const hasChart = chart.some((point) => point.value > 0);
+  const hasData = rows.some((row) => row.total > 0);
 
   return (
     <ChartCardShell
       title={meta.title}
+      subtitle={info ?? meta.subtitle}
       loading={loading}
       className={className}
       rightSlot={
         <CardDownloadButton
           label={`Download ${meta.title}`}
           onDownload={() =>
-            checklistReportsAPI.downloadExport(
-              { fromDate: dateRange.startDate, toDate: dateRange.endDate },
-              meta.exportKind
-            )
+            checklistDashboardAnalyticsAPI.downloadExport(meta.kind, {
+              fromDate: dateRange.startDate,
+              toDate: dateRange.endDate,
+            })
           }
         />
       }
     >
-      {!hasChart && rows.length === 0 ? (
+      {!hasData ? (
         <div className="flex h-full min-h-40 items-center justify-center text-brand-body-5 text-brand-text-light">
           No data available
         </div>
       ) : (
-      <div className="space-y-4">
-        {hasChart && (
-          <ResponsiveContainer width="100%" height={190}>
-            <BarChart data={chart} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
+        <div className="space-y-4">
+          <ResponsiveContainer width="100%" height={210}>
+            <BarChart data={rows} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} />
               <XAxis dataKey="name" tick={{ fill: '#2C2C2C', fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fill: '#2C2C2C', fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="value" name="Checklists" fill={getTicketsChartColor(2)} radius={[4, 4, 0, 0]} />
+              <YAxis allowDecimals={false} width={40} tick={{ fill: '#2C2C2C', fontSize: 11 }} />
+              <Tooltip cursor={{ fill: 'rgba(180,180,180,0.15)' }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              {STATUS_BARS.map((bar, i) => (
+                <Bar
+                  key={bar.key}
+                  dataKey={bar.key}
+                  stackId="status"
+                  name={bar.label}
+                  fill={STATUS_COLORS[bar.key]}
+                  radius={i === STATUS_BARS.length - 1 ? [4, 4, 0, 0] : undefined}
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
-        )}
 
-        <div className="max-h-64 overflow-auto">
-          <table className="tickets-ageing-matrix-table w-full min-w-[560px] border-separate border-spacing-0 overflow-hidden rounded-2xl border border-[#d5dbdb] text-brand-body-5">
-            <thead>
-              <tr>
-                <th className="sticky top-0 bg-brand px-3 py-2.5 text-left font-bold text-white">
-                  {meta.firstColumn}
-                </th>
-                {STATUS_COLUMNS.map((col) => (
-                  <th key={col.key} className="sticky top-0 bg-brand px-3 py-2.5 text-right font-bold text-white">
-                    {col.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
+          <div className="max-h-64 overflow-auto">
+            <table className="tickets-ageing-matrix-table w-full min-w-[560px] border-separate border-spacing-0 overflow-hidden rounded-2xl border border-[#d5dbdb] text-brand-body-5">
+              <thead>
                 <tr>
-                  <td
-                    colSpan={STATUS_COLUMNS.length + 1}
-                    className="border-b border-[#d5dbdb] px-3 py-6 text-center font-semibold text-brand-text-light"
-                  >
-                    No data available
-                  </td>
+                  <th className="sticky top-0 bg-brand px-3 py-2.5 text-left font-bold text-white">
+                    {meta.firstColumn}
+                  </th>
+                  {TABLE_COLUMNS.map((col) => (
+                    <th
+                      key={col.key}
+                      className="sticky top-0 bg-brand px-3 py-2.5 text-right font-bold text-white"
+                    >
+                      {col.label}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                rows.map((row, index) => (
-                  <tr key={`${row.name}-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-[#f6f4ee]'}>
+              </thead>
+              <tbody>
+                {rows.map((row, index) => (
+                  <tr
+                    key={`${row.name}-${index}`}
+                    className={index % 2 === 0 ? 'bg-white' : 'bg-[#f6f4ee]'}
+                  >
                     <td className="border-b border-[#d5dbdb] px-3 py-2.5 font-semibold text-brand-text">
                       {row.name}
                     </td>
-                    {STATUS_COLUMNS.map((col) => (
+                    {TABLE_COLUMNS.map((col) => (
                       <td
                         key={col.key}
                         className={`border-b border-[#d5dbdb] px-3 py-2.5 text-right tabular-nums text-brand-text ${
@@ -149,12 +195,11 @@ export const ChecklistStatusCard: React.FC<ChecklistStatusCardProps> = ({ varian
                       </td>
                     ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
       )}
     </ChartCardShell>
   );

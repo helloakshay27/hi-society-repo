@@ -1,64 +1,62 @@
 import React, { useEffect, useState } from 'react';
 import { BarChartCard, BarChartSeries } from './BarChartCard';
-import { assetReportsAPI, AssetChartKey } from '@/services/assetReportsAPI';
+import { CardDownloadButton } from './CardDownloadButton';
+import { assetDashboardAnalyticsAPI, AssetNamedCount } from '@/services/assetDashboardAnalyticsAPI';
 import { getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
 
-export type AssetBarMetric = 'group-wise' | 'category-wise';
-
-const BAR_METRIC_META: Record<AssetBarMetric, { title: string; subtitle?: string; chartKey: AssetChartKey }> = {
-  'group-wise': {
-    title: 'Group-wise Assets',
-    subtitle: 'Asset count per group',
-    chartKey: 'group_wise',
-  },
-  'category-wise': {
-    title: 'Category-wise Assets',
-    subtitle: 'Asset count per category',
-    chartKey: 'category_wise',
-  },
-};
-
 interface AssetBarCardProps {
-  metric: AssetBarMetric;
   dateRange: TicketsDashboardDateRange;
   className?: string;
 }
 
-/** Bar-chart card for the Assets tab — group-wise / category-wise counts from `/assets/charts`. */
-export const AssetBarCard: React.FC<AssetBarCardProps> = ({ metric, dateRange, className }) => {
-  const meta = BAR_METRIC_META[metric];
-  const [rows, setRows] = useState<{ name: string; value: number }[]>([]);
+/**
+ * Group-wise Assets bar chart — `assets_group_count_by_name=true`, the one bar chart
+ * on the FM Matrix `/maintenance/asset` Analytics tab.
+ */
+export const AssetBarCard: React.FC<AssetBarCardProps> = ({ dateRange, className }) => {
+  const [rows, setRows] = useState<AssetNamedCount[]>([]);
+  const [info, setInfo] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    assetReportsAPI
-      .getChart({ fromDate: dateRange.startDate, toDate: dateRange.endDate }, meta.chartKey)
+
+    assetDashboardAnalyticsAPI
+      .getGroupWise({ fromDate: dateRange.startDate, toDate: dateRange.endDate })
       .then((res) => {
-        if (!cancelled) setRows(res.response);
+        if (cancelled) return;
+        setRows(res.response);
+        setInfo(res.info);
       })
       .catch(() => {
-        if (!cancelled) setRows([]);
+        if (!cancelled) {
+          setRows([]);
+          setInfo(undefined);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
-  }, [meta.chartKey, dateRange.startDate, dateRange.endDate]);
+  }, [dateRange.startDate, dateRange.endDate]);
 
   const data = [...rows]
     .sort((a, b) => b.value - a.value)
     .map((row, i) => ({ ...row, color: getTicketsChartColor(i) }));
-  const series: BarChartSeries[] = [{ dataKey: 'value', name: 'Assets', color: getTicketsChartColor(0) }];
+
+  const series: BarChartSeries[] = [
+    { dataKey: 'value', name: 'Assets', color: getTicketsChartColor(0) },
+  ];
 
   return (
     <BarChartCard
-      title={meta.title}
-      subtitle={meta.subtitle}
+      title="Group-wise Assets"
+      subtitle={info ?? 'Asset count per group'}
       data={data}
       categoryKey="name"
       series={series}
@@ -66,6 +64,17 @@ export const AssetBarCard: React.FC<AssetBarCardProps> = ({ metric, dateRange, c
       orientation="horizontal"
       loading={loading}
       className={className}
+      rightSlot={
+        <CardDownloadButton
+          label="Download Group-wise Assets"
+          onDownload={() =>
+            assetDashboardAnalyticsAPI.downloadExport(
+              { fromDate: dateRange.startDate, toDate: dateRange.endDate },
+              'group_wise'
+            )
+          }
+        />
+      }
     />
   );
 };

@@ -9,7 +9,6 @@ import {
   useUtilityOverview,
   TicketsPieCard,
   TicketsBarCard,
-  EscalationPieCard,
   ExecutiveEscalationCard,
   VisitorPieCard,
   VisitorBarCard,
@@ -17,8 +16,8 @@ import {
   UtilityBarCard,
   AssetPieCard,
   AssetBarCard,
-  AssetBreakdownTableCard,
-  useAssetOverview,
+  AssetAmcCard,
+  useAssetStatistics,
   ChecklistStatusCard,
   ChecklistTopTenCard,
   DEFAULT_CHECKLIST_GRID_LAYOUT,
@@ -28,22 +27,25 @@ import {
   BodyInjuryChartCard,
   useIncidentOverview,
   DEFAULT_INCIDENT_GRID_LAYOUT,
+  ManageUsersPieCard,
+  useManageUsersOverview,
+  DEFAULT_MANAGE_USERS_GRID_LAYOUT,
   ActivityFeedCard,
   TicketsAgeingMatrixCard,
   CheckListCard,
   TicketsDashboardGrid,
-  DEFAULT_ESCALATION_GRID_LAYOUT,
   DEFAULT_VISITOR_GRID_LAYOUT,
   DEFAULT_UTILITY_GRID_LAYOUT,
   DEFAULT_ASSET_GRID_LAYOUT,
   type TicketsDashboardDateRange,
   type DashboardTab,
 } from '@/components/tickets-dashboard';
+import { manageUsersDashboardAPI } from '@/services/manageUsersDashboardAPI';
 
 const getDefaultDateRange = (): TicketsDashboardDateRange => {
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setFullYear(startDate.getFullYear() - 1);
+  startDate.setMonth(startDate.getMonth() - 1);
   return { startDate, endDate };
 };
 
@@ -55,11 +57,12 @@ const TicketsDashboardPage: React.FC = () => {
 
   const overview = useTicketsOverview(dateRange);
   const utilityOverview = useUtilityOverview(dateRange, activeTab === 'utility');
-  const escalationOverview = useEscalationOverview(dateRange, activeTab === 'escalation');
+  const escalationOverview = useEscalationOverview(dateRange, activeTab === 'tickets');
   const visitorOverview = useVisitorOverview(dateRange, activeTab === 'visitor');
   const visitorStaffKpi = useVisitorStaffKpi(dateRange, activeTab === 'visitor');
-  const assetOverview = useAssetOverview(dateRange, activeTab === 'assets');
+  const assetStatistics = useAssetStatistics(dateRange, activeTab === 'assets');
   const incidentOverview = useIncidentOverview(dateRange, activeTab === 'incident');
+  const manageUsersOverview = useManageUsersOverview(dateRange, activeTab === 'manage-users');
 
   const handleStartDateChange = (value: string) => {
     if (!value) return;
@@ -87,7 +90,7 @@ const TicketsDashboardPage: React.FC = () => {
 
       <div className="p-4 sm:p-6">
         {activeTab === 'tickets' && (
-          <TicketsDashboardGrid storageKey="tickets-dashboard-grid-layout-v4">
+          <TicketsDashboardGrid storageKey="tickets-dashboard-grid-layout-v5">
             <div key="kpi-open">
               <TicketsKpiTile label="Open Tickets" value={overview?.ticket_status.total_open} tone="purple" />
             </div>
@@ -147,6 +150,42 @@ const TicketsDashboardPage: React.FC = () => {
             {/* <div key="delivery-visitors">
               <TicketsBarCard metric="delivery-visitors" dateRange={dateRange} />
             </div> */}
+
+            {/* Escalation — folded in from the former Escalation tab. */}
+            <div key="kpi-open-escalation">
+              <TicketsKpiTile label="Open Escalation" value={escalationOverview?.open} tone="purple" />
+            </div>
+            <div key="kpi-close-escalation">
+              <TicketsKpiTile label="Close Escalation" value={escalationOverview?.closed} tone="teal" />
+            </div>
+            <div key="kpi-average-escalation">
+              <TicketsKpiTile
+                label="Average Escalation"
+                value={
+                  escalationOverview?.average_ageing != null
+                    ? Number.isInteger(escalationOverview.average_ageing)
+                      ? escalationOverview.average_ageing
+                      : Number(escalationOverview.average_ageing.toFixed(1))
+                    : undefined
+                }
+                tone="blue"
+              />
+            </div>
+            <div key="kpi-total-escalation">
+              <TicketsKpiTile
+                label="Total Escalation"
+                value={
+                  escalationOverview != null
+                    ? (escalationOverview.open ?? 0) + (escalationOverview.closed ?? 0)
+                    : undefined
+                }
+                tone="peach"
+              />
+            </div>
+
+            <div key="executive-escalation">
+              <ExecutiveEscalationCard dateRange={dateRange} />
+            </div>
 
             {/* <div key="checklist">
               <CheckListCard />
@@ -384,61 +423,6 @@ const TicketsDashboardPage: React.FC = () => {
           </TicketsDashboardGrid>
         )}
 
-        {activeTab === 'escalation' && (
-          <TicketsDashboardGrid
-            storageKey="escalation-dashboard-grid-layout-v3"
-            defaultLayout={DEFAULT_ESCALATION_GRID_LAYOUT}
-          >
-            <div key="kpi-open-escalation">
-              <TicketsKpiTile label="Open Escalation" value={escalationOverview?.open} tone="purple" />
-            </div>
-            <div key="kpi-close-escalation">
-              <TicketsKpiTile label="Close Escalation" value={escalationOverview?.closed} tone="teal" />
-            </div>
-            <div key="kpi-average-escalation">
-              <TicketsKpiTile
-                label="Average Escalation"
-                value={
-                  escalationOverview?.average_ageing != null
-                    ? Number.isInteger(escalationOverview.average_ageing)
-                      ? escalationOverview.average_ageing
-                      : Number(escalationOverview.average_ageing.toFixed(1))
-                    : undefined
-                }
-                tone="blue"
-              />
-            </div>
-            <div key="kpi-total-escalation">
-              <TicketsKpiTile
-                label="Total Escalation"
-                value={
-                  escalationOverview != null
-                    ? (escalationOverview.open ?? 0) + (escalationOverview.closed ?? 0)
-                    : undefined
-                }
-                tone="peach"
-              />
-            </div>
-
-            {/* <div key="open-escalation">
-              <EscalationPieCard metric="open-escalation" dateRange={dateRange} />
-            </div>
-            <div key="close-escalation">
-              <EscalationPieCard metric="close-escalation" dateRange={dateRange} />
-            </div>
-            <div key="average-escalation">
-              <EscalationPieCard metric="average-escalation" dateRange={dateRange} />
-            </div>
-            <div key="executive-escalation-pie">
-              <EscalationPieCard metric="executive-escalation" dateRange={dateRange} />
-            </div> */}
-
-            <div key="executive-escalation">
-              <ExecutiveEscalationCard dateRange={dateRange} />
-            </div>
-          </TicketsDashboardGrid>
-        )}
-
         {activeTab === 'visitor' && (
           <TicketsDashboardGrid
             storageKey="visitor-dashboard-grid-layout-v10"
@@ -489,73 +473,75 @@ const TicketsDashboardPage: React.FC = () => {
           </TicketsDashboardGrid>
         )}
 
+        {/* Assets — ported from the FM Matrix /maintenance/asset "Analytics" tab:
+            six KPI metrics, the status / IT-vs-Non-IT / category donuts, and the
+            group-wise bar chart. All served by /pms/assets/assets_statistics.json. */}
         {activeTab === 'assets' && (
           <TicketsDashboardGrid
-            storageKey="asset-dashboard-grid-layout-v2"
+            storageKey="asset-dashboard-grid-layout-v3"
             defaultLayout={DEFAULT_ASSET_GRID_LAYOUT}
           >
             <div key="kpi-total-assets">
               <TicketsKpiTile
-                label="Total Assets Available"
-                value={assetOverview?.total_assets_available}
+                label="Total Assets"
+                value={assetStatistics?.total_assets}
                 tone="purple"
               />
             </div>
             <div key="kpi-assets-in-use">
-              <TicketsKpiTile label="Asset In Use" value={assetOverview?.assets_in_use} tone="teal" />
+              <TicketsKpiTile
+                label="Assets in Use"
+                value={assetStatistics?.assets_in_use}
+                tone="teal"
+              />
             </div>
             <div key="kpi-assets-in-breakdown">
               <TicketsKpiTile
-                label="Asset In Breakdown"
-                value={assetOverview?.assets_in_breakdown}
+                label="Assets in Breakdown"
+                value={assetStatistics?.assets_in_breakdown}
                 tone="peach"
               />
             </div>
             <div key="kpi-critical-breakdown">
               <TicketsKpiTile
-                label="Critical Assets In Breakdown"
-                value={assetOverview?.critical_assets_in_breakdown}
+                label="Critical Assets in Breakdown"
+                value={assetStatistics?.critical_assets_in_breakdown}
                 tone="blue"
               />
             </div>
-            <div key="kpi-ppm-overdue">
+            <div key="kpi-ppm-conduct">
               <TicketsKpiTile
-                label="PPM Overdue Assets"
-                value={assetOverview?.ppm_overdue_assets}
+                label="PPM Conduct Assets"
+                value={assetStatistics?.ppm_conduct_assets}
                 tone="peach"
               />
             </div>
-            {/* <div key="kpi-customer-rating">
-              <TicketsKpiTile
-                label="Customer Average Rating"
-                value={
-                  assetOverview?.customer_average_rating != null
-                    ? assetOverview.customer_average_rating.toFixed(2)
-                    : undefined
-                }
-                tone="teal"
+            <div key="kpi-amc-assets">
+              <AssetAmcCard
+                underAmc={assetStatistics?.assets_under_amc}
+                missingAmc={assetStatistics?.assets_missing_amc}
               />
-            </div> */}
+            </div>
 
-            {/* <div key="pie-asset-status">
-              <AssetPieCard dateRange={dateRange} />
-            </div> */}
-            {/* <div key="bar-group-wise">
-              <AssetBarCard metric="group-wise" dateRange={dateRange} />
-            </div> */}
-            {/* <div key="bar-category-wise">
-              <AssetBarCard metric="category-wise" dateRange={dateRange} />
-            </div> */}
+            <div key="pie-asset-status">
+              <AssetPieCard metric="status" dateRange={dateRange} />
+            </div>
+            <div key="pie-asset-type-distribution">
+              <AssetPieCard metric="type-distribution" dateRange={dateRange} />
+            </div>
 
-            <div key="asset-breakdown-table">
-              <AssetBreakdownTableCard dateRange={dateRange} />
+            <div key="pie-asset-category-wise">
+              <AssetPieCard metric="category-wise" dateRange={dateRange} />
+            </div>
+            <div key="bar-asset-group-wise">
+              <AssetBarCard dateRange={dateRange} />
             </div>
           </TicketsDashboardGrid>
         )}
 
         {activeTab === 'checklist' && (
           <TicketsDashboardGrid
-            storageKey="checklist-dashboard-grid-layout-v2"
+            storageKey="checklist-dashboard-grid-layout-v3"
             defaultLayout={DEFAULT_CHECKLIST_GRID_LAYOUT}
           >
             <div key="checklist-technical">
@@ -635,6 +621,84 @@ const TicketsDashboardPage: React.FC = () => {
             </div>
             <div key="body-injury-map">
               <BodyInjuryChartCard />
+            </div>
+          </TicketsDashboardGrid>
+        )}
+
+        {/* Manage Users — the StatsCards from /settings/manage-users, off the same
+            `dashboard` block on /crm/admin/user_societies.json: the four user-status
+            counters as KPI tiles (each keeping its XLSX export), and the six download
+            counters as donuts. */}
+        {activeTab === 'manage-users' && (
+          <TicketsDashboardGrid
+            storageKey="manage-users-dashboard-grid-layout-v1"
+            defaultLayout={DEFAULT_MANAGE_USERS_GRID_LAYOUT}
+          >
+            <div key="kpi-total-users">
+              <TicketsKpiTile
+                label="Total Users"
+                value={manageUsersOverview?.total_users}
+                tone="purple"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx',
+                    'total_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+            <div key="kpi-pending-users">
+              <TicketsKpiTile
+                label="Pending Users"
+                value={manageUsersOverview?.pending_users}
+                tone="peach"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx?q[approve_eq]=null',
+                    'pending_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+            <div key="kpi-approved-users">
+              <TicketsKpiTile
+                label="Approved Users"
+                value={manageUsersOverview?.approved_users}
+                tone="teal"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx?q[approve_eq]=true',
+                    'approved_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+            <div key="kpi-rejected-users">
+              <TicketsKpiTile
+                label="Rejected Users"
+                value={manageUsersOverview?.rejected_users}
+                tone="blue"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx?q[approve_eq]=false',
+                    'rejected_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+
+            <div key="pie-app-downloads">
+              <ManageUsersPieCard metric="app-downloads" dashboard={manageUsersOverview} />
+            </div>
+            <div key="pie-resident-type">
+              <ManageUsersPieCard metric="resident-type" dashboard={manageUsersOverview} />
+            </div>
+            <div key="pie-phase">
+              <ManageUsersPieCard metric="phase" dashboard={manageUsersOverview} />
             </div>
           </TicketsDashboardGrid>
         )}
