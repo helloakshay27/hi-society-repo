@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ChartCardShell } from "./ChartCardShell";
+import { CardDownloadButton } from "./CardDownloadButton";
 import {
   ticketReportsAPI,
   TicketPerformanceResponse,
@@ -57,6 +58,17 @@ export const TicketsAgeingMatrixCard: React.FC<
       title="Tickets Ageing Matrix"
       loading={loading}
       className={className}
+      rightSlot={
+        <CardDownloadButton
+          label="Download Tickets Ageing Matrix"
+          onDownload={() =>
+            ticketReportsAPI.downloadExport(
+              { fromDate: dateRange.startDate, toDate: dateRange.endDate },
+              "ageing"
+            )
+          }
+        />
+      }
     >
       <div className="space-y-4">
         <div className="overflow-x-auto">

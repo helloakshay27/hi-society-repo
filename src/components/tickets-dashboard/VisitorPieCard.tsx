@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import { visitorReportsAPI, VisitorOverviewResponse } from '@/services/visitorReportsAPI';
 import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR } from './colors';
 import { TicketsDashboardDateRange } from './types';
@@ -104,6 +105,22 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
       loading={loading}
       className={className}
       maxVisibleSegments={metric === 'delivery-visitors' ? 6 : undefined}
+      rightSlot={
+        // The Visitors module documents a single export — `kpis?export=true` —
+        // covering the whole KPI payload, so it hangs off the two cards that render
+        // that payload's headline splits. Delivery is a sub-slice, so it has none.
+        metric === 'delivery-visitors' ? undefined : (
+          <CardDownloadButton
+            label="Download Visitor Details"
+            onDownload={() =>
+              visitorReportsAPI.downloadKpisExport({
+                fromDate: dateRange.startDate,
+                toDate: dateRange.endDate,
+              })
+            }
+          />
+        )
+      }
     />
   );
 };
