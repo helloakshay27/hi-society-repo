@@ -25,6 +25,7 @@ import {
 interface LockAccountGroupAPI {
   id: number;
   lock_account_id?: number;
+  account_name?: string | null;
   group_name: string;
   parent_group_id?: number | null;
   base_group_id?: number | null;
@@ -78,11 +79,14 @@ const AccountingSubgroupSetup: React.FC = () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const res = await axios.get(`${baseUrl}/lock_account_groups`, {
-        params: { lock_account_id: lockAccountId },
-        headers: { ...authHeaders(), "Content-Type": "application/json" },
-      });
-      const groups: LockAccountGroupAPI[] = res.data?.lock_account_groups || [];
+      const res = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_groups.json`,
+        { headers: authHeaders() }
+      );
+      const data = res.data;
+      const groups: LockAccountGroupAPI[] = Array.isArray(data)
+        ? data
+        : data?.lock_account_groups ?? data?.groups ?? data?.data ?? [];
       const nameById = new Map(groups.map((g) => [g.id, g.group_name]));
       const resolveName = (id?: number | null) => {
         if (!id) return "-";
@@ -91,7 +95,7 @@ const AccountingSubgroupSetup: React.FC = () => {
       setRows(
         groups.map((g) => ({
           id: g.id,
-          accountName: "",
+          accountName: g.account_name || "",
           groupName: g.group_name,
           parentGroup: resolveName(g.parent_group_id),
           baseGroup: resolveName(g.base_group_id),
@@ -191,6 +195,11 @@ const AccountingSubgroupSetup: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+       <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          SubGroups
+        </h1>
+      </div>
       <EnhancedTable
         data={rows}
         columns={columns}

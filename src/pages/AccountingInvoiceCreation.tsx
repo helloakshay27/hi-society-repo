@@ -110,7 +110,7 @@ const normalizeOptions = (list: unknown): SelectOption[] => {
       const obj = item as Record<string, unknown>;
       const rawId = obj.id ?? obj.value ?? obj.code ?? obj.name ?? obj.label;
       const rawLabel =
-        obj.name ?? obj.label ?? obj.title ?? obj.formatted_name ?? obj.text ?? rawId ?? "";
+        obj.name ?? obj.label ?? obj.category ?? obj.title ?? obj.formatted_name ?? obj.text ?? rawId ?? "";
       return { id: String(rawId ?? ""), label: String(rawLabel) };
     }
     return { id: String(item), label: String(item) };
@@ -267,13 +267,43 @@ const AccountingInvoiceCreation: React.FC = () => {
         setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
         setResidentTypeOptions(normalizeOptions(data.resident_types));
         setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
-        setChargeTypeOptions(normalizeOptions(data.charge_types));
       } catch (error) {
         console.error("Error fetching invoice form options:", error);
         toast.error("Failed to load invoice form options");
       }
     };
     fetchFormOptions();
+  }, [lockAccountId]);
+
+  // GET /account/charge_setups/charge_type_options.json?lock_account_id=... —
+  // dedicated charge-type list used by the "Charge Type" column in the charges table.
+  useEffect(() => {
+    const fetchChargeTypes = async () => {
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/account/charge_setups/charge_type_options.json`, {
+          params: { lock_account_id: lockAccountId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list = Array.isArray(data)
+          ? data
+          : data?.charge_categories ??
+            data?.charge_type_options ??
+            data?.categories ??
+            data?.data ??
+            [];
+        setChargeTypeOptions(normalizeOptions(list));
+      } catch (error) {
+        console.error("Error fetching charge types:", error);
+        setChargeTypeOptions([]);
+      }
+    };
+    fetchChargeTypes();
   }, [lockAccountId]);
 
   // GET /lock_account_ledgers?lock_account_id=... — list of ledgers selectable

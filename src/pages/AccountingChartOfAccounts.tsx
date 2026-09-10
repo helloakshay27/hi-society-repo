@@ -23,13 +23,16 @@ import {
   ChartOfAccountLedger,
 } from "@/components/AddChartOfAccountModal";
 
-// Shape returned by GET /lock_account_ledgers/opening (bulk list for the table)
+// Shape returned by GET /lock_accounts/:id/lock_account_ledgers.json (table view)
 interface LockAccountLedgerAPI {
   id: number;
   name: string;
   fixed_type?: string | null;
   account_code?: string;
   lock_account_group_id?: number;
+  account_type?: string;
+  group_name?: string;
+  lock_account_group?: { id?: number; group_name?: string } | null;
 }
 
 // Shape returned by GET /lock_account_ledgers/:id (single ledger detail)
@@ -45,12 +48,6 @@ interface LockAccountLedgerDetailAPI {
   budget?: number | string | null;
   watchlist?: boolean | null;
   assoc_cost_centre?: boolean | null;
-}
-
-interface LockAccountGroupAPI {
-  id: number;
-  group_name: string;
-  parent_group_id?: number | null;
 }
 
 interface LedgerRow {
@@ -83,6 +80,34 @@ const columns: ColumnConfig[] = [
   { key: "accountCode", label: "Account Code", sortable: true },
   { key: "accountType", label: "Account Type", sortable: true },
 ];
+
+// GET /lock_accounts/:id/lock_account_ledgers/tree.json may return either a
+// nested tree ({ text/name, children: [...] }) or a jsTree-style flat list
+// ([{ id, parent, text }]). Normalize both into AccountTreeNodeData[].
+const normalizeTree = (data: unknown): AccountTreeNodeData[] => {
+  const record = data as Record<string, unknown> | null;
+  const arr = Array.isArray(data)
+    ? data
+    : (record?.tree as unknown[]) ?? (record?.children as unknown[]) ?? (record?.nodes as unknown[]) ?? [];
+  if (!Array.isArray(arr) || arr.length === 0) return [];
+
+  const looksNested = arr.some((n) => Array.isArray((n as Record<string, unknown>)?.children));
+  if (looksNested) {
+    const toNode = (n: Record<string, unknown>): AccountTreeNodeData => {
+      const rawChildren = Array.isArray(n.children) ? (n.children as Record<string, unknown>[]) : [];
+      const children = rawChildren.map(toNode);
+      const name = String(n.text ?? n.name ?? n.title ?? n.id ?? "");
+      return {
+        id: (n.id ?? n.key ?? name) as string | number,
+        name,
+        type: children.length > 0 ? "group" : "ledger",
+        children,
+      };
+    };
+    return arr.map((n) => toNode(n as Record<string, unknown>));
+  }
+  return buildTreeFromFlat(arr as FlatTreeNode[]);
+};
 
 // numeric id → group node; "documents_..._<ledgerId>" string id → ledger node
 const buildTreeFromFlat = (flat: FlatTreeNode[]): AccountTreeNodeData[] => {
@@ -151,7 +176,7 @@ const AccountingChartOfAccounts: React.FC = () => {
   const navigate = useNavigate();
   const [viewType, setViewType] = useState<"table" | "tree">("table");
   const [ledgers, setLedgers] = useState<LockAccountLedgerAPI[]>([]);
-  const [groups, setGroups] = useState<LockAccountGroupAPI[]>([]);
+  const [accountTypes, setAccountTypes] = useState<{ id: number; name: string }[]>([]);
   const [tree, setTree] = useState<AccountTreeNodeData[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -167,29 +192,48 @@ const AccountingChartOfAccounts: React.FC = () => {
     };
   };
 
-  const fetchGroups = useCallback(async () => {
+  // GET /lock_accounts/:id/lock_account_ledgers/account_types.json
+  const fetchAccountTypes = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_groups`, {
-        params: { lock_account_id: lockAccountId },
-        headers: authHeaders(),
-      });
-      setGroups(response.data?.lock_account_groups || []);
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/account_types.json`,
+        { headers: authHeaders() }
+      );
+      const data = response.data;
+      const list: unknown[] = Array.isArray(data)
+        ? data
+        : data?.account_types ?? data?.lock_account_groups ?? data?.data ?? [];
+      setAccountTypes(
+        list.map((item) => {
+          if (typeof item === "string") return { id: 0, name: item };
+          const obj = item as Record<string, unknown>;
+          return {
+            id: Number(obj.id ?? obj.value ?? 0),
+            name: String(obj.name ?? obj.group_name ?? obj.label ?? obj.id ?? ""),
+          };
+        })
+      );
     } catch (error) {
-      console.error("Error fetching account groups:", error);
-      setGroups([]);
+      console.error("Error fetching account types:", error);
+      setAccountTypes([]);
     }
   }, [lockAccountId]);
 
+  // GET /lock_accounts/:id/lock_account_ledgers.json (table view)
   const fetchLedgers = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers/opening`, {
-        params: { lock_account_id: lockAccountId },
-        headers: authHeaders(),
-      });
-      setLedgers(response.data?.lock_account_ledgers || []);
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers.json`,
+        { headers: authHeaders() }
+      );
+      const data = response.data;
+      const list: LockAccountLedgerAPI[] = Array.isArray(data)
+        ? data
+        : data?.lock_account_ledgers ?? data?.ledgers ?? data?.data ?? [];
+      setLedgers(list);
     } catch (error) {
       console.error("Error fetching chart of accounts:", error);
       toast.error("Failed to fetch chart of accounts");
@@ -199,15 +243,15 @@ const AccountingChartOfAccounts: React.FC = () => {
     }
   }, [lockAccountId]);
 
+  // GET /lock_accounts/:id/lock_account_ledgers/tree.json (tree view)
   const fetchTree = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers`, {
-        params: { lock_account_id: lockAccountId },
-        headers: authHeaders(),
-      });
-      const flat: FlatTreeNode[] = Array.isArray(response.data) ? response.data : [];
-      setTree(buildTreeFromFlat(flat));
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/tree.json`,
+        { headers: authHeaders() }
+      );
+      setTree(normalizeTree(response.data));
     } catch (error) {
       console.error("Error fetching account tree:", error);
       setTree([]);
@@ -215,16 +259,16 @@ const AccountingChartOfAccounts: React.FC = () => {
   }, [lockAccountId]);
 
   useEffect(() => {
-    fetchGroups();
+    fetchAccountTypes();
     fetchLedgers();
     fetchTree();
-  }, [fetchGroups, fetchLedgers, fetchTree]);
+  }, [fetchAccountTypes, fetchLedgers, fetchTree]);
 
-  const groupNameById = useMemo(() => {
+  const accountTypeNameById = useMemo(() => {
     const map = new Map<number, string>();
-    groups.forEach((g) => map.set(g.id, g.group_name));
+    accountTypes.forEach((t) => t.id && map.set(t.id, t.name));
     return map;
-  }, [groups]);
+  }, [accountTypes]);
 
   const rows = useMemo<LedgerRow[]>(
     () =>
@@ -233,12 +277,16 @@ const AccountingChartOfAccounts: React.FC = () => {
         id: ledger.id,
         accountName: ledger.name,
         accountCode: ledger.account_code || "",
-        accountType: ledger.lock_account_group_id
-          ? groupNameById.get(ledger.lock_account_group_id) || ""
-          : "",
+        accountType:
+          ledger.account_type ||
+          ledger.group_name ||
+          ledger.lock_account_group?.group_name ||
+          (ledger.lock_account_group_id
+            ? accountTypeNameById.get(ledger.lock_account_group_id) || ""
+            : ""),
         raw: ledger,
       })),
-    [ledgers, groupNameById]
+    [ledgers, accountTypeNameById]
   );
 
   // The API's root jsTree node ("Account Ledgers", parent "#") already reads
@@ -246,26 +294,39 @@ const AccountingChartOfAccounts: React.FC = () => {
   const rootNode: AccountTreeNodeData =
     tree[0] ?? { id: "root", name: "Account Ledgers", type: "root", children: [] };
 
-  const callSyncEndpoint = async (path: string, successMessage: string) => {
+  const callLedgerEndpoint = async (
+    path: string,
+    successMessage: string,
+    params?: Record<string, string>
+  ) => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      await axios.post(
-        `${baseUrl}/lock_accounts/${lockAccountId}/${path}.json`,
-        {},
-        { headers: authHeaders() }
+      await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/${path}.json`,
+        { headers: authHeaders(), params }
       );
       toast.success(successMessage);
       fetchLedgers();
       fetchTree();
     } catch (error) {
       console.error(`Error calling ${path}:`, error);
-      toast.error(`Failed to ${successMessage.toLowerCase()}`);
+      toast.error(`Failed: ${successMessage}`);
     }
   };
 
-  const handleSyncFlatLedgers = () => callSyncEndpoint("sync_flat_ledgers", "Flat ledgers synced");
-  const handleSyncVendorLedgers = () => callSyncEndpoint("sync_vendor_ledgers", "Vendor ledgers synced");
-  const handleRaiseToBuilder = () => callSyncEndpoint("raise_to_builder", "Raised to builder");
+  // GET /lock_accounts/:id/lock_account_ledgers/sync.json
+  const handleSyncUnitLedgers = () => callLedgerEndpoint("sync", "Unit ledgers synced");
+  // GET /lock_accounts/:id/lock_account_ledgers/sync_suppliers.json
+  const handleSyncVendorLedgers = () => callLedgerEndpoint("sync_suppliers", "Vendor ledgers synced");
+  // GET /lock_accounts/:id/lock_account_ledgers/raise_to_builder.json?pids=1,2,3
+  const handleRaiseToBuilder = () => {
+    const pids = ledgers.map((l) => l.id).filter(Boolean).join(",");
+    if (!pids) {
+      toast.error("No accounts to raise to builder");
+      return;
+    }
+    callLedgerEndpoint("raise_to_builder", "Raised to builder", { pids });
+  };
 
   const handleAddAccount = () => {
     setEditingLedger(null);
@@ -395,9 +456,9 @@ const AccountingChartOfAccounts: React.FC = () => {
           <Button
             variant="outline"
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-            onClick={handleSyncFlatLedgers}
+            onClick={handleSyncUnitLedgers}
           >
-            <UploadCloud className="mr-2 h-4 w-4" /> Sync Flat Ledgers
+            <UploadCloud className="mr-2 h-4 w-4" /> Sync Unit Ledgers
           </Button>
           <Button
             variant="outline"
@@ -415,7 +476,11 @@ const AccountingChartOfAccounts: React.FC = () => {
           </Button>
         </div>
       </div>
-
+ <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          Chart of Accounts
+        </h1>
+      </div>
       {viewType === "table" ? (
         <EnhancedTable
           data={rows}
