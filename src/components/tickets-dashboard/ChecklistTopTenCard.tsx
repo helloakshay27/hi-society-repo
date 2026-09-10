@@ -2,14 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ChartCardShell } from './ChartCardShell';
 import { CardDownloadButton } from './CardDownloadButton';
-import { checklistReportsAPI, ChecklistTopTenRow } from '@/services/checklistReportsAPI';
-import { getTicketsChartColor } from './colors';
+import {
+  checklistDashboardAnalyticsAPI,
+  ChecklistTopTenRow,
+} from '@/services/checklistDashboardAnalyticsAPI';
 import { TicketsDashboardDateRange } from './types';
 
 interface ChecklistTopTenCardProps {
   dateRange: TicketsDashboardDateRange;
   className?: string;
 }
+
+/** Per-bar palette from the FM Matrix `/maintenance/task` top-ten card. */
+const TOP_TEN_COLORS = [
+  '#9EC8BA',
+  '#8E7BE0',
+  '#DA7756',
+  '#798C5E',
+  '#EDC488',
+  '#76CDC1',
+  '#E39090',
+  '#CDCAF5',
+];
 
 /** "Top 10 Checklist Types" — ranked bar chart + rank / type / count table. */
 export const ChecklistTopTenCard: React.FC<ChecklistTopTenCardProps> = ({ dateRange, className }) => {
@@ -19,7 +33,7 @@ export const ChecklistTopTenCard: React.FC<ChecklistTopTenCardProps> = ({ dateRa
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    checklistReportsAPI
+    checklistDashboardAnalyticsAPI
       .getTopTen({ fromDate: dateRange.startDate, toDate: dateRange.endDate })
       .then((res) => {
         if (!cancelled) setRows(res.response);
@@ -38,7 +52,11 @@ export const ChecklistTopTenCard: React.FC<ChecklistTopTenCardProps> = ({ dateRa
   const chartData = [...rows]
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
-    .map((row, i) => ({ name: row.type, value: row.count, color: getTicketsChartColor(i) }));
+    .map((row, i) => ({
+      name: row.type,
+      value: row.count,
+      color: TOP_TEN_COLORS[i % TOP_TEN_COLORS.length],
+    }));
   const chartHeight = Math.max(200, chartData.length * 34 + 40);
 
   return (
@@ -50,10 +68,10 @@ export const ChecklistTopTenCard: React.FC<ChecklistTopTenCardProps> = ({ dateRa
         <CardDownloadButton
           label="Download Top 10 Checklist Types"
           onDownload={() =>
-            checklistReportsAPI.downloadExport(
-              { fromDate: dateRange.startDate, toDate: dateRange.endDate },
-              'top_ten'
-            )
+            checklistDashboardAnalyticsAPI.downloadExport('topTen', {
+              fromDate: dateRange.startDate,
+              toDate: dateRange.endDate,
+            })
           }
         />
       }
