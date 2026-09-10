@@ -18,6 +18,8 @@ export const DEFAULT_INCIDENT_GRID_LAYOUT: GridLayout.Layout[] = [
   { i: 'pie-status-distribution', x: 6, y: 6, w: 6, h: 6, minW: 4, minH: 5 },
   { i: 'bar-level-wise', x: 0, y: 12, w: 12, h: 8, minW: 6, minH: 6 },
   // Tables / map
-  { i: 'rca-table', x: 0, y: 20, w: 12, h: 12, minW: 6, minH: 8 },
-  { i: 'body-injury-map', x: 0, y: 32, w: 12, h: 18, minW: 6, minH: 10 },
+  { i: 'rca-table', x: 0, y: 20, w: 12, h: 10, minW: 6, minH: 7 },
+  // Height is sized to the figure + its percentage tiles; anything taller leaves a
+  // large empty band under the chart since the SVG is width-capped.
+  { i: 'body-injury-map', x: 0, y: 30, w: 12, h: 10, minW: 6, minH: 7 },
 ];
