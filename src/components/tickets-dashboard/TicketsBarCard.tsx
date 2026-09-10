@@ -9,15 +9,7 @@ import {
   TicketOverviewResponse,
 } from '@/services/ticketReportsAPI';
 import { visitorReportsAPI } from '@/services/visitorReportsAPI';
-import {
-  OPEN_COLOR,
-  CLOSED_COLOR,
-  REACTIVE_COLOR,
-  PROACTIVE_COLOR,
-  TAT_ACHIEVED_COLOR,
-  TAT_BREACHED_COLOR,
-  getTicketsChartColor,
-} from './colors';
+import { OPEN_COLOR, CLOSED_COLOR, REACTIVE_COLOR, PROACTIVE_COLOR, TAT_ACHIEVED_COLOR, TAT_BREACHED_COLOR, getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
 
 export type TicketsBarMetric =
@@ -31,11 +23,8 @@ export type TicketsBarMetric =
   | 'resolution-tat';
 
 const BAR_METRIC_META: Record<TicketsBarMetric, { title: string; subtitle?: string; orientation?: 'horizontal' | 'vertical' }> = {
-  'unit-category': { title: 'Unit Category-wise Tickets', subtitle: 'Open vs Closed tickets per unit category' },
-  'unit-category-proactive': {
-    title: 'Unit Category-wise Proactive Tickets',
-    subtitle: 'Open vs Closed proactive tickets per unit category',
-  },
+  'unit-category': { title: 'Unit Category-wise Tickets', subtitle: 'Open vs Closed volume per category' },
+  'unit-category-proactive': { title: 'Unit Category-wise Proactive Tickets', subtitle: 'Proactive-only volume per category' },
   'common-area-category': {
     title: 'Common Area Category-wise Tickets',
     subtitle: 'Reactive vs Proactive volume per common-area category',
@@ -130,17 +119,17 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
   let emptyMessage: string | undefined;
 
   switch (metric) {
-    // Both unit-category cards read their own `unit_category*` block. They must NOT
-    // use `proactive_reactive`, which spans every category (unit *and* common-area)
-    // — that was showing common-area categories under a "Unit Category" heading.
     case 'unit-category': {
-      const counts = categoryBreakdown?.unit_category;
-      const rows = (counts?.tickets_category ?? [])
+      // Sourced from `response.unit_category` — open/closed counts per unit category.
+      // (The `proactive_reactive` matrix this used to read spans unit AND common-area
+      // categories, so it was listing common-area ones on a unit card.)
+      const unit = categoryBreakdown?.unit_category;
+      const rows = (unit?.tickets_category ?? [])
         .map((category, i) => ({
           category,
-          open: counts?.open_tickets?.[i] ?? 0,
-          closed: counts?.closed_tickets?.[i] ?? 0,
-          total: counts?.total_tickets?.[i] ?? 0,
+          open: unit!.open_tickets[i] ?? 0,
+          closed: unit!.closed_tickets[i] ?? 0,
+          total: unit!.total_tickets[i] ?? 0,
         }))
         .sort((a, b) => b.total - a.total);
       data = rows;
@@ -155,20 +144,11 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
       break;
     }
     case 'unit-category-proactive': {
-      const counts = categoryBreakdown?.unit_category_proactive;
-      data = (counts?.tickets_category ?? [])
-        .map((category, i) => ({
-          category,
-          open: counts?.open_tickets?.[i] ?? 0,
-          closed: counts?.closed_tickets?.[i] ?? 0,
-          total: counts?.total_tickets?.[i] ?? 0,
-        }))
-        .filter((row) => row.total > 0)
-        .sort((a, b) => b.total - a.total);
-      series = [
-        { dataKey: 'open', name: 'Open', color: OPEN_COLOR, stackId: 'a' },
-        { dataKey: 'closed', name: 'Closed', color: CLOSED_COLOR, stackId: 'a' },
-      ];
+      data = (categoryBreakdown?.proactive_reactive ?? [])
+        .map((c) => ({ category: c.category, proactive: c.proactive.open + c.proactive.closed }))
+        .filter((c) => (c.proactive as number) > 0)
+        .sort((a, b) => (b.proactive as number) - (a.proactive as number));
+      series = [{ dataKey: 'proactive', name: 'Proactive', color: PROACTIVE_COLOR }];
       emptyMessage = 'No proactive tickets recorded for the selected date range.';
       break;
     }

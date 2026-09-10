@@ -561,7 +561,7 @@ const TicketsDashboardPage: React.FC = () => {
 
         {activeTab === 'incident' && (
           <TicketsDashboardGrid
-            storageKey="incident-dashboard-grid-layout-v2"
+            storageKey="incident-dashboard-grid-layout-v3"
             defaultLayout={DEFAULT_INCIDENT_GRID_LAYOUT}
           >
             <div key="kpi-total-incidents">
@@ -620,7 +620,7 @@ const TicketsDashboardPage: React.FC = () => {
               <IncidentRcaTableCard dateRange={dateRange} />
             </div>
             <div key="body-injury-map">
-              <BodyInjuryChartCard />
+              <BodyInjuryChartCard dateRange={dateRange} />
             </div>
           </TicketsDashboardGrid>
         )}

@@ -51,6 +51,15 @@ export interface IncidentNamedCountsResponse {
   info?: string;
 }
 
+export interface IncidentBodyInjuryResponse {
+  success: number;
+  message: string;
+  /** Server-rendered chart image URL — the payload calls this field `response`. */
+  imageUrl: string | null;
+  /** Body part -> share of total injuries (%). Only parts with >= 1 incident appear. */
+  percentages: Record<string, number>;
+}
+
 export type IncidentRcaRow = Record<string, string | number>;
 
 export interface IncidentRcaTableResponse {
@@ -301,6 +310,38 @@ export const incidentReportsAPI = {
       totalPages,
       totalCount,
       info: data?.info,
+    };
+  },
+
+  /**
+   * Body-injury chart. Three things to know about this payload:
+   *  - the image URL lives on the `response` key (not `image_url`/`url`), and the
+   *    image itself is public, so it can go straight into an <img src> with no token;
+   *  - failures come back as `200` with `success: 0` and a `message`, not an HTTP
+   *    error status;
+   *  - `percentage` can still be present when only the image build failed, so
+   *    `imageUrl` and `percentages` are surfaced independently rather than
+   *    treating the call as all-or-nothing.
+   */
+  async getBodyInjuryChart(range: IncidentReportDateRange): Promise<IncidentBodyInjuryResponse> {
+    const { data } = await apiClient.get(`${BASE_PATH}/body_injury_chart`, {
+      params: buildParams(range, { page: 1 }),
+    });
+
+    const rawPercentages = (data?.percentage ?? {}) as Record<string, unknown>;
+    const percentages: Record<string, number> = {};
+    for (const [part, value] of Object.entries(rawPercentages)) {
+      const n = Number(value);
+      if (Number.isFinite(n)) percentages[part] = n;
+    }
+
+    const url = typeof data?.response === 'string' ? data.response.trim() : '';
+
+    return {
+      success: toNumber(data?.success ?? 0),
+      message: String(data?.message ?? ''),
+      imageUrl: url !== '' ? url : null,
+      percentages,
     };
   },
 

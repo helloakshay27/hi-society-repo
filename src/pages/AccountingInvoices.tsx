@@ -9,7 +9,7 @@ import { API_CONFIG } from "@/config/apiConfig";
 import {
   ArrowLeft,
   Eye,
-  Pencil,
+  Edit,
   Plus,
   Download,
   Send,
@@ -84,7 +84,7 @@ const columns: ColumnConfig[] = [
 const toRow = (bill: LockAccountBill): InvoiceRow => ({
   id: bill.id,
   billNumber: bill.bill_number,
-  irnNo: bill.irn_no || "N/A",
+  irnNo: bill.irn_no || "",
   society: bill.society_name || bill.society?.name || "",
   tower: bill.tower_name || bill.tower?.name || "",
   ledger: bill.ledger_name || bill.ledger?.name || "",
@@ -117,50 +117,41 @@ const DUMMY_BILL: LockAccountBill = {
   mail_sent: false,
 };
 
-const exportRowsToCsv = (rows: InvoiceRow[], fileName: string) => {
-  if (rows.length === 0) {
-    toast.error("No data to export");
+// GET /lock_account_bills/download_invoices.xlsx?pids=1,2,3 (pids = bill ids)
+const downloadInvoicesXlsx = async (ids: number[], fileName: string) => {
+  if (ids.length === 0) {
+    toast.error("No invoices to export");
     return;
   }
-  const headers = columns.filter((c) => c.key !== "actions").map((c) => c.label);
-  const csv = [
-    headers.join(","),
-    ...rows.map((row) =>
-      [
-        row.id,
-        row.billNumber,
-        row.irnNo,
-        row.society,
-        row.tower,
-        row.ledger,
-        row.nameOnBill,
-        row.dueDate,
-        row.totalAmount,
-        row.note,
-        row.billCycle,
-        row.status,
-        row.publish ? "Yes" : "No",
-        row.mailSent ? "Yes" : "No",
-      ]
-        .map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`)
-        .join(",")
-    ),
-  ].join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${fileName}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  try {
+    const baseUrl = API_CONFIG.BASE_URL;
+    const token = API_CONFIG.TOKEN;
+    const response = await axios.get(`${baseUrl}/lock_account_bills/download_invoices.xlsx`, {
+      params: { pids: ids.join(",") },
+      responseType: "blob",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error exporting invoices:", error);
+    toast.error("Failed to export invoices");
+  }
 };
 
 const AccountingInvoices: React.FC = () => {
   const navigate = useNavigate();
   const [bills, setBills] = useState<LockAccountBill[]>([]);
+  const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -183,10 +174,16 @@ const AccountingInvoices: React.FC = () => {
       });
       const data = response.data;
       setBills(data?.lock_account_bills || data?.data || data || []);
+      setSummary(
+        (data?.summary ?? data?.kpi ?? data?.kpis ?? data?.stats ?? data?.totals ?? null) as
+          | Record<string, unknown>
+          | null
+      );
     } catch (error) {
       console.error("Error fetching bills:", error);
       toast.error("Failed to fetch invoices");
       setBills([DUMMY_BILL]);
+      setSummary(null);
     } finally {
       setLoading(false);
     }
@@ -230,17 +227,35 @@ const AccountingInvoices: React.FC = () => {
     });
   }, [rows, appliedFilters]);
 
+  // KPI cards come from GET /lock_account_bills.json?lock_account_id=... — use a
+  // summary block from that response when present, otherwise derive from the list.
   const totals = useMemo(() => {
-    const totalBills = rows.length;
-    const totalAmount = rows.reduce((sum, r) => sum + r.totalAmount, 0);
-    const pendingAmount = rows
+    const s = summary || {};
+    const apiNum = (...keys: string[]): number | null => {
+      for (const key of keys) {
+        const v = s[key];
+        if (v !== undefined && v !== null && v !== "" && Number.isFinite(Number(v))) {
+          return Number(v);
+        }
+      }
+      return null;
+    };
+    const computedTotalBills = rows.length;
+    const computedTotalAmount = rows.reduce((sum, r) => sum + r.totalAmount, 0);
+    const computedPending = rows
       .filter((r) => r.status.toLowerCase() !== "paid")
       .reduce((sum, r) => sum + r.totalAmount, 0);
-    const paidAmount = rows
+    const computedPaid = rows
       .filter((r) => r.status.toLowerCase() === "paid")
       .reduce((sum, r) => sum + r.totalAmount, 0);
-    return { totalBills, totalAmount, pendingAmount, paidAmount };
-  }, [rows]);
+    return {
+      totalBills: apiNum("total_bills", "total_count", "count", "bills_count") ?? computedTotalBills,
+      totalAmount: apiNum("total_amount", "total_bill_amount") ?? computedTotalAmount,
+      pendingAmount:
+        apiNum("pending_amount", "outstanding_amount", "unpaid_amount") ?? computedPending,
+      paidAmount: apiNum("paid_amount", "received_amount", "collected_amount") ?? computedPaid,
+    };
+  }, [rows, summary]);
 
   const statCards = [
     { label: "Total Bills", value: totals.totalBills.toLocaleString(), icon: Receipt },
@@ -257,6 +272,17 @@ const AccountingInvoices: React.FC = () => {
     setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((item) => item !== id)));
   };
 
+  const handleExport = () => {
+    const ids =
+      selectedIds.length > 0 ? selectedIds.map(Number) : filteredRows.map((r) => r.id);
+    downloadInvoicesXlsx(ids, "invoices");
+  };
+
+  const handleExportAll = () => {
+    downloadInvoicesXlsx(rows.map((r) => r.id), "invoices-all");
+  };
+
+  // POST /lock_account_bills/raise_account_invoices.json?lock_account_id=..&pids=1,2,3
   const handleRaiseInvoices = async () => {
     if (selectedIds.length === 0) {
       toast.error("Please select at least one bill to raise.");
@@ -265,20 +291,16 @@ const AccountingInvoices: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      await Promise.all(
-        selectedIds.map((id) =>
-          axios.patch(
-            `${baseUrl}/lock_account_bills/${id}.json`,
-            { lock_account_bill: { publish: true } },
-            {
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              },
-            }
-          )
-        )
+      await axios.post(
+        `${baseUrl}/lock_account_bills/raise_account_invoices.json`,
+        {},
+        {
+          params: { lock_account_id: lockAccountId, pids: selectedIds.join(",") },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
       );
       toast.success(`${selectedIds.length} invoice(s) raised successfully`);
       setSelectedIds([]);
@@ -289,62 +311,84 @@ const AccountingInvoices: React.FC = () => {
     }
   };
 
-  const handleRemind = () => {
+  // POST /lock_account_bills/trigger_invoice_emails.json?lock_account_id=..&invoice_ids=..
+  const handleRemind = async () => {
     if (selectedIds.length === 0) {
       toast.error("Please select at least one bill to remind.");
       return;
     }
-    toast.info("Reminder feature coming soon");
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      await axios.post(
+        `${baseUrl}/lock_account_bills/trigger_invoice_emails.json`,
+        {},
+        {
+          params: { lock_account_id: lockAccountId, invoice_ids: selectedIds.join(",") },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
+      );
+      toast.success(`Reminder sent for ${selectedIds.length} invoice(s)`);
+    } catch (error) {
+      console.error("Error sending reminders:", error);
+      toast.error("Failed to send reminders");
+    }
   };
 
   const renderCell = (item: InvoiceRow, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="flex items-center gap-3">
-            <span title="View">
-              <Eye
-                className="h-4 w-4 cursor-pointer text-gray-600 hover:text-[#C72030]"
-                onClick={() => navigate(`/accounting/invoices/${item.id}`)}
-              />
-            </span>
-            <span title="Edit">
-              <Pencil
-                className="h-4 w-4 cursor-pointer text-gray-600 hover:text-[#C72030]"
-                onClick={() => navigate(`/accounting/invoices/${item.id}/edit`)}
-              />
-            </span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`/accounting/invoices/${item.id}`)}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1"
+              onClick={() => navigate(`/accounting/invoices/${item.id}/edit`)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
           </div>
         );
       case "id":
-        return item.id;
+        return item.id || "-";
       case "billNumber":
-        return item.billNumber;
+        return item.billNumber || "-";
       case "irnNo":
-        return item.irnNo;
+        return item.irnNo || "-";
       case "society":
-        return item.society;
+        return item.society || "-";
       case "tower":
-        return item.tower;
+        return item.tower || "-";
       case "ledger":
-        return item.ledger;
+        return item.ledger || "-";
       case "nameOnBill":
-        return item.nameOnBill;
+        return item.nameOnBill || "-";
       case "dueDate":
-        return item.dueDate;
+        return item.dueDate || "-";
       case "totalAmount":
-        return item.totalAmount.toFixed(1);
+        return item.totalAmount ? item.totalAmount.toFixed(1) : "-";
       case "note":
-        return item.note;
+        return item.note || "-";
       case "billCycle":
-        return item.billCycle;
+        return item.billCycle || "-";
       case "status":
         return (
           <span className="flex items-center gap-1">
             <span
-              className={`inline-block h-3 w-1 rounded ${
-                item.status.toLowerCase() === "paid" ? "bg-green-500" : "bg-orange-400"
-              }`}
+              className={`inline-block h-3 w-1 rounded ${item.status.toLowerCase() === "paid" ? "bg-green-500" : "bg-orange-400"
+                }`}
             />
             {item.status}
           </span>
@@ -354,19 +398,13 @@ const AccountingInvoices: React.FC = () => {
       case "mailSent":
         return item.mailSent ? "Yes" : "No";
       default:
-        return "";
+        return "-";
     }
   };
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-      <button
-        onClick={() => navigate("/accounting/dashboard")}
-        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Accounting
-      </button>
+     
 
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => {
@@ -393,7 +431,7 @@ const AccountingInvoices: React.FC = () => {
       </div>
 
       <div className="mb-4 flex flex-wrap gap-3">
-       
+
         <Button
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
           onClick={() => handleSelectAll(selectedIds.length !== filteredRows.length)}
@@ -401,13 +439,14 @@ const AccountingInvoices: React.FC = () => {
           <CheckSquare className="mr-2 h-4 w-4" /> Select All
         </Button>
         <Button
- className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"          onClick={() => exportRowsToCsv(filteredRows, "invoices")}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          onClick={handleExport}
         >
           <Download className="mr-2 h-4 w-4" /> Export
         </Button>
         <Button
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-          onClick={() => exportRowsToCsv(rows, "invoices-all")}
+          onClick={handleExportAll}
         >
           <FileSpreadsheet className="mr-2 h-4 w-4" /> Export All
         </Button>
@@ -418,7 +457,11 @@ const AccountingInvoices: React.FC = () => {
           Remind
         </Button>
       </div>
-
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          Invoices
+        </h1>
+      </div>
       <EnhancedTable
         data={filteredRows}
         columns={columns}
@@ -431,20 +474,21 @@ const AccountingInvoices: React.FC = () => {
         pagination
         pageSize={20}
         enableExport
+        onExport={handleExport}
         exportFileName="accounting-invoices"
         storageKey="accounting-invoices-table"
         onFilterClick={() => setIsFilterOpen(true)}
         loading={loading}
         loadingMessage="Loading invoices..."
         emptyMessage="No matching records found"
-         leftActions={
-                  <Button
-           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-          onClick={() => navigate("/accounting/invoice-creation")}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add
-        </Button>
-                }
+        leftActions={
+          <Button
+            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+            onClick={() => navigate("/accounting/invoice-creation")}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add
+          </Button>
+        }
       />
 
       <AccountingInvoiceFilterDialog

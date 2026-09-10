@@ -26,6 +26,35 @@ const isBrokenLayout = (layout: GridLayout.Layout[]): boolean => {
   return leftStuck && hasWideCharts && layout.length > 3;
 };
 
+/**
+ * Fingerprint of the shipped layout's geometry. Saved beside the layout so a
+ * revision to `defaultLayout` can be detected and adopted.
+ *
+ * Without this, a *reduced* default height could never reach anyone with a saved
+ * layout: `mergeWithDefaults` keeps the user's row height, and `Math.max` means a
+ * stale taller value always wins — leaving a blank band under short cards.
+ */
+const signatureOf = (layout: GridLayout.Layout[]): string =>
+  layout.map((l) => `${l.i}:${l.w}x${l.h}`).join('|');
+
+const SIGNATURE_SUFFIX = ':defaults';
+
+const readSignature = (storageKey: string): string | null => {
+  try {
+    return localStorage.getItem(storageKey + SIGNATURE_SUFFIX);
+  } catch {
+    return null;
+  }
+};
+
+const writeSignature = (storageKey: string, signature: string): void => {
+  try {
+    localStorage.setItem(storageKey + SIGNATURE_SUFFIX, signature);
+  } catch {
+    // ignore quota errors
+  }
+};
+
 const mergeWithDefaults = (
   saved: GridLayout.Layout[],
   defaults: GridLayout.Layout[]
@@ -91,6 +120,8 @@ export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({
 }) => {
   const [layouts, setLayouts] = useState<GridLayout.Layout[]>(() => {
     try {
+      // A revised shipped layout wins over whatever was saved for the old one.
+      if (readSignature(storageKey) !== signatureOf(defaultLayout)) return defaultLayout;
       const raw = localStorage.getItem(storageKey);
       if (raw) return mergeWithDefaults(JSON.parse(raw) as GridLayout.Layout[], defaultLayout);
     } catch {
@@ -108,6 +139,15 @@ export const TicketsDashboardGrid: React.FC<TicketsDashboardGridProps> = ({
 
   // Always prefer current defaults when storage key / defaults change (layout version bumps).
   useEffect(() => {
+    const signature = signatureOf(defaultLayout);
+    if (readSignature(storageKey) !== signature) {
+      // The shipped layout was revised — adopt it wholesale rather than merging,
+      // so a reduced card height isn't overridden by the stale saved one.
+      writeSignature(storageKey, signature);
+      skipPersistRef.current = true;
+      setLayouts(defaultLayout);
+      return;
+    }
     setLayouts((prev) => mergeWithDefaults(prev, defaultLayout));
   }, [defaultLayout, storageKey]);
 

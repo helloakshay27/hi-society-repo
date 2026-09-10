@@ -96,6 +96,17 @@ const emptyCharge = (): ChargeRow => ({
   sgstRate: "0",
 });
 
+// API returns dates as "DD/MM/YYYY" or ISO; <input type="date"> needs "YYYY-MM-DD".
+const toDateInputValue = (value?: string | null): string => {
+  if (!value) return "";
+  const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+  const iso = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+  if (iso) return iso[1];
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+};
+
 interface SelectOption {
   id: string;
   label: string;
@@ -111,7 +122,7 @@ const normalizeOptions = (list: unknown): SelectOption[] => {
       const obj = item as Record<string, unknown>;
       const rawId = obj.id ?? obj.value ?? obj.code ?? obj.name ?? obj.label;
       const rawLabel =
-        obj.name ?? obj.label ?? obj.title ?? obj.formatted_name ?? obj.text ?? rawId ?? "";
+        obj.name ?? obj.label ?? obj.category ?? obj.title ?? obj.formatted_name ?? obj.text ?? rawId ?? "";
       return { id: String(rawId ?? ""), label: String(rawLabel) };
     }
     return { id: String(item), label: String(item) };
@@ -271,13 +282,43 @@ const AccountingInvoiceEdit: React.FC = () => {
         setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
         setResidentTypeOptions(normalizeOptions(data.resident_types));
         setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
-        setChargeTypeOptions(normalizeOptions(data.charge_types));
       } catch (error) {
         console.error("Error fetching invoice form options:", error);
         toast.error("Failed to load invoice form options");
       }
     };
     fetchFormOptions();
+  }, [lockAccountId]);
+
+  // GET /account/charge_setups/charge_type_options.json?lock_account_id=... —
+  // dedicated charge-type list used by the "Charge Type" column in the charges table.
+  useEffect(() => {
+    const fetchChargeTypes = async () => {
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/account/charge_setups/charge_type_options.json`, {
+          params: { lock_account_id: lockAccountId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list = Array.isArray(data)
+          ? data
+          : data?.charge_categories ??
+            data?.charge_type_options ??
+            data?.categories ??
+            data?.data ??
+            [];
+        setChargeTypeOptions(normalizeOptions(list));
+      } catch (error) {
+        console.error("Error fetching charge types:", error);
+        setChargeTypeOptions([]);
+      }
+    };
+    fetchChargeTypes();
   }, [lockAccountId]);
 
   // GET /lock_account_ledgers?lock_account_id=... — list of ledgers selectable
@@ -354,16 +395,18 @@ const AccountingInvoiceEdit: React.FC = () => {
         });
         const bill = res.data?.lock_account_bill || res.data;
         setBillNumber(bill.bill_number || "");
-        setDueDate(bill.due_date || "");
+        setDueDate(toDateInputValue(bill.due_date || bill.billing_date));
         setBillCycleId(bill.bill_cycle_id ? String(bill.bill_cycle_id) : "");
-        setBillFrequency(bill.frequency || "");
+        setBillFrequency(
+          bill.bill_frequency_id ? String(bill.bill_frequency_id) : bill.frequency || ""
+        );
         setUnitId(bill.ledger_id ? String(bill.ledger_id) : "");
         setResidentTypeId(bill.resident_type || "");
         setOtherPreferences(bill.other_preferences || "");
         setInvoiceFormatId(bill.invoice_format || "");
         setIrnNo(bill.irn_no || "");
-        setAcknowledgementNo(bill.acknowledgement_no || "");
-        setAcknowledgementDate(bill.acknowledgement_date || "");
+        setAcknowledgementNo(bill.ack_no || bill.acknowledgement_no || "");
+        setAcknowledgementDate(toDateInputValue(bill.ack_date || bill.acknowledgement_date));
         setNote(bill.note || "");
 
         const existingCharges = bill.lock_account_bill_charges || bill.charges || [];
