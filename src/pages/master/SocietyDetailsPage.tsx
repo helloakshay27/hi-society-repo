@@ -21,8 +21,10 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
+import { HI_SOCIETY_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { Society } from "@/types/society";
+
+type FaceRecognitionService = "internal" | "aws";
 
 interface SocietyBlock {
   id: number;
@@ -56,6 +58,11 @@ export const SocietyDetailsPage: React.FC = () => {
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [blockFormData, setBlockFormData] = useState({ name: "", description: "", active: true });
   const [blockSubmitting, setBlockSubmitting] = useState(false);
+
+  // Face recognition service state
+  const [faceRecognitionService, setFaceRecognitionService] = useState<FaceRecognitionService | null>(null);
+  const [faceRecognitionLoading, setFaceRecognitionLoading] = useState(false);
+  const [faceRecognitionSaving, setFaceRecognitionSaving] = useState(false);
 
   const fetchSocietyDetails = async (societyId: number) => {
     setLoading(true);
@@ -234,10 +241,72 @@ export const SocietyDetailsPage: React.FC = () => {
     }
   };
 
+  // ── Face Recognition Service ────────────────────────────────────────────────
+
+  const fetchFaceRecognitionService = async (societyId: number) => {
+    setFaceRecognitionLoading(true);
+    try {
+      const url = `${getFullUrl("/api/v1/face_recognition/service")}?society_id=${societyId}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const service = data?.data?.face_recognition_service || data?.face_recognition_service;
+      setFaceRecognitionService(service === "internal" || service === "aws" ? service : null);
+    } catch (err) {
+      console.error("Error fetching face recognition service:", err);
+    } finally {
+      setFaceRecognitionLoading(false);
+    }
+  };
+
+  const handleToggleFaceRecognitionService = async () => {
+    if (!id) return;
+    const nextService: FaceRecognitionService =
+      faceRecognitionService === "internal" ? "aws" : "internal";
+
+    setFaceRecognitionSaving(true);
+    try {
+      const url = getFullUrl("/api/v1/face_recognition/service");
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify({ society_id: parseInt(id), service: nextService }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setFaceRecognitionService(nextService);
+      toast.success(
+        `Face recognition service set to ${nextService === "internal" ? "Internal" : "AWS"}`
+      );
+    } catch (err) {
+      console.error("Error updating face recognition service:", err);
+      toast.error("Failed to update face recognition service");
+    } finally {
+      setFaceRecognitionSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       fetchSocietyDetails(parseInt(id));
       fetchBlocks();
+      fetchFaceRecognitionService(parseInt(id));
     }
   }, [id]);
 
@@ -570,6 +639,36 @@ export const SocietyDetailsPage: React.FC = () => {
 
               {/* Right Column - Meta Information */}
               <div className="space-y-6">
+                {/* Face Recognition Service Card */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    Face Recognition Service
+                  </h2>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">
+                        Use Internal Face Recognition Service
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {faceRecognitionLoading
+                          ? "Loading..."
+                          : faceRecognitionSaving
+                          ? "Saving..."
+                          : faceRecognitionService === "internal"
+                          ? "Currently using the Internal service"
+                          : faceRecognitionService === "aws"
+                          ? "Currently using the AWS service"
+                          : "Not configured"}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={faceRecognitionService === "internal"}
+                      onCheckedChange={handleToggleFaceRecognitionService}
+                      disabled={faceRecognitionLoading || faceRecognitionSaving}
+                    />
+                  </div>
+                </div>
+
                 {/* Images Card */}
                 {society.images && (
                   <div className="bg-white rounded-lg shadow p-6">
