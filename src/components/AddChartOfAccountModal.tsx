@@ -166,7 +166,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
             active: true,
           },
         };
-        await axios.post(`${baseUrl}/lock_account_ledgers`, payload, { headers });
+        await axios.post(`${baseUrl}/lock_account_ledgers.json`, payload, { headers });
         toast.success("Account created successfully");
       }
       onSaved();
