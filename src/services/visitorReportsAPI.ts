@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient';
 import type { TicketReportDateRange } from './ticketReportsAPI';
 import { getDynamicScopeParams } from './reportScopeParams';
+import { saveReportDownload } from './reportDownload';
 
 // Per FM-HI-SOCIETY-DASHBOARD-APIS.md § 1 "Visitors", the backend only exposes
 // two routes:
@@ -160,5 +161,22 @@ export const visitorReportsAPI = {
       response: normalizeOverview(data ?? {}).delivery_visitors,
       info: data?.info,
     };
+  },
+
+  /**
+   * `kpis?export=true` — the module's only export (staff_kpi has no download).
+   * `from_date` / `to_date` are mandatory here (the JSON call tolerates their
+   * absence, the export 422s without them); `buildParams` always sends both.
+   * Note the file has one extra row per additional visitor, so its row count is
+   * higher than the visitor totals shown on the KPI tiles.
+   */
+  async downloadKpisExport(range: TicketReportDateRange): Promise<void> {
+    await saveReportDownload(
+      apiClient.get(`${BASE_PATH}/kpis`, {
+        params: { ...buildParams(range), export: 'true' },
+        responseType: 'blob',
+      }),
+      `FM_card_visitors_${formatDateForAPI(range.fromDate)}_to_${formatDateForAPI(range.toDate)}.xlsx`
+    );
   },
 };

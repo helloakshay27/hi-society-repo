@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient';
 import { getDynamicScopeParams } from './reportScopeParams';
+import { saveReportDownload } from './reportDownload';
 
 // Per FM-HI-SOCIETY-DASHBOARD-APIS.md § 1 "Incident":
 //   GET /api-fm-report/hi-society/incident/incident_kpis   -> KPI totals
@@ -7,7 +8,13 @@ import { getDynamicScopeParams } from './reportScopeParams';
 //   GET /api-fm-report/hi-society/incident/level_wise      -> Level 0-3 counts
 //   GET /api-fm-report/hi-society/incident/rca_data        -> paginated RCA rows (20/page)
 //   GET /api-fm-report/hi-society/incident/body_injury_chart -> body-injury PNG url
-//   GET /api-fm-report/hi-society/incident/download        -> CSV
+//   GET /api-fm-report/hi-society/incident/download        -> CSV (full RCA export)
+//
+// Per incident-dashboard-new-download-apis.md, three per-card CSV exports:
+//   GET .../download_category_wise        -> category_wise_incidents.csv
+//   GET .../download_status_distribution  -> incident_status_distribution.csv
+//   GET .../download_level_wise           -> level_wise_incidents.csv
+// All three take the same site/society/date filters as the JSON actions.
 //
 // `site_id` and `society_id` are OR'd server-side and `society_id` alone is
 // enough, so this module reuses the shared (society-scoped) getDynamicScopeParams.
@@ -232,16 +239,24 @@ const normalizeRca = (
   return { columns, rows, totalPages, totalCount };
 };
 
-const triggerDownload = (blob: Blob, filename: string): void => {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-};
+/**
+ * Fetches a CSV export and saves it. `saveReportDownload` handles the case these
+ * endpoints document — a 200 carrying `{ success: 0, message: 'No data found' }`
+ * instead of a file when the filtered query is empty — so an empty result surfaces
+ * as a toast rather than a .csv full of JSON.
+ */
+const downloadCsvFrom = (
+  path: string,
+  range: IncidentReportDateRange,
+  filename: string
+): Promise<void> =>
+  saveReportDownload(
+    apiClient.get(`${BASE_PATH}/${path}`, {
+      params: buildParams(range),
+      responseType: 'blob',
+    }),
+    filename
+  );
 
 export const incidentReportsAPI = {
   async getKpis(range: IncidentReportDateRange): Promise<IncidentKpisResponse> {
@@ -289,14 +304,31 @@ export const incidentReportsAPI = {
     };
   },
 
+  /** Full RCA export, behind the RCA table card. */
   async downloadCsv(range: IncidentReportDateRange): Promise<void> {
-    const response = await apiClient.get(`${BASE_PATH}/download`, {
-      params: buildParams(range),
-      responseType: 'blob',
-    });
-    triggerDownload(
-      response.data as Blob,
+    await downloadCsvFrom(
+      'download',
+      range,
       `incident_dashboard-${formatDateForAPI(range.fromDate)}-to-${formatDateForAPI(range.toDate)}.csv`
     );
+  },
+
+  /** Top 5 Category-wise Incidents card — columns: Category, Incident Count. */
+  async downloadCategoryWise(range: IncidentReportDateRange): Promise<void> {
+    await downloadCsvFrom('download_category_wise', range, 'category_wise_incidents.csv');
+  },
+
+  /** Incident Status Distribution card — columns: Status, Incident Count, Percentage. */
+  async downloadStatusDistribution(range: IncidentReportDateRange): Promise<void> {
+    await downloadCsvFrom(
+      'download_status_distribution',
+      range,
+      'incident_status_distribution.csv'
+    );
+  },
+
+  /** Level Wise Incidents card — columns: Level, Incident Count. */
+  async downloadLevelWise(range: IncidentReportDateRange): Promise<void> {
+    await downloadCsvFrom('download_level_wise', range, 'level_wise_incidents.csv');
   },
 };

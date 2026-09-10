@@ -1,14 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
-import { incidentReportsAPI } from '@/services/incidentReportsAPI';
+import { CardDownloadButton } from './CardDownloadButton';
+import { incidentReportsAPI, IncidentReportDateRange } from '@/services/incidentReportsAPI';
 import { getPieChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
 
 export type IncidentPieMetric = 'category-wise' | 'status-distribution';
 
-const META: Record<IncidentPieMetric, { title: string; subtitle?: string }> = {
-  'category-wise': { title: 'Top 5 Category-wise Incidents', subtitle: 'Incident volume per category' },
-  'status-distribution': { title: 'Incident Status Distribution', subtitle: 'Open / Closed / Under Investigation' },
+const META: Record<
+  IncidentPieMetric,
+  {
+    title: string;
+    subtitle?: string;
+    /** Per-card CSV export, per incident-dashboard-new-download-apis.md. */
+    download: (range: IncidentReportDateRange) => Promise<void>;
+  }
+> = {
+  'category-wise': {
+    title: 'Top 5 Category-wise Incidents',
+    subtitle: 'Incident volume per category',
+    download: (range) => incidentReportsAPI.downloadCategoryWise(range),
+  },
+  'status-distribution': {
+    title: 'Incident Status Distribution',
+    subtitle: 'Open / Closed / Under Investigation',
+    download: (range) => incidentReportsAPI.downloadStatusDistribution(range),
+  },
 };
 
 interface IncidentPieCardProps {
@@ -76,6 +93,14 @@ export const IncidentPieCard: React.FC<IncidentPieCardProps> = ({ metric, dateRa
       loading={loading}
       maxVisibleSegments={metric === 'category-wise' ? 5 : undefined}
       className={className}
+      rightSlot={
+        <CardDownloadButton
+          label={`Download ${meta.title}`}
+          onDownload={() =>
+            meta.download({ fromDate: dateRange.startDate, toDate: dateRange.endDate })
+          }
+        />
+      }
     />
   );
 };

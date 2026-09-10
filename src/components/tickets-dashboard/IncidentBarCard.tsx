@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChartCard, BarChartSeries } from './BarChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import { incidentReportsAPI } from '@/services/incidentReportsAPI';
 import { getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
@@ -47,6 +48,17 @@ export const IncidentBarCard: React.FC<IncidentBarCardProps> = ({ dateRange, cla
       orientation="vertical"
       loading={loading}
       className={className}
+      rightSlot={
+        <CardDownloadButton
+          label="Download Level Wise Incidents"
+          onDownload={() =>
+            incidentReportsAPI.downloadLevelWise({
+              fromDate: dateRange.startDate,
+              toDate: dateRange.endDate,
+            })
+          }
+        />
+      }
     />
   );
 };

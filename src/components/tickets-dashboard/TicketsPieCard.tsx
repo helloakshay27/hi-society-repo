@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import {
   ticketReportsAPI,
   TicketOverviewResponse,
@@ -105,6 +106,21 @@ export const TicketsPieCard: React.FC<TicketsPieCardProps> = ({ metric, dateRang
       loading={loading}
       emptyMessage={meta.emptyMessage}
       className={className}
+      rightSlot={
+        // Only Proactive vs Reactive has a documented export
+        // ("ticket and visitor download api.md" → export=proactive_reactive).
+        metric === 'proactive-reactive' ? (
+          <CardDownloadButton
+            label={`Download ${meta.title}`}
+            onDownload={() =>
+              ticketReportsAPI.downloadExport(
+                { fromDate: dateRange.startDate, toDate: dateRange.endDate },
+                'proactive_reactive'
+              )
+            }
+          />
+        ) : undefined
+      }
     />
   );
 };

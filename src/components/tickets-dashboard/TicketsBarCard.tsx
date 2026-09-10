@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { BarChartCard, BarChartSeries } from './BarChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import {
   ticketReportsAPI,
   TicketCategoryBreakdownResponse,
   TicketDistributionResponse,
+  TicketExportType,
   TicketOverviewResponse,
 } from '@/services/ticketReportsAPI';
 import { visitorReportsAPI } from '@/services/visitorReportsAPI';
-import { REACTIVE_COLOR, PROACTIVE_COLOR, TAT_ACHIEVED_COLOR, TAT_BREACHED_COLOR, getTicketsChartColor } from './colors';
+import {
+  OPEN_COLOR,
+  CLOSED_COLOR,
+  REACTIVE_COLOR,
+  PROACTIVE_COLOR,
+  TAT_ACHIEVED_COLOR,
+  TAT_BREACHED_COLOR,
+  getTicketsChartColor,
+} from './colors';
 import { TicketsDashboardDateRange } from './types';
 
 export type TicketsBarMetric =
@@ -21,8 +31,11 @@ export type TicketsBarMetric =
   | 'resolution-tat';
 
 const BAR_METRIC_META: Record<TicketsBarMetric, { title: string; subtitle?: string; orientation?: 'horizontal' | 'vertical' }> = {
-  'unit-category': { title: 'Unit Category-wise Tickets', subtitle: 'Reactive vs Proactive volume per category' },
-  'unit-category-proactive': { title: 'Unit Category-wise Proactive Tickets', subtitle: 'Proactive-only volume per category' },
+  'unit-category': { title: 'Unit Category-wise Tickets', subtitle: 'Open vs Closed tickets per unit category' },
+  'unit-category-proactive': {
+    title: 'Unit Category-wise Proactive Tickets',
+    subtitle: 'Open vs Closed proactive tickets per unit category',
+  },
   'common-area-category': {
     title: 'Common Area Category-wise Tickets',
     subtitle: 'Reactive vs Proactive volume per common-area category',
@@ -35,6 +48,16 @@ const BAR_METRIC_META: Record<TicketsBarMetric, { title: string; subtitle?: stri
   'delivery-visitors': { title: 'Delivery Visitors', subtitle: 'Delivery-partner visit volume (Blinkit, Swiggy, Zomato, etc.)' },
   'response-tat': { title: 'Response TAT', orientation: 'vertical' },
   'resolution-tat': { title: 'Resolution TAT', orientation: 'vertical' },
+};
+
+/**
+ * Per-card exports from "ticket and visitor download api.md". Only these three bar
+ * cards have one — the remaining metrics have no documented export type.
+ */
+const EXPORT_BY_METRIC: Partial<Record<TicketsBarMetric, TicketExportType>> = {
+  'unit-category': 'unit_category',
+  'response-tat': 'response_tat',
+  'resolution-tat': 'resolution_tat',
 };
 
 const CATEGORY_ENDPOINT_METRICS: TicketsBarMetric[] = [
@@ -107,31 +130,45 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
   let emptyMessage: string | undefined;
 
   switch (metric) {
+    // Both unit-category cards read their own `unit_category*` block. They must NOT
+    // use `proactive_reactive`, which spans every category (unit *and* common-area)
+    // — that was showing common-area categories under a "Unit Category" heading.
     case 'unit-category': {
-      const rows = (categoryBreakdown?.proactive_reactive ?? [])
-        .map((c) => ({
-          category: c.category,
-          reactive: c.reactive.open + c.reactive.closed,
-          proactive: c.proactive.open + c.proactive.closed,
+      const counts = categoryBreakdown?.unit_category;
+      const rows = (counts?.tickets_category ?? [])
+        .map((category, i) => ({
+          category,
+          open: counts?.open_tickets?.[i] ?? 0,
+          closed: counts?.closed_tickets?.[i] ?? 0,
+          total: counts?.total_tickets?.[i] ?? 0,
         }))
-        .sort((a, b) => b.reactive + b.proactive - (a.reactive + a.proactive));
+        .sort((a, b) => b.total - a.total);
       data = rows;
       series = [
-        { dataKey: 'reactive', name: 'Reactive', color: REACTIVE_COLOR, stackId: 'a' },
-        { dataKey: 'proactive', name: 'Proactive', color: PROACTIVE_COLOR, stackId: 'a' },
+        { dataKey: 'open', name: 'Open', color: OPEN_COLOR, stackId: 'a' },
+        { dataKey: 'closed', name: 'Closed', color: CLOSED_COLOR, stackId: 'a' },
       ];
       const top = rows[0];
       insight = top
-        ? `${top.category} leads volume with ${top.reactive + top.proactive} tickets — worth checking whether that reflects genuine demand or a recurring issue specific to that category.`
+        ? `${top.category} leads volume with ${top.total} tickets (${top.open} open) — worth checking whether that reflects genuine demand or a recurring issue specific to that category.`
         : undefined;
       break;
     }
     case 'unit-category-proactive': {
-      data = (categoryBreakdown?.proactive_reactive ?? [])
-        .map((c) => ({ category: c.category, proactive: c.proactive.open + c.proactive.closed }))
-        .filter((c) => (c.proactive as number) > 0)
-        .sort((a, b) => (b.proactive as number) - (a.proactive as number));
-      series = [{ dataKey: 'proactive', name: 'Proactive', color: PROACTIVE_COLOR }];
+      const counts = categoryBreakdown?.unit_category_proactive;
+      data = (counts?.tickets_category ?? [])
+        .map((category, i) => ({
+          category,
+          open: counts?.open_tickets?.[i] ?? 0,
+          closed: counts?.closed_tickets?.[i] ?? 0,
+          total: counts?.total_tickets?.[i] ?? 0,
+        }))
+        .filter((row) => row.total > 0)
+        .sort((a, b) => b.total - a.total);
+      series = [
+        { dataKey: 'open', name: 'Open', color: OPEN_COLOR, stackId: 'a' },
+        { dataKey: 'closed', name: 'Closed', color: CLOSED_COLOR, stackId: 'a' },
+      ];
       emptyMessage = 'No proactive tickets recorded for the selected date range.';
       break;
     }
@@ -190,6 +227,7 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
   }
 
   const meta = BAR_METRIC_META[metric];
+  const exportType = EXPORT_BY_METRIC[metric];
 
   return (
     <BarChartCard
@@ -204,6 +242,19 @@ export const TicketsBarCard: React.FC<TicketsBarCardProps> = ({ metric, dateRang
       insight={insight}
       emptyMessage={emptyMessage}
       className={className}
+      rightSlot={
+        exportType ? (
+          <CardDownloadButton
+            label={`Download ${meta.title}`}
+            onDownload={() =>
+              ticketReportsAPI.downloadExport(
+                { fromDate: dateRange.startDate, toDate: dateRange.endDate },
+                exportType
+              )
+            }
+          />
+        ) : undefined
+      }
     />
   );
 };
