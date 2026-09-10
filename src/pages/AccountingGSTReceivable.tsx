@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "sonner";
 import TextField from "@mui/material/TextField";
 import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
@@ -7,6 +8,13 @@ import { API_CONFIG } from "@/config/apiConfig";
 import { formatAmount } from "@/utils/financialStatement";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+
+// "2026-04-01" → "01/04/2026"
+const toDdMmYyyy = (iso: string) => {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+};
 
 // Confirmed shape returned by the sibling GET /lock_account_transactions/gst_payable
 // endpoint on the same controller — { income: {ledgers}, expense: {ledgers} },
@@ -104,6 +112,40 @@ const AccountingGSTReceivable: React.FC = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  // GET /lock_accounts/:id/lock_account_transactions/gst_receivable.xlsx?q[date_range]=DD/MM/YYYY - DD/MM/YYYY
+  const handleExport = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const from = toDdMmYyyy(filters.fromDate);
+      const to = toDdMmYyyy(filters.toDate);
+      const params: Record<string, string> = {};
+      if (from && to) params["q[date_range]"] = `${from} - ${to}`;
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lock_account_id}/lock_account_transactions/gst_receivable.xlsx`,
+        {
+          params,
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "gst_receivable.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error exporting GST receivable:", err);
+      toast.error("Failed to export GST receivable");
+    }
+  };
+
   const renderCell = (item: GstReceivableRow, columnKey: string) => {
     switch (columnKey) {
       case "ledgerId":
@@ -181,6 +223,7 @@ const AccountingGSTReceivable: React.FC = () => {
             enableGlobalSearch
             searchPlaceholder="Search ledgers"
             enableExport
+            onExport={handleExport}
             exportFileName="gst-receivable"
             storageKey="gst-receivable-table"
             loading={loading}

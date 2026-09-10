@@ -144,6 +144,35 @@ const AccountingSubgroupSetup: React.FC = () => {
     }
   };
 
+  // GET /lock_accounts/:id/lock_account_groups.xlsx
+  const handleExport = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_groups.xlsx`,
+        {
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "subgroups.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting subgroups:", error);
+      toast.error("Failed to export subgroups");
+    }
+  };
+
   const renderCell = (item: SubgroupRow, columnKey: string) => {
     switch (columnKey) {
       case "actions":
@@ -210,6 +239,7 @@ const AccountingSubgroupSetup: React.FC = () => {
         enableGlobalSearch
         searchPlaceholder="Search"
         enableExport
+        onExport={handleExport}
         exportFileName="subgroup-setup"
         storageKey="subgroup-setup-table"
         loading={loading}
