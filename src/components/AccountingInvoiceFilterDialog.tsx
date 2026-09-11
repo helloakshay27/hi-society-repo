@@ -11,11 +11,16 @@ import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyl
 import { X } from "lucide-react";
 
 export interface AccountingInvoiceFilters {
-  tower?: string;
+  tower?: string; // society_block_id
   billNumber?: string;
-  unit?: string;
+  unit?: string; // society_flat_id
   paymentStatus?: string;
   publishStatus?: string;
+}
+
+export interface FilterOption {
+  value: string;
+  label: string;
 }
 
 interface AccountingInvoiceFilterDialogProps {
@@ -24,8 +29,8 @@ interface AccountingInvoiceFilterDialogProps {
   onApplyFilters: (filters: AccountingInvoiceFilters) => void;
   onResetFilters: () => void;
   currentFilters?: AccountingInvoiceFilters;
-  towerOptions: string[];
-  unitOptions: string[];
+  towerOptions: FilterOption[];
+  unitOptions: FilterOption[];
 }
 
 export const AccountingInvoiceFilterDialog: React.FC<AccountingInvoiceFilterDialogProps> = ({
@@ -107,7 +112,7 @@ export const AccountingInvoiceFilterDialog: React.FC<AccountingInvoiceFilterDial
               "All Towers",
               filters.tower || "",
               "tower",
-              towerOptions.map((tower) => ({ label: tower, value: tower })),
+              towerOptions,
             )}
             <TextField
               label="Bill Number Search"
@@ -124,7 +129,7 @@ export const AccountingInvoiceFilterDialog: React.FC<AccountingInvoiceFilterDial
               "All Units",
               filters.unit || "",
               "unit",
-              unitOptions.map((unit) => ({ label: unit, value: unit })),
+              unitOptions,
             )}
             {renderSelectField(
               "Select Payment Status",
