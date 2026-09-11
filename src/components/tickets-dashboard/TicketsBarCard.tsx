@@ -40,11 +40,17 @@ const BAR_METRIC_META: Record<TicketsBarMetric, { title: string; subtitle?: stri
 };
 
 /**
- * Per-card exports from "ticket and visitor download api.md". Only these three bar
- * cards have one — the remaining metrics have no documented export type.
+ * Per-card exports, from "ticket and visitor download api.md" plus the newer
+ * "new download api for ticket and visitor for hisociety.md". Every bar metric on
+ * this card now has one except `delivery-visitors`, which is a Visitors-module
+ * export and is handled by VisitorBarCard/VisitorPieCard instead.
  */
 const EXPORT_BY_METRIC: Partial<Record<TicketsBarMetric, TicketExportType>> = {
   'unit-category': 'unit_category',
+  'unit-category-proactive': 'unit_category_proactive',
+  'common-area-category': 'common_area_category',
+  'common-area-category-proactive': 'common_area_category_proactive',
+  'complaint-mode': 'complaint_mode',
   'response-tat': 'response_tat',
   'resolution-tat': 'resolution_tat',
 };

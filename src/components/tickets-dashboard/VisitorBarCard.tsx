@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChartCard, BarChartSeries } from './BarChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import { visitorReportsAPI } from '@/services/visitorReportsAPI';
 import { getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
@@ -71,6 +72,17 @@ export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRang
       orientation={meta.orientation}
       loading={loading}
       className={className}
+      rightSlot={
+        <CardDownloadButton
+          label="Download Delivery Visitors"
+          onDownload={() =>
+            visitorReportsAPI.downloadDeliveryVisitorsExport({
+              fromDate: dateRange.startDate,
+              toDate: dateRange.endDate,
+            })
+          }
+        />
+      }
     />
   );
 };

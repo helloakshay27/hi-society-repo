@@ -33,7 +33,7 @@ export const TicketsKpiTile: React.FC<TicketsKpiTileProps> = ({
 }) => {
   return (
     <div
-      className={`relative flex h-full w-full flex-col justify-center rounded-xl p-4 ${className}`}
+      className={`relative flex h-full w-full flex-col justify-center rounded-xl p-5 ${className}`}
       style={{ backgroundColor: KPI_TONE_BG[tone] }}
     >
       {onDownload && (
@@ -41,10 +41,13 @@ export const TicketsKpiTile: React.FC<TicketsKpiTileProps> = ({
           <CardDownloadButton label={`Download ${label}`} onDownload={onDownload} />
         </div>
       )}
-      <div className="mb-1 pr-10 text-brand-caption font-medium uppercase tracking-wide text-black">
+      <div className="mb-2 pr-10 text-brand-body-4 font-medium uppercase tracking-wide text-black">
         {label}
       </div>
-      <div className="text-[22px] font-bold leading-none text-brand-text">{value ?? '—'}</div>
+      {/* Value steps down on narrow tiles so long strings ("1,234,567 kWh") don't clip. */}
+      <div className="text-[30px] font-bold leading-none text-brand-text sm:text-[38px]">
+        {value ?? '—'}
+      </div>
     </div>
   );
 };
