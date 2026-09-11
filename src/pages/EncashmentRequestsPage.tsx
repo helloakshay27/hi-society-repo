@@ -95,6 +95,52 @@ const DetailField: React.FC<{ label: string; value: string | null | undefined }>
   </div>
 );
 
+/**
+ * Cancelled-cheque proof images from `cancelled_cheque_urls`. These are the KYC
+ * document for the bank account, so they're the thing an admin checks before paying
+ * out — shown inline, with each thumbnail opening the full-size image in a new tab.
+ */
+const ChequeImages: React.FC<{ urls: string[] | null | undefined }> = ({ urls }) => {
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const images = (urls ?? []).filter((url) => typeof url === "string" && url.trim() !== "");
+
+  if (images.length === 0) return null;
+
+  return (
+    <div className="border-t border-[#D5DbDB] pt-4">
+      <div className="text-xs text-gray-500 mb-2">
+        Cancelled Cheque{images.length > 1 ? ` (${images.length})` : ""}
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {images.map((url) => (
+          <a
+            key={url}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open full size"
+            className="block overflow-hidden rounded-md border border-[#D5DbDB] bg-[#F6F4EE] transition-shadow hover:shadow-md"
+          >
+            {failed[url] ? (
+              <div className="flex h-28 items-center justify-center px-2 text-center text-xs text-gray-500">
+                Image unavailable — open original
+              </div>
+            ) : (
+              <img
+                src={url}
+                alt="Cancelled cheque"
+                loading="lazy"
+                className="h-28 w-full object-cover"
+                onError={() => setFailed((prev) => ({ ...prev, [url]: true }))}
+              />
+            )}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 interface CancelDialogState {
   open: boolean;
   request: EncashRequest | null;
@@ -431,6 +477,8 @@ export const EncashmentRequestsPage: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              <ChequeImages urls={selectedRequest.cancelled_cheque_urls} />
             </div>
           )}
 
