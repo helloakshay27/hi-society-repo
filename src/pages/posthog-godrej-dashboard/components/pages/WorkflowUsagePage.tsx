@@ -119,7 +119,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({ filters, b
         id="card-allScreens"
         infoKey="chart.screens"
         eyebrow="All screens in this module"
-        title="Screen path flows"
+        title="All screens in this module"
         purpose="Every screen path inside this module with users, events, sessions and completion rate."
         style={{ marginTop: '12px' }}
       >

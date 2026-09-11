@@ -182,7 +182,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         id="card-allScreens"
         infoKey="chart.screens"
         eyebrow="All screens & flows"
-        title="Screen path flows"
+        title="All screens in this module"
         purpose="Every screen path inside this module with users, events, sessions and completion rate."
         style={{ marginTop: '12px' }}
       >

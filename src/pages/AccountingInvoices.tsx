@@ -23,7 +23,19 @@ import {
 import {
   AccountingInvoiceFilterDialog,
   AccountingInvoiceFilters,
+  FilterOption,
 } from "@/components/AccountingInvoiceFilterDialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const PAGE_SIZE = 20;
 
 interface LockAccountBill {
   id: number;
@@ -33,8 +45,11 @@ interface LockAccountBill {
   society?: { name?: string };
   tower_name: string | null;
   tower?: { name?: string };
+  society_block_id?: number | string | null;
   ledger_name: string | null;
   ledger?: { name?: string };
+  ledger_id?: number | string | null;
+  society_flat_id?: number | string | null;
   name_on_bill: string | null;
   due_date: string | null;
   total_amount: number;
@@ -53,6 +68,7 @@ interface InvoiceRow {
   society: string;
   tower: string;
   ledger: string;
+  ledgerId: string;
   nameOnBill: string;
   dueDate: string;
   totalAmount: number;
@@ -86,8 +102,9 @@ const toRow = (bill: LockAccountBill): InvoiceRow => ({
   billNumber: bill.bill_number,
   irnNo: bill.irn_no || "",
   society: bill.society_name || bill.society?.name || "",
-  tower: bill.tower_name || bill.tower?.name || "",
+  tower: bill.tower|| bill.tower?.name || "",
   ledger: bill.ledger_name || bill.ledger?.name || "",
+  ledgerId: String(bill.society_flat_id ?? bill.ledger_id ?? ""),
   nameOnBill: bill.name_on_bill || "",
   dueDate: bill.due_date || "",
   totalAmount: Number(bill.total_amount) || 0,
@@ -156,16 +173,33 @@ const AccountingInvoices: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<AccountingInvoiceFilters>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
+  // GET /lock_accounts/:id/lock_account_bills.json?q[...]=... — filters applied server-side.
   const fetchBills = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const url = `${baseUrl}/lock_account_bills.json?lock_account_id=${lockAccountId}`;
+      const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_bills.json`;
+      const params: Record<string, string | number> = {
+        page: currentPage,
+        per_page: PAGE_SIZE,
+      };
+      if (appliedFilters.tower) params["q[society_block_id_in][]"] = appliedFilters.tower;
+      if (appliedFilters.billNumber) {
+        params["q[bill_number_in][]"] = appliedFilters.billNumber.trim();
+      }
+      if (appliedFilters.unit) params["q[society_flat_id_in][]"] = appliedFilters.unit;
+      if (appliedFilters.paymentStatus) params["q[status_eq]"] = appliedFilters.paymentStatus;
+      if (appliedFilters.publishStatus) {
+        params["q[publish_eq]"] = appliedFilters.publishStatus === "Yes" ? "1" : "0";
+      }
       const response = await axios.get(url, {
+        params,
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -179,15 +213,18 @@ const AccountingInvoices: React.FC = () => {
           | Record<string, unknown>
           | null
       );
+      const pagination = data?.pagination;
+      setTotalPages(pagination?.total_pages ? Number(pagination.total_pages) : 1);
     } catch (error) {
       console.error("Error fetching bills:", error);
       toast.error("Failed to fetch invoices");
       setBills([DUMMY_BILL]);
       setSummary(null);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId]);
+  }, [lockAccountId, currentPage, appliedFilters]);
 
   useEffect(() => {
     fetchBills();
@@ -195,37 +232,51 @@ const AccountingInvoices: React.FC = () => {
 
   const rows = useMemo(() => bills.map(toRow), [bills]);
 
-  const towerOptions = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.tower).filter(Boolean))),
-    [rows]
-  );
-  const unitOptions = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.ledger).filter(Boolean))),
-    [rows]
-  );
+  const [towerOptions, setTowerOptions] = useState<FilterOption[]>([]);
 
-  const filteredRows = useMemo(() => {
-    return rows.filter((row) => {
-      if (appliedFilters.tower && row.tower !== appliedFilters.tower) return false;
-      if (
-        appliedFilters.billNumber &&
-        !row.billNumber.toLowerCase().includes(appliedFilters.billNumber.trim().toLowerCase())
-      )
-        return false;
-      if (appliedFilters.unit && row.ledger !== appliedFilters.unit) return false;
-      if (
-        appliedFilters.paymentStatus &&
-        row.status.toLowerCase() !== appliedFilters.paymentStatus.toLowerCase()
-      )
-        return false;
-      if (
-        appliedFilters.publishStatus &&
-        (row.publish ? "Yes" : "No") !== appliedFilters.publishStatus
-      )
-        return false;
-      return true;
+  // GET /account/soc_flat_charges/form_options.json — real tower list for the filter
+  // dropdown; value = society_block_id, sent as q[society_block_id_in][] on fetchBills.
+  useEffect(() => {
+    const fetchTowerOptions = async () => {
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/account/soc_flat_charges/form_options.json`, {
+          params: { lock_account_id: lockAccountId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const towers = res.data?.towers;
+        const options = Array.isArray(towers)
+          ? towers
+              .map((t: Record<string, unknown>) => ({
+                value: String(t.id ?? ""),
+                label: String(t.name ?? t.label ?? t.id ?? ""),
+              }))
+              .filter((t) => t.value && t.label)
+          : [];
+        setTowerOptions(options);
+      } catch (error) {
+        console.error("Error fetching tower options:", error);
+      }
+    };
+    fetchTowerOptions();
+  }, [lockAccountId]);
+
+  // Derived from the currently-loaded bills (only units with at least one bill
+  // appear) — value = society_flat_id, sent as q[society_flat_id_in][] on fetchBills.
+  const unitOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    rows.forEach((r) => {
+      if (r.ledgerId && r.ledger && !seen.has(r.ledgerId)) seen.set(r.ledgerId, r.ledger);
     });
-  }, [rows, appliedFilters]);
+    return Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
+  }, [rows]);
+
+  // Filters are applied server-side (see fetchBills' q[...] params).
+  const filteredRows = rows;
 
   // KPI cards come from GET /lock_account_bills.json?lock_account_id=... — use a
   // summary block from that response when present, otherwise derive from the list.
@@ -264,6 +315,16 @@ const AccountingInvoices: React.FC = () => {
     { label: "Paid Amount", value: `₹${totals.paidAmount.toFixed(2)}`, icon: CheckCircle2 },
   ];
 
+  const handleApplyFilters = (filters: AccountingInvoiceFilters) => {
+    setAppliedFilters(filters);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setAppliedFilters({});
+    setCurrentPage(1);
+  };
+
   const handleSelectAll = (checked: boolean) => {
     setSelectedIds(checked ? filteredRows.map((r) => String(r.id)) : []);
   };
@@ -278,6 +339,8 @@ const AccountingInvoices: React.FC = () => {
     downloadInvoicesXlsx(ids, "invoices");
   };
 
+  // NOTE: with server-side pagination, `rows` only holds the current page's
+  // bills — "Export All" exports the current page, not every invoice.
   const handleExportAll = () => {
     downloadInvoicesXlsx(rows.map((r) => r.id), "invoices-all");
   };
@@ -402,6 +465,66 @@ const AccountingInvoices: React.FC = () => {
     }
   };
 
+  // Sliding 3-page window anchored at the current page (current, current+1,
+  // current+2, clamped to stay inside range) with page 1 / last page always
+  // reachable — e.g. page 3 → "3 4 5 ... 21", page 4 → "1 ... 4 5 6 ... 21".
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+
+    const pageItem = (page: number) => (
+      <PaginationItem key={page} className="cursor-pointer">
+        <PaginationLink
+          onClick={() => setCurrentPage(page)}
+          isActive={currentPage === page}
+          aria-disabled={loading}
+          className={loading ? "pointer-events-none opacity-50" : ""}
+        >
+          {page}
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    const windowSize = 3;
+    const items = [];
+
+    if (totalPages <= windowSize + 2) {
+      for (let i = 1; i <= totalPages; i++) items.push(pageItem(i));
+      return items;
+    }
+
+    let start = currentPage;
+    const end = Math.min(totalPages, start + windowSize - 1);
+    if (end - start < windowSize - 1) start = Math.max(1, end - windowSize + 1);
+
+    if (start > 1) {
+      items.push(pageItem(1));
+      if (start > 2) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+
+    for (let i = start; i <= end; i++) items.push(pageItem(i));
+
+    if (end < totalPages) {
+      if (end < totalPages - 1) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+      items.push(pageItem(totalPages));
+    }
+
+    return items;
+  };
+
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
      
@@ -471,8 +594,7 @@ const AccountingInvoices: React.FC = () => {
         selectedItems={selectedIds}
         onSelectAll={handleSelectAll}
         onSelectItem={handleSelectItem}
-        pagination
-        pageSize={20}
+        pagination={false}
         enableExport
         onExport={handleExport}
         exportFileName="accounting-invoices"
@@ -491,11 +613,41 @@ const AccountingInvoices: React.FC = () => {
         }
       />
 
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  className={
+                    currentPage === 1 || loading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  className={
+                    currentPage === totalPages || loading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+
       <AccountingInvoiceFilterDialog
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
-        onApplyFilters={setAppliedFilters}
-        onResetFilters={() => setAppliedFilters({})}
+        onApplyFilters={handleApplyFilters}
+        onResetFilters={handleResetFilters}
         currentFilters={appliedFilters}
         towerOptions={towerOptions}
         unitOptions={unitOptions}

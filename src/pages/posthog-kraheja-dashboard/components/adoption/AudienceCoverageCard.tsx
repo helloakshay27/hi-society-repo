@@ -29,7 +29,7 @@ export const AudienceCoverageCard: React.FC<AudienceCoverageCardProps> = ({ role
       purpose="Reference card, not a filter, and PROPOSED rather than as-is. The connected project's role property has no confirmed pre-sales/post-sales distinction — this renders real role data only when the API happens to return matching values."
       style={{ marginTop: '12px' }}
     >
-      <div className="bmnote crashnote" style={{ marginBottom: '14px' }}>
+      {/* <div className="bmnote crashnote" style={{ marginBottom: '14px' }}>
         <span>⚠</span>
         <div>
           <b>Proposed, not confirmed instrumentation.</b> There is no catalogue-documented boolean
@@ -37,7 +37,7 @@ export const AudienceCoverageCard: React.FC<AudienceCoverageCardProps> = ({ role
           populate when the API's role data happens to include matching role names — this card does not
           drive any other number on the dashboard.
         </div>
-      </div>
+      </div> */}
 
       {isLoading ? (
         <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
