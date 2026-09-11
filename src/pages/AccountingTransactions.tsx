@@ -176,7 +176,7 @@ const AccountingTransactions: React.FC = () => {
         page: currentPage,
         per_page: PAGE_SIZE,
       };
-      if (tabType) params.transaction_type = tabType;
+      if (tabType) params["q[transaction_type_eq]"] = tabType;
       if (appliedFilters.id) {
         params["q[lock_account_transaction_id_eq]"] = appliedFilters.id.trim();
       }
