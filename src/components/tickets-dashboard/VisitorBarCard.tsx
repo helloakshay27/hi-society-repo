@@ -1,45 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { BarChartCard, BarChartSeries } from './BarChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import { visitorReportsAPI } from '@/services/visitorReportsAPI';
 import { getTicketsChartColor } from './colors';
 import { TicketsDashboardDateRange } from './types';
 
-export type VisitorBarMetric = 'total-visitors' | 'goods-in' | 'goods-out' | 'delivery-visitors';
+// Only the delivery-partner split has a real breakdown in the Visitors API
+// (the `delivery_visitors` map on /kpis). Building-wise / goods-in / goods-out
+// bars had no endpoint and were removed.
+export type VisitorBarMetric = 'delivery-visitors';
 
 const BAR_METRIC_META: Record<
   VisitorBarMetric,
   { title: string; subtitle?: string; orientation?: 'horizontal' | 'vertical' }
 > = {
-  'total-visitors': {
-    title: 'Total Visitors',
-    subtitle: 'Building-wise visitor volume',
-    orientation: 'vertical',
-  },
-  'goods-in': {
-    title: 'Goods In',
-    subtitle: 'Day / period-wise goods inwards',
-    orientation: 'vertical',
-  },
-  'goods-out': {
-    title: 'Goods Out',
-    subtitle: 'Day / period-wise goods outwards',
-    orientation: 'vertical',
-  },
   'delivery-visitors': {
     title: 'Delivery Visitors',
     subtitle: 'Delivery-partner visit volume (Blinkit, Swiggy, Zomato, etc.)',
     orientation: 'horizontal',
   },
-};
-
-const FETCHER_BY_METRIC: Record<
-  VisitorBarMetric,
-  typeof visitorReportsAPI.getBuildingWise
-> = {
-  'total-visitors': visitorReportsAPI.getBuildingWise,
-  'goods-in': visitorReportsAPI.getGoodsIn,
-  'goods-out': visitorReportsAPI.getGoodsOut,
-  'delivery-visitors': visitorReportsAPI.getDelivery,
 };
 
 interface VisitorBarCardProps {
@@ -48,7 +27,7 @@ interface VisitorBarCardProps {
   className?: string;
 }
 
-/** Bar-chart cards for the Visitor tab — Total Visitors, Goods In/Out, Delivery Visitors. */
+/** Bar-chart card for the Visitor tab — Delivery Visitors by provider. */
 export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRange, className }) => {
   const [rows, setRows] = useState<{ name: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +37,8 @@ export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRang
     setLoading(true);
     const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
 
-    FETCHER_BY_METRIC[metric](range)
+    visitorReportsAPI
+      .getDelivery(range)
       .then((res) => {
         if (!cancelled) setRows(res.response);
       })
@@ -92,6 +72,17 @@ export const VisitorBarCard: React.FC<VisitorBarCardProps> = ({ metric, dateRang
       orientation={meta.orientation}
       loading={loading}
       className={className}
+      rightSlot={
+        <CardDownloadButton
+          label="Download Delivery Visitors"
+          onDownload={() =>
+            visitorReportsAPI.downloadDeliveryVisitorsExport({
+              fromDate: dateRange.startDate,
+              toDate: dateRange.endDate,
+            })
+          }
+        />
+      }
     />
   );
 };

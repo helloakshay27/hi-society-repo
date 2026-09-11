@@ -126,7 +126,7 @@ export const AssetAnalyticsSelector: React.FC<AssetAnalyticsSelectorProps> = ({
       <Button
         variant="outline"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-2 min-w-[250px] justify-between text-gray-700 border-gray-300"
+        className="flex items-center gap-2 min-w-[250px] justify-between text-gray-700 border-gray-300 !text-[#DA7756] !border-[#DA7756] [&_svg]:!text-[#DA7756]"
       >
         <div className="flex items-center gap-2">
           <Settings className="w-4 h-4" />

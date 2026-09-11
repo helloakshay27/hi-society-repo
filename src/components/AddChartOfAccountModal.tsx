@@ -20,9 +20,9 @@ export interface ChartOfAccountLedger {
   allow_cost_center?: boolean;
 }
 
-interface AccountGroupOption {
+interface AccountTypeOption {
   id: number;
-  group_name: string;
+  name: string;
 }
 
 interface AddChartOfAccountModalProps {
@@ -32,32 +32,6 @@ interface AddChartOfAccountModalProps {
   editingLedger?: ChartOfAccountLedger | null;
 }
 
-interface AccountGroupAPI {
-  id: number;
-  group_name: string;
-  parent_group_id?: number | null;
-}
-
-// lock_account_groups comes back as a flat list (parent_group_id links to a
-// parent) rather than nested, so build each option's display name by walking
-// its ancestor chain.
-const flattenGroups = (groups: AccountGroupAPI[]): AccountGroupOption[] => {
-  const byId = new Map(groups.map((g) => [g.id, g]));
-  const nameWithAncestry = (group: AccountGroupAPI): string => {
-    const names: string[] = [group.group_name];
-    const seen = new Set<number>([group.id]);
-    let parentId = group.parent_group_id;
-    while (parentId && byId.has(parentId) && !seen.has(parentId)) {
-      const parent = byId.get(parentId)!;
-      names.unshift(parent.group_name);
-      seen.add(parentId);
-      parentId = parent.parent_group_id;
-    }
-    return names.join(" > ");
-  };
-  return groups.map((g) => ({ id: g.id, group_name: nameWithAncestry(g) }));
-};
-
 export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
   open,
   onOpenChange,
@@ -66,7 +40,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
 }) => {
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
-  const [accountTypes, setAccountTypes] = useState<AccountGroupOption[]>([]);
+  const [accountTypes, setAccountTypes] = useState<AccountTypeOption[]>([]);
   const [accountTypeId, setAccountTypeId] = useState("");
   const [accountName, setAccountName] = useState("");
   const [accountCode, setAccountCode] = useState("");
@@ -82,12 +56,29 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_groups`, {
-          params: { lock_account_id: lockAccountId },
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        });
-        const groups: AccountGroupAPI[] = res.data?.lock_account_groups || [];
-        setAccountTypes(flattenGroups(groups));
+        const res = await axios.get(
+          `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/account_types.json`,
+          {
+            headers: {
+              Accept: "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
+        const data = res.data;
+        const list: unknown[] = Array.isArray(data)
+          ? data
+          : data?.account_types ?? data?.lock_account_groups ?? data?.data ?? [];
+        setAccountTypes(
+          list.map((item) => {
+            if (typeof item === "string") return { id: 0, name: item };
+            const obj = item as Record<string, unknown>;
+            return {
+              id: Number(obj.id ?? obj.value ?? 0),
+              name: String(obj.name ?? obj.group_name ?? obj.label ?? obj.id ?? ""),
+            };
+          })
+        );
       } catch (error) {
         console.error("Error fetching account types:", error);
         setAccountTypes([]);
@@ -175,7 +166,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
             active: true,
           },
         };
-        await axios.post(`${baseUrl}/lock_account_ledgers`, payload, { headers });
+        await axios.post(`${baseUrl}/lock_account_ledgers.json`, payload, { headers });
         toast.success("Account created successfully");
       }
       onSaved();
@@ -218,9 +209,24 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
               sx={fieldStyles}
               MenuProps={{
                 ...menuProps,
+                anchorOrigin: { vertical: "bottom", horizontal: "left" },
+                transformOrigin: { vertical: "top", horizontal: "left" },
                 PaperProps: {
                   ...menuProps.PaperProps,
                   style: { ...menuProps.PaperProps.style, maxHeight: 300 },
+                  sx: {
+                    width: "min(464px, calc(100vw - 3rem))",
+                    maxWidth: "calc(100vw - 3rem)",
+                    boxSizing: "border-box",
+                  },
+                },
+                MenuListProps: {
+                  sx: {
+                    "& .MuiMenuItem-root": {
+                      whiteSpace: "normal",
+                      wordBreak: "break-word",
+                    },
+                  },
                 },
               }}
             >
@@ -228,8 +234,12 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
                 <em>Select Account Type</em>
               </MenuItem>
               {accountTypes.map((type) => (
-                <MenuItem key={type.id} value={String(type.id)}>
-                  {type.group_name}
+                <MenuItem
+                  key={type.id}
+                  value={String(type.id)}
+                  sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                >
+                  {type.name}
                 </MenuItem>
               ))}
             </MuiSelect>
@@ -270,17 +280,24 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
             InputProps={{ sx: fieldStyles }}
           />
 
-          <TextField
-            label="Description"
-            placeholder="Enter Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={4}
-            InputLabelProps={{ shrink: true }}
-          />
+          <div>
+            <div className="relative">
+              <textarea
+                className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+                rows={4}
+                value={description}
+                onChange={(e) => {
+                  if (e.target.value.length <= 500) setDescription(e.target.value);
+                }}
+                placeholder="Enter Description"
+                maxLength={500}
+              />
+              <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
+                Description
+              </label>
+            </div>
+            <div className="mt-1 text-right text-xs text-gray-400">{description.length}/500</div>
+          </div>
 
           <div className="flex items-center gap-2">
             <Checkbox

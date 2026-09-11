@@ -27,7 +27,7 @@ const formatDateTime = (value?: string) => {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return `${date.toLocaleDateString("en-GB")} ${date.toLocaleTimeString()}`;
+  return `${date.toLocaleDateString("en-GB")} , ${date.toLocaleTimeString()}`;
 };
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -108,22 +108,22 @@ const AccountingChargeDetails: React.FC = () => {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <Row label="Charge Name" value={detail.name} />
               <Row label="Description" value={detail.description} />
-              <Row label="Value" value={detail.value ?? "-"} />
+              {/* <Row label="Value" value={detail.value ?? "-"} /> */}
               <Row label="Category" value={detail.charge_category} />
               <Row label="Basis" value={detail.basis} />
               <Row label="HSN Code" value={detail.hsn_code} />
-              <Row label="UOM" value={detail.uom} />
+              {/* <Row label="UOM" value={detail.uom} /> */}
               <Row label="Igst Rate (%)" value={detail.igst_rate ?? "-"} />
               <Row label="Cgst Rate (%)" value={detail.cgst_rate ?? "-"} />
               <Row label="Sgst Rate (%)" value={detail.sgst_rate ?? "-"} />
               <Row label="GST Applicable" value={detail.gst_applicable ? "Yes" : "No"} />
-              <Row label="Created By" value={detail.created_by} />
+              <Row label="Created By" value={detail.created_by_name} />
               <Row label="Created At" value={formatDateTime(detail.created_at)} />
               <Row label="Status" value={detail.active ? "Active" : "Inactive"} />
             </div>
           </SectionCard>
 
-          <div className="flex justify-start gap-3">
+          {/* <div className="flex justify-start gap-3">
             <Button
               className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#A01020]"
               onClick={() => navigate(`/accounting/charges/${id}/edit`)}
@@ -138,7 +138,7 @@ const AccountingChargeDetails: React.FC = () => {
             >
               Cancel
             </Button>
-          </div>
+          </div> */}
         </div>
       )}
     </div>

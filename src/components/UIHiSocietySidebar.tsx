@@ -418,12 +418,12 @@ export const UIHiSocietySidebar: React.FC = () => {
               label: "Encashment",
               icon: DollarSign,
               subItems: [
-                {
-                  id: "encashment-config",
-                  label: "Encashment Config",
-                  icon: SettingsIcon,
-                  path: "/loyalty/encashment/config",
-                },
+                // {
+                //   id: "encashment-config",
+                //   label: "Encashment Config",
+                //   icon: SettingsIcon,
+                //   path: "/loyalty/encashment/config",
+                // },
                 {
                   id: "encashment-requests",
                   label: "Encashment Requests",

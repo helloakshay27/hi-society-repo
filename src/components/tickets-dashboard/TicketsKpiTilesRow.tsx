@@ -1,4 +1,5 @@
 import React from 'react';
+import { CardDownloadButton } from './CardDownloadButton';
 
 export type KpiTone = 'purple' | 'teal' | 'peach' | 'blue';
 
@@ -15,6 +16,8 @@ interface TicketsKpiTileProps {
   value?: number | string;
   tone?: KpiTone;
   className?: string;
+  /** When set, renders a small XLSX download button in the tile's top-right corner. */
+  onDownload?: () => Promise<void>;
 }
 
 /**
@@ -26,14 +29,25 @@ export const TicketsKpiTile: React.FC<TicketsKpiTileProps> = ({
   value,
   tone = 'purple',
   className = '',
+  onDownload,
 }) => {
   return (
     <div
-      className={`relative flex h-full w-full flex-col justify-center rounded-xl p-4 ${className}`}
+      className={`relative flex h-full w-full flex-col justify-center rounded-xl p-5 ${className}`}
       style={{ backgroundColor: KPI_TONE_BG[tone] }}
     >
-      <div className="mb-1 text-brand-caption font-medium uppercase tracking-wide text-black">{label}</div>
-      <div className="text-[22px] font-bold leading-none text-brand-text">{value ?? '—'}</div>
+      {onDownload && (
+        <div className="absolute right-2 top-2">
+          <CardDownloadButton label={`Download ${label}`} onDownload={onDownload} />
+        </div>
+      )}
+      <div className="mb-2 pr-10 text-brand-body-4 font-medium uppercase tracking-wide text-black">
+        {label}
+      </div>
+      {/* Value steps down on narrow tiles so long strings ("1,234,567 kWh") don't clip. */}
+      <div className="text-[30px] font-bold leading-none text-brand-text sm:text-[38px]">
+        {value ?? '—'}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "sonner";
 import TextField from "@mui/material/TextField";
 import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
@@ -8,26 +9,28 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { formatAmount } from "@/utils/financialStatement";
 
-// Real response shape returned by GET /lock_account_transactions/gst_payable
-// It only returns the chart-of-accounts scaffold (no GST %/amount figures)
-// split into the Income and Expense sides.
-interface GstPayableLedgerAPI {
-  id: number;
-  name: string;
-  account_code?: string | null;
-}
+// "2026-04-01" → "01/04/2026"
+const toDdMmYyyy = (iso: string) => {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+};
 
-interface GstPayableGroupAPI {
-  id: number;
-  group_name: string;
-  ledgers?: GstPayableLedgerAPI[];
+// Real response shape returned by GET /lock_account_transactions/gst_payable
+interface GstPayableRecordAPI {
+  ledger_id?: number;
+  ledger_name?: string;
+  gst_percentage?: string | number | null;
+  total_amount?: number | null;
+  gst_amount?: number | null;
 }
 
 interface GstPayableApiResponse {
   code?: number;
   report?: string;
-  income?: GstPayableGroupAPI;
-  expense?: GstPayableGroupAPI;
+  date_range?: string[];
+  lock_account?: { id: number; name: string };
+  records?: GstPayableRecordAPI[];
 }
 
 interface GstPayableRow {
@@ -74,17 +77,16 @@ const AccountingGSTPayable: React.FC = () => {
         }
       );
       const data = response.data;
-      // The API doesn't return gst_percent/total_amount/gst_amount yet — only
-      // the ledger scaffold — so those columns render blank until it does.
-      const toRows = (group: GstPayableGroupAPI | undefined): GstPayableRow[] =>
-        (group?.ledgers || []).map((ledger) => ({
-          id: ledger.id,
-          ledgerName: ledger.name,
-          gstPercent: "",
-          totalAmount: null,
-          gstAmount: null,
-        }));
-      setRows([...toRows(data.income), ...toRows(data.expense)]);
+      const records = data.records || [];
+      setRows(
+        records.map((record) => ({
+          id: record.ledger_id ?? 0,
+          ledgerName: record.ledger_name || "",
+          gstPercent: record.gst_percentage != null ? `${record.gst_percentage}` : "",
+          totalAmount: record.total_amount ?? null,
+          gstAmount: record.gst_amount ?? null,
+        }))
+      );
     } catch (err) {
       console.error("Error fetching GST payable:", err);
       setError("Failed to load GST payable data");
@@ -102,6 +104,40 @@ const AccountingGSTPayable: React.FC = () => {
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // GET /lock_accounts/:id/lock_account_transactions/gst_payable.xlsx?q[date_range]=DD/MM/YYYY - DD/MM/YYYY
+  const handleExport = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const from = toDdMmYyyy(filters.fromDate);
+      const to = toDdMmYyyy(filters.toDate);
+      const params: Record<string, string> = {};
+      if (from && to) params["q[date_range]"] = `${from} - ${to}`;
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lock_account_id}/lock_account_transactions/gst_payable.xlsx`,
+        {
+          params,
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "gst_payable.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error exporting GST payable:", err);
+      toast.error("Failed to export GST payable");
+    }
   };
 
   const renderCell = (item: GstPayableRow, columnKey: string) => {
@@ -179,6 +215,7 @@ const AccountingGSTPayable: React.FC = () => {
             enableGlobalSearch
             searchPlaceholder="Search ledgers"
             enableExport
+            onExport={handleExport}
             exportFileName="gst-payable"
             storageKey="gst-payable-table"
             loading={loading}

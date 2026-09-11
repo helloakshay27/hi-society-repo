@@ -10,7 +10,7 @@ import { FilterBar } from './components/common/FilterBar';
 import { TrafficSessionPage } from './components/pages/TrafficSessionPage';
 import { AdoptionEngagementPage } from './components/pages/AdoptionEngagementPage';
 import { WorkflowUsagePage } from './components/pages/WorkflowUsagePage';
-import { useDashboardSites, useTrafficSession } from './hooks/useDashboardAnalytics';
+import { useDashboardSites, useTrafficSession, useUserAccountSiteId } from './hooks/useDashboardAnalytics';
 import { getAppIdFromUrl } from './api/api';
 import { DashboardFilters } from './api/types';
 import { getToken, getBaseUrlDomain } from '../../utils/auth';
@@ -53,6 +53,11 @@ function PosthogRunwalDashboardContent() {
   // Load user/org accessible sites
   const { sites, sitesSettled, allSiteIds, isLoading: isSitesLoading } = useDashboardSites();
   const [selectedSiteId, setSelectedSiteId] = useState<string>('all');
+
+  // Dynamic site scope: fetched from the logged-in user's own account
+  // (site_id on /api/users/account.json) rather than a manual picker, since
+  // the site dropdown was removed from the filter bar.
+  const { data: accountSiteId } = useUserAccountSiteId();
 
   // The "All residents / Pre Sales / Post Sales" tab is only shown for
   // ?app_id=35 (read once — the query param isn't expected to change without
@@ -119,8 +124,9 @@ function PosthogRunwalDashboardContent() {
   }, []);
 
   const filters: DashboardFilters = useMemo(() => {
-    // When "all" is selected, siteIds must be [] so PostHog returns tenant-wide aggregate live data
-    const siteIds = selectedSiteId && selectedSiteId !== 'all' ? [selectedSiteId] : [];
+    // Site scope comes from the logged-in user's own account (site_id),
+    // not a manual picker — falls back to [] (tenant-wide) until it loads.
+    const siteIds = accountSiteId ? [accountSiteId] : [];
 
     // display_view only applies for the app_id=35 tenant; "all" maps to both
     // segments at once ("0,1"), Pre Sales -> "0", Post Sales -> "1".
@@ -145,7 +151,7 @@ function PosthogRunwalDashboardContent() {
       displayView,
       appId: appId || undefined,
     };
-  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl, showResidentSegment, residentSegment, appId]);
+  }, [accountSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl, showResidentSegment, residentSegment, appId]);
 
   // Traffic Session query for global live counter & badge
   const {
@@ -316,10 +322,9 @@ function PosthogRunwalDashboardContent() {
     pgFlows: 'Workflow Usage',
   };
 
-  const currentSiteName =
-    selectedSiteId === 'all'
-      ? 'All Live Sites / Projects'
-      : sites.find((s) => String(s.id) === selectedSiteId)?.name || `Site ${selectedSiteId}`;
+  const currentSiteName = accountSiteId
+    ? sites.find((s) => String(s.id) === accountSiteId)?.name || `Site ${accountSiteId}`
+    : 'All Live Sites / Projects';
 
   return (
     <div

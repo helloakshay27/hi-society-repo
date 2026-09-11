@@ -25,6 +25,7 @@ import {
 interface LockAccountGroupAPI {
   id: number;
   lock_account_id?: number;
+  account_name?: string | null;
   group_name: string;
   parent_group_id?: number | null;
   base_group_id?: number | null;
@@ -78,11 +79,14 @@ const AccountingSubgroupSetup: React.FC = () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const res = await axios.get(`${baseUrl}/lock_account_groups`, {
-        params: { lock_account_id: lockAccountId },
-        headers: { ...authHeaders(), "Content-Type": "application/json" },
-      });
-      const groups: LockAccountGroupAPI[] = res.data?.lock_account_groups || [];
+      const res = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_groups.json`,
+        { headers: authHeaders() }
+      );
+      const data = res.data;
+      const groups: LockAccountGroupAPI[] = Array.isArray(data)
+        ? data
+        : data?.lock_account_groups ?? data?.groups ?? data?.data ?? [];
       const nameById = new Map(groups.map((g) => [g.id, g.group_name]));
       const resolveName = (id?: number | null) => {
         if (!id) return "-";
@@ -91,7 +95,7 @@ const AccountingSubgroupSetup: React.FC = () => {
       setRows(
         groups.map((g) => ({
           id: g.id,
-          accountName: "",
+          accountName: g.account_name || "",
           groupName: g.group_name,
           parentGroup: resolveName(g.parent_group_id),
           baseGroup: resolveName(g.base_group_id),
@@ -137,6 +141,35 @@ const AccountingSubgroupSetup: React.FC = () => {
     } catch (error) {
       console.error("Error deleting group:", error);
       toast.error("Failed to delete group");
+    }
+  };
+
+  // GET /lock_accounts/:id/lock_account_groups.xlsx
+  const handleExport = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_groups.xlsx`,
+        {
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "subgroups.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting subgroups:", error);
+      toast.error("Failed to export subgroups");
     }
   };
 
@@ -191,6 +224,11 @@ const AccountingSubgroupSetup: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+       <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          SubGroups
+        </h1>
+      </div>
       <EnhancedTable
         data={rows}
         columns={columns}
@@ -201,6 +239,7 @@ const AccountingSubgroupSetup: React.FC = () => {
         enableGlobalSearch
         searchPlaceholder="Search"
         enableExport
+        onExport={handleExport}
         exportFileName="subgroup-setup"
         storageKey="subgroup-setup-table"
         loading={loading}

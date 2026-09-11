@@ -431,12 +431,12 @@ export const HiSocietySidebar: React.FC = () => {
               label: "Encashment",
               icon: DollarSign,
               subItems: [
-                {
-                  id: "encashment-config",
-                  label: "Encashment Config",
-                  icon: SettingsIcon,
-                  path: "/loyalty/encashment/config",
-                },
+                // {
+                //   id: "encashment-config",
+                //   label: "Encashment Config",
+                //   icon: SettingsIcon,
+                //   path: "/loyalty/encashment/config",
+                // },
                 {
                   id: "encashment-requests",
                   label: "Encashment Requests",
@@ -785,12 +785,12 @@ export const HiSocietySidebar: React.FC = () => {
           icon: FileText,
           path: "/accounting/download-report",
         },
-        {
-          id: "invoice-creation",
-          label: "Invoice Creation",
-          icon: FileText,
-          path: "/accounting/invoice-creation",
-        },
+        // {
+        //   id: "invoice-creation",
+        //   label: "Invoice Creation",
+        //   icon: FileText,
+        //   path: "/accounting/invoice-creation",
+        // },
       ],
     },
     smartsecure: {

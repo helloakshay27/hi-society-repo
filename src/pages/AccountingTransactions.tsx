@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,28 @@ import { TextField } from "@mui/material";
 import { fieldStyles } from "@/components/ticket-management/fieldStyles";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Plus, Upload, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
+// Flat row shape returned by
+// GET /lock_accounts/:id/lock_account_transactions.json → lock_account_transaction_records
 interface LedgerRecord {
   id?: number;
+  lock_account_id?: number;
+  lock_account_transaction_id?: number;
   ledger_id: number;
   ledger_name: string;
   tr_type: "dr" | "cr" | string;
   amount: number;
   cost_centre_id?: number | null;
+  description?: string | null;
+  created_at?: string;
+  // present only when the API also echoes the parent transaction fields
+  transaction_type?: string | null;
+  reference?: string | null;
+  voucher_number?: string | null;
+  transaction_date?: string | null;
 }
 
 interface LockAccountTransaction {
@@ -81,11 +93,24 @@ const formatDateOnly = (value: string | null | undefined) => {
   return value.slice(0, 10);
 };
 
+// Display helper: "2026-09-09..." → "09/09/2026" (leaves DD/MM/YYYY input untouched).
+const formatDateDisplay = (value: string | null | undefined) => {
+  if (!value) return "";
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return value;
+};
+
 const AccountingTransactions: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [transactions, setTransactions] = useState<LockAccountTransaction[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const fromUrl = searchParams.get("tab");
+    return fromUrl && TABS.some((t) => t.value === fromUrl) ? fromUrl : "all";
+  });
+  const [records, setRecords] = useState<LedgerRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showActionPanel, setShowActionPanel] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterId, setFilterId] = useState("");
   const [filterReference, setFilterReference] = useState("");
@@ -106,47 +131,75 @@ const AccountingTransactions: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_transactions.json`;
+      const tabType = TABS.find((tab) => tab.value === activeTab)?.type;
       const response = await axios.get(url, {
+        params: tabType ? { transaction_type: tabType } : {},
         headers: {
-          "Content-Type": "application/json",
+          Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
-      setTransactions(response.data?.lock_account_transactions || []);
+      const data = response.data;
+      if (Array.isArray(data?.lock_account_transaction_records)) {
+        setRecords(data.lock_account_transaction_records);
+      } else if (Array.isArray(data?.lock_account_transactions)) {
+        // Fallback for the nested { records: [...] } shape.
+        setRecords(
+          (data.lock_account_transactions as LockAccountTransaction[]).flatMap((t) =>
+            (t.records || []).map((r) => ({
+              ...r,
+              lock_account_transaction_id: r.lock_account_transaction_id ?? t.id,
+              transaction_type: r.transaction_type ?? t.transaction_type,
+              reference: r.reference ?? t.reference,
+              voucher_number: r.voucher_number ?? t.voucher_number,
+              transaction_date: r.transaction_date ?? t.transaction_date,
+              created_at: r.created_at ?? t.created_at,
+            }))
+          )
+        );
+      } else {
+        setRecords([]);
+      }
     } catch (error) {
       console.error("Error fetching transactions:", error);
       toast.error("Failed to fetch transactions");
-      setTransactions([]);
+      setRecords([]);
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId]);
+  }, [lockAccountId, activeTab]);
 
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
 
   const rows: TransactionRow[] = useMemo(() => {
-    return transactions.flatMap((transaction) =>
-      (transaction.records || []).map((record, index) => ({
-        rowId: `${transaction.id}-${index}`,
-        transactionId: transaction.id,
-        particulars: record.ledger_name,
-        debit: record.tr_type === "dr" ? -Math.abs(record.amount) : null,
-        credit: record.tr_type === "cr" ? Math.abs(record.amount) : null,
-        reference: transaction.reference,
-        transactionType: transaction.transaction_type,
-        voucherDate: transaction.transaction_date,
-        createdOn: transaction.created_at,
-      }))
-    );
-  }, [transactions]);
+    return records.map((record) => {
+      const amount = Math.abs(Number(record.amount) || 0);
+      return {
+        rowId: String(record.id ?? `${record.lock_account_transaction_id}-${record.ledger_id}`),
+        transactionId: record.lock_account_transaction_id ?? 0,
+        particulars: record.ledger_name || "",
+        debit: record.tr_type === "dr" ? amount : null,
+        credit: record.tr_type === "cr" ? amount : null,
+        reference: record.reference || "",
+        transactionType: record.transaction_type || "",
+        voucherDate: record.transaction_date || record.created_at || "",
+        createdOn: record.created_at || "",
+      };
+    });
+  }, [records]);
 
   const activeTabConfig = TABS.find((tab) => tab.value === activeTab) ?? TABS[0];
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
-      if (activeTabConfig.type && row.transactionType !== activeTabConfig.type) {
+      // Records without a transaction_type (flat list API) stay visible on every tab.
+      if (
+        activeTabConfig.type &&
+        row.transactionType &&
+        row.transactionType !== activeTabConfig.type
+      ) {
         return false;
       }
       if (
@@ -200,11 +253,14 @@ const AccountingTransactions: React.FC = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     handleResetFilters();
+    setSearchParams(value === "all" ? {} : { tab: value }, { replace: true });
   };
 
   const handleAddTransaction = () => {
     const type = activeTabConfig.type ?? "Journal";
-    navigate(`/accounting/transactions/add?type=${encodeURIComponent(type)}`);
+    navigate(
+      `/accounting/transactions/add?type=${encodeURIComponent(type)}&tab=${encodeURIComponent(activeTab)}`
+    );
   };
 
   const handleImport = () => {
@@ -214,21 +270,21 @@ const AccountingTransactions: React.FC = () => {
   const renderCell = (item: TransactionRow, columnKey: string) => {
     switch (columnKey) {
       case "id":
-        return `#${item.transactionId}`;
+        return item.transactionId ? `#${item.transactionId}` : "-";
       case "particulars":
-        return item.particulars || "--";
+        return item.particulars || "-";
       case "debit":
-        return formatAmount(item.debit);
+        return item.debit === null ? "-" : formatAmount(item.debit);
       case "credit":
-        return formatAmount(item.credit);
+        return item.credit === null ? "-" : formatAmount(item.credit);
       case "reference":
-        return item.reference || "";
+        return item.reference || "-";
       case "transactionType":
-        return item.transactionType || "";
+        return item.transactionType || "-";
       case "voucherDate":
-        return formatDateOnly(item.voucherDate);
+        return formatDateDisplay(item.voucherDate) || "-";
       default:
-        return "";
+        return "-";
     }
   };
 
@@ -246,7 +302,11 @@ const AccountingTransactions: React.FC = () => {
             </TabsTrigger>
           ))}
         </TabsList>
-
+ <div className="mb-4 mt-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          Transactions
+        </h1>
+      </div>
         <div className="mt-4">
           <EnhancedTable
             data={filteredRows}
@@ -260,21 +320,13 @@ const AccountingTransactions: React.FC = () => {
             storageKey={`accounting-transactions-${activeTab}-table`}
             leftActions={
               activeTabConfig.type ? (
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleAddTransaction}
-                     className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Add
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleImport}
-                     className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-                  >
-                    <Upload className="mr-2 h-4 w-4" /> Import
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setShowActionPanel(true)}
+                  variant="ghost"
+                  className="btn-primary h-9 px-4 text-sm font-medium"
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Action
+                </Button>
               ) : undefined
             }
             onFilterClick={() => setIsFilterOpen(true)}
@@ -284,6 +336,21 @@ const AccountingTransactions: React.FC = () => {
           />
         </div>
       </Tabs>
+
+      {showActionPanel && (
+        <SelectionPanel
+          className="selection-panel--end"
+          onAdd={() => {
+            setShowActionPanel(false);
+            handleAddTransaction();
+          }}
+          onImport={() => {
+            setShowActionPanel(false);
+            handleImport();
+          }}
+          onClearSelection={() => setShowActionPanel(false)}
+        />
+      )}
 
       <Dialog open={isFilterOpen} modal={false} onOpenChange={setIsFilterOpen}>
         <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">

@@ -2400,9 +2400,9 @@ export const AddIncidentPage = () => {
                     checked={incidentData.supportRequired}
                     onChange={(e) => handleCheckboxChange('supportRequired', e.target.checked)}
                     sx={{
-                      color: '#C72030',
+                      color: '#DA7756',
                       '&.Mui-checked': {
-                        color: '#C72030',
+                        color: '#DA7756',
                       },
                     }}
                   />
@@ -2412,16 +2412,16 @@ export const AddIncidentPage = () => {
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3">Disclaimer <span style={{ color: '#C72030' }}>*</span></h3>
+              <h3 className="text-lg font-medium mb-3">Disclaimer <span style={{ color: '#DA7756' }}>*</span></h3>
               <FormControlLabel
                 control={
                   <Checkbox
                     checked={incidentData.factsCorrect}
                     onChange={(e) => handleCheckboxChange('factsCorrect', e.target.checked)}
                     sx={{
-                      color: '#C72030',
+                      color: '#DA7756',
                       '&.Mui-checked': {
-                        color: '#C72030',
+                        color: '#DA7756',
                       },
                     }}
                   />
@@ -2475,8 +2475,9 @@ export const AddIncidentPage = () => {
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Button
                     type="button"
-                    variant="outline"
-                    className="flex items-center gap-2 !bg-white !text-[#C72030] !border !border-[#C72030] hover:!bg-[#F6F4EE] hover:!text-[#C72030]"
+                    variant="ghost"
+                    className="flex items-center gap-2"
+                    style={{ backgroundColor: '#DA7756', color: 'white', borderColor: '#DA7756' }}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Choose Files
