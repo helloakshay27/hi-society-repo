@@ -199,6 +199,12 @@ export interface EncashRequest {
   cancelled_at: string | null;
   created_at: string;
   updated_at: string;
+  /**
+   * Cancelled-cheque proof images for the bank account — the standard KYC document,
+   * unrelated to a request being cancelled. Public S3 URLs, usable directly as an
+   * <img src> with no auth.
+   */
+  cancelled_cheque_urls?: string[] | null;
   [key: string]: unknown;
 }
 
