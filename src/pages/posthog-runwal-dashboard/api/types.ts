@@ -384,6 +384,11 @@ export interface DashboardFilters {
   // window.location.search) so it's visible wherever filters are, and sent
   // as app_id on every PostHog adoption request.
   appId?: string;
+  // Runwal CP identifies itself by project code instead of app_id (it has no
+  // app_id at all). When set, this is sent as `project_code` on every
+  // PostHog adoption / FM / site-lookup request in place of `app_id` — the
+  // two are mutually exclusive identifiers, never sent together.
+  projectCode?: string;
 }
 
 export interface SiteLookupItem {

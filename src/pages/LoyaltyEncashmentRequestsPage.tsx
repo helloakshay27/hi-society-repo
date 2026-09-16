@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -81,7 +80,9 @@ const statusVariant = (status: string): string => {
 type StatusAction = "cancelled" | "successful";
 
 // The tenant-side transitions, per
-// /admin/encash_requests/:id/{cancel,mark_successful}.
+// /admin/encash_requests/:id/{cancel,mark_successful}. Marking successful
+// (with a bank UTR number) fires immediately without a popup; cancellation
+// requires a reason entered in the dialog.
 const STATUS_ACTIONS: { key: StatusAction; label: string }[] = [
   { key: "cancelled", label: "Cancelled" },
   { key: "successful", label: "Successful" },
@@ -163,12 +164,6 @@ interface CancelDialogState {
   reason: string;
 }
 
-interface UtrDialogState {
-  open: boolean;
-  request: EncashRequest | null;
-  utr: string;
-}
-
 export const LoyaltyEncashmentRequestsPage: React.FC = () => {
   const [requests, setRequests] = useState<EncashRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -191,11 +186,6 @@ export const LoyaltyEncashmentRequestsPage: React.FC = () => {
     open: false,
     request: null,
     reason: "",
-  });
-  const [utrDialog, setUtrDialog] = useState<UtrDialogState>({
-    open: false,
-    request: null,
-    utr: "",
   });
 
   const handleViewRequest = (item: EncashRequest) => {
@@ -240,8 +230,18 @@ export const LoyaltyEncashmentRequestsPage: React.FC = () => {
       setCancelDialog({ open: true, request: item, reason: "" });
       return;
     }
-    // "successful" needs the bank UTR number — mark_successful requires it.
-    setUtrDialog({ open: true, request: item, utr: "" });
+    // "successful" fires immediately — no UTR popup on this page.
+    setUpdatingId(item.id);
+    markEncashRequestSuccessful(item.id, item.utr_number || "")
+      .then(() => {
+        toast.success("Request marked successful");
+        fetchRequests(currentPage);
+      })
+      .catch((err) => {
+        console.warn("Could not mark request successful:", err);
+        toast.error(getApiErrorMessage(err, "Failed to update request status"));
+      })
+      .finally(() => setUpdatingId(null));
   };
 
   const handleConfirmCancel = async () => {
@@ -260,27 +260,6 @@ export const LoyaltyEncashmentRequestsPage: React.FC = () => {
     } catch (err) {
       console.warn("Could not cancel request:", err);
       toast.error(getApiErrorMessage(err, "Failed to cancel request"));
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleConfirmUtr = async () => {
-    if (!utrDialog.request) return;
-    if (!utrDialog.utr.trim()) {
-      toast.error("Please enter the bank UTR number");
-      return;
-    }
-    const id = utrDialog.request.id;
-    setUpdatingId(id);
-    try {
-      await markEncashRequestSuccessful(id, utrDialog.utr.trim());
-      toast.success("Request marked successful");
-      setUtrDialog({ open: false, request: null, utr: "" });
-      fetchRequests(currentPage);
-    } catch (err) {
-      console.warn("Could not mark request successful:", err);
-      toast.error(getApiErrorMessage(err, "Failed to update request status"));
     } finally {
       setUpdatingId(null);
     }
@@ -320,20 +299,24 @@ export const LoyaltyEncashmentRequestsPage: React.FC = () => {
         return <span>{item.processing_fee_percent}%</span>;
       case "amount_payable":
         return <span className="font-semibold text-[#1A1A1A]">₹{item.amount_payable}</span>;
-      case "status":
+      case "status": {
+        // Once a request is resolved (approved/rejected), it's final — the
+        // dropdown is disabled/grayed out so the status can't be changed again.
+        const isLocked = statusVariant(item.status) !== "pending";
+        const isDisabled = updatingId === item.id || isLocked;
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild disabled={updatingId === item.id}>
+            <DropdownMenuTrigger asChild disabled={isDisabled}>
               <button
                 type="button"
                 className="inline-flex items-center disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={updatingId === item.id}
+                disabled={isDisabled}
               >
                 <StatusBadge status={statusVariant(item.status)} className="flex items-center gap-1.5">
                   {item.status}
                   {updatingId === item.id ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
+                  ) : isLocked ? null : (
                     <ChevronDown className="w-3 h-3" />
                   )}
                 </StatusBadge>
@@ -348,6 +331,7 @@ export const LoyaltyEncashmentRequestsPage: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         );
+      }
       case "lockated_action":
         return <span className="whitespace-nowrap">{item.lockated_action || "-"}</span>;
       case "requested_at":
@@ -560,59 +544,7 @@ export const LoyaltyEncashmentRequestsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Mark Successful (UTR Number) Modal */}
-      <Dialog
-        open={utrDialog.open}
-        onOpenChange={(open) => setUtrDialog((prev) => ({ ...prev, open }))}
-      >
-        <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
-          <DialogHeader className="bg-[#F6F4EE] px-6 py-4 border-b border-[#D5DbDB]">
-            <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-[#C72030]" />
-              Mark as Successful
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="p-6 bg-white space-y-2">
-            {utrDialog.request && (
-              <p className="text-sm text-gray-600">
-                Marking{" "}
-                <span className="font-medium text-[#1A1A1A]">{utrDialog.request.request_reference}</span>{" "}
-                as paid
-              </p>
-            )}
-            <Label className="text-xs font-semibold text-[#1A1A1A]">Bank UTR Number</Label>
-            <Input
-              className="h-9 text-sm border-[#D5DbDB] bg-white"
-              placeholder="Enter the bank UTR / transaction number"
-              value={utrDialog.utr}
-              onChange={(e) => setUtrDialog((prev) => ({ ...prev, utr: e.target.value }))}
-            />
-          </div>
-
-          <DialogFooter className="bg-[#F6F4EE] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setUtrDialog({ open: false, request: null, utr: "" })}
-              className="border-[#D5DbDB] text-[#1A1A1A] hover:bg-[#DBC2A9]"
-            >
-              Close
-            </Button>
-            <Button
-              onClick={handleConfirmUtr}
-              disabled={updatingId === utrDialog.request?.id}
-              variant="ghost"
-              className="btn-primary"
-            >
-              {updatingId === utrDialog.request?.id && (
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-              )}
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+      </div>
   );
 };
 
