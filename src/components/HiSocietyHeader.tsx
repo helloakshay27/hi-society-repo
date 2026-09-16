@@ -211,6 +211,9 @@ export const HiSocietyHeader = () => {
         localStorage.setItem("selectedUserSociety", accountData?.selected_user_society?.toString() || "");
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         sessionStorage.setItem("selectedUserSociety", accountData?.selected_user_society?.toString() || "");
+        // Let Layout (and any other listener) know fresh account data — including
+        // is_society_admin — is available, since it lives in a sibling component.
+        window.dispatchEvent(new Event("hiSocietyAccountUpdated"));
 
         // RM/CS users: pull their assigned societies + currently selected
         // society straight off the account response (no separate approved-
