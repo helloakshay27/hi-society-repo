@@ -59,6 +59,10 @@ function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: stri
   const p: Record<string, string> = {};
   if (devices?.length) p.device_type = devices.join(',');
   if (os) p.os = os;
+  if (siteIds?.length) p.site_id = siteIds.join(',');
+  if (appId) {
+    p.app_id = appId;
+  }
   return p;
 }
 

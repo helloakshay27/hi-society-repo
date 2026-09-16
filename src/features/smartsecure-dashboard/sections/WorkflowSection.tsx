@@ -1,5 +1,6 @@
 import { Card, CardHead } from '../components/Card';
 import { Tile } from '../components/Tile';
+import { TileSkeleton, FunnelSkeleton, TableSkeleton } from '../components/Skeleton';
 import { ModuleNav } from '../components/ModuleNav';
 import { Funnel } from '../components/Funnel';
 import { ScreensTable } from '../components/tables/ScreensTable';
@@ -7,7 +8,7 @@ import { EntryScreensTable } from '../components/tables/EntryScreensTable';
 import { useSmartSecureDashboard } from '../context/DashboardContext';
 
 export function WorkflowSection() {
-  const { flows } = useSmartSecureDashboard();
+  const { flows, isFlowsLoading } = useSmartSecureDashboard();
   const { workflow: w, scopeNote } = flows;
 
   return (
@@ -21,9 +22,13 @@ export function WorkflowSection() {
 
       <ModuleNav />
 
-      <div className="tiles" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-        {flows.tiles.map((t) => <Tile key={t.label} {...t} />)}
-      </div>
+      {isFlowsLoading ? (
+        <TileSkeleton count={4} cols={4} />
+      ) : (
+        <div className="tiles" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+          {flows.tiles.map((t) => <Tile key={t.label} {...t} />)}
+        </div>
+      )}
 
       {scopeNote && (
         <div className="bmnote crashnote" style={{ marginTop: 16 }}>
@@ -50,7 +55,11 @@ export function WorkflowSection() {
           />
         }
       >
-        <Funnel funnel={flows.funnel} />
+        {isFlowsLoading ? (
+          <FunnelSkeleton steps={w.steps.length || 4} />
+        ) : (
+          <Funnel funnel={flows.funnel} />
+        )}
       </Card>
 
       <Card
@@ -59,7 +68,11 @@ export function WorkflowSection() {
         bodyClassName="tbl-wrap"
         head={<CardHead cr="All screens in this module" ct="All screens in this module" cd={`Every screen path inside ${w.name}, with users, events, sessions and completion rate for each.`} />}
       >
-        <ScreensTable rows={flows.screens} />
+        {isFlowsLoading ? (
+          <TableSkeleton rows={4} cols={5} />
+        ) : (
+          <ScreensTable rows={flows.screens} />
+        )}
       </Card>
 
       <Card
@@ -68,7 +81,11 @@ export function WorkflowSection() {
         bodyClassName="tbl-wrap"
         head={<CardHead cr="Top entry screens" ct="Top entry screens" cd="The first screen seen in each session — usually reached via push notification, deep link, or the app icon." />}
       >
-        <EntryScreensTable rows={flows.entryScreens} />
+        {isFlowsLoading ? (
+          <TableSkeleton rows={3} cols={4} />
+        ) : (
+          <EntryScreensTable rows={flows.entryScreens} />
+        )}
       </Card>
     </section>
   );

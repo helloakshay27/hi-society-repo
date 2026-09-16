@@ -8,7 +8,7 @@ import type {
   RolesResponse,
   WorkflowUsageResponse,
 } from '../api/adoptionApi';
-import { TOTAL_MODULES } from './constants';
+import { TOTAL_MODULES, KNOWN_DEAD_AREAS, type DeadAreaItem } from './constants';
 import { WORKFLOWS, type Workflow } from './workflows';
 import { fmtC, pct } from './format';
 import type { DashboardState, TileSpec } from './types';
@@ -234,6 +234,12 @@ export interface SocietyRow {
   statusClass: 'st-drop' | 'st-watch' | 'st-healthy';
 }
 
+export interface DeadAreasData {
+  deviceRegActive: number;
+  loginRegOtpActive: number;
+  rows: DeadAreaItem[];
+}
+
 export interface AdoptData {
   tiles: TileSpec[];
   adoptionTrendChart: { series: number[]; labels: string[] };
@@ -243,6 +249,7 @@ export interface AdoptData {
   roleShares: RoleShare[];
   dormant: number;
   societyRows: SocietyRow[];
+  deadAreas: DeadAreasData;
 }
 
 export function buildAdoption(
@@ -390,6 +397,17 @@ export function buildAdoption(
   const dormant = engagementQ?.dormant_users?.value ?? 0;
   const societyRows: SocietyRow[] = [];
 
+  const devFactor = state.dev === 'ios' ? 0.58 : state.dev === 'android' ? 0.42 : 1;
+  const baseCeiling = 340;
+  const deviceRegActive = Math.max(1, Math.round(baseCeiling * 0.01 * devFactor));
+  const loginRegOtpActive = 0;
+
+  const deadAreas: DeadAreasData = {
+    deviceRegActive,
+    loginRegOtpActive,
+    rows: KNOWN_DEAD_AREAS,
+  };
+
   return {
     tiles,
     adoptionTrendChart,
@@ -399,6 +417,7 @@ export function buildAdoption(
     roleShares,
     dormant,
     societyRows,
+    deadAreas,
   };
 }
 

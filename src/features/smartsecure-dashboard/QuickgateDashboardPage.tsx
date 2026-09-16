@@ -76,7 +76,7 @@ function DashboardLayout() {
           <div className="page-head">
             <h2>{page.title}</h2>
             <p className="page-sub">
-              <span>Quickgate Application</span> &middot; <span>Gate staff &amp; admins &middot; all societies</span>
+              <span>QuikGate — Gate Terminal App</span> &middot; <span>All gatekeepers &amp; terminals &middot; all sites &middot; client = smartsecure</span>
             </p>
           </div>
 
@@ -96,7 +96,7 @@ function DashboardLayout() {
 
 export function QuickgateDashboardPage() {
   return (
-    <DashboardProvider appId="39">
+    <DashboardProvider appId="23" appName="QuikGate">
       <DashboardLayout />
     </DashboardProvider>
   );
