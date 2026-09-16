@@ -34,6 +34,7 @@ import { UIHiSocietyNavigation } from "./UIHiSocietyNavigation";
 import { ZxSidebar } from "./ZxSidebar";
 import { RouteErrorBoundary } from "./ErrorBoundary";
 import { CPNavigation } from "./CPNavigation";
+import { ShieldAlert } from "lucide-react";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -72,6 +73,35 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
   const isCSUser = hiSocietyAccountUserType === "cs_user";
   const isRMUser = hiSocietyAccountUserType === "rm_user";
+
+  const readIsSocietyAdmin = () => {
+    try {
+      const hiSocietyAccountRaw = localStorage.getItem("hiSocietyAccount");
+      if (!hiSocietyAccountRaw) return true;
+      const parsed = JSON.parse(hiSocietyAccountRaw);
+      const raw = parsed?.is_society_admin;
+      console.log("hiSocietyAccount.is_society_admin raw value:", raw, typeof raw, parsed);
+      if (raw === undefined) return false;
+      // Rails-style APIs can send this as a real boolean, "true"/"false", or 0/1 — normalize all of them.
+      return raw === true || raw === "true" || raw === 1 || raw === "1";
+    } catch {
+      return false;
+    }
+  };
+  const [isSocietyAdmin, setIsSocietyAdmin] = useState(readIsSocietyAdmin);
+
+  useEffect(() => {
+    const handleAccountUpdate = () => setIsSocietyAdmin(readIsSocietyAdmin());
+    window.addEventListener("hiSocietyAccountUpdated", handleAccountUpdate);
+    window.addEventListener("storage", handleAccountUpdate);
+    return () => {
+      window.removeEventListener("hiSocietyAccountUpdated", handleAccountUpdate);
+      window.removeEventListener("storage", handleAccountUpdate);
+    };
+  }, []);
+
+  const isUnauthorizedSociety = layoutMode === "hi-society" && !isSocietyAdmin;
+  console.log(isUnauthorizedSociety)
 
   // Detect Club Management routes
   const isClubManagementRoute =
@@ -413,48 +443,66 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Conditional Header - Hi-Society mode shows HiSocietyHeader, FM Matrix mode shows admin Header */}
       {layoutMode === "hi-society" ? <HiSocietyHeader /> : <Header />}
 
-      {/* Mobile overlay backdrop - closes sidebar when tapping outside */}
-      {isMobileSidebarOpen && (
-        <div
-          className="fixed top-0 bottom-0 left-0 right-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setIsMobileSidebarOpen(false)}
-        />
+      {isUnauthorizedSociety ? (
+        <main className="pt-28 px-4">
+          <div className="flex items-center justify-center min-h-[70vh]">
+            <div className="max-w-md w-full text-center bg-white border border-gray-200 rounded-xl shadow-sm p-10">
+              <div className="mx-auto mb-5 flex items-center justify-center w-16 h-16 rounded-full bg-[#F2C8C4]">
+                <ShieldAlert className="w-8 h-8 text-[#C72030]" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Restricted</h2>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                You are not authorized to access this. Please change your society or contact administrator.
+              </p>
+            </div>
+          </div>
+        </main>
+      ) : (
+        <>
+          {/* Mobile overlay backdrop - closes sidebar when tapping outside */}
+          {isMobileSidebarOpen && (
+            <div
+              className="fixed top-0 bottom-0 left-0 right-0 bg-black/50 z-30 md:hidden"
+              onClick={() => setIsMobileSidebarOpen(false)}
+            />
+          )}
+
+          {renderSidebar()}
+
+          {renderDynamicHeader()}
+
+          <main
+            className={`transition-all duration-300 ${
+              // Hi-Society mode styling
+              layoutMode === "hi-society"
+                ? isSidebarCollapsed
+                  ? "md:ml-16 ml-0"
+                  : "md:ml-64 ml-0"
+                : // FM Matrix mode - always show sidebar margin for admin users
+                isActionSidebarVisible
+                  ? "md:ml-64 ml-0 pt-28"
+                  : isSidebarCollapsed
+                    ? "md:ml-16 ml-0"
+                    : "md:ml-64 ml-0"
+              } ${
+              // Top padding based on mode
+              layoutMode === "hi-society"
+                ? // RM/CS users have no HiSocietyNavigation bar (renderDynamicHeader
+                // returns null for them), so they only need space for the header
+                isCSUser || isRMUser
+                  ? "pt-16"
+                  : "pt-28"
+                : isActionSidebarVisible
+                  ? ""
+                  : "pt-28"
+              }`}
+          >
+            <RouteErrorBoundary locationKey={location.key}>
+              <Outlet />
+            </RouteErrorBoundary>
+          </main>
+        </>
       )}
-
-      {renderSidebar()}
-
-      {renderDynamicHeader()}
-
-      <main
-        className={`transition-all duration-300 ${
-          // Hi-Society mode styling
-          layoutMode === "hi-society"
-            ? isSidebarCollapsed
-              ? "md:ml-16 ml-0"
-              : "md:ml-64 ml-0"
-            : // FM Matrix mode - always show sidebar margin for admin users
-            isActionSidebarVisible
-              ? "md:ml-64 ml-0 pt-28"
-              : isSidebarCollapsed
-                ? "md:ml-16 ml-0"
-                : "md:ml-64 ml-0"
-          } ${
-          // Top padding based on mode
-          layoutMode === "hi-society"
-            ? // RM/CS users have no HiSocietyNavigation bar (renderDynamicHeader
-              // returns null for them), so they only need space for the header
-              isCSUser || isRMUser
-              ? "pt-16"
-              : "pt-28"
-            : isActionSidebarVisible
-              ? ""
-              : "pt-28"
-          }`}
-      >
-        <RouteErrorBoundary locationKey={location.key}>
-          <Outlet />
-        </RouteErrorBoundary>
-      </main>
     </div>
   );
 };
