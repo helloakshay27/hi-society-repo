@@ -65,7 +65,7 @@ function DateRangeControl() {
 }
 
 export function ControlBar() {
-  const { state, setDev, togglePrev, setSociety, sites } = useSmartSecureDashboard();
+  const { state, setDev, togglePrev, setSociety, sites, refreshAll, isRefreshing } = useSmartSecureDashboard();
 
   return (
     <div className="filterbar">
@@ -91,6 +91,24 @@ export function ControlBar() {
       <label className={`ctrl ${state.prev ? 'toggle-on' : ''}`} onClick={togglePrev}>
         <span className="ic">↺</span> Previous period {state.prev ? '✓' : ''}
       </label>
+
+      <button
+        type="button"
+        className={`ctrl ${isRefreshing ? 'is-refreshing' : ''}`}
+        id="refreshBtn"
+        onClick={refreshAll}
+        disabled={isRefreshing}
+        aria-busy={isRefreshing}
+        title={isRefreshing ? "Refreshing metrics…" : "Refetch every metric"}
+      >
+        <span
+          className="ic"
+          style={isRefreshing ? { display: 'inline-block', animation: 'ss-spin 0.8s linear infinite' } : undefined}
+        >
+          ⟳
+        </span>{' '}
+        {isRefreshing ? 'Refreshing…' : 'Refresh'}
+      </button>
 
       <div className="spacer" />
 

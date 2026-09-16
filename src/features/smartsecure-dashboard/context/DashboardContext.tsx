@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useIsFetching } from '@tanstack/react-query';
 import {
   fetchTrafficSession,
   fetchUsageAndDistribution,
@@ -61,11 +61,18 @@ interface DashboardContextValue {
   openInfoPopover: (key: string, rect: DOMRect) => void;
   closeInfoPopover: () => void;
   sites: Site[];
+  appId?: string;
+  appName?: string;
+  refreshAll: () => Promise<void>;
+  isRefreshing: boolean;
+  isTrafficLoading: boolean;
+  isAdoptLoading: boolean;
+  isFlowsLoading: boolean;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-export function DashboardProvider({ children, appId }: { children: ReactNode, appId?: string }) {
+export function DashboardProvider({ children, appId, appName }: { children: ReactNode; appId?: string; appName?: string }) {
   const [state, setState] = useState<DashboardState>(DEFAULT_STATE);
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>({});
   const [infoPopover, setInfoPopover] = useState<InfoPopoverState | null>(null);
@@ -91,6 +98,20 @@ export function DashboardProvider({ children, appId }: { children: ReactNode, ap
   const sites = useMemo(() => sitesQ.data ?? [], [sitesQ.data]);
   const sitesSettled = sitesQ.isSuccess && sites.length > 0;
 
+  const effectiveAppId = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromUrl = urlParams.get('app_id') || urlParams.get('appId');
+      if (fromUrl) return fromUrl;
+    }
+    if (appId) return appId;
+    const isQuikgate =
+      appName === 'QuikGate' ||
+      (typeof window !== 'undefined' &&
+        (window.location.pathname.includes('quickgate') || window.location.pathname.includes('quikgate')));
+    return isQuikgate ? '23' : '39';
+  }, [appId, appName]);
+
   const filters = useMemo(() => {
     let devices: ('Mobile' | 'Desktop')[] | undefined;
     let os: string | undefined;
@@ -107,19 +128,63 @@ export function DashboardProvider({ children, appId }: { children: ReactNode, ap
       os,
       siteIds: state.society === 'All Societies' ? undefined : [state.society],
       url: dynamicUrl,
-      token: '', // Mock token, since it's required by QueryFilters in queries.ts but not used in smartsecure-dashboard yet? Wait, smartsecure queries use enabled: f.enabled. But wait, `QueryFilters` in `smartsecure-dashboard/api/queries.ts` requires it!
-      appId,
+      token: '',
+      appId: effectiveAppId,
     };
-  }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl, sitesSettled, appId]);
+  }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl, sitesSettled, effectiveAppId]);
 
-  const trafficQ    = useQuery({ queryKey: ['ss-traffic',    filters], queryFn: () => fetchTrafficSession(filters),                                                                        staleTime: 5 * 60_000 });
-  const usageQ      = useQuery({ queryKey: ['ss-usage',      filters], queryFn: () => fetchUsageAndDistribution(filters),                                                                   staleTime: 5 * 60_000 });
-  const engagementQ = useQuery({ queryKey: ['ss-engagement', filters], queryFn: () => fetchAdoptionEngagement({ ...filters }),                                                             staleTime: 5 * 60_000 });
-  const trendQ      = useQuery({ queryKey: ['ss-trend',      filters], queryFn: () => fetchAdoptionTrend({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices }), staleTime: 5 * 60_000 });
-  const growthQ     = useQuery({ queryKey: ['ss-growth',     filters], queryFn: () => fetchGrowth({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices }),        staleTime: 5 * 60_000 });
-  const retentionQ  = useQuery({ queryKey: ['ss-retention',  filters], queryFn: () => fetchRetention({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices }),     staleTime: 5 * 60_000 });
-  const rolesQ      = useQuery({ queryKey: ['ss-roles',      filters], queryFn: () => fetchRoles(filters),                                                                                  staleTime: 5 * 60_000 });
-  const workflowQ   = useQuery({ queryKey: ['ss-workflow',   filters, state.wf], queryFn: () => fetchWorkflowUsage({ ...filters, module: state.wf }),                                       staleTime: 5 * 60_000 });
+  const trafficQ    = useQuery({ queryKey: ['ss-traffic',    filters], queryFn: () => fetchTrafficSession(filters),                                                                                                           staleTime: 5 * 60_000 });
+  const usageQ      = useQuery({ queryKey: ['ss-usage',      filters], queryFn: () => fetchUsageAndDistribution(filters),                                                                                                      staleTime: 5 * 60_000 });
+  const engagementQ = useQuery({ queryKey: ['ss-engagement', filters], queryFn: () => fetchAdoptionEngagement({ ...filters }),                                                                                                staleTime: 5 * 60_000 });
+  const trendQ      = useQuery({ queryKey: ['ss-trend',      filters], queryFn: () => fetchAdoptionTrend({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }), staleTime: 5 * 60_000 });
+  const growthQ     = useQuery({ queryKey: ['ss-growth',     filters], queryFn: () => fetchGrowth({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }),        staleTime: 5 * 60_000 });
+  const retentionQ  = useQuery({ queryKey: ['ss-retention',  filters], queryFn: () => fetchRetention({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }),     staleTime: 5 * 60_000 });
+  const rolesQ      = useQuery({ queryKey: ['ss-roles',      filters], queryFn: () => fetchRoles(filters),                                                                                                                     staleTime: 5 * 60_000 });
+  const workflowQ   = useQuery({ queryKey: ['ss-workflow',   filters, state.wf], queryFn: () => fetchWorkflowUsage({ ...filters, module: state.wf }),                                                                          staleTime: 5 * 60_000 });
+
+  const queryClient = useQueryClient();
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+  const isFetchingQueries =
+    useIsFetching({
+      predicate: (query) => {
+        const k = query.queryKey[0];
+        return typeof k === 'string' && (k.startsWith('ss-') || k === 'all-sites');
+      },
+    }) > 0;
+  const isRefreshing = isManualRefreshing || isFetchingQueries;
+
+  const refreshAll = async () => {
+    setIsManualRefreshing(true);
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 650));
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const k = query.queryKey[0];
+            return typeof k === 'string' && (k.startsWith('ss-') || k === 'all-sites');
+          },
+          refetchType: 'all',
+        }),
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const k = query.queryKey[0];
+            return typeof k === 'string' && (k.startsWith('ss-') || k === 'all-sites');
+          },
+          type: 'active',
+        }),
+        minDelay,
+      ]);
+    } catch {
+      // ignore
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
+
+  const sitesLoading = sitesQ.isLoading;
+  const isTrafficLoading = sitesLoading || trafficQ.isLoading || usageQ.isLoading;
+  const isAdoptLoading = sitesLoading || engagementQ.isLoading || trendQ.isLoading || growthQ.isLoading || retentionQ.isLoading || rolesQ.isLoading;
+  const isFlowsLoading = sitesLoading || workflowQ.isLoading;
 
   const traffic = useMemo(() => buildTraffic(state, trafficQ.data, usageQ.data),                                                              [state, trafficQ.data, usageQ.data]);
   const adopt   = useMemo(() => buildAdoption(state, engagementQ.data, trendQ.data, growthQ.data, retentionQ.data, rolesQ.data),             [state, engagementQ.data, trendQ.data, growthQ.data, retentionQ.data, rolesQ.data]);
@@ -157,6 +222,13 @@ export function DashboardProvider({ children, appId }: { children: ReactNode, ap
     openInfoPopover: (key, rect) => setInfoPopover({ key, rect }),
     closeInfoPopover: () => setInfoPopover(null),
     sites,
+    appId,
+    appName,
+    refreshAll,
+    isRefreshing,
+    isTrafficLoading,
+    isAdoptLoading,
+    isFlowsLoading,
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

@@ -510,3 +510,52 @@ html[data-ss-theme="dark"]{
 @media(prefers-reduced-motion:reduce){
   .ss-app *,.ss-app *::before,.ss-app *::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+/* ============ SPIN ANIMATION FOR REFRESH ============ */
+.ss-app .ctrl .spin {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 1.8px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ss-spin .7s linear infinite;
+}
+@keyframes ss-spin {
+  to { transform: rotate(360deg); }
+}
+@media(prefers-reduced-motion:reduce){
+  .ss-app .ctrl .spin { animation: none; }
+}
+
+/* ============ SKELETON SHIMMER ============ */
+@keyframes ss-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.ss-app .ss-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    var(--surface-3) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: ss-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--r-xs);
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-app .ss-skeleton {
+    animation: none;
+    background: var(--surface-2);
+  }
+}
+
+

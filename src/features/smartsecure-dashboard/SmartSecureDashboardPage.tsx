@@ -130,7 +130,7 @@ function DashboardLayout() {
 
 export function SmartSecureDashboardPage() {
   return (
-    <DashboardProvider appId="39">
+    <DashboardProvider appId="39" appName="SmartSecure">
       <DashboardLayout />
     </DashboardProvider>
   );

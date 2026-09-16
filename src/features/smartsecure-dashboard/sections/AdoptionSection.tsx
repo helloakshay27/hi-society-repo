@@ -1,6 +1,8 @@
 import { Card, CardHead } from '../components/Card';
 import { Tile } from '../components/Tile';
+import { TileSkeleton, ChartSkeleton, BarsSkeleton, TableSkeleton, Skeleton } from '../components/Skeleton';
 import { SocietyTable } from '../components/tables/SocietyTable';
+import { KnownDeadAreasCard } from '../components/KnownDeadAreasCard';
 import { LineChart } from '../../posthog-dashboard/components/charts/LineChart';
 import { GrowthChart } from '../../posthog-dashboard/components/charts/GrowthChart';
 import { HorizontalBars } from '../../posthog-dashboard/components/charts/HorizontalBars';
@@ -8,7 +10,7 @@ import { RetentionHeatmap } from '../../posthog-dashboard/components/charts/Rete
 import { useSmartSecureDashboard } from '../context/DashboardContext';
 
 export function AdoptionSection() {
-  const { adopt } = useSmartSecureDashboard();
+  const { adopt, isAdoptLoading } = useSmartSecureDashboard();
 
   return (
     <section className="page on" id="pgAdopt">
@@ -27,17 +29,29 @@ export function AdoptionSection() {
         </ul>
       </div>
 
-      <div className="tiles" style={{ gridTemplateColumns: 'repeat(3,1fr)', marginTop: 16 }}>
-        {adopt.tiles.map((t) => <Tile key={t.label} {...t} />)}
-      </div>
+      {isAdoptLoading ? (
+        <div style={{ marginTop: 16 }}>
+          <TileSkeleton count={4} cols={4} />
+        </div>
+      ) : (
+        <div className="tiles" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginTop: 16 }}>
+          {adopt.tiles.map((t) => <Tile key={t.label} {...t} />)}
+        </div>
+      )}
 
       <Card
         style={{ marginTop: 12 }}
         infoKey="A6"
         head={<CardHead cr="Trend · SVG line chart" ct="Adoption trend (weekly active users, last 8 weeks)" />}
       >
-        <LineChart cur={adopt.adoptionTrendChart.series} showPrev={false} labels={adopt.adoptionTrendChart.labels} />
-        <div className="legend"><span><i style={{ background: 'var(--ss-chart-blue)' }} /> Weekly active users</span></div>
+        {isAdoptLoading ? (
+          <ChartSkeleton height={240} />
+        ) : (
+          <>
+            <LineChart cur={adopt.adoptionTrendChart.series} showPrev={false} labels={adopt.adoptionTrendChart.labels} />
+            <div className="legend"><span><i style={{ background: 'var(--ss-chart-blue)' }} /> Weekly active users</span></div>
+          </>
+        )}
       </Card>
 
       <div className="grid2">
@@ -45,13 +59,19 @@ export function AdoptionSection() {
           infoKey="A7"
           head={<CardHead cr="Growth accounting · Last 6 weeks" ct="New · Returning · Resurrecting · Dormant" />}
         >
-          <GrowthChart weeks={adopt.growthWeeks} />
-          <div className="legend">
-            <span><i style={{ background: 'var(--ss-chart-blue)' }} /> New</span>
-            <span><i style={{ background: 'var(--ss-green)' }} /> Returning</span>
-            <span><i style={{ background: 'var(--ss-mint)' }} /> Resurrecting</span>
-            <span><i style={{ background: 'var(--ss-chart-red)' }} /> Dormant</span>
-          </div>
+          {isAdoptLoading ? (
+            <ChartSkeleton height={240} />
+          ) : (
+            <>
+              <GrowthChart weeks={adopt.growthWeeks} />
+              <div className="legend">
+                <span><i style={{ background: 'var(--ss-chart-blue)' }} /> New</span>
+                <span><i style={{ background: 'var(--ss-green)' }} /> Returning</span>
+                <span><i style={{ background: 'var(--ss-mint)' }} /> Resurrecting</span>
+                <span><i style={{ background: 'var(--ss-chart-red)' }} /> Dormant</span>
+              </div>
+            </>
+          )}
         </Card>
 
         <Card
@@ -59,25 +79,41 @@ export function AdoptionSection() {
           bodyClassName="tbl-wrap"
           head={<CardHead cr="Retention · weekly cohorts" ct="Do new users keep coming back?" />}
         >
-          <RetentionHeatmap cohorts={adopt.retentionCohorts} rowLabels={adopt.retentionRowLabels} />
+          {isAdoptLoading ? (
+            <TableSkeleton rows={6} cols={7} />
+          ) : (
+            <RetentionHeatmap cohorts={adopt.retentionCohorts} rowLabels={adopt.retentionRowLabels} />
+          )}
         </Card>
       </div>
 
       <div className="grid2">
         <Card infoKey="A9" head={<CardHead ct="Adoption by role" cd="Who is (and isn't) using the app" />}>
-          <HorizontalBars rows={adopt.roleShares} />
+          {isAdoptLoading ? (
+            <div style={{ padding: '8px 0' }}>
+              <BarsSkeleton count={3} />
+            </div>
+          ) : (
+            <HorizontalBars rows={adopt.roleShares} />
+          )}
         </Card>
 
         <Card infoKey="A10" head={<CardHead ct="Dormant users" cd="Registered gate staff/admins with no activity in the last 14 days." />}>
           <div className="kv">
             <div>
               <div className="k">Dormant gate staff</div>
-              <div className="v" style={{ fontSize: 22 }}>{adopt.dormant.toLocaleString()}</div>
+              {isAdoptLoading ? (
+                <Skeleton style={{ width: 60, height: 28, margin: '4px 0' }} />
+              ) : (
+                <div className="v" style={{ fontSize: 22 }}>{adopt.dormant.toLocaleString()}</div>
+              )}
               <div className="u">no activity 14+ days</div>
             </div>
           </div>
         </Card>
       </div>
+
+      <KnownDeadAreasCard />
 
       <Card
         style={{ marginTop: 12 }}
@@ -85,7 +121,11 @@ export function AdoptionSection() {
         bodyClassName="tbl-wrap"
         head={<CardHead cr="League table" ct="Society-wise breakdown" cd="Active gate staff, sessions and bounce rate per society, worst-trending first." />}
       >
-        <SocietyTable rows={adopt.societyRows} />
+        {isAdoptLoading ? (
+          <TableSkeleton rows={5} cols={7} />
+        ) : (
+          <SocietyTable rows={adopt.societyRows} />
+        )}
       </Card>
     </section>
   );
