@@ -212,6 +212,13 @@ export interface EncashRequest {
    * processing/cancel/mark_successful flow.
    */
   lockated_action?: string | null;
+  /**
+   * Status of the Lockated (superadmin) approve/reject gate — starts as
+   * `"requested"` and moves to whatever lockated_approve/lockated_reject set
+   * it to. Distinct from `status`, which reflects the tenant-side
+   * processing/cancel/mark_successful flow.
+   */
+  lockated_status?: string | null;
   [key: string]: unknown;
 }
 
@@ -288,13 +295,21 @@ export const markEncashRequestSuccessful = async (id: number, utrNumber: string)
 /**
  * PUT /admin/encash_requests/:id/lockated_approve — approve a request at the
  * platform (Lockated superadmin) level. Distinct from `start_processing` /
- * `mark_successful` above, which are the tenant-side processing flow.
+ * `mark_successful` above, which are the tenant-side processing flow. Takes
+ * the bank UTR number entered by the admin at approval time.
  */
-export const lockatedApproveEncashRequest = async (id: number): Promise<void> => {
+export const lockatedApproveEncashRequest = async (id: number, utrNumber: string): Promise<void> => {
+  const body = new URLSearchParams();
+  body.append("utr_number", utrNumber);
   await axios.put(
     getFullUrl(`/admin/encash_requests/${id}/lockated_approve`),
-    null,
-    { headers: { Authorization: getAuthHeader() } }
+    body,
+    {
+      headers: {
+        Authorization: getAuthHeader(),
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
   );
 };
 
@@ -336,7 +351,9 @@ export interface UserKycVerification {
   created_at: string;
   updated_at: string;
   pan_attachment_urls: string[];
+  pan_back_attachment_urls: string[];
   aadhaar_attachment_urls: string[];
+  aadhaar_back_attachment_urls: string[];
   id_proof_attachment_urls: string[];
   [key: string]: unknown;
 }

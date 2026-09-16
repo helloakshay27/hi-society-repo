@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -70,11 +71,11 @@ const statusVariant = (status: string): string => {
 type StatusAction = "processing" | "cancelled" | "successful";
 
 // "Processing" moves the request into processing (/start_processing).
-// "Successful" and "Cancelled" are the Lockated (superadmin) approve/reject
-// gate — /admin/encash_requests/:id/{lockated_approve,lockated_reject} — not
-// the tenant-side /{mark_successful,cancel} actions.
+// "Successful" approves the request at the Lockated (superadmin) level
+// (/lockated_approve). "Cancelled" is the Lockated reject gate
+// (/lockated_reject) — reason required.
 const STATUS_ACTIONS: { key: StatusAction; label: string }[] = [
-  { key: "processing", label: "Processing" },
+  // { key: "processing", label: "Processing" },
   { key: "cancelled", label: "Cancelled" },
   { key: "successful", label: "Successful" },
 ];
@@ -88,7 +89,7 @@ const requestColumns: ColumnConfig[] = [
   { key: "points_to_encash", label: "Points", sortable: false, hideable: true, draggable: true },
   { key: "processing_fee_percent", label: "Fee %", sortable: false, hideable: true, draggable: true },
   { key: "amount_payable", label: "Amount Payable", sortable: false, hideable: true, draggable: true },
-  { key: "status", label: "Status", sortable: false, hideable: true, draggable: true },
+  { key: "status", label: "Overall Status", sortable: false, hideable: true, draggable: true },
   { key: "requested_at", label: "Requested On", sortable: false, hideable: true, draggable: true },
   { key: "resolution", label: "Resolved On", sortable: false, hideable: true, draggable: true },
 ];
@@ -158,6 +159,7 @@ interface CancelDialogState {
 interface ApproveDialogState {
   open: boolean;
   request: EncashRequest | null;
+  utr: string;
 }
 
 export const EncashmentRequestsPage: React.FC = () => {
@@ -186,6 +188,7 @@ export const EncashmentRequestsPage: React.FC = () => {
   const [approveDialog, setApproveDialog] = useState<ApproveDialogState>({
     open: false,
     request: null,
+    utr: "",
   });
 
   const handleViewRequest = (item: EncashRequest) => {
@@ -233,10 +236,10 @@ export const EncashmentRequestsPage: React.FC = () => {
       return;
     }
     if (action === "successful") {
-      // "Successful" is the Lockated (superadmin) approve gate. lockated_approve
-      // takes no body, but the confirmation popup itself stays — same as before,
-      // just without a UTR field since the API doesn't take one.
-      setApproveDialog({ open: true, request: item });
+      // "Successful" is the Lockated (superadmin) approve gate — the admin
+      // enters the bank UTR number in the popup, then lockated_approve is
+      // called with it.
+      setApproveDialog({ open: true, request: item, utr: "" });
       return;
     }
 
@@ -256,12 +259,16 @@ export const EncashmentRequestsPage: React.FC = () => {
 
   const handleConfirmApprove = async () => {
     if (!approveDialog.request) return;
+    if (!approveDialog.utr.trim()) {
+      toast.error("Please enter the bank UTR number");
+      return;
+    }
     const id = approveDialog.request.id;
     setUpdatingId(id);
     try {
-      await lockatedApproveEncashRequest(id);
+      await lockatedApproveEncashRequest(id, approveDialog.utr.trim());
       toast.success("Request approved");
-      setApproveDialog({ open: false, request: null });
+      setApproveDialog({ open: false, request: null, utr: "" });
       fetchRequests(currentPage);
     } catch (err) {
       console.warn("Could not approve request:", err);
@@ -326,20 +333,28 @@ export const EncashmentRequestsPage: React.FC = () => {
         return <span>{item.processing_fee_percent}%</span>;
       case "amount_payable":
         return <span className="font-semibold text-[#1A1A1A]">₹{item.amount_payable}</span>;
-      case "status":
+      case "status": {
+        // This page's actions (lockated_approve/lockated_reject) mutate
+        // `lockated_status`, not `status` — so that's the field shown/tracked
+        // here, falling back to `status` for older records that predate it.
+        const displayStatus = item.lockated_status || item.status;
+        // Once a request is resolved (approved/rejected), it's final — the
+        // dropdown is disabled/grayed out so the status can't be changed again.
+        const isLocked = statusVariant(displayStatus) !== "pending";
+        const isDisabled = updatingId === item.id || isLocked;
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild disabled={updatingId === item.id}>
+            <DropdownMenuTrigger asChild disabled={isDisabled}>
               <button
                 type="button"
                 className="inline-flex items-center disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={updatingId === item.id}
+                disabled={isDisabled}
               >
-                <StatusBadge status={statusVariant(item.status)} className="flex items-center gap-1.5">
-                  {item.status}
+                <StatusBadge status={statusVariant(displayStatus)} className="flex items-center gap-1.5">
+                  {displayStatus}
                   {updatingId === item.id ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
+                  ) : isLocked ? null : (
                     <ChevronDown className="w-3 h-3" />
                   )}
                 </StatusBadge>
@@ -354,6 +369,7 @@ export const EncashmentRequestsPage: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         );
+      }
       case "requested_at":
         return <span className="whitespace-nowrap">{formatDateTime(item.requested_at)}</span>;
       case "resolution":
@@ -375,17 +391,19 @@ export const EncashmentRequestsPage: React.FC = () => {
 
   // Derived from statusVariant() rather than re-matching status strings here, so
   // these stay consistent with the badge and correctly bucket whatever status
-  // lockated_approve/lockated_reject end up setting.
+  // lockated_approve/lockated_reject end up setting. Bucketed off
+  // `lockated_status` (falling back to `status`) — same field the status
+  // column/badge use.
   const pendingCount = useMemo(
-    () => requests.filter((r) => statusVariant(r.status) === "pending").length,
+    () => requests.filter((r) => statusVariant(r.lockated_status || r.status) === "pending").length,
     [requests]
   );
   const successfulCount = useMemo(
-    () => requests.filter((r) => statusVariant(r.status) === "accepted").length,
+    () => requests.filter((r) => statusVariant(r.lockated_status || r.status) === "accepted").length,
     [requests]
   );
   const cancelledCount = useMemo(
-    () => requests.filter((r) => statusVariant(r.status) === "rejected").length,
+    () => requests.filter((r) => statusVariant(r.lockated_status || r.status) === "rejected").length,
     [requests]
   );
 
@@ -462,8 +480,8 @@ export const EncashmentRequestsPage: React.FC = () => {
                   {selectedRequest.request_reference}
                   {detailLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
                 </span>
-                <StatusBadge status={statusVariant(selectedRequest.status)}>
-                  {selectedRequest.status}
+                <StatusBadge status={statusVariant(selectedRequest.lockated_status || selectedRequest.status)}>
+                  {selectedRequest.lockated_status || selectedRequest.status}
                 </StatusBadge>
               </div>
 
@@ -565,7 +583,7 @@ export const EncashmentRequestsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Approve Confirmation Modal */}
+      {/* Mark Successful (Approve) Modal */}
       <Dialog
         open={approveDialog.open}
         onOpenChange={(open) => setApproveDialog((prev) => ({ ...prev, open }))}
@@ -574,26 +592,33 @@ export const EncashmentRequestsPage: React.FC = () => {
           <DialogHeader className="bg-[#F6F4EE] px-6 py-4 border-b border-[#D5DbDB]">
             <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-[#C72030]" />
-              Approve Request
+              Mark as Successful
             </DialogTitle>
           </DialogHeader>
 
-          <div className="p-6 bg-white">
+          <div className="p-6 bg-white space-y-2">
             {approveDialog.request && (
               <p className="text-sm text-gray-600">
-                Approve{" "}
+                Marking{" "}
                 <span className="font-medium text-[#1A1A1A]">
                   {approveDialog.request.request_reference}
-                </span>
-                ? This marks the request successful.
+                </span>{" "}
+                as paid
               </p>
             )}
+            <Label className="text-xs font-semibold text-[#1A1A1A]">Bank UTR Number</Label>
+            <Input
+              className="h-9 text-sm border-[#D5DbDB] bg-white"
+              placeholder="Enter the bank UTR / transaction number"
+              value={approveDialog.utr}
+              onChange={(e) => setApproveDialog((prev) => ({ ...prev, utr: e.target.value }))}
+            />
           </div>
 
           <DialogFooter className="bg-[#F6F4EE] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
             <Button
               variant="outline"
-              onClick={() => setApproveDialog({ open: false, request: null })}
+              onClick={() => setApproveDialog({ open: false, request: null, utr: "" })}
               className="border-[#D5DbDB] text-[#1A1A1A] hover:bg-[#DBC2A9]"
             >
               Close
@@ -607,7 +632,7 @@ export const EncashmentRequestsPage: React.FC = () => {
               {updatingId === approveDialog.request?.id && (
                 <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
               )}
-              Confirm Approval
+              Confirm
             </Button>
           </DialogFooter>
         </DialogContent>
