@@ -59,6 +59,20 @@ export function getAppIdFromUrl(): string | null {
   }
 }
 
+/**
+ * Read the `project_code` query param off the current URL (e.g.
+ * /posthog-runwal-cp-dashboard?project_code=RE-CP01). Runwal CP identifies
+ * itself this way instead of by app_id — mirrors getAppIdFromUrl() above.
+ */
+export function getProjectCodeFromUrl(): string | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('project_code');
+  } catch {
+    return null;
+  }
+}
+
 export function getDynamicTenantUrl(): string {
   const baseUrl = localStorage.getItem('baseUrl') || '';
   return baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
@@ -79,16 +93,19 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
   if (filters.from) parts.push(`from=${encodeURIComponent(filters.from)}`);
   if (filters.to) parts.push(`to=${encodeURIComponent(filters.to)}`);
 
-  if (filters.siteIds && filters.siteIds.length > 0) {
-    parts.push(`site_id=${filters.siteIds.join(',')}`);
-  }
-
   for (const [k, v] of Object.entries(getDeviceParams(filters.devPlatform))) {
     parts.push(`${k}=${encodeURIComponent(v)}`);
   }
 
-  const appId = filters.appId || getAppIdFromUrl();
-  if (appId) parts.push(`app_id=${encodeURIComponent(appId)}`);
+  // Runwal CP has no app_id at all — it identifies itself by project_code
+  // instead, so the two are mutually exclusive on the wire.
+  const projectCode = filters.projectCode || getProjectCodeFromUrl();
+  if (projectCode) {
+    parts.push(`project_code=${encodeURIComponent(projectCode)}`);
+  } else {
+    const appId = filters.appId || getAppIdFromUrl();
+    if (appId) parts.push(`app_id=${encodeURIComponent(appId)}`);
+  }
 
   // Sent unescaped (matches the site_id convention below) — the value is
   // always a plain digit or comma-separated digits, e.g. "0,1".
@@ -211,7 +228,6 @@ async function getFm<T>(
   path: string,
   params: {
     token?: string;
-    site_id?: string | number;
     [key: string]: any;
   } = {}
 ): Promise<T> {
@@ -226,8 +242,13 @@ async function getFm<T>(
     }
   }
 
-  const appId = getAppIdFromUrl();
-  if (appId) query.set('app_id', appId);
+  const projectCode = getProjectCodeFromUrl();
+  if (projectCode) {
+    query.set('project_code', projectCode);
+  } else {
+    const appId = getAppIdFromUrl();
+    if (appId) query.set('app_id', appId);
+  }
 
   const baseUrl = getApiBaseUrl();
   const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -247,48 +268,48 @@ async function getFm<T>(
 }
 
 // CRM Endpoints (Non-AI)
-export const fetchLeaseOverview = (token: string, siteIds: string[]) =>
-  getFm<LeaseOverviewData>('/fm_dashboard/crm/lease_overview.json', { token, site_id: siteIds.join(',') });
+export const fetchLeaseOverview = (token: string) =>
+  getFm<LeaseOverviewData>('/fm_dashboard/crm/lease_overview.json', { token });
 
-export const fetchEventsOverview = (token: string, siteIds: string[]) =>
-  getFm<EventsOverviewData>('/fm_dashboard/crm/events_overview.json', { token, site_id: siteIds.join(',') });
+export const fetchEventsOverview = (token: string) =>
+  getFm<EventsOverviewData>('/fm_dashboard/crm/events_overview.json', { token });
 
-export const fetchBroadcastOverview = (token: string, siteIds: string[]) =>
-  getFm<BroadcastOverviewData>('/fm_dashboard/crm/broadcast_overview.json', { token, site_id: siteIds.join(',') });
+export const fetchBroadcastOverview = (token: string) =>
+  getFm<BroadcastOverviewData>('/fm_dashboard/crm/broadcast_overview.json', { token });
 
-export const fetchWalletOverview = (token: string, siteIds: string[]) =>
-  getFm<WalletOverviewData>('/fm_dashboard/crm/wallet_overview.json', { token, site_id: siteIds.join(',') });
+export const fetchWalletOverview = (token: string) =>
+  getFm<WalletOverviewData>('/fm_dashboard/crm/wallet_overview.json', { token });
 
-export const fetchWalletDistribution = (token: string, siteIds: string[]) =>
-  getFm<WalletDistributionData>('/fm_dashboard/crm/wallet_distribution.json', { token, site_id: siteIds.join(',') });
+export const fetchWalletDistribution = (token: string) =>
+  getFm<WalletDistributionData>('/fm_dashboard/crm/wallet_distribution.json', { token });
 
-export const fetchWalletTransactions = (token: string, siteIds: string[]) =>
-  getFm<WalletTransactionsData>('/fm_dashboard/crm/wallet_transactions.json', { token, site_id: siteIds.join(',') });
+export const fetchWalletTransactions = (token: string) =>
+  getFm<WalletTransactionsData>('/fm_dashboard/crm/wallet_transactions.json', { token });
 
 // Finance Endpoints (Non-AI)
-export const fetchPendingApprovals = (token: string, siteIds: string[]) =>
-  getFm<PendingApprovalsData>('/fm_dashboard/procurement/pending_approvals.json', { token, site_id: siteIds.join(',') });
+export const fetchPendingApprovals = (token: string) =>
+  getFm<PendingApprovalsData>('/fm_dashboard/procurement/pending_approvals.json', { token });
 
-export const fetchDraftPrs = (token: string, siteIds: string[]) =>
-  getFm<DraftPrsData>('/fm_dashboard/requisitions/draft_prs.json', { token, site_id: siteIds.join(',') });
+export const fetchDraftPrs = (token: string) =>
+  getFm<DraftPrsData>('/fm_dashboard/requisitions/draft_prs.json', { token });
 
-export const fetchProcurementPipeline = (token: string, siteIds: string[]) =>
-  getFm<ProcurementPipelineData>('/fm_dashboard/procurement/procurement_pipeline.json', { token, site_id: siteIds.join(',') });
+export const fetchProcurementPipeline = (token: string) =>
+  getFm<ProcurementPipelineData>('/fm_dashboard/procurement/procurement_pipeline.json', { token });
 
-export const fetchPendingRequisitionValue = (token: string, siteIds: string[]) =>
-  getFm<PendingRequisitionValueData>('/fm_dashboard/requisitions/pending_value.json', { token, site_id: siteIds.join(',') });
+export const fetchPendingRequisitionValue = (token: string) =>
+  getFm<PendingRequisitionValueData>('/fm_dashboard/requisitions/pending_value.json', { token });
 
-export const fetchPrSrSplit = (token: string, siteIds: string[]) =>
-  getFm<PrSrSplitData>('/fm_dashboard/procurement/pr_sr_split.json', { token, site_id: siteIds.join(',') });
+export const fetchPrSrSplit = (token: string) =>
+  getFm<PrSrSplitData>('/fm_dashboard/procurement/pr_sr_split.json', { token });
 
 export const fetchOverdueInvoices = (token: string) =>
   getFm<OverdueInvoicesData>('/fm_dashboard/invoices/overdue_invoices.json', { token });
 
-export const fetchApprovalQueue = (token: string, siteIds: string[]) =>
-  getFm<ApprovalQueueData>('/fm_dashboard/approvals/approval_queue.json', { token, site_id: siteIds.join(',') });
+export const fetchApprovalQueue = (token: string) =>
+  getFm<ApprovalQueueData>('/fm_dashboard/approvals/approval_queue.json', { token });
 
-export const fetchTopPendingRecords = (token: string, siteIds: string[]) =>
-  getFm<TopPendingRecordsData>('/fm_dashboard/approvals/top_pending_records.json', { token, site_id: siteIds.join(',') });
+export const fetchTopPendingRecords = (token: string) =>
+  getFm<TopPendingRecordsData>('/fm_dashboard/approvals/top_pending_records.json', { token });
 
 // ==========================================
 // 3. Dynamic Site Lookup
@@ -361,8 +382,13 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
       const query = new URLSearchParams();
       if (token) query.set('token', token);
       query.set('user_id', String(userId));
-      const appIdAllowed = getAppIdFromUrl();
-      if (appIdAllowed) query.set('app_id', appIdAllowed);
+      const projectCodeAllowed = getProjectCodeFromUrl();
+      if (projectCodeAllowed) {
+        query.set('project_code', projectCodeAllowed);
+      } else {
+        const appIdAllowed = getAppIdFromUrl();
+        if (appIdAllowed) query.set('app_id', appIdAllowed);
+      }
 
       const res = await fetch(`${cleanBase}/pms/sites/allowed_sites.json?${query.toString()}`, {
         method: 'GET',
@@ -393,8 +419,13 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
       const query = new URLSearchParams();
       if (token) query.set('token', token);
       if (orgId) query.set('organization_id', orgId);
-      const appIdSites = getAppIdFromUrl();
-      if (appIdSites) query.set('app_id', appIdSites);
+      const projectCodeSites = getProjectCodeFromUrl();
+      if (projectCodeSites) {
+        query.set('project_code', projectCodeSites);
+      } else {
+        const appIdSites = getAppIdFromUrl();
+        if (appIdSites) query.set('app_id', appIdSites);
+      }
 
       const res = await fetch(`${cleanBase}/pms/sites.json?${query.toString()}`, {
         method: 'GET',
@@ -421,9 +452,14 @@ export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
   // 3. Fallback to /societies/user_approved_societies.json
   if (cleanBase && token) {
     try {
-      const appIdSocieties = getAppIdFromUrl();
+      const projectCodeSocieties = getProjectCodeFromUrl();
+      const appIdSocieties = projectCodeSocieties ? null : getAppIdFromUrl();
       const societiesQuery = `token=${encodeURIComponent(token)}${
-        appIdSocieties ? `&app_id=${encodeURIComponent(appIdSocieties)}` : ''
+        projectCodeSocieties
+          ? `&project_code=${encodeURIComponent(projectCodeSocieties)}`
+          : appIdSocieties
+          ? `&app_id=${encodeURIComponent(appIdSocieties)}`
+          : ''
       }`;
       const res = await fetch(`${cleanBase}/societies/user_approved_societies.json?${societiesQuery}`, {
         method: 'GET',

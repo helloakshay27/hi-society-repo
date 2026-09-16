@@ -1,6 +1,13 @@
 import React from 'react';
 import { FlowItem, EntryScreenItem } from '../../api/types';
 
+// "app_permissions_requested" -> "App permissions requested"
+const formatScreenName = (path?: string | null) => {
+  if (!path) return path;
+  const spaced = path.replace(/_/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+};
+
 interface AllScreensTableProps {
   flows?: FlowItem[];
 }
@@ -29,7 +36,7 @@ export const AllScreensTable: React.FC<AllScreensTableProps> = ({ flows = [] }) 
         <tbody>
           {flows.map((r, idx) => (
             <tr key={r.path || idx}>
-              <td className="strong">{r.path}</td>
+              <td className="strong">{formatScreenName(r.path)}</td>
               <td className="num">{r.users != null ? r.users.toLocaleString() : '—'}</td>
               <td className="num">{r.events != null ? r.events.toLocaleString() : '—'}</td>
               <td className="num">{r.sessions != null ? r.sessions.toLocaleString() : '—'}</td>
@@ -73,7 +80,7 @@ export const EntryScreensTable: React.FC<EntryScreensTableProps> = ({ entryScree
         <tbody>
           {entryScreens.map((r, idx) => (
             <tr key={r.path || idx}>
-              <td className="strong">{r.path}</td>
+              <td className="strong">{formatScreenName(r.path)}</td>
               <td className="num">{r.visitors != null ? r.visitors.toLocaleString() : '—'}</td>
               <td className="num">{r.views != null ? r.views.toLocaleString() : '—'}</td>
               <td className="num">

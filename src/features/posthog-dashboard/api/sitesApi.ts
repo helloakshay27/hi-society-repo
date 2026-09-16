@@ -70,28 +70,52 @@ export async function fetchAllSites(): Promise<Site[]> {
       ? `${ENDPOINTS.SITES}?organization_id=${orgId}`
       : `${ENDPOINTS.SITES}`;
     const res = await apiClient.get(url);
-    return normalise(readList<ApiSite>(res.data, 'sites', 'data'));
+    const sites = normalise(readList<ApiSite>(res.data, 'sites', 'data'));
+    if (sites.length) return sites;
   } catch {
-    try {
-      const cached =
-        localStorage.getItem('sites') ||
-        localStorage.getItem('allowed_sites') ||
-        localStorage.getItem('hiSocietyApprovedSocieties');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        const raw = Array.isArray(parsed) ? parsed : parsed.sites || parsed.user_societies || [];
-        if (Array.isArray(raw) && raw.length > 0) {
-          return normalise(raw);
-        }
-      }
-    } catch {}
-
-    // Return fallback mock sites so dashboard can load in local dev despite CORS/500 backend errors
-    return [
-      { id: '2189', name: 'Fallback Site A' },
-      { id: '2190', name: 'Fallback Site B' }
-    ];
+    // fall through to cached / society fallbacks below
   }
+
+  // Fallback: Check cached societies / sites in localStorage & sessionStorage (Hi-Society context)
+  try {
+    const cachedSources = [
+      localStorage.getItem('hiSocietyApprovedSocieties'),
+      sessionStorage.getItem('hiSocietyApprovedSocieties'),
+      localStorage.getItem('hiSocietyAccount'),
+      localStorage.getItem('sites'),
+      localStorage.getItem('allowed_sites'),
+      localStorage.getItem('user_societies'),
+    ];
+
+    for (const cached of cachedSources) {
+      if (!cached) continue;
+      try {
+        const parsed = JSON.parse(cached);
+        const raw = Array.isArray(parsed)
+          ? parsed
+          : parsed.sites || parsed.user_societies || parsed.rm_societies || (parsed.society ? [parsed.society] : []);
+        if (Array.isArray(raw) && raw.length > 0) {
+          const list: Site[] = raw
+            .filter((s: any) => s && (s.id != null || s.id_society != null || s.society_id != null || s.society?.id != null))
+            .map((s: any) => ({
+              id: String(s.id_society || s.society_id || s.society?.id || s.id),
+              name: s.society?.building_name || s.building_name || s.name || `Society ${s.id_society || s.id}`,
+              companyId: s.company_id != null ? String(s.company_id) : undefined,
+              companyName: s.company_name,
+            }));
+          if (list.length > 0) {
+            return list.sort((a, b) => a.name.localeCompare(b.name));
+          }
+        }
+      } catch {}
+    }
+  } catch {}
+
+  // Return fallback mock sites so dashboard can load in local dev despite CORS/500 backend errors
+  return [
+    { id: '2189', name: 'Fallback Site A' },
+    { id: '2190', name: 'Fallback Site B' }
+  ];
 }
 
 interface ApiCompany {

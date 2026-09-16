@@ -65,7 +65,8 @@ const navigationItems: NavigationItem[] = [
     id: "accounting",
     label: "Accounting",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/accounting/dashboard",
+    // path: "/accounting/dashboard",
+    path: "/accounting/chart-of-accounts",
   },
   {
     id: "smartsecure",

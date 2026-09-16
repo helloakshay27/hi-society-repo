@@ -138,11 +138,16 @@ const CampaignsOtherProjectConfig: React.FC = () => {
   const fetchEstateBuilders = async () => {
     try {
       setIsLoadingBuilders(true);
-      const baseUrl = API_CONFIG.BASE_URL || "https://hi-society.lockated.com";
+      const baseUrl = (
+        localStorage.getItem("baseUrl") ||
+        API_CONFIG.BASE_URL ||
+        "https://hi-society.lockated.com"
+      ).replace(/\/$/, "");
       const url = `${baseUrl}/crm/estate_builders.json`;
-      const token = JSON.parse(
-        localStorage.getItem("user") || "{}"
-      )?.spree_api_key;
+      const token =
+        JSON.parse(localStorage.getItem("user") || "{}")?.spree_api_key ||
+        localStorage.getItem("token") ||
+        "";
       const response = await fetch(`${url}?token=${token}`);
       if (!response.ok) throw new Error("Failed to fetch estate builders");
       const data = await response.json();
@@ -160,9 +165,18 @@ const CampaignsOtherProjectConfig: React.FC = () => {
   const [configurations, setConfigurations] = useState([
     { name: "", description: "" },
   ]);
-  const [highlights, setHighlights] = useState([{ name: "", description: "" }]);
-  const [plans, setPlans] = useState([{ name: "" }]);
-  const [amenities, setAmenities] = useState([{ name: "", description: "" }]);
+  const [amenities, setAmenities] = useState<
+    { name: string; attachment: File | null }[]
+  >([{ name: "", attachment: null }]);
+  const [documents, setDocuments] = useState<
+    { name: string; attachment: File | null }[]
+  >([{ name: "", attachment: null }]);
+  const [floorPlans, setFloorPlans] = useState<
+    { name: string; attachments: File[] }[]
+  >([{ name: "", attachments: [] }]);
+  const [unitPlans, setUnitPlans] = useState<
+    { name: string; attachments: File[] }[]
+  >([{ name: "", attachments: [] }]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,12 +202,20 @@ const CampaignsOtherProjectConfig: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const baseUrl = API_CONFIG.BASE_URL || "https://hi-society.lockated.com";
+      const baseUrl = (
+        localStorage.getItem("baseUrl") ||
+        API_CONFIG.BASE_URL ||
+        "https://hi-society.lockated.com"
+      ).replace(/\/$/, "");
 
       const formData = new FormData();
       formData.append("builder_project[name]", configForm.name);
       formData.append("builder_project[address]", configForm.address);
       formData.append("builder_project[about]", configForm.about);
+      formData.append(
+        "builder_project[show_on_other_project]",
+        configForm.showOnOtherProject ? "1" : "0"
+      );
       formData.append(
         "builder_project[active]",
         configForm.showOnOtherProject ? "1" : "0"
@@ -235,16 +257,17 @@ const CampaignsOtherProjectConfig: React.FC = () => {
           configForm.externalProjectId
         );
 
-
       if (configForm.latitude)
         formData.append("builder_project[latitude]", configForm.latitude);
       if (configForm.longitude)
         formData.append("builder_project[longitude]", configForm.longitude);
 
       if (configForm.coverImage) {
+        formData.append("builder_project[mainimage]", configForm.coverImage);
         formData.append("builder_project[cover_image]", configForm.coverImage);
       }
       if (configForm.projectLogo) {
+        formData.append("builder_project[mainlogo]", configForm.projectLogo);
         formData.append(
           "builder_project[project_logo]",
           configForm.projectLogo
@@ -260,51 +283,83 @@ const CampaignsOtherProjectConfig: React.FC = () => {
         formData.append("builder_project[builder_id]", configForm.builder_id);
       }
 
-      amenities.forEach((item, i) => {
-        if (item.name) {
-          formData.append(
-            `builder_project[amenities_attributes][${i}][name]`,
-            item.name
-          );
-          if (item.description)
-            formData.append(
-              `builder_project[amenities_attributes][${i}][description]`,
-              item.description
-            );
+      let amenityIdx = 0;
+      amenities.forEach((item) => {
+        if (item.name?.trim() || item.attachment) {
+          if (item.name?.trim()) {
+            formData.append(`project_amenities[${amenityIdx}][name]`, item.name.trim());
+          }
+          if (item.attachment) {
+            formData.append(`project_amenities[${amenityIdx}][attachment]`, item.attachment);
+          }
+          amenityIdx++;
         }
       });
-      configurations.forEach((item, i) => {
-        if (item.name) {
-          formData.append(
-            `builder_project[configurations_attributes][${i}][name]`,
-            item.name
-          );
-          if (item.description)
+
+      let confIdx = 0;
+      configurations.forEach((item) => {
+        if (item.name?.trim() || item.description?.trim()) {
+          if (item.name?.trim()) {
             formData.append(
-              `builder_project[configurations_attributes][${i}][description]`,
-              item.description
+              `builder_project[configurations_attributes][${confIdx}][name]`,
+              item.name.trim()
             );
+          }
+          if (item.description?.trim()) {
+            formData.append(
+              `builder_project[configurations_attributes][${confIdx}][description]`,
+              item.description.trim()
+            );
+          }
+          confIdx++;
         }
       });
-      highlights.forEach((item, i) => {
-        if (item.name) {
-          formData.append(
-            `builder_project[highlights_attributes][${i}][name]`,
-            item.name
-          );
-          if (item.description)
+
+      let docIdx = 0;
+      documents.forEach((doc) => {
+        if (doc.name?.trim() || doc.attachment) {
+          if (doc.name?.trim()) {
+            formData.append(`project_documents[${docIdx}][name]`, doc.name.trim());
+          }
+          if (doc.attachment) {
             formData.append(
-              `builder_project[highlights_attributes][${i}][description]`,
-              item.description
+              `project_documents[${docIdx}][attachment]`,
+              doc.attachment
             );
+          }
+          docIdx++;
         }
       });
-      plans.forEach((item, i) => {
-        if (item.name) {
-          formData.append(
-            `builder_project[plans_attributes][${i}][name]`,
-            item.name
-          );
+
+      let fpIdx = 0;
+      floorPlans.forEach((fp) => {
+        if (fp.name?.trim() || fp.attachments?.length > 0) {
+          if (fp.name?.trim()) {
+            formData.append(`project_floor_plans[${fpIdx}][name]`, fp.name.trim());
+          }
+          fp.attachments?.forEach((file) => {
+            formData.append(
+              `project_floor_plans[${fpIdx}][attachments][]`,
+              file
+            );
+          });
+          fpIdx++;
+        }
+      });
+
+      let upIdx = 0;
+      unitPlans.forEach((up) => {
+        if (up.name?.trim() || up.attachments?.length > 0) {
+          if (up.name?.trim()) {
+            formData.append(`project_unit_plans[${upIdx}][name]`, up.name.trim());
+          }
+          up.attachments?.forEach((file) => {
+            formData.append(
+              `project_unit_plans[${upIdx}][attachments][]`,
+              file
+            );
+          });
+          upIdx++;
         }
       });
 
@@ -313,41 +368,60 @@ const CampaignsOtherProjectConfig: React.FC = () => {
         formData.append("builder_project[society_id]", societyId);
       }
 
-      const token = JSON.parse(
-        localStorage.getItem("user") || "{}"
-      )?.spree_api_key;
+      const token =
+        JSON.parse(localStorage.getItem("user") || "{}")?.spree_api_key ||
+        localStorage.getItem("token") ||
+        "";
 
       // Debug: Log all form data being sent
-      console.error("Form data being sent:");
+      console.log("Form data being sent:");
       for (const [key, value] of formData.entries()) {
-        console.error(`${key}:`, value);
+        console.log(`${key}:`, value);
       }
 
       const response = await axios.post(
         `${baseUrl}/crm/builder_projects.json?token=${token}`,
-        formData
+        formData,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
       );
 
       // Check if response contains error data
-      if (response.data?.code === 401 || response.data?.error) {
+      if (
+        response.data?.code === 401 ||
+        response.data?.error ||
+        response.data?.errors ||
+        response.data?.success === false
+      ) {
         console.error("API Error Response:", response.data);
-        alert(
-          `Failed to create project: ${response.data.error || JSON.stringify(response.data)}`
-        );
+        const errMsg =
+          response.data?.error ||
+          (typeof response.data?.errors === "object"
+            ? Object.entries(response.data.errors)
+                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+                .join("\n")
+            : response.data?.errors) ||
+          response.data?.message ||
+          JSON.stringify(response.data);
+        alert(`Failed to create project: ${errMsg}`);
         return;
       }
 
       if (
         response.data?.success ||
         response.data?.id ||
-        response.data?.data?.id
+        response.data?.data?.id ||
+        response.data?.builder_project?.id ||
+        response.status === 200 ||
+        response.status === 201
       ) {
         navigate("/campaigns/other-project");
       } else {
         console.error("API Response:", response.data);
-        alert(
-          `Failed to create project: ${JSON.stringify(response.data)}`
-        );
+        alert(`Failed to create project: ${JSON.stringify(response.data)}`);
       }
     } catch (error: any) {
       console.error("Error creating project:", error);
@@ -793,7 +867,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
               </label>
               <div className="space-y-4">
                 {amenities.map((amenity, index) => (
-                  <div key={index} className="grid grid-cols-2 gap-4">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <TextField
                         fullWidth
@@ -813,15 +887,14 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                     <div>
                       <TextField
                         fullWidth
-                        label="Description"
+                        label="Attachment"
+                        type="file"
                         variant="outlined"
                         InputLabelProps={{ shrink: true }}
                         InputProps={{ sx: fieldStyles }}
-                        placeholder="Description (Optional)"
-                        value={amenity.description}
-                        onChange={(e) => {
+                        onChange={(e: any) => {
                           const newAm = [...amenities];
-                          newAm[index].description = e.target.value;
+                          newAm[index].attachment = e.target.files ? e.target.files[0] : null;
                           setAmenities(newAm);
                         }}
                       />
@@ -833,9 +906,12 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                 <Button
                   type="button"
                   onClick={() =>
-                    setAmenities([...amenities, { name: "", description: "" }])
+                    setAmenities([
+                      ...amenities,
+                      { name: "", attachment: null },
+                    ])
                   }
-                  className="!bg-[#C72030] !text-white  px-8 border-0 flex items-center gap-2"
+                  className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
@@ -847,7 +923,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       newAm.pop();
                       setAmenities(newAm);
                     }}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   >
                     Delete
                   </Button>
@@ -919,7 +995,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                       newConf.pop();
                       setConfigurations(newConf);
                     }}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   >
                     Delete
                   </Button>
@@ -927,14 +1003,15 @@ const CampaignsOtherProjectConfig: React.FC = () => {
               </div>
             </div>
 
-            {/* Highlights */}
+
+            {/* Documents */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Highlights
+                Documents
               </label>
               <div className="space-y-4">
-                {highlights.map((highlight, index) => (
-                  <div key={index} className="grid grid-cols-2 gap-4">
+                {documents.map((doc, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <TextField
                         fullWidth
@@ -942,28 +1019,27 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                         variant="outlined"
                         InputLabelProps={{ shrink: true }}
                         InputProps={{ sx: fieldStyles }}
-                        placeholder="e.g., Swimming Pool"
-                        value={highlight.name}
+                        placeholder="e.g., Brochure / RERA Certificate"
+                        value={doc.name}
                         onChange={(e) => {
-                          const newHL = [...highlights];
-                          newHL[index].name = e.target.value;
-                          setHighlights(newHL);
+                          const newDocs = [...documents];
+                          newDocs[index].name = e.target.value;
+                          setDocuments(newDocs);
                         }}
                       />
                     </div>
                     <div>
                       <TextField
                         fullWidth
-                        label="Description"
+                        label="Attachment"
+                        type="file"
                         variant="outlined"
                         InputLabelProps={{ shrink: true }}
                         InputProps={{ sx: fieldStyles }}
-                        placeholder="e.g., Olympic size pool"
-                        value={highlight.description}
-                        onChange={(e) => {
-                          const newHL = [...highlights];
-                          newHL[index].description = e.target.value;
-                          setHighlights(newHL);
+                        onChange={(e: any) => {
+                          const newDocs = [...documents];
+                          newDocs[index].attachment = e.target.files ? e.target.files[0] : null;
+                          setDocuments(newDocs);
                         }}
                       />
                     </div>
@@ -974,22 +1050,19 @@ const CampaignsOtherProjectConfig: React.FC = () => {
                 <Button
                   type="button"
                   onClick={() =>
-                    setHighlights([
-                      ...highlights,
-                      { name: "", description: "" },
-                    ])
+                    setDocuments([...documents, { name: "", attachment: null }])
                   }
-                  className="!bg-[#C72030] !text-white  px-8 border-0 flex items-center gap-2"
+                  className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
-                {highlights.length > 1 && (
+                {documents.length > 1 && (
                   <Button
                     type="button"
                     onClick={() => {
-                      const newHL = [...highlights];
-                      newHL.pop();
-                      setHighlights(newHL);
+                      const newDocs = [...documents];
+                      newDocs.pop();
+                      setDocuments(newDocs);
                     }}
                     className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   >
@@ -999,48 +1072,189 @@ const CampaignsOtherProjectConfig: React.FC = () => {
               </div>
             </div>
 
-            {/* Plans */}
+            {/* Floor Plans */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Plans
+                Floor Plans
               </label>
               <div className="space-y-4">
-                {plans.map((plan, index) => (
-                  <div key={index}>
-                    <TextField
-                      fullWidth
-                      label="Name"
-                      variant="outlined"
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{ sx: fieldStyles }}
-                      placeholder="e.g., Master Plan"
-                      value={plan.name}
-                      onChange={(e) => {
-                        const newPlans = [...plans];
-                        newPlans[index].name = e.target.value;
-                        setPlans(newPlans);
-                      }}
-                    />
+                {floorPlans.map((fp, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <TextField
+                          fullWidth
+                          label="Name"
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                          placeholder="e.g., Ground Floor Plan"
+                          value={fp.name}
+                          onChange={(e) => {
+                            const newFp = [...floorPlans];
+                            newFp[index].name = e.target.value;
+                            setFloorPlans(newFp);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <TextField
+                          fullWidth
+                          label="Attachments"
+                          type="file"
+                          inputProps={{ multiple: true }}
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                          onChange={(e: any) => {
+                            const files = e.target.files ? (Array.from(e.target.files) as File[]) : [];
+                            const newFp = [...floorPlans];
+                            newFp[index].attachments = [...newFp[index].attachments, ...files];
+                            setFloorPlans(newFp);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {fp.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {fp.attachments.map((file, fIdx) => (
+                          <span
+                            key={fIdx}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-gray-100 text-xs text-gray-700 border"
+                          >
+                            <span className="max-w-[200px] truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newFp = [...floorPlans];
+                                newFp[index].attachments = newFp[index].attachments.filter((_, i) => i !== fIdx);
+                                setFloorPlans(newFp);
+                              }}
+                              className="text-red-500 hover:text-red-700 ml-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
               <div className="flex gap-2 mt-4">
                 <Button
                   type="button"
-                  onClick={() => setPlans([...plans, { name: "" }])}
-                  className="!bg-[#C72030] !text-white  px-8 border-0 flex items-center gap-2"
+                  onClick={() =>
+                    setFloorPlans([...floorPlans, { name: "", attachments: [] }])
+                  }
+                  className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
                 >
                   Add More
                 </Button>
-                {plans.length > 1 && (
+                {floorPlans.length > 1 && (
                   <Button
                     type="button"
                     onClick={() => {
-                      const newPlans = [...plans];
-                      newPlans.pop();
-                      setPlans(newPlans);
+                      const newFp = [...floorPlans];
+                      newFp.pop();
+                      setFloorPlans(newFp);
                     }}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white fix  flex items-center gap-2"
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Unit Plans */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Unit Plans
+              </label>
+              <div className="space-y-4">
+                {unitPlans.map((up, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <TextField
+                          fullWidth
+                          label="Name"
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                          placeholder="e.g., 2 BHK Unit Plan"
+                          value={up.name}
+                          onChange={(e) => {
+                            const newUp = [...unitPlans];
+                            newUp[index].name = e.target.value;
+                            setUnitPlans(newUp);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <TextField
+                          fullWidth
+                          label="Attachments"
+                          type="file"
+                          inputProps={{ multiple: true }}
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                          onChange={(e: any) => {
+                            const files = e.target.files ? (Array.from(e.target.files) as File[]) : [];
+                            const newUp = [...unitPlans];
+                            newUp[index].attachments = [...newUp[index].attachments, ...files];
+                            setUnitPlans(newUp);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {up.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {up.attachments.map((file, fIdx) => (
+                          <span
+                            key={fIdx}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-gray-100 text-xs text-gray-700 border"
+                          >
+                            <span className="max-w-[200px] truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newUp = [...unitPlans];
+                                newUp[index].attachments = newUp[index].attachments.filter((_, i) => i !== fIdx);
+                                setUnitPlans(newUp);
+                              }}
+                              className="text-red-500 hover:text-red-700 ml-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  type="button"
+                  onClick={() =>
+                    setUnitPlans([...unitPlans, { name: "", attachments: [] }])
+                  }
+                  className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
+                >
+                  Add More
+                </Button>
+                {unitPlans.length > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const newUp = [...unitPlans];
+                      newUp.pop();
+                      setUnitPlans(newUp);
+                    }}
+                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                   >
                     Delete
                   </Button>

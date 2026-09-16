@@ -36,7 +36,42 @@ export const INFO: Record<string, InfoEntry> = {
   'F-vol': { t: 'Usage Volume (F-vol)', f: 'count(terminal event) over the period — successful completions.', d: 'Absolute volume of successful check-ins, check-outs, or creations.' },
   'F-scr': { t: 'All screens in this module (F-scr)', f: 'Per step i in the flow: users = distinct reaching step i; events = count(step i event); sessions = distinct sessions reaching step i; completion = reach(i) ÷ reach(1) × 100.', d: 'The module-scoped equivalent of the funnel above, at the individual-screen level.' },
   'F-entry': { t: 'Top entry screens (F-entry)', f: 'Org-wide, not module-filtered: visitors = distinct sessions where entry_screen = screen; views = count of Success-typed screen-load events for that screen; bounce = % of those sessions that were single-view.', d: 'Where gate staff land — usually the Splash/device-approval flow or Home after login.' },
+  tierCoverage: { t: 'Known-dead areas · reference', f: 'Reference card — not a filter. QuikGate catalogue documents two real areas that are fully wired in code but cannot fire in the current build because nothing routes to their screens.', d: 'Surfaces funnels at true-to-code volume so a reviewer sees the gap directly rather than an unexplained absence from Workflow Usage; it does not change any other number on the dashboard.' },
 };
+
+export interface DeadAreaItem {
+  area: string;
+  status: string;
+  statusClass: 'st-drop' | 'st-watch' | 'st-healthy';
+  eventsAffected: string | number;
+}
+
+export const KNOWN_DEAD_AREAS: DeadAreaItem[] = [
+  {
+    area: 'Device Registration (gate terminal)',
+    status: 'Disabled route',
+    statusClass: 'st-drop',
+    eventsAffected: 5,
+  },
+  {
+    area: 'otp_*{flow=login}',
+    status: 'Never navigated to',
+    statusClass: 'st-drop',
+    eventsAffected: '5 (shared with forgot_password)',
+  },
+  {
+    area: 'otp_*{flow=registration}',
+    status: 'Never navigated to',
+    statusClass: 'st-drop',
+    eventsAffected: '5 (shared with forgot_password)',
+  },
+  {
+    area: 'bluetooth_device_connect_failed',
+    status: 'Never emitted',
+    statusClass: 'st-watch',
+    eventsAffected: 1,
+  },
+];
 
 /** User-defined KPI benchmarks — rate metrics start with a suggested target, count metrics start blank. Ported from the wireframe's BM_DEFAULTS (only the ids actually wired to a tile in this build). */
 export const BM_DEFAULTS: Record<string, number> = {

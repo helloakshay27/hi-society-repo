@@ -1,10 +1,12 @@
 import { Menu, ArrowLeft, Moon, Sun } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSmartSecureDashboard } from '../context/DashboardContext';
 
 export function Header() {
   const navigate = useNavigate();
-  const { state, setTheme, setNavCollapsed } = useSmartSecureDashboard();
+  const location = useLocation();
+  const { state, setTheme, setNavCollapsed, appName } = useSmartSecureDashboard();
+  const isQuikgate = appName === 'QuikGate' || location.pathname.includes('quickgate') || location.pathname.includes('quikgate');
 
   return (
     <header className="topbar">
@@ -19,7 +21,7 @@ export function Header() {
       <button className="back" aria-label="Back" onClick={() => navigate(-1)}>
         <ArrowLeft size={17} />
       </button>
-      <span className="topbar-title">SmartSecure Analytics</span>
+      <span className="topbar-title">{isQuikgate ? 'QuikGate Analytics' : 'SmartSecure Analytics'}</span>
       <div className="spacer" />
       <span className="rule" />
       <button
@@ -31,7 +33,7 @@ export function Header() {
         {state.theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
       </button>
       <span className="badge-sample">Wireframe · sample data</span>
-      <div className="avatar">SS</div>
+      <div className="avatar">{isQuikgate ? 'QG' : 'SS'}</div>
     </header>
   );
 }

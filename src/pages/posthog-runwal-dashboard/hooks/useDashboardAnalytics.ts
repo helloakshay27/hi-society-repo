@@ -75,8 +75,6 @@ const commonKey = (f: DashboardFilters) => [
   f.displayView || '',
 ];
 
-const fmKey = (f: DashboardFilters) => [f.token, f.siteIds.join(',')];
-
 // ==========================================
 // Sites Hook
 // ==========================================
@@ -257,110 +255,110 @@ export function useWorkflowUsage(
 // ==========================================
 
 export function useLeaseOverview(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<LeaseOverviewData>({
-    queryKey: ['fm-dashboard', 'lease-overview', ...fmKey(filters)],
-    queryFn: () => fetchLeaseOverview(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'lease-overview', filters.token],
+    queryFn: () => fetchLeaseOverview(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useEventsOverview(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<EventsOverviewData>({
-    queryKey: ['fm-dashboard', 'events-overview', ...fmKey(filters)],
-    queryFn: () => fetchEventsOverview(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'events-overview', filters.token],
+    queryFn: () => fetchEventsOverview(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useBroadcastOverview(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<BroadcastOverviewData>({
-    queryKey: ['fm-dashboard', 'broadcast-overview', ...fmKey(filters)],
-    queryFn: () => fetchBroadcastOverview(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'broadcast-overview', filters.token],
+    queryFn: () => fetchBroadcastOverview(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useWalletOverview(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<WalletOverviewData>({
-    queryKey: ['fm-dashboard', 'wallet-overview', ...fmKey(filters)],
-    queryFn: () => fetchWalletOverview(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'wallet-overview', filters.token],
+    queryFn: () => fetchWalletOverview(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useWalletDistribution(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<WalletDistributionData>({
-    queryKey: ['fm-dashboard', 'wallet-distribution', ...fmKey(filters)],
-    queryFn: () => fetchWalletDistribution(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'wallet-distribution', filters.token],
+    queryFn: () => fetchWalletDistribution(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useWalletTransactions(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<WalletTransactionsData>({
-    queryKey: ['fm-dashboard', 'wallet-transactions', ...fmKey(filters)],
-    queryFn: () => fetchWalletTransactions(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'wallet-transactions', filters.token],
+    queryFn: () => fetchWalletTransactions(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function usePendingApprovals(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<PendingApprovalsData>({
-    queryKey: ['fm-dashboard', 'pending-approvals', ...fmKey(filters)],
-    queryFn: () => fetchPendingApprovals(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'pending-approvals', filters.token],
+    queryFn: () => fetchPendingApprovals(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useDraftPrs(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<DraftPrsData>({
-    queryKey: ['fm-dashboard', 'draft-prs', ...fmKey(filters)],
-    queryFn: () => fetchDraftPrs(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'draft-prs', filters.token],
+    queryFn: () => fetchDraftPrs(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useProcurementPipeline(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<ProcurementPipelineData>({
-    queryKey: ['fm-dashboard', 'procurement-pipeline', ...fmKey(filters)],
-    queryFn: () => fetchProcurementPipeline(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'procurement-pipeline', filters.token],
+    queryFn: () => fetchProcurementPipeline(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function usePendingRequisitionValue(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<PendingRequisitionValueData>({
-    queryKey: ['fm-dashboard', 'pending-requisition-value', ...fmKey(filters)],
-    queryFn: () => fetchPendingRequisitionValue(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'pending-requisition-value', filters.token],
+    queryFn: () => fetchPendingRequisitionValue(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function usePrSrSplit(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<PrSrSplitData>({
-    queryKey: ['fm-dashboard', 'pr-sr-split', ...fmKey(filters)],
-    queryFn: () => fetchPrSrSplit(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'pr-sr-split', filters.token],
+    queryFn: () => fetchPrSrSplit(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
@@ -377,20 +375,20 @@ export function useOverdueInvoices(filters: DashboardFilters, enabled: boolean =
 }
 
 export function useApprovalQueue(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<ApprovalQueueData>({
-    queryKey: ['fm-dashboard', 'approval-queue', ...fmKey(filters)],
-    queryFn: () => fetchApprovalQueue(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'approval-queue', filters.token],
+    queryFn: () => fetchApprovalQueue(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });
 }
 
 export function useTopPendingRecords(filters: DashboardFilters, enabled: boolean = true) {
-  const isEnabled = enabled && !!filters.token && filters.siteIds.length > 0;
+  const isEnabled = enabled && !!filters.token;
   return useQuery<TopPendingRecordsData>({
-    queryKey: ['fm-dashboard', 'top-pending-records', ...fmKey(filters)],
-    queryFn: () => fetchTopPendingRecords(filters.token, filters.siteIds),
+    queryKey: ['fm-dashboard', 'top-pending-records', filters.token],
+    queryFn: () => fetchTopPendingRecords(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
   });

@@ -363,7 +363,9 @@ export const KycRequestsPage: React.FC = () => {
                   </div>
                 )}
                 <AttachmentGroup label="PAN Attachment" urls={selected.pan_attachment_urls} />
+                <AttachmentGroup label="PAN Back Attachment" urls={selected.pan_back_attachment_urls} />
                 <AttachmentGroup label="Aadhaar Attachment" urls={selected.aadhaar_attachment_urls} />
+                <AttachmentGroup label="Aadhaar Back Attachment" urls={selected.aadhaar_back_attachment_urls} />
                 <AttachmentGroup label="ID Proof Attachment" urls={selected.id_proof_attachment_urls} />
               </div>
             </div>

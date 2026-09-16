@@ -937,6 +937,7 @@ const FitoutRequestAdd = lazy(() => import("./pages/FitoutRequestAdd"));
 
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
 const PosthogRunwalDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalDashboard"));
+const PosthogRunwalCpDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalCpDashboard"));
 const PosthogGodrejDashboard = lazy(() => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard"));
 const PosthogKRahejaDashboard = lazy(() => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard"));
 const ViewUserPage = lazy(() => import("./pages/ViewUserPage").then(m => ({ default: m.ViewUserPage })));
@@ -1605,6 +1606,11 @@ function App() {
                       <Route
                         path="/posthog-runwal-dashboard"
                         element={<PosthogRunwalDashboard />}
+                      />
+                      {/* Runwal CP variant — identical UI/data, scoped by project_code=RE-CP01 instead of app_id */}
+                      <Route
+                        path="/posthog-runwal-cp-dashboard"
+                        element={<PosthogRunwalCpDashboard />}
                       />
                       <Route
                         path="/posthog-my-piramal-dashboard"
