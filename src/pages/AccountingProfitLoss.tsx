@@ -55,13 +55,22 @@ const EXPENDITURE_TEMPLATE: SectionTemplate[] = [
   },
 ];
 
-interface PnlGroupAPI {
-  id: number;
-  group_name: string;
-  group_total: number;
-  children?: PnlGroupAPI[];
-  ledgers?: PnlLedgerAPI[];
-}
+const INCOME_TEMPLATE: SectionTemplate[] = [
+  {
+    label: "Indirect Income",
+    children: [
+      "Interest Received",
+      "Interest on Investments",
+      "Dividend",
+      "Rent Received",
+      "Profit on Sale of Assets",
+      "Excess Provision Written Back",
+      "Bad Debts Recovered",
+      "Other Income",
+      { label: "Net Loss carried to Balance Sheet", summary: true },
+    ],
+  },
+];
 
 const AccountingProfitLoss: React.FC = () => {
   const lock_account_id = localStorage.getItem("lock_account_id") || "3";
@@ -117,7 +126,7 @@ const AccountingProfitLoss: React.FC = () => {
 
   const rowCount = Math.max(expenditureRows.length, incomeRows.length);
 
-  const renderSideCells = (row?: PnlRow) => {
+  const renderSideCells = (row?: StatementRow) => {
     if (!row) {
       return (
         <>
@@ -130,7 +139,7 @@ const AccountingProfitLoss: React.FC = () => {
     }
 
     const showInCurrentYear = row.isTotal;
-    const labelClass = row.isGroup || row.isTotal ? "font-bold" : "font-normal";
+    const labelClass = row.isHeader || row.isTotal ? "font-bold" : "font-normal";
     const rowBg = row.isTotal ? "bg-gray-100" : "";
 
     return (

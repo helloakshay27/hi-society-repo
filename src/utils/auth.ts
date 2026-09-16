@@ -298,7 +298,7 @@ export const getOrganizationsByEmail = async (
   }
 
   if (isHiSocietyUatUiSite) {
-    return fetchOrgs("https://uat-hi-society.lockated.com", "Hi-Society");
+    return fetchOrgs("https://runwal-api.lockated.com", "Hi-Society");
   }
 
   if (isHiSocietyUiSite) {

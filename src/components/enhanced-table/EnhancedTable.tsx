@@ -909,7 +909,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               className={cn(
-                "border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2 rounded-lg",
+                "flex items-center gap-2 rounded-lg",
                 filterButtonClassName
               )}
               onClick={onFilterClick}

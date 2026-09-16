@@ -17,7 +17,7 @@ const PIE_METRIC_META: Record<UtilityPieMetric, { title: string; subtitle?: stri
   },
   'renewable-sources': {
     title: 'Renewable Sources & Consumption',
-    subtitle: 'Solar / Wind / Other renewable',
+    subtitle: 'Solar / Wind / Hydro',
   },
 };
 

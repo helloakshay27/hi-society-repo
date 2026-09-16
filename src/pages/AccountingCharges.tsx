@@ -24,14 +24,14 @@ interface ChargeSetup {
 
 const columns: ColumnConfig[] = [
   { key: "actions", label: "Actions", sortable: false },
-  { key: "name", label: "Name", sortable: true },
-  { key: "charge_category", label: "Category", sortable: true },
-  { key: "value", label: "Value", sortable: true },
-  { key: "basis", label: "Basis", sortable: true },
-  { key: "hsn_code", label: "HSN Code", sortable: true },
-  { key: "uom", label: "UOM", sortable: true },
+  { key: "name", label: "Charge Name", sortable: true },
+  { key: "charge_category", label: "Charge Type", sortable: true },
+  // { key: "value", label: "Value", sortable: true },
+  // { key: "basis", label: "Basis", sortable: true },
+  // { key: "hsn_code", label: "HSN Code", sortable: true },
+  // { key: "uom", label: "UOM", sortable: true },
   { key: "gst_applicable", label: "GST Applicable", sortable: true },
-  { key: "created_by", label: "Created By", sortable: true },
+  { key: "created_by_name", label: "Created By", sortable: true },
   { key: "created_at", label: "Created At", sortable: true },
 ];
 
@@ -39,7 +39,7 @@ const formatDateTime = (value?: string) => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return `${date.toLocaleDateString("en-GB")} ${date.toLocaleTimeString()}`;
+  return `${date.toLocaleDateString("en-GB")} , ${date.toLocaleTimeString()}`;
 };
 
 const AccountingCharges: React.FC = () => {
@@ -55,7 +55,10 @@ const AccountingCharges: React.FC = () => {
       const token = API_CONFIG.TOKEN;
       const response = await axios.get(`${baseUrl}/account/charge_setups.json`, {
         params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       setCharges(Array.isArray(response.data?.charge_setups) ? response.data.charge_setups : []);
     } catch (error) {
@@ -72,6 +75,32 @@ const AccountingCharges: React.FC = () => {
   }, [fetchCharges]);
 
   const rows = useMemo(() => charges, [charges]);
+
+  const handleExportExcel = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(`${baseUrl}/account/charge_setups.xlsx`, {
+        params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
+        responseType: "blob",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "charges.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting charges:", error);
+      toast.error("Failed to export charges");
+    }
+  };
 
   const renderCell = (item: ChargeSetup, columnKey: string) => {
     switch (columnKey) {
@@ -133,6 +162,7 @@ const AccountingCharges: React.FC = () => {
         pagination
         pageSize={20}
         enableExport
+        onExport={handleExportExcel}
         exportFileName="accounting-charges"
         storageKey="accounting-charges-table"
         leftActions={

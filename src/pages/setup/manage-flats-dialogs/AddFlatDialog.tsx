@@ -457,7 +457,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
               fullWidth
               variant="outlined"
               InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles, inputProps: { max: new Date().toISOString().split("T")[0] } }}
+              InputProps={{ sx: fieldStyles }}
             />
 
             <MuiFormControl fullWidth variant="outlined">

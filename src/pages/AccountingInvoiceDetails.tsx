@@ -249,7 +249,7 @@ const AccountingInvoiceDetails: React.FC = () => {
   const isPaid = bill.status?.toLowerCase() === "paid";
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
+    <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden">
       <div className="mb-6 no-print">
         <button
           onClick={() => navigate("/accounting/invoices")}
@@ -281,21 +281,21 @@ const AccountingInvoiceDetails: React.FC = () => {
               <Button
                 onClick={() => setIsPaymentOpen(true)}
                 size="sm"
-                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#B01C29]"
+                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
               >
                 Receive Payment
               </Button>
               <Button
                 onClick={() => navigate(`/accounting/invoices/${bill.id}/edit`)}
                 size="sm"
-                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#B01C29]"
+                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
               >
                 Edit
               </Button>
               <Button
                 onClick={handleDownloadInvoice}
                 size="sm"
-                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#B01C29]"
+                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
               >
                 <Download className="mr-2 h-4 w-4" /> Download Invoice
               </Button>
@@ -303,7 +303,7 @@ const AccountingInvoiceDetails: React.FC = () => {
                 onClick={handlePrint}
                 size="icon"
                 title="Print"
-                className="bg-[#C72030] text-white hover:bg-[#B01C29]"
+                className="bg-[#C72030] text-white hover:bg-[#A01020]"
               >
                 <Printer className="h-4 w-4" />
               </Button>
@@ -321,9 +321,9 @@ const AccountingInvoiceDetails: React.FC = () => {
                 className="flex h-8 w-8 items-center justify-center rounded-full"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <FileText className="h-4 w-4" style={{ color: "#C72030" }} />
+                <FileText size={16} color="var(--color-primary,#da7756)" />
               </div>
-              <h3 className="text-base font-semibold text-gray-900">Bill Details</h3>
+              <h2 className="text-lg font-medium text-gray-900">Bill Details</h2>
             </div>
           </div>
           <div className="p-6">
@@ -358,9 +358,9 @@ const AccountingInvoiceDetails: React.FC = () => {
                 className="flex h-8 w-8 items-center justify-center rounded-full"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Receipt className="h-4 w-4" style={{ color: "#C72030" }} />
+                <Receipt size={16} color="var(--color-primary,#da7756)" />
               </div>
-              <h3 className="text-base font-semibold text-gray-900">Charges</h3>
+              <h2 className="text-lg font-medium text-gray-900">Charges</h2>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -419,9 +419,9 @@ const AccountingInvoiceDetails: React.FC = () => {
                 className="flex h-8 w-8 items-center justify-center rounded-full"
                 style={{ backgroundColor: "#E5E0D3" }}
               >
-                <Wallet className="h-4 w-4" style={{ color: "#C72030" }} />
+                <Wallet size={16} color="var(--color-primary,#da7756)" />
               </div>
-              <h3 className="text-base font-semibold text-gray-900">Payment Details</h3>
+              <h2 className="text-lg font-medium text-gray-900">Payment Details</h2>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -512,7 +512,7 @@ const AccountingInvoiceDetails: React.FC = () => {
             <Button
               onClick={handleRecordPayment}
               disabled={submittingPayment}
-              className="bg-[#C72030] text-white hover:bg-[#A01B28]"
+              className="bg-[#C72030] text-white hover:bg-[#A01020]"
             >
               Record Payment
             </Button>

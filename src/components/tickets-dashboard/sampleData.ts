@@ -140,8 +140,9 @@ export const SAMPLE_VISITOR_OVERVIEW = {
   expected_visitors: 912,
   unexpected_visitors: 372,
   total_vehicles: 486,
-  goods_inwards: 214,
-  goods_outwards: 168,
+  total_gate_pass: 214,
+  returnable_gate_pass: 168,
+  non_returnable_gate_pass: 46,
 };
 
 /** Sample building-wise total visitors bar. */

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import {
   ticketReportsAPI,
+  TicketExportType,
   TicketOverviewResponse,
   TicketDistributionResponse,
 } from '@/services/ticketReportsAPI';
@@ -9,6 +11,15 @@ import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR, PIE_PROACTIVE_COLOR, PIE_REACTIVE_COL
 import { TicketsDashboardDateRange } from './types';
 
 export type TicketsPieMetric = 'tickets-overview' | 'proactive-reactive' | 'golden-tickets' | 'fm-vs-project';
+
+/**
+ * Per-card exports. `tickets-overview` and `golden-tickets` have no documented
+ * export type, so those cards show no download button.
+ */
+const EXPORT_BY_METRIC: Partial<Record<TicketsPieMetric, TicketExportType>> = {
+  'proactive-reactive': 'proactive_reactive',
+  'fm-vs-project': 'fm_vs_project',
+};
 
 const PIE_METRIC_META: Record<TicketsPieMetric, { title: string; subtitle?: string; emptyMessage?: string }> = {
   'tickets-overview': { title: 'Tickets', subtitle: 'Open / Closed' },
@@ -96,6 +107,7 @@ export const TicketsPieCard: React.FC<TicketsPieCardProps> = ({ metric, dateRang
   }
 
   const meta = PIE_METRIC_META[metric];
+  const exportType = EXPORT_BY_METRIC[metric];
 
   return (
     <PieChartCard
@@ -105,6 +117,19 @@ export const TicketsPieCard: React.FC<TicketsPieCardProps> = ({ metric, dateRang
       loading={loading}
       emptyMessage={meta.emptyMessage}
       className={className}
+      rightSlot={
+        exportType ? (
+          <CardDownloadButton
+            label={`Download ${meta.title}`}
+            onDownload={() =>
+              ticketReportsAPI.downloadExport(
+                { fromDate: dateRange.startDate, toDate: dateRange.endDate },
+                exportType
+              )
+            }
+          />
+        ) : undefined
+      }
     />
   );
 };

@@ -363,7 +363,7 @@ const RcaTable = ({
             variant="outline"
             size="sm"
             onClick={onDownload}
-            className="h-9 gap-1.5 whitespace-nowrap"
+            className="h-9 gap-1.5 whitespace-nowrap [&_svg]:!text-[#DA7756]"
           >
             <Download className="w-4 h-4" /> Export
           </Button>
@@ -1202,7 +1202,7 @@ export const IncidentDashboard = () => {
             <Button
               variant="outline"
               onClick={() => setIsAnalyticsFilterOpen(true)}
-              className="w-full sm:w-[280px] justify-between"
+              className="w-full sm:w-[280px] justify-between !text-[#DA7756] !border-[#DA7756] [&_svg]:!text-[#DA7756]"
             >
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" /> {analyticsDateRange.startDate}{" "}

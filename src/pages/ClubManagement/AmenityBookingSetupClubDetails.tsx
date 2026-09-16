@@ -23,6 +23,7 @@ import {
   LampFloor,
   Share2,
   BookKey,
+  Pencil,
 } from "lucide-react";
 import {
   TextField,
@@ -699,7 +700,7 @@ export const BookingSetupDetailClubPage = () => {
                   onClick={() => handleEditClick(id)}
                   className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                 >
-                  Edit
+                  <Pencil className="w-4 h-4 text-white" />
                 </Button>
               }
 

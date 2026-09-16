@@ -1,16 +1,75 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, Receipt, X } from "lucide-react";
 import { toast } from "sonner";
+import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { menuProps } from "@/components/ticket-management/fieldStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
+
+const CHARGE_COLUMNS: ColumnConfig[] = [
+  { key: "ledgerId", label: "Ledger", sortable: false },
+  { key: "description", label: "Description", sortable: false },
+  { key: "chargeType", label: "Charge Type", sortable: false },
+  { key: "quantity", label: "Quantity", sortable: false },
+  { key: "rate", label: "Rate", sortable: false },
+  { key: "amount", label: "Amount", sortable: false },
+  { key: "igstRate", label: "Igst Rate (%)", sortable: false },
+  { key: "igstAmount", label: "Igst Amount", sortable: false },
+  { key: "cgstRate", label: "Cgst Rate (%)", sortable: false },
+  { key: "cgstAmount", label: "Cgst Amount", sortable: false },
+  { key: "sgstRate", label: "Sgst Rate (%)", sortable: false },
+  { key: "sgstAmount", label: "Sgst Amount", sortable: false },
+  { key: "totalAmount", label: "Total Amount", sortable: false },
+];
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
+    },
+    "&:hover fieldset": {
+      borderColor: "#C72030",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
+    },
+  },
+};
+
+const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <span
+          className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+          style={{ backgroundColor: "#E5E0D3" }}
+        >
+          <Receipt size={16} color="var(--color-primary,#da7756)" />
+        </span>
+        {title}
+      </h2>
+    </div>
+    <div className="p-6 space-y-6">{children}</div>
+  </div>
+);
 
 interface ChargeRow {
   key: string;
@@ -37,6 +96,17 @@ const emptyCharge = (): ChargeRow => ({
   sgstRate: "0",
 });
 
+// API returns dates as "DD/MM/YYYY" or ISO; <input type="date"> needs "YYYY-MM-DD".
+const toDateInputValue = (value?: string | null): string => {
+  if (!value) return "";
+  const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+  const iso = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+  if (iso) return iso[1];
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+};
+
 interface SelectOption {
   id: string;
   label: string;
@@ -52,7 +122,7 @@ const normalizeOptions = (list: unknown): SelectOption[] => {
       const obj = item as Record<string, unknown>;
       const rawId = obj.id ?? obj.value ?? obj.code ?? obj.name ?? obj.label;
       const rawLabel =
-        obj.name ?? obj.label ?? obj.title ?? obj.formatted_name ?? obj.text ?? rawId ?? "";
+        obj.name ?? obj.label ?? obj.category ?? obj.title ?? obj.formatted_name ?? obj.text ?? rawId ?? "";
       return { id: String(rawId ?? ""), label: String(rawLabel) };
     }
     return { id: String(item), label: String(item) };
@@ -70,18 +140,36 @@ const computeChargeAmounts = (row: ChargeRow) => {
   return { amount, igstAmount, cgstAmount, sgstAmount, totalAmount };
 };
 
-const FieldsetField: React.FC<{
+const FormTextArea: React.FC<{
   label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}> = ({ label, required, children }) => (
-  <fieldset className="rounded border border-[#ddd] px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-    <legend className="px-1 text-sm font-medium text-gray-500">
-      {label}
-      {required ? <span className="text-red-500"> *</span> : null}
-    </legend>
-    {children}
-  </fieldset>
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+  maxLength?: number;
+}> = ({ label, value, onChange, placeholder, rows = 3, maxLength }) => (
+  <div>
+    <div className="relative">
+      <textarea
+        className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+        rows={rows}
+        value={value}
+        onChange={(e) => {
+          if (!maxLength || e.target.value.length <= maxLength) onChange(e.target.value);
+        }}
+        placeholder={placeholder}
+        maxLength={maxLength}
+      />
+      <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
+        {label}
+      </label>
+    </div>
+    {maxLength ? (
+      <div className="mt-1 text-right text-xs text-gray-400">
+        {value.length}/{maxLength}
+      </div>
+    ) : null}
+  </div>
 );
 
 const FormSelect: React.FC<{
@@ -194,13 +282,43 @@ const AccountingInvoiceEdit: React.FC = () => {
         setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
         setResidentTypeOptions(normalizeOptions(data.resident_types));
         setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
-        setChargeTypeOptions(normalizeOptions(data.charge_types));
       } catch (error) {
         console.error("Error fetching invoice form options:", error);
         toast.error("Failed to load invoice form options");
       }
     };
     fetchFormOptions();
+  }, [lockAccountId]);
+
+  // GET /account/charge_setups/charge_type_options.json?lock_account_id=... —
+  // dedicated charge-type list used by the "Charge Type" column in the charges table.
+  useEffect(() => {
+    const fetchChargeTypes = async () => {
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/account/charge_setups/charge_type_options.json`, {
+          params: { lock_account_id: lockAccountId },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list = Array.isArray(data)
+          ? data
+          : data?.charge_categories ??
+            data?.charge_type_options ??
+            data?.categories ??
+            data?.data ??
+            [];
+        setChargeTypeOptions(normalizeOptions(list));
+      } catch (error) {
+        console.error("Error fetching charge types:", error);
+        setChargeTypeOptions([]);
+      }
+    };
+    fetchChargeTypes();
   }, [lockAccountId]);
 
   // GET /lock_account_ledgers?lock_account_id=... — list of ledgers selectable
@@ -277,16 +395,18 @@ const AccountingInvoiceEdit: React.FC = () => {
         });
         const bill = res.data?.lock_account_bill || res.data;
         setBillNumber(bill.bill_number || "");
-        setDueDate(bill.due_date || "");
+        setDueDate(toDateInputValue(bill.due_date || bill.billing_date));
         setBillCycleId(bill.bill_cycle_id ? String(bill.bill_cycle_id) : "");
-        setBillFrequency(bill.frequency || "");
+        setBillFrequency(
+          bill.bill_frequency_id ? String(bill.bill_frequency_id) : bill.frequency || ""
+        );
         setUnitId(bill.ledger_id ? String(bill.ledger_id) : "");
         setResidentTypeId(bill.resident_type || "");
         setOtherPreferences(bill.other_preferences || "");
         setInvoiceFormatId(bill.invoice_format || "");
         setIrnNo(bill.irn_no || "");
-        setAcknowledgementNo(bill.acknowledgement_no || "");
-        setAcknowledgementDate(bill.acknowledgement_date || "");
+        setAcknowledgementNo(bill.ack_no || bill.acknowledgement_no || "");
+        setAcknowledgementDate(toDateInputValue(bill.ack_date || bill.acknowledgement_date));
         setNote(bill.note || "");
 
         const existingCharges = bill.lock_account_bill_charges || bill.charges || [];
@@ -336,6 +456,120 @@ const AccountingInvoiceEdit: React.FC = () => {
       }
       return prev.filter((row) => row.key !== key);
     });
+  };
+
+  const renderChargeCell = (row: ChargeRow, columnKey: string) => {
+    const { amount, igstAmount, cgstAmount, sgstAmount, totalAmount } = computeChargeAmounts(row);
+    switch (columnKey) {
+      case "ledgerId":
+        return (
+          <FormSelect
+            value={row.ledgerId}
+            onChange={(value) => updateCharge(row.key, "ledgerId", value)}
+            placeholder="Select Ledger"
+            options={ledgerOptions}
+            bordered
+          />
+        );
+      case "description":
+        return (
+          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+            <Input
+              value={row.description}
+              onChange={(e) => updateCharge(row.key, "description", e.target.value)}
+              placeholder="Description"
+              className="border-0 focus-visible:border-0"
+            />
+          </div>
+        );
+      case "chargeType":
+        return (
+          <FormSelect
+            value={row.chargeType}
+            onChange={(value) => updateCharge(row.key, "chargeType", value)}
+            placeholder="Select Type"
+            options={chargeTypeOptions}
+            bordered
+          />
+        );
+      case "quantity":
+        return (
+          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={row.quantity}
+              onChange={(e) => updateCharge(row.key, "quantity", e.target.value)}
+              className="border-0 focus-visible:border-0"
+            />
+          </div>
+        );
+      case "rate":
+        return (
+          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={row.rate}
+              onChange={(e) => updateCharge(row.key, "rate", e.target.value)}
+              className="border-0 focus-visible:border-0"
+            />
+          </div>
+        );
+      case "amount":
+        return <Input readOnly value={amount.toFixed(2)} className="bg-brand-bg" />;
+      case "igstRate":
+        return (
+          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={row.igstRate}
+              onChange={(e) => updateCharge(row.key, "igstRate", e.target.value)}
+              className="border-0 focus-visible:border-0"
+            />
+          </div>
+        );
+      case "igstAmount":
+        return <Input readOnly value={igstAmount.toFixed(2)} className="bg-brand-bg" />;
+      case "cgstRate":
+        return (
+          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={row.cgstRate}
+              onChange={(e) => updateCharge(row.key, "cgstRate", e.target.value)}
+              className="border-0 focus-visible:border-0"
+            />
+          </div>
+        );
+      case "cgstAmount":
+        return <Input readOnly value={cgstAmount.toFixed(2)} className="bg-brand-bg" />;
+      case "sgstRate":
+        return (
+          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={row.sgstRate}
+              onChange={(e) => updateCharge(row.key, "sgstRate", e.target.value)}
+              className="border-0 focus-visible:border-0"
+            />
+          </div>
+        );
+      case "sgstAmount":
+        return <Input readOnly value={sgstAmount.toFixed(2)} className="bg-brand-bg" />;
+      case "totalAmount":
+        return <Input readOnly value={totalAmount.toFixed(2)} className="bg-brand-bg font-medium" />;
+      default:
+        return null;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -422,327 +656,267 @@ const AccountingInvoiceEdit: React.FC = () => {
   };
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+    <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden invoice-form-page">
+      <style>{`.invoice-form-page .MuiFormLabel-asterisk { color: #da7756 !important; }`}</style>
       <button
         onClick={() => navigate("/accounting/invoices")}
-        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+        className="mb-6 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Invoices
       </button>
 
-      <div className="mb-6">
-        <h1 className="text-brand-h2 font-semibold text-brand-text">Editing Invoice</h1>
-      </div>
-
       {loadingBill ? (
         <div className="py-10 text-center text-brand-text-light">Loading invoice...</div>
       ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3 items-start">
-            <FieldsetField label="Bill Number" required>
-              <Input
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <SectionCard title="Editing Invoice">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              <TextField
+                label="Bill Number"
+                required
                 placeholder="Enter bill number"
                 value={billNumber}
                 onChange={(e) => setBillNumber(e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Due Date" required>
-              <Input
+              <TextField
+                label="Due Date"
+                required
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Bill Cycle">
-              <FormSelect
-                value={billCycleId}
-                onChange={setBillCycleId}
-                placeholder="Select Bill Cycle"
-                options={billCycleOptions}
-              />
-            </FieldsetField>
-          </div>
+              <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <InputLabel shrink>Bill Cycle</InputLabel>
+                <Select
+                  value={billCycleId}
+                  onChange={(e) => setBillCycleId(e.target.value as string)}
+                  label="Bill Cycle"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Bill Cycle</MenuItem>
+                  {billCycleOptions.map((option) => (
+                    <MenuItem key={option.id} value={option.id} title={option.label}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
 
-          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <FieldsetField label="Bill Frequency">
-              <FormSelect
-                value={billFrequency}
-                onChange={setBillFrequency}
-                placeholder={
-                  !billCycleId
-                    ? "Select Bill Cycle first"
-                    : frequencyLoading
-                    ? "Loading..."
-                    : "Select Frequency"
-                }
-                options={billFrequencyOptions}
-                disabled={!billCycleId || frequencyLoading}
-              />
-            </FieldsetField>
-            <FieldsetField label="Select Unit">
-              <FormSelect
-                value={unitId}
-                onChange={setUnitId}
-                placeholder="Select Unit"
-                options={unitOptions}
-              />
-            </FieldsetField>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              <FormControl fullWidth disabled={!billCycleId || frequencyLoading} sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <InputLabel shrink>Bill Frequency</InputLabel>
+                <Select
+                  value={billFrequency}
+                  onChange={(e) => setBillFrequency(e.target.value as string)}
+                  label="Bill Frequency"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">
+                    {!billCycleId
+                      ? "Select Bill Cycle first"
+                      : frequencyLoading
+                      ? "Loading..."
+                      : "Select Frequency"}
+                  </MenuItem>
+                  {billFrequencyOptions.map((option) => (
+                    <MenuItem key={option.id} value={option.id} title={option.label}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth required sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <InputLabel shrink>Select Unit</InputLabel>
+                <Select
+                  value={unitId}
+                  onChange={(e) => setUnitId(e.target.value as string)}
+                  label="Select Unit"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Unit</MenuItem>
+                  {unitOptions.map((option) => (
+                    <MenuItem key={option.id} value={option.id} title={option.label}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <InputLabel shrink>Resident Type</InputLabel>
+                <Select
+                  value={residentTypeId}
+                  onChange={(e) => setResidentTypeId(e.target.value as string)}
+                  label="Resident Type"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Resident Type</MenuItem>
+                  {residentTypeOptions.map((option) => (
+                    <MenuItem key={option.id} value={option.id} title={option.label}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
 
-          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3 items-start">
-            <FieldsetField label="Resident Type">
-              <FormSelect
-                value={residentTypeId}
-                onChange={setResidentTypeId}
-                placeholder="Select Resident Type"
-                options={residentTypeOptions}
-              />
-            </FieldsetField>
-            <FieldsetField label="Other Preferences">
-              <Textarea
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              <FormTextArea
+                label="Other Preferences"
                 placeholder="Enter Other Preferences"
                 value={otherPreferences}
-                onChange={(e) => setOtherPreferences(e.target.value)}
+                onChange={setOtherPreferences}
                 rows={1}
-                className="h-9 min-h-0 resize-none overflow-hidden border-0 px-0 py-1.5 shadow-none focus-visible:outline-none focus-visible:ring-0"
               />
-            </FieldsetField>
-            <FieldsetField label="Invoice Format">
-              <FormSelect
-                value={invoiceFormatId}
-                onChange={setInvoiceFormatId}
-                placeholder="Select Invoice Format"
-                options={invoiceFormatOptions}
-              />
-            </FieldsetField>
-          </div>
-
-          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <FieldsetField label="IRN No">
-              <Input
+              <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <InputLabel shrink>Invoice Format</InputLabel>
+                <Select
+                  value={invoiceFormatId}
+                  onChange={(e) => setInvoiceFormatId(e.target.value as string)}
+                  label="Invoice Format"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Invoice Format</MenuItem>
+                  {invoiceFormatOptions.map((option) => (
+                    <MenuItem key={option.id} value={option.id} title={option.label}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="IRN No"
                 placeholder="Enter IRN Number"
                 value={irnNo}
                 onChange={(e) => setIrnNo(e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Acknowledgement No">
-              <Input
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              <TextField
+                label="Acknowledgement No"
                 placeholder="Enter Acknowledgement Number"
                 value={acknowledgementNo}
                 onChange={(e) => setAcknowledgementNo(e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-            <FieldsetField label="Acknowledgement Date">
-              <Input
+              <TextField
+                label="Acknowledgement Date"
                 type="date"
                 value={acknowledgementDate}
                 onChange={(e) => setAcknowledgementDate(e.target.value)}
-                className="h-9 border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </FieldsetField>
-          </div>
-
-          <div className="overflow-hidden rounded-md border border-brand-card-border bg-white">
-            <div className="flex items-center bg-brand-bg px-4 py-2">
-              <h3 className="text-brand-body-3 font-semibold text-brand-text">Charges</h3>
             </div>
+          </SectionCard>
 
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1280px] border-collapse">
-                <thead>
-                  <tr className="bg-brand-selected text-left text-brand-body-5 text-brand-text-light">
-                    <th className="px-2 py-2 font-medium">Ledger</th>
-                    <th className="px-2 py-2 font-medium">Description</th>
-                    <th className="px-2 py-2 font-medium">Charge Type</th>
-                    <th className="px-2 py-2 font-medium">Quantity</th>
-                    <th className="px-2 py-2 font-medium">Rate</th>
-                    <th className="px-2 py-2 font-medium">Amount</th>
-                    <th className="px-2 py-2 font-medium">Igst Rate (%)</th>
-                    <th className="px-2 py-2 font-medium">Igst Amount</th>
-                    <th className="px-2 py-2 font-medium">Cgst Rate (%)</th>
-                    <th className="px-2 py-2 font-medium">Cgst Amount</th>
-                    <th className="px-2 py-2 font-medium">Sgst Rate (%)</th>
-                    <th className="px-2 py-2 font-medium">Sgst Amount</th>
-                    <th className="px-2 py-2 font-medium">Total Amount</th>
-                    <th className="w-10 px-2 py-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {charges.map((row) => {
-                    const { amount, igstAmount, cgstAmount, sgstAmount, totalAmount } =
-                      computeChargeAmounts(row);
-                    return (
-                      <tr key={row.key} className="border-t border-brand-border">
-                        <td className="min-w-[160px] p-1.5">
-                          <FormSelect
-                            value={row.ledgerId}
-                            onChange={(value) => updateCharge(row.key, "ledgerId", value)}
-                            placeholder="Select Ledger"
-                            options={ledgerOptions}
-                            bordered
-                          />
-                        </td>
-                        <td className="min-w-[140px] p-1.5">
-                          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-                            <Input
-                              value={row.description}
-                              onChange={(e) => updateCharge(row.key, "description", e.target.value)}
-                              placeholder="Description"
-                              className="border-0 focus-visible:border-0"
-                            />
-                          </div>
-                        </td>
-                        <td className="min-w-[140px] p-1.5">
-                          <FormSelect
-                            value={row.chargeType}
-                            onChange={(value) => updateCharge(row.key, "chargeType", value)}
-                            placeholder="Select Type"
-                            options={chargeTypeOptions}
-                            bordered
-                          />
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              value={row.quantity}
-                              onChange={(e) => updateCharge(row.key, "quantity", e.target.value)}
-                              className="border-0 focus-visible:border-0"
-                            />
-                          </div>
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              value={row.rate}
-                              onChange={(e) => updateCharge(row.key, "rate", e.target.value)}
-                              className="border-0 focus-visible:border-0"
-                            />
-                          </div>
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <Input readOnly value={amount.toFixed(2)} className="bg-brand-bg" />
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              value={row.igstRate}
-                              onChange={(e) => updateCharge(row.key, "igstRate", e.target.value)}
-                              className="border-0 focus-visible:border-0"
-                            />
-                          </div>
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <Input readOnly value={igstAmount.toFixed(2)} className="bg-brand-bg" />
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              value={row.cgstRate}
-                              onChange={(e) => updateCharge(row.key, "cgstRate", e.target.value)}
-                              className="border-0 focus-visible:border-0"
-                            />
-                          </div>
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <Input readOnly value={cgstAmount.toFixed(2)} className="bg-brand-bg" />
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              value={row.sgstRate}
-                              onChange={(e) => updateCharge(row.key, "sgstRate", e.target.value)}
-                              className="border-0 focus-visible:border-0"
-                            />
-                          </div>
-                        </td>
-                        <td className="min-w-[90px] p-1.5">
-                          <Input readOnly value={sgstAmount.toFixed(2)} className="bg-brand-bg" />
-                        </td>
-                        <td className="min-w-[110px] p-1.5">
-                          <Input readOnly value={totalAmount.toFixed(2)} className="bg-brand-bg font-medium" />
-                        </td>
-                        <td className="p-1.5 text-center">
-                          <button
-                            type="button"
-                            onClick={() => removeCharge(row.key)}
-                            disabled={charges.length <= 1}
-                            className="rounded bg-[#C72030] p-1 text-white hover:opacity-90 disabled:opacity-40"
-                            title="Remove row"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-brand-border bg-white px-3 py-3">
-              <button
-                type="button"
-                onClick={addCharge}
-                className="rounded bg-[#C72030] p-1.5 text-white hover:opacity-90"
-                title="Add charge row"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-              <div className="flex items-center gap-3">
-                <span className="whitespace-nowrap text-brand-body-4 font-semibold text-brand-text">
-                  Total ₹
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#E5E0D3" }}
+                >
+                  <Receipt size={16} color="var(--color-primary,#da7756)" />
                 </span>
-                <span className="text-brand-body-3 font-semibold text-brand-text">{total.toFixed(2)}</span>
+                Charges
+              </h2>
+            </div>
+
+            <div className="p-4">
+              <EnhancedTable
+                data={charges}
+                columns={CHARGE_COLUMNS}
+                getItemId={(item) => item.key}
+                renderCell={(item, columnKey) => renderChargeCell(item, columnKey)}
+                renderActions={(item) => (
+                  <button
+                    type="button"
+                    onClick={() => removeCharge(item.key)}
+                    disabled={charges.length <= 1}
+                    className="rounded bg-[#C72030] p-1 text-white hover:opacity-90 disabled:opacity-40"
+                    title="Remove row"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                hideTableSearch
+                hideColumnsButton
+                emptyMessage="No charges added"
+              />
+
+              <div className="flex items-center justify-between border-t border-gray-200 pt-3 mt-3">
+                <button
+                  type="button"
+                  onClick={addCharge}
+                  className="rounded bg-[#C72030] p-1.5 text-white hover:opacity-90"
+                  title="Add charge row"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <span className="whitespace-nowrap text-brand-body-4 font-semibold text-brand-text">
+                    Total ₹
+                  </span>
+                  <span className="text-brand-body-3 font-semibold text-brand-text">{total.toFixed(2)}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6">
-            <FieldsetField label="Note">
-              <Textarea
-                placeholder="Enter note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={3}
-                className="border-0 px-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
-              />
-            </FieldsetField>
-          </div>
+          <SectionCard title="Additional Note">
+            <FormTextArea
+              label="Note"
+              placeholder="Enter note"
+              value={note}
+              onChange={setNote}
+              rows={3}
+            />
+          </SectionCard>
 
-          <div className="mt-6 flex justify-center gap-3 border-t border-brand-border pt-6">
+          <div className="flex justify-center gap-3">
             <Button
               type="submit"
-              variant="ghost"
               disabled={submitting}
-              className="btn-primary min-w-[140px] h-9 px-4 text-sm font-medium"
+              className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#A01020]"
             >
               {submitting ? "Updating..." : "Update"}
             </Button>
             <Button
               type="button"
+              variant="outline"
               disabled={submitting}
               onClick={() => navigate("/accounting/invoices")}
-              className="min-w-[140px] h-9 !bg-white border !border-[#da7756] !text-[#da7756] px-4 text-sm font-medium"
+              className="min-w-[100px]"
             >
               Cancel
             </Button>

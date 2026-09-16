@@ -31,18 +31,23 @@ interface AddLockAccountGroupModalProps {
   editingGroup?: EditableLockAccountGroup | null;
 }
 
-interface AccountGroupAPI {
-  id: number;
-  group_name: string;
-  parent_group_id?: number | null;
-}
-
-// parent_group_id: null = top-level group; non-null = nested subgroup.
-// Only top-level groups are valid choices for a new subgroup's parent.
-const topLevelGroups = (groups: AccountGroupAPI[]): ParentGroupOption[] =>
-  groups
-    .filter((g) => g.parent_group_id === null || g.parent_group_id === undefined)
-    .map((g) => ({ id: g.id, group_name: g.group_name }));
+const normalizeParentGroups = (data: unknown): ParentGroupOption[] => {
+  const list: unknown[] = Array.isArray(data)
+    ? data
+    : (data as Record<string, unknown>)?.parent_groups as unknown[] ??
+      (data as Record<string, unknown>)?.lock_account_groups as unknown[] ??
+      (data as Record<string, unknown>)?.groups as unknown[] ??
+      (data as Record<string, unknown>)?.data as unknown[] ??
+      [];
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    const obj = item as Record<string, unknown>;
+    return {
+      id: Number(obj.id ?? obj.value ?? 0),
+      group_name: String(obj.group_name ?? obj.name ?? obj.label ?? obj.id ?? ""),
+    };
+  });
+};
 
 export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> = ({
   open,
@@ -64,16 +69,18 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_groups`, {
-          params: { lock_account_id: lockAccountId },
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-        const groups: AccountGroupAPI[] = res.data?.lock_account_groups || [];
-        const options = topLevelGroups(groups).filter((g) => g.id !== editingGroup?.id);
+        const res = await axios.get(
+          `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_groups/parent_groups.json`,
+          {
+            headers: {
+              Accept: "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
+        const options = normalizeParentGroups(res.data).filter(
+          (g) => g.id !== editingGroup?.id
+        );
         setParentGroups(options);
       } catch (error) {
         console.error("Error fetching parent groups:", error);
@@ -183,9 +190,24 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
                 }}
                 MenuProps={{
                   ...menuProps,
+                  anchorOrigin: { vertical: "bottom", horizontal: "left" },
+                  transformOrigin: { vertical: "top", horizontal: "left" },
                   PaperProps: {
                     ...menuProps.PaperProps,
                     style: { ...menuProps.PaperProps.style, maxHeight: 300 },
+                    sx: {
+                      width: "min(464px, calc(100vw - 3rem))",
+                      maxWidth: "calc(100vw - 3rem)",
+                      boxSizing: "border-box",
+                    },
+                  },
+                  MenuListProps: {
+                    sx: {
+                      "& .MuiMenuItem-root": {
+                        whiteSpace: "normal",
+                        wordBreak: "break-word",
+                      },
+                    },
                   },
                 }}
               >
@@ -193,7 +215,11 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
                   Select Group
                 </MenuItem>
                 {parentGroups.map((group) => (
-                  <MenuItem key={group.id} value={String(group.id)}>
+                  <MenuItem
+                    key={group.id}
+                    value={String(group.id)}
+                    sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                  >
                     {group.group_name}
                   </MenuItem>
                 ))}

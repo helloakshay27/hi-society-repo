@@ -22,7 +22,7 @@ import {
   usePrSrSplit,
   useOverdueInvoices,
 } from '../../hooks/useDashboardAnalytics';
-import { pct } from '../../data/constants';
+import { pct, fmtDateShort } from '../../data/constants';
 
 interface AdoptionEngagementPageProps {
   filters: DashboardFilters;
@@ -203,6 +203,16 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     refetch: refetchOverdue,
   } = useOverdueInvoices(filters, sitesSettled);
 
+  // Seat Utilisation
+  const seatUtilVal = adoptData?.seat_utilisation?.value;
+  const seatUtilDisplay =
+    seatUtilVal != null
+      ? pct(seatUtilVal <= 1 ? seatUtilVal * 100 : seatUtilVal)
+      : isAdoptLoading
+      ? '...'
+      : '—';
+  const seatUtilDelta = formatDelta(adoptData?.seat_utilisation?.delta_pct);
+
   // Stickiness
   const stickinessVal = adoptData?.stickiness?.value;
   const stickinessDisplay =
@@ -249,12 +259,12 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   // 8-Week Trend Line Chart Series
   const weeklyCurrent = trendData?.weekly?.current || [];
   const weeklyPrevious = trendData?.weekly?.previous || [];
-  const trendLabels = weeklyCurrent.map((w) => w.week || 'W');
+  const trendLabels = weeklyCurrent.map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
   const trendSeriesCurrent = weeklyCurrent.map((w) => w.wau || 0);
   const trendSeriesPrev = weeklyPrevious.map((w) => w.wau || 0);
 
   // Growth Accounting Series
-  const growthWeeks = (growthData?.weeks || []).map((w) => w.week || 'W');
+  const growthWeeks = (growthData?.weeks || []).map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
   const growthNew = (growthData?.weeks || []).map((w) => w.new || 0);
   const growthRet = (growthData?.weeks || []).map((w) => w.returning || 0);
   const growthRes = (growthData?.weeks || []).map((w) => w.resurrected || 0);
@@ -299,6 +309,21 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       )}
 
       <div className="tiles" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: '16px' }}>
+        <KpiTile
+          id="seatUtil"
+          infoKey="A1"
+          label="Seat Utilisation"
+          val={seatUtilDisplay}
+          dir={seatUtilDelta.dir}
+          delta={seatUtilDelta.text}
+          sub="active ÷ registered users"
+          raw={seatUtilVal != null ? (seatUtilVal <= 1 ? seatUtilVal * 100 : seatUtilVal) : undefined}
+          unit="%"
+          goodUp={true}
+          benchmark={benchmarks.seatUtil}
+          onBenchmarkChange={onBenchmarkChange}
+          isLoading={isAdoptLoading}
+        />
         <KpiTile
           id="stickiness"
           infoKey="A2"

@@ -3,6 +3,16 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
@@ -31,7 +41,7 @@ const formatDateTime = (value?: string) => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return `${date.toLocaleDateString("en-GB")} ${date.toLocaleTimeString()}`;
+  return `${date.toLocaleDateString("en-GB")} , ${date.toLocaleTimeString()}`;
 };
 
 const AccountingUnitsBillCycleMapping: React.FC = () => {
@@ -39,6 +49,8 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
   const [mappings, setMappings] = useState<FlatChargeMapping[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const fetchMappings = useCallback(async () => {
     setLoading(true);
@@ -70,8 +82,14 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
 
   const rows = useMemo(() => mappings, [mappings]);
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Delete this bill cycle mapping?")) return;
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTargetId == null) return;
+    const id = deleteTargetId;
     setDeletingId(id);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
@@ -81,11 +99,13 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
       });
       toast.success("Mapping deleted successfully");
       setMappings((prev) => prev.filter((m) => m.id !== id));
+      setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting mapping:", error);
       toast.error("Failed to delete mapping");
     } finally {
       setDeletingId(null);
+      setDeleteTargetId(null);
     }
   };
 
@@ -94,14 +114,14 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button
+            {/* <Button
               size="sm"
               variant="ghost"
               className="p-1"
               onClick={() => navigate(`/accounting/units-bill-cycle-mapping/${item.id}`, { state: { mapping: item } })}
             >
               <Eye className="w-4 h-4" />
-            </Button>
+            </Button> */}
             <Button
               size="sm"
               variant="ghost"
@@ -148,6 +168,32 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
         loadingMessage="Loading mappings..."
         emptyMessage="No mappings found"
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Mapping</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this bill cycle mapping? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingId !== null} className="min-w-[100px]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={deletingId !== null}
+              className="min-w-[70px] bg-[#C72030] text-white hover:bg-[#A01020]"
+            >
+              {deletingId !== null ? "Deleting..." : "OK"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

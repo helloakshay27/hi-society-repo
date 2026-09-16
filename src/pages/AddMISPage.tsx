@@ -97,7 +97,7 @@ const AddButton = styled(MuiButton)(({ theme }) => ({
 }));
 
 const RemoveButton = styled(IconButton)(({ theme }) => ({
-  color: "#C72030",
+  color: "#DA7756",
   padding: "4px",
   "&:hover": {
     backgroundColor: "#fef2f2",

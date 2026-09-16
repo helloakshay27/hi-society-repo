@@ -6,6 +6,33 @@ import { NotepadText } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
 import { formatAmount } from "@/utils/financialStatement";
 import { TaxSummaryApiRow, TaxSummaryRow, mapTaxSummaryRow, formatLedgerTaxName } from "@/utils/taxSummary";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+
+const columns: ColumnConfig[] = [
+  { key: "ledgerId", label: "Ledger ID", sortable: true },
+  { key: "ledgerTaxName", label: "Ledger & Tax Name", sortable: true },
+  { key: "taxPercentage", label: "Tax Percentage", sortable: false },
+  { key: "transactionAmount", label: "Transaction Amount", sortable: true },
+  { key: "taxAmount", label: "Tax Amount", sortable: true },
+];
+
+const renderCell = (row: TaxSummaryRow, columnKey: string) => {
+  switch (columnKey) {
+    case "ledgerId":
+      return row.ledgerId || "-";
+    case "ledgerTaxName":
+      return formatLedgerTaxName(row) || "-";
+    case "taxPercentage":
+      return row.taxPercentage ? row.taxPercentage : "-";
+    case "transactionAmount":
+      return formatAmount(row.transactionAmount) || "-";
+    case "taxAmount":
+      return formatAmount(row.taxAmount) || "-";
+    default:
+      return "-";
+  }
+};
 
 const AccountingTaxSummary: React.FC = () => {
   const lock_account_id = localStorage.getItem("lock_account_id") || "3";
@@ -35,7 +62,7 @@ const AccountingTaxSummary: React.FC = () => {
       const data = response.data;
       const list: TaxSummaryApiRow[] = Array.isArray(data)
         ? data
-        : data?.tax_summary || data?.data || [];
+        : data?.records || data?.tax_summary || data?.data || [];
       setRows(list.map(mapTaxSummaryRow));
     } catch (err) {
       console.error("Error fetching tax summary:", err);
@@ -101,49 +128,21 @@ const AccountingTaxSummary: React.FC = () => {
           <h1 className="text-xl font-bold">Tax Summary</h1>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030]"></div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-red-500">{error}</div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-300 text-sm">
-              <thead className="bg-[#E5E0D3]">
-                <tr>
-                  <th className="border border-gray-300 px-3 py-2 text-left">Ledger ID</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left">Ledger & Tax Name</th>
-                  <th className="border border-gray-300 px-3 py-2">Tax Percentage</th>
-                  <th className="border border-gray-300 px-3 py-2">Transaction Amount</th>
-                  <th className="border border-gray-300 px-3 py-2">Tax Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="border border-gray-300 px-3 py-4 text-center text-gray-500">
-                      No matching records found
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((row, index) => (
-                    <tr key={`${row.ledgerId}-${index}`}>
-                      <td className="border border-gray-300 px-3 py-1.5">{row.ledgerId}</td>
-                      <td className="border border-gray-300 px-3 py-1.5">{formatLedgerTaxName(row)}</td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxPercentage}</td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-right">
-                        {formatAmount(row.transactionAmount)}
-                      </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-right">{row.taxAmount}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <EnhancedTable
+            data={rows}
+            columns={columns}
+            renderCell={renderCell}
+            loading={loading}
+            loadingMessage="Loading tax summary..."
+            emptyMessage="No matching records found"
+            hideTableSearch
+            hideColumnsButton
+          />
         )}
       </div>
     </div>

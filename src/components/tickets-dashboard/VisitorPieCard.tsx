@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { PieChartCard, PieChartSegment } from './PieChartCard';
+import { CardDownloadButton } from './CardDownloadButton';
 import { visitorReportsAPI, VisitorOverviewResponse } from '@/services/visitorReportsAPI';
 import { PIE_OPEN_COLOR, PIE_CLOSED_COLOR } from './colors';
 import { TicketsDashboardDateRange } from './types';
 
-export type VisitorPieMetric = 'expected-unexpected' | 'goods-in-out' | 'delivery-visitors';
+export type VisitorPieMetric = 'expected-unexpected' | 'gate-pass' | 'delivery-visitors';
 
 const PIE_METRIC_META: Record<VisitorPieMetric, { title: string; subtitle?: string }> = {
   'expected-unexpected': {
     title: 'Expected vs Unexpected Visitors',
     subtitle: 'Expected / Unexpected',
   },
-  'goods-in-out': {
-    title: 'Goods In vs Goods Out',
-    subtitle: 'Inwards / Outwards',
+  'gate-pass': {
+    title: 'Returnable vs Non-Returnable Gate Pass',
+    subtitle: 'Returnable / Non-returnable',
   },
   'delivery-visitors': {
     title: 'Delivery Visitors',
@@ -77,10 +78,10 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
         { name: 'Unexpected', value: overview?.unexpected_visitors ?? 0, color: PIE_OPEN_COLOR },
       ];
       break;
-    case 'goods-in-out':
+    case 'gate-pass':
       segments = [
-        { name: 'Goods In', value: overview?.goods_inwards ?? 0, color: PIE_CLOSED_COLOR },
-        { name: 'Goods Out', value: overview?.goods_outwards ?? 0, color: PIE_OPEN_COLOR },
+        { name: 'Returnable', value: overview?.returnable_gate_pass ?? 0, color: PIE_CLOSED_COLOR },
+        { name: 'Non-Returnable', value: overview?.non_returnable_gate_pass ?? 0, color: PIE_OPEN_COLOR },
       ];
       break;
     case 'delivery-visitors': {
@@ -104,6 +105,24 @@ export const VisitorPieCard: React.FC<VisitorPieCardProps> = ({ metric, dateRang
       loading={loading}
       className={className}
       maxVisibleSegments={metric === 'delivery-visitors' ? 6 : undefined}
+      rightSlot={
+        // Delivery has its own export (`kpis?export=delivery_visitors`); the other
+        // two cards render the headline splits of the full KPI payload, which is
+        // what `kpis?export=true` covers.
+        <CardDownloadButton
+          label={
+            metric === 'delivery-visitors'
+              ? 'Download Delivery Visitors'
+              : 'Download Visitor Details'
+          }
+          onDownload={() => {
+            const range = { fromDate: dateRange.startDate, toDate: dateRange.endDate };
+            return metric === 'delivery-visitors'
+              ? visitorReportsAPI.downloadDeliveryVisitorsExport(range)
+              : visitorReportsAPI.downloadKpisExport(range);
+          }}
+        />
+      }
     />
   );
 };

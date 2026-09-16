@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { API_CONFIG } from "@/config/apiConfig";
-import { CalendarDays } from "lucide-react";
+import { ArrowLeft, CalendarDays } from "lucide-react";
 
 // Real response shape returned by GET /lock_account_ledgers/:id
 interface LedgerDetailAPI {
@@ -68,6 +68,7 @@ const formatAmount = (value: number) =>
 
 const AccountingLedgerDetails: React.FC = () => {
   const { ledgerId } = useParams<{ ledgerId: string }>();
+  const navigate = useNavigate();
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
   const [ledger, setLedger] = useState<LedgerDetailAPI | null>(null);
@@ -138,6 +139,14 @@ const AccountingLedgerDetails: React.FC = () => {
 
   return (
     <div className="w-full bg-white p-6" style={{ minHeight: "100vh", boxSizing: "border-box" }}>
+      <button
+        onClick={() => navigate("/accounting/chart-of-accounts")}
+        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Chart of Accounts
+      </button>
+
       <h1 className="text-2xl font-bold text-center text-gray-900 mb-6">
         {ledger?.name || "Ledger"}
       </h1>

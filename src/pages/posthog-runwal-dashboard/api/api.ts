@@ -87,7 +87,7 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
     parts.push(`${k}=${encodeURIComponent(v)}`);
   }
 
-  const appId = getAppIdFromUrl();
+  const appId = filters.appId || getAppIdFromUrl();
   if (appId) parts.push(`app_id=${encodeURIComponent(appId)}`);
 
   // Sent unescaped (matches the site_id convention below) — the value is
@@ -180,6 +180,32 @@ export const getApiBaseUrl = (): string => {
 
   return 'http://localhost:3000';
 };
+
+/**
+ * Fetch the logged-in user's account details and return their site_id.
+ * Used as the dynamic site filter for every dashboard API call now that
+ * there's no manual site picker in the UI — the dashboard always scopes
+ * to the current user's own site, fetched fresh rather than hardcoded.
+ */
+export async function fetchUserAccountSiteId(): Promise<string | null> {
+  const token = getToken() || localStorage.getItem('token') || '';
+  if (!token) return null;
+
+  const baseUrl = getApiBaseUrl();
+  const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+
+  const response = await fetch(`${cleanBase}/api/users/account.json`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Account API error (${response.status}): ${response.statusText || 'Failed to fetch'}`);
+  }
+
+  const data = await response.json();
+  return data?.site_id != null ? String(data.site_id) : null;
+}
 
 async function getFm<T>(
   path: string,

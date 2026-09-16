@@ -23,6 +23,8 @@ interface BarChartCardProps {
   insight?: string;
   emptyMessage?: string;
   className?: string;
+  /** Header-right slot, e.g. a `CardDownloadButton`. */
+  rightSlot?: React.ReactNode;
 }
 
 /** Generic bar chart card, used for every category/vendor/mode comparison on the Tickets Dashboard. */
@@ -38,6 +40,7 @@ export const BarChartCard: React.FC<BarChartCardProps> = ({
   insight,
   emptyMessage = 'No data for the selected date range.',
   className,
+  rightSlot,
 }) => {
   const isHorizontal = orientation === 'horizontal';
   const chartHeight = isHorizontal ? Math.max(240, data.length * 34 + 40) : 300;
@@ -48,6 +51,7 @@ export const BarChartCard: React.FC<BarChartCardProps> = ({
       subtitle={subtitle}
       loading={loading}
       className={className}
+      rightSlot={rightSlot}
     >
       {data.length === 0 ? (
         <div className="flex h-64 items-center justify-center text-brand-body-5 text-brand-text-light">{emptyMessage}</div>

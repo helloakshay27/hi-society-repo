@@ -568,6 +568,21 @@
   color: var(--ink);
 }
 
+#refreshBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-spin {
+  display: inline-block;
+  animation: refresh-spin 0.8s linear infinite;
+}
+
+@keyframes refresh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* ============ DATE RANGE POPOVER ============ */
 .daterange {
   position: relative;
@@ -1246,6 +1261,37 @@ table.pathtbl tbody tr:hover {
 .st-drop {
   background: var(--red-tint);
   color: var(--red);
+}
+
+/* ============ NOTES / DISCLAIMERS ============ */
+.bmnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.bmnote > span:first-child {
+  flex-shrink: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.bmnote b {
+  color: var(--ink);
+}
+
+.crashnote {
+  background: var(--amber-tint);
+  border: 1px solid var(--amber);
+  color: var(--amber-ink);
+}
+
+.crashnote > span:first-child {
+  color: var(--amber-ink);
 }
 
 /* ============ KEY VALUES ============ */

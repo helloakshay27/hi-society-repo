@@ -5,30 +5,47 @@ import {
   useTicketsOverview,
   useEscalationOverview,
   useVisitorOverview,
+  useVisitorStaffKpi,
   useUtilityOverview,
   TicketsPieCard,
   TicketsBarCard,
-  EscalationPieCard,
   ExecutiveEscalationCard,
   VisitorPieCard,
   VisitorBarCard,
   UtilityPieCard,
   UtilityBarCard,
+  AssetPieCard,
+  AssetBarCard,
+  AssetAmcCard,
+  useAssetStatistics,
+  ChecklistStatusCard,
+  ChecklistTopTenCard,
+  DEFAULT_CHECKLIST_GRID_LAYOUT,
+  IncidentPieCard,
+  IncidentBarCard,
+  IncidentRcaTableCard,
+  BodyInjuryChartCard,
+  useIncidentOverview,
+  DEFAULT_INCIDENT_GRID_LAYOUT,
+  ManageUsersPieCard,
+  useManageUsersOverview,
+  DEFAULT_MANAGE_USERS_GRID_LAYOUT,
   ActivityFeedCard,
   TicketsAgeingMatrixCard,
   CheckListCard,
   TicketsDashboardGrid,
-  DEFAULT_ESCALATION_GRID_LAYOUT,
   DEFAULT_VISITOR_GRID_LAYOUT,
   DEFAULT_UTILITY_GRID_LAYOUT,
+  DEFAULT_ASSET_GRID_LAYOUT,
   type TicketsDashboardDateRange,
   type DashboardTab,
 } from '@/components/tickets-dashboard';
+import { manageUsersDashboardAPI } from '@/services/manageUsersDashboardAPI';
 
 const getDefaultDateRange = (): TicketsDashboardDateRange => {
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setFullYear(startDate.getFullYear() - 1);
+  startDate.setMonth(startDate.getMonth() - 1);
   return { startDate, endDate };
 };
 
@@ -40,8 +57,12 @@ const TicketsDashboardPage: React.FC = () => {
 
   const overview = useTicketsOverview(dateRange);
   const utilityOverview = useUtilityOverview(dateRange, activeTab === 'utility');
-  const escalationOverview = useEscalationOverview(dateRange, activeTab === 'escalation');
+  const escalationOverview = useEscalationOverview(dateRange, activeTab === 'tickets');
   const visitorOverview = useVisitorOverview(dateRange, activeTab === 'visitor');
+  const visitorStaffKpi = useVisitorStaffKpi(dateRange, activeTab === 'visitor');
+  const assetStatistics = useAssetStatistics(dateRange, activeTab === 'assets');
+  const incidentOverview = useIncidentOverview(dateRange, activeTab === 'incident');
+  const manageUsersOverview = useManageUsersOverview(dateRange, activeTab === 'manage-users');
 
   const handleStartDateChange = (value: string) => {
     if (!value) return;
@@ -69,7 +90,7 @@ const TicketsDashboardPage: React.FC = () => {
 
       <div className="p-4 sm:p-6">
         {activeTab === 'tickets' && (
-          <TicketsDashboardGrid storageKey="tickets-dashboard-grid-layout-v3">
+          <TicketsDashboardGrid storageKey="tickets-dashboard-grid-layout-v5">
             <div key="kpi-open">
               <TicketsKpiTile label="Open Tickets" value={overview?.ticket_status.total_open} tone="purple" />
             </div>
@@ -87,9 +108,9 @@ const TicketsDashboardPage: React.FC = () => {
               <TicketsPieCard metric="proactive-reactive" dateRange={dateRange} />
             </div>
 
-            <div key="activity-feed">
+            {/* <div key="activity-feed">
               <ActivityFeedCard />
-            </div>
+            </div> */}
 
             <div key="unit-category">
               <TicketsBarCard metric="unit-category" dateRange={dateRange} />
@@ -119,20 +140,56 @@ const TicketsDashboardPage: React.FC = () => {
             <div key="fm-vs-project">
               <TicketsPieCard metric="fm-vs-project" dateRange={dateRange} />
             </div>
-            <div key="golden-tickets">
+            {/* <div key="golden-tickets">
               <TicketsPieCard metric="golden-tickets" dateRange={dateRange} />
-            </div>
+            </div> */}
 
             <div key="complaint-mode">
               <TicketsBarCard metric="complaint-mode" dateRange={dateRange} />
             </div>
-            <div key="delivery-visitors">
+            {/* <div key="delivery-visitors">
               <TicketsBarCard metric="delivery-visitors" dateRange={dateRange} />
+            </div> */}
+
+            {/* Escalation — folded in from the former Escalation tab. */}
+            <div key="kpi-open-escalation">
+              <TicketsKpiTile label="Open Escalation" value={escalationOverview?.open} tone="purple" />
+            </div>
+            <div key="kpi-close-escalation">
+              <TicketsKpiTile label="Close Escalation" value={escalationOverview?.closed} tone="teal" />
+            </div>
+            <div key="kpi-average-escalation">
+              <TicketsKpiTile
+                label="Average Escalation"
+                value={
+                  escalationOverview?.average_ageing != null
+                    ? Number.isInteger(escalationOverview.average_ageing)
+                      ? escalationOverview.average_ageing
+                      : Number(escalationOverview.average_ageing.toFixed(1))
+                    : undefined
+                }
+                tone="blue"
+              />
+            </div>
+            <div key="kpi-total-escalation">
+              <TicketsKpiTile
+                label="Total Escalation"
+                value={
+                  escalationOverview != null
+                    ? (escalationOverview.open ?? 0) + (escalationOverview.closed ?? 0)
+                    : undefined
+                }
+                tone="peach"
+              />
             </div>
 
-            <div key="checklist">
-              <CheckListCard />
+            <div key="executive-escalation">
+              <ExecutiveEscalationCard dateRange={dateRange} />
             </div>
+
+            {/* <div key="checklist">
+              <CheckListCard />
+            </div> */}
           </TicketsDashboardGrid>
         )}
 
@@ -360,70 +417,15 @@ const TicketsDashboardPage: React.FC = () => {
             <div key="bar-dry-segregation">
               <UtilityBarCard metric="dry-segregation" dateRange={dateRange} />
             </div>
-            <div key="bar-ev-consumption">
+            {/* <div key="bar-ev-consumption">
               <UtilityBarCard metric="ev-consumption" dateRange={dateRange} />
-            </div>
-          </TicketsDashboardGrid>
-        )}
-
-        {activeTab === 'escalation' && (
-          <TicketsDashboardGrid
-            storageKey="escalation-dashboard-grid-layout-v3"
-            defaultLayout={DEFAULT_ESCALATION_GRID_LAYOUT}
-          >
-            <div key="kpi-open-escalation">
-              <TicketsKpiTile label="Open Escalation" value={escalationOverview?.open} tone="purple" />
-            </div>
-            <div key="kpi-close-escalation">
-              <TicketsKpiTile label="Close Escalation" value={escalationOverview?.closed} tone="teal" />
-            </div>
-            <div key="kpi-average-escalation">
-              <TicketsKpiTile
-                label="Average Escalation"
-                value={
-                  escalationOverview?.average_ageing != null
-                    ? Number.isInteger(escalationOverview.average_ageing)
-                      ? escalationOverview.average_ageing
-                      : Number(escalationOverview.average_ageing.toFixed(1))
-                    : undefined
-                }
-                tone="blue"
-              />
-            </div>
-            <div key="kpi-total-escalation">
-              <TicketsKpiTile
-                label="Total Escalation"
-                value={
-                  escalationOverview != null
-                    ? (escalationOverview.open ?? 0) + (escalationOverview.closed ?? 0)
-                    : undefined
-                }
-                tone="peach"
-              />
-            </div>
-
-            <div key="open-escalation">
-              <EscalationPieCard metric="open-escalation" dateRange={dateRange} />
-            </div>
-            <div key="close-escalation">
-              <EscalationPieCard metric="close-escalation" dateRange={dateRange} />
-            </div>
-            <div key="average-escalation">
-              <EscalationPieCard metric="average-escalation" dateRange={dateRange} />
-            </div>
-            <div key="executive-escalation-pie">
-              <EscalationPieCard metric="executive-escalation" dateRange={dateRange} />
-            </div>
-
-            <div key="executive-escalation">
-              <ExecutiveEscalationCard dateRange={dateRange} />
-            </div>
+            </div> */}
           </TicketsDashboardGrid>
         )}
 
         {activeTab === 'visitor' && (
           <TicketsDashboardGrid
-            storageKey="visitor-dashboard-grid-layout-v5"
+            storageKey="visitor-dashboard-grid-layout-v10"
             defaultLayout={DEFAULT_VISITOR_GRID_LAYOUT}
           >
             <div key="kpi-total-visitors">
@@ -438,34 +440,265 @@ const TicketsDashboardPage: React.FC = () => {
             <div key="kpi-total-vehicles">
               <TicketsKpiTile label="Total Vehicles" value={visitorOverview?.total_vehicles} tone="blue" />
             </div>
-            <div key="kpi-goods-inwards">
-              <TicketsKpiTile label="Goods Inwards" value={visitorOverview?.goods_inwards} tone="teal" />
+            <div key="kpi-total-gate-pass">
+              <TicketsKpiTile label="Total Gate Pass" value={visitorOverview?.total_gate_pass} tone="teal" />
             </div>
-            <div key="kpi-goods-outwards">
-              <TicketsKpiTile label="Goods Outwards" value={visitorOverview?.goods_outwards} tone="peach" />
+            <div key="kpi-returnable-gate-pass">
+              <TicketsKpiTile
+                label="Returnable Gate Pass"
+                value={visitorOverview?.returnable_gate_pass}
+                tone="peach"
+              />
+            </div>
+            <div key="kpi-staff-in">
+              <TicketsKpiTile label="Staff In" value={visitorStaffKpi?.staff_in} tone="teal" />
+            </div>
+            <div key="kpi-staff-out">
+              <TicketsKpiTile label="Staff Out" value={visitorStaffKpi?.staff_out} tone="purple" />
             </div>
 
             <div key="pie-expected-unexpected">
               <VisitorPieCard metric="expected-unexpected" dateRange={dateRange} />
             </div>
-            <div key="pie-goods-in-out">
-              <VisitorPieCard metric="goods-in-out" dateRange={dateRange} />
+            <div key="pie-gate-pass">
+              <VisitorPieCard metric="gate-pass" dateRange={dateRange} />
             </div>
-            <div key="pie-delivery-visitors">
+            {/* <div key="pie-delivery-visitors">
               <VisitorPieCard metric="delivery-visitors" dateRange={dateRange} />
-            </div>
+            </div> */}
 
-            <div key="bar-total-visitors">
-              <VisitorBarCard metric="total-visitors" dateRange={dateRange} />
-            </div>
-            <div key="bar-goods-in">
-              <VisitorBarCard metric="goods-in" dateRange={dateRange} />
-            </div>
-            <div key="bar-goods-out">
-              <VisitorBarCard metric="goods-out" dateRange={dateRange} />
-            </div>
             <div key="bar-delivery-visitors">
               <VisitorBarCard metric="delivery-visitors" dateRange={dateRange} />
+            </div>
+          </TicketsDashboardGrid>
+        )}
+
+        {/* Assets — ported from the FM Matrix /maintenance/asset "Analytics" tab:
+            six KPI metrics, the status / IT-vs-Non-IT / category donuts, and the
+            group-wise bar chart. All served by /pms/assets/assets_statistics.json. */}
+        {activeTab === 'assets' && (
+          <TicketsDashboardGrid
+            storageKey="asset-dashboard-grid-layout-v3"
+            defaultLayout={DEFAULT_ASSET_GRID_LAYOUT}
+          >
+            <div key="kpi-total-assets">
+              <TicketsKpiTile
+                label="Total Assets"
+                value={assetStatistics?.total_assets}
+                tone="purple"
+              />
+            </div>
+            <div key="kpi-assets-in-use">
+              <TicketsKpiTile
+                label="Assets in Use"
+                value={assetStatistics?.assets_in_use}
+                tone="teal"
+              />
+            </div>
+            <div key="kpi-assets-in-breakdown">
+              <TicketsKpiTile
+                label="Assets in Breakdown"
+                value={assetStatistics?.assets_in_breakdown}
+                tone="peach"
+              />
+            </div>
+            <div key="kpi-critical-breakdown">
+              <TicketsKpiTile
+                label="Critical Assets in Breakdown"
+                value={assetStatistics?.critical_assets_in_breakdown}
+                tone="blue"
+              />
+            </div>
+            <div key="kpi-ppm-conduct">
+              <TicketsKpiTile
+                label="PPM Conduct Assets"
+                value={assetStatistics?.ppm_conduct_assets}
+                tone="peach"
+              />
+            </div>
+            <div key="kpi-amc-assets">
+              <AssetAmcCard
+                underAmc={assetStatistics?.assets_under_amc}
+                missingAmc={assetStatistics?.assets_missing_amc}
+              />
+            </div>
+
+            <div key="pie-asset-status">
+              <AssetPieCard metric="status" dateRange={dateRange} />
+            </div>
+            <div key="pie-asset-type-distribution">
+              <AssetPieCard metric="type-distribution" dateRange={dateRange} />
+            </div>
+
+            <div key="pie-asset-category-wise">
+              <AssetPieCard metric="category-wise" dateRange={dateRange} />
+            </div>
+            <div key="bar-asset-group-wise">
+              <AssetBarCard dateRange={dateRange} />
+            </div>
+          </TicketsDashboardGrid>
+        )}
+
+        {activeTab === 'checklist' && (
+          <TicketsDashboardGrid
+            storageKey="checklist-dashboard-grid-layout-v3"
+            defaultLayout={DEFAULT_CHECKLIST_GRID_LAYOUT}
+          >
+            <div key="checklist-technical">
+              <ChecklistStatusCard variant="technical" dateRange={dateRange} />
+            </div>
+            <div key="checklist-non-technical">
+              <ChecklistStatusCard variant="non-technical" dateRange={dateRange} />
+            </div>
+            <div key="checklist-top-ten">
+              <ChecklistTopTenCard dateRange={dateRange} />
+            </div>
+            <div key="checklist-site-wise">
+              <ChecklistStatusCard variant="site-wise" dateRange={dateRange} />
+            </div>
+          </TicketsDashboardGrid>
+        )}
+
+        {activeTab === 'incident' && (
+          <TicketsDashboardGrid
+            storageKey="incident-dashboard-grid-layout-v3"
+            defaultLayout={DEFAULT_INCIDENT_GRID_LAYOUT}
+          >
+            <div key="kpi-total-incidents">
+              <TicketsKpiTile label="Total Incidents" value={incidentOverview?.total_incidents} tone="purple" />
+            </div>
+            <div key="kpi-open">
+              <TicketsKpiTile label="Open" value={incidentOverview?.open} tone="teal" />
+            </div>
+            <div key="kpi-under-investigation">
+              <TicketsKpiTile
+                label="Under Investigation"
+                value={incidentOverview?.under_investigation}
+                tone="peach"
+              />
+            </div>
+            <div key="kpi-closed">
+              <TicketsKpiTile label="Closed" value={incidentOverview?.closed} tone="blue" />
+            </div>
+            <div key="kpi-zero-incident-days">
+              <TicketsKpiTile
+                label="Zero Incident Days"
+                value={incidentOverview?.zero_incident_days}
+                tone="teal"
+              />
+            </div>
+            <div key="kpi-incident-rate">
+              <TicketsKpiTile
+                label="Incident Rate"
+                value={
+                  incidentOverview?.incident_rate != null
+                    ? incidentOverview.incident_rate.toFixed(2)
+                    : undefined
+                }
+                tone="purple"
+              />
+            </div>
+            <div key="kpi-ltir">
+              <TicketsKpiTile
+                label="LTIR"
+                value={incidentOverview?.ltir != null ? incidentOverview.ltir.toFixed(2) : undefined}
+                tone="peach"
+              />
+            </div>
+
+            <div key="pie-category-wise">
+              <IncidentPieCard metric="category-wise" dateRange={dateRange} />
+            </div>
+            <div key="pie-status-distribution">
+              <IncidentPieCard metric="status-distribution" dateRange={dateRange} />
+            </div>
+            <div key="bar-level-wise">
+              <IncidentBarCard dateRange={dateRange} />
+            </div>
+
+            <div key="rca-table">
+              <IncidentRcaTableCard dateRange={dateRange} />
+            </div>
+            <div key="body-injury-map">
+              <BodyInjuryChartCard dateRange={dateRange} />
+            </div>
+          </TicketsDashboardGrid>
+        )}
+
+        {/* Manage Users — the StatsCards from /settings/manage-users, off the same
+            `dashboard` block on /crm/admin/user_societies.json: the four user-status
+            counters as KPI tiles (each keeping its XLSX export), and the six download
+            counters as donuts. */}
+        {activeTab === 'manage-users' && (
+          <TicketsDashboardGrid
+            storageKey="manage-users-dashboard-grid-layout-v1"
+            defaultLayout={DEFAULT_MANAGE_USERS_GRID_LAYOUT}
+          >
+            <div key="kpi-total-users">
+              <TicketsKpiTile
+                label="Total Users"
+                value={manageUsersOverview?.total_users}
+                tone="purple"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx',
+                    'total_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+            <div key="kpi-pending-users">
+              <TicketsKpiTile
+                label="Pending Users"
+                value={manageUsersOverview?.pending_users}
+                tone="peach"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx?q[approve_eq]=null',
+                    'pending_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+            <div key="kpi-approved-users">
+              <TicketsKpiTile
+                label="Approved Users"
+                value={manageUsersOverview?.approved_users}
+                tone="teal"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx?q[approve_eq]=true',
+                    'approved_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+            <div key="kpi-rejected-users">
+              <TicketsKpiTile
+                label="Rejected Users"
+                value={manageUsersOverview?.rejected_users}
+                tone="blue"
+                onDownload={() =>
+                  manageUsersDashboardAPI.downloadExport(
+                    '/crm/admin/user_societies.xlsx?q[approve_eq]=false',
+                    'rejected_users.xlsx',
+                    { fromDate: dateRange.startDate, toDate: dateRange.endDate }
+                  )
+                }
+              />
+            </div>
+
+            <div key="pie-app-downloads">
+              <ManageUsersPieCard metric="app-downloads" dashboard={manageUsersOverview} />
+            </div>
+            <div key="pie-resident-type">
+              <ManageUsersPieCard metric="resident-type" dashboard={manageUsersOverview} />
+            </div>
+            <div key="pie-phase">
+              <ManageUsersPieCard metric="phase" dashboard={manageUsersOverview} />
             </div>
           </TicketsDashboardGrid>
         )}

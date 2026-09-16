@@ -402,7 +402,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .modal-close-btn:hover {
-            color: #c72030;
+            color: #DA7756;
           }
 
           .project-banner-upload {
@@ -459,7 +459,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .ratio-upload-area:hover {
-            border-color: #c72030;
+            border-color: #DA7756;
             background: #f8faff;
           }
 
@@ -474,7 +474,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .ratio-upload-area:hover .upload-placeholder {
-            color: #c72030;
+            color: #DA7756;
           }
 
           .ratio-upload-area.disabled {
@@ -531,7 +531,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .uploaded-image-card.invalid {
-            border: 2px solid #c72030;
+            border: 2px solid #DA7756;
             background: #fef2f2;
           }
 
@@ -629,7 +629,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .continue-btn {
-            background: #c72030;
+            background: #DA7756;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -640,7 +640,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .continue-btn:hover {
-            background: #c72030;
+            background: #DA7756;
           }
 
           @media (max-width: 768px) {
@@ -727,7 +727,7 @@ const ProjectImageVideoUpload = ({
         }
 
         .ratio-upload-area:hover {
-          border-color: #de7007;
+          border-color: #DA7756;
           background: #f8faff;
         }
 
@@ -741,7 +741,7 @@ const ProjectImageVideoUpload = ({
         }
 
         .ratio-upload-area:hover .upload-placeholder {
-          color: #de7007;
+          color: #DA7756;
         }
 
         .ratio-upload-area.disabled {
@@ -896,7 +896,7 @@ const ProjectImageVideoUpload = ({
         }
 
         .continue-btn {
-          background: #de7007;
+          background: #DA7756;
           color: white;
           border: none;
           padding: 12px 24px;
@@ -907,7 +907,7 @@ const ProjectImageVideoUpload = ({
         }
 
         .continue-btn:hover {
-          background: #de7007;
+          background: #DA7756;
         }
 
         @media (max-width: 768px) {

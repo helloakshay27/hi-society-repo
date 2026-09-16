@@ -1,5 +1,6 @@
 import React from 'react';
 import { RetentionCohort } from '../../api/types';
+import { fmtDateShort } from '../../data/constants';
 
 interface RetentionCohortTableProps {
   cohorts?: RetentionCohort[];
@@ -24,7 +25,7 @@ export const RetentionCohortTable: React.FC<RetentionCohortTableProps> = ({ coho
         <thead>
           <tr>
             <th style={{ textAlign: 'left' }}>Cohort</th>
-            <th style={{ textAlign: 'center' }}>Size</th>
+            {/* <th style={{ textAlign: 'center' }}>Size</th> */}
             {weekCols.map((_, w) => (
               <th key={w}>W{w}</th>
             ))}
@@ -32,15 +33,15 @@ export const RetentionCohortTable: React.FC<RetentionCohortTableProps> = ({ coho
         </thead>
         <tbody>
           {cohorts.map((c, i) => {
-            const label = c.cohort_week || `Cohort ${i + 1}`;
+            const label = c.cohort_week ? fmtDateShort(c.cohort_week) : `Cohort ${i + 1}`;
             return (
               <tr key={i}>
                 <td className="lbl" style={{ fontWeight: 500 }}>
                   {label}
                 </td>
-                <td style={{ textAlign: 'center', fontSize: '12px', color: 'var(--muted)' }}>
+                {/* <td style={{ textAlign: 'center', fontSize: '12px', color: 'var(--muted)' }}>
                   {c.size ? c.size.toLocaleString() : '—'}
-                </td>
+                </td> */}
                 {weekCols.map((wkKey, w) => {
                   const rawVal = c[wkKey];
                   if (rawVal === null || rawVal === undefined || rawVal === '') {
@@ -58,7 +59,7 @@ export const RetentionCohortTable: React.FC<RetentionCohortTableProps> = ({ coho
                     );
                   }
 
-                  let num = typeof rawVal === 'number' ? rawVal : parseFloat(String(rawVal));
+                  const num = typeof rawVal === 'number' ? rawVal : parseFloat(String(rawVal));
                   if (isNaN(num)) {
                     return (
                       <td key={w} style={{ textAlign: 'center' }}>

@@ -22,14 +22,26 @@ import {
   AddChartOfAccountModal,
   ChartOfAccountLedger,
 } from "@/components/AddChartOfAccountModal";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
-// Shape returned by GET /lock_account_ledgers/opening (bulk list for the table)
+// Shape returned by GET /lock_accounts/:id/lock_account_ledgers.json (table view)
 interface LockAccountLedgerAPI {
   id: number;
   name: string;
   fixed_type?: string | null;
   account_code?: string;
   lock_account_group_id?: number;
+  account_type?: string;
+  group_name?: string;
+  lock_account_group?: { id?: number; group_name?: string } | null;
 }
 
 // Shape returned by GET /lock_account_ledgers/:id (single ledger detail)
@@ -45,12 +57,6 @@ interface LockAccountLedgerDetailAPI {
   budget?: number | string | null;
   watchlist?: boolean | null;
   assoc_cost_centre?: boolean | null;
-}
-
-interface LockAccountGroupAPI {
-  id: number;
-  group_name: string;
-  parent_group_id?: number | null;
 }
 
 interface LedgerRow {
@@ -83,6 +89,38 @@ const columns: ColumnConfig[] = [
   { key: "accountCode", label: "Account Code", sortable: true },
   { key: "accountType", label: "Account Type", sortable: true },
 ];
+
+// GET /lock_accounts/:id/lock_account_ledgers/tree.json may return either a
+// nested tree ({ text/name, children: [...] }) or a jsTree-style flat list
+// ([{ id, parent, text }]). Normalize both into AccountTreeNodeData[].
+const normalizeTree = (data: unknown): AccountTreeNodeData[] => {
+  const record = data as Record<string, unknown> | null;
+  const arr = Array.isArray(data)
+    ? data
+    : (record?.jstree_data as unknown[]) ??
+      (record?.tree as unknown[]) ??
+      (record?.children as unknown[]) ??
+      (record?.nodes as unknown[]) ??
+      [];
+  if (!Array.isArray(arr) || arr.length === 0) return [];
+
+  const looksNested = arr.some((n) => Array.isArray((n as Record<string, unknown>)?.children));
+  if (looksNested) {
+    const toNode = (n: Record<string, unknown>): AccountTreeNodeData => {
+      const rawChildren = Array.isArray(n.children) ? (n.children as Record<string, unknown>[]) : [];
+      const children = rawChildren.map(toNode);
+      const name = String(n.text ?? n.name ?? n.title ?? n.id ?? "");
+      return {
+        id: (n.id ?? n.key ?? name) as string | number,
+        name,
+        type: children.length > 0 ? "group" : "ledger",
+        children,
+      };
+    };
+    return arr.map((n) => toNode(n as Record<string, unknown>));
+  }
+  return buildTreeFromFlat(arr as FlatTreeNode[]);
+};
 
 // numeric id → group node; "documents_..._<ledgerId>" string id → ledger node
 const buildTreeFromFlat = (flat: FlatTreeNode[]): AccountTreeNodeData[] => {
@@ -147,13 +185,18 @@ const AccountTreeNode: React.FC<{ node: AccountTreeNodeData; level: number }> = 
   );
 };
 
+const PAGE_SIZE = 20;
+
 const AccountingChartOfAccounts: React.FC = () => {
   const navigate = useNavigate();
   const [viewType, setViewType] = useState<"table" | "tree">("table");
   const [ledgers, setLedgers] = useState<LockAccountLedgerAPI[]>([]);
-  const [groups, setGroups] = useState<LockAccountGroupAPI[]>([]);
+  const [accountTypes, setAccountTypes] = useState<{ id: number; name: string }[]>([]);
   const [tree, setTree] = useState<AccountTreeNodeData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [treeLoading, setTreeLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingLedger, setEditingLedger] = useState<ChartOfAccountLedger | null>(null);
 
@@ -167,78 +210,111 @@ const AccountingChartOfAccounts: React.FC = () => {
     };
   };
 
-  const fetchGroups = useCallback(async () => {
+  // GET /lock_accounts/:id/lock_account_ledgers/account_types.json
+  const fetchAccountTypes = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_groups`, {
-        params: { lock_account_id: lockAccountId },
-        headers: authHeaders(),
-      });
-      setGroups(response.data?.lock_account_groups || []);
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/account_types.json`,
+        { headers: authHeaders() }
+      );
+      const data = response.data;
+      const list: unknown[] = Array.isArray(data)
+        ? data
+        : data?.account_types ?? data?.lock_account_groups ?? data?.data ?? [];
+      setAccountTypes(
+        list.map((item) => {
+          if (typeof item === "string") return { id: 0, name: item };
+          const obj = item as Record<string, unknown>;
+          return {
+            id: Number(obj.id ?? obj.value ?? 0),
+            name: String(obj.name ?? obj.group_name ?? obj.label ?? obj.id ?? ""),
+          };
+        })
+      );
     } catch (error) {
-      console.error("Error fetching account groups:", error);
-      setGroups([]);
+      console.error("Error fetching account types:", error);
+      setAccountTypes([]);
     }
   }, [lockAccountId]);
 
+  // GET /lock_accounts/:id/lock_account_ledgers.json (table view, server-paginated:
+  // { pagination: { current_page, total_pages, total_count, per_page }, lock_account_ledgers: [...] })
   const fetchLedgers = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers/opening`, {
-        params: { lock_account_id: lockAccountId },
-        headers: authHeaders(),
-      });
-      setLedgers(response.data?.lock_account_ledgers || []);
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers.json`,
+        { params: { page: currentPage, per_page: PAGE_SIZE }, headers: authHeaders() }
+      );
+      const data = response.data;
+      const list: LockAccountLedgerAPI[] = Array.isArray(data)
+        ? data
+        : data?.lock_account_ledgers ?? data?.ledgers ?? data?.data ?? [];
+      setLedgers(list);
+      const pagination = data?.pagination;
+      setTotalPages(pagination?.total_pages ? Number(pagination.total_pages) : 1);
     } catch (error) {
       console.error("Error fetching chart of accounts:", error);
       toast.error("Failed to fetch chart of accounts");
       setLedgers([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId]);
+  }, [lockAccountId, currentPage]);
 
+  // GET /lock_accounts/:id/lock_account_ledgers/tree.json (tree view)
   const fetchTree = useCallback(async () => {
+    setTreeLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      const response = await axios.get(`${baseUrl}/lock_account_ledgers`, {
-        params: { lock_account_id: lockAccountId },
-        headers: authHeaders(),
-      });
-      const flat: FlatTreeNode[] = Array.isArray(response.data) ? response.data : [];
-      setTree(buildTreeFromFlat(flat));
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/tree.json`,
+        { headers: authHeaders() }
+      );
+      setTree(normalizeTree(response.data));
     } catch (error) {
       console.error("Error fetching account tree:", error);
       setTree([]);
+    } finally {
+      setTreeLoading(false);
     }
   }, [lockAccountId]);
 
   useEffect(() => {
-    fetchGroups();
-    fetchLedgers();
+    fetchAccountTypes();
     fetchTree();
-  }, [fetchGroups, fetchLedgers, fetchTree]);
+  }, [fetchAccountTypes, fetchTree]);
 
-  const groupNameById = useMemo(() => {
+  useEffect(() => {
+    fetchLedgers();
+  }, [fetchLedgers]);
+
+  const accountTypeNameById = useMemo(() => {
     const map = new Map<number, string>();
-    groups.forEach((g) => map.set(g.id, g.group_name));
+    accountTypes.forEach((t) => t.id && map.set(t.id, t.name));
     return map;
-  }, [groups]);
+  }, [accountTypes]);
 
   const rows = useMemo<LedgerRow[]>(
     () =>
       ledgers.map((ledger, index) => ({
-        sr: index + 1,
+        sr: (currentPage - 1) * PAGE_SIZE + index + 1,
         id: ledger.id,
         accountName: ledger.name,
         accountCode: ledger.account_code || "",
-        accountType: ledger.lock_account_group_id
-          ? groupNameById.get(ledger.lock_account_group_id) || ""
-          : "",
+        accountType:
+          ledger.account_type ||
+          ledger.group_name ||
+          ledger.lock_account_group?.group_name ||
+          (ledger.lock_account_group_id
+            ? accountTypeNameById.get(ledger.lock_account_group_id) || ""
+            : ""),
         raw: ledger,
       })),
-    [ledgers, groupNameById]
+    [ledgers, accountTypeNameById, currentPage]
   );
 
   // The API's root jsTree node ("Account Ledgers", parent "#") already reads
@@ -246,26 +322,39 @@ const AccountingChartOfAccounts: React.FC = () => {
   const rootNode: AccountTreeNodeData =
     tree[0] ?? { id: "root", name: "Account Ledgers", type: "root", children: [] };
 
-  const callSyncEndpoint = async (path: string, successMessage: string) => {
+  const callLedgerEndpoint = async (
+    path: string,
+    successMessage: string,
+    params?: Record<string, string>
+  ) => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
-      await axios.post(
-        `${baseUrl}/lock_accounts/${lockAccountId}/${path}.json`,
-        {},
-        { headers: authHeaders() }
+      await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/${path}.json`,
+        { headers: authHeaders(), params }
       );
       toast.success(successMessage);
       fetchLedgers();
       fetchTree();
     } catch (error) {
       console.error(`Error calling ${path}:`, error);
-      toast.error(`Failed to ${successMessage.toLowerCase()}`);
+      toast.error(`Failed: ${successMessage}`);
     }
   };
 
-  const handleSyncFlatLedgers = () => callSyncEndpoint("sync_flat_ledgers", "Flat ledgers synced");
-  const handleSyncVendorLedgers = () => callSyncEndpoint("sync_vendor_ledgers", "Vendor ledgers synced");
-  const handleRaiseToBuilder = () => callSyncEndpoint("raise_to_builder", "Raised to builder");
+  // GET /lock_accounts/:id/lock_account_ledgers/sync.json
+  const handleSyncUnitLedgers = () => callLedgerEndpoint("sync", "Accounting ledgers synced successfully.");
+  // GET /lock_accounts/:id/lock_account_ledgers/sync_suppliers.json
+  const handleSyncVendorLedgers = () => callLedgerEndpoint("sync_suppliers", "Vendor account ledgers are successfully synced.");
+  // GET /lock_accounts/:id/lock_account_ledgers/raise_to_builder.json?pids=1,2,3
+  const handleRaiseToBuilder = () => {
+    const pids = ledgers.map((l) => l.id).filter(Boolean).join(",");
+    if (!pids) {
+      toast.error("No accounts to raise to builder");
+      return;
+    }
+    callLedgerEndpoint("raise_to_builder", "Raised to builder successfully.", { pids });
+  };
 
   const handleAddAccount = () => {
     setEditingLedger(null);
@@ -279,7 +368,7 @@ const AccountingChartOfAccounts: React.FC = () => {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
-      return response.data?.lock_account_ledger || null;
+      return response.data?.lock_account_ledger || response.data || null;
     } catch (error) {
       console.error("Error fetching ledger detail:", error);
       toast.error("Failed to load account details");
@@ -371,6 +460,67 @@ const AccountingChartOfAccounts: React.FC = () => {
     }
   };
 
+  // Sliding 3-page window anchored at the current page (current, current+1,
+  // current+2, clamped to stay inside range) with page 1 / last page always
+  // reachable — e.g. page 3 → "3 4 5 ... 21", page 4 → "1 ... 4 5 6 ... 21".
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+
+    const pageItem = (page: number) => (
+      <PaginationItem key={page} className="cursor-pointer">
+        <PaginationLink
+          onClick={() => setCurrentPage(page)}
+          isActive={currentPage === page}
+          aria-disabled={loading}
+          className={loading ? "pointer-events-none opacity-50" : ""}
+        >
+          {page}
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    const windowSize = 3;
+    const items = [];
+
+    // Small enough to just list every page — no need to truncate.
+    if (totalPages <= windowSize + 2) {
+      for (let i = 1; i <= totalPages; i++) items.push(pageItem(i));
+      return items;
+    }
+
+    let start = currentPage;
+    const end = Math.min(totalPages, start + windowSize - 1);
+    if (end - start < windowSize - 1) start = Math.max(1, end - windowSize + 1);
+
+    if (start > 1) {
+      items.push(pageItem(1));
+      if (start > 2) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+
+    for (let i = start; i <= end; i++) items.push(pageItem(i));
+
+    if (end < totalPages) {
+      if (end < totalPages - 1) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+      items.push(pageItem(totalPages));
+    }
+
+    return items;
+  };
+
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -395,7 +545,7 @@ const AccountingChartOfAccounts: React.FC = () => {
           <Button
             variant="outline"
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-            onClick={handleSyncFlatLedgers}
+            onClick={handleSyncUnitLedgers}
           >
             <UploadCloud className="mr-2 h-4 w-4" /> Sync Flat Ledgers
           </Button>
@@ -415,15 +565,18 @@ const AccountingChartOfAccounts: React.FC = () => {
           </Button>
         </div>
       </div>
-
+ <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+          Chart of Accounts
+        </h1>
+      </div>
       {viewType === "table" ? (
         <EnhancedTable
           data={rows}
           columns={columns}
           renderCell={renderCell}
           getItemId={(item) => String(item.id)}
-          pagination
-          pageSize={20}
+          pagination={false}
           // enableExport
           exportFileName="chart-of-accounts"
           storageKey="chart-of-accounts-table"
@@ -441,7 +594,44 @@ const AccountingChartOfAccounts: React.FC = () => {
         />
       ) : (
         <div className="rounded-md border border-gray-200 bg-white p-4">
-          <AccountTreeNode node={rootNode} level={0} />
+          {treeLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#C72030]" />
+              <span className="ml-3 text-sm text-gray-500">Loading account tree...</span>
+            </div>
+          ) : (
+            <AccountTreeNode node={rootNode} level={0} />
+          )}
+        </div>
+      )}
+
+      {viewType === "table" && totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  className={
+                    currentPage === 1 || loading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  className={
+                    currentPage === totalPages || loading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
 

@@ -174,14 +174,14 @@ const AccountingChargeEdit: React.FC = () => {
         charge_setup: {
           name: form.chargeName,
           description: form.description,
-          value: form.value !== "" ? Number(form.value) : null,
+          // value: form.value !== "" ? Number(form.value) : null,
           charge_category_id: Number(form.chargeCategoryId),
           igst_rate: Number(form.igstRate) || 0,
           cgst_rate: Number(form.cgstRate) || 0,
           sgst_rate: Number(form.sgstRate) || 0,
           basis: form.basis,
           hsn_code: form.hsnCode,
-          uom: form.uom,
+          // uom: form.uom,
         },
       };
       await axios.put(`${baseUrl}/account/charge_setups/${id}.json`, payload, {
@@ -251,7 +251,7 @@ const AccountingChargeEdit: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <TextField
                 label="Value"
                 type="number"
@@ -275,7 +275,7 @@ const AccountingChargeEdit: React.FC = () => {
               InputProps={{ notched: true }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
@@ -359,7 +359,7 @@ const AccountingChargeEdit: React.FC = () => {
             </div>
           </SectionCard>
 
-          <div className="flex justify-start gap-3">
+          <div className="flex justify-center gap-3">
             <Button
               type="submit"
               disabled={submitting}

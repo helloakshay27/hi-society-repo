@@ -379,6 +379,11 @@ export interface DashboardFilters {
   // shown. "0,1" (All), "0" (Pre Sales) or "1" (Post Sales) — sent verbatim
   // (comma unescaped) as the display_view query param.
   displayView?: string;
+  // Read from the current URL's ?app_id=... param — carried explicitly on
+  // the filters object (rather than each fetch call re-reading
+  // window.location.search) so it's visible wherever filters are, and sent
+  // as app_id on every PostHog adoption request.
+  appId?: string;
 }
 
 export interface SiteLookupItem {

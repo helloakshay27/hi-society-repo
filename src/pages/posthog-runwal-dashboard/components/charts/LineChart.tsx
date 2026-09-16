@@ -212,8 +212,17 @@ export const LineChart: React.FC<LineChartProps> = ({
       </g>
     );
 
-    // Tooltip Box layout
-    const cardW = hasPrev ? 174 : 144;
+    // Tooltip Box layout — size the box to fit its actual text so long
+    // labels (e.g. "Weekly active residents:") don't overlap the value.
+    const measure = (s: string, fontSize: number) => s.length * fontSize * 0.58;
+    const curValStr = vfmt(curVal);
+    const titleWidth = measure(pointLabel, 11) + 20;
+    const curRowWidth = 22 + measure(`${curLabel}:`, 11) + 10 + measure(curValStr, 11.5) + 14;
+    const prevRowWidth = hasPrev && prevVal != null
+      ? 22 + measure(`${prevLabel}: ${vfmt(prevVal)}`, 10.5) + (deltaStr ? measure(deltaStr, 10.5) + 10 : 0) + 14
+      : 0;
+    const neededWidth = Math.max(titleWidth, curRowWidth, prevRowWidth);
+    const cardW = Math.max(hasPrev ? 174 : 144, Math.min(neededWidth, W - 20));
     const cardH = hasPrev ? 76 : 52;
     let cardX = hx + 12;
     if (cardX + cardW > W - 10) {
@@ -222,7 +231,7 @@ export const LineChart: React.FC<LineChartProps> = ({
     if (cardX < 10) {
       cardX = 10;
     }
-    let cardY = Math.max(pt + 2, Math.min(base - cardH - 6, hyCur - cardH / 2));
+    const cardY = Math.max(pt + 2, Math.min(base - cardH - 6, hyCur - cardH / 2));
 
     tooltipNode = (
       <g style={{ pointerEvents: 'none', transition: 'all 0.05s ease-out' }}>

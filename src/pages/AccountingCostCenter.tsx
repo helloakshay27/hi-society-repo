@@ -106,6 +106,35 @@ const AccountingCostCenter: React.FC = () => {
     }
   };
 
+  // GET /lock_accounts/:id/cost_centres.xlsx
+  const handleExport = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/cost_centres.xlsx`,
+        {
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "cost_centres.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting cost centres:", error);
+      toast.error("Failed to export cost centres");
+    }
+  };
+
   const renderCell = (item: CostCentre, columnKey: string) => {
     switch (columnKey) {
       case "actions":
@@ -173,6 +202,7 @@ const AccountingCostCenter: React.FC = () => {
         enableGlobalSearch
         searchPlaceholder="Search"
         enableExport
+        onExport={handleExport}
         exportFileName="cost-centres"
         storageKey="cost-centres-table"
         loading={loading}

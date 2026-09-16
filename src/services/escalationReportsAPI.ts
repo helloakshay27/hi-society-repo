@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient';
 import type { TicketReportDateRange } from './ticketReportsAPI';
+import { getDynamicScopeParams } from './reportScopeParams';
 
 // Per FM-HI-SOCIETY-DASHBOARD-APIS.md § 2 "Escalation":
 //   GET /api-fm-report/hi-society/escalation/escalation_kpi   -> open/closed/average_ageing
@@ -42,15 +43,6 @@ const formatDateForAPI = (date: Date): string => {
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
-};
-
-const getDynamicScopeParams = (): Record<string, string> => {
-  const params: Record<string, string> = {};
-  const siteId = localStorage.getItem('selectedSiteId');
-  const societyId = localStorage.getItem('selectedSocietyId') || localStorage.getItem('selectedUserSociety');
-  if (siteId) params.site_id = siteId;
-  if (societyId) params.society_id = societyId;
-  return params;
 };
 
 const buildParams = ({ fromDate, toDate }: TicketReportDateRange): Record<string, string> => ({

@@ -8,6 +8,15 @@ import { ticketManagementAPI } from "@/services/ticketManagementAPI";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface SmartsecureGateRow {
   id: number;
@@ -52,6 +61,100 @@ const enquiryColumns: ColumnConfig[] = [
   { key: "gateDevice", label: "Gate Device", sortable: true, hideable: true, draggable: true },
 ];
 
+const getPageNumbers = (currentPage: number, totalPages: number) => {
+  const pages: (number | "ellipsis-start" | "ellipsis-end")[] = [];
+  const maxVisiblePages = 5;
+
+  if (totalPages <= maxVisiblePages) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+    return pages;
+  }
+
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  if (startPage > 1) {
+    pages.push(1);
+    if (startPage > 2) pages.push("ellipsis-start");
+  }
+
+  for (let i = startPage; i <= endPage; i++) pages.push(i);
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) pages.push("ellipsis-end");
+    pages.push(totalPages);
+  }
+
+  return pages;
+};
+
+interface PaginationBarProps {
+  currentPage: number;
+  totalPages: number;
+  totalEntries?: number;
+  onPageChange: (page: number) => void;
+}
+
+const PaginationBar: React.FC<PaginationBarProps> = ({
+  currentPage,
+  totalPages,
+  totalEntries,
+  onPageChange,
+}) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between mt-4">
+      {totalEntries !== undefined && (
+        <p className="text-sm text-gray-600 whitespace-nowrap">
+          {totalEntries.toLocaleString()} result{totalEntries === 1 ? "" : "s"} total
+        </p>
+      )}
+      <Pagination className="ml-auto w-auto">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+              className={
+                currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
+              }
+            />
+          </PaginationItem>
+
+          {getPageNumbers(currentPage, totalPages).map((page, index) =>
+            page === "ellipsis-start" || page === "ellipsis-end" ? (
+              <PaginationItem key={`${page}-${index}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            ) : (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  onClick={() => onPageChange(page)}
+                  isActive={currentPage === page}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            )
+          )}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
+              className={
+                currentPage === totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
+  );
+};
+
 const SmartsecureIntegration: React.FC = () => {
   const navigate = useNavigate();
 
@@ -62,6 +165,7 @@ const SmartsecureIntegration: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalEntries, setTotalEntries] = useState(0);
 
   const [enquiries, setEnquiries] = useState<EnquiryRow[]>([]);
   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
@@ -90,6 +194,7 @@ const SmartsecureIntegration: React.FC = () => {
       if (response?.smart_secure_pagination) {
         setCurrentPage(response.smart_secure_pagination.current_page || page);
         setTotalPages(response.smart_secure_pagination.total_pages || 1);
+        setTotalEntries(response.smart_secure_pagination.total_entries || 0);
       }
     } catch (error) {
       console.error("Error fetching smartsecure gates:", error);
@@ -291,13 +396,15 @@ const SmartsecureIntegration: React.FC = () => {
             onGlobalSearch={handleGateSearch}
             disableClientSearch
             searchPlaceholder="Search"
-            pagination
-            manualPagination
+            pagination={false}
             pageSize={20}
+            storageKey="smartsecure-gates-table"
+          />
+          <PaginationBar
             currentPage={currentPage}
             totalPages={totalPages}
+            totalEntries={totalEntries}
             onPageChange={setCurrentPage}
-            storageKey="smartsecure-gates-table"
           />
         </TabsContent>
 
@@ -330,13 +437,14 @@ const SmartsecureIntegration: React.FC = () => {
             onGlobalSearch={handleEnquirySearch}
             disableClientSearch
             searchPlaceholder="Search enquiries"
-            pagination
-            manualPagination
+            pagination={false}
             pageSize={20}
+            storageKey="smartsecure-enquiries-table"
+          />
+          <PaginationBar
             currentPage={enquiryPage}
             totalPages={enquiryTotalPages}
             onPageChange={setEnquiryPage}
-            storageKey="smartsecure-enquiries-table"
           />
         </TabsContent>
       </Tabs>

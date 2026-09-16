@@ -16,6 +16,7 @@ import {
   fetchModules,
   fetchWorkflowUsage,
   fetchAllowedSites,
+  fetchUserAccountSiteId,
   fetchLeaseOverview,
   fetchEventsOverview,
   fetchBroadcastOverview,
@@ -97,6 +98,20 @@ export function useDashboardSites() {
     sitesSettled,
     allSiteIds,
   };
+}
+
+// ==========================================
+// Logged-in user's own site_id (from /api/users/account.json)
+// ==========================================
+
+export function useUserAccountSiteId() {
+  return useQuery<string | null>({
+    queryKey: ['user-account-site-id'],
+    queryFn: fetchUserAccountSiteId,
+    staleTime: Infinity, // site_id doesn't change without re-login
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 }
 
 // ==========================================

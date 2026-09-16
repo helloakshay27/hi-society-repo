@@ -35,6 +35,7 @@ interface InvoiceReportRow {
   ageing9: number | null;
   ageing12: number | null;
   ageing15: number | null;
+  ageingOver15: number | null;
 }
 
 interface OptionItem {
@@ -79,35 +80,37 @@ const toOptionList = (raw: unknown, nameKeys: string[]): OptionItem[] => {
   });
 };
 
-const normalizeInvoiceRow = (item: Record<string, unknown>, index: number): InvoiceReportRow => ({
-  sr: toNumberOrNull(pick(item, ["sr", "sr_no", "serial_no"])) ?? index + 1,
-  tower: String(pick(item, ["tower", "tower_name", "block_name", "wing_name"]) ?? ""),
-  flat: String(pick(item, ["flat", "flat_no", "flat_name", "unit_name"]) ?? ""),
-  partyName: String(pick(item, ["party_name", "member_name", "customer_name", "user_name"]) ?? ""),
-  billNo: String(pick(item, ["bill_no", "bill_number", "invoice_no", "invoice_number"]) ?? ""),
-  billPeriod: String(pick(item, ["bill_period", "period"]) ?? ""),
-  billDate: String(pick(item, ["bill_date", "invoice_date"]) ?? ""),
-  billAmt: toNumberOrNull(pick(item, ["bill_amt", "bill_amount", "amount", "total_amount"])) ?? 0,
-  dueDate: String(pick(item, ["due_date"]) ?? ""),
-  paidAmount: toNumberOrNull(pick(item, ["paid_amount", "amount_paid"])),
-  paidDate: String(pick(item, ["paid_date"]) ?? ""),
-  receiptNo: String(pick(item, ["receipt_no", "receipt_number"]) ?? ""),
-  receiptDate: String(pick(item, ["receipt_date"]) ?? ""),
-  outstandingAmt:
-    toNumberOrNull(pick(item, ["outstanding_amt", "outstanding_amount", "balance_amount", "balance"])) ?? 0,
-  ageing6: toNumberOrNull(pick(item, ["ageing_6", "ageing6", "ageing_6_months", "less_than_6_months"])),
-  ageing9: toNumberOrNull(pick(item, ["ageing_9", "ageing9", "ageing_9_months", "less_than_9_months"])),
-  ageing12: toNumberOrNull(pick(item, ["ageing_12", "ageing12", "ageing_12_months", "less_than_12_months"])),
-  ageing15: toNumberOrNull(
-    pick(item, ["ageing_15", "ageing15", "ageing_15_months", "less_than_15_months", "above_15_months"])
-  ),
-});
+const normalizeInvoiceRow = (item: Record<string, unknown>, index: number): InvoiceReportRow => {
+  const ageing = (item.ageing ?? {}) as Record<string, unknown>;
+  return {
+    sr: toNumberOrNull(pick(item, ["sr", "sr_no", "serial_no"])) ?? index + 1,
+    tower: String(pick(item, ["tower", "tower_name", "block_name", "wing_name"]) ?? ""),
+    flat: String(pick(item, ["unit", "flat", "flat_no", "flat_name", "unit_name"]) ?? ""),
+    partyName: String(pick(item, ["party_name", "member_name", "customer_name", "user_name"]) ?? ""),
+    billNo: String(pick(item, ["bill_number", "bill_no", "invoice_no", "invoice_number"]) ?? ""),
+    billPeriod: String(pick(item, ["bill_period", "period"]) ?? ""),
+    billDate: String(pick(item, ["bill_date", "invoice_date"]) ?? ""),
+    billAmt: toNumberOrNull(pick(item, ["bill_amount", "bill_amt", "amount", "total_amount"])) ?? 0,
+    dueDate: String(pick(item, ["due_date"]) ?? ""),
+    paidAmount: toNumberOrNull(pick(item, ["paid_amount", "amount_paid"])),
+    paidDate: String(pick(item, ["paid_date"]) ?? ""),
+    receiptNo: String(pick(item, ["receipt_number", "receipt_no"]) ?? ""),
+    receiptDate: String(pick(item, ["receipt_date"]) ?? ""),
+    outstandingAmt:
+      toNumberOrNull(pick(item, ["outstanding_amount", "outstanding_amt", "balance_amount", "balance"])) ?? 0,
+    ageing6: toNumberOrNull(pick(ageing, ["under_6_months", "ageing_6", "ageing6", "less_than_6_months"])),
+    ageing9: toNumberOrNull(pick(ageing, ["under_9_months", "ageing_9", "ageing9", "less_than_9_months"])),
+    ageing12: toNumberOrNull(pick(ageing, ["under_12_months", "ageing_12", "ageing12", "less_than_12_months"])),
+    ageing15: toNumberOrNull(pick(ageing, ["under_15_months", "ageing_15", "ageing15", "less_than_15_months"])),
+    ageingOver15: toNumberOrNull(pick(ageing, ["over_15_months", "above_15_months"])),
+  };
+};
 
 const extractInvoiceReportList = (data: unknown): Record<string, unknown>[] => {
   if (Array.isArray(data)) return data as Record<string, unknown>[];
   const obj = data as Record<string, unknown>;
   const candidate =
-    obj?.bills_invoice_report ?? obj?.data ?? obj?.report ?? obj?.invoices ?? obj?.rows;
+    obj?.invoices ?? obj?.bills_invoice_report ?? obj?.data ?? obj?.report ?? obj?.rows;
   return Array.isArray(candidate) ? (candidate as Record<string, unknown>[]) : [];
 };
 
@@ -130,10 +133,11 @@ const columns: ColumnConfig[] = [
   { key: "ageing9", label: "< 9 Months", sortable: true, group: "Debtors Ageing (o/s amt)" },
   { key: "ageing12", label: "< 12 Months", sortable: true, group: "Debtors Ageing (o/s amt)" },
   { key: "ageing15", label: "< 15 Months", sortable: true, group: "Debtors Ageing (o/s amt)" },
+  { key: "ageingOver15", label: "> 15 Months", sortable: true, group: "Debtors Ageing (o/s amt)" },
 ];
 
-const formatBillAmount = (value: number | null) => (value === null || value === undefined ? "" : value.toFixed(1));
-const formatOutstanding = (value: number | null) => (value === null || value === undefined ? "" : value.toFixed(2));
+const formatBillAmount = (value: number | null) => (value === null || value === undefined ? "-" : value.toFixed(1));
+const formatOutstanding = (value: number | null) => (value === null || value === undefined ? "-" : value.toFixed(2));
 
 const EMPTY_FILTERS: FilterState = { towerId: "", towerName: "", flatId: "", flatName: "", dueDate: undefined };
 
@@ -213,9 +217,8 @@ const AccountingInvoicesReport: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const currentLockAccountId = localStorage.getItem("lock_account_id");
-      const params: Record<string, string> = {};
-      if (currentLockAccountId) params.lock_account_id = currentLockAccountId;
+      const currentLockAccountId = localStorage.getItem("lock_account_id") || "3";
+      const params: Record<string, string> = { lock_account_id: currentLockAccountId };
       if (filters.towerId) params["q[society_block_id_eq]"] = filters.towerId;
       if (filters.flatId) params["q[society_flat_id_eq]"] = filters.flatId;
       if (filters.dueDate) params["q[due_date_eq]"] = format(filters.dueDate, "yyyy-MM-dd");
@@ -286,9 +289,14 @@ const AccountingInvoicesReport: React.FC = () => {
       case "ageing9":
       case "ageing12":
       case "ageing15":
-        return formatOutstanding(item[columnKey as "outstandingAmt" | "ageing6" | "ageing9" | "ageing12" | "ageing15"]);
-      default:
-        return item[columnKey as keyof InvoiceReportRow] ?? "";
+      case "ageingOver15":
+        return formatOutstanding(
+          item[columnKey as "outstandingAmt" | "ageing6" | "ageing9" | "ageing12" | "ageing15" | "ageingOver15"]
+        );
+      default: {
+        const value = item[columnKey as keyof InvoiceReportRow];
+        return value === null || value === undefined || value === "" ? "-" : value;
+      }
     }
   };
 
@@ -300,7 +308,6 @@ const AccountingInvoicesReport: React.FC = () => {
           {hasAppliedFilters ? "Filtered results" : "All invoices"}
         </p>
       </div>
-
       {hasAppliedFilters && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-brand-body-4 font-medium text-brand-text-light">

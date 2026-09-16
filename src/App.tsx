@@ -937,6 +937,8 @@ const FitoutRequestAdd = lazy(() => import("./pages/FitoutRequestAdd"));
 
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
 const PosthogRunwalDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalDashboard"));
+const PosthogGodrejDashboard = lazy(() => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard"));
+const PosthogKRahejaDashboard = lazy(() => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard"));
 const ViewUserPage = lazy(() => import("./pages/ViewUserPage").then(m => ({ default: m.ViewUserPage })));
 const FioutMobileView = lazy(() => import("./pages/FioutMobileView"));
 const FitoutRequestDetailsPageMobile = lazy(() => import("./pages/FitoutRequestDetailsPageMobile"));
@@ -1166,6 +1168,13 @@ import { NewIncidentListDashboard } from "./pages/NewIncidentListDashboard";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import PosthogMyPiramalDashboard from "./pages/posthog-my-piramal-dashboard";
 const LockFees = lazy(() => import("./pages/LockFees"));
+// Same pages setupMemberRoutes.tsx mounts under /loyalty/encashment/*, also
+// reachable under /ops-console so AdminSidebar's Encashment links stay inside
+// AdminLayout instead of bouncing out to the member Layout (and its own
+// "Loyalty" sidebar section, which is what /loyalty/* resolves to there).
+const EncashmentConfigPage = lazy(() => import("./pages/EncashmentConfigPage"));
+const EncashmentRequestsPage = lazy(() => import("./pages/EncashmentRequestsPage"));
+const KycRequestsPage = lazy(() => import("./pages/KycRequestsPage"));
 const LockFeesAdd = lazy(() => import("./pages/LockFeesAdd"));
 const LockFeesDetail = lazy(() => import("./pages/LockFeesDetail"));
 const EditLockFeesPage = lazy(() => import("./pages/EditLockFeesPage"));
@@ -1570,6 +1579,19 @@ function App() {
                           element={<LockFeesDetail />}
                         />
 
+                        <Route
+                          path="admin/encashment/config"
+                          element={<EncashmentConfigPage />}
+                        />
+                        <Route
+                          path="admin/encashment/requests"
+                          element={<EncashmentRequestsPage />}
+                        />
+                        <Route
+                          path="admin/encashment/kyc-requests"
+                          element={<KycRequestsPage />}
+                        />
+
                         <Route path="settings/account/user-list-otp" element={<OccupantUserListWrapper />} />
                         <Route path="settings/account/user-list-otp/detail/:id" element={<OccupantUserDetailWrapper />} />
 
@@ -1587,6 +1609,14 @@ function App() {
                       <Route
                         path="/posthog-my-piramal-dashboard"
                         element={<PosthogMyPiramalDashboard />}
+                      />
+                      <Route
+                        path="/posthog-godrej-dashboard"
+                        element={<PosthogGodrejDashboard />}
+                      />
+                      <Route
+                        path="/posthog-kraheja-dashboard"
+                        element={<PosthogKRahejaDashboard />}
                       />
                       <Route
                         path="/smartsecure-dashboard"
@@ -1677,7 +1707,7 @@ function App() {
                       />
 
                       <Route
-                        path="/tickets-dashboard"
+                        path="/hi-society-dashboard"
                         element={
                           <ProtectedRoute>
                             <TicketsDashboardPage />
@@ -2162,7 +2192,7 @@ function App() {
 
                         {/* Setup - KYC Detail View Route */}
                         <Route
-                          path="/kyc-details/:id"
+                          path="/settings/kyc-details/:id"
                           element={<KYCDetailView />}
                         />
 

@@ -36,11 +36,25 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      const isClickedOutside = 
+      const isClickedOutside =
         (desktopPanelRef.current && !desktopPanelRef.current.contains(target)) &&
         (mobilePanelRef.current && !mobilePanelRef.current.contains(target));
-      
+
       if (isClickedOutside) {
+        // Do NOT clear the selection when the click is on a selection checkbox
+        // (otherwise selecting a second row deselects the first), or inside any
+        // open dialog / menu / popover (e.g. the Send Email modal and its
+        // dropdowns) — acting on the selection must not wipe it.
+        const el = target as HTMLElement | null;
+        if (
+          el?.closest?.(
+            '[data-checkbox], [role="dialog"], [role="menu"], [role="listbox"], ' +
+            '[data-radix-popper-content-wrapper], .MuiModal-root, .MuiPopover-root, ' +
+            '.MuiMenu-root, [data-sonner-toaster]'
+          )
+        ) {
+          return;
+        }
         onClearSelection?.();
       }
     };

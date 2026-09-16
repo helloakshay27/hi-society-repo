@@ -215,9 +215,14 @@ export const getOrganizations = async (): Promise<{
 };
 
 /**
- * Get companies list for dropdown
+ * Get companies list for dropdown. Pass `organizationId` to scope the
+ * request server-side (q[organization_id_eq]) instead of fetching every
+ * company and filtering client-side — this fires a fresh network call each
+ * time the selected organization changes.
  */
-export const getCompanies = async (): Promise<{
+export const getCompanies = async (
+  organizationId?: string | number
+): Promise<{
   success: boolean;
   data?: any[];
   error?: string;
@@ -230,7 +235,9 @@ export const getCompanies = async (): Promise<{
       throw new Error("Authentication required");
     }
 
-    const url = `https://${baseUrl}/pms/company_setups/company_index.json`;
+    const url = organizationId
+      ? `https://${baseUrl}/pms/company_setups/company_index.json?q[organization_id_eq]=${organizationId}`
+      : `https://${baseUrl}/pms/company_setups/company_index.json`;
 
     const response = await fetch(url, {
       method: "GET",

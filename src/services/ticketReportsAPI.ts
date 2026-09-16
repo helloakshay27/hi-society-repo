@@ -1,4 +1,6 @@
 import { apiClient } from '@/utils/apiClient';
+import { getDynamicScopeParams } from './reportScopeParams';
+import { saveReportDownload } from './reportDownload';
 
 // Pms::Manage::TicketsDashboardController — see hi-society-fm-reports-curls.md
 const BASE_PATH = '/api-fm-report/hi-society/tickets';
@@ -121,15 +123,51 @@ const formatDateForAPI = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// site_id and society_id are OR'd server-side, so whichever is present in the
-// user's current context is enough to scope the report.
-const getDynamicScopeParams = (): Record<string, string> => {
-  const params: Record<string, string> = {};
-  const siteId = localStorage.getItem('selectedSiteId');
-  const societyId = localStorage.getItem('selectedSocietyId') || localStorage.getItem('selectedUserSociety');
-  if (siteId) params.site_id = siteId;
-  if (societyId) params.society_id = societyId;
-  return params;
+/** The five `export=` values the controller accepts. */
+export type TicketExportType =
+  | 'ageing'
+  | 'unit_category'
+  | 'resolution_tat'
+  | 'response_tat'
+  | 'proactive_reactive'
+  // Added per "new download api for ticket and visitor for hisociety.md".
+  | 'unit_category_proactive'
+  | 'common_area_category'
+  | 'common_area_category_proactive'
+  | 'fm_vs_project'
+  | 'complaint_mode';
+
+/**
+ * `path` is the chart endpoint each export's card already reads, per the doc's
+ * "call it on whichever endpoint's chart the download button lives next to".
+ * `<stamp>` in the filename is replaced with the selected date range.
+ */
+const TICKET_EXPORTS: Record<TicketExportType, { path: string; filename: string }> = {
+  ageing: { path: 'performance', filename: 'FM_ageingMatrix_<stamp>.xlsx' },
+  unit_category: { path: 'category-breakdown', filename: 'FM_CategoryWiseTicket_<stamp>.xlsx' },
+  resolution_tat: { path: 'overview', filename: 'FM_Resolution_TAT_Details_<stamp>.xlsx' },
+  response_tat: {
+    path: 'overview',
+    filename: 'FM_chart_response_resolution_TAT_<stamp>.xlsx',
+  },
+  proactive_reactive: {
+    path: 'overview',
+    filename: 'tickets_proactive_reactive_<stamp>.csv',
+  },
+  unit_category_proactive: {
+    path: 'category-breakdown',
+    filename: 'FM_UnitCategoryWiseProactiveTicket_<stamp>.xlsx',
+  },
+  common_area_category: {
+    path: 'category-breakdown',
+    filename: 'FM_CommonAreaCategoryWiseTicket_<stamp>.xlsx',
+  },
+  common_area_category_proactive: {
+    path: 'category-breakdown',
+    filename: 'FM_CommonAreaCategoryWiseProactiveTicket_<stamp>.xlsx',
+  },
+  fm_vs_project: { path: 'overview', filename: 'FM_FmVsProjectTicket_<stamp>.xlsx' },
+  complaint_mode: { path: 'distribution', filename: 'FM_ComplaintModeTicket_<stamp>.xlsx' },
 };
 
 const buildParams = (
@@ -167,5 +205,24 @@ export const ticketReportsAPI = {
   async getTrends(range: TicketReportDateRange, granularity: 'monthly' | 'daily' = 'monthly'): Promise<TicketTrendsResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/trends`, { params: buildParams(range, { granularity }) });
     return data;
+  },
+
+  /**
+   * Per-card export. Adding `export=<type>` to any of the five chart endpoints
+   * makes it return a file instead of JSON — the export type is decided purely by
+   * the param, not the route, so each entry below calls the endpoint that already
+   * feeds the card the button sits on (see "ticket and visitor download api.md").
+   */
+  async downloadExport(range: TicketReportDateRange, exportType: TicketExportType): Promise<void> {
+    const { path, filename } = TICKET_EXPORTS[exportType];
+    const stamp = `${formatDateForAPI(range.fromDate)}_to_${formatDateForAPI(range.toDate)}`;
+
+    await saveReportDownload(
+      apiClient.get(`${BASE_PATH}/${path}`, {
+        params: buildParams(range, { export: exportType }),
+        responseType: 'blob',
+      }),
+      filename.replace('<stamp>', stamp)
+    );
   },
 };

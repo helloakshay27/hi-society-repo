@@ -1,16 +1,22 @@
 import { apiClient } from '@/utils/apiClient';
 import type { TicketReportDateRange } from './ticketReportsAPI';
+import { getDynamicScopeParams } from './reportScopeParams';
+import { saveReportDownload } from './reportDownload';
 
 // Per FM-HI-SOCIETY-DASHBOARD-APIS.md § 1 "Visitors", the backend only exposes
 // two routes:
 //   GET /api-fm-report/hi-society/visitors/kpis       -> overview KPI totals
 //   GET /api-fm-report/hi-society/visitors/staff_kpi   -> staff-specific KPIs
-// There is NO documented per-building / goods-in / goods-out / delivery
-// breakdown route, so getBuildingWise/getGoodsIn/getGoodsOut/getDelivery below
-// have no real endpoint to call — they're left pointing at their previous
-// (already non-existent) paths and will keep falling back to sample data via
-// the card components, same as before this fix. See getStaffKpi for the one
-// extra route the doc does provide that isn't wired into any card yet.
+//
+// The /kpis payload (camelCase) is:
+//   { totalVisitors, expectedVisitors, unexpectedVisitors, totalGatePass,
+//     totalVehicle, returnable_gatePass, non_returnable_gatePass,
+//     delivery_visitors: { "<provider>": <count>, ... } }
+// So the delivery-partner split ships *inside* /kpis — there is no separate
+// /delivery route (getDelivery below reads it back out of /kpis). There is
+// still no per-building / goods-in / goods-out breakdown route, so those
+// bars were dropped from the Visitor tab. See getStaffKpi for the one extra
+// documented route.
 const BASE_PATH = '/api-fm-report/hi-society/visitors';
 
 export interface VisitorOverviewResponse {
@@ -21,8 +27,11 @@ export interface VisitorOverviewResponse {
     expected_visitors: number;
     unexpected_visitors: number;
     total_vehicles: number;
-    goods_inwards: number;
-    goods_outwards: number;
+    total_gate_pass: number;
+    returnable_gate_pass: number;
+    non_returnable_gate_pass: number;
+    /** Delivery-partner visit split, from the `delivery_visitors` map in /kpis. */
+    delivery_visitors: { name: string; value: number }[];
   };
   info?: string;
 }
@@ -34,12 +43,17 @@ export interface VisitorNamedCountsResponse {
   info?: string;
 }
 
-/** GET /visitors/staff_kpi — shape isn't documented beyond "staff KPIs", so
- * this is left as a passthrough of whatever the backend returns. */
+/** GET /visitors/staff_kpi — `{ total_staff, staff_in, staff_out }`.
+ * total_staff is a headcount (not date-filtered); staff_in / staff_out are
+ * distinct staff with a gate entry / a matched entry+exit in the range. */
 export interface VisitorStaffKpiResponse {
   success: number;
   message: string;
-  response: Record<string, unknown>;
+  response: {
+    total_staff: number;
+    staff_in: number;
+    staff_out: number;
+  };
   info?: string;
 }
 
@@ -48,15 +62,6 @@ const formatDateForAPI = (date: Date): string => {
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
-};
-
-const getDynamicScopeParams = (): Record<string, string> => {
-  const params: Record<string, string> = {};
-  const siteId = localStorage.getItem('selectedSiteId');
-  const societyId = localStorage.getItem('selectedSocietyId') || localStorage.getItem('selectedUserSociety');
-  if (siteId) params.site_id = siteId;
-  if (societyId) params.society_id = societyId;
-  return params;
 };
 
 const buildParams = ({ fromDate, toDate }: TicketReportDateRange): Record<string, string> => ({
@@ -77,8 +82,14 @@ const normalizeOverview = (raw: Record<string, unknown>): VisitorOverviewRespons
     expected_visitors: toNumber(response.expected_visitors ?? response.expectedVisitors),
     unexpected_visitors: toNumber(response.unexpected_visitors ?? response.unexpectedVisitors),
     total_vehicles: toNumber(response.total_vehicles ?? response.totalVehicle ?? response.totalVehicles),
-    goods_inwards: toNumber(response.goods_inwards ?? response.goodsInwards),
-    goods_outwards: toNumber(response.goods_outwards ?? response.outwards ?? response.goodsOutwards),
+    total_gate_pass: toNumber(response.total_gate_pass ?? response.totalGatePass),
+    returnable_gate_pass: toNumber(response.returnable_gate_pass ?? response.returnable_gatePass),
+    non_returnable_gate_pass: toNumber(
+      response.non_returnable_gate_pass ?? response.non_returnable_gatePass
+    ),
+    delivery_visitors: normalizeNamedCounts(
+      response.delivery_visitors ?? response.deliveryVisitors ?? []
+    ),
   };
 };
 
@@ -125,60 +136,62 @@ export const visitorReportsAPI = {
     };
   },
 
-  /** GET /visitors/staff_kpi — documented but not wired into any card yet. */
+  /** GET /visitors/staff_kpi — Total / In / Out staff headcounts. */
   async getStaffKpi(range: TicketReportDateRange): Promise<VisitorStaffKpiResponse> {
     const { data } = await apiClient.get(`${BASE_PATH}/staff_kpi`, { params: buildParams(range) });
+    const r = (data?.response ?? data ?? {}) as Record<string, unknown>;
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: (data?.response ?? data ?? {}) as Record<string, unknown>,
+      response: {
+        total_staff: toNumber(r.total_staff ?? r.totalStaff),
+        staff_in: toNumber(r.staff_in ?? r.staffIn ?? r.in),
+        staff_out: toNumber(r.staff_out ?? r.staffOut ?? r.out),
+      },
       info: data?.info,
     };
   },
 
-  // NOT AVAILABLE per FM-HI-SOCIETY-DASHBOARD-APIS.md — no per-building/goods/
-  // delivery breakdown route exists for Visitors. Kept calling this (non-existent)
-  // path so the card's existing sample-data fallback keeps working unchanged.
-  async getBuildingWise(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
-    const { data } = await apiClient.get(`${BASE_PATH}/building-wise`, { params: buildParams(range) });
-    return {
-      success: data?.success ?? 1,
-      message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
-      info: data?.info,
-    };
-  },
-
-  // NOT AVAILABLE per the doc — same as getBuildingWise above.
-  async getGoodsIn(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
-    const { data } = await apiClient.get(`${BASE_PATH}/goods-in`, { params: buildParams(range) });
-    return {
-      success: data?.success ?? 1,
-      message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
-      info: data?.info,
-    };
-  },
-
-  // NOT AVAILABLE per the doc — same as getBuildingWise above.
-  async getGoodsOut(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
-    const { data } = await apiClient.get(`${BASE_PATH}/goods-out`, { params: buildParams(range) });
-    return {
-      success: data?.success ?? 1,
-      message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
-      info: data?.info,
-    };
-  },
-
-  // NOT AVAILABLE per the doc — same as getBuildingWise above.
+  /** Delivery-partner visit split — comes from the `delivery_visitors` map on /kpis. */
   async getDelivery(range: TicketReportDateRange): Promise<VisitorNamedCountsResponse> {
-    const { data } = await apiClient.get(`${BASE_PATH}/delivery`, { params: buildParams(range) });
+    const { data } = await apiClient.get(`${BASE_PATH}/kpis`, { params: buildParams(range) });
     return {
       success: data?.success ?? 1,
       message: data?.message ?? '',
-      response: normalizeNamedCounts(data ?? {}),
+      response: normalizeOverview(data ?? {}).delivery_visitors,
       info: data?.info,
     };
+  },
+
+  /**
+   * `kpis?export=true` — the full visitor/gate-pass card export.
+   * `from_date` / `to_date` are mandatory here (the JSON call tolerates their
+   * absence, the export 422s without them); `buildParams` always sends both.
+   * Note the file has one extra row per additional visitor, so its row count is
+   * higher than the visitor totals shown on the KPI tiles.
+   */
+  async downloadKpisExport(range: TicketReportDateRange): Promise<void> {
+    await saveReportDownload(
+      apiClient.get(`${BASE_PATH}/kpis`, {
+        params: { ...buildParams(range), export: 'true' },
+        responseType: 'blob',
+      }),
+      `FM_card_visitors_${formatDateForAPI(range.fromDate)}_to_${formatDateForAPI(range.toDate)}.xlsx`
+    );
+  },
+
+  /**
+   * `kpis?export=delivery_visitors` — one row per delivery visit, plus a per-provider
+   * summary. Additional to the full-card export above, not a replacement. Row counts
+   * match the delivery_visitors breakdown, not the overall visitor total.
+   */
+  async downloadDeliveryVisitorsExport(range: TicketReportDateRange): Promise<void> {
+    await saveReportDownload(
+      apiClient.get(`${BASE_PATH}/kpis`, {
+        params: { ...buildParams(range), export: 'delivery_visitors' },
+        responseType: 'blob',
+      }),
+      `FM_DeliveryVisitors_${formatDateForAPI(range.fromDate)}_to_${formatDateForAPI(range.toDate)}.xlsx`
+    );
   },
 };

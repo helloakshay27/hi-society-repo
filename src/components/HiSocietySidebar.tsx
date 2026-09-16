@@ -426,30 +426,35 @@ export const HiSocietySidebar: React.FC = () => {
               icon: Database,
               path: "/loyalty/wallet-management",
             },
+            // {
+            //   id: "encashment",
+            //   label: "Encashment",
+            //   icon: DollarSign,
+            //   subItems: [
+            //     // Encashment Config lives only in AdminSidebar (ops-console) now.
+            //     {
+            //       id: "encashment-requests",
+            //       label: "Encashment Requests",
+            //       icon: FileText,
+            //       path: "/loyalty/encashment/requests",
+            //     },
+            //     {
+            //       id: "encashment-kyc-requests",
+            //       label: "KYC Requests",
+            //       icon: UserCheck,
+            //       path: "/loyalty/encashment/kyc-requests",
+            //     },
+            //   ],
+            // },
             {
-              id: "encashment",
-              label: "Encashment",
-              icon: DollarSign,
-              subItems: [
-                {
-                  id: "encashment-config",
-                  label: "Encashment Config",
-                  icon: SettingsIcon,
-                  path: "/loyalty/encashment/config",
-                },
-                {
-                  id: "encashment-requests",
-                  label: "Encashment Requests",
-                  icon: FileText,
-                  path: "/loyalty/encashment/requests",
-                },
-                {
-                  id: "encashment-kyc-requests",
-                  label: "KYC Requests",
-                  icon: UserCheck,
-                  path: "/loyalty/encashment/kyc-requests",
-                },
-              ],
+              // Own page (LoyaltyEncashmentRequestsPage), separate from the
+              // ops-console EncashmentRequestsPage the commented block above
+              // used to point at — uses mark_successful/cancel, not
+              // lockated_approve/lockated_reject.
+              id: "loyalty-encashment-requests",
+              label: "Encashment Requests",
+              icon: FileText,
+              path: "/loyalty/encashment-requests",
             },
             {
               id: "loyalty-customers",
@@ -785,12 +790,12 @@ export const HiSocietySidebar: React.FC = () => {
           icon: FileText,
           path: "/accounting/download-report",
         },
-        {
-          id: "invoice-creation",
-          label: "Invoice Creation",
-          icon: FileText,
-          path: "/accounting/invoice-creation",
-        },
+        // {
+        //   id: "invoice-creation",
+        //   label: "Invoice Creation",
+        //   icon: FileText,
+        //   path: "/accounting/invoice-creation",
+        // },
       ],
     },
     smartsecure: {
@@ -1398,6 +1403,12 @@ export const HiSocietySidebar: React.FC = () => {
               path: "/settings/ticket-management/vendor-setup",
             },
           ],
+        },
+         {
+          id: "email-templates",
+          label: "Email Templates",
+          icon: FileText,
+          path: "/settings/email-templates",
         },
         {
           id: "question-bank",

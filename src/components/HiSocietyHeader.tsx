@@ -542,17 +542,17 @@ export const HiSocietyHeader = () => {
           </div>
 
           {/* Dashboard Button */}
-          {/* <div className="flex items-center gap-2">
-            {!isViSite && (
+          <div className="flex items-center gap-2">
+            {/* {!isViSite && ( */}
               <button
-                onClick={() => (window.location.href = "/dashboard")}
+                onClick={() => (window.location.href = "/hi-society-dashboard")}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
               >
                 <ChartArea className="w-4 h-4" />
                 Dashboard
               </button>
-            )}
-            {!isViSite && (
+            {/* )} */}
+            {/* {!isViSite && (
               <button
                 onClick={() => (window.location.href = "/dashboard-executive")}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
@@ -560,9 +560,9 @@ export const HiSocietyHeader = () => {
                 <ChartAreaIcon className="w-4 h-4" />
                 Executive Dashboard
               </button>
-            )}
+            )} */}
 
-            {isViSite && (
+            {/* {isViSite && (
               <button
                 onClick={() => navigate("/msafedashboard")}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
@@ -585,8 +585,8 @@ export const HiSocietyHeader = () => {
                 <Home className="w-4 h-4" />
                 MSafe Dashboard
               </button>
-            )}
-          </div> */}
+            )} */}
+          </div>
 
           {/* Project Dropdown */}
         </div>

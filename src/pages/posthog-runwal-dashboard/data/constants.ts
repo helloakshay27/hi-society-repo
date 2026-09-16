@@ -12,6 +12,14 @@ export function pct(x: number, d?: number): string {
   return x.toFixed(d == null ? 0 : d) + '%';
 }
 
+// "2026-07-12" → "7/12" (matches the Usage-over-time chart's axis label format).
+// Non-ISO-date strings (e.g. already-short labels) are returned unchanged.
+export function fmtDateShort(value: string | null | undefined): string {
+  if (!value) return '';
+  const parts = value.split('-');
+  return parts.length === 3 ? `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}` : value;
+}
+
 export const BM_DEFAULTS: Record<string, number> = {
   activeUsers: 75,
   bounceRate: 18,

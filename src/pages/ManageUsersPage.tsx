@@ -682,7 +682,7 @@ const ManageUsersPage = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedUsers(users.map((u) => u.id));
+      setSelectedUsers(Array.from(new Set(users.map((u) => String(u.id)))));
     } else {
       setSelectedUsers([]);
     }
@@ -691,7 +691,7 @@ const ManageUsersPage = () => {
   const clean = (v: string | undefined) => (v && v !== "-" ? v : undefined);
   const getSelectedRecipients = () =>
     users
-      .filter((u) => selectedUsers.includes(u.id))
+      .filter((u) => selectedUsers.includes(String(u.id)))
       .map((u) => ({
         email: clean(u.email) || "",
         name: clean(u.name),
@@ -709,11 +709,13 @@ const ManageUsersPage = () => {
   };
 
   const handleSelectUser = (userId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedUsers([...selectedUsers, userId]);
-    } else {
-      setSelectedUsers(selectedUsers.filter((id) => id !== userId));
-    }
+    // Functional updater so a memoized row's stale closure can't drop the
+    // rest of the selection (was: only one row stayed checked at a time).
+    setSelectedUsers((prev) =>
+      checked
+        ? Array.from(new Set([...prev, userId]))
+        : prev.filter((id) => id !== userId)
+    );
   };
 
   const handleActionClick = (e: React.MouseEvent) => {
@@ -941,11 +943,14 @@ const ManageUsersPage = () => {
         </div>
 
         {/* Action Panel */}
-        {showActionPanel && (
+        {(showActionPanel || selectedUsers.length > 0) && (
           <SelectionPanel
             onAdd={handleAddUser}
             onImport={handleImport}
-            onClearSelection={() => setShowActionPanel(false)}
+            onClearSelection={() => {
+              setShowActionPanel(false);
+              setSelectedUsers([]);
+            }}
             actions={[
               { label: "Send Email", icon: Mail, onClick: handleSendEmailAction },
             ]}
@@ -1237,7 +1242,7 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
           isDownloading={isDownloadingSample}
         />
 
-        {/* Table */}
+       
         <div className="">
           <EnhancedTable
             columns={columns}
@@ -1247,6 +1252,8 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
             selectedItems={selectedUsers}
             onSelectAll={handleSelectAll}
             onSelectItem={handleSelectUser}
+            getItemId={(user) => String(user.id)}
+            selectAllLabel="Select all users"
             onFilterClick={handleFilters}
             enableSelection={true}
             enableExport={true}

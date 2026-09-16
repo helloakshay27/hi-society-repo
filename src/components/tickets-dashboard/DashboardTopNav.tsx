@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
+  ArrowLeft,
   CalendarDays,
   Settings,
   Search,
@@ -9,13 +11,24 @@ import {
 } from 'lucide-react';
 import { TicketsDashboardDateRange } from './types';
 
-export type DashboardTab = 'tickets' | 'utility' | 'escalation' | 'visitor';
+export type DashboardTab =
+  | 'tickets'
+  | 'utility'
+  | 'visitor'
+  | 'assets'
+  | 'checklist'
+  | 'incident'
+  | 'manage-users';
 
 const SECTION_PILLS: { key: DashboardTab; label: string }[] = [
   { key: 'tickets', label: 'Tickets' },
-  { key: 'utility', label: 'Utility' },
-  { key: 'escalation', label: 'Escalation' },
+  // { key: 'utility', label: 'Utility' },
+  // Escalation is no longer its own tab — its cards live under Tickets.
   { key: 'visitor', label: 'Visitor' },
+  { key: 'assets', label: 'Assets' },
+  { key: 'checklist', label: 'Checklist' },
+  { key: 'incident', label: 'Incident' },
+  { key: 'manage-users', label: 'Manage Users' },
 ];
 
 const toInputValue = (date: Date): string => {
@@ -60,12 +73,24 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({
   onRedFlagToggle,
 }) => {
   const [periodOpen, setPeriodOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="sticky top-0 z-30 bg-brand-bg">
       {/* Title bar */}
       <div className="flex items-center justify-between border-b border-brand-border bg-white px-6 py-4">
-        <h1 className="text-brand-h2 font-bold text-brand-text">Dashboard View</h1>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            aria-label="Back to home"
+            title="Back to home"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-brand-border text-brand-text hover:bg-brand-light"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <h1 className="text-brand-h2 font-bold text-brand-text">Dashboard View</h1>
+        </div>
         <div className="flex items-center gap-3">
           <span className="hidden text-brand-body-4 text-brand-text-light md:inline">
             {new Date().toLocaleDateString('en-US', {
@@ -123,22 +148,22 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({
             )}
           </div>
 
-          <button
+          {/* <button
             type="button"
             aria-label="Settings"
             title="Settings"
             className="flex h-10 w-10 items-center justify-center rounded-md border border-brand-border text-brand-text hover:bg-brand-light"
           >
             <Settings className="h-4 w-4" />
-          </button>
-          <button
+          </button> */}
+          {/* <button
             type="button"
             aria-label="Search"
             title="Search"
             className="flex h-10 w-10 items-center justify-center rounded-md border border-brand-border text-brand-text hover:bg-brand-light"
           >
             <Search className="h-4 w-4" />
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -152,7 +177,7 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({
                 key={pill.key}
                 type="button"
                 onClick={() => onTabChange(pill.key)}
-                className={`whitespace-nowrap rounded-full border px-3 py-1 text-brand-caption font-semibold transition-colors ${
+                className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-brand-body-4 font-semibold transition-colors ${
                   active
                     ? 'border-brand bg-brand text-white'
                     : 'border-brand-sidebar bg-white text-brand-green hover:bg-brand-light'
@@ -164,7 +189,7 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({
           })}
         </div>
 
-        {activeTab === 'tickets' && (
+        {/* {activeTab === 'tickets' && (
           <div className="flex flex-wrap items-center gap-2 pb-3">
             <button
               type="button"
@@ -191,7 +216,7 @@ export const DashboardTopNav: React.FC<DashboardTopNavProps> = ({
               Red Flag
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
