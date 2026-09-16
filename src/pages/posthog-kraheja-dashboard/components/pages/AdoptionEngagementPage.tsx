@@ -14,7 +14,7 @@ import {
   useRetention,
   useRoles,
 } from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
-import { pct } from '../../../posthog-runwal-dashboard/data/constants';
+import { pct, fmtDateShort } from '../../../posthog-runwal-dashboard/data/constants';
 import { AudienceCoverageCard } from '../adoption/AudienceCoverageCard';
 import { ProjectLeagueTable } from '../adoption/ProjectLeagueTable';
 
@@ -78,11 +78,11 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
   const weeklyCurrent = trendData?.weekly?.current || [];
   const weeklyPrevious = trendData?.weekly?.previous || [];
-  const trendLabels = weeklyCurrent.map((w) => w.week || 'W');
+  const trendLabels = weeklyCurrent.map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
   const trendSeriesCurrent = weeklyCurrent.map((w) => w.wau || 0);
   const trendSeriesPrev = weeklyPrevious.map((w) => w.wau || 0);
 
-  const growthWeeks = (growthData?.weeks || []).map((w) => w.week || 'W');
+  const growthWeeks = (growthData?.weeks || []).map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
   const growthNew = (growthData?.weeks || []).map((w) => w.new || 0);
   const growthRet = (growthData?.weeks || []).map((w) => w.returning || 0);
   const growthRes = (growthData?.weeks || []).map((w) => w.resurrected || 0);
