@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -24,12 +25,26 @@ import { toast } from "sonner";
 import {
   getEncashRequests,
   getEncashRequestDetail,
-  startProcessingEncashRequest,
-  lockatedApproveEncashRequest,
-  lockatedRejectEncashRequest,
+  cancelEncashRequest,
+  markEncashRequestSuccessful,
   EncashRequest,
   PaginationMeta,
 } from "@/services/encashmentService";
+
+/**
+ * Encashment Requests — Loyalty section version.
+ *
+ * A standalone page, separate from `EncashmentRequestsPage.tsx` (the
+ * ops-console / superadmin page reached from AdminSidebar, which uses the
+ * `lockated_approve`/`lockated_reject` endpoints). This page is for the
+ * tenant-side review flow instead, per:
+ *   GET  /admin/encash_requests               — list
+ *   GET  /admin/encash_requests/:id            — single request detail
+ *   PUT  /admin/encash_requests/:id/mark_successful  (utr_number)
+ *   PUT  /admin/encash_requests/:id/cancel           (reason)
+ * It shares only `encashmentService.ts` with the ops-console page — no
+ * component code is reused, so changes here can't affect that page.
+ */
 
 const formatDateTime = (value: string | null | undefined) => {
   if (!value) return "-";
@@ -56,25 +71,18 @@ const getApiErrorMessage = (err: unknown, fallback: string): string => {
   return fallback;
 };
 
-// Substring match, not exact equality — the resulting status string after
-// lockated_approve/lockated_reject isn't documented (could be "approved",
-// "lockated_approved", "approved_by_lockated", etc.), so this has to catch
-// whatever comes back rather than an exact list of known values.
 const statusVariant = (status: string): string => {
   const s = (status || "").toLowerCase();
-  if (s.includes("successful") || s.includes("completed") || s.includes("approved")) return "accepted";
+  if (s.includes("successful") || s.includes("completed")) return "accepted";
   if (s.includes("cancelled") || s.includes("failed") || s.includes("rejected")) return "rejected";
   return "pending";
 };
 
-type StatusAction = "processing" | "cancelled" | "successful";
+type StatusAction = "cancelled" | "successful";
 
-// "Processing" moves the request into processing (/start_processing).
-// "Successful" and "Cancelled" are the Lockated (superadmin) approve/reject
-// gate — /admin/encash_requests/:id/{lockated_approve,lockated_reject} — not
-// the tenant-side /{mark_successful,cancel} actions.
+// The tenant-side transitions, per
+// /admin/encash_requests/:id/{cancel,mark_successful}.
 const STATUS_ACTIONS: { key: StatusAction; label: string }[] = [
-  { key: "processing", label: "Processing" },
   { key: "cancelled", label: "Cancelled" },
   { key: "successful", label: "Successful" },
 ];
@@ -89,6 +97,7 @@ const requestColumns: ColumnConfig[] = [
   { key: "processing_fee_percent", label: "Fee %", sortable: false, hideable: true, draggable: true },
   { key: "amount_payable", label: "Amount Payable", sortable: false, hideable: true, draggable: true },
   { key: "status", label: "Status", sortable: false, hideable: true, draggable: true },
+  { key: "lockated_action", label: "Lockated Action", sortable: false, hideable: true, draggable: true },
   { key: "requested_at", label: "Requested On", sortable: false, hideable: true, draggable: true },
   { key: "resolution", label: "Resolved On", sortable: false, hideable: true, draggable: true },
 ];
@@ -104,9 +113,8 @@ const DetailField: React.FC<{ label: string; value: string | null | undefined }>
 );
 
 /**
- * Cancelled-cheque proof images from `cancelled_cheque_urls`. These are the KYC
- * document for the bank account, so they're the thing an admin checks before paying
- * out — shown inline, with each thumbnail opening the full-size image in a new tab.
+ * Cancelled-cheque proof images from `cancelled_cheque_urls` — the KYC document
+ * for the bank account, shown inline with each thumbnail opening full size.
  */
 const ChequeImages: React.FC<{ urls: string[] | null | undefined }> = ({ urls }) => {
   const [failed, setFailed] = useState<Record<string, boolean>>({});
@@ -155,12 +163,13 @@ interface CancelDialogState {
   reason: string;
 }
 
-interface ApproveDialogState {
+interface UtrDialogState {
   open: boolean;
   request: EncashRequest | null;
+  utr: string;
 }
 
-export const EncashmentRequestsPage: React.FC = () => {
+export const LoyaltyEncashmentRequestsPage: React.FC = () => {
   const [requests, setRequests] = useState<EncashRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -183,9 +192,10 @@ export const EncashmentRequestsPage: React.FC = () => {
     request: null,
     reason: "",
   });
-  const [approveDialog, setApproveDialog] = useState<ApproveDialogState>({
+  const [utrDialog, setUtrDialog] = useState<UtrDialogState>({
     open: false,
     request: null,
+    utr: "",
   });
 
   const handleViewRequest = (item: EncashRequest) => {
@@ -227,48 +237,11 @@ export const EncashmentRequestsPage: React.FC = () => {
 
   const handleStatusSelect = (item: EncashRequest, action: StatusAction) => {
     if (action === "cancelled") {
-      // "Cancelled" is the Lockated (superadmin) reject gate — reason required,
-      // reuses this same dialog; handleConfirmCancel calls lockated_reject.
       setCancelDialog({ open: true, request: item, reason: "" });
       return;
     }
-    if (action === "successful") {
-      // "Successful" is the Lockated (superadmin) approve gate. lockated_approve
-      // takes no body, but the confirmation popup itself stays — same as before,
-      // just without a UTR field since the API doesn't take one.
-      setApproveDialog({ open: true, request: item });
-      return;
-    }
-
-    // "Processing" needs no extra input — fire immediately.
-    setUpdatingId(item.id);
-    startProcessingEncashRequest(item.id)
-      .then(() => {
-        toast.success("Request moved to processing");
-        fetchRequests(currentPage);
-      })
-      .catch((err) => {
-        console.warn("Could not start processing request:", err);
-        toast.error(getApiErrorMessage(err, "Failed to update request status"));
-      })
-      .finally(() => setUpdatingId(null));
-  };
-
-  const handleConfirmApprove = async () => {
-    if (!approveDialog.request) return;
-    const id = approveDialog.request.id;
-    setUpdatingId(id);
-    try {
-      await lockatedApproveEncashRequest(id);
-      toast.success("Request approved");
-      setApproveDialog({ open: false, request: null });
-      fetchRequests(currentPage);
-    } catch (err) {
-      console.warn("Could not approve request:", err);
-      toast.error(getApiErrorMessage(err, "Failed to approve request"));
-    } finally {
-      setUpdatingId(null);
-    }
+    // "successful" needs the bank UTR number — mark_successful requires it.
+    setUtrDialog({ open: true, request: item, utr: "" });
   };
 
   const handleConfirmCancel = async () => {
@@ -280,13 +253,34 @@ export const EncashmentRequestsPage: React.FC = () => {
     const id = cancelDialog.request.id;
     setUpdatingId(id);
     try {
-      await lockatedRejectEncashRequest(id, cancelDialog.reason.trim());
-      toast.success("Request rejected");
+      await cancelEncashRequest(id, cancelDialog.reason.trim());
+      toast.success("Request cancelled");
       setCancelDialog({ open: false, request: null, reason: "" });
       fetchRequests(currentPage);
     } catch (err) {
-      console.warn("Could not reject request:", err);
-      toast.error(getApiErrorMessage(err, "Failed to reject request"));
+      console.warn("Could not cancel request:", err);
+      toast.error(getApiErrorMessage(err, "Failed to cancel request"));
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleConfirmUtr = async () => {
+    if (!utrDialog.request) return;
+    if (!utrDialog.utr.trim()) {
+      toast.error("Please enter the bank UTR number");
+      return;
+    }
+    const id = utrDialog.request.id;
+    setUpdatingId(id);
+    try {
+      await markEncashRequestSuccessful(id, utrDialog.utr.trim());
+      toast.success("Request marked successful");
+      setUtrDialog({ open: false, request: null, utr: "" });
+      fetchRequests(currentPage);
+    } catch (err) {
+      console.warn("Could not mark request successful:", err);
+      toast.error(getApiErrorMessage(err, "Failed to update request status"));
     } finally {
       setUpdatingId(null);
     }
@@ -354,6 +348,8 @@ export const EncashmentRequestsPage: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         );
+      case "lockated_action":
+        return <span className="whitespace-nowrap">{item.lockated_action || "-"}</span>;
       case "requested_at":
         return <span className="whitespace-nowrap">{formatDateTime(item.requested_at)}</span>;
       case "resolution":
@@ -373,9 +369,6 @@ export const EncashmentRequestsPage: React.FC = () => {
     }
   };
 
-  // Derived from statusVariant() rather than re-matching status strings here, so
-  // these stay consistent with the badge and correctly bucket whatever status
-  // lockated_approve/lockated_reject end up setting.
   const pendingCount = useMemo(
     () => requests.filter((r) => statusVariant(r.status) === "pending").length,
     [requests]
@@ -437,7 +430,7 @@ export const EncashmentRequestsPage: React.FC = () => {
           enableSearch={false}
           hideTableExport
           hideColumnsButton={false}
-          storageKey="encashment-requests-table"
+          storageKey="loyalty-encashment-requests-table"
           className="transition-all duration-500 ease-in-out"
           loading={loading}
           loadingMessage="Loading encashment requests..."
@@ -491,6 +484,7 @@ export const EncashmentRequestsPage: React.FC = () => {
                 />
                 <DetailField label="Completed On" value={formatDateTime(selectedRequest.completed_at)} />
                 <DetailField label="Cancelled On" value={formatDateTime(selectedRequest.cancelled_at)} />
+                <DetailField label="Lockated Action" value={selectedRequest.lockated_action} />
                 {selectedRequest.cancelled_reason && (
                   <div className="col-span-2">
                     <DetailField label="Cancellation Reason" value={selectedRequest.cancelled_reason} />
@@ -530,7 +524,8 @@ export const EncashmentRequestsPage: React.FC = () => {
           <div className="p-6 bg-white space-y-2">
             {cancelDialog.request && (
               <p className="text-sm text-gray-600">
-                Cancelling <span className="font-medium text-[#1A1A1A]">{cancelDialog.request.request_reference}</span>
+                Cancelling{" "}
+                <span className="font-medium text-[#1A1A1A]">{cancelDialog.request.request_reference}</span>
               </p>
             )}
             <Label className="text-xs font-semibold text-[#1A1A1A]">Cancellation Reason</Label>
@@ -565,49 +560,54 @@ export const EncashmentRequestsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Approve Confirmation Modal */}
+      {/* Mark Successful (UTR Number) Modal */}
       <Dialog
-        open={approveDialog.open}
-        onOpenChange={(open) => setApproveDialog((prev) => ({ ...prev, open }))}
+        open={utrDialog.open}
+        onOpenChange={(open) => setUtrDialog((prev) => ({ ...prev, open }))}
       >
         <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
           <DialogHeader className="bg-[#F6F4EE] px-6 py-4 border-b border-[#D5DbDB]">
             <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-[#C72030]" />
-              Approve Request
+              Mark as Successful
             </DialogTitle>
           </DialogHeader>
 
-          <div className="p-6 bg-white">
-            {approveDialog.request && (
+          <div className="p-6 bg-white space-y-2">
+            {utrDialog.request && (
               <p className="text-sm text-gray-600">
-                Approve{" "}
-                <span className="font-medium text-[#1A1A1A]">
-                  {approveDialog.request.request_reference}
-                </span>
-                ? This marks the request successful.
+                Marking{" "}
+                <span className="font-medium text-[#1A1A1A]">{utrDialog.request.request_reference}</span>{" "}
+                as paid
               </p>
             )}
+            <Label className="text-xs font-semibold text-[#1A1A1A]">Bank UTR Number</Label>
+            <Input
+              className="h-9 text-sm border-[#D5DbDB] bg-white"
+              placeholder="Enter the bank UTR / transaction number"
+              value={utrDialog.utr}
+              onChange={(e) => setUtrDialog((prev) => ({ ...prev, utr: e.target.value }))}
+            />
           </div>
 
           <DialogFooter className="bg-[#F6F4EE] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
             <Button
               variant="outline"
-              onClick={() => setApproveDialog({ open: false, request: null })}
+              onClick={() => setUtrDialog({ open: false, request: null, utr: "" })}
               className="border-[#D5DbDB] text-[#1A1A1A] hover:bg-[#DBC2A9]"
             >
               Close
             </Button>
             <Button
-              onClick={handleConfirmApprove}
-              disabled={updatingId === approveDialog.request?.id}
+              onClick={handleConfirmUtr}
+              disabled={updatingId === utrDialog.request?.id}
               variant="ghost"
               className="btn-primary"
             >
-              {updatingId === approveDialog.request?.id && (
+              {updatingId === utrDialog.request?.id && (
                 <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
               )}
-              Confirm Approval
+              Confirm
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -616,4 +616,4 @@ export const EncashmentRequestsPage: React.FC = () => {
   );
 };
 
-export default EncashmentRequestsPage;
+export default LoyaltyEncashmentRequestsPage;

@@ -97,7 +97,11 @@ const normalizeTree = (data: unknown): AccountTreeNodeData[] => {
   const record = data as Record<string, unknown> | null;
   const arr = Array.isArray(data)
     ? data
-    : (record?.tree as unknown[]) ?? (record?.children as unknown[]) ?? (record?.nodes as unknown[]) ?? [];
+    : (record?.jstree_data as unknown[]) ??
+      (record?.tree as unknown[]) ??
+      (record?.children as unknown[]) ??
+      (record?.nodes as unknown[]) ??
+      [];
   if (!Array.isArray(arr) || arr.length === 0) return [];
 
   const looksNested = arr.some((n) => Array.isArray((n as Record<string, unknown>)?.children));
@@ -190,6 +194,7 @@ const AccountingChartOfAccounts: React.FC = () => {
   const [accountTypes, setAccountTypes] = useState<{ id: number; name: string }[]>([]);
   const [tree, setTree] = useState<AccountTreeNodeData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [treeLoading, setTreeLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -262,6 +267,7 @@ const AccountingChartOfAccounts: React.FC = () => {
 
   // GET /lock_accounts/:id/lock_account_ledgers/tree.json (tree view)
   const fetchTree = useCallback(async () => {
+    setTreeLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const response = await axios.get(
@@ -272,6 +278,8 @@ const AccountingChartOfAccounts: React.FC = () => {
     } catch (error) {
       console.error("Error fetching account tree:", error);
       setTree([]);
+    } finally {
+      setTreeLoading(false);
     }
   }, [lockAccountId]);
 
@@ -335,9 +343,9 @@ const AccountingChartOfAccounts: React.FC = () => {
   };
 
   // GET /lock_accounts/:id/lock_account_ledgers/sync.json
-  const handleSyncUnitLedgers = () => callLedgerEndpoint("sync", "Unit ledgers synced");
+  const handleSyncUnitLedgers = () => callLedgerEndpoint("sync", "Accounting ledgers synced successfully.");
   // GET /lock_accounts/:id/lock_account_ledgers/sync_suppliers.json
-  const handleSyncVendorLedgers = () => callLedgerEndpoint("sync_suppliers", "Vendor ledgers synced");
+  const handleSyncVendorLedgers = () => callLedgerEndpoint("sync_suppliers", "Vendor account ledgers are successfully synced.");
   // GET /lock_accounts/:id/lock_account_ledgers/raise_to_builder.json?pids=1,2,3
   const handleRaiseToBuilder = () => {
     const pids = ledgers.map((l) => l.id).filter(Boolean).join(",");
@@ -345,7 +353,7 @@ const AccountingChartOfAccounts: React.FC = () => {
       toast.error("No accounts to raise to builder");
       return;
     }
-    callLedgerEndpoint("raise_to_builder", "Raised to builder", { pids });
+    callLedgerEndpoint("raise_to_builder", "Raised to builder successfully.", { pids });
   };
 
   const handleAddAccount = () => {
@@ -539,7 +547,7 @@ const AccountingChartOfAccounts: React.FC = () => {
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
             onClick={handleSyncUnitLedgers}
           >
-            <UploadCloud className="mr-2 h-4 w-4" /> Sync Unit Ledgers
+            <UploadCloud className="mr-2 h-4 w-4" /> Sync Flat Ledgers
           </Button>
           <Button
             variant="outline"
@@ -586,7 +594,14 @@ const AccountingChartOfAccounts: React.FC = () => {
         />
       ) : (
         <div className="rounded-md border border-gray-200 bg-white p-4">
-          <AccountTreeNode node={rootNode} level={0} />
+          {treeLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#C72030]" />
+              <span className="ml-3 text-sm text-gray-500">Loading account tree...</span>
+            </div>
+          ) : (
+            <AccountTreeNode node={rootNode} level={0} />
+          )}
         </div>
       )}
 
