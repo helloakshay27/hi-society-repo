@@ -119,6 +119,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       )}
 
       <div className="tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginTop: '16px' }}>
+        {/* Seat Utilisation — commented out for now.
         <KpiTile
           id="seatUtil"
           infoKey="A1"
@@ -134,6 +135,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           onBenchmarkChange={onBenchmarkChange}
           isLoading={isAdoptLoading}
         />
+        */}
         <KpiTile
           id="stickiness"
           infoKey="A2"

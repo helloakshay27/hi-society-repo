@@ -132,6 +132,24 @@ const adminNavigationStructure = {
         href: "/ops-console/admin/lock-fees",
       },
       {
+        name: "Encashment",
+        icon: DollarSign,
+        subItems: [
+          {
+            name: "Encashment Config",
+            href: "/ops-console/admin/encashment/config",
+          },
+          {
+            name: "Encashment Requests",
+            href: "/ops-console/admin/encashment/requests",
+          },
+          {
+            name: "KYC Requests",
+            href: "/ops-console/admin/encashment/kyc-requests",
+          },
+        ],
+      },
+      {
         name: "Smartsecure Integration",
         icon: DollarSign,
         href: "/ops-console/admin/smartsecure-integration",

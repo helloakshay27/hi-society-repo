@@ -22,6 +22,15 @@ import {
   AddChartOfAccountModal,
   ChartOfAccountLedger,
 } from "@/components/AddChartOfAccountModal";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Shape returned by GET /lock_accounts/:id/lock_account_ledgers.json (table view)
 interface LockAccountLedgerAPI {
@@ -172,6 +181,8 @@ const AccountTreeNode: React.FC<{ node: AccountTreeNodeData; level: number }> = 
   );
 };
 
+const PAGE_SIZE = 20;
+
 const AccountingChartOfAccounts: React.FC = () => {
   const navigate = useNavigate();
   const [viewType, setViewType] = useState<"table" | "tree">("table");
@@ -179,6 +190,8 @@ const AccountingChartOfAccounts: React.FC = () => {
   const [accountTypes, setAccountTypes] = useState<{ id: number; name: string }[]>([]);
   const [tree, setTree] = useState<AccountTreeNodeData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingLedger, setEditingLedger] = useState<ChartOfAccountLedger | null>(null);
 
@@ -220,28 +233,32 @@ const AccountingChartOfAccounts: React.FC = () => {
     }
   }, [lockAccountId]);
 
-  // GET /lock_accounts/:id/lock_account_ledgers.json (table view)
+  // GET /lock_accounts/:id/lock_account_ledgers.json (table view, server-paginated:
+  // { pagination: { current_page, total_pages, total_count, per_page }, lock_account_ledgers: [...] })
   const fetchLedgers = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const response = await axios.get(
         `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers.json`,
-        { headers: authHeaders() }
+        { params: { page: currentPage, per_page: PAGE_SIZE }, headers: authHeaders() }
       );
       const data = response.data;
       const list: LockAccountLedgerAPI[] = Array.isArray(data)
         ? data
         : data?.lock_account_ledgers ?? data?.ledgers ?? data?.data ?? [];
       setLedgers(list);
+      const pagination = data?.pagination;
+      setTotalPages(pagination?.total_pages ? Number(pagination.total_pages) : 1);
     } catch (error) {
       console.error("Error fetching chart of accounts:", error);
       toast.error("Failed to fetch chart of accounts");
       setLedgers([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [lockAccountId]);
+  }, [lockAccountId, currentPage]);
 
   // GET /lock_accounts/:id/lock_account_ledgers/tree.json (tree view)
   const fetchTree = useCallback(async () => {
@@ -260,9 +277,12 @@ const AccountingChartOfAccounts: React.FC = () => {
 
   useEffect(() => {
     fetchAccountTypes();
-    fetchLedgers();
     fetchTree();
-  }, [fetchAccountTypes, fetchLedgers, fetchTree]);
+  }, [fetchAccountTypes, fetchTree]);
+
+  useEffect(() => {
+    fetchLedgers();
+  }, [fetchLedgers]);
 
   const accountTypeNameById = useMemo(() => {
     const map = new Map<number, string>();
@@ -273,7 +293,7 @@ const AccountingChartOfAccounts: React.FC = () => {
   const rows = useMemo<LedgerRow[]>(
     () =>
       ledgers.map((ledger, index) => ({
-        sr: index + 1,
+        sr: (currentPage - 1) * PAGE_SIZE + index + 1,
         id: ledger.id,
         accountName: ledger.name,
         accountCode: ledger.account_code || "",
@@ -286,7 +306,7 @@ const AccountingChartOfAccounts: React.FC = () => {
             : ""),
         raw: ledger,
       })),
-    [ledgers, accountTypeNameById]
+    [ledgers, accountTypeNameById, currentPage]
   );
 
   // The API's root jsTree node ("Account Ledgers", parent "#") already reads
@@ -340,7 +360,7 @@ const AccountingChartOfAccounts: React.FC = () => {
         params: { lock_account_id: lockAccountId },
         headers: authHeaders(),
       });
-      return response.data?.lock_account_ledger || null;
+      return response.data?.lock_account_ledger || response.data || null;
     } catch (error) {
       console.error("Error fetching ledger detail:", error);
       toast.error("Failed to load account details");
@@ -432,6 +452,67 @@ const AccountingChartOfAccounts: React.FC = () => {
     }
   };
 
+  // Sliding 3-page window anchored at the current page (current, current+1,
+  // current+2, clamped to stay inside range) with page 1 / last page always
+  // reachable — e.g. page 3 → "3 4 5 ... 21", page 4 → "1 ... 4 5 6 ... 21".
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+
+    const pageItem = (page: number) => (
+      <PaginationItem key={page} className="cursor-pointer">
+        <PaginationLink
+          onClick={() => setCurrentPage(page)}
+          isActive={currentPage === page}
+          aria-disabled={loading}
+          className={loading ? "pointer-events-none opacity-50" : ""}
+        >
+          {page}
+        </PaginationLink>
+      </PaginationItem>
+    );
+
+    const windowSize = 3;
+    const items = [];
+
+    // Small enough to just list every page — no need to truncate.
+    if (totalPages <= windowSize + 2) {
+      for (let i = 1; i <= totalPages; i++) items.push(pageItem(i));
+      return items;
+    }
+
+    let start = currentPage;
+    const end = Math.min(totalPages, start + windowSize - 1);
+    if (end - start < windowSize - 1) start = Math.max(1, end - windowSize + 1);
+
+    if (start > 1) {
+      items.push(pageItem(1));
+      if (start > 2) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+
+    for (let i = start; i <= end; i++) items.push(pageItem(i));
+
+    if (end < totalPages) {
+      if (end < totalPages - 1) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+      items.push(pageItem(totalPages));
+    }
+
+    return items;
+  };
+
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -487,8 +568,7 @@ const AccountingChartOfAccounts: React.FC = () => {
           columns={columns}
           renderCell={renderCell}
           getItemId={(item) => String(item.id)}
-          pagination
-          pageSize={20}
+          pagination={false}
           // enableExport
           exportFileName="chart-of-accounts"
           storageKey="chart-of-accounts-table"
@@ -507,6 +587,36 @@ const AccountingChartOfAccounts: React.FC = () => {
       ) : (
         <div className="rounded-md border border-gray-200 bg-white p-4">
           <AccountTreeNode node={rootNode} level={0} />
+        </div>
+      )}
+
+      {viewType === "table" && totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  className={
+                    currentPage === 1 || loading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  className={
+                    currentPage === totalPages || loading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
 
