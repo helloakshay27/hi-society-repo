@@ -580,6 +580,11 @@ const EncashmentRequestsPage = lazy(
   () => import("@/pages/EncashmentRequestsPage")
 );
 const KycRequestsPage = lazy(() => import("@/pages/KycRequestsPage"));
+// Loyalty-section encashment requests page — separate from EncashmentRequestsPage
+// above (the ops-console/superadmin version); do not merge these two.
+const LoyaltyEncashmentRequestsPage = lazy(
+  () => import("@/pages/LoyaltyEncashmentRequestsPage")
+);
 const AppointmentzEmailConfig = lazy(
   () => import("@/pages/AppointmentzEmailConfig")
 );
@@ -649,6 +654,10 @@ export const setupMemberRoutes = (
     <Route
       path="/loyalty/encashment/kyc-requests"
       Component={withSuspense(KycRequestsPage)}
+    />
+    <Route
+      path="/loyalty/encashment-requests"
+      Component={withSuspense(LoyaltyEncashmentRequestsPage)}
     />
     <Route path="/settings/wallet-topup" element={<WalletTopup />} />
     <Route

@@ -205,6 +205,13 @@ export interface EncashRequest {
    * <img src> with no auth.
    */
   cancelled_cheque_urls?: string[] | null;
+  /**
+   * Result of the Lockated (superadmin) approve/reject gate —
+   * `/admin/encash_requests/:id/{lockated_approve,lockated_reject}` — e.g.
+   * `"approved"`. Distinct from `status`, which reflects the tenant-side
+   * processing/cancel/mark_successful flow.
+   */
+  lockated_action?: string | null;
   [key: string]: unknown;
 }
 
@@ -226,6 +233,15 @@ export const getEncashRequests = async (
     page,
     perPage
   );
+};
+
+/** GET /admin/encash_requests/:id — single encashment request, full detail */
+export const getEncashRequestDetail = async (id: number): Promise<EncashRequest> => {
+  const response = await axios.get(
+    getFullUrl(`/admin/encash_requests/${id}`),
+    { headers: { Authorization: getAuthHeader() } }
+  );
+  return extractRecord<EncashRequest>(response.data, ["encash_request"]);
 };
 
 /** PUT /admin/encash_requests/:id/start_processing — move a request into processing */
@@ -259,6 +275,39 @@ export const markEncashRequestSuccessful = async (id: number, utrNumber: string)
   body.append("utr_number", utrNumber);
   await axios.put(
     getFullUrl(`/admin/encash_requests/${id}/mark_successful`),
+    body,
+    {
+      headers: {
+        Authorization: getAuthHeader(),
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
+  );
+};
+
+/**
+ * PUT /admin/encash_requests/:id/lockated_approve — approve a request at the
+ * platform (Lockated superadmin) level. Distinct from `start_processing` /
+ * `mark_successful` above, which are the tenant-side processing flow.
+ */
+export const lockatedApproveEncashRequest = async (id: number): Promise<void> => {
+  await axios.put(
+    getFullUrl(`/admin/encash_requests/${id}/lockated_approve`),
+    null,
+    { headers: { Authorization: getAuthHeader() } }
+  );
+};
+
+/**
+ * PUT /admin/encash_requests/:id/lockated_reject — reject a request at the
+ * platform (Lockated superadmin) level, with a reason. Distinct from `cancel`
+ * above, which is the tenant-side cancellation.
+ */
+export const lockatedRejectEncashRequest = async (id: number, reason: string): Promise<void> => {
+  const body = new URLSearchParams();
+  body.append("reason", reason);
+  await axios.put(
+    getFullUrl(`/admin/encash_requests/${id}/lockated_reject`),
     body,
     {
       headers: {
@@ -310,6 +359,32 @@ export const getUserKycVerifications = async (
     page,
     perPage
   );
+};
+
+/** Unwraps `{ <key>: {...} }` envelopes a single-record endpoint may use, else returns the raw object. */
+const extractRecord = <T,>(raw: unknown, preferredKeys: string[]): T => {
+  const obj = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  for (const key of preferredKeys) {
+    const value = obj[key];
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return value as T;
+    }
+  }
+  return obj as T;
+};
+
+/** GET /admin/user_kyc_verifications/:id — single KYC request, full detail */
+export const getUserKycVerificationDetail = async (
+  id: number
+): Promise<UserKycVerification> => {
+  const response = await axios.get(
+    getFullUrl(`/admin/user_kyc_verifications/${id}`),
+    { headers: { Authorization: getAuthHeader() } }
+  );
+  return extractRecord<UserKycVerification>(response.data, [
+    "user_kyc_verification",
+    "kyc_verification",
+  ]);
 };
 
 /** PUT /admin/user_kyc_verifications/:id/verify — approve a KYC request */

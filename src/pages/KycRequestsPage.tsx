@@ -23,6 +23,7 @@ import { ShieldCheck, Eye, ChevronDown, Loader2, XCircle, FileText } from "lucid
 import { toast } from "sonner";
 import {
   getUserKycVerifications,
+  getUserKycVerificationDetail,
   verifyKycRequest,
   rejectKycRequest,
   UserKycVerification,
@@ -146,6 +147,7 @@ export const KycRequestsPage: React.FC = () => {
 
   const [selected, setSelected] = useState<UserKycVerification | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Status-change state
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -156,8 +158,20 @@ export const KycRequestsPage: React.FC = () => {
   });
 
   const handleView = (item: UserKycVerification) => {
+    // Open immediately with the row's data so the modal isn't blank while
+    // loading, then replace it with the full record from the detail endpoint
+    // (GET /admin/user_kyc_verifications/:id), which may carry fields the
+    // paginated list response doesn't.
     setSelected(item);
     setIsDetailsModalOpen(true);
+    setDetailLoading(true);
+    getUserKycVerificationDetail(item.id)
+      .then((detail) => setSelected(detail))
+      .catch((err) => {
+        console.warn("Could not fetch KYC request detail:", err);
+        toast.error(getApiErrorMessage(err, "Failed to load full request details"));
+      })
+      .finally(() => setDetailLoading(false));
   };
 
   const fetchItems = (page: number) => {
@@ -324,7 +338,10 @@ export const KycRequestsPage: React.FC = () => {
           {selected && (
             <div className="p-6 bg-white space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-[#1A1A1A]">Request #{selected.id}</span>
+                <span className="font-semibold text-[#1A1A1A] flex items-center gap-2">
+                  Request #{selected.id}
+                  {detailLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
+                </span>
                 <StatusBadge status={statusVariant(selected.status)}>{selected.status}</StatusBadge>
               </div>
 

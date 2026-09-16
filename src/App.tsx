@@ -1168,6 +1168,13 @@ import { NewIncidentListDashboard } from "./pages/NewIncidentListDashboard";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import PosthogMyPiramalDashboard from "./pages/posthog-my-piramal-dashboard";
 const LockFees = lazy(() => import("./pages/LockFees"));
+// Same pages setupMemberRoutes.tsx mounts under /loyalty/encashment/*, also
+// reachable under /ops-console so AdminSidebar's Encashment links stay inside
+// AdminLayout instead of bouncing out to the member Layout (and its own
+// "Loyalty" sidebar section, which is what /loyalty/* resolves to there).
+const EncashmentConfigPage = lazy(() => import("./pages/EncashmentConfigPage"));
+const EncashmentRequestsPage = lazy(() => import("./pages/EncashmentRequestsPage"));
+const KycRequestsPage = lazy(() => import("./pages/KycRequestsPage"));
 const LockFeesAdd = lazy(() => import("./pages/LockFeesAdd"));
 const LockFeesDetail = lazy(() => import("./pages/LockFeesDetail"));
 const EditLockFeesPage = lazy(() => import("./pages/EditLockFeesPage"));
@@ -1570,6 +1577,19 @@ function App() {
                         <Route
                           path="admin/lock-fees/:id"
                           element={<LockFeesDetail />}
+                        />
+
+                        <Route
+                          path="admin/encashment/config"
+                          element={<EncashmentConfigPage />}
+                        />
+                        <Route
+                          path="admin/encashment/requests"
+                          element={<EncashmentRequestsPage />}
+                        />
+                        <Route
+                          path="admin/encashment/kyc-requests"
+                          element={<KycRequestsPage />}
                         />
 
                         <Route path="settings/account/user-list-otp" element={<OccupantUserListWrapper />} />
