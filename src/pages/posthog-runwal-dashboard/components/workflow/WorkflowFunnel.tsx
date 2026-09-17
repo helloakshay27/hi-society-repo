@@ -5,6 +5,16 @@ interface WorkflowFunnelProps {
   funnel?: FunnelStep[];
 }
 
+// "main_home6" -> "Main Home 6" (same raw event/screen names as ScreensTable/ModuleNav)
+const formatStepName = (step: string) => {
+  const spaced = step.replace(/_/g, ' ').replace(/([a-zA-Z])(\d)/g, '$1 $2');
+  return spaced
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export const WorkflowFunnel: React.FC<WorkflowFunnelProps> = ({ funnel = [] }) => {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
@@ -82,7 +92,7 @@ export const WorkflowFunnel: React.FC<WorkflowFunnelProps> = ({ funnel = [] }) =
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>
-                  {i + 1}. {s.step}
+                  {i + 1}. {formatStepName(s.step)}
                 </span>
                 <span
                   style={{

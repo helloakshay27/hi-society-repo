@@ -6,7 +6,7 @@ import { WorkflowFunnel } from '../../../posthog-runwal-dashboard/components/wor
 import { AllScreensTable, EntryScreensTable } from '../../../posthog-runwal-dashboard/components/workflow/ScreensTable';
 import { ErrorState } from '../../../posthog-runwal-dashboard/components/common/DashboardStates';
 import { useModuleTree, useWorkflowUsage } from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
-import { ModuleNav } from '../workflow/ModuleNav';
+import { ModuleNav, formatModuleName } from '../workflow/ModuleNav';
 
 interface WorkflowUsagePageProps {
   filters: DashboardFilters;
@@ -74,8 +74,9 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({ filters, b
           raw={fAdopt != null ? (fAdopt <= 1 ? fAdopt * 100 : fAdopt) : undefined}
           unit="%"
           goodUp={true}
-          benchmark={benchmarks.wfAdoption}
-          onBenchmarkChange={onBenchmarkChange}
+          // benchmark={benchmarks.wfAdoption}
+          // onBenchmarkChange={onBenchmarkChange}
+          noTarget
           isLoading={isWfLoading}
         />
         <KpiTile
@@ -88,8 +89,9 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({ filters, b
           raw={fComp != null ? (fComp <= 1 ? fComp * 100 : fComp) : undefined}
           unit="%"
           goodUp={true}
-          benchmark={benchmarks.wfCompletion}
-          onBenchmarkChange={onBenchmarkChange}
+          // benchmark={benchmarks.wfCompletion}
+          // onBenchmarkChange={onBenchmarkChange}
+          noTarget
           isLoading={isWfLoading}
         />
         <KpiTile infoKey="F3" label="Biggest Step Drop" val={fStepDisplay} dir="dn" delta={null} sub="highest single drop-off" noTarget={true} isLoading={isWfLoading} />
@@ -100,7 +102,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({ filters, b
         id="card-wfFunnel"
         infoKey="chart.funnel"
         eyebrow="Workflow funnel (real event sequence)"
-        title={`${selectedModule || 'All Workflows'} — completion funnel`}
+        title={`${selectedModule ? formatModuleName(selectedModule) : 'All Workflows'} — completion funnel`}
         purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented PostHog event sequences."
         style={{ margin: '16px 0' }}
       >

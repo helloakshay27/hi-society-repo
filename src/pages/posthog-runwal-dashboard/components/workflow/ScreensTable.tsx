@@ -1,11 +1,16 @@
 import React from 'react';
 import { FlowItem, EntryScreenItem } from '../../api/types';
 
-// "app_permissions_requested" -> "App permissions requested"
+// "app_permissions_requested" -> "App Permissions Requested"
+// "main_home6" -> "Main Home 6" (space inserted before a number glued onto a word)
 const formatScreenName = (path?: string | null) => {
   if (!path) return path;
-  const spaced = path.replace(/_/g, ' ');
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  const spaced = path.replace(/_/g, ' ').replace(/([a-zA-Z])(\d)/g, '$1 $2');
+  return spaced
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
 interface AllScreensTableProps {
@@ -30,7 +35,7 @@ export const AllScreensTable: React.FC<AllScreensTableProps> = ({ flows = [] }) 
             <th className="num">Users</th>
             <th className="num">Events</th>
             <th className="num">Sessions</th>
-            <th className="num">Completion Rate</th>
+            {/* <th className="num">Completion Rate</th> */}
           </tr>
         </thead>
         <tbody>
@@ -40,11 +45,11 @@ export const AllScreensTable: React.FC<AllScreensTableProps> = ({ flows = [] }) 
               <td className="num">{r.users != null ? r.users.toLocaleString() : '—'}</td>
               <td className="num">{r.events != null ? r.events.toLocaleString() : '—'}</td>
               <td className="num">{r.sessions != null ? r.sessions.toLocaleString() : '—'}</td>
-              <td className="num">
+              {/* <td className="num">
                 {r.f_comp != null
                   ? `${Math.round(r.f_comp <= 1 ? r.f_comp * 100 : r.f_comp)}%`
                   : '—'}
-              </td>
+              </td> */}
             </tr>
           ))}
         </tbody>

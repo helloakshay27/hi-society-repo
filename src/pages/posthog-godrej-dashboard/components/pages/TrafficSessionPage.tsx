@@ -151,6 +151,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           goodUp={true}
           benchmark={benchmarks.activeUsers}
           onBenchmarkChange={onBenchmarkChange}
+          noTarget={true}
           isLoading={isTrafficLoading}
         />
         <KpiTile
@@ -202,6 +203,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           goodUp={false}
           benchmark={benchmarks.bounceRate}
           onBenchmarkChange={onBenchmarkChange}
+          noTarget={true}
           isLoading={isTrafficLoading}
         />
         <KpiTile
