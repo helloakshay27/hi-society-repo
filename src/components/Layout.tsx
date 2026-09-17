@@ -193,7 +193,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const hasToken = hasTokenParam || storedToken;
 
     if (
-      userEmail === "dineshshinde6666@gmail.com"
+      userEmail === "dineshshinde6666@gmail.com" ||
+      org_id === "109"
     ) {
       console.log("✅ Rendering ActionSidebar (company-specific)");
       return <ActionSidebar />;
@@ -284,7 +285,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Company-specific logic (Admin layout)
 
     if (
-      userEmail === "dineshshinde6666@gmail.com"
+      userEmail === "dineshshinde6666@gmail.com" ||
+      org_id === "109"
     ) {
       return <ActionHeader />;
     }

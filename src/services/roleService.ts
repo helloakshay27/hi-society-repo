@@ -5,6 +5,8 @@ export interface ApiRole {
   id: number;
   name: string;
   permissions_hash: string;
+  resource_id?: number | string | null;
+  resource_type?: string | null;
 }
 
 export interface BCRole {
@@ -159,6 +161,8 @@ export interface RoleWithModules {
   role_id: number;
   role_name: string;
   modules: LockModule[];
+  resource_id?: number | string | null;
+  resource_type?: string | null;
 }
 
 export interface ApiModulesResponse {
@@ -518,6 +522,8 @@ export const roleService = {
         id: role.id,
         role_id: role.id,
         role_name: role.title || role.name,
+        resource_id: role.resource_id ?? null,
+        resource_type: role.resource_type ?? null,
         modules: [],
       }));
 
@@ -548,11 +554,9 @@ export const roleService = {
 
       // Try to find the role_id from regular roles by matching role name
       let roleId = apiRole.role_id;
-      if (!roleId && regularRoles) {
-        const matchingRole = regularRoles.find(
-          (r) => r.name === apiRole.role_name
-        );
-        roleId = matchingRole?.id;
+      let matchingRole = regularRoles?.find((r) => r.name === apiRole.role_name);
+      if (!roleId && matchingRole) {
+        roleId = matchingRole.id;
         console.log("Found matching role ID from regular roles:", {
           roleName: apiRole.role_name,
           matchedId: roleId,
@@ -561,6 +565,12 @@ export const roleService = {
 
       // Fallback to index + 1 if still no role_id
       const finalRoleId = roleId || index + 1;
+
+      // resource_id/resource_type live on the flat roles list, not the
+      // modules response — carry them over from the matched flat role.
+      if (!matchingRole && regularRoles) {
+        matchingRole = regularRoles.find((r) => r.id === finalRoleId);
+      }
 
       console.log("Role ID assignment:", {
         apiRoleId: apiRole.role_id,
@@ -574,6 +584,8 @@ export const roleService = {
         id: finalRoleId,
         role_id: finalRoleId,
         role_name: apiRole.role_name,
+        resource_id: matchingRole?.resource_id ?? null,
+        resource_type: matchingRole?.resource_type ?? null,
         modules: (apiRole.lock_modules || []).map((apiModule) => {
           console.log("Processing module:", apiModule);
 
@@ -713,8 +725,8 @@ export const roleService = {
           name: roleWithModules.role_name,
           title: roleWithModules.role_name,
           description: "",
-          // resource_type: "Pms::CompanySetup",
-          // resource_id: localStorage.getItem("selectedCompanyId"),
+          resource_type: roleWithModules.resource_type,
+          resource_id: roleWithModules.resource_id,
           active: true,
           modules: enabledModuleIds,
           the_role: filteredPermissionsHash,
