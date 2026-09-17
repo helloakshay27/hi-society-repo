@@ -1350,14 +1350,30 @@ export function EnhancedTable<T extends Record<string, any>>({
               />
             </PaginationItem>
 
-            <PaginationItem>
-              <PaginationLink
-                isActive={true}
-                className="cursor-default"
-              >
-                {currentPage}
-              </PaginationLink>
-            </PaginationItem>
+            {generatePageNumbers().map((page) =>
+              typeof page === "number" ? (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    isActive={page === currentPage}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      if (page === currentPage) return;
+                      if (externalOnPageChange) {
+                        externalOnPageChange(page);
+                      } else {
+                        setInternalCurrentPage(page);
+                      }
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={page}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )
+            )}
 
             <PaginationItem>
               <PaginationNext
