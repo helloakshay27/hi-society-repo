@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { useLocation } from "react-router-dom";
 import { usePermissions } from "./PermissionsContext";
+import { getModuleForFunction } from "../utils/moduleDetection";
+import { getUser } from "../utils/auth";
 
 interface LockFunction {
   function_id: number;
@@ -174,6 +176,46 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
         }
       }
       if (foundMatch) break;
+    }
+
+    // Fallback for accounts pinned to the ActionSidebar/ActionHeader (org 109/324,
+    // see Layout.tsx) whose role data has no active function with a react_link
+    // matching the current route exactly. Derive the module from the URL itself
+    // (same mapping the static sidebars use) so the sidebar still shows instead
+    // of silently staying blank.
+    if (!foundMatch) {
+      const orgId = localStorage.getItem("org_id");
+      const userEmail = getUser()?.email;
+      const isActionOrgAccount =
+        orgId === "109" ||
+        orgId === "324" ||
+        userEmail === "dineshshinde6666@gmail.com";
+
+      if (isActionOrgAccount) {
+        const segments = path.split("/").filter(Boolean);
+        for (let start = 1; start < segments.length && !foundMatch; start++) {
+          const candidate = segments.slice(start).join("_");
+          const mappedModule = getModuleForFunction(candidate);
+          if (!mappedModule) continue;
+
+          const matchedModule = userRole.lock_modules.find(
+            (module) =>
+              module.module_active === 1 &&
+              module.module_name.toLowerCase() === mappedModule.toLowerCase()
+          );
+          if (matchedModule) {
+            foundModule = matchedModule.module_name;
+            foundFunction = candidate;
+            foundMatch = true;
+          }
+        }
+
+        if (foundMatch) {
+          console.log(
+            `🔄 ActionLayout - Fallback route match: Module="${foundModule}", Function="${foundFunction}" for path "${path}"`
+          );
+        }
+      }
     }
 
     if (foundMatch) {

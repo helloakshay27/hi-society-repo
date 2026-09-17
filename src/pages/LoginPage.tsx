@@ -60,7 +60,7 @@ const muiFieldStyles = {
 export const LoginPage = ({ setBaseUrl, setToken }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole } = usePermissions();
+  const { userRole, refreshPermissions } = usePermissions();
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,10 +80,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isViSite = hostname.includes("vi-web.gophygital.work");
   const isWebSite = hostname.includes("web.gophygital.work");
   // Check if it's Hi-Society site
-  const isHiSocietySite = hostname === "web.hisociety.lockated.com";
+  const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "localhost";
 
   const isUIHiSocietySite =
-    hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
+    hostname.includes("ui-hisociety.lockated.com") || org_id === "9" ;
 
 
   // Check if it's Runwal site
@@ -457,6 +457,26 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
         setTimeout(() => {
           navigate("/appointmentz/site-scheduling", { replace: true });
+        }, 500);
+        return;
+      }
+
+      // Org 109 / 324 use the ActionSidebar/ActionHeader layout (see Layout.tsx)
+      // and should land on the first route their role actually grants. Permissions
+      // for a freshly-authenticated session aren't fetched yet at this point, so
+      // force a refresh here instead of falling straight to the generic
+      // survey-mapping fallback used below.
+      const loginOrgId = localStorage.getItem("org_id");
+      if (loginOrgId === "109" || loginOrgId === "324") {
+        const freshRole = await refreshPermissions();
+        const firstRoute = freshRole ? findFirstAccessibleRoute(freshRole) : null;
+        const stateFrom = (location.state as { from?: Location })?.from?.pathname;
+        const redirectPath = stateFrom || firstRoute || "/maintenance/survey/mapping";
+
+        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
+
+        setTimeout(() => {
+          navigate(redirectPath, { replace: true });
         }, 500);
         return;
       }
