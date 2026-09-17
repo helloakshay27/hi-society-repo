@@ -156,7 +156,7 @@ export const RoleDashboard = () => {
       }))
     : [];
 
-  console.log(currentRole)
+  console.log("mmmm",currentRole)
 
   // Get current module from the selected role's modules (this contains the actual enabled status)
   const currentRoleModule =
@@ -655,16 +655,16 @@ export const RoleDashboard = () => {
                   </span>
                 </p>
               </div>
+              {console.log("rolee:",currentRole)}
               <div className="flex gap-2">
+                
                 {!isEditMode ? (
                   currentRole?.resource_id && currentRole?.resource_type && (
                     <Button
                       onClick={() => setIsEditMode(true)}
-                      variant="outline"
-                      className="border-[#C72030] bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                      className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
                       disabled={!currentRole}
                     >
-
                       <Edit2 className="w-4 h-4 mr-2" />
                       Edit Permissions
                     </Button>
