@@ -65,20 +65,11 @@ function DateRangeControl() {
 }
 
 export function ControlBar() {
-  const { state, setDev, togglePrev, setSociety, sites, refreshAll, isRefreshing } = useSmartSecureDashboard();
+  const { state, setDev, togglePrev, refreshAll, isRefreshing } = useSmartSecureDashboard();
 
   return (
     <div className="filterbar">
       <DateRangeControl />
-
-      <label className="ctrl">
-        <span className="ic">🏘</span>
-        <select value={state.society} onChange={(e) => setSociety(e.target.value)}>
-          <option value="All Societies">All Societies</option>
-          {sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-        <span className="chev">▾</span>
-      </label>
 
       <div className="devtoggle" title="Platform">
         {(['all', 'ios', 'android'] as Device[]).map((d) => (

@@ -88,9 +88,11 @@ function PosthogMyPiramalDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
-      // My Piramal is a fixed PostHog tenant app — unlike Runwal (which reads
-      // ?app_id= from the URL), it always sends app_id=38.
-      appId: '38',
+      // My Piramal sends both identifiers on every PostHog Adoption API
+      // call — project_code and app_id together (unlike Runwal CP, which
+      // sends project_code only).
+      appId: '30',
+      projectCode: 'PIR-01',
     };
   }, [accountSiteId, devPlatform, rangeFrom, rangeTo]);
 

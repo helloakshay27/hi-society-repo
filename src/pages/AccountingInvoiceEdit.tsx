@@ -321,14 +321,14 @@ const AccountingInvoiceEdit: React.FC = () => {
     fetchChargeTypes();
   }, [lockAccountId]);
 
-  // GET /lock_account_ledgers?lock_account_id=... — list of ledgers selectable
-  // as charges on the invoice.
+  // GET /lock_account_ledgers/dropdown.json?lock_account_id=... — list of
+  // ledgers selectable as charges on the invoice.
   useEffect(() => {
     const fetchLedgers = async () => {
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_ledgers`, {
+        const res = await axios.get(`${baseUrl}/lock_account_ledgers/dropdown.json`, {
           params: { lock_account_id: lockAccountId },
           headers: {
             Accept: "application/json",
@@ -490,6 +490,7 @@ const AccountingInvoiceEdit: React.FC = () => {
             placeholder="Select Type"
             options={chargeTypeOptions}
             bordered
+            disabled
           />
         );
       case "quantity":
