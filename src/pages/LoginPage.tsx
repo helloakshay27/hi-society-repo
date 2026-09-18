@@ -461,13 +461,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         return;
       }
 
-      // Org 109 / 324 use the ActionSidebar/ActionHeader layout (see Layout.tsx)
-      // and should land on the first route their role actually grants. Permissions
-      // for a freshly-authenticated session aren't fetched yet at this point, so
-      // force a refresh here instead of falling straight to the generic
-      // survey-mapping fallback used below.
+      // Org 109 / 324 / 10 use the ActionSidebar/ActionHeader layout (see
+      // Layout.tsx) and should land on the first route their role actually
+      // grants. Permissions for a freshly-authenticated session aren't
+      // fetched yet at this point, so force a refresh here instead of
+      // falling straight to the generic survey-mapping fallback used below.
       const loginOrgId = localStorage.getItem("org_id");
-      if (loginOrgId === "109" || loginOrgId === "324") {
+      if (loginOrgId === "109" || loginOrgId === "324" || loginOrgId === "10") {
         const freshRole = await refreshPermissions();
         const firstRoute = freshRole ? findFirstAccessibleRoute(freshRole) : null;
         const stateFrom = (location.state as { from?: Location })?.from?.pathname;
