@@ -275,7 +275,13 @@ const isHiSocietyUiSite = hostname === "web.lockated.com";
 const isHiSocietyUatUiSite = hostname.includes("ui-hisociety.lockated.com");
 const isHiSocietySite =
   isLocalhost ||
-  hostname.includes("web.hisociety.lockated.com");
+  hostname.includes("web.hisociety.lockated.com") ||
+  hostname === "runwal.lockated.com" ||
+  hostname === "runwalrealty.lockated.com" ||
+  hostname === "godrej.lockated.com" ||
+  hostname === "kraheja.lockated.com" ||
+  hostname === "sunteck.lockated.com" ||
+  hostname === "piramal.lockated.com";
 
 // const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
 
