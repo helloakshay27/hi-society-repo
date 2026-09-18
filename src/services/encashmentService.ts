@@ -222,11 +222,23 @@ export interface EncashRequest {
   [key: string]: unknown;
 }
 
+/**
+ * Status counts across *all* pages (not just the current page's 10 items) —
+ * returned alongside the paginated list, e.g. `{ pending: 5, successful: 16,
+ * cancelled: 17, total: 38 }`.
+ */
+export interface EncashRequestCounts {
+  pending: number;
+  successful: number;
+  cancelled: number;
+  total: number;
+}
+
 /** GET /admin/encash_requests — paginated list of encashment requests, across statuses */
 export const getEncashRequests = async (
   page = 1,
   perPage = DEFAULT_PAGE_SIZE
-): Promise<{ items: EncashRequest[]; pagination: PaginationMeta }> => {
+): Promise<{ items: EncashRequest[]; pagination: PaginationMeta; counts?: EncashRequestCounts }> => {
   const response = await axios.get(
     getFullUrl("/admin/encash_requests"),
     {
@@ -234,12 +246,14 @@ export const getEncashRequests = async (
       headers: { Authorization: getAuthHeader() },
     }
   );
-  return extractPaginated<EncashRequest>(
+  const { items, pagination } = extractPaginated<EncashRequest>(
     response.data,
     ["encash_requests"],
     page,
     perPage
   );
+  const counts = (response.data as { counts?: EncashRequestCounts })?.counts;
+  return { items, pagination, counts };
 };
 
 /** GET /admin/encash_requests/:id — single encashment request, full detail */
