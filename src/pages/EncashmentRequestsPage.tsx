@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import {
   lockatedApproveEncashRequest,
   lockatedRejectEncashRequest,
   EncashRequest,
+  EncashRequestCounts,
   PaginationMeta,
 } from "@/services/encashmentService";
 
@@ -173,6 +174,9 @@ export const EncashmentRequestsPage: React.FC = () => {
     total_count: 0,
     total_pages: 1,
   });
+  // Status counts across all pages (from the API's `counts`), not just the
+  // current page's 10 rows — powers the stats cards below.
+  const [counts, setCounts] = useState<EncashRequestCounts | null>(null);
 
   const [selectedRequest, setSelectedRequest] = useState<EncashRequest | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -211,9 +215,10 @@ export const EncashmentRequestsPage: React.FC = () => {
   const fetchRequests = (page: number) => {
     setLoading(true);
     getEncashRequests(page, pageSize)
-      .then(({ items, pagination: meta }) => {
+      .then(({ items, pagination: meta, counts: statusCounts }) => {
         setRequests(items);
         setPagination(meta);
+        if (statusCounts) setCounts(statusCounts);
       })
       .catch((err) => {
         console.warn("Could not fetch encash requests:", err);
@@ -389,23 +394,16 @@ export const EncashmentRequestsPage: React.FC = () => {
     }
   };
 
-  // Derived from statusVariant() rather than re-matching status strings here, so
-  // these stay consistent with the badge and correctly bucket whatever status
-  // lockated_approve/lockated_reject end up setting. Bucketed off
-  // `lockated_status` (falling back to `status`) — same field the status
-  // column/badge use.
-  const pendingCount = useMemo(
-    () => requests.filter((r) => statusVariant(r.lockated_status || r.status) === "pending").length,
-    [requests]
-  );
-  const successfulCount = useMemo(
-    () => requests.filter((r) => statusVariant(r.lockated_status || r.status) === "accepted").length,
-    [requests]
-  );
-  const cancelledCount = useMemo(
-    () => requests.filter((r) => statusVariant(r.lockated_status || r.status) === "rejected").length,
-    [requests]
-  );
+  // The API's `counts` covers every page, not just the current 10 rows — used
+  // whenever present; falls back to a page-only tally (bucketed the same way
+  // the status badge is, off `lockated_status`/`status`) if it's ever absent.
+  const pendingCount =
+    counts?.pending ?? requests.filter((r) => statusVariant(r.lockated_status || r.status) === "pending").length;
+  const successfulCount =
+    counts?.successful ?? requests.filter((r) => statusVariant(r.lockated_status || r.status) === "accepted").length;
+  const cancelledCount =
+    counts?.cancelled ?? requests.filter((r) => statusVariant(r.lockated_status || r.status) === "rejected").length;
+  const totalCount = counts?.total ?? pagination.total_count;
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
@@ -413,13 +411,13 @@ export const EncashmentRequestsPage: React.FC = () => {
         <h1 className="text-xl sm:text-2xl font-bold text-[#1A1A1A]">Encashment Requests</h1>
       </div>
 
-      {/* Stats Cards (current page only) */}
+      {/* Stats Cards (across all pages) */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total Requests", value: pagination.total_count, icon: Wallet },
-          { label: "Pending (page)", value: pendingCount, icon: Clock },
-          { label: "Successful (page)", value: successfulCount, icon: CheckCircle2 },
-          { label: "Cancelled (page)", value: cancelledCount, icon: XCircle },
+          { label: "Total Requests", value: totalCount, icon: Wallet },
+          { label: "Pending", value: pendingCount, icon: Clock },
+          { label: "Successful", value: successfulCount, icon: CheckCircle2 },
+          { label: "Cancelled", value: cancelledCount, icon: XCircle },
         ].map((item, i) => {
           const IconComponent = item.icon;
           return (

@@ -141,7 +141,54 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   const curSessions = getSeries(currentUsageDays, 'sessions');
   const prevSessions = getSeries(previousUsageDays, 'sessions');
 
-  const deviceList = usageData?.device_split?.devices || [];
+  // The card is titled "Device / Platform Split" — iOS, Android, and Desktop
+  // browsers as one combined breakdown — but `device_split.devices` only
+  // carries device_type (Mobile/Desktop/Tablet). Devices that report an
+  // `os_breakdown` (e.g. Mobile → Android/iOS) contribute their OS rows
+  // instead of a single "Mobile" row; devices without one (e.g. Desktop) are
+  // kept as-is. Rows are merged by name (in case more than one device_type
+  // reports the same OS) and re-shared against total_sessions so the whole
+  // list still sums to ~100%.
+  const totalSessions = usageData?.device_split?.total_sessions || 0;
+  const deviceList = useMemo(() => {
+    const rawDevices = usageData?.device_split?.devices || [];
+    const merged = new Map<string, { device: string; users: number; sessions: number }>();
+    let hasOsBreakdown = false;
+    rawDevices.forEach((d) => {
+      if (d.os_breakdown && d.os_breakdown.length > 0) {
+        hasOsBreakdown = true;
+        d.os_breakdown.forEach((o) => {
+          const existing = merged.get(o.os);
+          if (existing) {
+            existing.users += o.users;
+            existing.sessions += o.sessions;
+          } else {
+            merged.set(o.os, { device: o.os, users: o.users, sessions: o.sessions });
+          }
+        });
+      } else {
+        const existing = merged.get(d.device);
+        if (existing) {
+          existing.users += d.users;
+          existing.sessions += d.sessions;
+        } else {
+          merged.set(d.device, { device: d.device, users: d.users, sessions: d.sessions });
+        }
+      }
+    });
+    // Once any device reports an OS split, always show both Android and iOS
+    // — even at 0% — rather than silently dropping whichever had no sessions
+    // in the period (the API only includes OS entries that had activity).
+    if (hasOsBreakdown) {
+      ['Android', 'iOS'].forEach((os) => {
+        if (!merged.has(os)) merged.set(os, { device: os, users: 0, sessions: 0 });
+      });
+    }
+    return Array.from(merged.values()).map((d) => ({
+      ...d,
+      session_share: totalSessions > 0 ? (d.sessions / totalSessions) * 100 : 0,
+    }));
+  }, [usageData?.device_split, totalSessions]);
   const deviceColors: Record<string, string> = {
     Desktop: 'var(--chart-blue)',
     Mobile: 'var(--green)',

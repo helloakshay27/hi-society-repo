@@ -104,6 +104,7 @@ export function buildTraffic(
       raw: curActive,
       unit: '',
       goodUp: true,
+      noTarget: true,
     },
     {
       id: 'screenViews',
@@ -145,6 +146,7 @@ export function buildTraffic(
       raw: bounce,
       unit: '%',
       goodUp: false,
+      noTarget: true,
     },
     {
       id: 'recentlyOnline',
@@ -478,13 +480,12 @@ export function buildFlows(state: DashboardState, workflowQ?: WorkflowUsageRespo
   const tiles: TileSpec[] = [
     {
       id: 'F-adopt',
-      label: 'Workflow Adoption',
+      label: 'Module Adoption',
       val: adoptVal,
       dir: adoptDir,
       delta: fmtDelta(kpis?.f_adopt?.delta_pct),
-      raw: kpis?.f_adopt?.value ?? 0,
-      unit: '%',
-      goodUp: true,
+      sub: 'users entering workflow',
+      noTarget: true,
     },
     {
       id: 'F-comp',
@@ -492,24 +493,25 @@ export function buildFlows(state: DashboardState, workflowQ?: WorkflowUsageRespo
       val: compVal,
       dir: compDir,
       delta: fmtDelta(kpis?.f_comp?.delta_pct),
-      raw: kpis?.f_comp?.value ?? 0,
-      unit: '%',
-      goodUp: true,
+      sub: 'entrants completing flow',
+      noTarget: true,
     },
     {
+      id: 'F-step',
       label: 'Biggest Step Drop',
       val: biggestDropVal,
       dir: 'dn',
       delta: biggestDropStep !== '—' ? 'at ' + biggestDropStep : null,
-      sub: biggestDropStep !== '—' ? 'at ' + biggestDropStep : undefined,
+      sub: 'highest single drop-off',
       noTarget: true,
     },
     {
+      id: 'F-vol',
       label: 'Usage Volume',
       val: volVal,
       dir: 'up',
       delta: fmtDelta(kpis?.f_vol?.delta_pct),
-      sub: 'completions',
+      sub: 'workflow completions',
       noTarget: true,
     },
   ];

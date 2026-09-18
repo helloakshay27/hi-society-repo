@@ -98,12 +98,18 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
   }
 
   // Runwal CP has no app_id at all — it identifies itself by project_code
-  // instead, so the two are mutually exclusive on the wire.
+  // instead, so (absent an explicit filters.appId) the two stay mutually
+  // exclusive on the wire. A dashboard that explicitly sets both (e.g. My
+  // Piramal, which sends project_code=PIR-01 and app_id=30 together) gets
+  // both regardless.
   const projectCode = filters.projectCode || getProjectCodeFromUrl();
   if (projectCode) {
     parts.push(`project_code=${encodeURIComponent(projectCode)}`);
-  } else {
-    const appId = filters.appId || getAppIdFromUrl();
+  }
+  if (filters.appId) {
+    parts.push(`app_id=${encodeURIComponent(filters.appId)}`);
+  } else if (!projectCode) {
+    const appId = getAppIdFromUrl();
     if (appId) parts.push(`app_id=${encodeURIComponent(appId)}`);
   }
 
