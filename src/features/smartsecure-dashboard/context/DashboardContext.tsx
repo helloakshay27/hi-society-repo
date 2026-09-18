@@ -8,9 +8,11 @@ import {
   fetchGrowth,
   fetchRetention,
   fetchRoles,
+  fetchModules,
   fetchWorkflowUsage,
   getDynamicTenantUrl,
 } from '../api/adoptionApi';
+import type { ModuleNode } from '../api/adoptionApi';
 import { dateRangeFor } from '../api/queries';
 import { BM_DEFAULTS } from '../data/constants';
 import { buildTraffic, buildAdoption, buildFlows, type TrafficData, type AdoptData, type FlowsData } from '../data/metrics';
@@ -68,6 +70,11 @@ interface DashboardContextValue {
   isTrafficLoading: boolean;
   isAdoptLoading: boolean;
   isFlowsLoading: boolean;
+  /** Top-level module list from the modules API */
+  modules: ModuleNode[];
+  isModulesLoading: boolean;
+  selectedModule: string | null;
+  setSelectedModule: (name: string | null) => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -76,6 +83,7 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
   const [state, setState] = useState<DashboardState>(DEFAULT_STATE);
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>({});
   const [infoPopover, setInfoPopover] = useState<InfoPopoverState | null>(null);
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-ss-theme', state.theme);
@@ -140,7 +148,14 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
   const growthQ     = useQuery({ queryKey: ['ss-growth',     filters], queryFn: () => fetchGrowth({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }),        staleTime: 5 * 60_000 });
   const retentionQ  = useQuery({ queryKey: ['ss-retention',  filters], queryFn: () => fetchRetention({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }),     staleTime: 5 * 60_000 });
   const rolesQ      = useQuery({ queryKey: ['ss-roles',      filters], queryFn: () => fetchRoles(filters),                                                                                                                     staleTime: 5 * 60_000 });
-  const workflowQ   = useQuery({ queryKey: ['ss-workflow',   filters, state.wf], queryFn: () => fetchWorkflowUsage({ ...filters, module: state.wf }),                                                                          staleTime: 5 * 60_000 });
+  // Layer 3: modules list — fetch top-level module tree first
+  const modulesQ    = useQuery({ queryKey: ['ss-modules',    filters], queryFn: () => fetchModules(filters),                                                                                                                    staleTime: 5 * 60_000 });
+  // Layer 3: workflow_usage — gated on modulesQ settling; passes selectedModule name when set, or queries all modules when null
+  const workflowQ   = useQuery({
+    queryKey: ['ss-workflow', filters, selectedModule],
+    queryFn: () => fetchWorkflowUsage({ ...filters, ...(selectedModule ? { module: selectedModule } : {}) }),
+    staleTime: 5 * 60_000,
+  });
 
   const queryClient = useQueryClient();
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
@@ -185,6 +200,8 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
   const isTrafficLoading = sitesLoading || trafficQ.isLoading || usageQ.isLoading;
   const isAdoptLoading = sitesLoading || engagementQ.isLoading || trendQ.isLoading || growthQ.isLoading || retentionQ.isLoading || rolesQ.isLoading;
   const isFlowsLoading = sitesLoading || workflowQ.isLoading;
+  const isModulesLoading = sitesLoading || modulesQ.isLoading;
+  const modules: ModuleNode[] = modulesQ.data?.tree ?? [];
 
   const traffic = useMemo(() => buildTraffic(state, trafficQ.data, usageQ.data),                                                              [state, trafficQ.data, usageQ.data]);
   const adopt   = useMemo(() => buildAdoption(state, engagementQ.data, trendQ.data, growthQ.data, retentionQ.data, rolesQ.data),             [state, engagementQ.data, trendQ.data, growthQ.data, retentionQ.data, rolesQ.data]);
@@ -229,6 +246,10 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
     isTrafficLoading,
     isAdoptLoading,
     isFlowsLoading,
+    modules,
+    isModulesLoading,
+    selectedModule,
+    setSelectedModule,
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
