@@ -45,11 +45,20 @@ export interface UsageDay {
   sessions: number;
 }
 
+export interface OsStat {
+  os: string;
+  users: number;
+  sessions: number;
+  session_share: number;
+}
+
 export interface DeviceStat {
   device: string;
   users: number;
   sessions: number;
   session_share: number;
+  /** Per-OS split within this device_type (e.g. Android/iOS within Mobile). */
+  os_breakdown?: OsStat[];
 }
 
 export interface UsageDistributionResponse {
