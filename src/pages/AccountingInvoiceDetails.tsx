@@ -3,25 +3,18 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+  TextField,
+} from "@mui/material";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, Download, Printer, FileText, Receipt, Wallet } from "lucide-react";
+import { ArrowLeft, Download, Printer, FileText, Receipt, Wallet, X } from "lucide-react";
 
 interface BillCharge {
   id: number;
@@ -32,10 +25,11 @@ interface BillCharge {
 
 interface Payment {
   id: number;
-  payment_date: string;
-  amount: number;
-  payment_mode: string;
-  transaction_number: string;
+  amount: string;
+  method: string;
+  transaction_id: string;
+  date: string;
+  sap_response?: unknown[];
 }
 
 interface LockAccountBillDetail {
@@ -55,6 +49,15 @@ interface LockAccountBillDetail {
   lock_account_bill_charges?: BillCharge[];
   payments?: Payment[];
 }
+
+// "2026-09-18" -> "18/09/2026"
+const formatDateDMY = (value?: string | null): string => {
+  if (!value) return "-";
+  const parts = value.split("-");
+  if (parts.length !== 3) return value;
+  const [year, month, day] = parts;
+  return `${day}/${month}/${year}`;
+};
 
 const numberToWords = (num: number): string => {
   const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
@@ -111,6 +114,7 @@ const AccountingInvoiceDetails: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
   const [transactionNumber, setTransactionNumber] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
   const fetchBill = useCallback(async () => {
@@ -152,11 +156,23 @@ const AccountingInvoiceDetails: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      await axios.patch(
-        `${baseUrl}/lock_account_bills/${id}.json`,
-        { lock_account_bill: { publish: checked } },
-        { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
-      );
+      const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+
+      if (checked) {
+        // GET .../lock_account_ledgers/raise_to_builder.json?pids=<bill id> —
+        // pids accepts a comma-separated list for bulk use elsewhere; here we
+        // only ever raise this one bill, so it's just its own id.
+        await axios.get(
+          `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/raise_to_builder.json`,
+          { params: { pids: id }, headers }
+        );
+      } else {
+        await axios.patch(
+          `${baseUrl}/lock_account_bills/${id}.json`,
+          { lock_account_bill: { publish: false } },
+          { headers }
+        );
+      }
       setBill((prev) => (prev ? { ...prev, publish: checked } : prev));
       toast.success(checked ? "Raised to builder" : "Withdrawn from builder");
     } catch (error) {
@@ -165,8 +181,64 @@ const AccountingInvoiceDetails: React.FC = () => {
     }
   };
 
-  const handleDownloadInvoice = () => window.print();
+  const handleDownloadInvoice = async () => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_bills/${id}/generate_pdf.pdf`,
+        {
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blobUrl = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" })
+      );
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Invoice-${bill?.bill_number || id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      toast.error("Failed to download invoice");
+    }
+  };
   const handlePrint = () => window.print();
+
+  // GET /lock_account_bills/:id/receipt_pdf?pid=<payment_id> — pid is the
+  // specific payment's own id from the Payment Details table below, not the
+  // bill id, since a bill can have more than one payment recorded against it.
+  const handleDownloadReceipt = async (paymentId: number) => {
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/lock_account_bills/${id}/receipt_pdf`,
+        {
+          params: { pid: paymentId },
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blobUrl = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" })
+      );
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Receipt-${paymentId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error downloading receipt:", error);
+      toast.error("Failed to download receipt");
+    }
+  };
 
   const handleRecordPayment = async () => {
     if (!paymentAmount || Number(paymentAmount) <= 0) {
@@ -186,34 +258,24 @@ const AccountingInvoiceDetails: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const formData = new FormData();
-      formData.append("lock_payment[payment_of]", "LockAccountBill");
-      formData.append("lock_payment[payment_of_id]", String(id));
-      formData.append("lock_payment[paid_amount]", paymentAmount);
-      formData.append("lock_payment[payment_date]", paymentDate);
-      formData.append("lock_payment[payment_mode]", paymentMode);
-      formData.append("lock_payment[order_number]", transactionNumber);
-      formData.append(
-        "lock_payment[lock_bill_payments_attributes][0][resource_id]",
-        String(id)
-      );
-      formData.append(
-        "lock_payment[lock_bill_payments_attributes][0][resource_type]",
-        "LockAccountBill"
-      );
-      formData.append(
-        "lock_payment[lock_bill_payments_attributes][0][amount]",
-        paymentAmount
-      );
-      formData.append(
-        "lock_payment[lock_bill_payments_attributes][0][payment_date]",
-        paymentDate
-      );
 
       await axios.post(
-        `${baseUrl}/lock_payments.json?lock_account_id=${lockAccountId}`,
-        formData,
-        { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
+        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_bills/${id}/bill_payment.json`,
+        {
+          lock_payment: {
+            total_amount: Number(paymentAmount),
+            payment_method: paymentMode,
+            pg_transaction_id: transactionNumber,
+            cheque_date: paymentDate,
+            notes: paymentNotes,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
       );
       toast.success("Payment recorded successfully");
       setIsPaymentOpen(false);
@@ -221,6 +283,7 @@ const AccountingInvoiceDetails: React.FC = () => {
       setPaymentAmount("");
       setPaymentMode("");
       setTransactionNumber("");
+      setPaymentNotes("");
       fetchBill();
     } catch (error) {
       console.error("Error recording payment:", error);
@@ -247,6 +310,7 @@ const AccountingInvoiceDetails: React.FC = () => {
   }
 
   const isPaid = bill.status?.toLowerCase() === "paid";
+  // const isPartPayment = bill.status?.toLowerCase() === "part payment";
 
   return (
     <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden">
@@ -275,23 +339,35 @@ const AccountingInvoiceDetails: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Raise to Builder:</span>
-              <Switch checked={Boolean(bill.publish)} onCheckedChange={handleTogglePublish} />
+              <button
+                type="button"
+                onClick={() => handleTogglePublish(!bill.publish)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${bill.publish ? "bg-brand" : "bg-gray-300"
+                  }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${bill.publish ? "translate-x-6" : "translate-x-1"
+                    }`}
+                />
+              </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => setIsPaymentOpen(true)}
-                size="sm"
-                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
-              >
-                Receive Payment
-              </Button>
-              <Button
+              {!isPaid && (
+                <Button
+                  onClick={() => setIsPaymentOpen(true)}
+                  size="sm"
+                  className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
+                >
+                  Receive Payment
+                </Button>
+              )}
+              {/* <Button
                 onClick={() => navigate(`/accounting/invoices/${bill.id}/edit`)}
                 size="sm"
                 className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
               >
                 Edit
-              </Button>
+              </Button> */}
               <Button
                 onClick={handleDownloadInvoice}
                 size="sm"
@@ -299,14 +375,14 @@ const AccountingInvoiceDetails: React.FC = () => {
               >
                 <Download className="mr-2 h-4 w-4" /> Download Invoice
               </Button>
-              <Button
+              {/* <Button
                 onClick={handlePrint}
                 size="icon"
                 title="Print"
                 className="bg-[#C72030] text-white hover:bg-[#A01020]"
               >
                 <Printer className="h-4 w-4" />
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -433,12 +509,13 @@ const AccountingInvoiceDetails: React.FC = () => {
                   <th className="px-6 py-2 font-medium">Amount</th>
                   <th className="px-6 py-2 font-medium">Payment Mode</th>
                   <th className="px-6 py-2 font-medium">Transaction Number</th>
+                  <th className="px-6 py-2 font-medium">Receipt</th>
                 </tr>
               </thead>
               <tbody>
                 {payments.length === 0 ? (
                   <tr className="border-t border-gray-200">
-                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                       No payments recorded
                     </td>
                   </tr>
@@ -446,10 +523,20 @@ const AccountingInvoiceDetails: React.FC = () => {
                   payments.map((payment) => (
                     <tr key={payment.id} className="border-t border-gray-200">
                       <td className="px-6 py-2">{payment.id}</td>
-                      <td className="px-6 py-2">{payment.payment_date}</td>
+                      <td className="px-6 py-2">{formatDateDMY(payment.date)}</td>
                       <td className="px-6 py-2">{payment.amount}</td>
-                      <td className="px-6 py-2">{payment.payment_mode}</td>
-                      <td className="px-6 py-2">{payment.transaction_number}</td>
+                      <td className="px-6 py-2">{payment.method}</td>
+                      <td className="px-6 py-2">{payment.transaction_id}</td>
+                      <td className="px-6 py-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadReceipt(payment.id)}
+                          title="Download Receipt"
+                          className="inline-flex items-center gap-1 text-[#C72030] hover:underline"
+                        >
+                          <Download className="h-4 w-4" /> Receipt
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -459,64 +546,126 @@ const AccountingInvoiceDetails: React.FC = () => {
         </div>
       </div>
 
-      <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>Receive Payment</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-2">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-gray-700">Payment Date</label>
-              <Input
-                type="date"
-                value={paymentDate}
-                onChange={(e) => setPaymentDate(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-gray-700">Amount</label>
-              <Input
-                type="number"
-                min={0}
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-gray-700">Payment Mode</label>
-              <Select value={paymentMode} onValueChange={setPaymentMode}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Payment Mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Cheque">Cheque</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="NEFT">NEFT</SelectItem>
-                  <SelectItem value="UPI">UPI</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-gray-700">Transaction Number</label>
-              <Input
-                value={transactionNumber}
-                onChange={(e) => setTransactionNumber(e.target.value)}
-              />
+      <Dialog open={isPaymentOpen} modal={false} onOpenChange={setIsPaymentOpen}>
+        <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-medium text-gray-900">Receive Payment</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsPaymentOpen(false)}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
+            <TextField
+              label="Total Amount"
+              value={totalAmount.toFixed(1)}
+              fullWidth
+              variant="outlined"
+              disabled
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            <TextField
+              label={<>Amount Paid <span style={{ color: "#C72030" }}>*</span></>}
+              type="number"
+              placeholder="Enter Amount Paid"
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              fullWidth
+              variant="outlined"
+              inputProps={{ min: 0 }}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Payment Mode <span style={{ color: "#C72030" }}>*</span>
+              </InputLabel>
+              <MuiSelect
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value as string)}
+                displayEmpty
+                label="Payment Mode *"
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="">
+                  <em>Select Mode</em>
+                </MenuItem>
+                <MenuItem value="cash">Cash</MenuItem>
+                <MenuItem value="credit_card">Credit Card</MenuItem>
+                <MenuItem value="neft">NEFT</MenuItem>
+                <MenuItem value="card_swipe">Card Swipe</MenuItem>
+                <MenuItem value="cheque">Cheque</MenuItem>
+                <MenuItem value="rtgs">RTGS</MenuItem>
+              </MuiSelect>
+            </FormControl>
+
+            <TextField
+              label="Cheque/Transaction Number"
+              placeholder="Enter Cheque/Transaction Number"
+              value={transactionNumber}
+              onChange={(e) => setTransactionNumber(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            <TextField
+              label={<>Payment Date <span style={{ color: "#C72030" }}>*</span></>}
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+
+            <div>
+              <div className="relative">
+                <textarea
+                  className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+                  rows={4}
+                  value={paymentNotes}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 500) setPaymentNotes(e.target.value);
+                  }}
+                  placeholder="Write note"
+                  maxLength={500}
+                />
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
+                  Notes
+                </label>
+              </div>
+              <div className="mt-1 text-right text-xs text-gray-400">{paymentNotes.length}/500</div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPaymentOpen(false)}>
-              Cancel
-            </Button>
+
+          <div className="flex justify-center gap-3 border-t border-gray-200 px-6 py-4">
             <Button
               onClick={handleRecordPayment}
               disabled={submittingPayment}
-              className="bg-[#C72030] text-white hover:bg-[#A01020]"
+              className="bg-[#C72030] hover:bg-[#B8252F] px-8 text-white"
             >
-              Record Payment
+              {submittingPayment ? "Submitting..." : "Submit"}
             </Button>
-          </DialogFooter>
+            <Button
+              onClick={() => setIsPaymentOpen(false)}
+              disabled={submittingPayment}
+              className="h-10 w-full !border !border-[#da7756] !bg-white px-6 !text-[#da7756] sm:w-auto sm:px-8"
+            >
+              Cancel
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
