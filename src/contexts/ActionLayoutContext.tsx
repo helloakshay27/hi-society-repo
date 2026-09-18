@@ -144,6 +144,7 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
     const isActionOrgAccount =
       orgId === "109" ||
       orgId === "324" ||
+      orgId === "10" ||
       userEmail === "dineshshinde6666@gmail.com";
 
     if (!userRole || !userRole.lock_modules) {
