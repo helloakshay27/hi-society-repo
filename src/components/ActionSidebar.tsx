@@ -464,6 +464,55 @@ export const ActionSidebar = () => {
 
     topLevel.forEach((parent) => buildChildren(parent));
 
+    // Some parents (e.g. "Helpdesk") are meant to group a static page under
+    // themselves as a sub-item, but the API only exposes their other real
+    // child (e.g. "Communication Template") — inject the missing sibling leaf
+    // so it's reachable the same way, instead of making the parent header
+    // itself directly navigable.
+    const SYNTHETIC_CHILD_LINKS: Record<
+      string,
+      { label: string; link: string; actionName: string }
+    > = {
+      helpdesk: {
+        label: "Helpdesk",
+        link: "/bms/helpdesk",
+        actionName: "helpdesk_main",
+      },
+    };
+
+    const injectSyntheticChildren = (node: any): void => {
+      const key = (node.action_name || node.function_name || "")
+        .toString()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+      const synthetic = SYNTHETIC_CHILD_LINKS[key];
+
+      if (synthetic && node.children.length > 0) {
+        const alreadyPresent = node.children.some(
+          (child: any) =>
+            child.react_link === synthetic.link ||
+            (child.action_name || "").toLowerCase() === synthetic.actionName
+        );
+
+        if (!alreadyPresent) {
+          node.children.unshift({
+            function_id: `synthetic-${synthetic.actionName}`,
+            function_name: synthetic.label,
+            action_name: synthetic.actionName,
+            react_link: synthetic.link,
+            parent_function: node.action_name,
+            function_active: 1,
+            sub_functions: [],
+            children: [],
+          });
+        }
+      }
+
+      node.children.forEach(injectSyntheticChildren);
+    };
+
+    topLevel.forEach(injectSyntheticChildren);
+
     // Filter: only include functions that are active OR have active descendants
     const filterInactive = (func: any): any | null => {
       if (!hasActiveDescendant(func, moduleFunctions)) {
@@ -517,8 +566,12 @@ export const ActionSidebar = () => {
   };
 
   const renderFunctionItem = (func: any, level: number = 0) => {
-    const isActive = func.react_link ? isActiveRoute(func.react_link) : false;
     const hasChildren = func.children && func.children.length > 0;
+    // A row with children is a category header, not a specific page — only
+    // its leaf children should ever show the active highlight, even if the
+    // parent's own function happens to carry the same react_link.
+    const isActive =
+      !hasChildren && func.react_link ? isActiveRoute(func.react_link) : false;
     const isExpanded = expandedFunctions.has(func.action_name);
     const Icon = getIconForAction(func.action_name);
 

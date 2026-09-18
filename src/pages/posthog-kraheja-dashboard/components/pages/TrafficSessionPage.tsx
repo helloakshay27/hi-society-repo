@@ -149,8 +149,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           raw={tiles?.active_users}
           unit=""
           goodUp={true}
-          benchmark={benchmarks.activeUsers}
-          onBenchmarkChange={onBenchmarkChange}
+          // Active Users has no meaningful flat target (it's a raw headcount
+          // that scales with each site's size), so the benchmark/target row
+          // is turned off for this card rather than left showing a generic
+          // default that doesn't apply.
+          noTarget
           isLoading={isTrafficLoading}
         />
         <KpiTile
@@ -200,8 +203,9 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           raw={tiles?.bounce_rate}
           unit="%"
           goodUp={false}
-          benchmark={benchmarks.bounceRate}
-          onBenchmarkChange={onBenchmarkChange}
+          // benchmark={benchmarks.bounceRate}
+          // onBenchmarkChange={onBenchmarkChange}
+          noTarget
           isLoading={isTrafficLoading}
         />
         <KpiTile
