@@ -149,6 +149,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           goodUp={true}
           benchmark={benchmarks.stickiness}
           onBenchmarkChange={onBenchmarkChange}
+          noTarget={true}
           isLoading={isAdoptLoading}
         />
         <KpiTile
@@ -175,6 +176,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           goodUp={true}
           benchmark={benchmarks.activation14}
           onBenchmarkChange={onBenchmarkChange}
+          noTarget={true}
           isLoading={isAdoptLoading}
         />
         <KpiTile
@@ -357,7 +359,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
       <AdminTiersCard roles={rolesList} isLoading={isRolesLoading} adminScope={adminScope} />
 
-      <SocietyLeagueTable sites={sites} baseFilters={filters} enabled={sitesSettled} />
+      {/* <SocietyLeagueTable sites={sites} baseFilters={filters} enabled={sitesSettled} /> */}
     </section>
   );
 };

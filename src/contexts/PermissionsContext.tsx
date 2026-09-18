@@ -20,7 +20,7 @@ interface PermissionsContextType {
   userRole: UserRoleResponse | null;
   loading: boolean;
   error: string | null;
-  refreshPermissions: () => Promise<void>;
+  refreshPermissions: () => Promise<UserRoleResponse | null>;
   isModuleEnabled: (moduleName: string) => boolean;
   isFunctionEnabled: (moduleName: string, functionName: string) => boolean;
   isSubFunctionEnabled: (
@@ -67,12 +67,12 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
   const userRoleRef = useRef<UserRoleResponse | null>(null);
   userRoleRef.current = userRole;
 
-  const fetchUserPermissions = useCallback(async (forceRefresh = false) => {
+  const fetchUserPermissions = useCallback(async (forceRefresh = false): Promise<UserRoleResponse | null> => {
     // Don't fetch permissions if user is not authenticated
     if (!isAuthenticated()) {
       setUserRole(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     // Use cached permissions if still fresh and not forcing a refresh
@@ -80,14 +80,14 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
       const cached = permissionCache.get();
       if (cached) {
         // If we already have userRole in state, no need to even parse cache again
-        if (userRoleRef.current) return;
+        if (userRoleRef.current) return userRoleRef.current;
         // Reconstruct a minimal UserRoleResponse from cache so state is populated
         const cachedRole = localStorage.getItem("cached_user_role");
         if (cachedRole) {
           try {
             const parsed = JSON.parse(cachedRole) as UserRoleResponse;
             setUserRole(parsed);
-            return;
+            return parsed;
           } catch { /* fall through to API */ }
         }
       }
@@ -105,6 +105,7 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
         // Reset error shown flag on success
         errorShownRef.current = null;
       }
+      return role ?? null;
     } catch (err: any) {
       // Improved error handling for 500 errors and Axios errors
       let errorMessage = "Failed to fetch user permissions";
@@ -130,6 +131,7 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
           });
         }
       }
+      return null;
     } finally {
       setLoading(false);
     }
@@ -148,8 +150,8 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
   }, [location.pathname, fetchUserPermissions]);
 
   // Force refresh (called explicitly after login/role change)
-  const refreshPermissions = useCallback(async () => {
-    await fetchUserPermissions(true);
+  const refreshPermissions = useCallback(async (): Promise<UserRoleResponse | null> => {
+    return fetchUserPermissions(true);
   }, [fetchUserPermissions]);
 
   const isModuleEnabled = useCallback(

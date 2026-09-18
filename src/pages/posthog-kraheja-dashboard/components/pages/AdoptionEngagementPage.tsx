@@ -145,8 +145,9 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           raw={stickinessVal != null ? (stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal) : undefined}
           unit="%"
           goodUp={true}
-          benchmark={benchmarks.stickiness}
-          onBenchmarkChange={onBenchmarkChange}
+          // benchmark={benchmarks.stickiness}
+          // onBenchmarkChange={onBenchmarkChange}
+          noTarget
           isLoading={isAdoptLoading}
         />
         <KpiTile
@@ -171,8 +172,9 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           raw={activationVal != null ? (activationVal <= 1 ? activationVal * 100 : activationVal) : undefined}
           unit="%"
           goodUp={true}
-          benchmark={benchmarks.activation14}
-          onBenchmarkChange={onBenchmarkChange}
+          // benchmark={benchmarks.activation14}
+          // onBenchmarkChange={onBenchmarkChange}
+          noTarget
           isLoading={isAdoptLoading}
         />
         <KpiTile
@@ -349,7 +351,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
       <AudienceCoverageCard roles={rolesList} isLoading={isRolesLoading} />
 
-      <ProjectLeagueTable sites={sites} baseFilters={filters} enabled={sitesSettled} />
+      {/* <ProjectLeagueTable sites={sites} baseFilters={filters} enabled={sitesSettled} /> */}
     </section>
   );
 };

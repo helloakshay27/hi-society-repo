@@ -8,6 +8,17 @@ interface ModuleNavProps {
   isLoading?: boolean;
 }
 
+// "main_home6" -> "Main Home 6" — display only; onSelectModule/selection
+// comparisons keep using the raw m.name.
+export const formatModuleName = (name: string) => {
+  const spaced = name.replace(/_/g, ' ').replace(/([a-zA-Z])(\d)/g, '$1 $2');
+  return spaced
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export const ModuleNav: React.FC<ModuleNavProps> = ({
   modules,
   selectedModule,
@@ -52,7 +63,7 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
               onClick={() => onSelectModule(m.name)}
               title={`${m.users ? m.users.toLocaleString() + ' users' : ''}`}
             >
-              {m.name}
+              {formatModuleName(m.name)}
               {m.users > 0 && <span className="mcount" style={{ marginLeft: '4px' }}>{m.users}</span>}
             </button>
           ))}

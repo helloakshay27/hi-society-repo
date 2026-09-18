@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { DashboardFilters } from '../../api/types';
 import { KpiTile } from '../common/KpiTile';
 import { Card } from '../common/Card';
-import { ModuleNav } from '../workflow/ModuleNav';
+import { ModuleNav, formatModuleName } from '../workflow/ModuleNav';
 import { WorkflowFunnel } from '../workflow/WorkflowFunnel';
 import { AllScreensTable, EntryScreensTable } from '../workflow/ScreensTable';
 import { ErrorState } from '../common/DashboardStates';
@@ -165,7 +165,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         id="card-wfFunnel"
         infoKey="chart.funnel"
         eyebrow="Workflow funnel (real event sequence)"
-        title={`${selectedModule || 'All Workflows'} — completion funnel`}
+        title={`${selectedModule ? formatModuleName(selectedModule) : 'All Workflows'} — completion funnel`}
         purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented PostHog event sequences."
         style={{ margin: '16px 0' }}
       >

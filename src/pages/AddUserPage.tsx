@@ -215,6 +215,7 @@ const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_
     user_category_id: formData.category,
     display_view: formData.phase,
     membership_type: formData.membershipType,
+    role_id: formData.role,
   };
   return payload;
 };
@@ -232,6 +233,7 @@ const defaultFormData = {
   tower: "",
   flat: "",
   category: "",
+  role: "",
   alternateAddress: "",
   residentType: "Owner",
   membershipType: "Primary",
@@ -290,6 +292,7 @@ export const AddUserPage = () => {
   const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
   const [flatOptions, setFlatOptions] = useState<{ id: number; flat_no: string }[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<{ id: number; name: string }[]>([]);
+  const [roleOptions, setRoleOptions] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
@@ -349,6 +352,21 @@ export const AddUserPage = () => {
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      const baseUrl = localStorage.getItem('baseUrl') || '';
+      const token = localStorage.getItem('token') || '';
+      if (!baseUrl || !token) return;
+      const url = `https://${baseUrl}/admin/roles/roles_for_dropdown.json?token=${token}`;
+      const res = await axios.get(url);
+      const roles = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.roles) ? res.data.roles : []);
+      setRoleOptions(roles);
+    } catch (e) {
+      console.error("Error fetching roles:", e);
+      setRoleOptions([]);
+    }
+  };
+
   // Fetch user data if editing and fetch tower options always
   useEffect(() => {
     // Fetch towers (blocks)
@@ -369,6 +387,7 @@ export const AddUserPage = () => {
     };
     fetchTowers();
     fetchCategories();
+    fetchRoles();
 
     if (isEdit && userId) {
       setLoading(true);
@@ -392,6 +411,7 @@ export const AddUserPage = () => {
             tower: user.society_block_id ? user.society_block_id.toString() : "",
             flat: user.society_flat_id || "",
             category: user.user_category_id || "",
+            role: user.role_id ? user.role_id.toString() : "",
             alternateAddress: user.alternate_address || "",
             residentType: user.resident_type || "Owner",
             membershipType: user.is_primary === 1 ? "Primary" : "Secondary",
@@ -1120,6 +1140,21 @@ export const AddUserPage = () => {
                     <MenuItem value="">Select Category</MenuItem>
                     {categoryOptions.map((cat) => (
                       <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Role */}
+                <FormControl fullWidth size="small" sx={fieldStyles}>
+                  <InputLabel>Select Role</InputLabel>
+                  <Select
+                    value={formData.role}
+                    label="Select Role"
+                    onChange={(e) => handleInputChange("role", e.target.value)}
+                  >
+                    <MenuItem value="">Select Role</MenuItem>
+                    {roleOptions.map((role) => (
+                      <MenuItem key={role.id} value={role.id.toString()}>{role.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>

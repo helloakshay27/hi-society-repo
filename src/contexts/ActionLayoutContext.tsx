@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { useLocation } from "react-router-dom";
 import { usePermissions } from "./PermissionsContext";
+import { getModuleForFunction } from "../utils/moduleDetection";
+import { getUser } from "../utils/auth";
 
 interface LockFunction {
   function_id: number;
@@ -137,6 +139,13 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
     const path = location.pathname;
     const userType = localStorage.getItem("userType");
 
+    const orgId = localStorage.getItem("org_id");
+    const userEmail = getUser()?.email;
+    const isActionOrgAccount =
+      orgId === "109" ||
+      orgId === "324" ||
+      userEmail === "dineshshinde6666@gmail.com";
+
     if (!userRole || !userRole.lock_modules) {
       setIsActionSidebarVisible(false);
       return;
@@ -176,6 +185,145 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
       if (foundMatch) break;
     }
 
+    // Fallback for accounts pinned to the ActionSidebar/ActionHeader (org 109/324,
+    // see Layout.tsx) whose role data has no active function with a react_link
+    // matching the current route exactly. Derive the module from the URL itself
+    // (same mapping the static sidebars use) so the sidebar still shows instead
+    // of silently staying blank.
+    if (!foundMatch) {
+      if (isActionOrgAccount) {
+        // Strategy 1: match this page to its sibling route's module using the
+        // user's OWN role data (no guessing). "/bms/hisoc-event-create" and
+        // "/bms/hisoc-event-list" aren't nested under each other, so the exact
+        // react_link check above never matches the create/edit/details pages —
+        // but they normalize to the same base once a trailing numeric id and a
+        // trailing CRUD verb are stripped, so we can find the module via the
+        // list page's own active react_link.
+        const normalizeRoute = (route: string): string => {
+          const parts = route.split("/").filter(Boolean);
+
+          // Drop a trailing numeric id segment (e.g. ".../edit/123")
+          if (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
+            parts.pop();
+          }
+
+          // Drop a trailing segment that IS a CRUD verb on its own
+          // (e.g. "/loyalty/offer/add" -> "/loyalty/offer")
+          if (
+            parts.length > 1 &&
+            /^(create|add|edit|details?|list|view|new)$/i.test(
+              parts[parts.length - 1]
+            )
+          ) {
+            parts.pop();
+          }
+
+          // Strip a CRUD-verb suffix glued onto the last word
+          // (e.g. "offers-list" -> "offers", "hisoc-event-create" -> "hisoc-event")
+          if (parts.length) {
+            const last = parts.pop() as string;
+            const stripped = last.replace(
+              /[-_]?(create|add|edit|details?|list|view|new)$/i,
+              ""
+            );
+            parts.push(stripped || last);
+          }
+
+          // Normalize a trailing plural so "offer" and "offers" collapse
+          // together (e.g. "offers-list" -> "offers" -> "offer", matching
+          // "/loyalty/offer/add" -> "offer")
+          if (parts.length) {
+            const last = parts.pop() as string;
+            parts.push(last.endsWith("s") ? last.slice(0, -1) : last);
+          }
+
+          return parts.join("/");
+        };
+
+        const normalizedPath = normalizeRoute(path);
+
+        outer: for (const module of userRole.lock_modules) {
+          if (module.module_active !== 1) continue;
+          for (const func of module.lock_functions) {
+            if (
+              func.function_active === 1 &&
+              func.react_link &&
+              normalizeRoute(func.react_link) === normalizedPath
+            ) {
+              foundModule = module.module_name;
+              foundFunction = func.function_name;
+              foundMatch = true;
+              break outer;
+            }
+          }
+        }
+
+        if (foundMatch) {
+          console.log(
+            `🔄 ActionLayout - Sibling-route match: Module="${foundModule}", Function="${foundFunction}" for path "${path}" (normalized "${normalizedPath}")`
+          );
+        }
+
+        // Strategy 2: derive the module from the URL's own words via the
+        // generic moduleDetection.ts map, for pages with no sibling route
+        // permission entry at all.
+        const segments = path
+          .split("/")
+          .filter((segment) => segment && !/^\d+$/.test(segment));
+
+        const triedCandidates: string[] = [];
+
+        for (let start = 1; start < segments.length && !foundMatch; start++) {
+          const rawCandidate = segments.slice(start).join("_");
+
+          // Also try a "core noun" candidate: strip a leading "hisoc" prefix
+          // and a trailing CRUD verb (create/add/edit/list/details/view), e.g.
+          // "hisoc_event_create" -> "event" -> "events", so bespoke Hi-Society
+          // route names still resolve to the same module as their list page.
+          const coreNoun = rawCandidate
+            .replace(/^hisoc[-_]?/i, "")
+            .replace(/[-_]?(create|add|edit|details?|list|view)$/i, "");
+
+          const candidates = new Set<string>([rawCandidate]);
+          if (coreNoun && coreNoun !== rawCandidate) {
+            candidates.add(coreNoun);
+            candidates.add(coreNoun.endsWith("s") ? coreNoun : `${coreNoun}s`);
+          }
+
+          for (const candidate of candidates) {
+            triedCandidates.push(candidate);
+            const mappedModule = getModuleForFunction(candidate);
+            if (!mappedModule) continue;
+
+            const matchedModule = userRole.lock_modules.find(
+              (module) =>
+                module.module_active === 1 &&
+                module.module_name.toLowerCase() === mappedModule.toLowerCase()
+            );
+            if (matchedModule) {
+              foundModule = matchedModule.module_name;
+              foundFunction = candidate;
+              foundMatch = true;
+              break;
+            }
+          }
+        }
+
+        if (foundMatch) {
+          console.log(
+            `🔄 ActionLayout - Fallback route match: Module="${foundModule}", Function="${foundFunction}" for path "${path}"`
+          );
+        } else {
+          console.log(
+            `🔍 ActionLayout - Fallback found no module for path "${path}". Tried candidates:`,
+            triedCandidates,
+            "Available module names in role:",
+            userRole.lock_modules.map((m) => `${m.module_name} (active=${m.module_active})`)
+          );
+        }
+      }
+    }
+
     if (foundMatch) {
       console.log(
         `🔄 ActionLayout - Route matched: Module="${foundModule}", Function="${foundFunction}"`
@@ -183,6 +331,16 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
       setCurrentModule(foundModule);
       setCurrentFunction(foundFunction);
       setIsActionSidebarVisible(true);
+    } else if (isActionOrgAccount && currentModule) {
+      // No route/derived match for this page (e.g. a "+ Add" sibling page
+      // whose exact URL isn't separately registered in the role data), but
+      // the user was already viewing a matched module — keep the sidebar/
+      // header showing that module instead of blanking out mid-flow. This
+      // covers every such sibling page generically, regardless of its URL
+      // naming convention.
+      console.log(
+        `🔄 ActionLayout - No match for "${path}"; keeping previous module "${currentModule}"`
+      );
     } else {
       // No match found - hide action sidebar
       setIsActionSidebarVisible(false);

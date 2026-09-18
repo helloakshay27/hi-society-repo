@@ -8,6 +8,17 @@ interface ModuleNavProps {
   isLoading?: boolean;
 }
 
+// "main_home6" -> "Main Home 6" — display only; onSelectModule/selection
+// comparisons keep using the raw m.name.
+export const formatModuleName = (name: string) => {
+  const spaced = name.replace(/_/g, ' ').replace(/([a-zA-Z])(\d)/g, '$1 $2');
+  return spaced
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 /**
  * Bucket-tabs + module chips, matching the wireframe's .mnav-buckets/.mnav-mods
  * two-row layout. The real API's module list carries no bucket/category field,
@@ -41,8 +52,8 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({ modules, selectedModule, o
           </button>
           {modules.map((m) => (
             <button key={m.name} type="button" className={selectedModule === m.name ? 'on' : ''} onClick={() => onSelectModule(m.name)}>
-              {m.name}
-              {m.users > 0 && <span className="mcount">{m.users}</span>}
+              {formatModuleName(m.name)}
+              {m.users > 0 && <span className="mcount"> {m.users}</span>}
             </button>
           ))}
         </div>
