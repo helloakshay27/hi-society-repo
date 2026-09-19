@@ -226,7 +226,7 @@ export const HiSocietyHeader = () => {
       }
 
       // Fetch user approved societies
-      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}&organization_id=${org_id}`);
       if (societiesResponse.ok) {
         const societiesData = await societiesResponse.json();
         const societies = societiesData.user_societies || [];
@@ -547,13 +547,13 @@ export const HiSocietyHeader = () => {
           {/* Dashboard Button */}
           <div className="flex items-center gap-2">
             {/* {!isViSite && ( */}
-              <button
-                onClick={() => (window.location.href = "/hi-society-dashboard")}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
-              >
-                <ChartArea className="w-4 h-4" />
-                Dashboard
-              </button>
+            <button
+              onClick={() => (window.location.href = "/hi-society-dashboard")}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
+            >
+              <ChartArea className="w-4 h-4" />
+              Dashboard
+            </button>
             {/* )} */}
             {/* {!isViSite && (
               <button
