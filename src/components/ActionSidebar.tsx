@@ -70,6 +70,25 @@ import {
   ShieldCheck,
   Gift,
   HandHeart,
+  Building2,
+  Megaphone,
+  BellRing,
+  Files,
+  Store,
+  ScrollText,
+  CreditCard,
+  IdCard,
+  CalendarCheck,
+  Share2,
+  FolderKanban,
+  ClipboardCheck,
+  FileBarChart,
+  LayoutDashboard,
+  ArrowLeftRight,
+  SlidersHorizontal,
+  FileDown,
+  Tags,
+  BadgeCheck,
 } from "lucide-react";
 
 // Icon mapping based on action_name
@@ -386,16 +405,104 @@ const actionIconMap: Record<string, any> = {
   installed: CheckSquare,
   updates: Download,
 
+  // Hi-Society Society Admin / BMS / CMS / Campaigns (from API response)
+  society_admin: Building2,
+  communication: Megaphone,
+  notice: Bell,
+  notifications: BellRing,
+  flat_related: Home,
+  common_files: Files,
+  business_directory: Store,
+  business_setup: Settings,
+  helpdesk_report: BarChart3,
+  setup: Settings,
+  facility_setup: Settings,
+  rules: ScrollText,
+  payment_plan_setup: CreditCard,
+  membership_plan_setup: IdCard,
+  club_members: Users,
+  facility_bookings: CalendarCheck,
+  payments: CreditCard,
+  referrals: Share2,
+  referral_setup: Settings,
+  other_project: FolderKanban,
+
+  // Fitout
+  fitout_requests: FileText,
+  fitout_checklists: ClipboardCheck,
+  fitout_deviations: AlertTriangle,
+  fitout_report: FileBarChart,
+
+  // Accounting
+  dashboard: LayoutDashboard,
+  accountant: Calculator,
+  transactions: ArrowLeftRight,
+  receipts: Receipt,
+  configuration: SlidersHorizontal,
+  custom_settings: Settings,
+  reports: BarChart3,
+  invoices_report: FileBarChart,
+  download_report: FileDown,
+
+  // SmartSecure
+  smartsecure: ShieldCheck,
+  smart_secure: ShieldCheck,
+  staffs: Users,
+  vehicles: Car,
+
+  // F & B
+  f_b: Utensils,
+  restaurants: Utensils,
+
+  // Settings
+  settings: Settings,
+  special_users_category: Tags,
+  manage_users: UserCog,
+  kyc_details: BadgeCheck,
+  manage_flats: Home,
+
   // Common
   circle: Circle,
 };
+
+// Keyword fallback for action_names not listed above, so new API functions
+// still get a meaningful icon instead of the plain circle.
+const keywordIconMap: [RegExp, any][] = [
+  [/report|dashboard|analytic/, BarChart3],
+  [/setup|setting|config/, Settings],
+  [/payment|invoice|billing|account|wallet/, CreditCard],
+  [/booking|event|calendar|schedule/, CalendarCheck],
+  [/member|user|staff|occupant|group|customer/, Users],
+  [/notice|notification|alert|broadcast/, Bell],
+  [/document|file/, Folder],
+  [/helpdesk|ticket|complaint/, Ticket],
+  [/visitor|gate|security|secure/, ShieldCheck],
+  [/fitout|maintenance|repair/, Wrench],
+  [/food|restaurant|f_b|menu/, Utensils],
+];
 
 // Fallback icon
 const FallbackIcon = Circle;
 
 // Helper function to get icon for action_name
-const getIconForAction = (actionName: string) => {
-  return actionIconMap[actionName] || FallbackIcon;
+// "Fitout Requests" / "F & B" -> "fitout_requests" / "f_b"
+const toIconKey = (value?: string) =>
+  (value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+// Looks up by action_name first, then by function_name, then by keyword —
+// so the icon still resolves when the API's action_name differs from the label.
+const getIconForAction = (actionName: string, functionName?: string) => {
+  const keys = [actionName, toIconKey(actionName), toIconKey(functionName)];
+  for (const key of keys) {
+    if (key && actionIconMap[key]) return actionIconMap[key];
+  }
+  return (
+    keywordIconMap.find(([pattern]) => keys.some((key) => pattern.test(key)))?.[1] ||
+    FallbackIcon
+  );
 };
 
 export const ActionSidebar = () => {
@@ -573,7 +680,7 @@ export const ActionSidebar = () => {
     const isActive =
       !hasChildren && func.react_link ? isActiveRoute(func.react_link) : false;
     const isExpanded = expandedFunctions.has(func.action_name);
-    const Icon = getIconForAction(func.action_name);
+    const Icon = getIconForAction(func.action_name, func.function_name);
 
     return (
       <div key={func.function_id}>
@@ -621,7 +728,7 @@ export const ActionSidebar = () => {
 
   const CollapsedFunctionItem = ({ func }: { func: any }) => {
     const isActive = func.react_link ? isActiveRoute(func.react_link) : false;
-    const Icon = getIconForAction(func.action_name);
+    const Icon = getIconForAction(func.action_name, func.function_name);
 
     return (
       <button
