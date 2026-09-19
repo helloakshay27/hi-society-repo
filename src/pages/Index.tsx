@@ -117,6 +117,18 @@ const Index = () => {
       return;
     }
 
+    // Org 109 / 324 / 10 (runwal.lockated.com) - land on the first route the role grants
+    if (
+      hostname === "runwal.lockated.com" ||
+      org_id === "109" ||
+      org_id === "324" ||
+      org_id === "10"
+    ) {
+      const firstRoute = findFirstAccessibleRoute(userRole);
+      navigate(firstRoute || "/bms/hisoc-notice-list", { replace: true });
+      return;
+    }
+
     // Hi-Society layout mode (localhost / dev environment)
     const layoutMode = localStorage.getItem("layoutMode");
     if (layoutMode === "hi-society") {

@@ -412,6 +412,7 @@ const FitoutChecklists: React.FC = () => {
         case "active":
           return (
             <div className="flex items-center justify-center">
+              {shouldShow("Fitout Checklists", "update") && (
               <button
                 onClick={() => handleToggle(item.id, item.active)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -424,6 +425,7 @@ const FitoutChecklists: React.FC = () => {
                   }`}
                 />
               </button>
+              )}
             </div>
           );
         default:
@@ -435,7 +437,7 @@ const FitoutChecklists: React.FC = () => {
           );
       }
     },
-    [navigate, toast]
+    [navigate, toast, shouldShow]
   );
 
   const filteredChecklists = useMemo(() => {

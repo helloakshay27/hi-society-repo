@@ -1116,7 +1116,7 @@ export const TicketDashboard = () => {
   }];
   const renderCustomActions = () => (
     <div className="flex gap-3">
-      {shouldShow("tickets", "add") && (
+      {shouldShow("Helpdesk", "create") && (
         <Button
           onClick={handleAddButton}
           variant="ghost"
@@ -1277,7 +1277,7 @@ export const TicketDashboard = () => {
       return (
         <div className="flex items-center justify-center gap-1 w-full h-full min-h-[40px]">
           <div title="View ticket" className="p-1 hover:bg-gray-100 rounded transition-colors">
-            {shouldShow("tickets", "view") && (
+            {shouldShow("Helpdesk", "show") && (
               <Eye
                 className="w-4 h-4 text-gray-600 cursor-pointer"
                 onClick={(e) => {
@@ -1329,15 +1329,17 @@ export const TicketDashboard = () => {
     if (columnKey === 'issue_status') {
       const statusName = item.status?.name || item.issue_status || '--';
       const colorCode = item.status?.color_code;
+      const canUpdate = shouldShow("Helpdesk", "update");
       return (
         <span
-          className="px-2 py-1 rounded text-xs animate-scale-in cursor-pointer hover:opacity-80 transition-opacity font-medium"
+          className={`px-2 py-1 rounded text-xs animate-scale-in transition-opacity font-medium ${canUpdate ? 'cursor-pointer hover:opacity-80' : ''}`}
           style={colorCode ? {
             backgroundColor: `${colorCode}22`,
             color: colorCode,
             border: `1px solid ${colorCode}44`,
           } : {}}
           onClick={(e) => {
+            if (!canUpdate) return;
             e.stopPropagation();
             setSelectedTicketForEdit(item);
             setIsEditStatusOpen(true);
@@ -1877,7 +1879,7 @@ export const TicketDashboard = () => {
         />
 
         {/* Ticket Selection Panel */}
-        {selectedTickets.length > 0 && shouldShow("tickets", "manage") && (
+        {selectedTickets.length > 0 && shouldShow("Helpdesk", "update") && (
           <TicketSelectionPanel
             selectedTickets={selectedTickets}
             selectedTicketObjects={tickets.filter(ticket => selectedTickets.includes(ticket.id))}

@@ -461,17 +461,28 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         return;
       }
 
-      // Org 109 / 324 / 10 use the ActionSidebar/ActionHeader layout (see
-      // Layout.tsx) and should land on the first route their role actually
-      // grants. Permissions for a freshly-authenticated session aren't
-      // fetched yet at this point, so force a refresh here instead of
-      // falling straight to the generic survey-mapping fallback used below.
+      // Org 109 / 324 / 10 (and runwal.lockated.com) use the ActionSidebar/
+      // ActionHeader layout (see Layout.tsx) and should land on the first
+      // route their role actually grants. Permissions for a freshly-
+      // authenticated session aren't fetched yet at this point, so force a
+      // refresh here instead of relying on the cached userRole.
       const loginOrgId = localStorage.getItem("org_id");
-      if (loginOrgId === "109" || loginOrgId === "324" || loginOrgId === "10") {
+      const isRunwalWebSite = hostname === "runwal.lockated.com";
+      if (
+        isRunwalWebSite ||
+        loginOrgId === "109" ||
+        loginOrgId === "324" ||
+        loginOrgId === "10"
+      ) {
         const freshRole = await refreshPermissions();
         const firstRoute = freshRole ? findFirstAccessibleRoute(freshRole) : null;
         const stateFrom = (location.state as { from?: Location })?.from?.pathname;
-        const redirectPath = stateFrom || "/bms/hisoc-notice-list" || "/maintenance/survey/mapping";
+        const redirectPath =
+          (stateFrom && stateFrom !== "/" && stateFrom !== "/login"
+            ? stateFrom
+            : null) ||
+          firstRoute ||
+          "/bms/hisoc-notice-list";
 
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
@@ -480,6 +491,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         }, 500);
         return;
       }
+
+      // web.hisociety.lockated.com - navigate to Index for view selection handling
+      if (hostname.includes("web.hisociety.lockated.com")) {
+        navigate("/", { replace: true });
+        return;
+      }
+
 
       if (isHiSocietySite || isUIHiSocietySite) {
         const from =

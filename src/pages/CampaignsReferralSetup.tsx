@@ -213,14 +213,16 @@ const CampaignsReferralSetup: React.FC = () => {
       case "actions":
         return (
           <div className="flex items-center justify-center gap-2">
-            <button
-              className="p-1 hover:bg-gray-100 rounded"
-              onClick={() =>
-                navigate(`/campaigns/referral-setup/edit/${item.id}`)
-              }
-            >
-              <Edit className="w-4 h-4 text-gray-900" />
-            </button>
+            {shouldShow("Referral Setup", "update") && (
+              <button
+                className="p-1 hover:bg-gray-100 rounded"
+                onClick={() =>
+                  navigate(`/campaigns/referral-setup/edit/${item.id}`)
+                }
+              >
+                <Edit className="w-4 h-4 text-gray-900" />
+              </button>
+            )}
             {/* <button
               className="p-1 hover:bg-gray-100 rounded"
               onClick={() => handleDelete(item.id)}

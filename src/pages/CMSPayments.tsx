@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import axios from "axios";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { CMSPaymentsFilterModal } from "@/components/CMSPaymentsFilterModal";
@@ -122,6 +123,7 @@ const CMSPayments = () => {
   const baseUrl = localStorage.getItem('baseUrl')
   const token = localStorage.getItem('token')
   const societyId = localStorage.getItem("selectedUserSociety");
+  const { shouldShow } = useDynamicPermissions()
   const [payments, setPayments] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -523,14 +525,16 @@ const CMSPayments = () => {
 
   const renderActions = (item: any) => (
     <div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => handlePrint(item.id)}
-      >
-        <Printer className="w-4 h-4" />
-      </Button>
-      {item.actions.can_edit && (
+      {shouldShow("Payments", "show") && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handlePrint(item.id)}
+        >
+          <Printer className="w-4 h-4" />
+        </Button>
+      )}
+      {shouldShow("Payments", "update") && item.actions.can_edit && (
         <Button
           variant="ghost"
           size="sm"
@@ -566,7 +570,7 @@ const CMSPayments = () => {
         renderCell={renderCell}
         searchTerm={searchQuery}
         onSearchChange={handleSearchChange}
-        enableExport
+        enableExport={shouldShow("Payments", "show")}
         handleExport={handleExport}
         onFilterClick={() => setIsFilterModalOpen(true)}
         loading={loading}
