@@ -20,6 +20,7 @@ import {
   Clock,
   CheckCircle2,
 } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   AccountingInvoiceFilterDialog,
   AccountingInvoiceFilters,
@@ -166,6 +167,7 @@ const downloadInvoicesXlsx = async (ids: number[], fileName: string) => {
 };
 
 const AccountingInvoices: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [bills, setBills] = useState<LockAccountBill[]>([]);
   const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
@@ -406,22 +408,26 @@ const AccountingInvoices: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/invoices/${item.id}`)}
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/invoices/${item.id}/edit`)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            {shouldShow("Invoices", "show") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/invoices/${item.id}`)}
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Invoices", "update") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/invoices/${item.id}/edit`)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "id":
@@ -604,12 +610,14 @@ const AccountingInvoices: React.FC = () => {
         loadingMessage="Loading invoices..."
         emptyMessage="No matching records found"
         leftActions={
-          <Button
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-            onClick={() => navigate("/accounting/invoice-creation")}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add
-          </Button>
+          shouldShow("Invoices", "create") && (
+            <Button
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+              onClick={() => navigate("/accounting/invoice-creation")}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add
+            </Button>
+          )
         }
       />
 

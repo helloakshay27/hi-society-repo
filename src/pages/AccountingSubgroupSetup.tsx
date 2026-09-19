@@ -6,6 +6,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   AddLockAccountGroupModal,
   EditableLockAccountGroup,
@@ -71,6 +72,7 @@ const ROOT_GROUP_NAMES: Record<number, string> = {
 };
 
 const AccountingSubgroupSetup: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [rows, setRows] = useState<SubgroupRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -198,33 +200,37 @@ const AccountingSubgroupSetup: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button size="sm" variant="ghost" className="p-1" onClick={() => handleEdit(item)}>
-              <Edit className="w-4 h-4" />
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="p-1">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Group</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete <strong>{item.groupName}</strong>? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
-                    onClick={() => handleDelete(item)}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {shouldShow("Subgroup Setup", "update") && (
+              <Button size="sm" variant="ghost" className="p-1" onClick={() => handleEdit(item)}>
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Subgroup Setup", "destroy") && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="ghost" className="p-1">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Group</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete <strong>{item.groupName}</strong>? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
+                      onClick={() => handleDelete(item)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         );
       case "id":
@@ -325,12 +331,14 @@ const AccountingSubgroupSetup: React.FC = () => {
         loadingMessage="Loading account groups..."
         emptyMessage="No matching records found"
         leftActions={
-          <Button
-            onClick={handleAdd}
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add
-          </Button>
+          shouldShow("Subgroup Setup", "create") && (
+            <Button
+              onClick={handleAdd}
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add
+            </Button>
+          )
         }
       />
 

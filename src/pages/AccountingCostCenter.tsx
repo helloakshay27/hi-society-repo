@@ -6,6 +6,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, Eye, Edit, RotateCw, Trash2 } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { AddCostCentreModal, CostCentre } from "@/components/AddCostCentreModal";
 import {
   AlertDialog,
@@ -38,6 +39,7 @@ const columns: ColumnConfig[] = [
 ];
 
 const AccountingCostCenter: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [costCentres, setCostCentres] = useState<CostCentre[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -140,37 +142,42 @@ const AccountingCostCenter: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button size="sm" variant="ghost" className="p-1" onClick={() => handleView(item)}>
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="p-1" onClick={() => handleEdit(item)}>
-              <Edit className="w-4 h-4" />
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="p-1">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Cost Centre</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete <strong>{item.name}</strong>? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    // className="!bg-red-600 hover:!bg-red-700 !text-white"
-                    className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
-                    onClick={() => handleDelete(item)}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {shouldShow("Cost Center", "show") && (
+              <Button size="sm" variant="ghost" className="p-1" onClick={() => handleView(item)}>
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Cost Center", "update") && (
+              <Button size="sm" variant="ghost" className="p-1" onClick={() => handleEdit(item)}>
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Cost Center", "destroy") && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="ghost" className="p-1">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Cost Centre</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete <strong>{item.name}</strong>? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
+                      onClick={() => handleDelete(item)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         );
       case "name":
@@ -209,12 +216,15 @@ const AccountingCostCenter: React.FC = () => {
         loadingMessage="Loading cost centres..."
         emptyMessage="No matching records found"
         leftActions={
-          <Button
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium" 
-                     onClick={handleAdd}>
-            <Plus className="mr-2 h-4 w-4" /> Add
-          </Button>
+          shouldShow("Cost Center", "create") && (
+            <Button
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
+              onClick={handleAdd}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add
+            </Button>
+          )
         }
         // rightActions={
         //   <Button variant="outline" size="icon" onClick={fetchCostCentres} title="Refresh">

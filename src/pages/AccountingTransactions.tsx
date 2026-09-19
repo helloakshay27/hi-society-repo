@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/pagination";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, X } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 const PAGE_SIZE = 20;
 
@@ -134,6 +135,7 @@ const downloadBlob = (data: BlobPart, filename: string, mimeType: string) => {
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 const AccountingTransactions: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<string>(() => {
@@ -492,7 +494,7 @@ const AccountingTransactions: React.FC = () => {
             exportFileName={`accounting-transactions-${activeTab}`}
             storageKey={`accounting-transactions-${activeTab}-table`}
             leftActions={
-              activeTabConfig.type ? (
+              activeTabConfig.type && shouldShow("Transactions", "create") ? (
                 <Button
                   onClick={() => setShowActionPanel(true)}
                   variant="ghost"
