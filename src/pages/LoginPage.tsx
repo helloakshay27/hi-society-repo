@@ -83,7 +83,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "localhost";
 
   const isUIHiSocietySite =
-    hostname.includes("ui-hisociety.lockated.com") || org_id === "9" ;
+    hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
 
 
   // Check if it's Runwal site
@@ -239,10 +239,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       return valid
         ? { isValid: true, message: "" }
         : {
-            isValid: false,
-            message:
-              "Please enter a valid email address (e.g. name@example.com).",
-          };
+          isValid: false,
+          message:
+            "Please enter a valid email address (e.g. name@example.com).",
+        };
     }
 
     // Treat as mobile: strip spaces/dashes, allow optional leading +
@@ -251,9 +251,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return valid
       ? { isValid: true, message: "" }
       : {
-          isValid: false,
-          message: "Please enter a valid mobile number (7–15 digits).",
-        };
+        isValid: false,
+        message: "Please enter a valid mobile number (7–15 digits).",
+      };
   };
 
   const handleEmailSubmit = async () => {
@@ -471,7 +471,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         const freshRole = await refreshPermissions();
         const firstRoute = freshRole ? findFirstAccessibleRoute(freshRole) : null;
         const stateFrom = (location.state as { from?: Location })?.from?.pathname;
-        const redirectPath = stateFrom || firstRoute || "/maintenance/survey/mapping";
+        const redirectPath = stateFrom || "/bms/hisoc-notice-list" || "/maintenance/survey/mapping";
 
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
