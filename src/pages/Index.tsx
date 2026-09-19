@@ -107,7 +107,19 @@ const Index = () => {
     const isWebSite = hostname.includes("web.lockated.com");
 
     // PRIORITY 0: Hi-Society site routing (highest priority for specific domains)
-    if (isUIHiSocietySite) {
+   
+
+    // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
+    if (userRole) {
+      const firstRoute = findFirstAccessibleRoute(userRole);
+
+      if (firstRoute) {
+        navigate(firstRoute, { replace: true });
+        return;
+      }
+    }
+
+     if (isUIHiSocietySite) {
       navigate("/loyalty/dashboard", { replace: true });
       return;
     }
@@ -134,16 +146,6 @@ const Index = () => {
     if (layoutMode === "hi-society") {
       navigate("/bms/helpdesk", { replace: true });
       return;
-    }
-
-    // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
-    if (userRole) {
-      const firstRoute = findFirstAccessibleRoute(userRole);
-
-      if (firstRoute) {
-        navigate(firstRoute, { replace: true });
-        return;
-      }
     }
 
     // PRIORITY 3: Company ID-based routing for specific companies and domains
