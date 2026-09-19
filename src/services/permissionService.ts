@@ -514,6 +514,38 @@ export const permissionService = {
   },
 
   /**
+   * Strict version of findMatchingFunction — normalized equality only, no
+   * substring fuzzy matching. Used to make sure a short generic function
+   * name (e.g. "Setup") can never shadow a more specific one that merely
+   * contains it as a substring (e.g. "Payment Plan Setup", "Facility
+   * Setup") just because fuzzy matching considers "X".includes("Y") a hit.
+   */
+  findExactMatchingFunction(
+    lockFunctions: LockFunction[],
+    searchFunctionName: string
+  ): LockFunction | undefined {
+    const normalize = (v: string) => v.toLowerCase().replace(/[-_\s]/g, "");
+    const searchVariants = this.generateFunctionNameVariants(
+      searchFunctionName
+    ).map(normalize);
+
+    return lockFunctions.find((f) => {
+      const functionNameVariants =
+        this.generateFunctionNameVariants(f.function_name).map(normalize);
+      const actionNameVariants = (f as any).action_name
+        ? this.generateFunctionNameVariants((f as any).action_name).map(
+            normalize
+          )
+        : [];
+
+      return searchVariants.some(
+        (sv) =>
+          functionNameVariants.includes(sv) || actionNameVariants.includes(sv)
+      );
+    });
+  },
+
+  /**
    * NEW: Check if a function is enabled anywhere (ignoring module_active)
    * This searches across ALL modules for the function, regardless of module status
    */
@@ -522,6 +554,31 @@ export const permissionService = {
     functionName: string
   ): boolean {
     if (!userRole || !userRole.lock_modules) return false;
+
+    // Prefer an exact name match across all modules first — only fall back
+    // to fuzzy/substring matching when no function is exactly named this.
+    let exactMatchFound = false;
+    for (const module of userRole.lock_modules) {
+      const func = this.findExactMatchingFunction(
+        module.lock_functions,
+        functionName
+      );
+      if (func) {
+        exactMatchFound = true;
+        if (func.function_active === 1) {
+          console.log(
+            `🔍 Function "${functionName}" found active (exact match) in module "${module.module_name}"`
+          );
+          return true;
+        }
+      }
+    }
+    if (exactMatchFound) {
+      console.log(
+        `🔍 Function "${functionName}" matched exactly but is not active in any module`
+      );
+      return false;
+    }
 
     // Search across ALL modules (ignoring module_active status)
     for (const module of userRole.lock_modules) {
@@ -559,6 +616,66 @@ export const permissionService = {
       return true; // Fallback: show if no role data
     }
 
+    const matchSubFunction = (func: LockFunction): SubFunction | undefined => {
+      const subFunctionVariants =
+        this.generateFunctionNameVariants(subFunctionName);
+      return func.sub_functions.find((sf) => {
+        const subFunctionNameVariants = this.generateFunctionNameVariants(
+          sf.sub_function_name
+        );
+
+        return subFunctionVariants.some((searchVariant) =>
+          subFunctionNameVariants.some((sfVariant) => {
+            const normalizedSearchVariant = searchVariant
+              .toLowerCase()
+              .replace(/[-_\s]/g, "");
+            const normalizedSfVariant = sfVariant
+              .toLowerCase()
+              .replace(/[-_\s]/g, "");
+
+            return (
+              normalizedSearchVariant === normalizedSfVariant ||
+              normalizedSearchVariant.includes(normalizedSfVariant) ||
+              normalizedSfVariant.includes(normalizedSearchVariant)
+            );
+          })
+        );
+      });
+    };
+
+    // Prefer an exact function-name match across all modules first — only
+    // fall back to fuzzy/substring matching when no function is exactly
+    // named this (see findExactMatchingFunction for why this matters).
+    let exactMatchFound = false;
+    for (const module of userRole.lock_modules) {
+      const func = this.findExactMatchingFunction(
+        module.lock_functions,
+        functionName
+      );
+      if (func) {
+        exactMatchFound = true;
+        if (func.function_active === 1) {
+          const subFunc = matchSubFunction(func);
+          if (subFunc) {
+            const isActive = subFunc.sub_function_active === 1;
+            console.log(
+              `🔍 Sub-function "${subFunctionName}" found in function "${functionName}" (exact match) - sub_function_active: ${subFunc.sub_function_active} (${isActive ? "SHOW" : "HIDE"})`
+            );
+            return isActive;
+          }
+          // Exact function matched and active, but this sub-function isn't
+          // listed on it at all — fall back to true (unknown sub-function).
+          return true;
+        }
+      }
+    }
+    if (exactMatchFound) {
+      console.log(
+        `🔍 Function "${functionName}" matched exactly but is not active in any module`
+      );
+      return false;
+    }
+
     // Search across ALL modules (ignoring module_active status)
     for (const module of userRole.lock_modules) {
       const func = this.findMatchingFunction(
@@ -566,32 +683,7 @@ export const permissionService = {
         functionName
       );
       if (func && func.function_active === 1) {
-        // Function found and active, now check sub-function
-        const subFunctionVariants =
-          this.generateFunctionNameVariants(subFunctionName);
-        const subFunc = func.sub_functions.find((sf) => {
-          const subFunctionNameVariants = this.generateFunctionNameVariants(
-            sf.sub_function_name
-          );
-
-          return subFunctionVariants.some((searchVariant) =>
-            subFunctionNameVariants.some((sfVariant) => {
-              const normalizedSearchVariant = searchVariant
-                .toLowerCase()
-                .replace(/[-_\s]/g, "");
-              const normalizedSfVariant = sfVariant
-                .toLowerCase()
-                .replace(/[-_\s]/g, "");
-
-              return (
-                normalizedSearchVariant === normalizedSfVariant ||
-                normalizedSearchVariant.includes(normalizedSfVariant) ||
-                normalizedSfVariant.includes(normalizedSearchVariant)
-              );
-            })
-          );
-        });
-
+        const subFunc = matchSubFunction(func);
         if (subFunc) {
           // Sub-function exists, check if it's active
           const isActive = subFunc.sub_function_active === 1;
