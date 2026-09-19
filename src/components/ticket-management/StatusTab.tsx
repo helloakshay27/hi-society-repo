@@ -35,6 +35,7 @@ import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManag
 import { EditStatusModal } from './modals/EditStatusModal';
 import { toast } from 'sonner';
 import { Edit, Plus, Trash2 } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchStatuses, createStatus, updateStatus, deleteStatus, fetchAccounts } from '@/store/slices/statusesSlice';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
@@ -67,6 +68,7 @@ const fixedStates = [
 ];
 
 export const StatusTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const dispatch = useDispatch<any>();
   const { data: statusess = [], loading, fetchLoading, error } = useSelector((state: any) => state.statuses) || {};
   const { accounts = [] } = useSelector((state: any) => state.complaintModes) || {}; // adjust if you have a separate accounts slice
@@ -419,12 +421,16 @@ export const StatusTab: React.FC = () => {
 
   const renderActions = (item: any) => (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 
@@ -648,13 +654,15 @@ export const StatusTab: React.FC = () => {
           onGlobalSearch={handleSearch}
           searchPlaceholder="Search statuses..."
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-              className="bg-[#C72030] hover:bg-[#a01828] text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                className="bg-[#C72030] hover:bg-[#a01828] text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {totalCount > 0 && (

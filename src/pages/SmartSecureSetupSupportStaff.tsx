@@ -14,6 +14,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   fetchSupportStaffSetup,
   fetchDeliveryServiceProviders,
@@ -55,6 +56,7 @@ const INITIAL_FORM = {
 };
 
 const SmartSecureSetupSupportStaff: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [activeTab, setActiveTab] = useState("society-staff");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -387,14 +389,16 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
         );
       case "action":
         return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-500 hover:text-blue-600"
-            onClick={() => handleEditStaffCategory(item)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
+          shouldShow("Support Staff", "update") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-blue-600"
+              onClick={() => handleEditStaffCategory(item)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )
         );
       default:
         return item[columnKey as keyof SupportStaffCategory] || "-";
@@ -431,14 +435,16 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
         );
       case "action":
         return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-500 hover:text-blue-600"
-            onClick={() => handleEditDeliveryProvider(item)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
+          shouldShow("Support Staff", "update") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-blue-600"
+              onClick={() => handleEditDeliveryProvider(item)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )
         );
       default:
         return item[columnKey as keyof DeliveryServiceProvider] || "-";
@@ -624,15 +630,17 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setIsAddModalOpen(true);
-                }}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Create
-              </Button>
+              shouldShow("Support Staff", "create") && (
+                <Button
+                  onClick={() => {
+                    resetForm();
+                    setIsAddModalOpen(true);
+                  }}
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Create
+                </Button>
+              )
             }
             loading={loading}
             emptyMessage="No Matching Records Found"
@@ -649,15 +657,17 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setIsAddModalOpen(true);
-                }}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Create
-              </Button>
+              shouldShow("Support Staff", "create") && (
+                <Button
+                  onClick={() => {
+                    resetForm();
+                    setIsAddModalOpen(true);
+                  }}
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Create
+                </Button>
+              )
             }
             loading={loading}
             emptyMessage="No Matching Records Found"
