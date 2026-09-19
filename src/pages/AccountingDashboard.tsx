@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye, Plus, Download, Filter, Receipt } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
@@ -25,6 +26,7 @@ interface AccountingData {
 }
 
 const AccountingDashboard = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   
   // State management
@@ -320,16 +322,18 @@ const AccountingDashboard = () => {
     if (columnKey === 'actions') {
       return (
         <div className="flex ">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate(`/club-management/accounting/${item.id}`)}
-            title="View Details"
-            className="h-8 w-8 p-0"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-          <Button 
+          {shouldShow("Dashboard", "show") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/club-management/accounting/${item.id}`)}
+              title="View Details"
+              className="h-8 w-8 p-0"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          )}
+          <Button
             variant="ghost" 
             size="sm"
             onClick={() => navigate(`/club-management/accounting/${item.id}/receipt`)}

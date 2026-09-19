@@ -7,6 +7,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Edit, Eye, Plus } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface SocietyBillCycle {
   id: number;
@@ -51,6 +52,7 @@ const formatDate = (value?: string) => {
 };
 
 const AccountingBillCycles: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [cycles, setCycles] = useState<SocietyBillCycle[]>([]);
   const [loading, setLoading] = useState(false);
@@ -105,22 +107,26 @@ const AccountingBillCycles: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/bill-cycles/${item.id}`)}
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/bill-cycles/${item.id}/edit`)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            {shouldShow("Bill Cycle", "show") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/bill-cycles/${item.id}`)}
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Bill Cycle", "update") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/bill-cycles/${item.id}/edit`)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "start_month":
@@ -177,13 +183,15 @@ const AccountingBillCycles: React.FC = () => {
         exportFileName="bill-cycles"
         storageKey="accounting-bill-cycles-table"
         leftActions={
-          <Button
-            variant="ghost"
-            className="btn-primary h-9 px-4 text-sm font-medium"
-            onClick={() => navigate("/accounting/bill-cycles/add")}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add
-          </Button>
+          shouldShow("Bill Cycle", "create") && (
+            <Button
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
+              onClick={() => navigate("/accounting/bill-cycles/add")}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add
+            </Button>
+          )
         }
         loading={loading}
         loadingMessage="Loading bill cycles..."

@@ -12,6 +12,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { FileText, Plus } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { CommonImportModal } from "@/components/CommonImportModal";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 
@@ -105,6 +106,7 @@ const toRow = (lp: LockPaymentAPI): ReceiptRow => ({
 });
 
 const AccountingReceipts: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [payments, setPayments] = useState<LockPaymentAPI[]>([]);
   const [loading, setLoading] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -239,10 +241,12 @@ const AccountingReceipts: React.FC = () => {
     switch (columnKey) {
       case "actions":
         return (
-          <FileText
-            className="h-4 w-4 cursor-pointer text-[#3b82c4] hover:text-[#C72030]"
-            onClick={() => setPreviewRow(item)}
-          />
+          shouldShow("Receipts", "show") && (
+            <FileText
+              className="h-4 w-4 cursor-pointer text-[#3b82c4] hover:text-[#C72030]"
+              onClick={() => setPreviewRow(item)}
+            />
+          )
         );
       case "receiptNumber":
         return item.receiptNumber || "-";
@@ -287,13 +291,15 @@ const AccountingReceipts: React.FC = () => {
         onExport={handleExportExcel}
         storageKey="accounting-receipts-table"
         leftActions={
-          <Button
-            onClick={() => setShowActionPanel(true)}
-            variant="ghost"
-            className="btn-primary h-9 px-4 text-sm font-medium"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Action
-          </Button>
+          shouldShow("Receipts", "create") && (
+            <Button
+              onClick={() => setShowActionPanel(true)}
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Action
+            </Button>
+          )
         }
         loading={loading}
         loadingMessage="Loading receipts..."

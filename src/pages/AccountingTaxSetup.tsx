@@ -9,6 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { User, FileCog, NotepadText } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
 import { API_CONFIG } from '@/config/apiConfig';
@@ -105,6 +106,7 @@ const defaultForm: GstForm = {
 };
 
 const AccountingTaxSetup: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   // Validation state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [form, setForm] = useState<GstForm>(defaultForm);
@@ -491,13 +493,15 @@ const AccountingTaxSetup: React.FC = () => {
 
         {/* ── Action Buttons ────────────────────────────────────────────── */}
         <div className="flex gap-3 pt-5 mt-5 mb-5 justify-center">
-          <Button
-            type="submit"
-            disabled={saving}
-            className="bg-[#C72030] hover:bg-[#A01020] text-white min-w-[140px]"
-          >
-            {saving ? "Saving..." : "Save"}
-          </Button>
+          {shouldShow("Tax Setup", "update") && (
+            <Button
+              type="submit"
+              disabled={saving}
+              className="bg-[#C72030] hover:bg-[#A01020] text-white min-w-[140px]"
+            >
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          )}
           <Button
             variant="outline"
             type="button"

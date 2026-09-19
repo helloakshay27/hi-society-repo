@@ -15,6 +15,7 @@ import {
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, Download, Printer, FileText, Receipt, Wallet, X } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface BillCharge {
   id: number;
@@ -103,6 +104,7 @@ const numberToWords = (num: number): string => {
 };
 
 const AccountingInvoiceDetails: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const { id } = useParams();
   const navigate = useNavigate();
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
@@ -352,7 +354,7 @@ const AccountingInvoiceDetails: React.FC = () => {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {!isPaid && (
+              {!isPaid && shouldShow("Invoices", "update") && (
                 <Button
                   onClick={() => setIsPaymentOpen(true)}
                   size="sm"
@@ -368,13 +370,15 @@ const AccountingInvoiceDetails: React.FC = () => {
               >
                 Edit
               </Button> */}
-              <Button
-                onClick={handleDownloadInvoice}
-                size="sm"
-                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
-              >
-                <Download className="mr-2 h-4 w-4" /> Download Invoice
-              </Button>
+              {shouldShow("Invoices", "show") && (
+                <Button
+                  onClick={handleDownloadInvoice}
+                  size="sm"
+                  className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Download Invoice
+                </Button>
+              )}
               {/* <Button
                 onClick={handlePrint}
                 size="icon"

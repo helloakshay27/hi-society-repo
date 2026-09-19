@@ -7,6 +7,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Eye, Edit, Plus, Trash2, ListTree, Table2, UploadCloud, DownloadCloud, Folder, Code2 } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -188,6 +189,7 @@ const AccountTreeNode: React.FC<{ node: AccountTreeNodeData; level: number }> = 
 const PAGE_SIZE = 20;
 
 const AccountingChartOfAccounts: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [viewType, setViewType] = useState<"table" | "tree">("table");
   const [ledgers, setLedgers] = useState<LockAccountLedgerAPI[]>([]);
@@ -415,36 +417,42 @@ const AccountingChartOfAccounts: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button size="sm" variant="ghost" className="p-1" onClick={() => handleViewAccount(item)}>
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="p-1" onClick={() => handleEditAccount(item)}>
-              <Edit className="w-4 h-4" />
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="p-1">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Account</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete <strong>{item.accountName}</strong>? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
-                    onClick={() => handleDeleteAccount(item)}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {shouldShow("Chart of Accounts", "show") && (
+              <Button size="sm" variant="ghost" className="p-1" onClick={() => handleViewAccount(item)}>
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Chart of Accounts", "update") && (
+              <Button size="sm" variant="ghost" className="p-1" onClick={() => handleEditAccount(item)}>
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Chart of Accounts", "destroy") && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="ghost" className="p-1">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete <strong>{item.accountName}</strong>? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
+                      onClick={() => handleDeleteAccount(item)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         );
       case "sr":
@@ -584,12 +592,14 @@ const AccountingChartOfAccounts: React.FC = () => {
           loadingMessage="Loading chart of accounts..."
           emptyMessage="No matching records found"
            leftActions={
-                    <Button
-          onClick={handleAddAccount}
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Account
-        </Button>
+                    shouldShow("Chart of Accounts", "create") && (
+                      <Button
+                        onClick={handleAddAccount}
+                        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Account
+                      </Button>
+                    )
                   }
         />
       ) : (
