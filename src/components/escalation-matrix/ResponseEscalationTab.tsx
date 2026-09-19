@@ -982,46 +982,57 @@ export const ResponseEscalationTab: React.FC = () => {
                         <TableBody>
                           <TableRow className="border-b border-gray-100 hover:bg-gray-50/50">
                             <TableCell className="py-4 px-4 align-top font-medium text-gray-900">
-                              {getIssueTypeName(rule.issue_type_id)}
+                              {rule.issue_type || getIssueTypeName(rule.issue_type_id)}
                             </TableCell>
                             <TableCell className="py-4 px-4 align-top font-medium text-gray-900">
-                              {getCategoryName(rule.category_id)}
+                              {rule.category_type || getCategoryName(rule.category_id)}
                             </TableCell>
                             <TableCell className="py-4 px-4 align-top">
-                              <div className="space-y-2">
-                                {['E1', 'E2', 'E3', 'E4', 'E5'].map((level) => (
-                                  <div key={level} className="text-sm text-gray-700 font-medium">
-                                    {level}
+                              {(() => {
+                                const escalations = rule.escalations || rule.escalation_matrix || []
+                                if (escalations.length === 0) {
+                                  return <div className="text-sm text-gray-400 italic">Not configured</div>
+                                }
+                                return (
+                                  <div className="space-y-2">
+                                    {escalations.map((levelItem: any, i: number) => (
+                                      <div key={i} className="text-sm text-gray-700 font-medium">
+                                        {(levelItem.level || levelItem.name || '').toUpperCase() || `Level ${i + 1}`}
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
-                              </div>
+                                )
+                              })()}
                             </TableCell>
                             <TableCell className="py-4 px-4 align-top">
-                              <div className="space-y-2">
-                                {['E1', 'E2', 'E3', 'E4', 'E5'].map((level) => {
-                                  const escalations = rule.escalations || rule.escalation_matrix || []
-                                  const levelData = escalations.find((e: any) => (e.name || '').toUpperCase() === level || (e.level || '').toUpperCase() === level)
-
-                                  let usersDisplay = '-'
-                                  if (levelData) {
-                                    if (levelData.escalate_to_display !== undefined) {
-                                      usersDisplay = levelData.escalate_to_display || '-'
-                                      if (levelData.escalate_to_more_count > 0) {
-                                        usersDisplay += ` +${levelData.escalate_to_more_count} more`
+                              {(() => {
+                                const escalations = rule.escalations || rule.escalation_matrix || []
+                                if (escalations.length === 0) {
+                                  return <div className="text-sm text-gray-400 italic">&mdash;</div>
+                                }
+                                return (
+                                  <div className="space-y-2">
+                                    {escalations.map((levelItem: any, i: number) => {
+                                      let usersDisplay = '-'
+                                      if (levelItem.escalate_to_display !== undefined) {
+                                        usersDisplay = levelItem.escalate_to_display || '-'
+                                        if (levelItem.escalate_to_more_count > 0) {
+                                          usersDisplay += ` +${levelItem.escalate_to_more_count} more`
+                                        }
+                                      } else {
+                                        const users = levelItem.escalate_to_users || levelItem.escalation_to || null
+                                        usersDisplay = getUserNames(users)
                                       }
-                                    } else {
-                                      const users = levelData.escalate_to_users || levelData.escalation_to || null
-                                      usersDisplay = getUserNames(users)
-                                    }
-                                  }
 
-                                  return (
-                                    <div key={level} className="text-sm text-gray-700">
-                                      {usersDisplay}
-                                    </div>
-                                  )
-                                })}
-                              </div>
+                                      return (
+                                        <div key={i} className="text-sm text-gray-700">
+                                          {usersDisplay}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                )
+                              })()}
                             </TableCell>
                           </TableRow>
                         </TableBody>
