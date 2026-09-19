@@ -12,6 +12,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { fieldStyles, menuProps } from './fieldStyles';
 
@@ -50,6 +51,7 @@ interface PmsArea {
 type LocationItem = SocietyLocation | PmsWing | PmsArea;
 
 export const LocationTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [activeLevel, setActiveLevel] = useState<1 | 2 | 3>(1);
 
   // Separate state for each level's data
@@ -423,9 +425,11 @@ export const LocationTab: React.FC = () => {
 
   const renderActions = (item: LocationItem & { level?: number }) => (
     <div className="flex gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
-      </Button>
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
+        </Button>
+      )}
     </div>
   );
 
@@ -557,14 +561,16 @@ export const LocationTab: React.FC = () => {
           onGlobalSearch={handleSearch}
           searchPlaceholder={`Search ${levels[activeLevel - 1].label}...`}
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-              variant="ghost"
-              className="btn-primary h-9 px-4 text-sm font-medium"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                variant="ghost"
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {totalCount > 0 && (

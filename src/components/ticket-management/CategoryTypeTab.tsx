@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { fieldStyles, menuProps } from './fieldStyles';
 import { Edit, Plus, Trash2, Upload, X } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 
 const categorySchema = z.object({
   categoryName: z.string().min(1, 'Category name is required'),
@@ -134,6 +135,7 @@ interface SitesApiResponse {
 }
 
 export const CategoryTypeTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [categories, setCategories] = useState<CategoryApiResponse['helpdesk_categories']>([]);
   const [sites, setSites] = useState<Site[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -852,12 +854,16 @@ export const CategoryTypeTab: React.FC = () => {
 
   const renderActions = (item: CategoryApiResponse['helpdesk_categories'][0]) => (
     <div className="flex gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 
@@ -1048,14 +1054,16 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
           enableSearch={true}
           searchPlaceholder="Search categories..."
           leftActions={
-            <button
-              type="button"
-              onClick={() => setAddDialogOpen(true)}
-// variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
-              <Plus className="h-4 w-4" />
-              Add
-            </button>
+            shouldShow("Ticket Setup", "create") && (
+              <button
+                type="button"
+                onClick={() => setAddDialogOpen(true)}
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4" />
+                Add
+              </button>
+            )
           }
         />
 

@@ -6,6 +6,7 @@ import { EditRelatedToModal } from './modals/EditRelatedToModal';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ interface RelatedToType {
 }
 
 export const RelatedToTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [relatedToItems, setRelatedToItems] = useState<RelatedToType[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -173,12 +175,16 @@ export const RelatedToTab: React.FC = () => {
 
   const renderActions = (item: RelatedToType) => (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" style={{ color: '#000000' }} />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" style={{ color: '#000000' }} />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
+        </Button>
+      )}
     </div>
   );
 
@@ -327,13 +333,16 @@ export const RelatedToTab: React.FC = () => {
           onGlobalSearch={handleSearch}
           searchPlaceholder="Search issue types..."
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                variant="ghost"
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {totalCount > 0 && (

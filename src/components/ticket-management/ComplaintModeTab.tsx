@@ -24,6 +24,7 @@ import { EditComplaintModeModal } from './modals/EditComplaintModeModal';
 import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManagementAPI';
 import { toast } from 'sonner';
 import { Edit, Plus, Trash2 } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import { useDispatch, useSelector } from 'react-redux';
 import { API_CONFIG, getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import {
@@ -51,6 +52,7 @@ interface ComplaintModeType {
 }
 
 export const ComplaintModeTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const dispatch = useDispatch<any>();
   const complaintModesState = useSelector((state: any) => state.complaintModes) || {};
   const { data: complaintModess = [], loading, fetchLoading, error, accounts } = complaintModesState;
@@ -212,12 +214,16 @@ export const ComplaintModeTab: React.FC = () => {
 
   const renderActions = (item: any) => (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 
@@ -373,13 +379,16 @@ export const ComplaintModeTab: React.FC = () => {
           onGlobalSearch={handleSearch}
           searchPlaceholder="Search complaint modes..."
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                variant="ghost"
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {totalCount > 0 && (

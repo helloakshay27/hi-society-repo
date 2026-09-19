@@ -21,7 +21,6 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
-
 const muiFieldStyles = {
   width: "100%",
   marginBottom: "16px",
@@ -57,10 +56,16 @@ const muiFieldStyles = {
   },
 };
 
+// Writes the same key to both localStorage and sessionStorage
+const setStoredValue = (key: string, value: string) => {
+  localStorage.setItem(key, value);
+  sessionStorage.setItem(key, value);
+};
+
 export const LoginPage = ({ setBaseUrl, setToken }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole, refreshPermissions } = usePermissions();
+  const { refreshPermissions } = usePermissions();
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,16 +85,11 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isViSite = hostname.includes("vi-web.gophygital.work");
   const isWebSite = hostname.includes("web.gophygital.work");
   // Check if it's Hi-Society site
-  const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "localhost";
+  const isHiSocietySite =
+    hostname === "web.hisociety.lockated.com" || hostname === "localhost";
 
   const isUIHiSocietySite =
     hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
-
-
-  // Check if it's Runwal site
-  const isRunwalSite = hostname === "runwal-cp.lockated.com";
-  console.log("domain is runwal", isRunwalSite, hostname);
-  const isClubSite = hostname === "club.lockated.com" || hostname === "recess-club.panchshil.com";
 
   // Check URL for email and orgId parameters on component mount
   React.useEffect(() => {
@@ -154,23 +154,41 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const fetchHiSocietyData = async (token: string) => {
     try {
       const savedBase = localStorage.getItem("baseUrl") || "";
-      const base = savedBase.startsWith("http") ? savedBase : `https://${savedBase}`;
+      const base = savedBase.startsWith("http")
+        ? savedBase
+        : `https://${savedBase}`;
 
-      const accountResponse = await fetch(`${base}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
+      const accountResponse = await fetch(
+        `${base}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`
+      );
       if (accountResponse.ok) {
         const accountData = await accountResponse.json();
         localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
-        localStorage.setItem("selectedUserSociety", accountData?.society?.id?.toString() || "");
+        localStorage.setItem(
+          "selectedUserSociety",
+          accountData?.society?.id?.toString() || ""
+        );
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
-        sessionStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
+        sessionStorage.setItem(
+          "selectedUserSociety",
+          accountData.selected_user_society?.toString() || ""
+        );
       }
 
-      const societiesResponse = await fetch(`${base}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+      const societiesResponse = await fetch(
+        `${base}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`
+      );
       if (societiesResponse.ok) {
         const societiesData = await societiesResponse.json();
         const societies = societiesData.user_societies || [];
-        localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
-        sessionStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
+        localStorage.setItem(
+          "hiSocietyApprovedSocieties",
+          JSON.stringify(societies)
+        );
+        sessionStorage.setItem(
+          "hiSocietyApprovedSocieties",
+          JSON.stringify(societies)
+        );
       }
     } catch (error) {
       console.error("Failed to fetch Hi-Society data:", error);
@@ -239,10 +257,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       return valid
         ? { isValid: true, message: "" }
         : {
-          isValid: false,
-          message:
-            "Please enter a valid email address (e.g. name@example.com).",
-        };
+            isValid: false,
+            message:
+              "Please enter a valid email address (e.g. name@example.com).",
+          };
     }
 
     // Treat as mobile: strip spaces/dashes, allow optional leading +
@@ -251,9 +269,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return valid
       ? { isValid: true, message: "" }
       : {
-        isValid: false,
-        message: "Please enter a valid mobile number (7–15 digits).",
-      };
+          isValid: false,
+          message: "Please enter a valid mobile number (7–15 digits).",
+        };
   };
 
   const handleEmailSubmit = async () => {
@@ -304,12 +322,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       return;
     }
 
-    // const passwordValidation = validatePassword(password);
-    // if (!passwordValidation.isValid) {
-    //   toast.error(passwordValidation.message);
-    //   return;
-    // }
-
     setLoginLoading(true);
     try {
       // Always use the backend_url saved when the user selected their organisation
@@ -319,10 +331,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       if (!response || !response.access_token) {
         throw new Error("Invalid response received from server");
       }
+
       if (
-        (!response.web_enabled ||
-          response.web_enabled == null ||
-          response.web_enabled === false) &&
+        !response.web_enabled &&
         response.company_id === 145 &&
         (isViSite || isWebSite)
       ) {
@@ -332,94 +343,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         return;
       }
 
-      // Check if number is verified first
-      if (response.number_verified === 0 && isViSite) {
-        // Store email temporarily for OTP verification
-        localStorage.setItem("temp_email", email);
-        localStorage.setItem("temp_token", response.access_token);
-
-        saveUser({
-          id: response.id,
-          email: response.email,
-          firstname: response.firstname,
-          lastname: response.lastname,
-          mobile: response.mobile,
-          latitude: response.latitude,
-          longitude: response.longitude,
-          country_code: response.country_code,
-          user_type: response.user_type || "",
-          // spree_api_key: response.spree_api_key,
-          lock_role: response.lock_role,
-        });
-
-        saveBaseUrl(baseUrl);
-        localStorage.setItem("userId", response.id?.toString() || "");
-        localStorage.setItem("userType", response.user_type?.toString() || "");
-        // Session Storage
-        sessionStorage.setItem("userId", response.id?.toString() || "");
-        sessionStorage.setItem(
-          "userType",
-          response.user_type?.toString() || ""
-        );
-
-        toast.success(
-          "OTP sent successfully! Please verify your phone number to continue."
-        );
-
-        // Redirect to OTP verification page
-        setTimeout(() => {
-          navigate("/otp-verification");
-        }, 500);
-        return; // Exit early, don't save user data yet
-      }
-
-      if (
-        response.company_id === 145 &&
-        response.web_enabled === true &&
-        isViSite &&
-        response.access_token
-      ) {
-        // Store email temporarily for OTP verification
-        localStorage.setItem("temp_email", email);
-        localStorage.setItem("temp_token", response.access_token);
-
-        saveUser({
-          id: response.id,
-          email: response.email,
-          firstname: response.firstname,
-          lastname: response.lastname,
-          mobile: response.mobile,
-          latitude: response.latitude,
-          longitude: response.longitude,
-          country_code: response.country_code,
-          user_type: response.user_type || "",
-          // spree_api_key: response.spree_api_key,
-          lock_role: response.lock_role,
-        });
-
-        saveBaseUrl(baseUrl);
-        localStorage.setItem("userId", response.id?.toString() || "");
-        localStorage.setItem("userType", response.user_type?.toString() || "");
-        // Session Storage
-        sessionStorage.setItem("userId", response.id?.toString() || "");
-        sessionStorage.setItem(
-          "userType",
-          response.user_type?.toString() || ""
-        );
-
-        toast.success(
-          "OTP sent successfully! Please verify your phone number to continue."
-        );
-
-        // Redirect to OTP verification page
-        setTimeout(() => {
-          navigate("/otp-verification");
-        }, 500);
-        return; // Exit early, don't save user data yet
-      }
-
-      // Save user data and token to localStorage (only for verified users)
-      saveUser({
+      const userData = {
         id: response.id,
         email: response.email,
         firstname: response.firstname,
@@ -429,35 +353,55 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         longitude: response.longitude,
         country_code: response.country_code,
         user_type: response.user_type || "",
-        spree_api_key: response.spree_api_key,
         lock_role: response.lock_role,
-      });
+      };
+
+      // VI site: unverified numbers (and web-enabled company 145 users) must
+      // verify via OTP first — don't save the token/session yet.
+      // if (
+      //   isViSite &&
+      //   (response.number_verified === 0 ||
+      //     (response.company_id === 145 && response.web_enabled === true))
+      // ) {
+      //   localStorage.setItem("temp_email", email);
+      //   localStorage.setItem("temp_token", response.access_token);
+      //   saveUser(userData);
+      //   saveBaseUrl(baseUrl);
+      //   setStoredValue("userId", response.id?.toString() || "");
+      //   setStoredValue("userType", response.user_type?.toString() || "");
+
+      //   toast.success(
+      //     "OTP sent successfully! Please verify your phone number to continue."
+      //   );
+      //   setTimeout(() => navigate("/otp-verification"), 500);
+      //   return;
+      // }
+
+      saveUser({ ...userData, spree_api_key: response.spree_api_key });
       saveToken(response.access_token);
       setToken(response.access_token);
       saveBaseUrl(baseUrl);
 
-      // Always set to Hi-Society layout mode and Admin view on login
-      localStorage.setItem("layoutMode", "hi-society");
-      localStorage.setItem("selectedView", "admin");
-      localStorage.setItem("userType", "admin"); // Force admin view only
-      localStorage.setItem("userId", response.id.toString());
+      // Always use Hi-Society layout mode and Admin view on login
+      setStoredValue("layoutMode", "hi-society");
+      setStoredValue("selectedView", "admin");
+      setStoredValue("userType", "admin");
+      setStoredValue("userId", response.id.toString());
 
-      // Session storage
-      sessionStorage.setItem("layoutMode", "hi-society");
-      sessionStorage.setItem("selectedView", "admin");
-      sessionStorage.setItem("userType", "admin"); // Force admin view only
-      sessionStorage.setItem("userId", response.id.toString());
+      const redirectTo = (path: string) => {
+        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
+        setTimeout(() => navigate(path, { replace: true }), 500);
+      };
+      const from = (location.state as { from?: Location })?.from;
 
       // RM (Relationship Manager) / CS (Customer Service) users only have
       // access to the site visit scheduling module — send them straight there.
-      if (response.user_type === "rm_user" || response.user_type === "cs_user") {
+      if (
+        response.user_type === "rm_user" ||
+        response.user_type === "cs_user"
+      ) {
         await fetchHiSocietyData(response.spree_api_key);
-
-        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
-
-        setTimeout(() => {
-          navigate("/appointmentz/site-scheduling", { replace: true });
-        }, 500);
+        redirectTo("/appointmentz/site-scheduling");
         return;
       }
 
@@ -467,28 +411,21 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       // authenticated session aren't fetched yet at this point, so force a
       // refresh here instead of relying on the cached userRole.
       const loginOrgId = localStorage.getItem("org_id");
-      const isRunwalWebSite = hostname === "runwal.lockated.com";
       if (
-        isRunwalWebSite ||
+        hostname === "runwal.lockated.com" ||
         loginOrgId === "109" ||
         loginOrgId === "324" ||
         loginOrgId === "10"
       ) {
         const freshRole = await refreshPermissions();
-        const firstRoute = freshRole ? findFirstAccessibleRoute(freshRole) : null;
-        const stateFrom = (location.state as { from?: Location })?.from?.pathname;
-        const redirectPath =
-          (stateFrom && stateFrom !== "/" && stateFrom !== "/login"
-            ? stateFrom
-            : null) ||
-          firstRoute ||
-          "/bms/hisoc-notice-list";
-
-        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
-
-        setTimeout(() => {
-          navigate(redirectPath, { replace: true });
-        }, 500);
+        const firstRoute = freshRole
+          ? findFirstAccessibleRoute(freshRole)
+          : null;
+        const fromPath =
+          from?.pathname && from.pathname !== "/" && from.pathname !== "/login"
+            ? from.pathname
+            : null;
+        redirectTo(fromPath || firstRoute || "/bms/hisoc-notice-list");
         return;
       }
 
@@ -498,102 +435,17 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         return;
       }
 
-
       if (isHiSocietySite || isUIHiSocietySite) {
-        const from =
-          (location.state as { from?: Location })?.from?.pathname +
-          (location.state as { from?: Location })?.from?.search ||
-          "/maintenance/survey/mapping";
-        // Hi Society specific logic - fetch additional data
-        // Fetch Hi-Society specific data
         await fetchHiSocietyData(response.spree_api_key);
-
-        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
-
-        // Navigate based on site type
-        const redirectPath = from ? from : isUIHiSocietySite ? "/loyalty/dashboard" : "/maintenance/project-details-list";
-        setTimeout(() => {
-          navigate(redirectPath, { replace: true });
-        }, 500);
-      } else {
-        // Other sites logic - still use hi-society mode and admin view
-
-        const from =
-          (location.state as { from?: Location })?.from?.pathname +
-          (location.state as { from?: Location })?.from?.search ||
-          "/maintenance/survey/mapping";
-
-        toast.success(`Welcome back, ${response.firstname}! Login successful.`);
-
-        // Add a slight delay for better UX, then redirect to dashboard
-        setTimeout(() => {
-          // Hi-Society layout — always go to helpdesk
-          const layoutMode = localStorage.getItem("layoutMode");
-          if (layoutMode === "hi-society") {
-            navigate("/bms/helpdesk", { replace: true });
-            return;
-          }
-
-          const userType = localStorage.getItem("userType");
-          const isLocalhost =
-            hostname.includes("lockated.gophygital.work") ||
-            hostname.includes("fm-matrix.lockated.com");
-          const isPulseSite =
-            hostname.includes("pulse.lockated.com") ||
-            hostname.includes("pulse.gophygital.work");
-
-          // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
-          if (userRole) {
-            const firstRoute = findFirstAccessibleRoute(userRole);
-            if (firstRoute) {
-              navigate(firstRoute, { replace: true });
-              return;
-            }
-          }
-
-          // PRIORITY 2: Localhost with userType-based routing
-          if (userType && isLocalhost) {
-            if (userType === "pms_organization_admin") {
-              navigate("/loyalty/dashboard", { replace: true });
-              return;
-            } else if (userType === "pms_occupant") {
-              navigate("/vas/projects", { replace: true });
-              return;
-            }
-          }
-
-          // PRIORITY 3: Company ID-based routing for specific companies
-          if (
-            response.company_id === 300 ||
-            response.company_id === 295 ||
-            response.company_id === 298 ||
-            response.company_id === 199
-          ) {
-            // For these companies, use dynamic routing from permissions
-            if (userRole) {
-              const firstRoute = findFirstAccessibleRoute(userRole);
-              if (firstRoute) {
-                navigate(firstRoute, { replace: true });
-                return;
-              }
-            }
-            // Fallback to default admin route for these companies
-            navigate("/admin/dashboard", { replace: true });
-            return;
-          }
-
-          // PRIORITY 4: Domain-specific and user-specific fallback routing
-          if (response.id === 189005) {
-            navigate("/dashboard");
-          } else if (isViSite) {
-            navigate("/safety/m-safe/internal");
-          } else if (isPulseSite) {
-            navigate("/maintenance/ticket");
-          } else {
-            navigate(from, { replace: true });
-          }
-        }, 500);
+        redirectTo(
+          (from && from.pathname + (from.search || "")) ||
+            "/maintenance/survey/mapping"
+        );
+        return;
       }
+
+      // All other sites run in Hi-Society layout mode (set above) — land on helpdesk
+      redirectTo("/bms/helpdesk");
     } catch (error: any) {
       console.error("Login error:", error);
 
@@ -637,12 +489,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         {[1, 2, 3].map((step) => (
           <div
             key={step}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all transform ${step === currentStep
-              ? "bg-[#C72030] text-white shadow-lg scale-110"
-              : step < currentStep
-                ? "bg-green-500 text-white"
-                : "bg-gray-100 text-gray-400"
-              }`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all transform ${
+              step === currentStep
+                ? "bg-[#C72030] text-white shadow-lg scale-110"
+                : step < currentStep
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-100 text-gray-400"
+            }`}
           >
             {step < currentStep ? (
               <Check className="w-5 h-5 stroke-[2.5]" />
@@ -654,16 +507,19 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       </div>
       <div className="flex justify-center items-center gap-2">
         <div
-          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 1 ? "bg-[#C72030]" : "bg-gray-200"
-            }`}
+          className={`h-1 w-16 rounded-full transition-all ${
+            currentStep >= 1 ? "bg-[#C72030]" : "bg-gray-200"
+          }`}
         ></div>
         <div
-          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 2 ? "bg-[#C72030]" : "bg-gray-200"
-            }`}
+          className={`h-1 w-16 rounded-full transition-all ${
+            currentStep >= 2 ? "bg-[#C72030]" : "bg-gray-200"
+          }`}
         ></div>
         <div
-          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 3 ? "bg-[#C72030]" : "bg-gray-200"
-            }`}
+          className={`h-1 w-16 rounded-full transition-all ${
+            currentStep >= 3 ? "bg-[#C72030]" : "bg-gray-200"
+          }`}
         ></div>
       </div>
       <p className="text-gray-400 text-sm mt-3 font-medium">
@@ -932,8 +788,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           <div className=" rounded-2xl  p-8 sm:p-10 relative z-10 animate-fade-in">
             {/* Logo */}
             <div
-              className={`text-center mb-5 flex flex-col items-center space-y-2 ${isViSite ? "-mt-4" : ""
-                }`}
+              className={`text-center mb-5 flex flex-col items-center space-y-2 ${
+                isViSite ? "-mt-4" : ""
+              }`}
             >
               {isOmanSite ? (
                 <svg
@@ -1053,10 +910,11 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
               )}
 
               <p
-                className={`${isViSite
-                  ? "text-gray-800 text-base sm:text-lg font-semibold tracking-tight"
-                  : "text-gray-600 text-sm font-medium"
-                  }`}
+                className={`${
+                  isViSite
+                    ? "text-gray-800 text-base sm:text-lg font-semibold tracking-tight"
+                    : "text-gray-600 text-sm font-medium"
+                }`}
               >
                 Sign in to your account
               </p>
