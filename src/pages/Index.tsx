@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
@@ -11,6 +11,9 @@ const Index = () => {
   const { userRole, loading } = usePermissions();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
   const org_id = localStorage.getItem("org_id");
+  // Set once a role fetch has started — lets us tell "role not loaded yet"
+  // apart from "role fetch finished with no role".
+  const roleRequestedRef = useRef(false);
 
   // Helper function to get first available employee link
   const getFirstEmployeeLink = useCallback((): string => {
@@ -81,7 +84,10 @@ const Index = () => {
   // First check if view selection is needed
   useEffect(() => {
     // Wait for permissions to load
-    if (loading) return;
+    if (loading) {
+      roleRequestedRef.current = true;
+      return;
+    }
 
     const hostname = window.location.hostname;
     const isViSite = hostname.includes("vi-web.gophygital.work");
@@ -106,9 +112,6 @@ const Index = () => {
     const isClubSite = hostname.includes("club.lockated.com");
     const isWebSite = hostname.includes("web.lockated.com");
 
-    // PRIORITY 0: Hi-Society site routing (highest priority for specific domains)
-   
-
     // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
     if (userRole) {
       const firstRoute = findFirstAccessibleRoute(userRole);
@@ -119,7 +122,7 @@ const Index = () => {
       }
     }
 
-     if (isUIHiSocietySite) {
+    if (isUIHiSocietySite) {
       navigate("/loyalty/dashboard", { replace: true });
       return;
     }
@@ -136,8 +139,11 @@ const Index = () => {
       org_id === "324" ||
       org_id === "10"
     ) {
-      const firstRoute = findFirstAccessibleRoute(userRole);
-      navigate(firstRoute || "/bms/hisoc-notice-list", { replace: true });
+      // Role not loaded yet — this effect re-runs once it arrives
+      if (!userRole && !roleRequestedRef.current) return;
+      navigate(findFirstAccessibleRoute(userRole) || "/bms/hisoc-notice-list", {
+        replace: true,
+      });
       return;
     }
 
