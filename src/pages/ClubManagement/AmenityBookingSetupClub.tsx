@@ -281,7 +281,7 @@ export const BookingSetupClubDashboard = () => {
   const renderActions = (booking: BookingSetup) => (
     <div className="flex items-center gap-2">
       {
-        shouldShow("Facility Setup", "view") && (
+        shouldShow("Facility Setup", "show") && (
           <Button
             size="sm"
             variant="ghost"

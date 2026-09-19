@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { getFullUrl, getAuthHeader, ENDPOINTS } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface TreeNode {
   id: string | number;
@@ -115,6 +116,7 @@ const TreeToggle: React.FC<{ isExpanded: boolean; visible: boolean }> = ({
 
 const BMSDocumentsCommonFiles: React.FC = () => {
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [expandedFolders, setExpandedFolders] = useState<Set<string | number>>(
     new Set(["All"])
   );
@@ -358,13 +360,15 @@ const BMSDocumentsCommonFiles: React.FC = () => {
             />
             Refresh
           </Button>
-          <Button
-            onClick={handleUpload}
-            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload Document
-          </Button>
+          {shouldShow("Common Files", "create") && (
+            <Button
+              onClick={handleUpload}
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Document
+            </Button>
+          )}
         </div>
       </div>
 

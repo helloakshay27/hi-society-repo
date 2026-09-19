@@ -25,6 +25,7 @@ import {
   getCrmAdminRequestConfig,
   getFullUrl,
 } from "@/config/apiConfig";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -234,6 +235,7 @@ const FileIcon = ({ fileType }: { fileType?: string }) => {
 const BMSDocumentsFlatRelated: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { shouldShow } = useDynamicPermissions();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -384,14 +386,16 @@ const BMSDocumentsFlatRelated: React.FC = () => {
         >
           <FileIcon fileType={node.fileType} />
           <span className="text-sm text-gray-600 flex-1 truncate">{node.name}</span>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="opacity-0 group-hover:opacity-100 transition-opacity h-7 px-2"
-            onClick={() => handleDownload(node.id, node.name)}
-          >
-            <Download className="w-4 h-4" />
-          </Button>
+          {shouldShow("Flat Related", "show") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 px-2"
+              onClick={() => handleDownload(node.id, node.name)}
+            >
+              <Download className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       );
     }
@@ -424,13 +428,15 @@ const BMSDocumentsFlatRelated: React.FC = () => {
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button
-            onClick={handleUpload}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload Document
-          </Button>
+          {shouldShow("Flat Related", "create") && (
+            <Button
+              onClick={handleUpload}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Document
+            </Button>
+          )}
         </div>
       </div>
 

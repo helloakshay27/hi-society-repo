@@ -21,6 +21,7 @@ import { getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 import axios from "axios";
 import { debounce } from "lodash";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -91,6 +92,7 @@ const ManageUsersPage = () => {
   const token = localStorage.getItem('token')
 
   const navigate = useNavigate();
+  const { shouldShow } = useDynamicPermissions();
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showActionPanel, setShowActionPanel] = useState(false);
@@ -780,20 +782,24 @@ const ManageUsersPage = () => {
       case "actions":
         return (
           <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => handleViewUser(user.id)}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="View"
-            >
-              <Eye className="w-4 h-4 text-[#1A1A1A]" />
-            </button>
-            <button
-              onClick={() => handleEditUser(user.id)}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="Edit"
-            >
-              <Edit className="w-4 h-4 !text-[#1A1A1A]" />
-            </button>
+            {shouldShow("Manage Users", "show") && (
+              <button
+                onClick={() => handleViewUser(user.id)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="View"
+              >
+                <Eye className="w-4 h-4 text-[#1A1A1A]" />
+              </button>
+            )}
+            {shouldShow("Manage Users", "update") && (
+              <button
+                onClick={() => handleEditUser(user.id)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="Edit"
+              >
+                <Edit className="w-4 h-4 !text-[#1A1A1A]" />
+              </button>
+            )}
           </div>
         );
       case "flat":
@@ -952,7 +958,9 @@ const ManageUsersPage = () => {
               setSelectedUsers([]);
             }}
             actions={[
-              { label: "Send Email", icon: Mail, onClick: handleSendEmailAction },
+              ...(shouldShow("Manage Users", "mail")
+                ? [{ label: "Send Email", icon: Mail, onClick: handleSendEmailAction }]
+                : []),
             ]}
           />
         )}
@@ -1262,14 +1270,17 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
             onSearchChange={handleSearchChange}
             searchPlaceholder="Search users..."
             leftActions={
-              <Button
-                size="sm"
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"                 onClick={handleActionClick}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Action
-              </Button>
+              shouldShow("Manage Users", "create") && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="btn-primary h-9 px-4 text-sm font-medium"
+                  onClick={handleActionClick}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Action
+                </Button>
+              )
             }
             loading={loading}
           />
