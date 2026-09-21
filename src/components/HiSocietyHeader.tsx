@@ -36,6 +36,7 @@ import { Dashboard } from "@mui/icons-material";
 import { AnalyticsGrid } from "./dashboard/AnalyticsGrid";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { useLayout } from "@/contexts/LayoutContext";
+import { usePermissions } from "@/contexts/PermissionsContext";
 import { UIHiSocietyNavigation } from "@asset";
 import RunwalLogo from "@/assets/Runwal Logo - A Subodh Runwal Group-01 1.png";
 
@@ -146,7 +147,9 @@ export const HiSocietyHeader = () => {
     "53815",
   ];
 
-  // Load user display name and role name from localStorage
+  const { userRole } = usePermissions();
+
+  // Load user display name and role name from localStorage for immediate paint
   useEffect(() => {
     const loadUserInfo = () => {
       const displayName = permissionService.getDisplayName();
@@ -157,6 +160,13 @@ export const HiSocietyHeader = () => {
 
     loadUserInfo();
   }, []);
+
+  // Keep the role name in sync with the freshly-fetched get_role API response
+  useEffect(() => {
+    if (userRole?.role_name) {
+      setUserRoleName(userRole.role_name);
+    }
+  }, [userRole]);
 
   // Fetch VI account from baseUrl for vi-web (and localhost for dev)
 
