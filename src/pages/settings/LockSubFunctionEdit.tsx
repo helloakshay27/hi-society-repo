@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Key, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,8 @@ import { lockFunctionService, LockFunction } from '@/services/lockFunctionServic
 export const LockSubFunctionEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOpsConsole = location.pathname.includes('/ops-console/');
   const [lockSubFunction, setLockSubFunction] = useState<LockSubFunction | null>(null);
   const [lockFunctions, setLockFunctions] = useState<LockFunction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export const LockSubFunctionEdit = () => {
 
       await lockSubFunctionService.updateLockSubFunction(lockSubFunction.id, payload);
       toast.success('Lock sub function updated successfully!');
-      navigate('/settings/account/lock-sub-function');
+      navigate(isOpsConsole ? '/ops-console/settings/account/lock-sub-function' : '/settings/account/lock-sub-function');
     } catch (error: any) {
       console.error('Error updating lock sub function:', error);
       toast.error(`Failed to update lock sub function: ${error.message}`);
@@ -88,7 +90,7 @@ export const LockSubFunctionEdit = () => {
   };
 
   const handleBack = () => {
-    navigate('/settings/account/lock-sub-function');
+    navigate(isOpsConsole ? '/ops-console/settings/account/lock-sub-function' : '/settings/account/lock-sub-function');
   };
 
   const handleChange = (field: string, value: any) => {
