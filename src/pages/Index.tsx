@@ -118,7 +118,7 @@ const Index = () => {
     }
 
     if (isHiSocietySite) {
-      navigate("/maintenance/project-details-list", { replace: true });
+      navigate("/bms/hisoc-notice-list", { replace: true });
       return;
     }
 
