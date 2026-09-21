@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Loader2, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
@@ -152,6 +152,8 @@ const transformLockFunctionData = (apiData: ApiLockFunctionItem[]): LockFunction
 
 export const LockFunctionList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOpsConsole = location.pathname.includes('/ops-console/');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15; // Same as ShiftDashboard
@@ -312,12 +314,12 @@ export const LockFunctionList = () => {
 
   const handleView = (id: number) => {
     console.log('View lock function:', id);
-    navigate(`/settings/account/lock-function/view/${id}`);
+    navigate(isOpsConsole ? `/ops-console/settings/account/lock-function/view/${id}` : `/settings/account/lock-function/view/${id}`);
   };
 
   const handleEdit = (id: number) => {
     console.log('Edit lock function:', id);
-    navigate(`/settings/account/lock-function/edit/${id}`);
+    navigate(isOpsConsole ? `/ops-console/settings/account/lock-function/edit/${id}` : `/settings/account/lock-function/edit/${id}`);
   };
 
   const handleDelete = async (id: number) => {

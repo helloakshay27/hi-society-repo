@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,8 @@ const durationOptions = [
 
 export const LockFunctionCreate: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOpsConsole = location.pathname.includes('/ops-console/');
 
   // Set document title
   useEffect(() => {
@@ -100,7 +102,7 @@ export const LockFunctionCreate: React.FC = () => {
       toast.success('Lock function created successfully!');
       
       // Navigate back to list
-      navigate('/settings/account/lock-function');
+      navigate(isOpsConsole ? '/ops-console/settings/account/lock-function' : '/settings/account/lock-function');
 
     } catch (error: any) {
       console.error('Error creating lock function:', error);
@@ -115,7 +117,7 @@ export const LockFunctionCreate: React.FC = () => {
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
-            onClick={() => navigate('/settings/account/lock-function')}
+            onClick={() => navigate(isOpsConsole ? '/ops-console/settings/account/lock-function' : '/settings/account/lock-function')}
             variant="outline"
             size="sm"
             className="flex items-center gap-2"

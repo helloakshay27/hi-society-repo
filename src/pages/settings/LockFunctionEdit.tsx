@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Lock, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,8 @@ import { moduleService, LockModule } from '@/services/moduleService';
 export const LockFunctionEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOpsConsole = location.pathname.includes('/ops-console/');
   const [lockFunction, setLockFunction] = useState<LockFunction | null>(null);
   const [modules, setModules] = useState<LockModule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +102,7 @@ export const LockFunctionEdit = () => {
 
       await lockFunctionService.updateLockFunction(lockFunction.id, payload);
       toast.success('Lock function updated successfully!');
-      navigate('/settings/account/lock-function');
+      navigate(isOpsConsole ? '/ops-console/settings/account/lock-function' : '/settings/account/lock-function');
     } catch (error: any) {
       console.error('Error updating lock function:', error);
       toast.error(`Failed to update lock function: ${error.message}`);
@@ -110,7 +112,7 @@ export const LockFunctionEdit = () => {
   };
 
   const handleBack = () => {
-    navigate('/settings/account/lock-function');
+    navigate(isOpsConsole ? '/ops-console/settings/account/lock-function' : '/settings/account/lock-function');
   };
 
   const handleChange = (field: string, value: any) => {

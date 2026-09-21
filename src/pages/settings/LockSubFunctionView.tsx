@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Key, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,8 @@ import { lockSubFunctionService, LockSubFunction } from '@/services/lockSubFunct
 export const LockSubFunctionView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOpsConsole = location.pathname.includes('/ops-console/');
   const [lockSubFunction, setLockSubFunction] = useState<LockSubFunction | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +35,7 @@ export const LockSubFunctionView = () => {
   }, [id]);
 
   const handleEdit = () => {
-    navigate(`/settings/account/lock-sub-function/edit/${id}`);
+    navigate(isOpsConsole ? `/ops-console/settings/account/lock-sub-function/edit/${id}` : `/settings/account/lock-sub-function/edit/${id}`);
   };
 
   const handleDelete = async () => {
@@ -44,7 +46,7 @@ export const LockSubFunctionView = () => {
     try {
       await lockSubFunctionService.deleteLockSubFunction(lockSubFunction.id);
       toast.success('Lock sub function deleted successfully!');
-      navigate('/settings/account/lock-sub-function');
+      navigate(isOpsConsole ? '/ops-console/settings/account/lock-sub-function' : '/settings/account/lock-sub-function');
     } catch (error: any) {
       console.error('Error deleting lock sub function:', error);
       toast.error(`Failed to delete lock sub function: ${error.message}`);
@@ -52,7 +54,7 @@ export const LockSubFunctionView = () => {
   };
 
   const handleBack = () => {
-    navigate('/settings/account/lock-sub-function');
+    navigate(isOpsConsole ? '/ops-console/settings/account/lock-sub-function' : '/settings/account/lock-sub-function');
   };
 
   if (loading) {

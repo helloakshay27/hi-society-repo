@@ -112,16 +112,6 @@ const Index = () => {
     const isClubSite = hostname.includes("club.lockated.com");
     const isWebSite = hostname.includes("web.lockated.com");
 
-    // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
-    if (userRole) {
-      const firstRoute = findFirstAccessibleRoute(userRole);
-
-      if (firstRoute) {
-        navigate(firstRoute, { replace: true });
-        return;
-      }
-    }
-
     if (isUIHiSocietySite) {
       navigate("/loyalty/dashboard", { replace: true });
       return;
@@ -141,9 +131,7 @@ const Index = () => {
     ) {
       // Role not loaded yet — this effect re-runs once it arrives
       if (!userRole && !roleRequestedRef.current) return;
-      navigate(findFirstAccessibleRoute(userRole) || "/bms/hisoc-notice-list", {
-        replace: true,
-      });
+      navigate("/bms/hisoc-notice-list", { replace: true });
       return;
     }
 
