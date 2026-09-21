@@ -109,7 +109,7 @@ const adminNavigationStructure = {
       {
         name: "Wallet Top-up",
         icon: CreditCard,
-        href: "/settings/wallet-topup",
+        href: "/ops-console/settings/wallet-topup",
       },
       {
         name: "Feedback Dashboard",

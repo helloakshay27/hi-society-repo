@@ -789,6 +789,10 @@ const LockSubFunctionList = lazy(() => import("./pages/settings/LockSubFunctionL
 const LockSubFunctionView = lazy(() => import("./pages/settings/LockSubFunctionView").then(m => ({ default: m.LockSubFunctionView })));
 const LockSubFunctionEdit = lazy(() => import("./pages/settings/LockSubFunctionEdit").then(m => ({ default: m.LockSubFunctionEdit })));
 const LockSubFunctionCreate = lazy(() => import("./pages/settings/LockSubFunctionCreate").then(m => ({ default: m.CreateLockSubFunctionDialog })));
+const WalletTopup = lazy(() => import("./pages/WalletTopup"));
+const FeedbackDashboard = lazy(() => import("./pages/admin/FeedbackDashboard"));
+const SystemAndSOP = lazy(() => import("./pages/admin/SystemAndSOP"));
+const DiscReport = lazy(() => import("./pages/admin/DiscReport"));
 const CrmCustomerDetails = lazy(() => import("./pages/CrmCustomerDetails").then(m => ({ default: m.CrmCustomerDetails })));
 const EditCrmCustomer = lazy(() => import("./pages/EditCrmCustomer").then(m => ({ default: m.EditCrmCustomer })));
 const MultipleUserDeletePage = lazy(() => import("./pages/MultipleUserDeletePage"));
@@ -1434,6 +1438,10 @@ function App() {
                           element={<AddRolePage />}
                         />
                         <Route
+                          path="settings/vi-roles/role"
+                          element={<RoleDashboard />}
+                        />
+                        <Route
                           path="master/location/account/societies/details/:id"
                           element={<SocietyDetailsPage />}
                         />
@@ -1505,6 +1513,22 @@ function App() {
                         <Route
                           path="admin/loyalty-tds"
                           element={<LoyaltyTDS />}
+                        />
+                        <Route
+                          path="settings/wallet-topup"
+                          element={<WalletTopup />}
+                        />
+                        <Route
+                          path="admin/feedback-dashboard"
+                          element={<FeedbackDashboard />}
+                        />
+                        <Route
+                          path="admin/systems-sops"
+                          element={<SystemAndSOP />}
+                        />
+                        <Route
+                          path="admin/disc-report"
+                          element={<DiscReport />}
                         />
                         <Route
                           path="admin/new-dashboard"
