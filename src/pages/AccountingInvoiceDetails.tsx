@@ -353,6 +353,16 @@ const AccountingInvoiceDetails: React.FC = () => {
                 />
               </button>
             </div>
+            {isPaid && payments.length > 0 && (
+              <Button
+                onClick={() => handleDownloadReceipt(payments[payments.length - 1].id)}
+                size="sm"
+                variant="outline"
+                className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+              >
+                <Download className="mr-2 h-4 w-4" /> Download Receipt
+              </Button>
+            )}
             <div className="flex flex-wrap gap-2">
               {!isPaid && shouldShow("Invoices", "update") && (
                 <Button
@@ -513,13 +523,13 @@ const AccountingInvoiceDetails: React.FC = () => {
                   <th className="px-6 py-2 font-medium">Amount</th>
                   <th className="px-6 py-2 font-medium">Payment Mode</th>
                   <th className="px-6 py-2 font-medium">Transaction Number</th>
-                  <th className="px-6 py-2 font-medium">Receipt</th>
+                  {/* <th className="px-6 py-2 font-medium">Receipt</th> */}
                 </tr>
               </thead>
               <tbody>
                 {payments.length === 0 ? (
                   <tr className="border-t border-gray-200">
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
                       No payments recorded
                     </td>
                   </tr>
@@ -531,7 +541,10 @@ const AccountingInvoiceDetails: React.FC = () => {
                       <td className="px-6 py-2">{payment.amount}</td>
                       <td className="px-6 py-2">{payment.method}</td>
                       <td className="px-6 py-2">{payment.transaction_id}</td>
-                      <td className="px-6 py-2">
+                      {/* Moved to a single "Download Receipt" button next to
+                      Raise to Builder at the top, shown once the bill is
+                      fully paid, instead of a per-payment download here. */}
+                      {/* <td className="px-6 py-2">
                         <button
                           type="button"
                           onClick={() => handleDownloadReceipt(payment.id)}
@@ -540,7 +553,7 @@ const AccountingInvoiceDetails: React.FC = () => {
                         >
                           <Download className="h-4 w-4" /> Receipt
                         </button>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 )}

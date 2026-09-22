@@ -11,12 +11,13 @@ import {
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { FileText, Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { CommonImportModal } from "@/components/CommonImportModal";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 
 interface BillPaymentAPI {
+  id?: number;
   formatted_number?: string;
   payment_date?: string;
   ledger_name?: string;
@@ -48,10 +49,14 @@ interface LockPaymentAPI {
   description?: string;
   created_at?: string;
   bill_payments?: BillPaymentAPI[];
+  bill_id?: number;
+  lock_account_bill_id?: number;
+  payment_of_id?: number;
 }
 
 interface ReceiptRow {
   id: number;
+  billId: number | null;
   receiptNumber: string;
   invoiceNumber: string;
   tower: string;
@@ -65,7 +70,7 @@ interface ReceiptRow {
 }
 
 const columns: ColumnConfig[] = [
-  // { key: "actions", label: "Actions", sortable: false },
+  { key: "actions", label: "Actions", sortable: false },
   { key: "receiptNumber", label: "Receipt Number", sortable: true },
   { key: "tower", label: "Tower", sortable: true },
   { key: "flat", label: "Flat", sortable: true },
@@ -92,6 +97,7 @@ const formatDate = (value?: string) => {
 
 const toRow = (lp: LockPaymentAPI): ReceiptRow => ({
   id: lp.id,
+  billId: lp.bill_id ?? lp.lock_account_bill_id ?? lp.payment_of_id ?? lp.bill_payments?.[0]?.id ?? null,
   receiptNumber: lp.receipt_number || lp.payment_number || String(lp.id),
   invoiceNumber: lp.bill_number || lp.bill_payments?.[0]?.formatted_number || lp.order_number || "",
   tower: lp.tower || lp.block_name || lp.wing_name || "",
@@ -208,6 +214,40 @@ const AccountingReceipts: React.FC = () => {
     }
   };
 
+  // GET /lock_account_bills/:id/receipt_pdf?pid=<payment_id> — :id is the
+  // bill the payment was made against, pid is the payment's own id.
+  const handleDownloadReceipt = async (row: ReceiptRow) => {
+    if (!row.billId) {
+      toast.error("Unable to determine the bill for this receipt");
+      return;
+    }
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(
+        `${baseUrl}/lock_account_bills/${row.billId}/receipt_pdf`,
+        {
+          params: { pid: row.id },
+          responseType: "blob",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      const blobUrl = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" })
+      );
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Receipt-${row.receiptNumber || row.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error downloading receipt:", error);
+      toast.error("Failed to download receipt");
+    }
+  };
+
   const handleExportExcel = async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
@@ -241,12 +281,13 @@ const AccountingReceipts: React.FC = () => {
     switch (columnKey) {
       case "actions":
         return (
-          shouldShow("Receipts", "show") && (
-            <FileText
+          <div className="flex items-center gap-3">
+            <Download
               className="h-4 w-4 cursor-pointer text-[#3b82c4] hover:text-[#C72030]"
-              onClick={() => setPreviewRow(item)}
+              onClick={() => handleDownloadReceipt(item)}
+              title="Download Receipt"
             />
-          )
+          </div>
         );
       case "receiptNumber":
         return item.receiptNumber || "-";
