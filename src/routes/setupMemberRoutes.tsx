@@ -1671,6 +1671,14 @@ export const setupMemberRoutes = (
       Component={withSuspense(AccountingCustomSettings)}
     />
     <Route
+      path="/accounting/custom-settings/invoices"
+      Component={withSuspense(AccountingCustomSettings)}
+    />
+    <Route
+      path="/accounting/custom-settings/receipts"
+      Component={withSuspense(AccountingCustomSettings)}
+    />
+    <Route
       path="/accounting/balance-sheet"
       Component={withSuspense(AccountingBalanceSheet)}
     />

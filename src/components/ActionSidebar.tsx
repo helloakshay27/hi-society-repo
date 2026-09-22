@@ -578,13 +578,27 @@ export const ActionSidebar = () => {
     // itself directly navigable.
     const SYNTHETIC_CHILD_LINKS: Record<
       string,
-      { label: string; link: string; actionName: string }
+      { label: string; link: string; actionName: string }[]
     > = {
-      helpdesk: {
-        label: "Helpdesk",
-        link: "/bms/helpdesk",
-        actionName: "helpdesk_main",
-      },
+      helpdesk: [
+        {
+          label: "Helpdesk",
+          link: "/bms/helpdesk",
+          actionName: "helpdesk_main",
+        },
+      ],
+      custom_settings: [
+        {
+          label: "Invoices",
+          link: "/accounting/custom-settings/invoices",
+          actionName: "custom_settings_invoices",
+        },
+        {
+          label: "Receipts",
+          link: "/accounting/custom-settings/receipts",
+          actionName: "custom_settings_receipts",
+        },
+      ],
     };
 
     const injectSyntheticChildren = (node: any): void => {
@@ -592,26 +606,38 @@ export const ActionSidebar = () => {
         .toString()
         .toLowerCase()
         .replace(/[\s-]+/g, "_");
-      const synthetic = SYNTHETIC_CHILD_LINKS[key];
+      const synthetics = SYNTHETIC_CHILD_LINKS[key];
+      // Helpdesk only supplements an existing child; Custom Settings may
+      // arrive as a plain leaf with zero children today, and still needs
+      // both synthetic sub-items to turn it into an expandable group.
+      const canInject =
+        synthetics && (node.children.length > 0 || key === "custom_settings");
 
-      if (synthetic && node.children.length > 0) {
-        const alreadyPresent = node.children.some(
-          (child: any) =>
-            child.react_link === synthetic.link ||
-            (child.action_name || "").toLowerCase() === synthetic.actionName
-        );
+      if (canInject) {
+        // Reversed so the array's declared order ends up first after each
+        // unshift, and matched by label too (not just link/actionName) so we
+        // don't duplicate a real child the API already provides under a
+        // different react_link.
+        for (const synthetic of [...synthetics].reverse()) {
+          const alreadyPresent = node.children.some(
+            (child: any) =>
+              child.react_link === synthetic.link ||
+              (child.action_name || "").toLowerCase() === synthetic.actionName ||
+              (child.function_name || "").toLowerCase() === synthetic.label.toLowerCase()
+          );
 
-        if (!alreadyPresent) {
-          node.children.unshift({
-            function_id: `synthetic-${synthetic.actionName}`,
-            function_name: synthetic.label,
-            action_name: synthetic.actionName,
-            react_link: synthetic.link,
-            parent_function: node.action_name,
-            function_active: 1,
-            sub_functions: [],
-            children: [],
-          });
+          if (!alreadyPresent) {
+            node.children.unshift({
+              function_id: `synthetic-${synthetic.actionName}`,
+              function_name: synthetic.label,
+              action_name: synthetic.actionName,
+              react_link: synthetic.link,
+              parent_function: node.action_name,
+              function_active: 1,
+              sub_functions: [],
+              children: [],
+            });
+          }
         }
       }
 

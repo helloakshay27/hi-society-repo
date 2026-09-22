@@ -1698,6 +1698,15 @@ const modulesByPackage = {
     },
 
     {
+      name: "Custom Settings",
+      icon: Wrench,
+      subItems: [
+        { name: "Invoices", href: "/accounting/custom-settings/invoices" },
+        { name: "Receipts", href: "/accounting/custom-settings/receipts" },
+      ],
+    },
+
+    {
       name: "Reports",
       icon: FileText,
       subItems: [
