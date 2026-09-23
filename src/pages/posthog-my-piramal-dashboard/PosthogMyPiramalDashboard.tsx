@@ -158,11 +158,11 @@ function PosthogMyPiramalDashboardContent() {
 
   const handleSelectPage = (page: PageId) => {
     setActivePage(page);
-    const mainEl = document.querySelector('.posthog-dashboard-root .main');
-    if (mainEl) {
-      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    // The root itself scrolls now (edge-to-edge with the window), not .main.
+    const rootEl = document.querySelector('.posthog-dashboard-root');
+    if (rootEl) {
+      rootEl.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSetRange = (days: number, label: string) => {
@@ -284,6 +284,8 @@ function PosthogMyPiramalDashboardContent() {
         <SideBar
           activePage={activePage}
           onSelectPage={handleSelectPage}
+          filters={filters}
+          sitesSettled={sitesSettled}
         />
 
         <main className="main">
@@ -332,6 +334,13 @@ function PosthogMyPiramalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              subtitle="Measure how effectively residents adopt and engage with the app’s major modules, and whether they keep coming back day over day."
+              questions={[
+                'Which modules and community services receive the highest engagement and adoption?',
+                'Which modules need UX improvements, and where do residents spend the most time?',
+                'Are residents returning to the application, and is retention improving over time?',
+                'How does usage differ between Tower Admins (one tower/wing) and Super Admins (whole society)?',
+              ]}
             />
           )}
 

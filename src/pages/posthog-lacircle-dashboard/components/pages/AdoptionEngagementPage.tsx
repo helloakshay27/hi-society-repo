@@ -1,36 +1,35 @@
-import React, { useState } from 'react';
-import { DashboardFilters } from '../../api/types';
-import { QuestionBox } from '../common/QuestionBox';
-import { KpiTile } from '../common/KpiTile';
-import { Card } from '../common/Card';
-import { LineChart } from '../charts/LineChart';
-import { StackedBarChart } from '../charts/StackedBarChart';
-import { RetentionCohortTable } from '../charts/RetentionCohortTable';
-import { ErrorState, EmptyState } from '../common/DashboardStates';
+import React from 'react';
+import { DashboardFilters } from '../../../posthog-runwal-dashboard/api/types';
+import { QuestionBox } from '../../../posthog-runwal-dashboard/components/common/QuestionBox';
+import { KpiTile } from '../../../posthog-runwal-dashboard/components/common/KpiTile';
+import { Card } from '../../../posthog-runwal-dashboard/components/common/Card';
+import { LineChart } from '../../../posthog-runwal-dashboard/components/charts/LineChart';
+import { StackedBarChart } from '../../../posthog-runwal-dashboard/components/charts/StackedBarChart';
+import { RetentionCohortTable } from '../../../posthog-runwal-dashboard/components/charts/RetentionCohortTable';
+import { ErrorState, EmptyState } from '../../../posthog-runwal-dashboard/components/common/DashboardStates';
 import {
   useAdoptionEngagement,
   useAdoptionTrend,
   useGrowth,
   useRetention,
   useRoles,
-  useLeaseOverview,
-  useEventsOverview,
-  useBroadcastOverview,
-  useWalletOverview,
-  usePendingApprovals,
-  usePendingRequisitionValue,
-  usePrSrSplit,
-  useOverdueInvoices,
-} from '../../hooks/useDashboardAnalytics';
-import { pct, fmtDateShort } from '../../data/constants';
+} from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
+import { pct, fmtDateShort } from '../../../posthog-runwal-dashboard/data/constants';
+
+// Lacircle's Adoption & Engagement page — unlike Runwal's own version of this
+// page, the HTML mockup (Lacircle_Dashboard_v1_FM_structure.html,
+// renderAdoption()) has no Lease/Broadcast/Wallet/Approval/Overdue/
+// Requisition/CRM/Procurement content at all, so this is a local fork that
+// keeps only the PostHog-only Adoption/Retention/Growth/Roles logic (the
+// same five hooks Runwal's page also calls) and drops the FM Matrix
+// CRM/Finance hooks + JSX sections entirely. Tile labels, chart titles and
+// section order below match renderAdoption() in the HTML mock 1:1.
 
 interface AdoptionEngagementPageProps {
   filters: DashboardFilters;
   benchmarks: Record<string, number | null>;
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
-  subtitle?: string;
-  questions?: string[];
 }
 
 function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
@@ -41,66 +40,13 @@ function formatDelta(d: number | null | undefined): { text: string | null; dir: 
   return { text: '0% vs prev', dir: 'flat' };
 }
 
-function renderScalarSummary(data: Record<string, any> | undefined | null) {
-  if (!data || Object.keys(data).length === 0) {
-    return <EmptyState message="No data returned for this module" />;
-  }
-
-  const entries = Object.entries(data).filter(
-    ([, val]) => typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean'
-  );
-
-  if (entries.length === 0) {
-    return <EmptyState message="No summary metrics found" />;
-  }
-
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginTop: '6px' }}>
-      {entries.map(([key, val]) => {
-        const formattedKey = key
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (c) => c.toUpperCase());
-        const displayVal =
-          typeof val === 'number'
-            ? val.toLocaleString()
-            : typeof val === 'boolean'
-            ? val ? 'Yes' : 'No'
-            : String(val);
-
-        return (
-          <div
-            key={key}
-            style={{
-              padding: '8px 10px',
-              background: 'var(--surface-2)',
-              borderRadius: 'var(--r-xs)',
-              border: '1px solid var(--border)',
-            }}
-          >
-            <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '3px' }}>
-              {formattedKey}
-            </div>
-            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>
-              {displayVal}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   filters,
   benchmarks,
   onBenchmarkChange,
   sitesSettled = true,
-  subtitle,
-  questions,
 }) => {
-  const [opsTab, setOpsTab] = useState<'crm' | 'finance'>('crm');
-
-  // PostHog Adoption Hooks
+  // PostHog Adoption Hooks — the only data sources this page needs.
   const {
     data: adoptData,
     isLoading: isAdoptLoading,
@@ -140,72 +86,6 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     error: rolesError,
     refetch: refetchRoles,
   } = useRoles(filters, sitesSettled);
-
-  // FM Matrix CRM Hooks
-  const {
-    data: leaseData,
-    isLoading: isLeaseLoading,
-    isError: isLeaseError,
-    error: leaseError,
-    refetch: refetchLease,
-  } = useLeaseOverview(filters, sitesSettled);
-
-  const {
-    data: eventsData,
-    isLoading: isEventsLoading,
-    isError: isEventsError,
-    error: eventsError,
-    refetch: refetchEvents,
-  } = useEventsOverview(filters, sitesSettled);
-
-  const {
-    data: broadcastData,
-    isLoading: isBroadcastLoading,
-    isError: isBroadcastError,
-    error: broadcastError,
-    refetch: refetchBroadcast,
-  } = useBroadcastOverview(filters, sitesSettled);
-
-  const {
-    data: walletData,
-    isLoading: isWalletLoading,
-    isError: isWalletError,
-    error: walletError,
-    refetch: refetchWallet,
-  } = useWalletOverview(filters, sitesSettled);
-
-  // FM Matrix Finance Hooks
-  const {
-    data: approvalsData,
-    isLoading: isApprovalsLoading,
-    isError: isApprovalsError,
-    error: approvalsError,
-    refetch: refetchApprovals,
-  } = usePendingApprovals(filters, sitesSettled);
-
-  const {
-    data: pendingValData,
-    isLoading: isPendingValLoading,
-    isError: isPendingValError,
-    error: pendingValError,
-    refetch: refetchPendingVal,
-  } = usePendingRequisitionValue(filters, sitesSettled);
-
-  const {
-    data: prSrData,
-    isLoading: isPrSrLoading,
-    isError: isPrSrError,
-    error: prSrError,
-    refetch: refetchPrSr,
-  } = usePrSrSplit(filters, sitesSettled);
-
-  const {
-    data: overdueData,
-    isLoading: isOverdueLoading,
-    isError: isOverdueError,
-    error: overdueError,
-    refetch: refetchOverdue,
-  } = useOverdueInvoices(filters, sitesSettled);
 
   // Seat Utilisation
   const seatUtilVal = adoptData?.seat_utilisation?.value;
@@ -290,18 +170,17 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <div className="section-head">
         <h2>Adoption &amp; Engagement</h2>
         <span className="sd">
-          {subtitle || 'Measure customer adoption, cohort retention, module breadth, and connected FM Matrix operations.'}
+          Measure how effectively residents adopt and engage with the app&rsquo;s major modules, and whether they
+          keep coming back day over day.
         </span>
       </div>
 
       <QuestionBox
-        questions={
-          questions || [
-            'Which modules and features receive the highest adoption across booked homebuyers?',
-            'Are new cohorts continuing to return over 8 weeks?',
-            'How are resident CRM operations and procurement metrics tracking for live sites?',
-          ]
-        }
+        questions={[
+          'Which modules and community services receive the highest engagement and adoption?',
+          'Which modules need UX improvements, and where do residents spend the most time?',
+          'Are residents returning to the application, and is retention improving over time?',
+        ]}
       />
 
       {isAdoptError && (
@@ -314,7 +193,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         </div>
       )}
 
-      <div className="tiles" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: '16px' }}>
+      <div className="tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginTop: '16px' }}>
         <KpiTile
           id="seatUtil"
           infoKey="A1"
@@ -322,7 +201,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           val={seatUtilDisplay}
           dir={seatUtilDelta.dir}
           delta={seatUtilDelta.text}
-          sub="active ÷ registered users"
+          sub="active ÷ registered residents"
           raw={seatUtilVal != null ? (seatUtilVal <= 1 ? seatUtilVal * 100 : seatUtilVal) : undefined}
           unit="%"
           goodUp={true}
@@ -337,7 +216,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           val={stickinessDisplay}
           dir={stickinessDelta.dir}
           delta={stickinessDelta.text}
-          sub="average DAU / MAU"
+          sub="avg DAU/MAU"
           raw={stickinessVal != null ? (stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal) : undefined}
           unit="%"
           goodUp={true}
@@ -352,7 +231,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           val={adoptTrendDisplay}
           dir={adoptTrendVal && adoptTrendVal > 0 ? 'up' : adoptTrendVal && adoptTrendVal < 0 ? 'dn' : 'flat'}
           delta="vs prior 8 weeks"
-          sub="weekly active users trend"
+          sub="weekly active users"
           noTarget={true}
           isLoading={isAdoptLoading || isTrendLoading}
         />
@@ -363,7 +242,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           val={activationDisplay}
           dir={activationDelta.dir}
           delta={activationDelta.text}
-          sub="activated within 14 days"
+          sub="of new bookings"
           raw={activationVal != null ? (activationVal <= 1 ? activationVal * 100 : activationVal) : undefined}
           unit="%"
           goodUp={true}
@@ -378,7 +257,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           val={moduleBreadthDisplay}
           dir="flat"
           delta={null}
-          sub="distinct modules used"
+          sub="modules used this period"
           noTarget={true}
           isLoading={isAdoptLoading}
         />
@@ -388,8 +267,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         id="card-adoptionTrend"
         infoKey="chart.adoptionTrend"
         eyebrow="Trend · Live 8-week PostHog data"
-        title="Adoption trend (weekly active users, last 8 weeks)"
-        purpose="Weekly active users over the last 8 weeks from PostHog adoption_trend endpoint."
+        title="Adoption trend (weekly active residents, last 8 weeks)"
+        purpose="Weekly active residents over the last 8 weeks — the trend line behind the Adoption Trend tile above."
         style={{ marginTop: '12px' }}
       >
         {isTrendError ? (
@@ -403,7 +282,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             Loading 8-week adoption trend...
           </div>
         ) : trendSeriesCurrent.length === 0 ? (
-          <EmptyState message="No weekly active user data for this period" />
+          <EmptyState message="No weekly active resident data for this period" />
         ) : (
           <>
             <LineChart
@@ -413,12 +292,12 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               color="var(--chart-blue)"
               fill="var(--chart-fill)"
               showPrev={weeklyPrevious.length > 0}
-              curLabel="Current WAU"
+              curLabel="Weekly active residents"
               prevLabel="Prior 8W WAU"
             />
             <div className="legend">
               <span>
-                <i style={{ background: 'var(--chart-blue)' }}></i> Current WAU
+                <i style={{ background: 'var(--chart-blue)' }}></i> Weekly active residents
               </span>
               {weeklyPrevious.length > 0 && (
                 <span>
@@ -436,7 +315,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           infoKey="chart.growth"
           eyebrow="Growth accounting · Last 6 weeks"
           title="New · Returning · Resurrecting · Dormant"
-          purpose="Breaks the active base into new signups, retained users, resurrected accounts, and dormant users."
+          purpose="Breaks the active base into new signups, retained users, win-backs and users going quiet."
         >
           {isGrowthError ? (
             <ErrorState
@@ -482,9 +361,9 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         <Card
           id="card-retentionCohort"
           infoKey="chart.retention"
-          eyebrow="Retention · Weekly cohorts"
-          title="Cohort retention analysis"
-          purpose="Percentage of users in each weekly signup cohort who remain active over subsequent weeks."
+          eyebrow="Retention · weekly cohorts"
+          title="Do new users keep coming back?"
+          purpose="Each row = residents first active that week; cells = % of that cohort still active N weeks later."
         >
           {isRetentionError ? (
             <ErrorState
@@ -506,9 +385,9 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         <Card
           id="card-roleSplit"
           infoKey="chart.roles"
-          eyebrow="Adoption by role / audience"
-          title="User roles distribution"
-          purpose="Active share and user counts by role from PostHog roles API."
+          eyebrow="Adoption by role"
+          title="Who is (and isn't) using the app"
+          purpose="Active users ÷ registered users, split by the role property stamped on every event."
         >
           {isRolesError ? (
             <ErrorState
@@ -552,8 +431,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           id="card-dormant"
           infoKey="chart.dormant"
           eyebrow="Dormant users"
-          title="Inactive account summary"
-          purpose="Customers with no activity in the dormancy window from PostHog."
+          title="Dormant users"
+          purpose="Registered residents/admins with no activity in the last 14 days — out of scope for the 14-Day Activation tile above."
         >
           {isAdoptError ? (
             <ErrorState
@@ -568,8 +447,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           ) : (
             <div className="kv">
               <div>
-                <div className="k">Dormant Users</div>
-                <div className="v" style={{ fontSize: '24px' }}>
+                <div className="k">Dormant residents</div>
+                <div className="v" style={{ fontSize: '22px' }}>
                   {dormantCount != null ? dormantCount.toLocaleString() : '—'}
                 </div>
                 <div className="u">{dormantBand}</div>
@@ -578,167 +457,6 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           )}
         </Card>
       </div>
-
-      {/* FM Matrix CRM & Operations Card Section */}
-      {/* <div style={{ marginTop: '24px', marginBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>
-            FM Matrix Operational Analytics
-          </h3>
-          <div className="charttabs">
-            <button
-              type="button"
-              className={opsTab === 'crm' ? 'on' : ''}
-              onClick={() => setOpsTab('crm')}
-            >
-              CRM &amp; Resident
-            </button>
-            <button
-              type="button"
-              className={opsTab === 'finance' ? 'on' : ''}
-              onClick={() => setOpsTab('finance')}
-            >
-              Finance &amp; Procurement
-            </button>
-          </div>
-        </div>
-
-        {opsTab === 'crm' && (
-          <div className="grid2">
-            <Card
-              id="card-leaseOverview"
-              infoKey="crm.leases"
-              eyebrow="FM Matrix CRM"
-              title="Lease & Occupancy"
-              purpose="Live lease metrics from /fm_dashboard/crm/lease_overview.json."
-            >
-              {isLeaseError ? (
-                <ErrorState title="Failed to load lease metrics" error={leaseError} onRetry={() => refetchLease()} />
-              ) : isLeaseLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(leaseData)
-              )}
-            </Card>
-
-            <Card
-              id="card-eventsOverview"
-              infoKey="crm.events"
-              eyebrow="FM Matrix CRM"
-              title="Community Events"
-              purpose="Live events overview from /fm_dashboard/crm/events_overview.json."
-            >
-              {isEventsError ? (
-                <ErrorState title="Failed to load events metrics" error={eventsError} onRetry={() => refetchEvents()} />
-              ) : isEventsLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(eventsData)
-              )}
-            </Card>
-
-            <Card
-              id="card-broadcastOverview"
-              infoKey="crm.broadcasts"
-              eyebrow="FM Matrix CRM"
-              title="Broadcasts & Notices"
-              purpose="Live broadcast reach from /fm_dashboard/crm/broadcast_overview.json."
-            >
-              {isBroadcastError ? (
-                <ErrorState title="Failed to load broadcast metrics" error={broadcastError} onRetry={() => refetchBroadcast()} />
-              ) : isBroadcastLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(broadcastData)
-              )}
-            </Card>
-
-            <Card
-              id="card-walletOverview"
-              infoKey="crm.wallets"
-              eyebrow="FM Matrix CRM"
-              title="Loyalty Wallet"
-              purpose="Resident points balance from /fm_dashboard/crm/wallet_overview.json."
-            >
-              {isWalletError ? (
-                <ErrorState title="Failed to load wallet metrics" error={walletError} onRetry={() => refetchWallet()} />
-              ) : isWalletLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(walletData)
-              )}
-            </Card>
-          </div>
-        )}
-
-        {opsTab === 'finance' && (
-          <div className="grid2">
-            <Card
-              id="card-pendingVal"
-              infoKey="fin.requisition_value"
-              eyebrow="FM Matrix Finance"
-              title="Pending Requisition Value"
-              purpose="Value of pending requisitions from /fm_dashboard/requisitions/pending_value.json."
-            >
-              {isPendingValError ? (
-                <ErrorState title="Failed to load requisition value" error={pendingValError} onRetry={() => refetchPendingVal()} />
-              ) : isPendingValLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(pendingValData)
-              )}
-            </Card>
-
-            <Card
-              id="card-pendingApprovals"
-              infoKey="fin.approvals"
-              eyebrow="FM Matrix Finance"
-              title="Pending Approvals"
-              purpose="Total items pending approval from /fm_dashboard/procurement/pending_approvals.json."
-            >
-              {isApprovalsError ? (
-                <ErrorState title="Failed to load approvals" error={approvalsError} onRetry={() => refetchApprovals()} />
-              ) : isApprovalsLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(approvalsData)
-              )}
-            </Card>
-
-            <Card
-              id="card-prSrSplit"
-              infoKey="fin.pr_sr_split"
-              eyebrow="FM Matrix Finance"
-              title="PR vs SR Split"
-              purpose="Material PR to Service Request ratio from /fm_dashboard/procurement/pr_sr_split.json."
-            >
-              {isPrSrError ? (
-                <ErrorState title="Failed to load PR/SR split" error={prSrError} onRetry={() => refetchPrSr()} />
-              ) : isPrSrLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(prSrData)
-              )}
-            </Card>
-
-            <Card
-              id="card-overdueInvoices"
-              infoKey="fin.overdue_invoices"
-              eyebrow="FM Matrix Finance"
-              title="Overdue Invoices"
-              purpose="Aging invoices from /fm_dashboard/invoices/overdue_invoices.json."
-            >
-              {isOverdueError ? (
-                <ErrorState title="Failed to load overdue invoices" error={overdueError} onRetry={() => refetchOverdue()} />
-              ) : isOverdueLoading ? (
-                <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading...</div>
-              ) : (
-                renderScalarSummary(overdueData)
-              )}
-            </Card>
-          </div>
-        )}
-      </div> */}
     </section>
   );
 };

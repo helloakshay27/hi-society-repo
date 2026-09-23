@@ -7,6 +7,7 @@ import { Footer } from './components/Footer';
 import { TrafficSection } from './sections/TrafficSection';
 import { AdoptionSection } from './sections/AdoptionSection';
 import { WorkflowSection } from './sections/WorkflowSection';
+import { useEnsureAppId } from '../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId';
 import type { ActivePage } from './data/types';
 
 const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
@@ -50,10 +51,10 @@ function DashboardLayout() {
       <div className="shell">
         <aside className="sidebar">
           <h1 className="brandmark">
-            <span className="bm-full">Quickgate</span>
+            <span className="bm-full">QuikGate</span>
             <span className="bm-mini">QG</span>
           </h1>
-          <p className="brandmark-sub">Quickgate &middot; Gatekeeper &amp; Security App</p>
+          <p className="brandmark-sub">QuikGate &middot; flutter_quikgate</p>
           <nav aria-label="Sections">
             <div className="nav-group">
               <div className="nav-label">Layers</div>
@@ -94,12 +95,21 @@ function DashboardLayout() {
   );
 }
 
-export function QuickgateDashboardPage() {
+const QUIKGATE_APP_ID = '23';
+
+function QuickgateDashboardGate() {
+  const appIdReady = useEnsureAppId(QUIKGATE_APP_ID);
+  if (!appIdReady) return null;
+
   return (
-    <DashboardProvider appId="23" appName="QuikGate">
+    <DashboardProvider appId={QUIKGATE_APP_ID} appName="QuikGate">
       <DashboardLayout />
     </DashboardProvider>
   );
+}
+
+export function QuickgateDashboardPage() {
+  return <QuickgateDashboardGate />;
 }
 
 export default QuickgateDashboardPage;

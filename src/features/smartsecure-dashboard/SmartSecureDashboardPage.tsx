@@ -10,6 +10,7 @@ import { Footer } from "./components/Footer";
 import { TrafficSection } from "./sections/TrafficSection";
 import { AdoptionSection } from "./sections/AdoptionSection";
 import { WorkflowSection } from "./sections/WorkflowSection";
+import { useEnsureAppId } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId";
 import type { ActivePage } from "./data/types";
 
 const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
@@ -128,12 +129,21 @@ function DashboardLayout() {
   );
 }
 
-export function SmartSecureDashboardPage() {
+const SMARTSECURE_APP_ID = "39";
+
+function SmartSecureDashboardGate() {
+  const appIdReady = useEnsureAppId(SMARTSECURE_APP_ID);
+  if (!appIdReady) return null;
+
   return (
-    <DashboardProvider appId="39" appName="SmartSecure">
+    <DashboardProvider appId={SMARTSECURE_APP_ID} appName="SmartSecure">
       <DashboardLayout />
     </DashboardProvider>
   );
+}
+
+export function SmartSecureDashboardPage() {
+  return <SmartSecureDashboardGate />;
 }
 
 export default SmartSecureDashboardPage;

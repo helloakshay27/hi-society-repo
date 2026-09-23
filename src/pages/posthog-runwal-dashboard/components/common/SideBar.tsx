@@ -1,19 +1,23 @@
 import React from 'react';
 import { PageId } from '../../types';
+import { DashboardFilters } from '../../api/types';
+import { RecentActivitySidebar } from './RecentActivitySidebar';
 
 interface SideBarProps {
   activePage: PageId;
   onSelectPage: (page: PageId) => void;
+  filters: DashboardFilters;
+  sitesSettled?: boolean;
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) => {
+export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage, filters, sitesSettled }) => {
   return (
     <aside className="sidebar">
       <h1 className="brandmark">
         <span className="bm-full">Runwal</span>
         <span className="bm-mini">RW</span>
       </h1>
-      <p className="brandmark-sub">Phygital.work</p>
+      <p className="brandmark-sub">Runwal Realty · flutter_resident app</p>
 
       <nav aria-label="Sections">
         <div className="nav-group">
@@ -90,6 +94,8 @@ export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) =>
           </button>
         </div>
       </nav>
+
+      <RecentActivitySidebar filters={filters} sitesSettled={sitesSettled} />
     </aside>
   );
 };

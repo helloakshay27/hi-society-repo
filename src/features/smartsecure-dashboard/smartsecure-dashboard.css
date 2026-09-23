@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap');
+
 /* ============================================================
    SmartSecure · Analytics Dashboard
    Ported verbatim from SmartSecure_Dashboard_v1_FM_structure_1.html's
@@ -60,7 +62,7 @@
   --r:12px; --r-sm:8px; --r-xs:6px;
   --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --font-serif:'Newsreader','Tiempos Headline',Georgia,'Times New Roman',serif;
-  --sidebar-w:252px;
+  --sidebar-w:300px;
   --sidebar-rail:64px;
   --topbar-h:56px;
 }
@@ -175,9 +177,14 @@ html[data-ss-theme="dark"]{
   position:sticky;top:var(--topbar-h);
   height:calc(100vh - var(--topbar-h));overflow-y:auto;overflow-x:hidden;
   padding:34px 14px 48px 26px;
+  border-right:none !important;
+}
+.ss-app .brandmark,
+.ss-app .brandmark span{
+  font-family:'Newsreader', Georgia, 'Times New Roman', serif;
 }
 .ss-app .brandmark{
-  font-family:var(--font-serif);font-size:26px;font-weight:400;
+  font-size:28px;font-weight:400;
   letter-spacing:-.012em;line-height:1.15;margin:0 0 4px;padding-left:10px;color:var(--ink);
   white-space:nowrap;
 }

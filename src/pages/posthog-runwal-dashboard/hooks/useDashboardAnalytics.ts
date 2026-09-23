@@ -15,6 +15,7 @@ import {
   fetchRoles,
   fetchModules,
   fetchWorkflowUsage,
+  fetchRecentActiveUsers,
   fetchAllowedSites,
   fetchUserAccountSiteId,
   fetchLeaseOverview,
@@ -43,6 +44,7 @@ import {
   RolesResponse,
   ModulesResponse,
   WorkflowUsageResponse,
+  RecentActiveUsersResponse,
   SiteLookupItem,
   LeaseOverviewData,
   EventsOverviewData,
@@ -203,6 +205,16 @@ export function useRoles(filters: DashboardFilters, enabled: boolean = true) {
   return useQuery<RolesResponse>({
     queryKey: ['fm-adoption', 'roles', ...commonKey(filters)],
     queryFn: () => fetchRoles(filters),
+    enabled,
+    ...CACHE_CONFIG,
+  });
+}
+
+/** Sidebar "Recent Activity" feed — latest identified active users, most recent first. */
+export function useRecentActiveUsers(filters: DashboardFilters, enabled: boolean = true, limit = 10) {
+  return useQuery<RecentActiveUsersResponse>({
+    queryKey: ['fm-adoption', 'recent_active_users', ...commonKey(filters), limit],
+    queryFn: () => fetchRecentActiveUsers(filters, limit),
     enabled,
     ...CACHE_CONFIG,
   });
