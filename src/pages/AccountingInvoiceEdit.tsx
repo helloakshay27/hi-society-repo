@@ -238,6 +238,7 @@ const AccountingInvoiceEdit: React.FC = () => {
   const [loadingBill, setLoadingBill] = useState(true);
 
   const [billNumber, setBillNumber] = useState("");
+  const [autoGenerateBillNumber, setAutoGenerateBillNumber] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [billCycleId, setBillCycleId] = useState("");
   const [billFrequency, setBillFrequency] = useState("");
@@ -282,6 +283,7 @@ const AccountingInvoiceEdit: React.FC = () => {
         setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
         setResidentTypeOptions(normalizeOptions(data.resident_types));
         setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
+        setAutoGenerateBillNumber(Boolean(data.auto_generate));
       } catch (error) {
         console.error("Error fetching invoice form options:", error);
         toast.error("Failed to load invoice form options");
@@ -575,7 +577,7 @@ const AccountingInvoiceEdit: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!billNumber.trim()) {
+    if (!autoGenerateBillNumber && !billNumber.trim()) {
       toast.error("Bill Number is required.");
       return;
     }
@@ -599,7 +601,7 @@ const AccountingInvoiceEdit: React.FC = () => {
     const payload = {
       lock_account_id: Number(lockAccountId),
       lock_account_bill: {
-        bill_number: billNumber,
+        ...(autoGenerateBillNumber ? {} : { bill_number: billNumber }),
         ledger_id: Number(unitId),
         society_id: Number(societyId) || undefined,
         due_date: dueDate,
@@ -673,18 +675,20 @@ const AccountingInvoiceEdit: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <SectionCard title="Editing Invoice">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-              <TextField
-                label="Bill Number"
-                required
-                placeholder="Enter bill number"
-                value={billNumber}
-                onChange={(e) => setBillNumber(e.target.value)}
-                variant="outlined"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                InputProps={{ notched: true }}
-                sx={{ "& .MuiInputBase-root": fieldStyles }}
-              />
+              {!autoGenerateBillNumber && (
+                <TextField
+                  label="Bill Number"
+                  required
+                  placeholder="Enter bill number"
+                  value={billNumber}
+                  onChange={(e) => setBillNumber(e.target.value)}
+                  variant="outlined"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ notched: true }}
+                  sx={{ "& .MuiInputBase-root": fieldStyles }}
+                />
+              )}
               <TextField
                 label="Due Date"
                 required
