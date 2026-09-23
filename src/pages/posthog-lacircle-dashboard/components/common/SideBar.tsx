@@ -1,7 +1,7 @@
 import React from 'react';
-import { PageId } from '../../types';
-import { DashboardFilters } from '../../api/types';
-import { RecentActivitySidebar } from './RecentActivitySidebar';
+import { PageId } from '../../../posthog-runwal-dashboard/types';
+import { DashboardFilters } from '../../../posthog-runwal-dashboard/api/types';
+import { RecentActivitySidebar } from '../../../posthog-runwal-dashboard/components/common/RecentActivitySidebar';
 
 interface SideBarProps {
   activePage: PageId;
@@ -10,18 +10,23 @@ interface SideBarProps {
   sitesSettled?: boolean;
 }
 
+// Brandmark, subtitle and nav copy match the HTML mockup
+// (Lacircle_Dashboard_v1_FM_structure.html) verbatim — see the <aside
+// class="sidebar"> block around line 706. Icons are the same three
+// Traffic/Adoption/Workflow SVGs already used by every other tenant
+// dashboard in this family (Runwal, Godrej, Kraheja).
 export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage, filters, sitesSettled }) => {
   return (
     <aside className="sidebar">
       <h1 className="brandmark">
-        <span className="bm-full">Runwal</span>
-        <span className="bm-mini">RW</span>
+        <span className="bm-full">LACIRCLE</span>
+        <span className="bm-mini">LC</span>
       </h1>
-      <p className="brandmark-sub">Phygital.work</p>
+      <p className="brandmark-sub">LACIRCLE · resident_rustomjee app</p>
 
       <nav aria-label="Sections">
         <div className="nav-group">
-          <div className="nav-label">Analytics Modules</div>
+          <div className="nav-label">Layers</div>
           <button
             type="button"
             className={`nav-item ${activePage === 'pgTraffic' ? 'on' : ''}`}

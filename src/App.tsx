@@ -944,6 +944,7 @@ const PosthogRunwalDashboard = lazy(() => import("./pages/posthog-runwal-dashboa
 const PosthogRunwalCpDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalCpDashboard"));
 const PosthogGodrejDashboard = lazy(() => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard"));
 const PosthogKRahejaDashboard = lazy(() => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard"));
+const PosthogLacircleDashboard = lazy(() => import("./pages/posthog-lacircle-dashboard/PosthogLacircleDashboard"));
 const ViewUserPage = lazy(() => import("./pages/ViewUserPage").then(m => ({ default: m.ViewUserPage })));
 const FioutMobileView = lazy(() => import("./pages/FioutMobileView"));
 const FitoutRequestDetailsPageMobile = lazy(() => import("./pages/FitoutRequestDetailsPageMobile"));
@@ -1647,6 +1648,10 @@ function App() {
                       <Route
                         path="/posthog-kraheja-dashboard"
                         element={<PosthogKRahejaDashboard />}
+                      />
+                      <Route
+                        path="/posthog-lacircle-dashboard"
+                        element={<PosthogLacircleDashboard />}
                       />
                       <Route
                         path="/smartsecure-dashboard"

@@ -206,6 +206,34 @@ export interface WorkflowUsageResponse {
   entry_screens: EntryScreenItem[];
 }
 
+/** One row from `recent_active_users` — a currently/recently active identified user. */
+export interface RecentActiveUser {
+  user_id: string | null;
+  user_name: string | null;
+  /** name → email local part → `user <id>` → `anonymous`, whichever is available first. */
+  display_name: string;
+  email: string | null;
+  /** `$pathname` on web, `screen` on apps. */
+  path: string | null;
+  last_event: string | null;
+  /** IST. */
+  last_seen: string | null;
+  minutes_ago: number | null;
+  user_role: string | null;
+  site_id: string | null;
+  site_name: string | null;
+  device_type: string | null;
+  os: string | null;
+  distinct_id?: string | null;
+  events: number | null;
+  sessions: number | null;
+}
+
+export interface RecentActiveUsersResponse {
+  meta: AdoptionMeta;
+  users: RecentActiveUser[];
+}
+
 // ==========================================
 // 2. FM Matrix CRM & Finance Response Types
 // ==========================================
