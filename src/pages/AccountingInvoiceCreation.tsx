@@ -268,7 +268,7 @@ const AccountingInvoiceCreation: React.FC = () => {
         setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
         setResidentTypeOptions(normalizeOptions(data.resident_types));
         setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
-        setAutoGenerateBillNumber(Boolean(data.auto_generate));
+        setAutoGenerateBillNumber(Boolean(data.bill_number_setting.auto_generate));
       } catch (error) {
         console.error("Error fetching invoice form options:", error);
         toast.error("Failed to load invoice form options");

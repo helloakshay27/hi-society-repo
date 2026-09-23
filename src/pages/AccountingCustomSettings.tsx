@@ -67,6 +67,16 @@ const pick = (obj: any, ...keys: string[]): any => {
   return undefined;
 };
 
+// The logo field comes back as either a plain URL string or an
+// { id, url } object (confirmed via a runtime "object with keys {id, url}"
+// render error) — normalize either shape down to just the URL string.
+const pickUrlString = (value: any): string => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object") return String(value.url ?? value.logo_url ?? "");
+  return "";
+};
+
 const mapApiAddress = (item: any): DocAddress => ({
   id: String(pick(item, "id") ?? `${Date.now()}-${Math.random()}`),
   title: pick(item, "title", "address_title", "name") ?? "",
@@ -260,7 +270,7 @@ const AccountingCustomSettings: React.FC = () => {
 
         setExistingLogoUrl((prev) => ({
           ...prev,
-          [activeTab]: pick(payload, "logo_url", "logo", "logo_path") ?? "",
+          [activeTab]: pickUrlString(pick(payload, "logo_url", "logo", "logo_path")),
         }));
 
         setOnlinePaymentAllowed(
@@ -349,10 +359,10 @@ const AccountingCustomSettings: React.FC = () => {
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setExistingLogoUrl((prev) => ({
-        ...prev,
-        [activeTab]: pick(response.data, "logo_url", "logo", "logo_path") ?? prev[activeTab],
-      }));
+      setExistingLogoUrl((prev) => {
+        const picked = pick(response.data, "logo_url", "logo", "logo_path");
+        return { ...prev, [activeTab]: picked ? pickUrlString(picked) : prev[activeTab] };
+      });
       toast.success("Logo updated successfully");
     } catch (error) {
       console.error("Error uploading logo:", error);
