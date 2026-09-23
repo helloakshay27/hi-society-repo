@@ -27,8 +27,8 @@ interface FlatOption {
 }
 
 const POSSESSION_OPTIONS = [
-  { value: "true", label: "Possessed" },
-  { value: "false", label: "Not Possessed" },
+  { value: "true", label: "Possession Done" },
+  { value: "false", label: "Possession Not Done" },
 ];
 
 const pickList = (data: Record<string, unknown> | undefined, keys: string[]): unknown[] => {

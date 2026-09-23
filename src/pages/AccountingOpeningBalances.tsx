@@ -103,6 +103,7 @@ const AccountingOpeningBalances: React.FC = () => {
   );
 
   const handleValueChange = (ledgerId: number, field: "debit" | "credit", value: string) => {
+    if (value.startsWith("-")) return;
     if (value !== "" && Number.isNaN(Number(value))) return;
     setValues((prev) => ({
       ...prev,
@@ -253,6 +254,7 @@ const AccountingOpeningBalances: React.FC = () => {
                     min={0}
                     value={values[ledger.id]?.debit || ""}
                     onChange={(e) => handleValueChange(ledger.id, "debit", e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
                     className="h-9 text-right"
                   />
                 </div>
@@ -262,6 +264,7 @@ const AccountingOpeningBalances: React.FC = () => {
                     min={0}
                     value={values[ledger.id]?.credit || ""}
                     onChange={(e) => handleValueChange(ledger.id, "credit", e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
                     className="h-9 text-right"
                   />
                 </div>

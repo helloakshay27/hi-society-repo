@@ -3,9 +3,9 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import TextField from "@mui/material/TextField";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, CalendarDays } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 // Real response shape returned by GET /lock_account_ledgers/:id
 interface LedgerDetailAPI {
@@ -151,35 +151,39 @@ const AccountingLedgerDetails: React.FC = () => {
         {ledger?.name || "Ledger"}
       </h1>
 
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="flex items-center gap-2 rounded border border-[#ddd] px-3 h-10">
-          <CalendarDays className="h-4 w-4 text-gray-500" />
-          <Input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="h-8 border-0 shadow-none px-0 w-[130px] focus-visible:ring-0 focus-visible:outline-none"
-          />
-          <span className="text-gray-400">-</span>
-          <Input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="h-8 border-0 shadow-none px-0 w-[130px] focus-visible:ring-0 focus-visible:outline-none"
-          />
-        </div>
+      <div className="flex flex-wrap items-end gap-3 mb-6">
+        <TextField
+          label="From Date"
+          type="date"
+          name="fromDate"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          size="small"
+          sx={{ width: 200 }}
+        />
+        <TextField
+          label="To Date"
+          type="date"
+          name="toDate"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          size="small"
+          sx={{ width: 200 }}
+        />
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-[#C72030] hover:bg-[#B8252F] text-white h-10 px-6"
+          className="bg-[#C72030] hover:bg-[#A01020] text-white h-[40px] px-6"
         >
-          Submit
+          View
         </Button>
         <Button
           onClick={handleReset}
           disabled={loading}
           variant="outline"
-          className="h-10 px-6"
+          className="h-[40px] px-6"
         >
           Reset
         </Button>

@@ -243,6 +243,10 @@ const AccountingBillCycleEdit: React.FC = () => {
       toast.error("Start Date and End Date are required");
       return;
     }
+    if (form.endDate < form.startDate) {
+      toast.error("End Date cannot be before Start Date");
+      return;
+    }
     if (!form.frequency) {
       toast.error("Bill Cycle Frequency is required");
       return;
@@ -318,7 +322,13 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="date"
                 placeholder="Select Start Date"
                 value={form.startDate}
-                onChange={(e) => updateField("startDate", e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  updateField("startDate", value);
+                  if (form.endDate && value > form.endDate) {
+                    updateField("endDate", value);
+                  }
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
@@ -336,6 +346,7 @@ const AccountingBillCycleEdit: React.FC = () => {
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: form.startDate || undefined }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <TextField
@@ -344,11 +355,15 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="number"
                 placeholder="Enter Days"
                 value={form.paymentDueDays}
-                onChange={(e) => updateField("paymentDueDays", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("paymentDueDays", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: 0, onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <FormControl fullWidth required sx={{ "& .MuiInputBase-root": fieldStyles }}>
@@ -393,11 +408,15 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="number"
                 placeholder={isPercentageType(form.fineType) ? "Enter Fine Percentage" : "Enter Fine Amount"}
                 value={form.fineRate}
-                onChange={(e) => updateField("fineRate", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("fineRate", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: 0, step: "0.01", onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
@@ -422,11 +441,15 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="number"
                 placeholder={isPercentageType(form.interestType) ? "Enter Interest Percentage" : "Enter Interest Amount"}
                 value={form.interestRate}
-                onChange={(e) => updateField("interestRate", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("interestRate", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: 0, step: "0.01", onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
             </div>
