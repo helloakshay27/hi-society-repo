@@ -326,7 +326,7 @@ const AccountingTaxSetup: React.FC = () => {
           </div>
           <div className="flex flex-col gap-4">
             {/* Composition Scheme */}
-            <div>
+            {/* <div>
               <div className="block text-sm font-semibold text-gray-700 mb-1">Composition Scheme</div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -340,10 +340,10 @@ const AccountingTaxSetup: React.FC = () => {
                   My business is registered for Composition Scheme.
                 </label>
               </div>
-            </div>
+            </div> */}
 
             {/* Reverse Charge */}
-            <div>
+            {/* <div>
               <div className="block text-sm font-semibold text-gray-700 mb-1">Reverse Charge</div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -357,7 +357,7 @@ const AccountingTaxSetup: React.FC = () => {
                   Enable Reverse Charge in Sales transactions
                 </label>
               </div>
-            </div>
+            </div> */}
 
             {/* Overseas Trading */}
             <div>

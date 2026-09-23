@@ -283,11 +283,15 @@ const AccountingChargeEdit: React.FC = () => {
                 type="number"
                 placeholder="Enter Igst Rate"
                 value={form.igstRate}
-                onChange={(e) => updateField("igstRate", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("igstRate", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
               InputProps={{ notched: true }}
+                inputProps={{ min: 0, step: "0.01", onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <TextField
@@ -295,11 +299,15 @@ const AccountingChargeEdit: React.FC = () => {
                 type="number"
                 placeholder="Enter Cgst Rate"
                 value={form.cgstRate}
-                onChange={(e) => updateField("cgstRate", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("cgstRate", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
               InputProps={{ notched: true }}
+                inputProps={{ min: 0, step: "0.01", onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <TextField
@@ -307,11 +315,15 @@ const AccountingChargeEdit: React.FC = () => {
                 type="number"
                 placeholder="Enter Sgst Rate"
                 value={form.sgstRate}
-                onChange={(e) => updateField("sgstRate", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("sgstRate", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
               InputProps={{ notched: true }}
+                inputProps={{ min: 0, step: "0.01", onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
             </div>
