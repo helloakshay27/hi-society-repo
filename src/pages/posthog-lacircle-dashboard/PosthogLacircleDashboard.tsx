@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-// Everything below except TopBar/SideBar is brand-agnostic — reused directly
-// from the Runwal dashboard rather than duplicated, so chart/table/page logic
-// has a single source of truth across all tenant dashboards.
+// Everything below except TopBar/SideBar/AdoptionEngagementPage is
+// brand-agnostic — reused directly from the Runwal dashboard rather than
+// duplicated, so chart/table/page logic has a single source of truth across
+// all tenant dashboards (same pattern as posthog-godrej-dashboard).
 import { PageId, DevicePlatform } from '../posthog-runwal-dashboard/types';
 import { BM_DEFAULTS } from '../posthog-runwal-dashboard/data/constants';
 import { DashboardProvider } from '../posthog-runwal-dashboard/context/DashboardContext';
@@ -10,18 +11,22 @@ import { InfoPopover } from '../posthog-runwal-dashboard/components/common/InfoP
 import { TopBar } from './components/common/TopBar';
 import { SideBar } from './components/common/SideBar';
 import { FilterBar } from '../posthog-runwal-dashboard/components/common/FilterBar';
-// Page bodies are Godrej-specific (not reused from Runwal) so this dashboard
-// can carry the extra wireframe sections (Admin Tiers, Society league table,
-// bucket-tab module nav) Runwal's own pages don't have — but they call the
-// exact same live PostHog/FM Matrix hooks/APIs as Runwal underneath.
-import { TrafficSessionPage } from './components/pages/TrafficSessionPage';
+// Traffic & Session and Workflow Usage are fully data-driven (module tree /
+// workflow usage / usage-and-distribution all come live from the backend,
+// scoped by app_id) with zero CRM/finance or hardcoded workflow-catalog
+// content, and their tile lists/chart structure already match the HTML
+// mock's renderTraffic() and workflow sections 1:1 — so they're reused
+// directly rather than forked. Adoption & Engagement, however, is forked
+// locally: Runwal's own version also renders FM Matrix CRM/Finance sections
+// (lease, events, broadcast, wallet, approvals, PR/SR split, overdue
+// invoices) that Lacircle's HTML mock does not have at all.
+import { TrafficSessionPage } from '../posthog-runwal-dashboard/components/pages/TrafficSessionPage';
 import { AdoptionEngagementPage } from './components/pages/AdoptionEngagementPage';
-import { WorkflowUsagePage } from './components/pages/WorkflowUsagePage';
+import { WorkflowUsagePage } from '../posthog-runwal-dashboard/components/pages/WorkflowUsagePage';
 import { useDashboardSites, useTrafficSession } from '../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
 import { useEnsureAppId } from '../posthog-runwal-dashboard/hooks/useEnsureAppId';
 import { DashboardFilters } from '../posthog-runwal-dashboard/api/types';
 import { getToken, getUser } from '../../utils/auth';
-import { AdminScope } from './data/wireframeData';
 import '../posthog-runwal-dashboard/styles/dashboard.css';
 
 function dateRangeFor(days: number) {
@@ -33,14 +38,16 @@ function dateRangeFor(days: number) {
   return { from: ymd(from), to: ymd(to) };
 }
 
-// No confirmed live app_id for this tenant is inferred from anywhere else —
-// pinned per the explicit real value given for this dashboard.
-const GODREJ_APP_ID = '29';
+// Lacircle is a build of the _COMPANY_RUSTOMJEE theme (isPostSales=false),
+// tracked in PostHog under app_id=32 — pinned here per the explicit value
+// given for this dashboard (see Lacircle_Dashboard_v1_FM_structure.html's
+// wireframe note for the package_name / client disambiguation background).
+const LACIRCLE_APP_ID = '32';
 
-function PosthogGodrejDashboardContent() {
+function PosthogLacircleDashboardContent() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
-      const saved = localStorage.getItem('godrej-theme');
+      const saved = localStorage.getItem('lacircle-theme');
       if (saved === 'dark' || saved === 'light') return saved;
     } catch {
       /* ignore */
@@ -57,7 +64,7 @@ function PosthogGodrejDashboardContent() {
 
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('godrej-nav') === 'collapsed';
+      return localStorage.getItem('lacircle-nav') === 'collapsed';
     } catch {
       return false;
     }
@@ -70,10 +77,6 @@ function PosthogGodrejDashboardContent() {
   const initialRange = useMemo(() => dateRangeFor(30), []);
 
   const [activePage, setActivePage] = useState<PageId>('pgTraffic');
-  // PROPOSED: no confirmed backend field distinguishes Tower vs Super admins
-  // yet, so this only drives the filter bar's UI state — it does not change
-  // any of the real numbers shown below.
-  const [adminScope, setAdminScope] = useState<AdminScope>('all');
   const [devPlatform, setDevPlatform] = useState<DevicePlatform>('all');
   const [showPrev, setShowPrev] = useState<boolean>(true);
   const [rangeDays, setRangeDays] = useState<number>(30);
@@ -116,7 +119,7 @@ function PosthogGodrejDashboardContent() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try {
-      localStorage.setItem('godrej-theme', theme);
+      localStorage.setItem('lacircle-theme', theme);
     } catch {
       /* ignore */
     }
@@ -133,10 +136,10 @@ function PosthogGodrejDashboardContent() {
       setIsNavCollapsed((prev) => {
         const next = !prev;
         try {
-          localStorage.setItem('godrej-nav', next ? 'collapsed' : 'open');
+          localStorage.setItem('lacircle-nav', next ? 'collapsed' : 'open');
         } catch {
-      /* ignore */
-    }
+          /* ignore */
+        }
         return next;
       });
     };
@@ -153,10 +156,10 @@ function PosthogGodrejDashboardContent() {
     setIsNavCollapsed((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem('godrej-nav', next ? 'collapsed' : 'open');
+        localStorage.setItem('lacircle-nav', next ? 'collapsed' : 'open');
       } catch {
-      /* ignore */
-    }
+        /* ignore */
+      }
       return next;
     });
   };
@@ -207,7 +210,7 @@ function PosthogGodrejDashboardContent() {
     }
   }, [queryClient]);
 
-  // Dynamic User and Organization Info
+  // Dynamic User Info
   const user = useMemo(() => {
     try {
       const u = getUser();
@@ -238,8 +241,8 @@ function PosthogGodrejDashboardContent() {
           if (name) return name;
         }
       } catch {
-      /* ignore */
-    }
+        /* ignore */
+      }
       return 'Logged-in User';
     }
     const name = [user.firstname, user.lastname].filter(Boolean).join(' ');
@@ -270,11 +273,12 @@ function PosthogGodrejDashboardContent() {
     return user?.email || '';
   }, [user]);
 
-  // Fixed brand name — this is a dedicated Godrej-branded dashboard page, so
-  // it should not switch to whatever org happens to be on the logged-in
+  // Fixed brand name — this is a dedicated Lacircle-branded dashboard page,
+  // so it should not switch to whatever org happens to be on the logged-in
   // test account (unlike Runwal/Piramal, which are meant to reflect the
-  // logged-in account's own org).
-  const orgName = 'Godrej Living';
+  // logged-in account's own org). Casing matches the HTML mock's brandmark,
+  // topbar-title and title tag ("LACIRCLE").
+  const orgName = 'LACIRCLE';
 
   const PAGE_TITLES: Record<PageId, string> = {
     pgTraffic: 'Traffic & Session',
@@ -309,6 +313,8 @@ function PosthogGodrejDashboardContent() {
         <SideBar
           activePage={activePage}
           onSelectPage={handleSelectPage}
+          filters={filters}
+          sitesSettled={sitesSettled}
         />
 
         <main className="main">
@@ -331,9 +337,6 @@ function PosthogGodrejDashboardContent() {
             selectedSiteId={selectedSiteId}
             onSelectSite={setSelectedSiteId}
             isSitesLoading={isSitesLoading}
-            showAdminScope
-            adminScope={adminScope}
-            onSelectAdminScope={setAdminScope}
             dev={devPlatform}
             onSelectDev={setDevPlatform}
             prev={showPrev}
@@ -363,8 +366,6 @@ function PosthogGodrejDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
-              sites={sites}
-              adminScope={adminScope}
             />
           )}
 
@@ -390,23 +391,24 @@ function PosthogGodrejDashboardContent() {
   );
 }
 
-// Ensures the URL carries app_id=29 before any of the content's data-fetching
-// hooks mount — several of them (useDashboardSites in particular) have no
-// `enabled` gate and cache under a query key that doesn't depend on the URL,
-// so firing them even once before the URL is corrected would permanently
-// cache results scoped to the wrong (missing) app_id.
-function PosthogGodrejDashboardGate() {
-  const appIdReady = useEnsureAppId(GODREJ_APP_ID);
+// Ensures the URL carries app_id=32 before any of the content's
+// data-fetching hooks mount — several of them (useDashboardSites in
+// particular) have no `enabled` gate and cache under a query key that
+// doesn't depend on the URL, so firing them even once before the URL is
+// corrected would permanently cache results scoped to the wrong (missing)
+// app_id.
+function PosthogLacircleDashboardGate() {
+  const appIdReady = useEnsureAppId(LACIRCLE_APP_ID);
   if (!appIdReady) return null;
-  return <PosthogGodrejDashboardContent />;
+  return <PosthogLacircleDashboardContent />;
 }
 
-export const PosthogGodrejDashboard: React.FC = () => {
+export const PosthogLacircleDashboard: React.FC = () => {
   return (
     <DashboardProvider>
-      <PosthogGodrejDashboardGate />
+      <PosthogLacircleDashboardGate />
     </DashboardProvider>
   );
 };
 
-export default PosthogGodrejDashboard;
+export default PosthogLacircleDashboard;

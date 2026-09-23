@@ -1,12 +1,16 @@
 import React from 'react';
 import { PageId } from '../../types';
+import { DashboardFilters } from '../../api/types';
+import { RecentActivitySidebar } from './RecentActivitySidebar';
 
 interface SideBarProps {
   activePage: PageId;
   onSelectPage: (page: PageId) => void;
+  filters: DashboardFilters;
+  sitesSettled?: boolean;
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) => {
+export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage, filters, sitesSettled }) => {
   return (
     <aside className="sidebar">
       <h1 className="brandmark">
@@ -90,6 +94,8 @@ export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) =>
           </button>
         </div>
       </nav>
+
+      <RecentActivitySidebar filters={filters} sitesSettled={sitesSettled} />
     </aside>
   );
 };

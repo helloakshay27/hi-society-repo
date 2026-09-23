@@ -19,6 +19,7 @@ import {
   RolesResponse,
   ModulesResponse,
   WorkflowUsageResponse,
+  RecentActiveUsersResponse,
   SiteLookupItem,
   LeaseOverviewData,
   EventsOverviewData,
@@ -186,6 +187,44 @@ export const fetchWorkflowUsage = (
       sub_module: subModule || undefined,
     })
   );
+
+/** Latest identified active users + the path/screen each is on. No `from`/`to` = today ("currently active"). */
+export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
+  getPosthog<RecentActiveUsersResponse>('recent_active_users', buildPosthogQuery(filters, { limit }));
+
+/**
+ * Downloads the `.xlsx` workbook of every active user in the filtered scope
+ * (uncapped — `limit` is ignored server-side unless passed deliberately) and
+ * saves it via a throwaway anchor, mirroring the blob-download pattern used
+ * elsewhere in the app (see WalletTopup.tsx's handleExport).
+ */
+export async function downloadActiveUsersExport(filters: DashboardFilters): Promise<void> {
+  const base = getPosthogApiBase();
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const queryStr = buildPosthogQuery(filters);
+  const url = `${cleanBase}/fm/adoption/active_users_export?${queryStr}`;
+
+  const response = await fetch(url, { method: 'GET', headers: { Accept: '*/*' } });
+  if (!response.ok) {
+    throw new Error(`Active users export failed (${response.status}): ${response.statusText || 'Failed to fetch'}`);
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get('content-disposition') || '';
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+  const filename = match
+    ? decodeURIComponent(match[1])
+    : `active_users_${filters.from || 'today'}_to_${filters.to || 'today'}.xlsx`;
+
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(blobUrl);
+}
 
 // ==========================================
 // 2. FM Matrix Backend API Client
