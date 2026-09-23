@@ -13,7 +13,7 @@ export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) =>
         <span className="bm-full">Runwal</span>
         <span className="bm-mini">RW</span>
       </h1>
-      <p className="brandmark-sub">Phygital.work</p>
+      <p className="brandmark-sub">Runwal Realty · flutter_resident app</p>
 
       <nav aria-label="Sections">
         <div className="nav-group">

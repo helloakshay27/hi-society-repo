@@ -332,6 +332,13 @@ function PosthogMyPiramalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              subtitle="Measure how effectively residents adopt and engage with the app’s major modules, and whether they keep coming back day over day."
+              questions={[
+                'Which modules and community services receive the highest engagement and adoption?',
+                'Which modules need UX improvements, and where do residents spend the most time?',
+                'Are residents returning to the application, and is retention improving over time?',
+                'How does usage differ between Tower Admins (one tower/wing) and Super Admins (whole society)?',
+              ]}
             />
           )}
 

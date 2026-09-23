@@ -29,6 +29,8 @@ interface AdoptionEngagementPageProps {
   benchmarks: Record<string, number | null>;
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
+  subtitle?: string;
+  questions?: string[];
 }
 
 function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
@@ -93,6 +95,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   benchmarks,
   onBenchmarkChange,
   sitesSettled = true,
+  subtitle,
+  questions,
 }) => {
   const [opsTab, setOpsTab] = useState<'crm' | 'finance'>('crm');
 
@@ -286,16 +290,18 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <div className="section-head">
         <h2>Adoption &amp; Engagement</h2>
         <span className="sd">
-          Measure customer adoption, cohort retention, module breadth, and connected FM Matrix operations.
+          {subtitle || 'Measure customer adoption, cohort retention, module breadth, and connected FM Matrix operations.'}
         </span>
       </div>
 
       <QuestionBox
-        questions={[
-          'Which modules and features receive the highest adoption across booked homebuyers?',
-          'Are new cohorts continuing to return over 8 weeks?',
-          'How are resident CRM operations and procurement metrics tracking for live sites?',
-        ]}
+        questions={
+          questions || [
+            'Which modules and features receive the highest adoption across booked homebuyers?',
+            'Are new cohorts continuing to return over 8 weeks?',
+            'How are resident CRM operations and procurement metrics tracking for live sites?',
+          ]
+        }
       />
 
       {isAdoptError && (

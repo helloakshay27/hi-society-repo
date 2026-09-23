@@ -13,7 +13,7 @@ export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) =>
         <span className="bm-full">My Piramal</span>
         <span className="bm-mini">MP</span>
       </h1>
-      <p className="brandmark-sub">FM Analytics · Phygital.work</p>
+      <p className="brandmark-sub">My Piramal Analytics</p>
 
       <nav aria-label="Sections">
         <div className="nav-group">
