@@ -239,9 +239,11 @@ const AccountingCustomSettings: React.FC = () => {
   // with whatever is already configured. Re-fetched whenever the Invoices/
   // Receipts tab changes, passing `doc_type` so the backend can (if it
   // distinguishes the two) return the right config; if it always returns
-  // one combined payload, this just refetches the same data harmlessly.
-  useEffect(() => {
-    const fetchSetupInvoice = async () => {
+  // one combined payload, this just refetches the same data harmlessly. Also
+  // called again after every address add/edit/delete so the list (and the
+  // ids used for further edits/deletes) always comes from the server rather
+  // than a locally-fabricated id.
+  const fetchSetupInvoice = React.useCallback(async () => {
       setLoadingSetup(true);
       try {
         const baseUrl = localStorage.getItem("baseUrl");
@@ -309,10 +311,11 @@ const AccountingCustomSettings: React.FC = () => {
       } finally {
         setLoadingSetup(false);
       }
-    };
-
-    fetchSetupInvoice();
   }, [activeTab]);
+
+  useEffect(() => {
+    fetchSetupInvoice();
+  }, [fetchSetupInvoice]);
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<DocAddress | null>(null);
@@ -430,6 +433,71 @@ const AccountingCustomSettings: React.FC = () => {
     setAddressForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Tel/Fax/Account Number are numeric-only fields — strip anything but
+  // digits as the user types instead of only rejecting on submit.
+  const handleNumericAddressFieldChange = (field: keyof DocAddress, value: string) => {
+    handleAddressFormChange(field, value.replace(/\D/g, ""));
+  };
+
+  // GST/PAN/IFSC are conventionally written in uppercase — normalize as the
+  // user types so the submit-time format check isn't tripped by casing alone.
+  const handleUppercaseAddressFieldChange = (field: keyof DocAddress, value: string) => {
+    handleAddressFormChange(field, value.toUpperCase());
+  };
+
+  // Format validation, checked on submit and only when the field actually has
+  // a value (none of these are mandatory) — mirrors real-world identifier
+  // formats rather than just "digits only".
+  const ADDRESS_FIELD_VALIDATIONS: {
+    field: keyof DocAddress;
+    label: string;
+    pattern: RegExp;
+    message: string;
+  }[] = [
+    {
+      field: "email",
+      label: "Email Address",
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: "Email Address must be a valid email, e.g. name@example.com",
+    },
+    {
+      field: "telNo",
+      label: "Tel.No",
+      pattern: /^\d{10}$/,
+      message: "Tel.No must be a valid 10-digit phone number",
+    },
+    {
+      field: "faxNo",
+      label: "Fax No",
+      pattern: /^\d{10}$/,
+      message: "Fax No must be a valid 10-digit number",
+    },
+    {
+      field: "gstNumber",
+      label: "GST Number",
+      pattern: /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+      message: "GST Number must be a valid 15-character GSTIN, e.g. 27ABCDE1234F1Z5",
+    },
+    {
+      field: "panNumber",
+      label: "PAN Number",
+      pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+      message: "PAN Number must be a valid 10-character PAN, e.g. ABCDE1234F",
+    },
+    {
+      field: "accountNumber",
+      label: "Account Number",
+      pattern: /^\d{9,18}$/,
+      message: "Account Number must be 9 to 18 digits",
+    },
+    {
+      field: "ifscCode",
+      label: "IFSC Code",
+      pattern: /^[A-Z]{4}0[A-Z0-9]{6}$/,
+      message: "IFSC Code must be a valid 11-character IFSC, e.g. SBIN0001234",
+    },
+  ];
+
   const buildAddressFormData = (form: DocAddress): FormData => {
     const formData = new FormData();
     const fields: [string, string][] = [
@@ -461,6 +529,14 @@ const AccountingCustomSettings: React.FC = () => {
       return;
     }
 
+    for (const { field, pattern, message } of ADDRESS_FIELD_VALIDATIONS) {
+      const value = addressForm[field];
+      if (value && !pattern.test(value)) {
+        toast.error(message);
+        return;
+      }
+    }
+
     try {
       const baseUrl = localStorage.getItem("baseUrl");
       const token = localStorage.getItem("token");
@@ -473,26 +549,19 @@ const AccountingCustomSettings: React.FC = () => {
           formData,
           { headers }
         );
-        setAddresses((prev) => ({
-          ...prev,
-          [activeTab]: prev[activeTab].map((a) =>
-            a.id === editingAddress.id ? { ...addressForm, id: editingAddress.id } : a
-          ),
-        }));
         toast.success("Address updated successfully");
       } else {
-        const response = await axios.post(
+        await axios.post(
           `https://${baseUrl}/crm/admin/admin_invoices/add_address.json`,
           formData,
           { headers }
         );
-        const newId = String(pick(response.data, "id") ?? `${Date.now()}`);
-        setAddresses((prev) => ({
-          ...prev,
-          [activeTab]: [...prev[activeTab], { ...addressForm, id: newId }],
-        }));
         toast.success("Address added successfully");
       }
+      // Re-fetch instead of splicing local state — the address list (and the
+      // ids used for further edits/deletes) should come from the server, not
+      // a client-generated placeholder id.
+      await fetchSetupInvoice();
       setAddressDialogOpen(false);
     } catch (error) {
       console.error("Error saving address:", error);
@@ -507,11 +576,8 @@ const AccountingCustomSettings: React.FC = () => {
       await axios.delete(`https://${baseUrl}/crm/admin/admin_invoices/${id}/destroy_address.json`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAddresses((prev) => ({
-        ...prev,
-        [activeTab]: prev[activeTab].filter((a) => a.id !== id),
-      }));
       toast.success("Address deleted successfully");
+      await fetchSetupInvoice();
     } catch (error) {
       console.error("Error deleting address:", error);
       toast.error("Failed to delete address");
@@ -783,17 +849,24 @@ const AccountingCustomSettings: React.FC = () => {
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles }}
             />
-            <TextField
-              label="Address"
-              placeholder="Enter Address"
-              value={addressForm.address}
-              onChange={(e) => handleAddressFormChange("address", e.target.value)}
-              fullWidth
-              multiline
-              minRows={2}
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
+            <div>
+              <div className="relative">
+                <textarea
+                  className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+                  rows={2}
+                  value={addressForm.address}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 500) handleAddressFormChange("address", e.target.value);
+                  }}
+                  placeholder="Enter Address"
+                  maxLength={500}
+                />
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
+                  Address
+                </label>
+              </div>
+              <div className="mt-1 text-right text-xs text-gray-400">{addressForm.address.length}/500</div>
+            </div>
 
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
@@ -823,7 +896,9 @@ const AccountingCustomSettings: React.FC = () => {
                 label="Tel.No"
                 placeholder="Enter Telephone Number"
                 value={addressForm.telNo}
-                onChange={(e) => handleAddressFormChange("telNo", e.target.value)}
+                onChange={(e) => handleNumericAddressFieldChange("telNo", e.target.value)}
+                inputMode="numeric"
+                inputProps={{ maxLength: 10 }}
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
@@ -833,7 +908,9 @@ const AccountingCustomSettings: React.FC = () => {
                 label="Fax No"
                 placeholder="Enter Fax Number"
                 value={addressForm.faxNo}
-                onChange={(e) => handleAddressFormChange("faxNo", e.target.value)}
+                onChange={(e) => handleNumericAddressFieldChange("faxNo", e.target.value)}
+                inputMode="numeric"
+                inputProps={{ maxLength: 10 }}
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
@@ -843,7 +920,7 @@ const AccountingCustomSettings: React.FC = () => {
 
             <TextField
               label="Email Address"
-              placeholder="Enter Email Address"
+              placeholder="e.g. name@example.com"
               value={addressForm.email}
               onChange={(e) => handleAddressFormChange("email", e.target.value)}
               fullWidth
@@ -865,9 +942,10 @@ const AccountingCustomSettings: React.FC = () => {
               />
               <TextField
                 label="PAN Number"
-                placeholder="Enter PAN Number"
+                placeholder="Enter PAN Number, e.g. ABCDE1234F"
                 value={addressForm.panNumber}
-                onChange={(e) => handleAddressFormChange("panNumber", e.target.value)}
+                onChange={(e) => handleUppercaseAddressFieldChange("panNumber", e.target.value)}
+                inputProps={{ maxLength: 10 }}
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
@@ -877,9 +955,10 @@ const AccountingCustomSettings: React.FC = () => {
 
             <TextField
               label="GST Number"
-              placeholder="Enter GST Number"
+              placeholder="Enter GST Number, e.g. 27ABCDE1234F1Z5"
               value={addressForm.gstNumber}
-              onChange={(e) => handleAddressFormChange("gstNumber", e.target.value)}
+              onChange={(e) => handleUppercaseAddressFieldChange("gstNumber", e.target.value)}
+              inputProps={{ maxLength: 15 }}
               fullWidth
               variant="outlined"
               InputLabelProps={{ shrink: true }}
@@ -895,17 +974,24 @@ const AccountingCustomSettings: React.FC = () => {
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles }}
             />
-            <TextField
-              label="Notes"
-              placeholder="notes"
-              value={addressForm.notes}
-              onChange={(e) => handleAddressFormChange("notes", e.target.value)}
-              fullWidth
-              multiline
-              minRows={2}
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
+            <div>
+              <div className="relative">
+                <textarea
+                  className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+                  rows={2}
+                  value={addressForm.notes}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 500) handleAddressFormChange("notes", e.target.value);
+                  }}
+                  placeholder="notes"
+                  maxLength={500}
+                />
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
+                  Notes
+                </label>
+              </div>
+              <div className="mt-1 text-right text-xs text-gray-400">{addressForm.notes.length}/500</div>
+            </div>
 
             <div className="border-t border-gray-200 pt-4">
               <h3 className="mb-3 text-sm font-semibold text-gray-800">Bank Details</h3>
@@ -914,7 +1000,9 @@ const AccountingCustomSettings: React.FC = () => {
                   label="Account Number"
                   placeholder="Enter Account Number"
                   value={addressForm.accountNumber}
-                  onChange={(e) => handleAddressFormChange("accountNumber", e.target.value)}
+                  onChange={(e) => handleNumericAddressFieldChange("accountNumber", e.target.value)}
+                  inputMode="numeric"
+                  inputProps={{ maxLength: 18 }}
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -961,9 +1049,10 @@ const AccountingCustomSettings: React.FC = () => {
                 />
                 <TextField
                   label="IFSC Code"
-                  placeholder="Enter IFSC Code"
+                  placeholder="Enter IFSC Code, e.g. SBIN0001234"
                   value={addressForm.ifscCode}
-                  onChange={(e) => handleAddressFormChange("ifscCode", e.target.value)}
+                  onChange={(e) => handleUppercaseAddressFieldChange("ifscCode", e.target.value)}
+                  inputProps={{ maxLength: 11 }}
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
