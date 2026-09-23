@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { ArrowLeft, CalendarClock, Pencil } from "lucide-react";
+import { ArrowLeft, CalendarClock, Pencil, Upload, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/config/apiConfig";
 
@@ -20,6 +20,38 @@ interface SocietyBillCycleDetail {
   expense_bill?: boolean;
   active: number;
 }
+
+interface InvoiceFrequencyRow {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  billingDate: string;
+  invoiceRaised: boolean;
+}
+
+const pick = (obj: Record<string, unknown>, ...keys: string[]): unknown => {
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return undefined;
+};
+
+// GET /lock_account_bills/bill_frequencies?bill_cycle_id=... — same endpoint
+// used to populate the "Bill Cycle Frequency" dropdown on invoice creation,
+// but the individual period records also carry billing_date/invoice_raised,
+// which is what this page's Invoice Frequency table needs.
+const mapInvoiceFrequencyRow = (item: Record<string, unknown>): InvoiceFrequencyRow => ({
+  id: String(pick(item, "id") ?? ""),
+  name: String(
+    pick(item, "name", "label") ??
+      `${pick(item, "start_date", "from_date") ?? ""} to ${pick(item, "end_date", "to_date") ?? ""}`
+  ),
+  startDate: String(pick(item, "start_date", "from_date") ?? ""),
+  endDate: String(pick(item, "end_date", "to_date") ?? ""),
+  billingDate: String(pick(item, "billing_date", "bill_date") ?? ""),
+  invoiceRaised: Boolean(pick(item, "invoice_raised", "invoiced", "is_invoiced")),
+});
 
 const formatDate = (value?: string) => {
   if (!value) return "-";
@@ -63,6 +95,9 @@ const AccountingBillCycleDetails: React.FC = () => {
   const { id } = useParams();
   const [detail, setDetail] = useState<SocietyBillCycleDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [invoiceFrequencies, setInvoiceFrequencies] = useState<InvoiceFrequencyRow[]>([]);
+  const [frequenciesLoading, setFrequenciesLoading] = useState(false);
+  const lockAccountId = localStorage.getItem("lock_account_id");
 
   useEffect(() => {
     if (!id) return;
@@ -85,6 +120,48 @@ const AccountingBillCycleDetails: React.FC = () => {
     };
     fetchDetail();
   }, [id]);
+
+  // GET /lock_account_bills/bill_frequencies?bill_cycle_id=... — the same
+  // endpoint invoice creation uses for its "Bill Cycle Frequency" dropdown;
+  // here the fuller per-period fields (billing_date, invoice_raised) drive
+  // the Invoice Frequency table instead.
+  useEffect(() => {
+    if (!id) return;
+    const fetchFrequencies = async () => {
+      setFrequenciesLoading(true);
+      try {
+        const baseUrl = API_CONFIG.BASE_URL;
+        const token = API_CONFIG.TOKEN;
+        const res = await axios.get(`${baseUrl}/lock_account_bills/bill_frequencies`, {
+          params: { bill_cycle_id: id, ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = res.data;
+        const list: Record<string, unknown>[] = Array.isArray(data)
+          ? data
+          : data?.bill_frequencies ?? data?.data ?? [];
+        setInvoiceFrequencies(list.map(mapInvoiceFrequencyRow));
+      } catch (error) {
+        console.error("Error fetching invoice frequencies:", error);
+        setInvoiceFrequencies([]);
+      } finally {
+        setFrequenciesLoading(false);
+      }
+    };
+    fetchFrequencies();
+  }, [id, lockAccountId]);
+
+  // No API given yet for these row actions — surface that clearly instead of
+  // silently doing nothing or faking a navigation that doesn't exist.
+  const handleImport = (row: InvoiceFrequencyRow) => {
+    toast.info(`Import for "${row.name}" isn't wired up yet.`);
+  };
+  const handleAddExpenseCharges = (row: InvoiceFrequencyRow) => {
+    toast.info(`Add Expense Charges for "${row.name}" isn't wired up yet.`);
+  };
 
   return (
     <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden">
@@ -134,7 +211,74 @@ const AccountingBillCycleDetails: React.FC = () => {
             </div>
           </SectionCard>
 
-          
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+              <h2 className="text-lg font-medium text-gray-900">Invoice Frequency</h2>
+            </div>
+            <div className="overflow-x-auto p-6">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-gray-300 text-left">
+                    <th className="py-2 pr-4 font-semibold">ID</th>
+                    <th className="py-2 pr-4 font-semibold">Name</th>
+                    <th className="py-2 pr-4 font-semibold">Start Date</th>
+                    <th className="py-2 pr-4 font-semibold">End Date</th>
+                    <th className="py-2 pr-4 font-semibold">Billing Date</th>
+                    <th className="py-2 pr-4 font-semibold">Invoice Raised</th>
+                    <th className="py-2 font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {frequenciesLoading ? (
+                    <tr>
+                      <td colSpan={7} className="py-6 text-center text-gray-500">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : invoiceFrequencies.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-6 text-center text-gray-500">
+                        No invoice frequencies found
+                      </td>
+                    </tr>
+                  ) : (
+                    invoiceFrequencies.map((row) => (
+                      <tr key={row.id} className="border-b border-gray-100">
+                        <td className="py-2 pr-4">{row.id}</td>
+                        <td className="py-2 pr-4">{row.name}</td>
+                        <td className="py-2 pr-4">{formatDate(row.startDate)}</td>
+                        <td className="py-2 pr-4">{formatDate(row.endDate)}</td>
+                        <td className="py-2 pr-4">{formatDate(row.billingDate)}</td>
+                        <td className="py-2 pr-4">
+                          <span className={row.invoiceRaised ? "text-[#3b82c4]" : "text-gray-500"}>
+                            {row.invoiceRaised ? "Yes" : "No"}
+                          </span>
+                        </td>
+                        <td className="py-2">
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleImport(row)}
+                              className="inline-flex items-center gap-1 text-[#3b82c4] hover:underline"
+                            >
+                              <Upload className="h-3.5 w-3.5" /> Import
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAddExpenseCharges(row)}
+                              className="inline-flex items-center gap-1 text-[#3b82c4] hover:underline"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Add Expense Charges
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

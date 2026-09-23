@@ -38,6 +38,7 @@ interface LockAccountBillDetail {
   bill_number: string;
   status: string;
   publish: boolean;
+  raise_to_builder?: boolean;
   ledger_name?: string;
   lock_account_ledger?: { name?: string };
   due_date: string;
@@ -118,6 +119,7 @@ const AccountingInvoiceDetails: React.FC = () => {
   const [transactionNumber, setTransactionNumber] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   const fetchBill = useCallback(async () => {
     setLoading(true);
@@ -153,33 +155,50 @@ const AccountingInvoiceDetails: React.FC = () => {
     [totalAmount]
   );
 
-  const handleTogglePublish = async (checked: boolean) => {
+  const handleToggleRaiseToBuilder = async (checked: boolean) => {
     if (!bill) return;
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
-      if (checked) {
-        // GET .../lock_account_ledgers/raise_to_builder.json?pids=<bill id> —
-        // pids accepts a comma-separated list for bulk use elsewhere; here we
-        // only ever raise this one bill, so it's just its own id.
-        await axios.get(
-          `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_ledgers/raise_to_builder.json`,
-          { params: { pids: id }, headers }
-        );
-      } else {
-        await axios.patch(
-          `${baseUrl}/lock_account_bills/${id}.json`,
-          { lock_account_bill: { publish: false } },
-          { headers }
-        );
-      }
-      setBill((prev) => (prev ? { ...prev, publish: checked } : prev));
+      await axios.patch(
+        `${baseUrl}/lock_account_bills/${id}.json`,
+        { lock_account_bill: { raise_to_builder: checked } },
+        { headers }
+      );
+
+      setBill((prev) =>
+        prev ? { ...prev, raise_to_builder: checked } : prev
+      );
       toast.success(checked ? "Raised to builder" : "Withdrawn from builder");
     } catch (error) {
-      console.error("Error updating publish status:", error);
+      console.error("Error updating raise to builder status:", error);
       toast.error("Failed to update status");
+    }
+  };
+
+  const handlePublishInvoice = async () => {
+    if (!bill) return;
+    setPublishing(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+
+      await axios.patch(
+        `${baseUrl}/lock_account_bills/${id}.json`,
+        { lock_account_bill: { publish: true } },
+        { headers }
+      );
+
+      setBill((prev) => (prev ? { ...prev, publish: true } : prev));
+      toast.success("Invoice published successfully");
+    } catch (error) {
+      console.error("Error publishing invoice:", error);
+      toast.error("Failed to publish invoice");
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -312,6 +331,8 @@ const AccountingInvoiceDetails: React.FC = () => {
   }
 
   const isPaid = bill.status?.toLowerCase() === "paid";
+  const isRaisedToBuilder = Boolean(bill.raise_to_builder);
+  const isRaiseToBuilderLocked = Boolean(bill.raise_to_builder);
   // const isPartPayment = bill.status?.toLowerCase() === "part payment";
 
   return (
@@ -343,22 +364,35 @@ const AccountingInvoiceDetails: React.FC = () => {
               <span className="text-sm font-medium text-gray-700">Raise to Builder:</span>
               <button
                 type="button"
-                onClick={() => handleTogglePublish(!bill.publish)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${bill.publish ? "bg-brand" : "bg-gray-300"
+                onClick={() => handleToggleRaiseToBuilder(!isRaisedToBuilder)}
+                disabled={isRaiseToBuilderLocked}
+                aria-pressed={isRaisedToBuilder}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${isRaisedToBuilder ? "bg-brand" : "bg-gray-300"
                   }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${bill.publish ? "translate-x-6" : "translate-x-1"
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isRaisedToBuilder ? "translate-x-6" : "translate-x-1"
                     }`}
                 />
               </button>
             </div>
+            {!bill.publish && (
+              <Button
+                onClick={handlePublishInvoice}
+                disabled={publishing}
+                size="sm"
+                className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020] disabled:opacity-70"
+              >
+                {publishing ? "Publishing..." : "Publish"}
+              </Button>
+            )}
             {isPaid && payments.length > 0 && (
               <Button
                 onClick={() => handleDownloadReceipt(payments[payments.length - 1].id)}
                 size="sm"
                 variant="outline"
-                className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+                // className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+                 className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
               >
                 <Download className="mr-2 h-4 w-4" /> Download Receipt
               </Button>

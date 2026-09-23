@@ -191,7 +191,7 @@ const NumberingSection: React.FC<{
     </div>
     <Button
       onClick={onSubmit}
-      className="mt-4 !bg-[#C72030] hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030] !text-white h-8 px-5 text-sm"
+      className="mt-4 !bg-[#C72030]    !text-white h-8 px-5 text-sm"
     >
       Submit
     </Button>
@@ -637,18 +637,18 @@ const AccountingCustomSettings: React.FC = () => {
             <button
               type="button"
               onClick={handleLogoUploadClick}
-              className="flex-1 flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100"
+              className="flex-1 flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-50 focus:bg-gray-50"
             >
               <Upload className="h-4 w-4" />
               {logoFile[activeTab]?.name || existingLogoUrl[activeTab] || "Upload File"}
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFileChange} />
-            <Button onClick={handleLogoSubmit} className="!bg-[#C72030] hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030] !text-white h-auto px-6">
+            <Button onClick={handleLogoSubmit} className="!bg-[#C72030] !text-white h-auto px-6">
               Submit
             </Button>
             <Button
               onClick={handleRemoveLogo}
-              className="h-auto px-6 !border !border-[#da7756] !bg-white !text-[#da7756]"
+              className="h-auto px-6 !border !border-[#da7756] !bg-white hover:!bg-white active:!bg-white focus:!bg-white focus-visible:!bg-white !text-[#da7756] hover:!text-[#da7756] active:!text-[#da7756] focus:!text-[#da7756] focus-visible:!text-[#da7756] hover:!border-[#da7756]"
             >
               Remove
             </Button>
@@ -735,7 +735,7 @@ const AccountingCustomSettings: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-medium text-gray-900">Address</h2>
-            <Button onClick={handleOpenAddAddress} className="!bg-[#C72030] hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030] !text-white h-9 px-4 text-sm">
+            <Button onClick={handleOpenAddAddress} className="!bg-[#C72030]  !text-white h-9 px-4 text-sm">
               Add New Address
             </Button>
           </div>
@@ -757,14 +757,14 @@ const AccountingCustomSettings: React.FC = () => {
                   <div className="flex gap-2 border-t border-gray-200 px-4 py-2">
                     <Button
                       size="sm"
-                      className="h-7 px-3 text-xs !bg-[#C72030] !text-white hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030]"
+                      className="h-7 px-3 text-xs !bg-[#C72030] "
                       onClick={() => handleOpenEditAddress(address)}
                     >
                       <Pencil className="mr-1 h-3 w-3" /> Edit
                     </Button>
                     <Button
                       size="sm"
-                      className="h-7 px-3 text-xs !bg-[#C72030] !text-white hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030]"
+                      className="h-7 px-3 text-xs !bg-[#C72030] "
                       onClick={() => setDeleteTargetId(address.id)}
                     >
                       <Trash2 className="mr-1 h-3 w-3" /> Delete
@@ -780,7 +780,7 @@ const AccountingCustomSettings: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-medium text-gray-900">Breakup Files</h2>
-            <Button onClick={handleOpenAddBreakupFile} className="!bg-[#C72030] hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030] !text-white h-9 px-4 text-sm">
+            <Button onClick={handleOpenAddBreakupFile} className="!bg-[#C72030] !text-white h-9 px-4 text-sm">
               Add New Breakup File
             </Button>
           </div>
@@ -833,7 +833,12 @@ const AccountingCustomSettings: React.FC = () => {
             <h2 className="text-lg font-medium text-gray-900">
               {editingAddress ? "Edit Address" : `${activeTab === "invoices" ? "Invoice" : "Receipt"} Address Setup`}
             </h2>
-            <Button variant="ghost" size="sm" onClick={() => setAddressDialogOpen(false)} className="h-6 w-6 p-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setAddressDialogOpen(false)}
+              className="h-6 w-6 p-0 hover:!bg-transparent active:!bg-transparent focus:!bg-transparent focus-visible:!bg-transparent"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -1073,12 +1078,12 @@ const AccountingCustomSettings: React.FC = () => {
           </div>
 
           <div className="flex justify-center gap-3 border-t border-gray-200 px-6 py-4">
-            <Button onClick={handleSubmitAddress} className="!bg-[#C72030] hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030] !text-white px-8">
+            <Button onClick={handleSubmitAddress} className="!bg-[#C72030] !text-white px-8">
               Submit
             </Button>
             <Button
               onClick={() => setAddressDialogOpen(false)}
-              className="h-10 w-full !border !border-[#da7756] !bg-white px-6 !text-[#da7756] sm:w-auto sm:px-8"
+              className="h-10 w-full !border !border-[#da7756] !bg-white hover:!bg-white active:!bg-white focus:!bg-white focus-visible:!bg-white !text-[#da7756] hover:!text-[#da7756] active:!text-[#da7756] focus:!text-[#da7756] focus-visible:!text-[#da7756] hover:!border-[#da7756] px-6 sm:w-auto sm:px-8"
             >
               Cancel
             </Button>
@@ -1096,7 +1101,9 @@ const AccountingCustomSettings: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="!border !border-[#da7756] !bg-white hover:!bg-white active:!bg-white focus:!bg-white focus-visible:!bg-white !text-[#da7756] hover:!text-[#da7756] active:!text-[#da7756] focus:!text-[#da7756] focus-visible:!text-[#da7756] hover:!border-[#da7756]">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               className="!bg-[#C72030] hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030] !text-white px-8"
               onClick={() => deleteTargetId && handleDeleteAddress(deleteTargetId)}
@@ -1112,7 +1119,12 @@ const AccountingCustomSettings: React.FC = () => {
         <DialogContent className="sm:max-w-md overflow-hidden p-0 [&>button]:hidden">
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
             <h2 className="text-lg font-medium text-gray-900">Add New Breakup File</h2>
-            <Button variant="ghost" size="sm" onClick={() => setBreakupDialogOpen(false)} className="h-6 w-6 p-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setBreakupDialogOpen(false)}
+              className="h-6 w-6 p-0 hover:!bg-transparent active:!bg-transparent focus:!bg-transparent focus-visible:!bg-transparent"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -1137,12 +1149,12 @@ const AccountingCustomSettings: React.FC = () => {
             </div>
           </div>
           <div className="flex justify-center gap-3 border-t border-gray-200 px-6 py-4">
-            <Button onClick={handleSubmitBreakupFile} className="!bg-[#C72030] hover:!bg-[#C72030] active:!bg-[#C72030] focus:!bg-[#C72030] focus-visible:!bg-[#C72030] !text-white px-8">
+            <Button onClick={handleSubmitBreakupFile} className="!bg-[#C72030] !text-white px-8">
               Submit
             </Button>
             <Button
               onClick={() => setBreakupDialogOpen(false)}
-              className="h-10 w-full !border !border-[#da7756] !bg-white px-6 !text-[#da7756] sm:w-auto sm:px-8"
+              className="h-10 w-full !border !border-[#da7756] !bg-white hover:!bg-white active:!bg-white focus:!bg-white focus-visible:!bg-white !text-[#da7756] hover:!text-[#da7756] active:!text-[#da7756] focus:!text-[#da7756] focus-visible:!text-[#da7756] hover:!border-[#da7756] px-6 sm:w-auto sm:px-8"
             >
               Cancel
             </Button>
