@@ -12,6 +12,8 @@ import { AdoptionSection } from './sections/AdoptionSection';
 import { WorkflowSection } from './sections/WorkflowSection';
 import { FmDashboardSection } from './sections/FmDashboardSection';
 import type { DashboardState } from './data/metrics';
+import { RecentActivitySidebar } from '../../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar';
+import type { DashboardFilters } from '../../pages/posthog-runwal-dashboard/api/types';
 
 const PAGES: { key: DashboardState['activePage']; title: string; icon: JSX.Element }[] = [
   { key: 'pgFm', title: 'FM Matrix dashboards', icon: <span aria-hidden="true">▦</span> },
@@ -49,6 +51,16 @@ function DashboardLayout() {
   const { vm, setActivePage } = useDashboard();
   const { activePage } = vm.state;
   const page = PAGES.find((p) => p.key === activePage) ?? PAGES[0];
+  const recentActivityFilters: DashboardFilters = {
+    siteIds: vm.scopedSites.map((site) => site.id),
+    from: vm.range.from,
+    to: vm.range.to,
+    token: vm.token,
+    devPlatform: 'all',
+    licensedSeats: vm.state.licensedSeats,
+    module: vm.state.module,
+    subModule: vm.state.subModule,
+  };
 
   return (
     <>
@@ -76,6 +88,7 @@ function DashboardLayout() {
               ))}
             </div>
           </nav>
+          <RecentActivitySidebar filters={recentActivityFilters} sitesSettled={!vm.sitesLoading && vm.sites.length > 0} />
         </aside>
 
         <main className="main">

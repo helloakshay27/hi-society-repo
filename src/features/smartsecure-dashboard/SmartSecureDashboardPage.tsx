@@ -11,6 +11,8 @@ import { TrafficSection } from "./sections/TrafficSection";
 import { AdoptionSection } from "./sections/AdoptionSection";
 import { WorkflowSection } from "./sections/WorkflowSection";
 import { useEnsureAppId } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId";
+import { RecentActivitySidebar } from "../../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar";
+import type { DashboardFilters } from "../../pages/posthog-runwal-dashboard/api/types";
 import type { ActivePage } from "./data/types";
 
 const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
@@ -73,8 +75,19 @@ const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
 ];
 
 function DashboardLayout() {
-  const { state, setPage } = useSmartSecureDashboard();
+  const { state, setPage, sites, appId } = useSmartSecureDashboard();
   const page = PAGES.find((p) => p.key === state.page) ?? PAGES[0];
+  const recentActivityFilters: DashboardFilters = {
+    siteIds: state.society === 'All Societies' ? sites.map((site) => site.id) : [state.society],
+    from: state.rangeFrom,
+    to: state.rangeTo,
+    token: '',
+    devPlatform: 'all',
+    licensedSeats: null,
+    module: null,
+    subModule: null,
+    appId,
+  };
 
   return (
     <div className={`ss-app${state.navCollapsed ? " nav-collapsed" : ""}`}>
@@ -104,6 +117,7 @@ function DashboardLayout() {
               ))}
             </div>
           </nav>
+          <RecentActivitySidebar filters={recentActivityFilters} sitesSettled={sites.length > 0} />
         </aside>
 
         <main className="main">
