@@ -167,7 +167,9 @@ const AccountingChargeCreation: React.FC = () => {
   const selectedCategory = categories.find(
     (category) => String(category.id) === form.chargeCategoryId
   );
-  const isAmountCategory = selectedCategory?.inputType === "amount";
+  const isAmountCategory =
+    selectedCategory?.inputType === "amount" &&
+    selectedCategory.category !== "No. of Water Inlets";
   const isUnitTypeCategory = selectedCategory?.inputType === "flat_amounts";
   const isExpenseBasedCategory = selectedCategory?.inputType === "ledger_select";
 
