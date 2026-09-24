@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit, Mail } from "lucide-react";
 import { FormControl, MenuItem, Select as MuiSelect, InputLabel, TextField, ListItemText, InputAdornment } from "@mui/material";
@@ -35,6 +35,7 @@ const columns: ColumnConfig[] = [
   { key: "name", label: "Name", sortable: true, draggable: true },
   { key: "mobileNumber", label: "Mobile Number", sortable: true, draggable: true },
   { key: "email", label: "Email", sortable: true, draggable: true },
+  { key: "role", label: "Role", sortable: true, draggable: true },
   { key: "residentType", label: "Resident Type", sortable: true, draggable: true },
   { key: "phase", label: "Phase", sortable: true, draggable: true },
   { key: "livesHere", label: "Lives Here", sortable: true, draggable: true },
@@ -71,6 +72,7 @@ const formattedResponse = (data) => {
     livesHere: item.lives_here ? item.lives_here.charAt(0).toUpperCase() + item.lives_here.slice(1) : "-",
     membershipType: item?.is_primary ? "Primary" : "Secondary",
     status: item.approve ? "Approved" : item.approve === false ? "Rejected" : "Pending",
+    role: item.role_name || "-",
     staff: item.staff || "-",
     vehicle: item.vehicle || "-",
     appDownloaded: item.app_downloaded ? "Yes" : "No",
@@ -87,11 +89,130 @@ const formattedResponse = (data) => {
   }));
 }
 
+type Option = { label: string; value: string };
+
+type UserFilters = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobile: string;
+  tower: string;
+  flat: Option[];
+  status: Option[];
+  residentType: Option[];
+  role: string;
+  livesHere: string;
+  membershipType: string;
+  appDownloaded: string;
+  startDate: string;
+  endDate: string;
+};
+
+const EMPTY_FILTERS: UserFilters = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  mobile: "",
+  tower: "",
+  flat: [],
+  status: [],
+  residentType: [],
+  role: "",
+  livesHere: "",
+  membershipType: "",
+  appDownloaded: "",
+  startDate: "",
+  endDate: "",
+};
+
+const STATUS_OPTIONS: Option[] = [
+  { label: "Approved", value: "1" },
+  { label: "Rejected", value: "0" },
+  { label: "Pending", value: "null" },
+];
+
+const RESIDENT_TYPE_OPTIONS: Option[] = [
+  { label: "Owner", value: "Owner" },
+  { label: "Tenant", value: "Tenant" },
+];
+
+// Scalar filter fields <-> URL query keys
+const URL_SCALAR_KEYS: [keyof UserFilters, string][] = [
+  ["firstName", "first_name"],
+  ["lastName", "last_name"],
+  ["email", "email"],
+  ["mobile", "mobile"],
+  ["tower", "tower"],
+  ["role", "role"],
+  ["livesHere", "lives_here"],
+  ["membershipType", "membership_type"],
+  ["startDate", "start_date"],
+  ["endDate", "end_date"],
+];
+
+const splitList = (value: string | null) =>
+  value ? value.split(",").filter(Boolean) : [];
+
+const filtersFromUrl = (params: URLSearchParams): UserFilters => {
+  const filters: UserFilters = { ...EMPTY_FILTERS };
+  URL_SCALAR_KEYS.forEach(([field, key]) => {
+    (filters as any)[field] = params.get(key) || "";
+  });
+  // Flat labels are resolved from flatOptions once the tower's flats load
+  filters.flat = splitList(params.get("flat")).map((v) => ({ label: v, value: v }));
+  filters.status = STATUS_OPTIONS.filter((o) => splitList(params.get("status")).includes(o.value));
+  filters.residentType = RESIDENT_TYPE_OPTIONS.filter((o) =>
+    splitList(params.get("resident_type")).includes(o.value)
+  );  return filters;
+};
+
+const buildUrlParams = (filters: UserFilters, search: string, page: number) => {
+  const params = new URLSearchParams();
+  URL_SCALAR_KEYS.forEach(([field, key]) => {
+    const value = filters[field] as string;
+    if (value && value !== "none") params.set(key, value);
+  });
+  if (filters.flat.length) params.set("flat", filters.flat.map((f) => f.value).join(","));
+  if (filters.status.length) params.set("status", filters.status.map((s) => s.value).join(","));
+  if (filters.residentType.length) {
+    params.set("resident_type", filters.residentType.map((r) => r.value).join(","));
+  }  if (search) params.set("search", search);
+  if (page > 1) params.set("page", page.toString());
+  return params;
+};
+
+const buildFilterParams = (filters: UserFilters, search: string) => {
+  const filterParams: any = {};
+  if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
+  if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
+  if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
+  if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
+  if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
+  if (filters.flat.length > 0) {
+    filterParams["q[user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
+  }
+  if (filters.status.length > 0) {
+    filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
+  }
+  if (filters.residentType.length > 0) {
+    filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
+  }
+  if (filters.role) filterParams["q[role_id_eq]"] = filters.role;
+  if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
+  if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
+  if (filters.startDate && filters.endDate) {
+    filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
+  }
+  if (search) filterParams["q[user_firstname_or_user_lastname_or_user_email_or_user_mobile_cont]"] = search;
+  return filterParams;
+};
+
 const ManageUsersPage = () => {
   const baseUrl = localStorage.getItem('baseUrl')
   const token = localStorage.getItem('token')
 
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { shouldShow } = useDynamicPermissions();
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -104,7 +225,7 @@ const ManageUsersPage = () => {
   const [importId, setImportId] = useState<number | null>(null);
   const importPollRef = useRef<number | null>(null);
   const [isDownloadingSample, setIsDownloadingSample] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -113,22 +234,13 @@ const ManageUsersPage = () => {
     per_page: 20,
   });
 
-  // Filter states
-  const [filters, setFilters] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    mobile: "",
-    tower: "",
-    flat: [] as { label: string; value: string }[],
-    status: [] as { label: string; value: string }[],
-    residentType: [] as { label: string; value: string }[],
-    livesHere: "",
-    membershipType: "",
-    appDownloaded: "",
-    startDate: "",
-    endDate: "",
-  });
+  // Filter states — `filters` is the dialog's draft; the applied filters live
+  // in the URL and are mirrored into these refs for the debounced search.
+  const [filters, setFilters] = useState<UserFilters>(() => filtersFromUrl(searchParams));
+  const appliedFiltersRef = useRef<UserFilters>(filtersFromUrl(searchParams));
+  const setSearchParamsRef = useRef(setSearchParams);
+  setSearchParamsRef.current = setSearchParams;
+  const loadedTowerRef = useRef<string>("");
 
   const [dashboardData, setDashboardData] = useState({
     pending_users: 0,
@@ -145,6 +257,7 @@ const ManageUsersPage = () => {
 
   const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
   const [flatOptions, setFlatOptions] = useState<{ label: string; value: string }[]>([]);
+  const [roleOptions, setRoleOptions] = useState<Option[]>([]);
 
   const getSocietyId = () => {
     return localStorage.getItem('selectedSocietyId') || '';
@@ -167,6 +280,19 @@ const ManageUsersPage = () => {
   };
 
   console.log(towerOptions)
+
+  // Same roles dropdown API as AddUserPage
+  const fetchRoles = async () => {
+    try {
+      if (!baseUrl || !token) return;
+      const res = await axios.get(`https://${baseUrl}/admin/roles/roles_for_dropdown.json?token=${token}`);
+      const roles = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.roles) ? res.data.roles : []);
+      setRoleOptions(roles.map((r: any) => ({ label: r.name, value: r.id.toString() })));
+    } catch (e) {
+      console.error("Error fetching roles:", e);
+      setRoleOptions([]);
+    }
+  };
 
   const fetchFlats = async (blockId: number) => {
     if (isNaN(blockId)) {
@@ -225,9 +351,37 @@ const ManageUsersPage = () => {
   }
 
   useEffect(() => {
-    fetchUsers(1);
     fetchTowers();
+    fetchRoles();
   }, []);
+
+  // URL is the source of truth for applied filters, search and page: any
+  // change (apply, reset, paging, search, back/forward, shared link) refetches.
+  useEffect(() => {
+    const urlFilters = filtersFromUrl(searchParams);
+    const urlSearch = searchParams.get("search") || "";
+    const urlPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+
+    appliedFiltersRef.current = urlFilters;
+    setFilters(urlFilters);
+    setSearchTerm(urlSearch);
+
+    if (urlFilters.tower && urlFilters.tower !== loadedTowerRef.current) {
+      loadedTowerRef.current = urlFilters.tower;
+      fetchFlats(parseInt(urlFilters.tower));
+    }
+
+    fetchUsers(urlPage, buildFilterParams(urlFilters, urlSearch));
+  }, [searchParams]);
+
+  const updateUrl = (
+    nextFilters: UserFilters,
+    search: string,
+    page: number,
+    replace = false
+  ) => {
+    setSearchParamsRef.current(buildUrlParams(nextFilters, search, page), { replace });
+  };
 
   useEffect(() => {
     return () => clearImportStatusPolling();
@@ -268,7 +422,7 @@ const ManageUsersPage = () => {
         );
         setIsImporting(false);
         setImportId(null);
-        fetchUsers(1);
+        fetchUsers(1, buildFilterParams(appliedFiltersRef.current, searchParams.get("search") || ""));
         setShowImportModal(false);
         setSelectedImportFile(null);
       } else if (statusInfo.status === "failed") {
@@ -426,7 +580,7 @@ const ManageUsersPage = () => {
       toast.success('Users imported successfully.');
 
       // Refresh the users list
-      fetchUsers(1);
+      fetchUsers(1, buildFilterParams(appliedFiltersRef.current, searchParams.get("search") || ""));
       setShowImportModal(false);
       setSelectedImportFile(null);
       setIsImporting(false);
@@ -446,35 +600,12 @@ const ManageUsersPage = () => {
     }
   };
 
-  const buildFilterParams = () => {
-    const filterParams: any = {};
-    if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
-    if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
-    if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
-    if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
-    if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
-    if (filters.flat && filters.flat.length > 0) {
-      filterParams["q[user_society_user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
-    }
-    if (filters.status && filters.status.length > 0) {
-      filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
-    }
-    if (filters.residentType && filters.residentType.length > 0) {
-      filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
-    }
-    if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
-    if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
-    if (filters.startDate && filters.endDate) {
-      filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
-    }
-    if (searchTerm) filterParams.search = searchTerm;
-    return filterParams;
-  };
-
   const handleExport = async () => {
     try {
       const queryParams = new URLSearchParams();
-      Object.entries(buildFilterParams()).forEach(([key, value]) => {
+      Object.entries(
+        buildFilterParams(appliedFiltersRef.current, searchParams.get("search") || "")
+      ).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach(v => queryParams.append(key, v));
         } else if (value !== undefined && value !== null) {
@@ -508,44 +639,21 @@ const ManageUsersPage = () => {
   };
 
   const handleApplyFilters = () => {
-    console.log("Applying filters:", filters);
-    setPagination((prev) => ({ ...prev, current_page: 1 }));
-    fetchUsers(1, buildFilterParams());
+    updateUrl(filters, searchTerm, 1);
     setShowFiltersDialog(false);
   };
 
   const handleResetFilters = () => {
-    setFilters({
-      firstName: "",
-      lastName: "",
-      email: "",
-      mobile: "",
-      tower: "",
-      flat: [],
-      status: [],
-      residentType: [],
-      livesHere: "",
-      membershipType: "",
-      appDownloaded: "",
-      startDate: "",
-      endDate: "",
-    });
-    setPagination({ ...pagination, current_page: 1 });
-    fetchUsers(1, {});
+    setFilters(EMPTY_FILTERS);
+    updateUrl(EMPTY_FILTERS, searchTerm, 1);
   };
 
-  const handlePageChange = async (page: number) => {
+  const handlePageChange = (page: number) => {
     if (page < 1 || page > pagination.total_pages || page === pagination.current_page || loading) {
       return;
     }
-
-    try {
-      setPagination((prev) => ({ ...prev, current_page: page }));
-      await fetchUsers(page, buildFilterParams());
-    } catch (error) {
-      console.error("Error changing page:", error);
-      toast.error("Failed to load page data. Please try again.");
-    }
+    setPagination((prev) => ({ ...prev, current_page: page }));
+    updateUrl(appliedFiltersRef.current, searchParams.get("search") || "", page);
   };
 
   const renderPaginationItems = () => {
@@ -670,11 +778,13 @@ const ManageUsersPage = () => {
     return items;
   };
 
+  // Search keeps the applied filters and resets to page 1; replace (not push)
+  // so each debounced keystroke doesn't add a history entry.
   const debouncedSearch = useCallback(
-    debounce(async (searchQuery: string) => {
-      fetchUsers(1, { "q[user_firstname_or_user_lastname_or_user_email_or_user_mobile_cont]": searchQuery });
+    debounce((searchQuery: string) => {
+      updateUrl(appliedFiltersRef.current, searchQuery, 1, true);
     }, 500),
-    [baseUrl, token, pagination.current_page]
+    []
   );
 
   const handleSearchChange = (value: string) => {
@@ -1162,6 +1272,24 @@ const ManageUsersPage = () => {
                   </MuiSelect>
                 </FormControl>
 
+                {/* Role */}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Role</InputLabel>
+                  <MuiSelect
+                    value={filters.role}
+                    onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+                    displayEmpty
+                    label="Role"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value=""><em>Select Role</em></MenuItem>
+                    {roleOptions.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+
                 {/* Membership Type */}
                 <FormControl fullWidth variant="outlined">
                   <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Membership Type</InputLabel>
@@ -1222,13 +1350,14 @@ const ManageUsersPage = () => {
               <div className="flex justify-center gap-4 pt-2">
                 <Button
                   onClick={handleResetFilters}
-                  className="!bg-[#C72030]  !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"
                 >
                   Reset
                 </Button>
                 <Button
                   onClick={handleApplyFilters}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"                >
+                  className="!bg-[#C72030]  !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Apply
                 </Button>
               </div>
@@ -1250,7 +1379,7 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
           isDownloading={isDownloadingSample}
         />
 
-       
+
         <div className="">
           <EnhancedTable
             columns={columns}
