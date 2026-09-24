@@ -237,20 +237,8 @@ function PosthogMyPiramalDashboardContent() {
     return user?.email || '';
   }, [user]);
 
-  const orgName = useMemo(() => {
-    try {
-      const acc = localStorage.getItem('hiSocietyAccount');
-      if (acc) {
-        const parsed = JSON.parse(acc);
-        if (parsed?.organization?.name) return parsed.organization.name;
-        if (parsed?.selected_user_society_name) return parsed.selected_user_society_name;
-        if (parsed?.society?.building_name) return parsed.society.building_name;
-      }
-      const savedOrg = localStorage.getItem('org_name') || localStorage.getItem('organization_name');
-      if (savedOrg) return savedOrg;
-    } catch {}
-    return 'My Piramal';
-  }, []);
+  // Fixed org name for dedicated My Piramal dashboard route
+  const orgName = 'My Piramal';
 
   const PAGE_TITLES: Record<PageId, string> = {
     pgTraffic: 'Traffic & Session',
@@ -292,8 +280,11 @@ function PosthogMyPiramalDashboardContent() {
           <div className="page-head">
             <h2 id="pageTitle">{PAGE_TITLES[activePage]}</h2>
             <p className="page-sub">
-              <span id="custName">{orgName} Analytics</span> ·{' '}
-              <span id="scopeLabel">{currentSiteName}</span>
+              <span>My Piramal — Post Possession</span> &middot;{' '}
+              <span>Residents &amp; society admins &middot; all societies</span>
+            </p>
+            <p className="page-sub" style={{ fontSize: '12.5px', marginTop: '4px' }}>
+              Resident community app, after handover &middot; 350 real events / 327 Post-Possession-scoped, 27 categories
             </p>
           </div>
 
