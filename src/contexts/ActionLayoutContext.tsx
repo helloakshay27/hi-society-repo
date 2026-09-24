@@ -5,7 +5,7 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "./PermissionsContext";
 import { getModuleForFunction } from "../utils/moduleDetection";
 import { getUser } from "../utils/auth";
@@ -45,6 +45,10 @@ interface ActionLayoutContextType {
   isActionSidebarVisible: boolean;
 }
 
+// Where action-org accounts (org 109/324/10) land when they hit a route that
+// isn't in their role response.
+const ACTION_ORG_FALLBACK_ROUTE = "/bms/hisoc-notice-list";
+
 const ActionLayoutContext = createContext<ActionLayoutContextType | undefined>(
   undefined
 );
@@ -80,6 +84,7 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
   const [isActionSidebarVisible, setIsActionSidebarVisible] =
     useState<boolean>(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { userRole } = usePermissions();
 
   // Extract available modules from userRole
@@ -332,6 +337,20 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
       setCurrentModule(foundModule);
       setCurrentFunction(foundFunction);
       setIsActionSidebarVisible(true);
+    } else if (
+      isActionOrgAccount &&
+      !currentModule &&
+      path !== ACTION_ORG_FALLBACK_ROUTE &&
+      path !== "/" &&
+      !path.startsWith("/login")
+    ) {
+      // Landed directly (fresh load / typed URL) on a route that isn't in the
+      // user's role response at all — send them to the default landing page
+      // instead of showing a page they have no module for.
+      console.log(
+        `🔀 ActionLayout - "${path}" not in role response; redirecting to ${ACTION_ORG_FALLBACK_ROUTE}`
+      );
+      navigate(ACTION_ORG_FALLBACK_ROUTE, { replace: true });
     } else if (isActionOrgAccount && currentModule) {
       // No route/derived match for this page (e.g. a "+ Add" sibling page
       // whose exact URL isn't separately registered in the role data), but
