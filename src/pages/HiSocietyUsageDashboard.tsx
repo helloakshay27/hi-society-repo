@@ -10,6 +10,8 @@ import { Footer } from '../features/posthog-dashboard/components/Footer';
 import { TrafficSection } from '../features/posthog-dashboard/sections/TrafficSection';
 import { AdoptionSection } from '../features/posthog-dashboard/sections/AdoptionSection';
 import { WorkflowSection } from '../features/posthog-dashboard/sections/WorkflowSection';
+import { RecentActivitySidebar } from '../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar';
+import type { DashboardFilters } from '../pages/posthog-runwal-dashboard/api/types';
 import type { DashboardState } from '../features/posthog-dashboard/data/metrics';
 
 const PAGES: { key: DashboardState['activePage']; title: string; icon: JSX.Element }[] = [
@@ -47,6 +49,17 @@ function DashboardLayout() {
   const { vm, setActivePage } = useDashboard();
   const { activePage } = vm.state;
   const page = PAGES.find((p) => p.key === activePage) ?? PAGES[0];
+  const recentActivityFilters: DashboardFilters = {
+    siteIds: vm.scopedSites.map((site) => site.id),
+    from: vm.range.from,
+    to: vm.range.to,
+    token: vm.token,
+    devPlatform: 'all',
+    licensedSeats: vm.state.licensedSeats,
+    module: vm.state.module,
+    subModule: vm.state.subModule,
+    projectCode: 'HS-01',
+  };
 
   return (
     <>
@@ -74,6 +87,7 @@ function DashboardLayout() {
               ))}
             </div>
           </nav>
+          <RecentActivitySidebar filters={recentActivityFilters} sitesSettled={!vm.sitesLoading && vm.sites.length > 0} />
         </aside>
 
         <main className="main">

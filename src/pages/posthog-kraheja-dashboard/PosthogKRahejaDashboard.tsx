@@ -271,7 +271,12 @@ function PosthogKRahejaDashboardContent() {
       />
 
       <div className="shell">
-        <SideBar activePage={activePage} onSelectPage={handleSelectPage} />
+        <SideBar
+          activePage={activePage}
+          onSelectPage={handleSelectPage}
+          filters={filters}
+          sitesSettled={sitesSettled}
+        />
 
         <main className="main">
           <div className="page-head">

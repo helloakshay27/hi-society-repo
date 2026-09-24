@@ -309,6 +309,8 @@ function PosthogGodrejDashboardContent() {
         <SideBar
           activePage={activePage}
           onSelectPage={handleSelectPage}
+          filters={filters}
+          sitesSettled={sitesSettled}
         />
 
         <main className="main">
