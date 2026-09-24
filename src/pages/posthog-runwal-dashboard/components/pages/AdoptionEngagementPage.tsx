@@ -207,16 +207,6 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     refetch: refetchOverdue,
   } = useOverdueInvoices(filters, sitesSettled);
 
-  // Seat Utilisation
-  const seatUtilVal = adoptData?.seat_utilisation?.value;
-  const seatUtilDisplay =
-    seatUtilVal != null
-      ? pct(seatUtilVal <= 1 ? seatUtilVal * 100 : seatUtilVal)
-      : isAdoptLoading
-      ? '...'
-      : '—';
-  const seatUtilDelta = formatDelta(adoptData?.seat_utilisation?.delta_pct);
-
   // Stickiness
   const stickinessVal = adoptData?.stickiness?.value;
   const stickinessDisplay =
@@ -315,21 +305,6 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       )}
 
       <div className="tiles" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: '16px' }}>
-        <KpiTile
-          id="seatUtil"
-          infoKey="A1"
-          label="Seat Utilisation"
-          val={seatUtilDisplay}
-          dir={seatUtilDelta.dir}
-          delta={seatUtilDelta.text}
-          sub="active ÷ registered users"
-          raw={seatUtilVal != null ? (seatUtilVal <= 1 ? seatUtilVal * 100 : seatUtilVal) : undefined}
-          unit="%"
-          goodUp={true}
-          benchmark={benchmarks.seatUtil}
-          onBenchmarkChange={onBenchmarkChange}
-          isLoading={isAdoptLoading}
-        />
         <KpiTile
           id="stickiness"
           infoKey="A2"
