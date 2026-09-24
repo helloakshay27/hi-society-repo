@@ -82,7 +82,12 @@ const extractFlatAmounts = (charge: Record<string, unknown>): Record<string, str
 };
 
 const extractLedgerIds = (charge: Record<string, unknown>): number[] => {
+  // Confirmed real shape: charge_setup.expense_charge.assigned_ledger_ids
+  // (plain id array) / .assigned_ledgers ({id, name} objects).
+  const expenseCharge = charge.expense_charge as Record<string, unknown> | undefined;
   const list =
+    (expenseCharge?.assigned_ledger_ids as unknown[]) ??
+    (expenseCharge?.assigned_ledgers as unknown[]) ??
     (charge.ledger_ids as unknown[]) ??
     (charge.assigned_ledgers as unknown[]) ??
     (charge.ledgers as unknown[]) ??
