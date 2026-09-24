@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { useLayout } from "../contexts/LayoutContext";
@@ -664,6 +664,40 @@ export const ActionSidebar = () => {
       .map((func) => filterInactive(func))
       .filter((func) => func !== null);
   }, [moduleFunctions]);
+
+  // Auto-expand every parent above the leaf whose page is currently open, so
+  // a child page opened by URL/header/redirect is visible in the sidebar.
+  // Merges into the existing set so manually opened sections stay open.
+  useEffect(() => {
+    const path = location.pathname;
+    const matchesPath = (link?: string) =>
+      !!link && (path === link || path.startsWith(link + "/"));
+
+    const findActiveAncestors = (nodes: any[], ancestors: string[]): string[] | null => {
+      for (const node of nodes) {
+        if (node.children.length > 0) {
+          const found = findActiveAncestors(node.children, [
+            ...ancestors,
+            node.action_name,
+          ]);
+          if (found) return found;
+        } else if (matchesPath(node.react_link)) {
+          return ancestors;
+        }
+      }
+      return null;
+    };
+
+    const activeAncestors = findActiveAncestors(hierarchicalFunctions, []);
+    if (!activeAncestors || activeAncestors.length === 0) return;
+
+    setExpandedFunctions((prev) => {
+      if (activeAncestors.every((name) => prev.has(name))) return prev;
+      const next = new Set(prev);
+      activeAncestors.forEach((name) => next.add(name));
+      return next;
+    });
+  }, [location.pathname, hierarchicalFunctions]);
 
   // Don't render if not visible or no module selected
   if (!isActionSidebarVisible || !currentModule) {
