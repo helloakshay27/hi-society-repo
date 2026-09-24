@@ -102,6 +102,12 @@ function PosthogLacircleDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
+      // Lacircle sends both identifiers on every PostHog Adoption API call —
+      // app_id and project_code together (same pattern as My Piramal) —
+      // since buildPosthogQuery() only falls back to the URL's app_id when
+      // no project_code is set on the filters at all.
+      appId: LACIRCLE_APP_ID,
+      projectCode: 'RMP-01',
     };
   }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
 
