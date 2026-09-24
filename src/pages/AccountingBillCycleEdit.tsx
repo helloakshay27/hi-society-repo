@@ -210,10 +210,21 @@ const AccountingBillCycleEdit: React.FC = () => {
           expense: !!data.expense_bill,
         });
 
-        const names: string[] = Array.isArray(data.charge_names) ? data.charge_names : [];
-        setChargeIds(
-          options.charges.filter((cs) => names.includes(cs.name)).map((cs) => cs.id)
-        );
+        // The API returns the selected charges as charge_setup_ids (real ids) —
+        // prefer that directly; only fall back to matching by charge_names
+        // (fuzzier, since formatting differences could miss a match) if the
+        // response doesn't include ids for some reason.
+        const chargeSetupIds: number[] = Array.isArray(data.charge_setup_ids)
+          ? data.charge_setup_ids.map(Number)
+          : [];
+        if (chargeSetupIds.length > 0) {
+          setChargeIds(chargeSetupIds);
+        } else {
+          const names: string[] = Array.isArray(data.charge_names) ? data.charge_names : [];
+          setChargeIds(
+            options.charges.filter((cs) => names.includes(cs.name)).map((cs) => cs.id)
+          );
+        }
       } catch (error) {
         console.error("Error fetching bill cycle for edit:", error);
         toast.error("Failed to load bill cycle for editing");

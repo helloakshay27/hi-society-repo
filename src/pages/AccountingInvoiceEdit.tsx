@@ -331,7 +331,7 @@ const AccountingInvoiceEdit: React.FC = () => {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
         const res = await axios.get(`${baseUrl}/lock_account_ledgers/dropdown.json`, {
-          params: { lock_account_id: lockAccountId },
+          params: { lock_account_id: lockAccountId, ledger_of: "ChargeSetup", },
           headers: {
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
