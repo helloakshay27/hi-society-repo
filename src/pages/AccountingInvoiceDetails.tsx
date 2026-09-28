@@ -33,6 +33,15 @@ interface Payment {
   sap_response?: unknown[];
 }
 
+interface BillActions {
+  show_actions?: boolean;
+  can_publish?: boolean;
+  can_receive_payment?: boolean;
+  receipt_url?: string;
+  can_download_invoice?: boolean;
+  can_cancel?: boolean;
+}
+
 interface LockAccountBillDetail {
   id: number;
   bill_number: string;
@@ -50,6 +59,7 @@ interface LockAccountBillDetail {
   charges?: BillCharge[];
   lock_account_bill_charges?: BillCharge[];
   payments?: Payment[];
+  bill_actions?: BillActions;
 }
 
 // "2026-09-18" -> "18/09/2026"
@@ -192,7 +202,17 @@ const AccountingInvoiceDetails: React.FC = () => {
         { headers }
       );
 
-      setBill((prev) => (prev ? { ...prev, publish: true } : prev));
+      setBill((prev) =>
+        prev
+          ? {
+              ...prev,
+              publish: true,
+              bill_actions: prev.bill_actions
+                ? { ...prev.bill_actions, can_publish: false }
+                : prev.bill_actions,
+            }
+          : prev
+      );
       toast.success("Invoice published successfully");
     } catch (error) {
       console.error("Error publishing invoice:", error);
@@ -376,7 +396,7 @@ const AccountingInvoiceDetails: React.FC = () => {
                 />
               </button>
             </div>
-            {!bill.publish && (
+            {bill.bill_actions?.can_publish && (
               <Button
                 onClick={handlePublishInvoice}
                 disabled={publishing}

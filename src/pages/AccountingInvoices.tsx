@@ -60,6 +60,7 @@ interface LockAccountBill {
   status: string;
   publish: boolean;
   mail_sent: boolean;
+  bill_actions?: { can_publish?: boolean };
 }
 
 interface InvoiceRow {
@@ -112,7 +113,7 @@ const toRow = (bill: LockAccountBill): InvoiceRow => ({
   note: bill.note || "",
   billCycle: bill.bill_cycle || bill.bill_cycle_name || "",
   status: bill.status || "Pending",
-  publish: Boolean(bill.publish),
+  publish: Boolean(bill.bill_actions?.can_publish),
   mailSent: Boolean(bill.mail_sent),
 });
 
