@@ -1306,6 +1306,7 @@ table.pathtbl {
   border-collapse: collapse;
   width: 100%;
   font-size: 13px;
+  background: transparent !important;
 }
 
 table.league th,
@@ -1315,42 +1316,84 @@ table.pathtbl td {
   padding: 11px 12px;
   text-align: left;
   white-space: nowrap;
+  background: transparent !important;
 }
 
 table.league thead th,
 table.pathtbl thead th {
   font-size: 12px;
-  font-weight: 400;
-  color: var(--faint);
+  font-weight: 500 !important;
+  color: var(--muted) !important;
   letter-spacing: 0;
   text-transform: none;
-  border-bottom: 1px solid var(--border);
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 table.league tbody td,
 table.pathtbl tbody td {
-  border-bottom: 1px solid var(--surface-2);
+  color: var(--ink) !important;
+  border-bottom: 1px solid var(--surface-2) !important;
   transition: background 0.12s;
+  background: transparent !important;
 }
 
 table.league tbody tr:last-child td,
 table.pathtbl tbody tr:last-child td {
-  border-bottom: none;
+  border-bottom: none !important;
 }
 
 table.league tbody tr:hover,
-table.pathtbl tbody tr:hover {
-  background: var(--surface-2);
+table.pathtbl tbody tr:hover,
+table.league tbody tr:hover td,
+table.pathtbl tbody tr:hover td {
+  background: var(--surface-2) !important;
 }
 
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
   font-weight: 400;
+  color: var(--ink-2) !important;
 }
 
 .strong {
   font-weight: 500;
+  color: var(--ink) !important;
+}
+
+[data-theme='dark'] table.league thead th,
+[data-theme='dark'] table.pathtbl thead th {
+  color: var(--muted, #a09d94) !important;
+  background: transparent !important;
+  border-bottom: 1px solid var(--border, #33302a) !important;
+}
+
+[data-theme='dark'] table.league tbody td,
+[data-theme='dark'] table.pathtbl tbody td {
+  color: var(--ink, #f2f0eb) !important;
+  background: transparent !important;
+  border-bottom: 1px solid var(--border, #33302a) !important;
+}
+
+[data-theme='dark'] table.league tbody tr:hover td,
+[data-theme='dark'] table.pathtbl tbody tr:hover td,
+[data-theme='dark'] table.league tbody tr:hover,
+[data-theme='dark'] table.pathtbl tbody tr:hover {
+  background: var(--surface-2, #2a2825) !important;
+}
+
+[data-theme='dark'] table.league td:first-child,
+[data-theme='dark'] table.pathtbl td:first-child {
+  color: var(--ink, #f2f0eb) !important;
+}
+
+[data-theme='dark'] .num {
+  color: var(--ink-2, #d3d0c8) !important;
+}
+
+[data-theme='dark'] .strong {
+  color: var(--ink, #f2f0eb) !important;
 }
 
 .arrow {

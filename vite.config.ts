@@ -23,7 +23,13 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/runwal-api/, ''),
-      }
+      },
+      '/posthog-api': {
+        target: 'https://posthog-api.lockated.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/posthog-api/, ''),
+      },
     }
   },
   optimizeDeps: {

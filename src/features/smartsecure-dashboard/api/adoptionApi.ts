@@ -4,6 +4,12 @@ import axios from 'axios';
  * Dynamically resolves the PostHog Adoption Analytics API host.
  */
 export function getApiBaseUrl(): string {
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return '/posthog-api';
+  }
   return (
     (import.meta.env.VITE_SMARTSECURE_API_URL as string | undefined) ??
     (import.meta.env.VITE_POSTHOG_API_URL as string | undefined) ??
