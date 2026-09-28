@@ -63,7 +63,10 @@ const AccountingBillCycles: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const response = await axios.get(`${baseUrl}/account/society_bill_cycles.json`, {
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       setCycles(response.data?.society_bill_cycles || []);
     } catch (error) {
@@ -91,7 +94,10 @@ const AccountingBillCycles: React.FC = () => {
         null,
         {
           params: { id, active: nextActive },
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         }
       );
       toast.success("Status updated successfully");

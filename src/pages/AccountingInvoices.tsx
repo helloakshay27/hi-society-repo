@@ -38,6 +38,14 @@ import {
 
 const PAGE_SIZE = 20;
 
+// "2026-09-30" -> "30/09/2026"; leaves already-formatted or unparseable values as-is.
+const formatDateDMY = (value?: string | null): string => {
+  if (!value) return "-";
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return value;
+};
+
 interface LockAccountBill {
   id: number;
   bill_number: string;
@@ -111,7 +119,7 @@ const toRow = (bill: LockAccountBill): InvoiceRow => ({
   dueDate: bill.due_date || "",
   totalAmount: Number(bill.total_amount) || 0,
   note: bill.note || "",
-  billCycle: bill.bill_cycle || bill.bill_cycle_name || "",
+  billCycle: bill.bill_cycle || bill.society_bill_cycle_name || "",
   status: bill.status || "Pending",
   publish: Boolean(bill.bill_actions?.can_publish),
   mailSent: Boolean(bill.mail_sent),
@@ -487,7 +495,7 @@ const AccountingInvoices: React.FC = () => {
       case "nameOnBill":
         return item.nameOnBill || "-";
       case "dueDate":
-        return item.dueDate || "-";
+        return formatDateDMY(item.dueDate);
       case "totalAmount":
         return item.totalAmount ? item.totalAmount.toFixed(1) : "-";
       case "note":

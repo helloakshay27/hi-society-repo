@@ -327,7 +327,24 @@ const AccountingTransactions: React.FC = () => {
       fetchTransactions();
     } catch (error) {
       console.error("Error importing transactions:", error);
-      toast.error("Failed to import transactions");
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response.data as {
+          message?: string;
+          errors?: { row?: number; column?: string; error?: string }[];
+        };
+        toast.error(
+          <div>
+            <div className="font-medium">{data?.message || "Failed to import transactions"}</div>
+            {(data?.errors ?? []).map((rowError, index) => (
+              <div key={index}>
+                Row {rowError.row}: {rowError.column} - {rowError.error}
+              </div>
+            ))}
+          </div>
+        );
+      } else {
+        toast.error("Failed to import transactions");
+      }
     } finally {
       setIsImporting(false);
     }

@@ -366,7 +366,6 @@ function PosthogGodrejDashboardContent() {
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
               sites={sites}
-              adminScope={adminScope}
             />
           )}
 
