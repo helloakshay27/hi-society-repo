@@ -15,7 +15,6 @@ import {
   useRoles,
 } from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
 import { pct, fmtDateShort } from '../../../posthog-runwal-dashboard/data/constants';
-import { AdminTiersCard } from '../adoption/AdminTiersCard';
 import { SocietyLeagueTable } from '../adoption/SocietyLeagueTable';
 import { AdminScope } from '../../data/wireframeData';
 
@@ -25,7 +24,7 @@ interface AdoptionEngagementPageProps {
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
   sites: SiteLookupItem[];
-  adminScope: AdminScope;
+  adminScope?: AdminScope;
 }
 
 function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
@@ -43,7 +42,6 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   onBenchmarkChange,
   sitesSettled = true,
   sites,
-  adminScope,
 }) => {
   const { data: adoptData, isLoading: isAdoptLoading, isError: isAdoptError, error: adoptError, refetch: refetchAdopt } =
     useAdoptionEngagement(filters, sitesSettled);
@@ -356,8 +354,6 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           )}
         </Card>
       </div>
-
-      <AdminTiersCard roles={rolesList} isLoading={isRolesLoading} adminScope={adminScope} />
 
       {/* <SocietyLeagueTable sites={sites} baseFilters={filters} enabled={sitesSettled} /> */}
     </section>

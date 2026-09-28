@@ -45,10 +45,16 @@ export function AdoptionSection() {
         head={<CardHead cr="Trend · SVG line chart" ct="Adoption trend (weekly active users, last 8 weeks)" />}
       >
         {isAdoptLoading ? (
-          <ChartSkeleton height={240} />
+          <ChartSkeleton height={140} />
         ) : (
           <>
-            <LineChart cur={adopt.adoptionTrendChart.series} showPrev={false} labels={adopt.adoptionTrendChart.labels} />
+            <LineChart
+              cur={adopt.adoptionTrendChart.series}
+              showPrev={false}
+              labels={adopt.adoptionTrendChart.labels}
+              height={140}
+              maxHeight={170}
+            />
             <div className="legend"><span><i style={{ background: 'var(--ss-chart-blue)' }} /> Weekly active users</span></div>
           </>
         )}
@@ -113,9 +119,9 @@ export function AdoptionSection() {
         </Card>
       </div>
 
-      <KnownDeadAreasCard />
+      {/* <KnownDeadAreasCard /> */}
 
-      <Card
+      {/* <Card
         style={{ marginTop: 12 }}
         infoKey="A11"
         bodyClassName="tbl-wrap"
@@ -126,7 +132,7 @@ export function AdoptionSection() {
         ) : (
           <SocietyTable rows={adopt.societyRows} />
         )}
-      </Card>
+      </Card> */}
     </section>
   );
 }
