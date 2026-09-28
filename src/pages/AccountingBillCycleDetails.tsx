@@ -132,7 +132,10 @@ const AccountingBillCycleDetails: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       const response = await axios.get(`${baseUrl}/account/society_bill_cycles/${id}.json`, {
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       setDetail(response.data?.society_bill_cycle || null);
     } catch (error) {
@@ -166,7 +169,10 @@ const AccountingBillCycleDetails: React.FC = () => {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
         const res = await axios.get(`${baseUrl}/account/society_bill_cycles/form_options.json`, {
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         });
         const data = (res.data || {}) as Record<string, unknown>;
         const list =
@@ -211,9 +217,14 @@ const AccountingBillCycleDetails: React.FC = () => {
   const handleOpenAddExpenseCharges = (row: InvoiceFrequencyRow) => {
     // Prefill with whatever's already been added for this period (matched by
     // charge_setup_id) so re-opening the modal doesn't blank out existing values.
+    // A charge_setup_id can have more than one record (re-added at a new
+    // amount) — the API returns the most recent one first, so keep only the
+    // first occurrence per charge_setup_id.
     const prefill: Record<number, string> = {};
     row.expenseCharges.forEach((charge) => {
-      prefill[charge.chargeSetupId] = String(charge.chargeAmount);
+      if (prefill[charge.chargeSetupId] === undefined) {
+        prefill[charge.chargeSetupId] = String(charge.chargeAmount);
+      }
     });
     setExpenseChargeAmounts(prefill);
     setExpenseChargeRow(row);

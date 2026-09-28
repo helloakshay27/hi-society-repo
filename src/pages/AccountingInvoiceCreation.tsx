@@ -100,6 +100,26 @@ interface SelectOption {
   label: string;
 }
 
+interface UnitOption extends SelectOption {
+  outstanding: number;
+}
+
+// Units carry an extra `outstanding` balance the plain {id,label}
+// normalizeOptions() shape would drop, so they get their own normalizer.
+const normalizeUnitOptions = (list: unknown): UnitOption[] => {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    const obj = (item ?? {}) as Record<string, unknown>;
+    const rawId = obj.id ?? obj.society_flat_id ?? obj.value ?? obj.name;
+    const rawLabel = obj.name ?? obj.label ?? rawId ?? "";
+    return {
+      id: String(rawId ?? ""),
+      label: String(rawLabel),
+      outstanding: Number(obj.outstanding ?? 0),
+    };
+  });
+};
+
 // The invoice_form_options / bill_frequencies APIs are expected to return
 // arrays of either plain strings or objects — normalize both shapes into
 // {id, label} so FormSelect never has to care which one it got.
@@ -241,7 +261,7 @@ const AccountingInvoiceCreation: React.FC = () => {
 
   const [billCycleOptions, setBillCycleOptions] = useState<SelectOption[]>([]);
   const [billFrequencyOptions, setBillFrequencyOptions] = useState<SelectOption[]>([]);
-  const [unitOptions, setUnitOptions] = useState<SelectOption[]>([]);
+  const [unitOptions, setUnitOptions] = useState<UnitOption[]>([]);
   const [residentTypeOptions, setResidentTypeOptions] = useState<SelectOption[]>([]);
   const [invoiceFormatOptions, setInvoiceFormatOptions] = useState<SelectOption[]>([]);
   const [ledgerOptions, setLedgerOptions] = useState<SelectOption[]>([]);
@@ -265,7 +285,7 @@ const AccountingInvoiceCreation: React.FC = () => {
         });
         const data = res.data || {};
         setBillCycleOptions(normalizeOptions(data.bill_cycles));
-        setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
+        setUnitOptions(normalizeUnitOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
         setResidentTypeOptions(normalizeOptions(data.resident_types));
         setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
         setAutoGenerateBillNumber(Boolean(data.bill_number_setting.auto_generate));
@@ -370,6 +390,11 @@ const AccountingInvoiceCreation: React.FC = () => {
   const total = useMemo(
     () => charges.reduce((sum, row) => sum + computeChargeAmounts(row).totalAmount, 0),
     [charges]
+  );
+
+  const balanceAmount = useMemo(
+    () => unitOptions.find((option) => option.id === unitId)?.outstanding ?? 0,
+    [unitOptions, unitId]
   );
 
   const updateCharge = (key: string, field: keyof ChargeRow, value: string) => {
@@ -528,7 +553,7 @@ const AccountingInvoiceCreation: React.FC = () => {
         society_id: Number(societyId) || undefined,
         due_date: dueDate,
         bill_cycle_id: billCycleId ? Number(billCycleId) : undefined,
-        frequency: billFrequency || undefined,
+        bill_frequency_id: billFrequency ? Number(billFrequency) : undefined,
         resident_type: residentTypeId,
         other_preferences: otherPreferences || undefined,
         invoice_format: invoiceFormatId || undefined,
@@ -637,7 +662,7 @@ const AccountingInvoiceCreation: React.FC = () => {
             </FormControl>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <FormControl fullWidth disabled={!billCycleId || frequencyLoading} sx={{ "& .MuiInputBase-root": fieldStyles }}>
               <InputLabel shrink>Bill Frequency</InputLabel>
               <Select
@@ -678,6 +703,14 @@ const AccountingInvoiceCreation: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+            {unitId && (
+              <div className="flex h-[45px] items-center text-sm text-brand-text">
+                Balance Amount: {Math.round(balanceAmount * 100) / 100}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
               <InputLabel shrink>Resident Type</InputLabel>
               <Select
@@ -695,9 +728,6 @@ const AccountingInvoiceCreation: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <FormTextArea
               label="Other Preferences"
               placeholder="Enter Other Preferences"
@@ -722,6 +752,9 @@ const AccountingInvoiceCreation: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <TextField
               label="IRN No"
               placeholder="Enter IRN Number"
@@ -733,9 +766,6 @@ const AccountingInvoiceCreation: React.FC = () => {
               InputProps={{ notched: true }}
               sx={{ "& .MuiInputBase-root": fieldStyles }}
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <TextField
               label="Acknowledgement No"
               placeholder="Enter Acknowledgement Number"
