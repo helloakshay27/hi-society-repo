@@ -42,6 +42,12 @@ import {
 // ==========================================
 
 function getPosthogApiBase(): string {
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return '/posthog-api';
+  }
   return (
     (import.meta as any).env?.VITE_FM_ADOPTION_API_URL ||
     (import.meta as any).env?.VITE_POSTHOG_API_URL ||

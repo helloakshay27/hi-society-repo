@@ -462,20 +462,20 @@ svg.chart{width:100%;height:auto;display:block;overflow:hidden}
 
 /* ============ TABLES ============ */
 .tbl-wrap{overflow-x:auto}
-table.league,table.pathtbl{border-collapse:collapse;width:100%;font-size:13px}
+table.league,table.pathtbl{border-collapse:collapse;width:100%;font-size:13px;background:transparent !important}
 table.league th,table.league td,table.pathtbl th,table.pathtbl td{
-  padding:11px 12px;text-align:left;white-space:nowrap;
+  padding:11px 12px;text-align:left;white-space:nowrap;background:transparent !important;
 }
 table.league thead th,table.pathtbl thead th{
-  font-size:12px;font-weight:400;color:var(--faint);
-  letter-spacing:0;text-transform:none;border-bottom:1px solid var(--border);
+  font-size:12px;font-weight:500 !important;color:var(--muted) !important;
+  letter-spacing:0;text-transform:none;border-bottom:1px solid var(--border) !important;background:transparent !important;
 }
-table.league tbody td,table.pathtbl tbody td{border-bottom:1px solid var(--surface-2);transition:background .12s}
-table.league tbody tr:last-child td,table.pathtbl tbody tr:last-child td{border-bottom:none}
-table.league tbody tr:hover,table.pathtbl tbody tr:hover{background:var(--surface-2)}
+table.league tbody td,table.pathtbl tbody td{border-bottom:1px solid var(--surface-2) !important;transition:background .12s;color:var(--ink) !important;background:transparent !important}
+table.league tbody tr:last-child td,table.pathtbl tbody tr:last-child td{border-bottom:none !important}
+table.league tbody tr:hover,table.pathtbl tbody tr:hover,table.league tbody tr:hover td,table.pathtbl tbody tr:hover td{background:var(--surface-2) !important}
 table.league tbody tr:hover td:first-child,table.pathtbl tbody tr:hover td:first-child{box-shadow:none}
-.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:400}
-.strong{font-weight:500}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:400;color:var(--ink-2) !important}
+.strong{font-weight:500;color:var(--ink) !important}
 .arrow{font-weight:400;font-size:12px}
 .arrow.up{color:var(--pos)} .arrow.dn{color:var(--neg)} .arrow.flat{color:var(--faint)}
 .status{font-size:11.5px;font-weight:500;letter-spacing:0;padding:3px 9px;border-radius:20px;text-transform:none}

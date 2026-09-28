@@ -49,6 +49,16 @@
   --chart-red:#b3402c;
   --chart-violet:#7c6fd6;
   --chart-violet-tint:#e7e4f8;
+  --ss-chart-blue:#2c7be5;
+  --ss-chart-fill:#d3e3f9;
+  --ss-chart-violet:#7c6fd6;
+  --ss-chart-violet-tint:#e7e4f8;
+  --ss-green:#0f8a3d;
+  --ss-green-tint:#e2efe6;
+  --ss-mint:#3daf7d;
+  --ss-amber:#c98a12;
+  --ss-chart-red:#b3402c;
+  --ss-text-sub:#6f6e68;
   --heat-rgb:44,123,229;
   --heat-a0:0.09;
   --heat-a1:0.78;
@@ -106,6 +116,16 @@ html[data-ss-theme="dark"]{
   --chart-red:#e4735c;
   --chart-violet:#9d90e8;
   --chart-violet-tint:#292440;
+  --ss-chart-blue:#5f9df6;
+  --ss-chart-fill:#22344b;
+  --ss-chart-violet:#9d90e8;
+  --ss-chart-violet-tint:#292440;
+  --ss-green:#4fc07f;
+  --ss-green-tint:#1a2c21;
+  --ss-mint:#57c496;
+  --ss-amber:#dfa63e;
+  --ss-chart-red:#e4735c;
+  --ss-text-sub:#a09d94;
   --heat-rgb:95,157,246;
   --heat-a0:0.12;
   --heat-a1:0.80;
@@ -392,13 +412,21 @@ html[data-ss-theme="dark"]{
 .ss-app .rt td.lbl{background:none;text-align:left;color:var(--muted);white-space:nowrap}
 
 /* ============ FUNNEL ============ */
-.ss-app .funnel{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+.ss-app .funnel{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.ss-app .funnel .fitem{display:flex;flex-direction:column;gap:4px}
+.ss-app .funnel .fdrop{font-size:11.5px;font-weight:600;color:var(--neg,#b3402c);padding-left:4px;display:inline-flex;align-items:center;gap:4px}
+html[data-ss-theme="dark"] .ss-app .funnel .fdrop{color:var(--red,#e4735c)}
+.ss-app .funnel .ftrack{width:100%;background:var(--surface-2,#f5f4f1);border:1px solid var(--border,#e6e4de);border-radius:var(--r-sm,8px);overflow:hidden}
+html[data-ss-theme="dark"] .ss-app .funnel .ftrack{background:var(--surface-2,#2a2825);border-color:var(--border,#33302a)}
 .ss-app .funnel .fstep{
-  position:relative;color:var(--on-ink);font-size:12.5px;font-weight:500;
-  padding:10px 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  position:relative;background:var(--blue,#2c7be5);color:#ffffff !important;
+  font-size:13px;font-weight:500;padding:10px 16px;border-radius:calc(var(--r-sm,8px) - 1px);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;min-height:42px;
+  transition:width .3s ease;
 }
-.ss-app .funnel .fsub{display:block;font-size:11px;font-weight:400;opacity:.86;margin-top:2px}
-.ss-app .funnel .fdrop{font-size:11.5px;color:var(--neg);font-weight:400;padding-left:2px}
+html[data-ss-theme="dark"] .ss-app .funnel .fstep{background:#3b82f6;color:#ffffff !important}
+.ss-app .funnel .fstep .fname{font-weight:600;color:#ffffff !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ss-app .funnel .fstep .fsub{font-size:11.5px;font-weight:500;color:rgba(255,255,255,.92) !important;white-space:nowrap;flex-shrink:0}
 
 /* ============ HORIZONTAL BARS ============ */
 .ss-app .hbars{display:flex;flex-direction:column;gap:13px;margin-top:4px}
@@ -410,19 +438,88 @@ html[data-ss-theme="dark"]{
 
 /* ============ TABLES ============ */
 .ss-app .tbl-wrap{overflow-x:auto}
-.ss-app table.league,.ss-app table.pathtbl{border-collapse:collapse;width:100%;font-size:13px}
-.ss-app table.league th,.ss-app table.league td,.ss-app table.pathtbl th,.ss-app table.pathtbl td{
-  padding:11px 12px;text-align:left;white-space:nowrap;
+.ss-app table.league,
+.ss-app table.pathtbl{
+  border-collapse:collapse;
+  width:100%;
+  font-size:13px;
+  background:transparent !important;
 }
-.ss-app table.league thead th,.ss-app table.pathtbl thead th{
-  font-size:12px;font-weight:400;color:var(--faint);
-  letter-spacing:0;text-transform:none;border-bottom:1px solid var(--border);
+.ss-app table.league th,
+.ss-app table.league td,
+.ss-app table.pathtbl th,
+.ss-app table.pathtbl td{
+  padding:11px 12px;
+  text-align:left;
+  white-space:nowrap;
+  background:transparent !important;
 }
-.ss-app table.league tbody td,.ss-app table.pathtbl tbody td{border-bottom:1px solid var(--surface-2);transition:background .12s}
-.ss-app table.league tbody tr:last-child td,.ss-app table.pathtbl tbody tr:last-child td{border-bottom:none}
-.ss-app table.league tbody tr:hover,.ss-app table.pathtbl tbody tr:hover{background:var(--surface-2)}
-.ss-app .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:400}
-.ss-app .strong{font-weight:500}
+.ss-app table.league thead th,
+.ss-app table.pathtbl thead th{
+  font-size:12px;
+  font-weight:500 !important;
+  color:var(--muted) !important;
+  letter-spacing:0;
+  text-transform:none;
+  background:transparent !important;
+  border-bottom:1px solid var(--border) !important;
+}
+.ss-app table.league tbody td,
+.ss-app table.pathtbl tbody td{
+  color:var(--ink) !important;
+  border-bottom:1px solid var(--surface-2) !important;
+  transition:background .12s;
+  background:transparent !important;
+}
+.ss-app table.league tbody tr:last-child td,
+.ss-app table.pathtbl tbody tr:last-child td{
+  border-bottom:none !important;
+}
+.ss-app table.league tbody tr:hover,
+.ss-app table.pathtbl tbody tr:hover,
+.ss-app table.league tbody tr:hover td,
+.ss-app table.pathtbl tbody tr:hover td{
+  background:var(--surface-2) !important;
+}
+.ss-app .num{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  font-weight:400;
+  color:var(--ink-2) !important;
+}
+.ss-app .strong{
+  font-weight:500;
+  color:var(--ink) !important;
+}
+
+html[data-ss-theme="dark"] .ss-app table.league thead th,
+html[data-ss-theme="dark"] .ss-app table.pathtbl thead th{
+  color:var(--muted,#a09d94) !important;
+  background:transparent !important;
+  border-bottom:1px solid var(--border,#33302a) !important;
+}
+html[data-ss-theme="dark"] .ss-app table.league tbody td,
+html[data-ss-theme="dark"] .ss-app table.pathtbl tbody td{
+  color:var(--ink,#f2f0eb) !important;
+  background:transparent !important;
+  border-bottom:1px solid var(--border,#33302a) !important;
+}
+html[data-ss-theme="dark"] .ss-app table.league tbody tr:hover td,
+html[data-ss-theme="dark"] .ss-app table.pathtbl tbody tr:hover td,
+html[data-ss-theme="dark"] .ss-app table.league tbody tr:hover,
+html[data-ss-theme="dark"] .ss-app table.pathtbl tbody tr:hover{
+  background:var(--surface-2,#2a2825) !important;
+}
+html[data-ss-theme="dark"] .ss-app table.league td:first-child,
+html[data-ss-theme="dark"] .ss-app table.pathtbl td:first-child{
+  color:var(--ink,#f2f0eb) !important;
+}
+html[data-ss-theme="dark"] .ss-app .num{
+  color:var(--ink-2,#d3d0c8) !important;
+}
+html[data-ss-theme="dark"] .ss-app .strong{
+  color:var(--ink,#f2f0eb) !important;
+}
 .ss-app .arrow{font-weight:400;font-size:12px}
 .ss-app .arrow.up{color:var(--pos)} .ss-app .arrow.dn{color:var(--neg)} .ss-app .arrow.flat{color:var(--faint)}
 .ss-app .status{font-size:11.5px;font-weight:500;letter-spacing:0;padding:3px 9px;border-radius:20px;text-transform:none}
