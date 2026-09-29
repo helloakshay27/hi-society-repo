@@ -426,6 +426,8 @@ export interface DashboardFilters {
   // PostHog adoption / FM / site-lookup request in place of `app_id` — the
   // two are mutually exclusive identifiers, never sent together.
   projectCode?: string;
+  deviceType?: string;
+  includeAnonymous?: boolean;
 }
 
 export interface SiteLookupItem {

@@ -78,12 +78,16 @@ function PosthogMyPiramalDashboardContent() {
     // Site scope comes from the logged-in user's own account (site_id),
     // not a manual picker — falls back to [] (tenant-wide) until it loads.
     const siteIds = accountSiteId ? [accountSiteId] : [];
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const dynamicAppId = urlParams?.get('app_id') || urlParams?.get('appId') || '30';
+    const dynamicProjectCode = urlParams?.get('project_code') || urlParams?.get('projectCode') || 'PIR-01';
 
     return {
       siteIds,
       from: rangeFrom,
       to: rangeTo,
       token: getToken() || localStorage.getItem('token') || '',
+      deviceType: 'Mobile',
       devPlatform,
       licensedSeats: null,
       module: null,
@@ -91,8 +95,9 @@ function PosthogMyPiramalDashboardContent() {
       // My Piramal sends both identifiers on every PostHog Adoption API
       // call — project_code and app_id together (unlike Runwal CP, which
       // sends project_code only).
-      appId: '30',
-      projectCode: 'PIR-01',
+      appId: dynamicAppId,
+      projectCode: dynamicProjectCode,
+      includeAnonymous: true,
     };
   }, [accountSiteId, devPlatform, rangeFrom, rangeTo]);
 
