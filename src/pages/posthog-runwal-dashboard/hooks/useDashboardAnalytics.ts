@@ -75,6 +75,10 @@ const commonKey = (f: DashboardFilters) => [
   f.siteIds.join(','),
   f.devPlatform,
   f.displayView || '',
+  f.projectCode || '',
+  f.appId || '',
+  f.deviceType || '',
+  f.includeAnonymous ? 'anon' : '',
 ];
 
 // ==========================================

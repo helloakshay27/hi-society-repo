@@ -79,19 +79,20 @@ const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
 ];
 
 function DashboardLayout() {
-  const { state, setPage, sites /* , appId */ } = useSmartSecureDashboard();
+  const { state, setPage, sites, appId, projectCode } = useSmartSecureDashboard();
   const page = PAGES.find((p) => p.key === state.page) ?? PAGES[0];
   const recentActivityFilters: DashboardFilters = {
     siteIds: state.society === 'All Societies' ? sites.map((site) => site.id) : [state.society],
     from: state.rangeFrom,
     to: state.rangeTo,
     token: '',
-    devPlatform: 'all',
+    deviceType: 'Mobile',
+    devPlatform: state.dev || 'all',
     licensedSeats: null,
     module: null,
     subModule: null,
-    // appId,
-    projectCode: SMARTSECURE_PROJECT_CODE,
+    appId: appId || undefined,
+    projectCode: projectCode || SMARTSECURE_PROJECT_CODE,
   };
 
   return (

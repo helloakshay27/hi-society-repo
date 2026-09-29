@@ -128,8 +128,6 @@ export function DashboardProvider({
   }, [projectCode]);
 
   const effectiveAppId = useMemo(() => {
-    // If project_code is active, don't pass or fall back to app_id
-    if (effectiveProjectCode) return undefined;
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const fromUrl = urlParams.get('app_id') || urlParams.get('appId');
@@ -141,15 +139,14 @@ export function DashboardProvider({
       (typeof window !== 'undefined' &&
         (window.location.pathname.includes('quickgate') || window.location.pathname.includes('quikgate')));
     return isQuikgate ? '23' : undefined;
-  }, [appId, appName, effectiveProjectCode]);
+  }, [appId, appName]);
 
   const filters = useMemo(() => {
-    let devices: ('Mobile' | 'Desktop')[] | undefined;
+    let devices: ('Mobile' | 'Desktop')[] | undefined = ['Mobile'];
     let os: string | undefined;
 
     if (state.dev === 'ios') os = 'ios';
     else if (state.dev === 'android') os = 'Android';
-    else devices = ['Mobile'];
 
     return {
       enabled: sitesSettled,
