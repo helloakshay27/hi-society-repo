@@ -80,7 +80,9 @@ export interface Society {
   attached_documents?: any[];
   // Additional fields from create API
   organization_id?: number;
+  organization_name?: string | null;
   company_id?: number;
+  company_name?: string | null;
   builder_id?: number;
   headquarter_id?: number;
   region_id?: number;

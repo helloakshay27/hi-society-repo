@@ -17,6 +17,9 @@ export interface HiSocietyUserSociety {
   id_user: string;
   role_id: number;
   building_name: string;
+  block_no: string | null;
+  flat_no: string | null;
+  society_block?: { name: string | null } | null;
   phase_names: string;
   status: string;
   role_name: string;

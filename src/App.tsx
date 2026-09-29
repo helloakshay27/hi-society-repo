@@ -1152,6 +1152,7 @@ const ModulesManagement = lazy(() => import("./pages/settings/ModulesManagement"
 const LoyaltyTDS = lazy(() => import("./pages/ops-console/admin/LoyaltyTDS").then(m => ({ default: m.LoyaltyTDS })));
 const AdminNewDashboard = lazy(() => import("./pages/ops-console/admin/AdminNewDashboard"));
 const SmartsecureIntegration = lazy(() => import("./pages/ops-console/admin/SmartsecureIntegration"));
+const UserDevices = lazy(() => import("./features/user-devices/pages/UserDevices"));
 const AddSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/AddSmartsecureGatePage"));
 const EditSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/EditSmartsecureGatePage"));
 const HiSocietyUsersDashboard = lazy(() => import("./pages/master/HiSocietyUsersDashboard").then(m => ({ default: m.HiSocietyUsersDashboard })));
@@ -1546,6 +1547,10 @@ function App() {
                         <Route
                           path="admin/smartsecure-integration/edit/:id"
                           element={<EditSmartsecureGatePage />}
+                        />
+                        <Route
+                          path="admin/user-devices"
+                          element={<UserDevices />}
                         />
                         {/* <Route
                       path="settings/account/lock-module/view/:id"

@@ -14,6 +14,7 @@ import {
   clearFlats,
 } from "@/store/slices/hiSocietyUsersSlice";
 import { Button } from "@/components/ui/button";
+import { UserDevicesTable } from "@/features/user-devices/components/UserDevicesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -69,6 +70,9 @@ const getStatusBadge = (status: string) => {
   return <Badge className="bg-gray-500 text-white">{status || "Unknown"}</Badge>;
 };
 
+const getTowerDisplayName = (tower: string | null | undefined) =>
+  tower && !/^#?<SocietyBlock:/.test(tower.trim()) ? tower : "-";
+
 export const ViewHiSocietyUserPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -109,7 +113,7 @@ export const ViewHiSocietyUserPage = () => {
   const [selectedSnag, setSelectedSnag] = useState<string | number>("");
   const [assocSnagLoading, setAssocSnagLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"societies" | "companies" | "snag">("societies");
+  const [activeTab, setActiveTab] = useState<"societies" | "companies" | "snag" | "devices">("societies");
   const [associatedCompanies, setAssociatedCompanies] = useState<any[]>([]);
   const [assocCompaniesLoading, setAssocCompaniesLoading] = useState(false);
   const [associatedSnagProjects, setAssociatedSnagProjects] = useState<any[]>([]);
@@ -418,7 +422,7 @@ export const ViewHiSocietyUserPage = () => {
         </CardContent>
       </Card>
 
-      {/* Tabs: Societies / Companies / Snag */}
+      {/* Tabs: Societies / Companies / Snag / Devices */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="border-b bg-gray-50 px-0 pt-0">
           <div className="flex border-b border-gray-200">
@@ -452,6 +456,16 @@ export const ViewHiSocietyUserPage = () => {
             >
               User Snag
             </button>
+            <button
+              onClick={() => setActiveTab("devices")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "devices"
+                  ? "border-[#C72030] text-[#C72030]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              User Devices
+            </button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -461,22 +475,35 @@ export const ViewHiSocietyUserPage = () => {
               <div className="p-6 text-center text-gray-500">No societies associated</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[1200px] table-fixed text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Society</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Add Phase</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Phases</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Approval</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Created</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                      <th className="w-[190px] text-left px-4 py-3 font-medium text-gray-600">Society</th>
+                      <th className="w-[110px] text-left px-4 py-3 font-medium text-gray-600">Tower</th>
+                      <th className="w-[100px] text-left px-4 py-3 font-medium text-gray-600">Flat</th>
+                      <th className="w-[120px] text-left px-4 py-3 font-medium text-gray-600">Add Phase</th>
+                      <th className="w-[200px] text-left px-4 py-3 font-medium text-gray-600">Phases</th>
+                      <th className="w-[120px] text-left px-4 py-3 font-medium text-gray-600">Approval</th>
+                      <th className="w-[150px] text-left px-4 py-3 font-medium text-gray-600">Role</th>
+                      <th className="w-[180px] text-left px-4 py-3 font-medium text-gray-600">Created</th>
+                      <th className="w-[110px] text-left px-4 py-3 font-medium text-gray-600">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {user_societies.map((us) => (
+                    {user_societies.map((us) => {
+                      const towerName = getTowerDisplayName(us.society_block?.name || us.block_no);
+
+                      return (
                       <tr key={us.id} className="border-b hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-700">{us.building_name}</td>
+                        <td className="px-4 py-3 text-gray-700">
+                          <span className="block truncate" title={us.building_name}>{us.building_name}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          <span className="block truncate" title={towerName}>{towerName}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          <span className="block truncate" title={us.flat_no || "-"}>{us.flat_no || "-"}</span>
+                        </td>
                         <td className="px-4 py-3">
                           <button
                             onClick={() => openUsPhaseModal({ id: us.id, id_society: us.id_society })}
@@ -485,9 +512,13 @@ export const ViewHiSocietyUserPage = () => {
                             UsPhase
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-gray-500">{us.phase_names || "-"}</td>
+                        <td className="px-4 py-3 text-gray-500">
+                          <span className="block truncate" title={us.phase_names || "-"}>{us.phase_names || "-"}</span>
+                        </td>
                         <td className="px-4 py-3">{getStatusBadge(us.status)}</td>
-                        <td className="px-4 py-3 text-gray-700">{us.role_name}</td>
+                        <td className="px-4 py-3 text-gray-700">
+                          <span className="block truncate" title={us.role_name}>{us.role_name}</span>
+                        </td>
                         <td className="px-4 py-3 text-gray-500">{moment(us.created_at).format("DD/MM/YYYY HH:mm")}</td>
                         <td className="px-4 py-3">
                           <Button
@@ -499,7 +530,8 @@ export const ViewHiSocietyUserPage = () => {
                           </Button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -572,6 +604,13 @@ export const ViewHiSocietyUserPage = () => {
                 </table>
               </div>
             )
+          )}
+
+          {/* User Devices Tab */}
+          {activeTab === "devices" && id && (
+            <div className="p-4">
+              <UserDevicesTable userId={id} storageKey="hi-society-user-devices-table" />
+            </div>
           )}
         </CardContent>
       </Card>
