@@ -63,7 +63,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   showAdminScope = false,
   adminScope = 'all',
   onSelectAdminScope,
-  showRefresh = false,
+  showRefresh = true,
   onRefresh,
   isRefreshing = false,
 }) => {

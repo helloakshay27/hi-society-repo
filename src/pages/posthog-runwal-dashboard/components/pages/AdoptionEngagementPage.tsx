@@ -8,6 +8,12 @@ import { StackedBarChart } from '../charts/StackedBarChart';
 import { RetentionCohortTable } from '../charts/RetentionCohortTable';
 import { ErrorState, EmptyState } from '../common/DashboardStates';
 import {
+  Skeleton,
+  ChartSkeleton,
+  BarsSkeleton,
+  TableSkeleton,
+} from '../common/Skeleton';
+import {
   useAdoptionEngagement,
   useAdoptionTrend,
   useGrowth,
@@ -31,6 +37,7 @@ interface AdoptionEngagementPageProps {
   sitesSettled?: boolean;
   subtitle?: string;
   questions?: string[];
+  isRefreshing?: boolean;
 }
 
 function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
@@ -97,6 +104,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   sitesSettled = true,
   subtitle,
   questions,
+  isRefreshing = false,
 }) => {
   const [opsTab, setOpsTab] = useState<'crm' | 'finance'>('crm');
 
@@ -140,6 +148,12 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     error: rolesError,
     refetch: refetchRoles,
   } = useRoles(filters, sitesSettled);
+
+  const isAdoptActiveLoading = isAdoptLoading || isRefreshing;
+  const isTrendActiveLoading = isTrendLoading || isRefreshing;
+  const isGrowthActiveLoading = isGrowthLoading || isRefreshing;
+  const isRetentionActiveLoading = isRetentionLoading || isRefreshing;
+  const isRolesActiveLoading = isRolesLoading || isRefreshing;
 
   // FM Matrix CRM Hooks
   const {
@@ -212,7 +226,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const stickinessDisplay =
     stickinessVal != null
       ? pct(stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal)
-      : isAdoptLoading
+      : isAdoptActiveLoading
       ? '...'
       : '—';
   const stickinessDelta = formatDelta(adoptData?.stickiness?.delta_pct);
@@ -222,7 +236,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const adoptTrendDisplay =
     adoptTrendVal != null
       ? `${adoptTrendVal > 0 ? '+' : ''}${adoptTrendVal.toFixed(1)}%`
-      : isAdoptLoading
+      : isAdoptActiveLoading || isTrendActiveLoading
       ? '...'
       : '—';
 
@@ -231,7 +245,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const activationDisplay =
     activationVal != null
       ? `${Math.round(activationVal <= 1 ? activationVal * 100 : activationVal)}%`
-      : isAdoptLoading
+      : isAdoptActiveLoading
       ? '...'
       : '—';
   const activationDelta = formatDelta(adoptData?.activation?.delta_pct);
@@ -242,7 +256,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const moduleBreadthDisplay =
     modInUse != null && modTotal != null
       ? `${modInUse} / ${modTotal}`
-      : isAdoptLoading
+      : isAdoptActiveLoading
       ? '...'
       : '—';
 
@@ -318,7 +332,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           goodUp={true}
           benchmark={benchmarks.stickiness}
           onBenchmarkChange={onBenchmarkChange}
-          isLoading={isAdoptLoading}
+          isLoading={isAdoptActiveLoading}
         />
         <KpiTile
           id="adoptionTrend"
@@ -329,7 +343,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           delta="vs prior 8 weeks"
           sub="weekly active users trend"
           noTarget={true}
-          isLoading={isAdoptLoading || isTrendLoading}
+          isLoading={isAdoptActiveLoading || isTrendActiveLoading}
         />
         <KpiTile
           id="activation14"
@@ -344,7 +358,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           goodUp={true}
           benchmark={benchmarks.activation14}
           onBenchmarkChange={onBenchmarkChange}
-          isLoading={isAdoptLoading}
+          isLoading={isAdoptActiveLoading}
         />
         <KpiTile
           id="moduleBreadth2"
@@ -355,7 +369,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           delta={null}
           sub="distinct modules used"
           noTarget={true}
-          isLoading={isAdoptLoading}
+          isLoading={isAdoptActiveLoading}
         />
       </div>
 
@@ -373,10 +387,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             error={trendError}
             onRetry={() => refetchTrend()}
           />
-        ) : isTrendLoading ? (
-          <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-            Loading 8-week adoption trend...
-          </div>
+        ) : isTrendActiveLoading ? (
+          <ChartSkeleton height={200} />
         ) : trendSeriesCurrent.length === 0 ? (
           <EmptyState message="No weekly active user data for this period" />
         ) : (
@@ -419,10 +431,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               error={growthError}
               onRetry={() => refetchGrowth()}
             />
-          ) : isGrowthLoading ? (
-            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-              Loading growth accounting...
-            </div>
+          ) : isGrowthActiveLoading ? (
+            <ChartSkeleton height={220} />
           ) : growthWeeks.length === 0 ? (
             <EmptyState message="No growth data available for this range" />
           ) : (
@@ -467,10 +477,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               error={retentionError}
               onRetry={() => refetchRetention()}
             />
-          ) : isRetentionLoading ? (
-            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-              Loading retention cohorts...
-            </div>
+          ) : isRetentionActiveLoading ? (
+            <TableSkeleton rows={4} cols={5} />
           ) : (
             <RetentionCohortTable cohorts={retentionData?.cohorts} />
           )}
@@ -491,10 +499,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               error={rolesError}
               onRetry={() => refetchRoles()}
             />
-          ) : isRolesLoading ? (
-            <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-              Loading role breakdown...
-            </div>
+          ) : isRolesActiveLoading ? (
+            <BarsSkeleton count={4} />
           ) : rolesList.length === 0 ? (
             <EmptyState message="No role data returned" />
           ) : (
@@ -536,9 +542,11 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               error={adoptError}
               onRetry={() => refetchAdopt()}
             />
-          ) : isAdoptLoading ? (
-            <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-              Loading dormant summary...
+          ) : isAdoptActiveLoading ? (
+            <div style={{ padding: '8px 0' }}>
+              <Skeleton width="120px" height="14px" style={{ marginBottom: '8px' }} />
+              <Skeleton width="90px" height="32px" style={{ marginBottom: '8px' }} />
+              <Skeleton width="160px" height="12px" />
             </div>
           ) : (
             <div className="kv">

@@ -6,6 +6,7 @@ import { ModuleNav, formatModuleName } from '../workflow/ModuleNav';
 import { WorkflowFunnel } from '../workflow/WorkflowFunnel';
 import { AllScreensTable, EntryScreensTable } from '../workflow/ScreensTable';
 import { ErrorState } from '../common/DashboardStates';
+import { FunnelSkeleton, TableSkeleton } from '../common/Skeleton';
 import {
   useModuleTree,
   useWorkflowUsage,
@@ -16,6 +17,7 @@ interface WorkflowUsagePageProps {
   benchmarks: Record<string, number | null>;
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
+  isRefreshing?: boolean;
 }
 
 export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
@@ -23,6 +25,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   benchmarks,
   onBenchmarkChange,
   sitesSettled = true,
+  isRefreshing = false,
 }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
@@ -39,6 +42,9 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
     refetch: refetchWf,
   } = useWorkflowUsage(filters, selectedModule, null, sitesSettled);
 
+  const isWfActiveLoading = isWfLoading || isRefreshing;
+  const isModulesActiveLoading = isModulesLoading || isRefreshing;
+
   const moduleList = moduleTreeData?.tree || [];
   const kpis = wfData?.kpis;
 
@@ -47,7 +53,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const fAdoptDisplay =
     fAdopt != null
       ? `${Math.round(fAdopt <= 1 ? fAdopt * 100 : fAdopt)}%`
-      : isWfLoading
+      : isWfActiveLoading
       ? '...'
       : '—';
   const fAdoptDelta = kpis?.f_adopt?.delta_pct;
@@ -57,7 +63,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const fCompDisplay =
     fComp != null
       ? `${Math.round(fComp <= 1 ? fComp * 100 : fComp)}%`
-      : isWfLoading
+      : isWfActiveLoading
       ? '...'
       : '—';
   const fCompDelta = kpis?.f_comp?.delta_pct;
@@ -67,7 +73,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const fStepDisplay =
     fStep != null
       ? `${Math.round(fStep <= 1 ? fStep * 100 : fStep)}%`
-      : isWfLoading
+      : isWfActiveLoading
       ? '...'
       : '—';
 
@@ -76,7 +82,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const fVolDisplay =
     fVol != null
       ? fVol.toLocaleString()
-      : isWfLoading
+      : isWfActiveLoading
       ? '...'
       : '—';
 
@@ -97,7 +103,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         modules={moduleList}
         selectedModule={selectedModule}
         onSelectModule={setSelectedModule}
-        isLoading={isModulesLoading}
+        isLoading={isModulesActiveLoading}
       />
 
       {isWfError && (
@@ -123,7 +129,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           goodUp={true}
           benchmark={benchmarks.wfAdoption}
           onBenchmarkChange={onBenchmarkChange}
-          isLoading={isWfLoading}
+          isLoading={isWfActiveLoading}
         />
         <KpiTile
           id="wfCompletion"
@@ -137,7 +143,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           goodUp={true}
           benchmark={benchmarks.wfCompletion}
           onBenchmarkChange={onBenchmarkChange}
-          isLoading={isWfLoading}
+          isLoading={isWfActiveLoading}
         />
         <KpiTile
           infoKey="F3"
@@ -147,7 +153,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           delta={null}
           sub="highest single drop-off"
           noTarget={true}
-          isLoading={isWfLoading}
+          isLoading={isWfActiveLoading}
         />
         <KpiTile
           infoKey="F4"
@@ -157,7 +163,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           delta="this period"
           sub="workflow completions"
           noTarget={true}
-          isLoading={isWfLoading}
+          isLoading={isWfActiveLoading}
         />
       </div>
 
@@ -169,10 +175,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented PostHog event sequences."
         style={{ margin: '16px 0' }}
       >
-        {isWfLoading ? (
-          <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-            Loading workflow funnel...
-          </div>
+        {isWfActiveLoading ? (
+          <FunnelSkeleton steps={4} />
         ) : (
           <WorkflowFunnel funnel={funnelList} />
         )}
@@ -186,10 +190,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         purpose="Every screen path inside this module with users, events, sessions and completion rate."
         style={{ marginTop: '12px' }}
       >
-        {isWfLoading ? (
-          <div style={{ height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-            Loading screen paths...
-          </div>
+        {isWfActiveLoading ? (
+          <TableSkeleton rows={4} cols={5} />
         ) : (
           <AllScreensTable flows={flowsList} />
         )}
@@ -203,10 +205,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         purpose="The first screen property seen in each session — visitors, screen views, and bounce rate."
         style={{ marginTop: '12px' }}
       >
-        {isWfLoading ? (
-          <div style={{ height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-            Loading entry screens...
-          </div>
+        {isWfActiveLoading ? (
+          <TableSkeleton rows={4} cols={4} />
         ) : (
           <EntryScreensTable entryScreens={entryScreensList} />
         )}

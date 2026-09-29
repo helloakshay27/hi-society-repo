@@ -10,10 +10,14 @@ import { Footer } from "./components/Footer";
 import { TrafficSection } from "./sections/TrafficSection";
 import { AdoptionSection } from "./sections/AdoptionSection";
 import { WorkflowSection } from "./sections/WorkflowSection";
-import { useEnsureAppId } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId";
+import { useEnsureProjectCode } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureProjectCode";
+// import { useEnsureAppId } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId";
 import { RecentActivitySidebar } from "../../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar";
 import type { DashboardFilters } from "../../pages/posthog-runwal-dashboard/api/types";
 import type { ActivePage } from "./data/types";
+
+const SMARTSECURE_PROJECT_CODE = "SMSE-01";
+// const SMARTSECURE_APP_ID = "39";
 
 const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
   {
@@ -75,7 +79,7 @@ const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
 ];
 
 function DashboardLayout() {
-  const { state, setPage, sites, appId } = useSmartSecureDashboard();
+  const { state, setPage, sites /* , appId */ } = useSmartSecureDashboard();
   const page = PAGES.find((p) => p.key === state.page) ?? PAGES[0];
   const recentActivityFilters: DashboardFilters = {
     siteIds: state.society === 'All Societies' ? sites.map((site) => site.id) : [state.society],
@@ -86,7 +90,8 @@ function DashboardLayout() {
     licensedSeats: null,
     module: null,
     subModule: null,
-    appId,
+    // appId,
+    projectCode: SMARTSECURE_PROJECT_CODE,
   };
 
   return (
@@ -143,14 +148,18 @@ function DashboardLayout() {
   );
 }
 
-const SMARTSECURE_APP_ID = "39";
-
 function SmartSecureDashboardGate() {
-  const appIdReady = useEnsureAppId(SMARTSECURE_APP_ID);
-  if (!appIdReady) return null;
+  // const appIdReady = useEnsureAppId(SMARTSECURE_APP_ID);
+  // if (!appIdReady) return null;
+  const projectCodeReady = useEnsureProjectCode(SMARTSECURE_PROJECT_CODE);
+  if (!projectCodeReady) return null;
 
   return (
-    <DashboardProvider appId={SMARTSECURE_APP_ID} appName="SmartSecure">
+    <DashboardProvider
+      // appId={SMARTSECURE_APP_ID}
+      projectCode={SMARTSECURE_PROJECT_CODE}
+      appName="SmartSecure"
+    >
       <DashboardLayout />
     </DashboardProvider>
   );
