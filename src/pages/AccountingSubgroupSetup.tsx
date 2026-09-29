@@ -40,6 +40,7 @@ interface LockAccountGroupAPI {
   account_name?: string | null;
   group_name: string;
   parent_group_id?: number | null;
+  parent_group_name?: string | null;
   base_group_id?: number | null;
   locked?: boolean | null;
 }
@@ -116,7 +117,7 @@ const AccountingSubgroupSetup: React.FC = () => {
           id: g.id,
           accountName: g.account_name || "",
           groupName: g.group_name,
-          parentGroup: resolveName(g.parent_group_id),
+          parentGroup: g.parent_group_name || resolveName(g.parent_group_id),
           baseGroup: resolveName(g.base_group_id),
           raw: g,
         }))

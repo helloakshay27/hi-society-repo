@@ -349,7 +349,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         </Card>
       </div>
 
-      <AudienceCoverageCard roles={rolesList} isLoading={isRolesLoading} />
+      {/* <AudienceCoverageCard roles={rolesList} isLoading={isRolesLoading} /> */}
 
       {/* <ProjectLeagueTable sites={sites} baseFilters={filters} enabled={sitesSettled} /> */}
     </section>

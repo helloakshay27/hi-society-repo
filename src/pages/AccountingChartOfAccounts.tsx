@@ -460,7 +460,7 @@ const AccountingChartOfAccounts: React.FC = () => {
       case "accountName":
         return item.accountName;
       case "accountCode":
-        return item.accountCode;
+        return item.accountCode || "-";
       case "accountType":
         return item.accountType;
       default:
