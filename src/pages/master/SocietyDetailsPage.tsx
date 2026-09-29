@@ -735,12 +735,28 @@ export const SocietyDetailsPage: React.FC = () => {
                         <p className="text-gray-900 font-mono">#{society.organization_id}</p>
                       </div>
                     )}
+                    {society.organization_name && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Organization Name
+                        </label>
+                        <p className="text-gray-900">{society.organization_name}</p>
+                      </div>
+                    )}
                     {society.company_id && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Company ID
                         </label>
                         <p className="text-gray-900 font-mono">#{society.company_id}</p>
+                      </div>
+                    )}
+                    {society.company_name && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Company Name
+                        </label>
+                        <p className="text-gray-900">{society.company_name}</p>
                       </div>
                     )}
                     {society.builder_id && (

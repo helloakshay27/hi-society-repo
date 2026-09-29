@@ -51,6 +51,7 @@ interface OrganizationDetails {
     document_file_name: string;
     document_url: string;
   };
+  country_name?:string;
   country?: {
     id: number;
     name: string;
@@ -382,7 +383,7 @@ export const OrganizationDetailsPage: React.FC = () => {
                   Country
                 </label>
                 <p className="text-gray-900">
-                  {organization.country?.name || "Not specified"}
+                  {organization.country_name || "Not specified"}
                 </p>
               </div>
             </div>
