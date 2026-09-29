@@ -277,9 +277,16 @@
   transition: width 0.2s ease;
 }
 
+.brandmark,
+.brandmark span,
+.brandmark .bm-full,
+.brandmark .bm-mini {
+  font-family: var(--font-serif) !important;
+  font-optical-sizing: auto;
+}
+
 .brandmark {
-  font-family: var(--font-serif);
-  font-size: 21px;
+  font-size: 26px;
   font-weight: 400;
   letter-spacing: -0.012em;
   line-height: 1.2;
@@ -710,6 +717,36 @@
 @keyframes refresh-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* ============ SKELETON LOADERS ============ */
+@keyframes dash-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.dash-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    var(--surface-3) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: dash-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--r-xs);
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-skeleton {
+    animation: none;
+    background: var(--surface-2);
+  }
 }
 
 /* ============ DATE RANGE POPOVER ============ */

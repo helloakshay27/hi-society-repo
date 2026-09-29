@@ -64,6 +64,7 @@ interface DashboardContextValue {
   closeInfoPopover: () => void;
   sites: Site[];
   appId?: string;
+  projectCode?: string;
   appName?: string;
   refreshAll: () => Promise<void>;
   isRefreshing: boolean;
@@ -79,7 +80,17 @@ interface DashboardContextValue {
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-export function DashboardProvider({ children, appId, appName }: { children: ReactNode; appId?: string; appName?: string }) {
+export function DashboardProvider({
+  children,
+  appId,
+  projectCode,
+  appName,
+}: {
+  children: ReactNode;
+  appId?: string;
+  projectCode?: string;
+  appName?: string;
+}) {
   const [state, setState] = useState<DashboardState>(DEFAULT_STATE);
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>({});
   const [infoPopover, setInfoPopover] = useState<InfoPopoverState | null>(null);
@@ -106,7 +117,19 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
   const sites = useMemo(() => sitesQ.data ?? [], [sitesQ.data]);
   const sitesSettled = sitesQ.isSuccess && sites.length > 0;
 
+  const effectiveProjectCode = useMemo(() => {
+    if (projectCode) return projectCode;
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromUrl = urlParams.get('project_code') || urlParams.get('projectCode');
+      if (fromUrl) return fromUrl;
+    }
+    return undefined;
+  }, [projectCode]);
+
   const effectiveAppId = useMemo(() => {
+    // If project_code is active, don't pass or fall back to app_id
+    if (effectiveProjectCode) return undefined;
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const fromUrl = urlParams.get('app_id') || urlParams.get('appId');
@@ -117,8 +140,8 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
       appName === 'QuikGate' ||
       (typeof window !== 'undefined' &&
         (window.location.pathname.includes('quickgate') || window.location.pathname.includes('quikgate')));
-    return isQuikgate ? '23' : '39';
-  }, [appId, appName]);
+    return isQuikgate ? '23' : undefined;
+  }, [appId, appName, effectiveProjectCode]);
 
   const filters = useMemo(() => {
     let devices: ('Mobile' | 'Desktop')[] | undefined;
@@ -138,15 +161,16 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
       url: dynamicUrl,
       token: '',
       appId: effectiveAppId,
+      projectCode: effectiveProjectCode,
     };
-  }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl, sitesSettled, effectiveAppId]);
+  }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl, sitesSettled, effectiveAppId, effectiveProjectCode]);
 
   const trafficQ    = useQuery({ queryKey: ['ss-traffic',    filters], queryFn: () => fetchTrafficSession(filters),                                                                                                           staleTime: 5 * 60_000 });
   const usageQ      = useQuery({ queryKey: ['ss-usage',      filters], queryFn: () => fetchUsageAndDistribution(filters),                                                                                                      staleTime: 5 * 60_000 });
   const engagementQ = useQuery({ queryKey: ['ss-engagement', filters], queryFn: () => fetchAdoptionEngagement({ ...filters }),                                                                                                staleTime: 5 * 60_000 });
-  const trendQ      = useQuery({ queryKey: ['ss-trend',      filters], queryFn: () => fetchAdoptionTrend({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }), staleTime: 5 * 60_000 });
-  const growthQ     = useQuery({ queryKey: ['ss-growth',     filters], queryFn: () => fetchGrowth({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }),        staleTime: 5 * 60_000 });
-  const retentionQ  = useQuery({ queryKey: ['ss-retention',  filters], queryFn: () => fetchRetention({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, os: filters.os }),     staleTime: 5 * 60_000 });
+  const trendQ      = useQuery({ queryKey: ['ss-trend',      filters], queryFn: () => fetchAdoptionTrend({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }), staleTime: 5 * 60_000 });
+  const growthQ     = useQuery({ queryKey: ['ss-growth',     filters], queryFn: () => fetchGrowth({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }),        staleTime: 5 * 60_000 });
+  const retentionQ  = useQuery({ queryKey: ['ss-retention',  filters], queryFn: () => fetchRetention({ to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }),     staleTime: 5 * 60_000 });
   const rolesQ      = useQuery({ queryKey: ['ss-roles',      filters], queryFn: () => fetchRoles(filters),                                                                                                                     staleTime: 5 * 60_000 });
   // Layer 3: modules list — fetch top-level module tree first
   const modulesQ    = useQuery({ queryKey: ['ss-modules',    filters], queryFn: () => fetchModules(filters),                                                                                                                    staleTime: 5 * 60_000 });
@@ -197,10 +221,10 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
   };
 
   const sitesLoading = sitesQ.isLoading;
-  const isTrafficLoading = sitesLoading || trafficQ.isLoading || usageQ.isLoading;
-  const isAdoptLoading = sitesLoading || engagementQ.isLoading || trendQ.isLoading || growthQ.isLoading || retentionQ.isLoading || rolesQ.isLoading;
-  const isFlowsLoading = sitesLoading || workflowQ.isLoading;
-  const isModulesLoading = sitesLoading || modulesQ.isLoading;
+  const isTrafficLoading = sitesLoading || trafficQ.isLoading || usageQ.isLoading || isManualRefreshing;
+  const isAdoptLoading = sitesLoading || engagementQ.isLoading || trendQ.isLoading || growthQ.isLoading || retentionQ.isLoading || rolesQ.isLoading || isManualRefreshing;
+  const isFlowsLoading = sitesLoading || workflowQ.isLoading || isManualRefreshing;
+  const isModulesLoading = sitesLoading || modulesQ.isLoading || isManualRefreshing;
   const modules: ModuleNode[] = modulesQ.data?.tree ?? [];
 
   const traffic = useMemo(() => buildTraffic(state, trafficQ.data, usageQ.data),                                                              [state, trafficQ.data, usageQ.data]);
@@ -239,7 +263,8 @@ export function DashboardProvider({ children, appId, appName }: { children: Reac
     openInfoPopover: (key, rect) => setInfoPopover({ key, rect }),
     closeInfoPopover: () => setInfoPopover(null),
     sites,
-    appId,
+    appId: effectiveAppId,
+    projectCode: effectiveProjectCode,
     appName,
     refreshAll,
     isRefreshing,

@@ -8,16 +8,31 @@ interface SideBarProps {
   onSelectPage: (page: PageId) => void;
   filters: DashboardFilters;
   sitesSettled?: boolean;
+  brandName?: string;
+  brandMini?: string;
+  brandSub?: string;
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage, filters, sitesSettled }) => {
+export const SideBar: React.FC<SideBarProps> = ({
+  activePage,
+  onSelectPage,
+  filters,
+  sitesSettled,
+  brandName = 'Runwal',
+  brandMini = 'RW',
+  brandSub = 'Runwal Realty · flutter_resident app',
+}) => {
   return (
     <aside className="sidebar">
       <h1 className="brandmark">
-        <span className="bm-full">Runwal</span>
-        <span className="bm-mini">RW</span>
+        <span className="bm-full" style={{ fontFamily: "var(--font-serif, 'Newsreader', Georgia, serif)" }}>
+          {brandName}
+        </span>
+        <span className="bm-mini" style={{ fontFamily: "var(--font-serif, 'Newsreader', Georgia, serif)" }}>
+          {brandMini}
+        </span>
       </h1>
-      <p className="brandmark-sub">Runwal Realty · flutter_resident app</p>
+      <p className="brandmark-sub">{brandSub}</p>
 
       <nav aria-label="Sections">
         <div className="nav-group">
