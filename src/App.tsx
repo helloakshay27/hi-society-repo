@@ -717,6 +717,7 @@ const AddApprovalMatrixPage = lazy(() => import("./pages/settings/AddApprovalMat
 
 const MobileAdminOrderDetailsPage = lazy(() => import("./pages/MobileAdminOrderDetailsPage"));
 const MobileSurveyPage = lazy(() => import("./pages/mobile/MobileSurveyPage").then(m => ({ default: m.MobileSurveyPage })));
+const InvitedVisitorPage = lazy(() => import("./pages/mobile/InvitedVisitorPage").then(m => ({ default: m.InvitedVisitorPage })));
 
 import { MobileOrderPlaced } from "./components/mobile/MobileOrderPlaced";
 import { ExternalFlowTester } from "./components/mobile/ExternalFlowTester";
@@ -7300,6 +7301,15 @@ function App() {
                       <Route
                         path="/survey_mappings/:mappingId/survey"
                         element={<MobileSurveyPage />}
+                      />
+                      {/* Invited Visitor Routes */}
+                      <Route
+                        path="/invite-visitor"
+                        element={<InvitedVisitorPage />}
+                      />
+                      <Route
+                        path="/invite-visitor/:id"
+                        element={<InvitedVisitorPage />}
                       />
                       {/* Mobile Asset Routes */}
                       <Route path="/mobile/assets" element={<MobileAssetPage />} />
