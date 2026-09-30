@@ -161,6 +161,8 @@ export interface TicketResponse {
   issue_status: string;
   priority: string;
   site_name: string;
+  /** Pre-combined "Tower-FlatNo" string from the API, e.g. "T1-101". */
+  flat_number?: string;
   created_at: string;
   issue_type: string;
   complaint_mode: string;
@@ -291,6 +293,10 @@ export interface TicketFilters {
   search_all_fields_cont?: string;
   assigned_to_in?: number[];
   complaint_status_fixed_state_eq?: string;
+  // Ransack _in predicates must be sent as an array (q[key][]=v) — see
+  // getTickets()'s query builder, which only produces that shape for
+  // Array.isArray(value).
+  complaint_status_fixed_state_or_complaint_status_name_in?: string[];
   complaint_status_name_eq?: string;
   complaint_status_fixed_state_not_eq?: string;
   complaint_status_fixed_state_null?: string;

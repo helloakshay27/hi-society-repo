@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { TextField } from '@mui/material';
+import { Checkbox } from '@/components/ui/checkbox';
 import { fieldStyles } from './fieldStyles';
 
 interface RelatedToType {
@@ -22,6 +23,7 @@ interface RelatedToType {
   name: string;
   society_id: number;
   active: number | null;
+  feedback_enabled?: boolean | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -35,6 +37,7 @@ export const RelatedToTab: React.FC = () => {
   // Add dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [issueTypeInput, setIssueTypeInput] = useState('');
+  const [feedbackEnabled, setFeedbackEnabled] = useState(false);
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -85,6 +88,7 @@ export const RelatedToTab: React.FC = () => {
       const payload = {
         name: issueTypeInput.trim(),
         active: 1,
+        feedback_enabled: feedbackEnabled,
       };
 
       const response = await fetch(
@@ -102,6 +106,7 @@ export const RelatedToTab: React.FC = () => {
       if (response.ok) {
         toast.success('Issue type created successfully!');
         setIssueTypeInput('');
+        setFeedbackEnabled(false);
         setAddDialogOpen(false);
         fetchRelatedToItems();
       } else {
@@ -156,9 +161,14 @@ export const RelatedToTab: React.FC = () => {
   const columns = [
     { key: 'id', label: 'S.No.', sortable: true },
     { key: 'name', label: 'Issue Type', sortable: true },
+    { key: 'feedback_enabled', label: 'Feedback Enabled', sortable: true },
   ];
 
   const renderCell = (item: RelatedToType, columnKey: string) => {
+    if (columnKey === 'feedback_enabled') {
+      // null defaults to enabled; only an explicit false reads as False.
+      return item.feedback_enabled === false ? 'False' : 'True';
+    }
     return item[columnKey as keyof RelatedToType];
   };
 
@@ -277,13 +287,16 @@ export const RelatedToTab: React.FC = () => {
       {/* Add Issue Type Dialog */}
       <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
-        if (!open) setIssueTypeInput('');
+        if (!open) {
+          setIssueTypeInput('');
+          setFeedbackEnabled(false);
+        }
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Related To</DialogTitle>
           </DialogHeader>
-          <div className="py-2">
+          <div className="py-2 space-y-4">
             <TextField
               label="Issue Type"
               placeholder="Enter issue type"
@@ -297,6 +310,14 @@ export const RelatedToTab: React.FC = () => {
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles }}
             />
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="feedback-enabled"
+                checked={feedbackEnabled}
+                onCheckedChange={(checked) => setFeedbackEnabled(!!checked)}
+              />
+              <label htmlFor="feedback-enabled" className="text-sm font-medium">Feedback Enabled</label>
+            </div>
           </div>
           <DialogFooter className="gap-2">
             <Button
@@ -304,6 +325,7 @@ export const RelatedToTab: React.FC = () => {
               onClick={() => {
                 setAddDialogOpen(false);
                 setIssueTypeInput('');
+                setFeedbackEnabled(false);
               }}
               disabled={isSubmitting}
             >
