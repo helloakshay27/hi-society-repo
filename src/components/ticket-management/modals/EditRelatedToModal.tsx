@@ -19,10 +19,12 @@ import {
 import { toast } from 'sonner';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { TextField } from '@mui/material';
+import { Checkbox } from '@/components/ui/checkbox';
 import { fieldStyles } from '../fieldStyles';
 
 const relatedToSchema = z.object({
   issueType: z.string().min(1, 'Issue type is required'),
+  feedbackEnabled: z.boolean(),
 });
 
 type RelatedToFormData = z.infer<typeof relatedToSchema>;
@@ -31,6 +33,7 @@ interface RelatedToType {
   id: number;
   name: string;
   society_id: number;
+  feedback_enabled?: boolean | null;
 }
 
 interface EditRelatedToModalProps {
@@ -54,6 +57,7 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
     resolver: zodResolver(relatedToSchema),
     defaultValues: {
       issueType: relatedTo.name,
+      feedbackEnabled: !!relatedTo.feedback_enabled,
     },
   });
 
@@ -61,6 +65,7 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
     if (relatedTo && isOpen) {
       form.reset({
         issueType: relatedTo.name,
+        feedbackEnabled: !!relatedTo.feedback_enabled,
       });
     }
   }, [relatedTo, isOpen, form]);
@@ -72,6 +77,7 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
         id: relatedTo.id,
         name: data.issueType,
         active: 1,
+        feedback_enabled: data.feedbackEnabled,
       };
 
       const response = await fetch(getFullUrl('/crm/admin/modify_issue_type.json'), {
@@ -96,6 +102,7 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
       const updatedRelatedTo: RelatedToType = {
         ...relatedTo,
         name: data.issueType,
+        feedback_enabled: data.feedbackEnabled,
       };
 
       onUpdate(updatedRelatedTo);
@@ -135,6 +142,26 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
                       InputLabelProps={{ shrink: true }}
                       InputProps={{ sx: fieldStyles }}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="feedbackEnabled"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        id="edit-feedback-enabled"
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
+                      />
+                      <label htmlFor="edit-feedback-enabled" className="text-sm font-medium">Feedback Enabled</label>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
