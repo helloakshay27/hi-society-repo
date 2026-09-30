@@ -51,7 +51,7 @@ export function InfoPopover() {
   if (!info) return null;
 
   return createPortal(
-    <div ref={popRef} className="ss-app info-pop" style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999 }}>
+    <div id="ss-info-popover" ref={popRef} role="tooltip" className="ss-app info-pop" style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999 }}>
       <b>{info.t}</b>
       <div>{info.f}</div>
       <div className="sep">{info.d}</div>
