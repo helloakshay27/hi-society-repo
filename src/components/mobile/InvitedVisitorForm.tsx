@@ -17,11 +17,13 @@ import {
 import { Camera, RotateCcw, CheckCircle2, DoorOpen } from "lucide-react";
 
 const DEFAULT_VISIT_PURPOSES = [
-  "Personal",
-  "Business",
-  "Delivery",
-  "Interview",
-  "Other",
+  // "Personal",
+  // "Business",
+  // "Delivery",
+  // "Interview",
+  // "Other",
+  "Meeting",
+  "Guest",
 ];
 
 interface InvitedVisitorFormProps {
@@ -52,7 +54,7 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
     name: "",
     expectedDate: defaultDate,
     expectedTime: defaultTime,
-    visitingPurpose: "Personal",
+    visitingPurpose: "Meeting",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
