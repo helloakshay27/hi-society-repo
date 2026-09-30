@@ -716,10 +716,18 @@ export const TicketDetailsPage = () => {
   const [loadingSocietyWings, setLoadingSocietyWings] = useState(false);
   const [loadingSocietyAreas, setLoadingSocietyAreas] = useState(false);
   const [isEditingSocietyLocation, setIsEditingSocietyLocation] = useState(false);
+  // Tower/Flat dropdowns — same /get_society_blocks.json + /get_society_flats.json
+  // API used by the Add Helpdesk Ticket form (AddHelpdeskTicket.tsx).
+  const [societyBlocks, setSocietyBlocks] = useState<Array<{ id: number; name: string }>>([]);
+  const [societyFlatOptions, setSocietyFlatOptions] = useState<Array<{ id: number; flat_no: string; approve?: boolean }>>([]);
+  const [loadingSocietyBlocks, setLoadingSocietyBlocks] = useState(false);
+  const [loadingSocietyFlatOptions, setLoadingSocietyFlatOptions] = useState(false);
   const [societyLocationFormData, setSocietyLocationFormData] = useState({
     society_location_id: '',
     wing_id: '',
     area_id: '',
+    tower_id: '',
+    flat_id: '',
   });
   const [submittingSocietyLocation, setSubmittingSocietyLocation] = useState(false);
 
@@ -1570,6 +1578,45 @@ export const TicketDetailsPage = () => {
       console.error('Error loading society areas:', error);
     } finally {
       setLoadingSocietyAreas(false);
+    }
+  };
+
+  // Tower (society block) + Flat dropdowns — same endpoints AddHelpdeskTicket.tsx
+  // uses to build these two selects when creating a new ticket.
+  const loadSocietyBlocks = async (societyId?: string) => {
+    setLoadingSocietyBlocks(true);
+    try {
+      const sid = societyId || ticketData?.id_society?.toString();
+      const url = sid
+        ? getFullUrl(`/get_society_blocks.json?society_id=${sid}`)
+        : getFullUrl('/get_society_blocks.json');
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyBlocks(data.society_blocks || []);
+    } catch (error) {
+      console.error('Error loading towers:', error);
+    } finally {
+      setLoadingSocietyBlocks(false);
+    }
+  };
+
+  const loadSocietyFlatOptionsForBlock = async (blockId: string) => {
+    setSocietyFlatOptions([]);
+    setLoadingSocietyFlatOptions(true);
+    try {
+      const sid = ticketData?.id_society?.toString();
+      const url = sid
+        ? getFullUrl(`/get_society_flats.json?society_block_id=${blockId}&society_id=${sid}`)
+        : getFullUrl(`/get_society_flats.json?society_block_id=${blockId}`);
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSocietyFlatOptions(data.society_flats || []);
+    } catch (error) {
+      console.error('Error loading flats:', error);
+    } finally {
+      setLoadingSocietyFlatOptions(false);
     }
   };
 
@@ -3406,16 +3453,26 @@ export const TicketDetailsPage = () => {
 
   // Society Location Edit Handlers
   const handleSocietyLocationEdit = () => {
+    // society_block_id / society_flat_id (numeric ids) are on ticketData
+    // alongside the flat_number display string, so Tower/Flat can be
+    // pre-selected the same way Wing/Area already are.
     setSocietyLocationFormData({
       society_location_id: ticketData?.society_location_id?.toString() || '',
       wing_id: ticketData?.wing_id?.toString() || '',
       area_id: ticketData?.area_id?.toString() || '',
+      tower_id: ticketData?.society_block_id?.toString() || '',
+      flat_id: ticketData?.society_flat_id?.toString() || '',
     });
     if (ticketData?.society_location_id) {
       loadSocietyWings(ticketData.society_location_id.toString());
       if (ticketData?.wing_id) {
         loadSocietyAreas(ticketData.wing_id.toString());
       }
+    }
+    setSocietyFlatOptions([]);
+    loadSocietyBlocks(ticketData?.id_society?.toString());
+    if (ticketData?.society_block_id) {
+      loadSocietyFlatOptionsForBlock(ticketData.society_block_id.toString());
     }
     setIsEditingSocietyLocation(true);
   };
@@ -3468,6 +3525,16 @@ export const TicketDetailsPage = () => {
       formDataToSend.append('complaint[society_location_id]', societyLocationFormData.society_location_id || '');
       formDataToSend.append('complaint[wing_id]', societyLocationFormData.wing_id || '');
       formDataToSend.append('complaint[area_id]', societyLocationFormData.area_id || '');
+      // Tower/Flat are pre-filled from ticketData.society_block_id /
+      // society_flat_id on edit-open, but still guarded here in case those
+      // ids are ever missing on a ticket — sending them blank would
+      // otherwise clear an existing tower/flat on save.
+      if (societyLocationFormData.tower_id) {
+        formDataToSend.append('complaint[tower_id]', societyLocationFormData.tower_id);
+      }
+      if (societyLocationFormData.flat_id) {
+        formDataToSend.append('complaint[flat_number]', societyLocationFormData.flat_id);
+      }
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
       const response = await fetch(apiUrl, {
@@ -7317,13 +7384,28 @@ export const TicketDetailsPage = () => {
                             <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
                           </div>
                         )}
-                        {/* {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                        {hasData(ticketData.flat_number) && String(ticketData.flat_number).includes('-') && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
+                            <span className="text-gray-500 min-w-[140px]">Tower</span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
+                            <span className="text-gray-900 font-medium">
+                              {String(ticketData.flat_number).split('-')[0]}
+                            </span>
                           </div>
-                        )} */}
+                        )}
+                        {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 min-w-[140px]">Flat</span>
+                            <span className="text-gray-500 mx-2">:</span>
+                            <span className="text-gray-900 font-medium">
+                              {/* API sends flat_number pre-combined as "Tower-FlatNo" (e.g. "T1-101"). */}
+                              {ticketData.flat_number
+                                ? String(ticketData.flat_number).split('-').join(' - ')
+                                : ticketData.unit_name}
+                            </span>
+                          </div>
+                        )}
+                        
                         {hasData(ticketData.zone) && (
                           <div className="flex items-center">
                             <span className="text-gray-500 min-w-[140px]">Zone</span>
@@ -7445,6 +7527,48 @@ export const TicketDetailsPage = () => {
                               {societyAreas.map((area) => (
                                 <MenuItem key={area.id} value={area.id.toString()}>
                                   {area.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+
+                          {/* Tower Dropdown (read-only — tower is not editable) */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Tower</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.tower_id}
+                              label="Tower"
+                              notched
+                              displayEmpty
+                              disabled
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyBlocks ? 'Loading...' : 'Select Tower'}
+                              </MenuItem>
+                              {societyBlocks.map((block) => (
+                                <MenuItem key={block.id} value={block.id.toString()}>
+                                  {block.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+
+                          {/* Flat Dropdown (read-only — flat is not editable) */}
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Flat</InputLabel>
+                            <MuiSelect
+                              value={societyLocationFormData.flat_id}
+                              label="Flat"
+                              notched
+                              displayEmpty
+                              disabled
+                            >
+                              <MenuItem value="">
+                                {loadingSocietyFlatOptions ? 'Loading...' : !societyLocationFormData.tower_id ? 'Select Tower First' : 'Select Flat'}
+                              </MenuItem>
+                              {societyFlatOptions.filter((flat) => flat.approve !== false).map((flat) => (
+                                <MenuItem key={flat.id} value={flat.id.toString()}>
+                                  {flat.flat_no}
                                 </MenuItem>
                               ))}
                             </MuiSelect>
@@ -10395,13 +10519,28 @@ export const TicketDetailsPage = () => {
                         <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
                       </div>
                     )}
-                    {/* {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                    {hasData(ticketData.flat_number) && String(ticketData.flat_number).includes('-') && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Flat/Unit</span>
+                        <span className="text-gray-500 min-w-[140px]">Tower</span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.flat_number || ticketData.unit_name}</span>
+                        <span className="text-gray-900 font-medium">
+                          {String(ticketData.flat_number).split('-')[0]}
+                        </span>
                       </div>
-                    )} */}
+                    )}
+                    {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-500 min-w-[140px]">Flat</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {/* API sends flat_number pre-combined as "Tower-FlatNo" (e.g. "T1-101"). */}
+                          {ticketData.flat_number
+                            ? String(ticketData.flat_number).split('-').join(' - ')
+                            : ticketData.unit_name}
+                        </span>
+                      </div>
+                    )}
+                    
                     {hasData(ticketData.zone) && (
                       <div className="flex items-center">
                         <span className="text-gray-500 min-w-[140px]">Zone</span>
@@ -10523,6 +10662,48 @@ export const TicketDetailsPage = () => {
                           {societyAreas.map((area) => (
                             <MenuItem key={area.id} value={area.id.toString()}>
                               {area.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+
+                      {/* Tower Dropdown (read-only — tower is not editable) */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Tower</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.tower_id}
+                          label="Tower"
+                          notched
+                          displayEmpty
+                          disabled
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyBlocks ? 'Loading...' : 'Select Tower'}
+                          </MenuItem>
+                          {societyBlocks.map((block) => (
+                            <MenuItem key={block.id} value={block.id.toString()}>
+                              {block.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+
+                      {/* Flat Dropdown (read-only — flat is not editable) */}
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <InputLabel shrink>Flat</InputLabel>
+                        <MuiSelect
+                          value={societyLocationFormData.flat_id}
+                          label="Flat"
+                          notched
+                          displayEmpty
+                          disabled
+                        >
+                          <MenuItem value="">
+                            {loadingSocietyFlatOptions ? 'Loading...' : !societyLocationFormData.tower_id ? 'Select Tower First' : 'Select Flat'}
+                          </MenuItem>
+                          {societyFlatOptions.filter((flat) => flat.approve !== false).map((flat) => (
+                            <MenuItem key={flat.id} value={flat.id.toString()}>
+                              {flat.flat_no}
                             </MenuItem>
                           ))}
                         </MuiSelect>

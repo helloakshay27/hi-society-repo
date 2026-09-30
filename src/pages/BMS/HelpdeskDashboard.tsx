@@ -897,6 +897,7 @@ export const TicketDashboard = () => {
       setFilters(prevFilters => {
         const {
           complaint_status_fixed_state_eq,
+          complaint_status_fixed_state_or_complaint_status_name_in,
           complaint_status_fixed_state_not_eq,
           complaint_status_fixed_state_null,
           complaint_type_eq,
@@ -913,6 +914,7 @@ export const TicketDashboard = () => {
     setFilters(prevFilters => {
       const {
         complaint_status_fixed_state_eq,
+        complaint_status_fixed_state_or_complaint_status_name_in,
         complaint_status_fixed_state_not_eq,
         complaint_status_fixed_state_null,
         complaint_type_eq,
@@ -931,13 +933,13 @@ export const TicketDashboard = () => {
           complaint_status_fixed_state_null: '1'
         }];
       } else if (cardType === 'pending') {
-        newFilters.complaint_status_fixed_state_eq = 'Pending';
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = ['Pending'];
       } else if (cardType === 'in_progress') {
-        newFilters.complaint_status_fixed_state_eq = 'In Progress';
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = ['Work In Progress'];
       } else if (cardType === 'closed') {
-        newFilters.complaint_status_fixed_state_eq = 'Closed';
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = ['Closed'];
       } else if (cardType === 'completed') {
-        newFilters.complaint_status_fixed_state_eq = 'complete';
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = ['complete'];
       } else if (cardType === 'complaints') {
         newFilters.complaint_type_eq = 'Complaint';
       } else if (cardType === 'suggestions') {
@@ -945,13 +947,13 @@ export const TicketDashboard = () => {
       } else if (cardType === 'requests') {
         newFilters.complaint_type_eq = 'Request';
       } else if (cardType === 'open_complaints') {
-        newFilters.complaint_status_fixed_state_eq = 'Open';
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = ['Open'];
         newFilters.complaint_type_eq = 'Complaint';
       } else if (cardType === 'open_suggestions') {
-        newFilters.complaint_status_fixed_state_eq = 'Open';
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = ['Open'];
         newFilters.complaint_type_eq = 'Suggestion';
       } else if (cardType === 'open_requests') {
-        newFilters.complaint_status_fixed_state_eq = 'Open';
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = ['Open'];
         newFilters.complaint_type_eq = 'Request';
       }
 
@@ -971,25 +973,25 @@ export const TicketDashboard = () => {
         filters.g?.[0]?.complaint_status_fixed_state_not_eq === 'closed' &&
         filters.g?.[0]?.complaint_status_fixed_state_null === '1';
     } else if (cardType === 'pending') {
-      return filters.complaint_status_fixed_state_eq === 'Pending';
+      return filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes('Pending') ?? false;
     } else if (cardType === 'in_progress') {
-      return filters.complaint_status_fixed_state_eq === 'In Progress';
+      return filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes('Work In Progress') ?? false;
     } else if (cardType === 'closed') {
-      return filters.complaint_status_fixed_state_eq === 'Closed';
+      return filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes('Closed') ?? false;
     } else if (cardType === 'completed') {
-      return filters.complaint_status_fixed_state_eq === 'complete';
+      return filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes('complete') ?? false;
     } else if (cardType === 'complaints') {
-      return filters.complaint_type_eq === 'Complaint' && !filters.complaint_status_fixed_state_eq;
+      return filters.complaint_type_eq === 'Complaint' && !filters.complaint_status_fixed_state_or_complaint_status_name_in?.length;
     } else if (cardType === 'suggestions') {
-      return filters.complaint_type_eq === 'Suggestion' && !filters.complaint_status_fixed_state_eq;
+      return filters.complaint_type_eq === 'Suggestion' && !filters.complaint_status_fixed_state_or_complaint_status_name_in?.length;
     } else if (cardType === 'requests') {
-      return filters.complaint_type_eq === 'Request' && !filters.complaint_status_fixed_state_eq;
+      return filters.complaint_type_eq === 'Request' && !filters.complaint_status_fixed_state_or_complaint_status_name_in?.length;
     } else if (cardType === 'open_complaints') {
-      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Complaint';
+      return (filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes('Open') ?? false) && filters.complaint_type_eq === 'Complaint';
     } else if (cardType === 'open_suggestions') {
-      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Suggestion';
+      return (filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes('Open') ?? false) && filters.complaint_type_eq === 'Suggestion';
     } else if (cardType === 'open_requests') {
-      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Request';
+      return (filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes('Open') ?? false) && filters.complaint_type_eq === 'Request';
     }
 
     return false;
@@ -1032,6 +1034,14 @@ export const TicketDashboard = () => {
     label: 'Sub Category',
     sortable: true
   }, {
+    key: 'flat_number',
+    label: 'Flat',
+    sortable: true
+  }, {
+    key: 'tower',
+    label: 'Tower',
+    sortable: true
+  }, {
     key: 'posted_by',
     label: 'Created By',
     sortable: true
@@ -1059,7 +1069,7 @@ export const TicketDashboard = () => {
     sortable: true
   }, {
     key: 'issue_type',
-    label: 'Ticket Type',
+    label: 'Related To',
     sortable: true
   }, {
     key: 'complaint_mode',
@@ -1353,6 +1363,17 @@ export const TicketDashboard = () => {
       return <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 animate-scale-in">
         {item.priority}
       </span>;
+    }
+    if (columnKey === 'flat_number') {
+      // The API sends flat_number pre-combined as "Tower-FlatNo" (e.g. "T1-101").
+      if (!item.flat_number) return '--';
+      const parts = String(item.flat_number).split('-');
+      return parts.length > 1 ? parts.join(' - ') : item.flat_number;
+    }
+    if (columnKey === 'tower') {
+      if (!item.flat_number) return '--';
+      const parts = String(item.flat_number).split('-');
+      return parts.length > 1 ? parts[0] : '--';
     }
     if (columnKey === 'created_at') {
       return formatDate(item.created_at);
