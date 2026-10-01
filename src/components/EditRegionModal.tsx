@@ -5,6 +5,7 @@ import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } fro
 import { Switch } from '@/components/ui/switch';
 import { MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
 import { useApiConfig } from '@/hooks/useApiConfig';
 
 interface EditRegionModalProps {
@@ -183,8 +184,8 @@ export const EditRegionModal: React.FC<EditRegionModalProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update region');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, 'Failed to update region'));
       }
 
       toast.success('Region updated successfully!', {
@@ -194,7 +195,7 @@ export const EditRegionModal: React.FC<EditRegionModalProps> = ({
       onSuccess();
     } catch (error: any) {
       console.error('Error updating region:', error);
-      toast.error(`Failed to update region: ${error.message}`, {
+      toast.error(error.message || 'Failed to update region', {
         duration: 5000,
       });
     } finally {

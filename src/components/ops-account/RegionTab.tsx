@@ -12,6 +12,7 @@ import { EnhancedTaskTable } from '@/components/enhanced-table/EnhancedTaskTable
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { TicketPagination } from '@/components/TicketPagination';
 import { toast } from 'sonner';
+import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
 import { useApiConfig } from '@/hooks/useApiConfig';
 import { getUser } from '@/utils/auth';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -584,7 +585,8 @@ export const RegionTab: React.FC<RegionTabProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to delete region"));
       }
 
       toast.success("Region deleted successfully!", {
@@ -597,7 +599,7 @@ export const RegionTab: React.FC<RegionTabProps> = ({
       setSelectedRegionId(null);
     } catch (error: any) {
       console.error("Error deleting region:", error);
-      toast.error(`Failed to delete region: ${error.message}`, {
+      toast.error(error.message || "Failed to delete region", {
         duration: 5000,
       });
     }

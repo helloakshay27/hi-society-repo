@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Upload, X, Building, Globe, Flag, Image } from "lucide-react";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 
 interface AddCompanyModalProps {
@@ -353,8 +354,8 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create company");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to create company"));
       }
 
       toast.success("Company created successfully!", {
@@ -368,8 +369,8 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
       const message =
         typeof error === "object" && error !== null && "message" in error
           ? String((error as { message: unknown }).message)
-          : "An unexpected error occurred";
-      toast.error(`Failed to create company: ${message}`, {
+          : "Failed to create company";
+      toast.error(message, {
         duration: 5000,
       });
     } finally {

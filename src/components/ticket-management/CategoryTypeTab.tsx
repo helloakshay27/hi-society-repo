@@ -143,7 +143,7 @@ export const CategoryTypeTab: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const perPage = 20;
+  const [perPage, setPerPage] = useState(20);
   const [faqItems, setFaqItems] = useState<FAQ[]>([{ question: '', answer: '' }]);
   const [vendorEmails, setVendorEmails] = useState<string[]>(['']);
   const [engineers, setEngineers] = useState<{ id: number; full_name: string }[]>([]);
@@ -240,6 +240,7 @@ export const CategoryTypeTab: React.FC = () => {
         setCurrentPage(data.pagination.current_page);
         setTotalPages(data.pagination.total_pages);
         setTotalCount(data.pagination.total_count);
+        if (data.pagination.per_page) setPerPage(data.pagination.per_page);
       }
     } catch (error) {
       toast.error('Failed to fetch categories');
@@ -780,7 +781,7 @@ export const CategoryTypeTab: React.FC = () => {
     
     switch (columnKey) {
       case 'srno':
-        return index + 1;
+        return (currentPage - 1) * perPage + index + 1;
       case 'name':
         return item.name;
       case 'issue_type_id': {

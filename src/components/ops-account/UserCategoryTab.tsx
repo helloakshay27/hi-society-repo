@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Search, Edit, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
 import { useApiConfig } from '@/hooks/useApiConfig';
 
 interface UserCategoryTabProps {
@@ -86,7 +87,8 @@ export const UserCategoryTab: React.FC<UserCategoryTabProps> = ({
         setUserCategoryName('');
         setIsAddUserCategoryOpen(false);
       } else {
-        toast.error('Failed to add user category');
+        const errorData = await response.json().catch(() => null);
+        toast.error(formatApiErrorMessage(errorData, 'Failed to add user category'));
       }
     } catch (error) {
       console.error('Error adding user category:', error);
@@ -125,7 +127,8 @@ export const UserCategoryTab: React.FC<UserCategoryTabProps> = ({
         setEditingCategory(null);
         setIsEditUserCategoryOpen(false);
       } else {
-        toast.error('Failed to update user category');
+        const errorData = await response.json().catch(() => null);
+        toast.error(formatApiErrorMessage(errorData, 'Failed to update user category'));
       }
     } catch (error) {
       console.error('Error updating user category:', error);

@@ -26,6 +26,7 @@ import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TicketPagination } from "@/components/TicketPagination";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import { getUser } from "@/utils/auth";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -665,7 +666,8 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to delete organization"));
       }
 
       toast.success("Organization deleted successfully!", {
@@ -683,7 +685,7 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       setSelectedOrganizationId(null);
     } catch (error: any) {
       console.error("Error deleting organization:", error);
-      toast.error(`Failed to delete organization: ${error.message}`, {
+      toast.error(error.message || "Failed to delete organization", {
         duration: 5000,
       });
     }

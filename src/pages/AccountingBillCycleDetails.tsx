@@ -422,7 +422,7 @@ const AccountingBillCycleDetails: React.FC = () => {
                         <td className="py-2 pr-4">{formatDate(row.endDate)}</td>
                         <td className="py-2 pr-4">{formatDate(row.billingDate)}</td>
                         <td className="py-2 pr-4">
-                          <span className={row.invoiceRaised ? "text-[#3b82c4]" : "text-gray-500"}>
+                          <span className={row.invoiceRaised ? "text-orange-500" : "text-gray-500"}>
                             {row.invoiceRaised ? "Yes" : "No"}
                           </span>
                         </td>
@@ -448,13 +448,13 @@ const AccountingBillCycleDetails: React.FC = () => {
                             >
                               <Upload className="h-3.5 w-3.5" /> Import
                             </button>
-                            <button
+                            {/* <button
                               type="button"
                               onClick={() => handleOpenAddExpenseCharges(row)}
                               className="inline-flex items-center gap-1 text-[#C72030] hover:underline"
                             >
                               <Plus className="h-3.5 w-3.5" /> Add Expense Charges
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                       </tr>

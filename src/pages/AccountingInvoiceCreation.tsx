@@ -104,6 +104,36 @@ interface UnitOption extends SelectOption {
   outstanding: number;
 }
 
+interface LedgerChargeOption extends SelectOption {
+  description: string;
+  chargeCategory: string;
+  igstRate: string;
+  cgstRate: string;
+  sgstRate: string;
+}
+
+// Charge ledgers carry their own description/category/tax rates (set on the
+// underlying ChargeSetup) which the plain {id,label} normalizeOptions() shape
+// would drop, so they get their own normalizer — selecting one in the
+// charges table preselects these instead of leaving them blank/editable.
+const normalizeLedgerOptions = (list: unknown): LedgerChargeOption[] => {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    const obj = (item ?? {}) as Record<string, unknown>;
+    const rawId = obj.id ?? obj.value ?? obj.name;
+    const rawLabel = obj.name ?? obj.label ?? rawId ?? "";
+    return {
+      id: String(rawId ?? ""),
+      label: String(rawLabel),
+      description: String(obj.description ?? ""),
+      chargeCategory: String(obj.charge_category ?? obj.chargeCategory ?? ""),
+      igstRate: String(obj.igst_rate ?? obj.igstRate ?? "0"),
+      cgstRate: String(obj.cgst_rate ?? obj.cgstRate ?? "0"),
+      sgstRate: String(obj.sgst_rate ?? obj.sgstRate ?? "0"),
+    };
+  });
+};
+
 // Units carry an extra `outstanding` balance the plain {id,label}
 // normalizeOptions() shape would drop, so they get their own normalizer.
 const normalizeUnitOptions = (list: unknown): UnitOption[] => {
@@ -264,8 +294,7 @@ const AccountingInvoiceCreation: React.FC = () => {
   const [unitOptions, setUnitOptions] = useState<UnitOption[]>([]);
   const [residentTypeOptions, setResidentTypeOptions] = useState<SelectOption[]>([]);
   const [invoiceFormatOptions, setInvoiceFormatOptions] = useState<SelectOption[]>([]);
-  const [ledgerOptions, setLedgerOptions] = useState<SelectOption[]>([]);
-  const [chargeTypeOptions, setChargeTypeOptions] = useState<SelectOption[]>([]);
+  const [ledgerOptions, setLedgerOptions] = useState<LedgerChargeOption[]>([]);
   const [frequencyLoading, setFrequencyLoading] = useState(false);
 
   // GET /lock_account_bills/invoice_form_options?lock_account_id=... — bundles
@@ -297,36 +326,6 @@ const AccountingInvoiceCreation: React.FC = () => {
     fetchFormOptions();
   }, [lockAccountId]);
 
-  // GET /account/charge_setups/charge_type_options.json?lock_account_id=... —
-  // dedicated charge-type list used by the "Charge Type" column in the charges table.
-  useEffect(() => {
-    const fetchChargeTypes = async () => {
-      try {
-        const baseUrl = API_CONFIG.BASE_URL;
-        const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/account/charge_setups/charge_type_options.json`, {
-          params: { lock_account_id: lockAccountId },
-          headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-        const data = res.data;
-        const list = Array.isArray(data)
-          ? data
-          : data?.charge_categories ??
-            data?.charge_type_options ??
-            data?.categories ??
-            data?.data ??
-            [];
-        setChargeTypeOptions(normalizeOptions(list));
-      } catch (error) {
-        console.error("Error fetching charge types:", error);
-        setChargeTypeOptions([]);
-      }
-    };
-    fetchChargeTypes();
-  }, [lockAccountId]);
 
   // GET /lock_account_ledgers/dropdown.json?lock_account_id=... — list of
   // ledgers selectable as charges on the invoice.
@@ -344,7 +343,7 @@ const AccountingInvoiceCreation: React.FC = () => {
         });
         const data = res.data;
         const list = Array.isArray(data) ? data : data?.lock_account_ledgers ?? data?.data ?? [];
-        setLedgerOptions(normalizeOptions(list));
+        setLedgerOptions(normalizeLedgerOptions(list));
       } catch (error) {
         console.error("Error fetching ledgers:", error);
         setLedgerOptions([]);
@@ -401,6 +400,27 @@ const AccountingInvoiceCreation: React.FC = () => {
     setCharges((prev) => prev.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
   };
 
+  // Selecting a ledger preselects its description/tax rates from the
+  // underlying ChargeSetup; only the description stays editable afterwards.
+  const handleLedgerSelect = (key: string, ledgerId: string) => {
+    const ledger = ledgerOptions.find((option) => option.id === ledgerId);
+    setCharges((prev) =>
+      prev.map((row) =>
+        row.key === key
+          ? {
+              ...row,
+              ledgerId,
+              description: ledger?.description || "",
+              chargeType: ledger?.chargeCategory || "",
+              igstRate: ledger?.igstRate || "0",
+              cgstRate: ledger?.cgstRate || "0",
+              sgstRate: ledger?.sgstRate || "0",
+            }
+          : row
+      )
+    );
+  };
+
   const addCharge = () => setCharges((prev) => [...prev, emptyCharge()]);
 
   const removeCharge = (key: string) => {
@@ -414,7 +434,7 @@ const AccountingInvoiceCreation: React.FC = () => {
         return (
           <FormSelect
             value={row.ledgerId}
-            onChange={(value) => updateCharge(row.key, "ledgerId", value)}
+            onChange={(value) => handleLedgerSelect(row.key, value)}
             placeholder="Select Ledger"
             options={ledgerOptions}
             bordered
@@ -432,16 +452,7 @@ const AccountingInvoiceCreation: React.FC = () => {
           </div>
         );
       case "chargeType":
-        return (
-          <FormSelect
-            value={row.chargeType}
-            onChange={(value) => updateCharge(row.key, "chargeType", value)}
-            placeholder="Select Type"
-            options={chargeTypeOptions}
-            bordered
-            disabled
-          />
-        );
+        return <Input readOnly value={row.chargeType} className="bg-brand-bg" />;
       case "quantity":
         return (
           <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
@@ -471,48 +482,15 @@ const AccountingInvoiceCreation: React.FC = () => {
       case "amount":
         return <Input readOnly value={amount.toFixed(2)} className="bg-brand-bg" />;
       case "igstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.igstRate}
-              onChange={(e) => updateCharge(row.key, "igstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={row.igstRate} className="bg-brand-bg" />;
       case "igstAmount":
         return <Input readOnly value={igstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "cgstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.cgstRate}
-              onChange={(e) => updateCharge(row.key, "cgstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={row.cgstRate} className="bg-brand-bg" />;
       case "cgstAmount":
         return <Input readOnly value={cgstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "sgstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.sgstRate}
-              onChange={(e) => updateCharge(row.key, "sgstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={row.sgstRate} className="bg-brand-bg" />;
       case "sgstAmount":
         return <Input readOnly value={sgstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "totalAmount":
@@ -539,6 +517,13 @@ const AccountingInvoiceCreation: React.FC = () => {
     const validCharges = charges.filter((row) => row.ledgerId);
     if (validCharges.length === 0) {
       toast.error("Please add at least one charge with a ledger selected.");
+      return;
+    }
+    const incompleteCharge = validCharges.find(
+      (row) => !(Number(row.quantity) > 0) || !(Number(row.rate) > 0)
+    );
+    if (incompleteCharge) {
+      toast.error("Quantity and Rate are required for every charge with a ledger selected.");
       return;
     }
 

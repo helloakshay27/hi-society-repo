@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Upload, X, Building, Globe, Flag, Image } from "lucide-react";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -406,13 +407,8 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
         resetForm();
         onSuccess();
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        const firstError = Object.entries(errorData as Record<string, string[]>)
-          .map(([key, msgs]) => {
-            const label = key.replace("organization_products.", "Product ").replace(/_/g, " ");
-            return `${label}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`;
-          })[0];
-        toast.error(firstError || errorData.message || "Failed to create organization");
+        const errorData = await response.json().catch(() => null);
+        toast.error(formatApiErrorMessage(errorData, "Failed to create organization"));
       }
     } catch (error) {
       console.error("Error creating organization:", error);

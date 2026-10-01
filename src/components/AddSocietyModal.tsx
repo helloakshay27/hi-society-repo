@@ -15,6 +15,7 @@ import { Button as MuiButton } from "@mui/material";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { SocietyFormData, EstateBuilder, Headquarter, Region, Zone } from "@/types/society";
@@ -286,8 +287,8 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create society");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to create society"));
       }
 
       toast.success("Society created successfully");

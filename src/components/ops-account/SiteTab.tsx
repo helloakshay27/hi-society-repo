@@ -21,6 +21,7 @@ import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TicketPagination } from "@/components/TicketPagination";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import { getUser } from "@/utils/auth";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -805,7 +806,8 @@ export const SiteTab: React.FC<SiteTabProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to delete site"));
       }
 
       toast.success("Site deleted successfully!", {
@@ -819,7 +821,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Error deleting site:", error);
-      toast.error(`Failed to delete site: ${msg}`, {
+      toast.error(msg || "Failed to delete site", {
         duration: 5000,
       });
     }

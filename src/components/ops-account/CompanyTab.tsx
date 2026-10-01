@@ -24,6 +24,7 @@ import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TicketPagination } from "@/components/TicketPagination";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import { getUser } from "@/utils/auth";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -697,7 +698,8 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to delete company"));
       }
 
       toast.success("Company deleted successfully!", {
@@ -715,7 +717,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
       setSelectedCompanyId(null);
     } catch (error: any) {
       console.error("Error deleting company:", error);
-      toast.error(`Failed to delete company: ${error.message}`, {
+      toast.error(error.message || "Failed to delete company", {
         duration: 5000,
       });
     }

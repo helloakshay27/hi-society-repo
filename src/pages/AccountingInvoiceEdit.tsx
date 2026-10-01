@@ -116,6 +116,38 @@ interface UnitOption extends SelectOption {
   outstanding: number;
 }
 
+interface LedgerChargeOption extends SelectOption {
+  chargeSetupId: string;
+  description: string;
+  chargeCategory: string;
+  igstRate: string;
+  cgstRate: string;
+  sgstRate: string;
+}
+
+// Charge ledgers carry their own description/category/tax rates (set on the
+// underlying ChargeSetup) which the plain {id,label} normalizeOptions() shape
+// would drop, so they get their own normalizer — selecting one in the
+// charges table preselects these instead of leaving them blank/editable.
+const normalizeLedgerOptions = (list: unknown): LedgerChargeOption[] => {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    const obj = (item ?? {}) as Record<string, unknown>;
+    const rawId = obj.id ?? obj.value ?? obj.name;
+    const rawLabel = obj.name ?? obj.label ?? rawId ?? "";
+    return {
+      id: String(rawId ?? ""),
+      label: String(rawLabel),
+      chargeSetupId: String(obj.charge_setup_id ?? ""),
+      description: String(obj.description ?? ""),
+      chargeCategory: String(obj.charge_category ?? obj.chargeCategory ?? ""),
+      igstRate: String(obj.igst_rate ?? obj.igstRate ?? "0"),
+      cgstRate: String(obj.cgst_rate ?? obj.cgstRate ?? "0"),
+      sgstRate: String(obj.sgst_rate ?? obj.sgstRate ?? "0"),
+    };
+  });
+};
+
 // Units carry an extra `outstanding` balance the plain {id,label}
 // normalizeOptions() shape would drop, so they get their own normalizer.
 const normalizeUnitOptions = (list: unknown): UnitOption[] => {
@@ -147,6 +179,24 @@ const normalizeOptions = (list: unknown): SelectOption[] => {
     }
     return { id: String(item), label: String(item) };
   });
+};
+
+const applyLedgerDetails = (
+  row: ChargeRow,
+  ledgerOptions: LedgerChargeOption[]
+): ChargeRow => {
+  const ledger = ledgerOptions.find(
+    (option) => option.id === row.ledgerId || option.chargeSetupId === row.ledgerId
+  );
+  if (!ledger) return row;
+
+  return {
+    ...row,
+    chargeType: ledger.chargeCategory || row.chargeType,
+    igstRate: ledger.igstRate,
+    cgstRate: ledger.cgstRate,
+    sgstRate: ledger.sgstRate,
+  };
 };
 
 const computeChargeAmounts = (row: ChargeRow) => {
@@ -279,8 +329,7 @@ const AccountingInvoiceEdit: React.FC = () => {
   const [unitOptions, setUnitOptions] = useState<UnitOption[]>([]);
   const [residentTypeOptions, setResidentTypeOptions] = useState<SelectOption[]>([]);
   const [invoiceFormatOptions, setInvoiceFormatOptions] = useState<SelectOption[]>([]);
-  const [ledgerOptions, setLedgerOptions] = useState<SelectOption[]>([]);
-  const [chargeTypeOptions, setChargeTypeOptions] = useState<SelectOption[]>([]);
+  const [ledgerOptions, setLedgerOptions] = useState<LedgerChargeOption[]>([]);
   const [frequencyLoading, setFrequencyLoading] = useState(false);
 
   // GET /lock_account_bills/invoice_form_options?lock_account_id=... — bundles
@@ -312,36 +361,6 @@ const AccountingInvoiceEdit: React.FC = () => {
     fetchFormOptions();
   }, [lockAccountId]);
 
-  // GET /account/charge_setups/charge_type_options.json?lock_account_id=... —
-  // dedicated charge-type list used by the "Charge Type" column in the charges table.
-  useEffect(() => {
-    const fetchChargeTypes = async () => {
-      try {
-        const baseUrl = API_CONFIG.BASE_URL;
-        const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/account/charge_setups/charge_type_options.json`, {
-          params: { lock_account_id: lockAccountId },
-          headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-        const data = res.data;
-        const list = Array.isArray(data)
-          ? data
-          : data?.charge_categories ??
-            data?.charge_type_options ??
-            data?.categories ??
-            data?.data ??
-            [];
-        setChargeTypeOptions(normalizeOptions(list));
-      } catch (error) {
-        console.error("Error fetching charge types:", error);
-        setChargeTypeOptions([]);
-      }
-    };
-    fetchChargeTypes();
-  }, [lockAccountId]);
 
   // GET /lock_account_ledgers/dropdown.json?lock_account_id=... — list of
   // ledgers selectable as charges on the invoice.
@@ -359,7 +378,7 @@ const AccountingInvoiceEdit: React.FC = () => {
         });
         const data = res.data;
         const list = Array.isArray(data) ? data : data?.lock_account_ledgers ?? data?.data ?? [];
-        setLedgerOptions(normalizeOptions(list));
+        setLedgerOptions(normalizeLedgerOptions(list));
       } catch (error) {
         console.error("Error fetching ledgers:", error);
         setLedgerOptions([]);
@@ -437,7 +456,11 @@ const AccountingInvoiceEdit: React.FC = () => {
             existingCharges.map((charge: Record<string, unknown>) => ({
               key: Math.random().toString(36).slice(2),
               id: charge.id !== undefined && charge.id !== null ? String(charge.id) : undefined,
-              ledgerId: charge.ledger_id ? String(charge.ledger_id) : "",
+              ledgerId: charge.charge_setup_id
+                ? String(charge.charge_setup_id)
+                : charge.ledger_id
+                  ? String(charge.ledger_id)
+                  : "",
               description: String(charge.description ?? charge.name ?? ""),
               chargeType: String(charge.charge_type ?? ""),
               quantity: String(charge.quantity ?? "1"),
@@ -459,8 +482,12 @@ const AccountingInvoiceEdit: React.FC = () => {
   }, [id, lockAccountId]);
 
   const total = useMemo(
-    () => charges.reduce((sum, row) => sum + computeChargeAmounts(row).totalAmount, 0),
-    [charges]
+    () =>
+      charges.reduce(
+        (sum, row) => sum + computeChargeAmounts(applyLedgerDetails(row, ledgerOptions)).totalAmount,
+        0
+      ),
+    [charges, ledgerOptions]
   );
 
   const balanceAmount = useMemo(
@@ -470,6 +497,27 @@ const AccountingInvoiceEdit: React.FC = () => {
 
   const updateCharge = (key: string, field: keyof ChargeRow, value: string) => {
     setCharges((prev) => prev.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
+  };
+
+  // Selecting a ledger preselects its description/tax rates from the
+  // underlying ChargeSetup; only the description stays editable afterwards.
+  const handleLedgerSelect = (key: string, ledgerId: string) => {
+    const ledger = ledgerOptions.find((option) => option.id === ledgerId);
+    setCharges((prev) =>
+      prev.map((row) =>
+        row.key === key
+          ? {
+              ...row,
+              ledgerId,
+              description: ledger?.description || "",
+              chargeType: ledger?.chargeCategory || "",
+              igstRate: ledger?.igstRate || "0",
+              cgstRate: ledger?.cgstRate || "0",
+              sgstRate: ledger?.sgstRate || "0",
+            }
+          : row
+      )
+    );
   };
 
   const addCharge = () => setCharges((prev) => [...prev, emptyCharge()]);
@@ -486,18 +534,23 @@ const AccountingInvoiceEdit: React.FC = () => {
   };
 
   const renderChargeCell = (row: ChargeRow, columnKey: string) => {
-    const { amount, igstAmount, cgstAmount, sgstAmount, totalAmount } = computeChargeAmounts(row);
+    const charge = applyLedgerDetails(row, ledgerOptions);
+    const { amount, igstAmount, cgstAmount, sgstAmount, totalAmount } = computeChargeAmounts(charge);
     switch (columnKey) {
-      case "ledgerId":
+      case "ledgerId": {
+        const selectedLedger = ledgerOptions.find(
+          (option) => option.id === row.ledgerId || option.chargeSetupId === row.ledgerId
+        );
         return (
           <FormSelect
-            value={row.ledgerId}
-            onChange={(value) => updateCharge(row.key, "ledgerId", value)}
+            value={selectedLedger?.id ?? row.ledgerId}
+            onChange={(value) => handleLedgerSelect(row.key, value)}
             placeholder="Select Ledger"
             options={ledgerOptions}
             bordered
           />
         );
+      }
       case "description":
         return (
           <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
@@ -510,16 +563,7 @@ const AccountingInvoiceEdit: React.FC = () => {
           </div>
         );
       case "chargeType":
-        return (
-          <FormSelect
-            value={row.chargeType}
-            onChange={(value) => updateCharge(row.key, "chargeType", value)}
-            placeholder="Select Type"
-            options={chargeTypeOptions}
-            bordered
-            disabled
-          />
-        );
+        return <Input readOnly value={charge.chargeType} className="bg-brand-bg" />;
       case "quantity":
         return (
           <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
@@ -549,48 +593,15 @@ const AccountingInvoiceEdit: React.FC = () => {
       case "amount":
         return <Input readOnly value={amount.toFixed(2)} className="bg-brand-bg" />;
       case "igstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.igstRate}
-              onChange={(e) => updateCharge(row.key, "igstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={charge.igstRate} className="bg-brand-bg" />;
       case "igstAmount":
         return <Input readOnly value={igstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "cgstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.cgstRate}
-              onChange={(e) => updateCharge(row.key, "cgstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={charge.cgstRate} className="bg-brand-bg" />;
       case "cgstAmount":
         return <Input readOnly value={cgstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "sgstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.sgstRate}
-              onChange={(e) => updateCharge(row.key, "sgstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={charge.sgstRate} className="bg-brand-bg" />;
       case "sgstAmount":
         return <Input readOnly value={sgstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "totalAmount":
@@ -619,6 +630,13 @@ const AccountingInvoiceEdit: React.FC = () => {
       toast.error("Please add at least one charge with a ledger selected.");
       return;
     }
+    const incompleteCharge = validCharges.find(
+      (row) => !(Number(row.quantity) > 0) || !(Number(row.rate) > 0)
+    );
+    if (incompleteCharge) {
+      toast.error("Quantity and Rate are required for every charge with a ledger selected.");
+      return;
+    }
 
     const societyId =
       localStorage.getItem("society_id") || localStorage.getItem("selectedSocietyId") || "";
@@ -642,20 +660,25 @@ const AccountingInvoiceEdit: React.FC = () => {
         delete_charge_ids: deletedChargeIds.map((chargeId) => Number(chargeId)),
       },
       lock_account_bill_charges: validCharges.map((row) => {
+        const charge = applyLedgerDetails(row, ledgerOptions);
         const { amount, igstAmount, cgstAmount, sgstAmount, totalAmount } =
-          computeChargeAmounts(row);
+          computeChargeAmounts(charge);
         return {
           id: row.id ? Number(row.id) : undefined,
-          ledger_id: Number(row.ledgerId),
+          ledger_id: Number(
+            ledgerOptions.find(
+              (option) => option.id === row.ledgerId || option.chargeSetupId === row.ledgerId
+            )?.id ?? row.ledgerId
+          ),
           description: row.description,
           quantity: Number(row.quantity) || 0,
           rate: Number(row.rate) || 0,
           amount,
-          igst_rate: Number(row.igstRate) || 0,
+          igst_rate: Number(charge.igstRate) || 0,
           igst_amount: igstAmount,
-          cgst_rate: Number(row.cgstRate) || 0,
+          cgst_rate: Number(charge.cgstRate) || 0,
           cgst_amount: cgstAmount,
-          sgst_rate: Number(row.sgstRate) || 0,
+          sgst_rate: Number(charge.sgstRate) || 0,
           sgst_amount: sgstAmount,
           total_amount: totalAmount,
         };
