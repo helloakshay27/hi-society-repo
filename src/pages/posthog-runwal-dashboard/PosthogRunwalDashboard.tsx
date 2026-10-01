@@ -344,6 +344,7 @@ function PosthogRunwalDashboardContent() {
       data-theme={theme}
     >
       <TopBar
+        title={orgName}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         isNavCollapsed={isNavCollapsed}
@@ -362,6 +363,7 @@ function PosthogRunwalDashboardContent() {
           onSelectPage={handleSelectPage}
           filters={filters}
           sitesSettled={sitesSettled}
+          brandSub="Runwal Realty"
         />
 
         <main className="main">
