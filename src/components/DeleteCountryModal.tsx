@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
 import { useApiConfig } from '@/hooks/useApiConfig';
 import { AlertTriangle } from 'lucide-react';
 
@@ -36,7 +37,8 @@ export const DeleteCountryModal: React.FC<DeleteCountryModalProps> = ({
         onConfirm(countryId);
         onClose();
       } else {
-        toast.error('Failed to delete country');
+        const errorData = await response.json().catch(() => null);
+        toast.error(formatApiErrorMessage(errorData, 'Failed to delete country'));
       }
     } catch (error) {
       console.error('Error deleting country:', error);
