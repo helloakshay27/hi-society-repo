@@ -10,6 +10,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { X } from "lucide-react";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import {
   Dialog,
@@ -173,15 +174,15 @@ export const AddZoneModal: React.FC<AddZoneModalProps> = ({
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to create zone");
+        const errData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errData, "Failed to create zone"));
       }
 
       toast.success("Zone created successfully!");
       resetForm();
       onSuccess();
     } catch (error: unknown) {
-      toast.error(`Failed to create zone: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(error instanceof Error ? error.message : "Failed to create zone");
     } finally {
       setIsSubmitting(false);
     }

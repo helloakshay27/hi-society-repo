@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
 import { useApiConfig } from '@/hooks/useApiConfig';
 
 interface EditCountryModalProps {
@@ -123,9 +124,9 @@ export const EditCountryModal: React.FC<EditCountryModalProps> = ({
         resetForm();
         onSuccess();
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => null);
         console.error('Failed to update country:', errorData);
-        toast.error('Failed to update country');
+        toast.error(formatApiErrorMessage(errorData, 'Failed to update country'));
       }
     } catch (error) {
       console.error('Error updating country:', error);

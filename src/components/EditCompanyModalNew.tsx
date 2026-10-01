@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { X, Building, Loader2, Image } from "lucide-react";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 
 interface EditCompanyModalProps {
@@ -446,8 +447,8 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update company");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to update company"));
       }
 
       toast.success("Company updated successfully!", {
@@ -457,7 +458,7 @@ export const EditCompanyModalNew: React.FC<EditCompanyModalProps> = ({
       onSuccess();
     } catch (error: any) {
       console.error("Error updating company:", error);
-      toast.error(`Failed to update company: ${error.message}`, {
+      toast.error(error.message || "Failed to update company", {
         duration: 5000,
       });
     } finally {

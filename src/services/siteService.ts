@@ -1,5 +1,6 @@
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 
 export interface SiteData {
   id?: number;
@@ -344,8 +345,7 @@ class SiteService {
           message: result.message || "Site created successfully",
         };
       } else {
-        const errorMessage =
-          result.message || result.error || "Failed to create site";
+        const errorMessage = formatApiErrorMessage(result, "Failed to create site");
         toast.error(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -466,8 +466,7 @@ class SiteService {
           message: result.message || "Site updated successfully",
         };
       } else {
-        const errorMessage =
-          result.message || result.error || "Failed to update site";
+        const errorMessage = formatApiErrorMessage(result, "Failed to update site");
         toast.error(errorMessage);
         return { success: false, error: errorMessage };
       }
