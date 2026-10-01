@@ -213,6 +213,10 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
       toast.error("Please select the purpose of your visit.");
       return false;
     }
+    if (formData.expectedDate < defaultDate) {
+      toast.error("Expected date cannot be in the past.");
+      return false;
+    }
     return true;
   };
 
@@ -288,6 +292,9 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
           <div className="flex gap-system-md items-start">
             {/* Photo capture */}
             <div className="shrink-0">
+              <label className="text-brand-body-5 text-brand-text-light block mb-1">
+                Photo <span className="text-red-500">*</span>
+              </label>
               {!capturedPhoto ? (
                 <button
                   type="button"
@@ -322,7 +329,7 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
             <div className="flex-1 space-y-system-sm">
               <div>
                 <label className="text-brand-body-5 text-brand-text-light">
-                  Mobile No.
+                  Mobile No. <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -341,7 +348,7 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
               </div>
               <div>
                 <label className="text-brand-body-5 text-brand-text-light">
-                  Name
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -357,10 +364,11 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
           <div className="flex gap-system-md">
             <div className="flex-1">
               <label className="text-brand-body-5 text-brand-text-light">
-                Expected Date
+                Expected Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
+                min={defaultDate}
                 value={formData.expectedDate}
                 onChange={(e) => handleChange("expectedDate", e.target.value)}
                 className="w-full border-b border-brand-card-border bg-transparent py-1 text-brand-body-4 text-brand-text focus:outline-none focus:border-brand"
@@ -368,7 +376,7 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
             </div>
             <div className="flex-1">
               <label className="text-brand-body-5 text-brand-text-light">
-                Expected Time
+                Expected Time <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
@@ -381,7 +389,7 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
 
           <div>
             <label className="text-brand-body-5 text-brand-text-light">
-              Visiting Purpose
+              Visiting Purpose <span className="text-red-500">*</span>
             </label>
             <Select
               value={formData.visitingPurpose}
@@ -419,7 +427,10 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
           if (!open) closeCameraDialog();
         }}
       >
-        <DialogContent className="max-w-sm">
+        {/* invite-visitor-camera-dialog opts this dialog out of the
+            site-wide "dialogs become a bottom sheet under 640px" rule
+            (see src/index.css) so it stays centered on mobile. */}
+        <DialogContent className="invite-visitor-camera-dialog max-w-sm max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Capture Photo</DialogTitle>
           </DialogHeader>

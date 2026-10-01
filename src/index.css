@@ -1756,6 +1756,21 @@ body {
     right: 0 !important;
     transform: none !important;
   }
+
+  /* Opt-out: keep this dialog centered instead of a bottom sheet
+     (used by the Invite Visitor camera capture dialog). */
+  [role="dialog"].invite-visitor-camera-dialog {
+    max-width: 24rem !important;
+    width: calc(100% - 2rem) !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
+    position: fixed !important;
+    top: 50% !important;
+    bottom: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+  }
 }
 
 /* 11. Figma card — responsive padding */
