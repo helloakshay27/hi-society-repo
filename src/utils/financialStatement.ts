@@ -5,6 +5,7 @@
 // template, appending anything beyond the template so no data is dropped.
 
 export interface StatementNode {
+  id?: number | null;
   name: string;
   values?: { total_formatted?: string; total?: number }[];
   accounts?: StatementNode[];
@@ -18,6 +19,7 @@ export type StatementRow = {
   level: number;
   label: string;
   amount: string | number | null;
+  ledgerId?: number | null;
   isHeader?: boolean;
   isSpacer?: boolean;
   isTotal?: boolean;
@@ -34,6 +36,11 @@ export const rawAmount = (node?: StatementNode): string | number | null => {
 
 export const leafAmount = (node: StatementNode): string | number | null =>
   node.accounts && node.accounts.length > 0 ? null : rawAmount(node);
+
+// Only true ledger leaves (no nested accounts) are individual ledgers a user
+// can drill into — group/header nodes have no single ledger to link to.
+export const leafId = (node: StatementNode): number | null =>
+  node.accounts && node.accounts.length > 0 ? null : node.id ?? null;
 
 export const toNumber = (value: string | number | null | undefined): number => {
   if (value === null || value === undefined || value === "") return 0;
@@ -56,7 +63,9 @@ export const formatAmount = (value: string | number | null | undefined): string 
 // Renders nodes that fall outside the standard template (e.g. custom
 // groups/ledgers a society has added) so nothing fetched is silently dropped.
 export const dynamicRows = (node: StatementNode, level: number): StatementRow[] => {
-  const rows: StatementRow[] = [{ level, label: node.name, amount: leafAmount(node) }];
+  const rows: StatementRow[] = [
+    { level, label: node.name, amount: leafAmount(node), ledgerId: leafId(node) },
+  ];
   (node.accounts || []).forEach((child) => rows.push(...dynamicRows(child, level + 1)));
   return rows;
 };
@@ -89,6 +98,7 @@ export const buildSideRows = (
         level: 1,
         label: childLabel,
         amount: match ? leafAmount(match) : 0,
+        ledgerId: match ? leafId(match) : null,
         isSummary,
       });
     });

@@ -121,7 +121,9 @@ const toRow = (bill: LockAccountBill): InvoiceRow => ({
   note: bill.note || "",
   billCycle: bill.bill_cycle || bill.society_bill_cycle_name || "",
   status: bill.status || "Pending",
-  publish: Boolean(bill.bill_actions?.can_publish),
+  // can_publish is true while the invoice is still unpublished; the list's
+  // Publish column shows the current published state, so invert the action flag.
+  publish: !Boolean(bill.bill_actions?.can_publish),
   mailSent: Boolean(bill.mail_sent),
 });
 
