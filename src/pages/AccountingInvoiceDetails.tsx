@@ -55,6 +55,8 @@ interface LockAccountBillDetail {
   note?: string;
   total_amount: number;
   balance_amount?: number;
+  paid_amount?: number;
+  balance_due?: number;
   total_receivable_amount?: number;
   charges?: BillCharge[];
   lock_account_bill_charges?: BillCharge[];
@@ -159,7 +161,14 @@ const AccountingInvoiceDetails: React.FC = () => {
 
   const totalAmount = Number(bill?.total_amount) || 0;
   const balanceAmount = Number(bill?.balance_amount) || 0;
+  const hasPaidAmount = bill?.paid_amount !== undefined && bill?.paid_amount !== null;
+  const paidAmount = Number(bill?.paid_amount) || 0;
+  const hasBalanceDue = bill?.balance_due !== undefined && bill?.balance_due !== null;
+  const balanceDue = Number(bill?.balance_due) || 0;
   const totalReceivable = Number(bill?.total_receivable_amount ?? totalAmount);
+  // Amount pre-filled/validated in the Receive Payment modal — prefer the
+  // outstanding balance due over the full bill total when the API provides it.
+  const payableAmount = hasBalanceDue ? balanceDue : totalAmount;
   const amountInWords = useMemo(
     () => `${numberToWords(totalAmount)} Rupees Only`,
     [totalAmount]
@@ -286,6 +295,10 @@ const AccountingInvoiceDetails: React.FC = () => {
       toast.error("Paid amount should be greater than 0.");
       return;
     }
+    if (Number(paymentAmount) > payableAmount) {
+      toast.error("Amount paid cannot be greater than the total amount.");
+      return;
+    }
     if (!paymentMode) {
       toast.error("Please select payment mode.");
       return;
@@ -328,7 +341,14 @@ const AccountingInvoiceDetails: React.FC = () => {
       fetchBill();
     } catch (error) {
       console.error("Error recording payment:", error);
-      toast.error("Failed to record payment");
+      const responseData = axios.isAxiosError(error) ? error.response?.data : undefined;
+      const errors = responseData?.errors;
+      const apiError = Array.isArray(errors)
+        ? errors.filter((message): message is string => typeof message === "string").join(" ")
+        : typeof errors === "string"
+          ? errors
+          : undefined;
+      toast.error(apiError || "Failed to record payment");
     } finally {
       setSubmittingPayment(false);
     }
@@ -538,6 +558,22 @@ const AccountingInvoiceDetails: React.FC = () => {
                     {totalReceivable.toFixed(1)}
                   </td>
                 </tr>
+                {hasPaidAmount && (
+                  <tr className="border-t border-gray-200">
+                    <td className="px-6 py-2 text-right font-semibold">Paid Amount</td>
+                    <td className="px-6 py-2 text-right font-semibold">
+                      {paidAmount.toFixed(1)}
+                    </td>
+                  </tr>
+                )}
+                {hasBalanceDue && (
+                  <tr className="border-t border-gray-200">
+                    <td className="px-6 py-2 text-right font-semibold">Balance Due</td>
+                    <td className="px-6 py-2 text-right font-semibold">
+                      {balanceDue.toFixed(1)}
+                    </td>
+                  </tr>
+                )}
                 <tr className="border-t border-gray-200">
                   <td className="px-6 py-2 text-right font-semibold" colSpan={2}>
                     Amt. in word: {amountInWords}
@@ -594,7 +630,7 @@ const AccountingInvoiceDetails: React.FC = () => {
                       <td className="px-6 py-2">{formatDateDMY(payment.date)}</td>
                       <td className="px-6 py-2">{payment.amount}</td>
                       <td className="px-6 py-2">{payment.method}</td>
-                      <td className="px-6 py-2">{payment.transaction_id}</td>
+                      <td className="px-6 py-2">{payment.transaction_id || "-"}</td>
                       {/* Moved to a single "Download Receipt" button next to
                       Raise to Builder at the top, shown once the bill is
                       fully paid, instead of a per-payment download here. */}
@@ -634,7 +670,7 @@ const AccountingInvoiceDetails: React.FC = () => {
           <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
             <TextField
               label="Total Amount"
-              value={totalAmount.toFixed(1)}
+              value={payableAmount.toFixed(1)}
               fullWidth
               variant="outlined"
               disabled
@@ -650,7 +686,7 @@ const AccountingInvoiceDetails: React.FC = () => {
               onChange={(e) => setPaymentAmount(e.target.value)}
               fullWidth
               variant="outlined"
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 0, max: payableAmount, step: "0.01" }}
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles }}
             />

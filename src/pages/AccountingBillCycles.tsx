@@ -3,11 +3,15 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Edit, Eye, Plus } from "lucide-react";
+import { Edit, Eye, Plus, X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+
+const CHARGES_PREVIEW_COUNT = 2;
 
 interface SocietyBillCycle {
   id: number;
@@ -16,12 +20,14 @@ interface SocietyBillCycle {
   end_month: string;
   payment_due_in: number;
   frequency: string;
+  charge_names?: string[];
   interest_rate?: number;
   interest_type?: string;
   fine_rate?: number;
   fine_type?: string;
   created_at: string;
   created_by?: string | number;
+  created_by_name?: string | null;
   active: number;
 }
 
@@ -34,10 +40,12 @@ const columns: ColumnConfig[] = [
   { key: "start_month", label: "Start Date", sortable: true },
   { key: "end_month", label: "End Date", sortable: true },
   { key: "frequency", label: "Frequency", sortable: true },
+  { key: "charge_names", label: "Charges", sortable: false },
   { key: "payment_due_in", label: "Payment Due In", sortable: true },
   { key: "interest_rate", label: "Interest", sortable: true },
   { key: "fine_rate", label: "Fine", sortable: true },
   { key: "created_at", label: "Created On", sortable: true },
+  { key: "created_by", label: "Created By", sortable: true },
   { key: "active", label: "Status", sortable: true },
 ];
 
@@ -56,6 +64,7 @@ const AccountingBillCycles: React.FC = () => {
   const navigate = useNavigate();
   const [cycles, setCycles] = useState<SocietyBillCycle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [chargesModalNames, setChargesModalNames] = useState<string[] | null>(null);
 
   const fetchCycles = useCallback(async () => {
     setLoading(true);
@@ -141,6 +150,42 @@ const AccountingBillCycles: React.FC = () => {
         return formatDate(item[columnKey as "start_month"]);
       case "frequency":
         return item.frequency ? item.frequency.replace("_", " ") : "";
+      case "charge_names": {
+        const names = item.charge_names || [];
+        if (names.length === 0) return "-";
+        const preview = names.slice(0, CHARGES_PREVIEW_COUNT);
+        const remaining = names.length - preview.length;
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            <span>{preview.join(", ")}</span>
+            {remaining > 0 && (
+              <HoverCard openDelay={150}>
+                <HoverCardTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setChargesModalNames(names)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#da7756] text-xs font-medium text-white"
+                  >
+                    +{remaining}
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-64 overflow-hidden p-0">
+                  <div className="border-b border-gray-200 px-4 py-2">
+                    <h3 className="text-sm font-medium text-gray-900">Charges</h3>
+                  </div>
+                  <ul className="max-h-[240px] list-disc space-y-1 overflow-y-auto px-4 py-3 pl-8 text-sm text-gray-900">
+                    {names.map((name, index) => (
+                      <li key={index}>{name}</li>
+                    ))}
+                  </ul>
+                </HoverCardContent>
+              </HoverCard>
+            )}
+          </div>
+        );
+      }
+      case "created_by":
+        return item.created_by_name || item.created_by || "-";
       case "payment_due_in":
         return item.payment_due_in ? `${item.payment_due_in} days` : "";
       case "interest_rate":
@@ -203,6 +248,27 @@ const AccountingBillCycles: React.FC = () => {
         loadingMessage="Loading bill cycles..."
         emptyMessage="No matching records found"
       />
+
+      <Dialog open={Boolean(chargesModalNames)} onOpenChange={(open) => !open && setChargesModalNames(null)}>
+        <DialogContent className="sm:max-w-md overflow-hidden p-0 [&>button]:hidden">
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-medium text-gray-900">Charges</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setChargesModalNames(null)}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <ul className="max-h-[60vh] list-disc space-y-1 overflow-y-auto px-6 py-4 pl-10 text-sm text-gray-900">
+            {(chargesModalNames || []).map((name, index) => (
+              <li key={index}>{name}</li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

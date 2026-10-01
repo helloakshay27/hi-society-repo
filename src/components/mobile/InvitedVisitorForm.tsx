@@ -64,6 +64,8 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
     null
   );
   const [societyName, setSocietyName] = useState<string | null>(null);
+  const [hostName, setHostName] = useState<string | null>(null);
+  const [flatLabel, setFlatLabel] = useState<string | null>(null);
 
   useEffect(() => {
     if (!visitorPageId) return;
@@ -79,6 +81,18 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
         }
         if (result?.society_building_name) {
           setSocietyName(result.society_building_name);
+        }
+        const name = [result?.firstname, result?.lastname]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        if (name) {
+          setHostName(name);
+        }
+        if (result?.block_no && result?.flat_no) {
+          setFlatLabel(`${result.block_no}-${result.flat_no}`);
+        } else if (result?.flat_no) {
+          setFlatLabel(String(result.flat_no));
         }
       } catch (error) {
         console.error("Failed to resolve invited visitor society:", error);
@@ -263,8 +277,11 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
             Thank you!
           </h1>
           <p className="text-brand-body-4 text-brand-text-light">
-            Your details have been sent. Please wait at the gate while we
-            notify your host.
+            Registration successful, your digital gate pass has been sent by
+            SMS.
+          </p>
+          <p className="text-brand-body-4 text-brand-text-light mt-2">
+            Please scan the QR code at the gate to enter.
           </p>
         </div>
       </div>
@@ -283,8 +300,15 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
             {societyName ? `Welcome to ${societyName}` : "Welcome!"}
           </h1>
           <p className="text-brand-body-4 text-brand-text-light mt-1">
-            Please fill the below details to enter the society and meet your
-            host.
+            {hostName && flatLabel ? (
+              <>
+                You are visiting <strong className="font-semibold text-brand-text">{hostName}</strong>{" "}
+                at flat <strong className="font-semibold text-brand-text">{flatLabel}</strong>. Please
+                enter your details to continue.
+              </>
+            ) : (
+              "Please fill the below details to enter the society and meet your host."
+            )}
           </p>
         </div>
 
