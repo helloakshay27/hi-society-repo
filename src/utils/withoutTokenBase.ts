@@ -2,6 +2,19 @@ import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { getBaseUrl } from "@/utils/auth";
 
+// Organization frontends served by the Hi-Society production backend.
+// To onboard a new organization frontend, add its hostname here.
+const HI_SOCIETY_PRODUCTION_FRONTEND_HOSTS = new Set([
+  "web.lockated.com", // default frontend for all other organizations
+  "runwal.lockated.com",
+  "runwalrealty.lockated.com",
+  "godrej.lockated.com",
+  "kraheja.lockated.com",
+  "sunteck.lockated.com",
+  "piramal.lockated.com",
+]);
+const HI_SOCIETY_PRODUCTION_API_URL = "https://hi-society.lockated.com";
+
 // Organization type for API response
 interface Organization {
   id: number;
@@ -89,12 +102,16 @@ baseClient.interceptors.request.use(
         hostname === "localhost";
       const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com";
       const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com";
-      const isHiSocietySite = isHiSocietyWebHost || isHiSocietyUIHost || isHiSocietyUATHost;
+      const isHiSocietySite =
+        isHiSocietyWebHost ||
+        isHiSocietyUIHost ||
+        isHiSocietyUATHost ||
+        HI_SOCIETY_PRODUCTION_FRONTEND_HOSTS.has(hostname);
 
       // Runwal specific host
       const isRunwalSite = hostname === "runwal-cp.lockated.com";
 
-      let hiSocietyApiBase = "https://hi-society.lockated.com";
+      let hiSocietyApiBase = HI_SOCIETY_PRODUCTION_API_URL;
       if (isHiSocietyUIHost || isHiSocietyUATHost) {
         hiSocietyApiBase = "https://uat-hi-society.lockated.com";
       }
@@ -267,7 +284,7 @@ baseClient.interceptors.request.use(
         config.baseURL = `${hiSocietyApiBase}/`;
         console.warn("⚠️ Using Hi-Society fallback URL due to error:", config.baseURL);
       } else {
-        config.baseURL = "https://hi-society.lockated.com/";
+        config.baseURL = `${HI_SOCIETY_PRODUCTION_API_URL}/`;
         console.warn("⚠️ Using fallback URL due to error:", config.baseURL);
       }
     }
