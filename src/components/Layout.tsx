@@ -197,7 +197,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       org_id === "109" ||
       org_id === "324" ||
       org_id === "10" ||
-      org_id === "5"
+      org_id === "5" ||
+      org_id === "9"
     ) {
       console.log("✅ Rendering ActionSidebar (company-specific)");
       return <ActionSidebar />;
@@ -292,7 +293,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       org_id === "109" ||
       org_id === "324" ||
       org_id === "10" ||
-      org_id === "5"
+      org_id === "5" ||
+      org_id === "9"
     ) {
       return <ActionHeader />;
     }
