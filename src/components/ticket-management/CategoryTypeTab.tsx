@@ -155,7 +155,7 @@ export const CategoryTypeTab: React.FC = () => {
   const [selectedPriority, setSelectedPriority] = useState('');
   const [fmResponseTime, setFmResponseTime] = useState('');
   const [projectResponseTime, setProjectResponseTime] = useState('');
-  
+
   const priorityOptions = ['P1', 'P2', 'P3', 'P4', 'P5'];
   const [accountData, setAccountData] = useState<{
     id?: string;
@@ -194,10 +194,10 @@ export const CategoryTypeTab: React.FC = () => {
     try {
       const data = await userService.getAccountDetails();
       setAccountData(data);
-      
+
       // Auto-populate form with company_id as society_id
       form.setValue('siteId', (data as any).company_id?.toString() || '');
-      
+
       // Fetch allowed sites for the user
       const sitesResponse = await fetch(getFullUrl(`/pms/sites/allowed_sites.json?user_id=${data.id}`), {
         headers: {
@@ -206,15 +206,15 @@ export const CategoryTypeTab: React.FC = () => {
         },
       });
 
-        if (sitesResponse.ok) {
-          const sitesData = await sitesResponse.json();
-          if (sitesData.sites && Array.isArray(sitesData.sites)) {
-            setSites(sitesData.sites);
-          }
-          if (sitesData.selected_site) {
-            setSelectedSite(sitesData.selected_site);
-          }
+      if (sitesResponse.ok) {
+        const sitesData = await sitesResponse.json();
+        if (sitesData.sites && Array.isArray(sitesData.sites)) {
+          setSites(sitesData.sites);
         }
+        if (sitesData.selected_site) {
+          setSelectedSite(sitesData.selected_site);
+        }
+      }
     } catch (error) {
       console.error('Error fetching account data:', error);
       toast.error('Failed to fetch account data');
@@ -360,7 +360,7 @@ export const CategoryTypeTab: React.FC = () => {
     try {
       const userData = localStorage.getItem('user');
       let userId = '12437'; // default fallback
-      
+
       if (userData) {
         try {
           const parsedUser = JSON.parse(userData);
@@ -384,12 +384,12 @@ export const CategoryTypeTab: React.FC = () => {
 
   const handleCreateSubmit = async () => {
     const categoryNameValue = form.getValues('categoryName');
-    
+
     if (!categoryNameValue?.trim()) {
       toast.error('Please enter a category name');
       return;
     }
-    
+
     const data: CategoryFormData = {
       categoryName: categoryNameValue.trim(),
       responseTime: fmResponseTime,
@@ -421,14 +421,14 @@ export const CategoryTypeTab: React.FC = () => {
     }
 
     // Check for duplicate category name
-    const existingCategory = categories.find(
-      category => category.name.toLowerCase() === data.categoryName.toLowerCase()
-    );
-    
-    if (existingCategory) {
-      toast.error('Category name already exists. Please choose a different name.');
-      return;
-    }
+    // const existingCategory = categories.find(
+    //   category => category.name.toLowerCase() === data.categoryName.toLowerCase()
+    // );
+
+    // if (existingCategory) {
+    //   toast.error('Category name already exists. Please choose a different name.');
+    //   return;
+    // }
 
     // Validate vendor emails if enabled
     if (vendorEmailEnabled) {
@@ -437,7 +437,7 @@ export const CategoryTypeTab: React.FC = () => {
         toast.error('Please enter valid email addresses for all vendor emails.');
         return;
       }
-      
+
       // Check if at least one email is provided when vendor email is enabled
       const validEmails = vendorEmails.filter(email => email.trim());
       if (validEmails.length === 0) {
@@ -447,10 +447,10 @@ export const CategoryTypeTab: React.FC = () => {
     }
 
     // Validate FAQ items - if any FAQ is partially filled, both question and answer are required
-    const incompleteFaqItems = faqItems.filter(item => 
+    const incompleteFaqItems = faqItems.filter(item =>
       (item.question.trim() && !item.answer.trim()) || (!item.question.trim() && item.answer.trim())
     );
-    
+
     if (incompleteFaqItems.length > 0) {
       toast.error('Please complete all FAQ items. If you enter a question, you must also provide an answer.');
       return;
@@ -459,7 +459,7 @@ export const CategoryTypeTab: React.FC = () => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      
+
       // Helpdesk category data
       formData.append('helpdesk_category[issue_type_id]', selectedIssueType);
       formData.append('helpdesk_category[name]', data.categoryName);
@@ -467,7 +467,7 @@ export const CategoryTypeTab: React.FC = () => {
       formData.append('helpdesk_category[project_tat]', projectResponseTime);
       formData.append('helpdesk_category[priority]', selectedPriority);
       formData.append('helpdesk_category[active]', '1');
-      
+
       if (iconFile) {
         formData.append('helpdesk_category[icon]', iconFile);
       }
@@ -482,7 +482,7 @@ export const CategoryTypeTab: React.FC = () => {
 
       if (response.ok) {
         toast.success('Category created successfully!');
-        
+
         // Reset form
         form.reset();
         setSelectedIssueType('');
@@ -492,17 +492,17 @@ export const CategoryTypeTab: React.FC = () => {
         setSelectedOfPhase('');
         setIconFile(null);
         setAddDialogOpen(false);
-        
+
         fetchCategories(1);
       } else {
         // Try to get the error message from the response
         const errorData = await response.json().catch(() => null);
         console.error('API Response Error:', errorData);
-        
+
         // Check if it's a duplicate name error
-        if (errorData?.errors?.name?.includes('has already been taken') || 
-            errorData?.message?.toLowerCase().includes('already exists') ||
-            errorData?.error?.toLowerCase().includes('already exists')) {
+        if (errorData?.errors?.name?.includes('has already been taken') ||
+          errorData?.message?.toLowerCase().includes('already exists') ||
+          errorData?.error?.toLowerCase().includes('already exists')) {
           toast.error('Category name already exists. Please choose a different name.');
         } else {
           toast.error(errorData?.message || 'Failed to create category');
@@ -521,7 +521,7 @@ export const CategoryTypeTab: React.FC = () => {
   };
 
   const updateFaqItem = (index: number, field: 'question' | 'answer', value: string) => {
-    const updated = faqItems.map((item, i) => 
+    const updated = faqItems.map((item, i) =>
       i === index ? { ...item, [field]: value } : item
     );
     setFaqItems(updated);
@@ -538,7 +538,7 @@ export const CategoryTypeTab: React.FC = () => {
   };
 
   const updateVendorEmail = (index: number, value: string) => {
-    const updated = vendorEmails.map((email, i) => 
+    const updated = vendorEmails.map((email, i) =>
       i === index ? value : email
     );
     setVendorEmails(updated);
@@ -662,7 +662,7 @@ export const CategoryTypeTab: React.FC = () => {
   };
 
   const updateEditFaqItem = (index: number, field: 'question' | 'answer', value: string) => {
-    const updated = editFaqItems.map((item, i) => 
+    const updated = editFaqItems.map((item, i) =>
       i === index ? { ...item, [field]: value } : item
     );
     setEditFaqItems(updated);
@@ -670,10 +670,10 @@ export const CategoryTypeTab: React.FC = () => {
 
   const removeEditFaqItem = (index: number) => {
     const faqToRemove = editFaqItems[index];
-    
+
     // If the FAQ has an ID (existing FAQ), mark it for destruction
     if (faqToRemove.id) {
-      const updated = editFaqItems.map((item, i) => 
+      const updated = editFaqItems.map((item, i) =>
         i === index ? { ...item, _destroy: true } : item
       );
       setEditFaqItems(updated);
@@ -697,7 +697,7 @@ export const CategoryTypeTab: React.FC = () => {
   };
 
   const updateEditVendorEmail = (index: number, value: string) => {
-    const updated = editVendorEmails.map((email, i) => 
+    const updated = editVendorEmails.map((email, i) =>
       i === index ? value : email
     );
     setEditVendorEmails(updated);
@@ -718,7 +718,7 @@ export const CategoryTypeTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this category?')) {
       return;
     }
-    
+
     try {
       const response = await fetch(getFullUrl(`/pms/admin/helpdesk_categories/${category.id}.json`), {
         method: 'PATCH',
@@ -752,7 +752,7 @@ export const CategoryTypeTab: React.FC = () => {
   const transformedCategories = useMemo(() => {
     return categories.map(category => ({
       ...category,
-      searchable_emails: category.category_email?.length 
+      searchable_emails: category.category_email?.length
         ? category.category_email.map(emailObj => emailObj.email).join(', ')
         : ''
     }));
@@ -772,13 +772,13 @@ export const CategoryTypeTab: React.FC = () => {
     { key: 'priority', label: 'Priority', sortable: false },
     { key: 'tat', label: 'Response Time (FM)', sortable: false },
     { key: 'project_tat', label: 'Project Response Time', sortable: false },
-    
+
     { key: 'icon_url', label: 'Icon', sortable: false },
   ];
 
   const renderCell = (item: CategoryApiResponse['helpdesk_categories'][0], columnKey: string) => {
     const index = categories.findIndex(cat => cat.id === item.id);
-    
+
     switch (columnKey) {
       case 'srno':
         return (currentPage - 1) * perPage + index + 1;
@@ -797,16 +797,16 @@ export const CategoryTypeTab: React.FC = () => {
         if (item.assigned_to_names) {
           return item.assigned_to_names;
         }
-        
+
         // Fallback: try to match from complaint_worker if assigned_to_names is not available
         if (item.complaint_worker?.assign_to && engineers.length > 0) {
           // Handle both array and non-array cases
-          const assignToArray = Array.isArray(item.complaint_worker.assign_to) 
-            ? item.complaint_worker.assign_to 
+          const assignToArray = Array.isArray(item.complaint_worker.assign_to)
+            ? item.complaint_worker.assign_to
             : [];
-          
+
           if (assignToArray.length === 0) return '--';
-          
+
           const names = assignToArray
             .map((id: string) => {
               const engineer = engineers.find(e => e.id === Number(id));
@@ -820,14 +820,14 @@ export const CategoryTypeTab: React.FC = () => {
       case 'tat':
         return item.tat || '--';
       case 'category_email':
-        return item.category_email?.length ? 
+        return item.category_email?.length ?
           item.category_email.map(emailObj => emailObj.email).join(', ') : '--';
       case 'icon_url':
         return item.icon_url ? (
-          <img 
-            src={item.icon_url} 
-            alt="Icon" 
-            className="w-8 h-8 object-cover rounded mx-auto" 
+          <img
+            src={item.icon_url}
+            alt="Icon"
+            className="w-8 h-8 object-cover rounded mx-auto"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}
@@ -837,9 +837,9 @@ export const CategoryTypeTab: React.FC = () => {
         );
       case 'selected_icon_url':
         return item.selected_icon_url ? (
-          <img 
-            src={item.selected_icon_url} 
-            alt="Selected Icon" 
+          <img
+            src={item.selected_icon_url}
+            alt="Selected Icon"
             className="w-8 h-8 object-cover rounded mx-auto"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
@@ -1030,7 +1030,7 @@ export const CategoryTypeTab: React.FC = () => {
             <Button
               type="button"
               onClick={() => setAddDialogOpen(false)}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"            >
+              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"            >
               Cancel
             </Button>
             <Button
@@ -1227,9 +1227,9 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
                   {editingCategory.icon_url && !editIconFile && (
                     <div className="mt-2">
                       <p className="text-sm text-gray-600 mb-1">Current Icon:</p>
-                      <img 
-                        src={editingCategory.icon_url} 
-                        alt="Current Icon" 
+                      <img
+                        src={editingCategory.icon_url}
+                        alt="Current Icon"
                         className="w-12 h-12 object-cover rounded border"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -1241,9 +1241,9 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
                   {editIconFile && (
                     <div className="mt-2">
                       <p className="text-sm text-gray-600 mb-1">New Icon Preview:</p>
-                      <img 
-                        src={URL.createObjectURL(editIconFile)} 
-                        alt="New Icon Preview" 
+                      <img
+                        src={URL.createObjectURL(editIconFile)}
+                        alt="New Icon Preview"
                         className="w-12 h-12 object-cover rounded border"
                       />
                     </div>
@@ -1419,9 +1419,9 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
               </div>
               */}
 
-              
+
               <div className="flex justify-end gap-3 pt-4">
-                <Button 
+                <Button
                   type="button"
                   onClick={() => {
                     setIsEditModalOpen(false);
@@ -1431,7 +1431,7 @@ className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !tex
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={() => handleEditSubmit()}
                   disabled={isSubmitting}
                   className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
