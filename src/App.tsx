@@ -21,6 +21,7 @@ import { AdminSidebar } from "./components/AdminSidebar";
 import { AdminLayout } from "./components/AdminLayout";
 import { PWALayoutWrapper } from "./components/PWALayoutWrapper";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { OpsConsoleGuard } from "./components/OpsConsoleGuard";
 import { Dashboard } from "./pages/Dashboard";
 const TicketsDashboardPage = lazy(() => import("./pages/TicketsDashboardPage"));
 const DashboardConfiguration = lazy(() => import("./pages/DashboardConfiguration"));
@@ -1371,7 +1372,9 @@ function App() {
                         path="/ops-console"
                         element={
                           <ProtectedRoute>
-                            <AdminLayout />
+                            <OpsConsoleGuard>
+                              <AdminLayout />
+                            </OpsConsoleGuard>
                           </ProtectedRoute>
                         }
                       >
@@ -6753,7 +6756,7 @@ function App() {
                         />
                         <Route
                           path="/ops-console/master/user/hi-society-users/view/:id"
-                          element={<ViewHiSocietyUserPage />}
+                          element={<OpsConsoleGuard><ViewHiSocietyUserPage /></OpsConsoleGuard>}
                         />
 
                         {/* Material Master Route */}

@@ -389,6 +389,19 @@ export const isAssetRestrictedUser = (
   return ASSET_RESTRICTED_EMAILS.includes(user.email.toLowerCase());
 };
 
+// Ops-console access is limited to these users only
+const OPS_CONSOLE_ALLOWED_EMAILS = [
+  "tejas.chaudhari@lockated.com",
+  "dinesh.shinde@lockated.com",
+].map((email) => email.toLowerCase());
+
+export const isOpsConsoleAllowedUser = (
+  user: User | null | undefined
+): boolean => {
+  if (!user?.email) return false;
+  return OPS_CONSOLE_ALLOWED_EMAILS.includes(user.email.trim().toLowerCase());
+};
+
 export const loginUser = async (
   email: string,
   password: string,
