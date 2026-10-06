@@ -141,10 +141,15 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
 
     const orgId = localStorage.getItem("org_id");
     const userEmail = getUser()?.email;
+    // Must stay in sync with the org list in Layout.tsx that renders
+    // ActionSidebar/ActionHeader — otherwise add/edit/details pages for
+    // those orgs never get the sibling-route fallback and the sidebar hides.
     const isActionOrgAccount =
       orgId === "109" ||
       orgId === "324" ||
       orgId === "10" ||
+      orgId === "5" ||
+      orgId === "9" ||
       userEmail === "dineshshinde6666@gmail.com";
 
     if (!userRole || !userRole.lock_modules) {
