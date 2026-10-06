@@ -606,6 +606,7 @@ export const TicketDetailsPage = () => {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [responsiblePersons, setResponsiblePersons] = useState<Array<{
     id: number;
+    person_id?: number | string | null;
     employee_type: string;
     full_name: string;
   }>>([]);
@@ -1149,8 +1150,9 @@ export const TicketDetailsPage = () => {
         const data = await response.json();
         const engineers = Array.isArray(data.helpdesk_users) ? data.helpdesk_users : [];
         setResponsiblePersons(
-          engineers.map((engineer: { id: number; full_name: string }) => ({
+          engineers.map((engineer: { id: number; person_id?: number | string | null; full_name: string }) => ({
             id: engineer.id,
+            person_id: engineer.person_id,
             employee_type: '',
             full_name: engineer.full_name,
           }))
@@ -2285,7 +2287,7 @@ export const TicketDetailsPage = () => {
 
       const formDataToSend = new FormData();
       formDataToSend.append('complaint_log[complaint_id]', id);
-      formDataToSend.append('person_id', selectedPersonId);
+      formDataToSend.append('person_id', String(selectedPerson.person_id ?? selectedPersonId));
 
       // Add asset_id and service_id based on current ticket's association
       if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
@@ -3074,7 +3076,13 @@ export const TicketDetailsPage = () => {
       }
 
       if (ticketClosureFormData.responsible_person) {
-        formDataToSend.append('complaint[person_id]', ticketClosureFormData.responsible_person);
+        const selectedPerson = responsiblePersons.find(
+          person => person.id.toString() === ticketClosureFormData.responsible_person
+        );
+        formDataToSend.append(
+          'complaint[person_id]',
+          String(selectedPerson?.person_id ?? ticketClosureFormData.responsible_person)
+        );
       }
 
       // Add asset_id and service_id based on current ticket's association
