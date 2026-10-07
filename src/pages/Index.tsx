@@ -91,7 +91,8 @@ const Index = () => {
 
     const hostname = window.location.hostname;
     const isViSite = hostname.includes("vi-web.gophygital.work");
-    const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
+    const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com")
+    // || org_id === "9";
     const isHiSocietySite = hostname === "web.hisociety.lockated.com";
     const userType = localStorage.getItem("userType");
     const currentUser = getUser();
