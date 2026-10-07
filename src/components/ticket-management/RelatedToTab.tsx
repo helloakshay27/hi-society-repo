@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { TextField } from '@mui/material';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { fieldStyles } from './fieldStyles';
 
 interface RelatedToType {
@@ -164,10 +165,45 @@ export const RelatedToTab: React.FC = () => {
     { key: 'feedback_enabled', label: 'Feedback Enabled', sortable: true },
   ];
 
+  // null defaults to enabled; only an explicit false reads as disabled.
+  const isFeedbackEnabled = (item: RelatedToType) => item.feedback_enabled !== false;
+
+  const handleFeedbackToggle = async (item: RelatedToType, checked: boolean) => {
+    const previous = item.feedback_enabled;
+    setRelatedToItems(prev => prev.map(i => (i.id === item.id ? { ...i, feedback_enabled: checked } : i)));
+    try {
+      const response = await fetch(getFullUrl('/crm/admin/modify_issue_type.json'), {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: item.id,
+          name: item.name,
+          active: 1,
+          feedback_enabled: checked,
+        }),
+      });
+      if (!response.ok) throw new Error('Request failed');
+      toast.success('Feedback status updated successfully!');
+    } catch (error) {
+      console.error('Error updating feedback status:', error);
+      setRelatedToItems(prev => prev.map(i => (i.id === item.id ? { ...i, feedback_enabled: previous } : i)));
+      toast.error('Failed to update feedback status');
+    }
+  };
+
   const renderCell = (item: RelatedToType, columnKey: string) => {
     if (columnKey === 'feedback_enabled') {
-      // null defaults to enabled; only an explicit false reads as False.
-      return item.feedback_enabled === false ? 'False' : 'True';
+      return (
+        <Switch
+          checked={isFeedbackEnabled(item)}
+          onCheckedChange={(checked) => handleFeedbackToggle(item, checked)}
+          disabled={!shouldShow("Ticket Setup", "update")}
+          className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-red-500"
+        />
+      );
     }
     return item[columnKey as keyof RelatedToType];
   };
