@@ -20,3 +20,11 @@ export const PIE_PROACTIVE_COLOR = '#76CDC1';
 export const PIE_REACTIVE_COLOR = '#CDCAF5';
 export const PIE_CHART_PALETTE = ['#CDCAF5', '#76CDC1', '#CDCAF5', '#798C5E', '#9EC8BA', '#EDC488', '#E7848E', '#6B9BCC'] as const;
 export const getPieChartColor = (index: number): string => PIE_CHART_PALETTE[index % PIE_CHART_PALETTE.length];
+
+// Customer Sentiments donut — rating 5 (great) down to rating 1 (unacceptable),
+// green through red per the doc's "as in the old dashboard" colour guidance.
+export const SENTIMENT_GREAT_COLOR = '#67A95B';
+export const SENTIMENT_GOOD_COLOR = '#AFC97E';
+export const SENTIMENT_OKAY_COLOR = '#EDC488';
+export const SENTIMENT_BAD_COLOR = '#E8936B';
+export const SENTIMENT_UNACCEPTABLE_COLOR = '#B23A42';
