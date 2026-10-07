@@ -151,9 +151,13 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
     };
 
     const handleInputChange = (field: string, value: string) => {
+        if (field === 'towerId') {
+            setFlats([]);
+        }
         setFilters(prev => ({
             ...prev,
-            [field]: value
+            [field]: value,
+            ...(field === 'towerId' ? { flatId: '' } : {}),
         }));
     };
 
@@ -163,7 +167,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
     };
 
     const handleReset = () => {
-        setFilters({
+        const resetFilters = {
             search: '',
             towerId: '',
             flatId: '',
@@ -171,7 +175,10 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
             status: '',
             cardAllocated: '',
             expired: ''
-        });
+        };
+        setFilters(resetFilters);
+        onApply(resetFilters);
+        onOpenChange(false);
     };
 
     return (
@@ -271,6 +278,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
                                         <MenuItem value="">Select Status</MenuItem>
                                         <MenuItem value="active">Active</MenuItem>
                                         <MenuItem value="inactive">Inactive</MenuItem>
+                                        <MenuItem value="pending">Pending</MenuItem>
                                     </Select>
                                 </FormControl>
                             </div>
