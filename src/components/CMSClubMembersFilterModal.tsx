@@ -93,7 +93,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
 }) => {
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
-    const societyId = localStorage.getItem("selectedUserSociety");
+    const societyId = localStorage.getItem("selectedSocietyId");
 
     const [towers, setTowers] = useState([]);
     const [flats, setFlats] = useState([]);

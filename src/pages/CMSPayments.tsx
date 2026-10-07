@@ -122,7 +122,7 @@ const fieldStyles = {
 const CMSPayments = () => {
   const baseUrl = localStorage.getItem('baseUrl')
   const token = localStorage.getItem('token')
-  const societyId = localStorage.getItem("selectedUserSociety");
+  const societyId = localStorage.getItem("selectedSocietyId");
   const { shouldShow } = useDynamicPermissions()
   const [payments, setPayments] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
