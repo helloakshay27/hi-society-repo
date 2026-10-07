@@ -156,14 +156,28 @@ const MultiSelectDropdown: React.FC<MultiSelectProps> = ({
 interface HelpdeskExportDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultStartDate?: Date;
+  defaultEndDate?: Date;
 }
 
-export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({ isOpen, onClose }) => {
+export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
+  isOpen,
+  onClose,
+  defaultStartDate,
+  defaultEndDate,
+}) => {
   const [exportType, setExportType] = useState<ExportType>("all");
   const [exportDate, setExportDate] = useState<DateRange | undefined>({
-    from: new Date(2026, 3, 1),
-    to: new Date(2026, 3, 23),
+    from: defaultStartDate ?? new Date(2026, 3, 1),
+    to: defaultEndDate ?? new Date(2026, 3, 23),
   });
+
+  // Sync date range with the parent's applied dates each time the dialog opens
+  useEffect(() => {
+    if (isOpen && defaultStartDate && defaultEndDate) {
+      setExportDate({ from: defaultStartDate, to: defaultEndDate });
+    }
+  }, [isOpen, defaultStartDate, defaultEndDate]);
 
   // Advanced filter state — status & category are multi-select
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
