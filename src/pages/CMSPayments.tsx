@@ -164,7 +164,7 @@ const CMSPayments = () => {
         params.search = search;
       }
       if (filterParams.status) {
-        params["q[payment_status_in][]"] = filterParams.status;
+        params["q[payment_status_in]"] = filterParams.status;
       }
       if (filterParams.fromDate && filterParams.toDate) {
         const fromDate = format(parse(filterParams.fromDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");
