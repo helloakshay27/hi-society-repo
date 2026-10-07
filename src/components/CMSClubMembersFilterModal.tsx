@@ -269,8 +269,9 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
                                         notched
                                     >
                                         <MenuItem value="">Select Status</MenuItem>
-                                        <MenuItem value="active">Active</MenuItem>
-                                        <MenuItem value="inactive">Inactive</MenuItem>
+                                        <MenuItem value="approved">Approved</MenuItem>
+                                        <MenuItem value="expired">Expired</MenuItem>
+                                        <MenuItem value="pending">Pending</MenuItem>
                                     </Select>
                                 </FormControl>
                             </div>
