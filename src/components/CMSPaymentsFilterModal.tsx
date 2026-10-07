@@ -106,14 +106,11 @@ export const CMSPaymentsFilterModal: React.FC<CMSPaymentsFilterModalProps> = ({
     };
 
     const handleReset = () => {
-        const resetFilters = {
+        setFilters({
             status: '',
             fromDate: '',
             toDate: '',
-        };
-        setFilters(resetFilters);
-        onApply(resetFilters);
-        onOpenChange(false);
+        });
     };
 
     return (

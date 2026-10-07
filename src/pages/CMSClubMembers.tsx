@@ -135,24 +135,19 @@ const CMSClubMembers = () => {
         params.append('q[society_flat_society_block_id_eq]', filters.towerId);
       }
       if (filters.flatId) {
-        params.append('q[society_flat_id_in][]', filters.flatId);
+        params.append('q[society_flat_id_in]', filters.flatId);
       }
       if (filters.residentType) {
-        params.append('q[resident_type_in][]', filters.residentType);
+        params.append('q[resident_type_in]', filters.residentType);
       }
       if (filters.status) {
-        params.append('q[status_eq]', filters.status);
+        params.append('q[club_member_check_eq]', filters.status);
       }
       if (filters.cardAllocated) {
         params.append('q[access_card_check_eq]', filters.cardAllocated);
       }
       if (filters.expired) {
-        const today = new Date();
-        const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        params.append(
-          filters.expired === 'true' ? 'q[end_date_lt]' : 'q[end_date_gteq]',
-          todayString
-        );
+        params.append('q[end_date]', filters.expired);
       }
 
       const queryString = params.toString();

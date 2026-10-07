@@ -122,7 +122,7 @@ const fieldStyles = {
 const CMSPayments = () => {
   const baseUrl = localStorage.getItem('baseUrl')
   const token = localStorage.getItem('token')
-  const societyId = localStorage.getItem("selectedUserSociety");
+  const societyId = localStorage.getItem("selectedSocietyId");
   const { shouldShow } = useDynamicPermissions()
   const [payments, setPayments] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -164,7 +164,7 @@ const CMSPayments = () => {
         params.search = search;
       }
       if (filterParams.status) {
-        params["q[payment_status_in][]"] = filterParams.status;
+        params["q[payment_status_in]"] = filterParams.status;
       }
       if (filterParams.fromDate && filterParams.toDate) {
         const fromDate = format(parse(filterParams.fromDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");

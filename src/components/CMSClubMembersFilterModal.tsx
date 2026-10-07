@@ -93,7 +93,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
 }) => {
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
-    const societyId = localStorage.getItem("selectedUserSociety");
+    const societyId = localStorage.getItem("selectedSocietyId");
 
     const [towers, setTowers] = useState([]);
     const [flats, setFlats] = useState([]);
@@ -151,13 +151,9 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
     };
 
     const handleInputChange = (field: string, value: string) => {
-        if (field === 'towerId') {
-            setFlats([]);
-        }
         setFilters(prev => ({
             ...prev,
-            [field]: value,
-            ...(field === 'towerId' ? { flatId: '' } : {}),
+            [field]: value
         }));
     };
 
@@ -167,7 +163,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
     };
 
     const handleReset = () => {
-        const resetFilters = {
+        setFilters({
             search: '',
             towerId: '',
             flatId: '',
@@ -175,10 +171,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
             status: '',
             cardAllocated: '',
             expired: ''
-        };
-        setFilters(resetFilters);
-        onApply(resetFilters);
-        onOpenChange(false);
+        });
     };
 
     return (
@@ -276,8 +269,8 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
                                         notched
                                     >
                                         <MenuItem value="">Select Status</MenuItem>
-                                        <MenuItem value="active">Active</MenuItem>
-                                        <MenuItem value="inactive">Inactive</MenuItem>
+                                        <MenuItem value="approved">Approved</MenuItem>
+                                        <MenuItem value="expired">Expired</MenuItem>
                                         <MenuItem value="pending">Pending</MenuItem>
                                     </Select>
                                 </FormControl>
