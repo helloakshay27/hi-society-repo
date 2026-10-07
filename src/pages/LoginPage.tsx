@@ -439,7 +439,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         await fetchHiSocietyData(response.spree_api_key);
         redirectTo(
           (from && from.pathname + (from.search || "")) ||
-          "/maintenance/survey/mapping"
+          // "/maintenance/survey/mapping"
+          "/bms/hisoc-notice-list"
         );
         return;
       }
