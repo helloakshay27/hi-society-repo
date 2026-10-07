@@ -187,17 +187,16 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
       return (savedMode === 'hi-society' ? 'hi-society' : 'fm-matrix') as 'fm-matrix' | 'hi-society';
     }
 
-    // First visit - auto-detect based on hostname
-    const hostname = window.location.hostname;
-    const isHiSocietySite =
-      hostname.includes("localhost") ||
-      hostname.includes("ui-hisociety.lockated.com") ||
-      hostname.includes("web.hisociety.lockated.com") ||
-      hostname.includes("dev-hisociety.lockated.com/");
-
-    // Set initial mode based on hostname and save it
-    const initialMode = isHiSocietySite ? 'hi-society' : 'fm-matrix';
-    console.log('🎨 First visit - Auto-detecting layout mode:', initialMode, '(hostname:', hostname, ')');
+    // First visit - default to Hi-Society on every host
+    // const hostname = window.location.hostname;
+    // const isHiSocietySite =
+    //   hostname.includes("localhost") ||
+    //   hostname.includes("ui-hisociety.lockated.com") ||
+    //   hostname.includes("web.hisociety.lockated.com") ||
+    //   hostname.includes("dev-hisociety.lockated.com/");
+    // const initialMode = isHiSocietySite ? 'hi-society' : 'fm-matrix';
+    const initialMode = 'hi-society' as const;
+    console.log('🎨 First visit - Defaulting layout mode to:', initialMode);
     localStorage.setItem("layoutMode", initialMode);
     return initialMode;
   });
