@@ -128,31 +128,7 @@ const AssignTicketsPage: React.FC = () => {
   }, [toast]);
 
   const handleBack = () => {
-    navigate('/maintenance/ticket');
-  };
-
-  // Helper function to format escalation time in D:H:M format
-  const formatEscalationTime = (escalation: NextEscalation | null | undefined) => {
-    if (!escalation || !escalation.minutes) return '-';
-    
-    const totalMinutes = escalation.minutes;
-    const days = Math.floor(totalMinutes / (24 * 60));
-    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
-    const minutes = totalMinutes % 60;
-    
-    return `${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  };
-
-  // Helper function to format escalation minutes (TAT)
-  const formatEscalationMinutes = (escalation: NextEscalation | null | undefined) => {
-    if (!escalation || !escalation.minutes) return '-';
-    return escalation.minutes.toString();
-  };
-
-  // Helper function to format escalation level name
-  const formatEscalationLevel = (escalation: NextEscalation | null | undefined) => {
-    if (!escalation || !escalation.escalation_name) return '-';
-    return escalation.escalation_name;
+    navigate(-1);
   };
 
   const handleSubmit = async () => {
@@ -338,9 +314,6 @@ const AssignTicketsPage: React.FC = () => {
                     PRIORITY
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    SITE
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     CREATED ON
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -350,12 +323,6 @@ const AssignTicketsPage: React.FC = () => {
                     COMPLAINT MODE
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ASSET / SERVICE NAME
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    TASK ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     PROACTIVE / REACTIVE
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -363,27 +330,6 @@ const AssignTicketsPage: React.FC = () => {
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     RESPONSE ESCALATION
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RESPONSE TAT (MIN)
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RESPONSE TIME (D:H:M)
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RESPONSE ESCALATION LEVEL
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RESOLUTION ESCALATION
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RESOLUTION TAT (MIN)
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RESOLUTION TIME (D:H:M)
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RESOLUTION ESCALATION LEVEL
                   </th>
                 </tr>
               </thead>
@@ -404,38 +350,16 @@ const AssignTicketsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">{ticket.priority || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{ticket.site_name || '-'}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">{ticket.issue_type || '-'}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">{ticket.complaint_mode || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{ticket.service_or_asset || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{ticket.asset_task_occurrence_id || '-'}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">{ticket.proactive_reactive || '-'}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {ticket.review_tracking_date ? new Date(ticket.review_tracking_date).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">{ticket.response_escalation || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {formatEscalationMinutes(ticket.next_response_escalation)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {formatEscalationTime(ticket.next_response_escalation)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {formatEscalationLevel(ticket.next_response_escalation)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{ticket.resolution_escalation || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {formatEscalationMinutes(ticket.next_resolution_escalation)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {formatEscalationTime(ticket.next_resolution_escalation)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {formatEscalationLevel(ticket.next_resolution_escalation)}
-                    </td>
                   </tr>
                 ))}
               </tbody>
