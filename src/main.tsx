@@ -16,12 +16,14 @@ import { attachPostHogDebugLogger } from "./utils/posthogDebug";
 
 // Register service worker for PWA
 // registerServiceWorker();
-// if (window.location.hostname === "fm-matrix.lockated.com" || window.location.hostname === "localhost" || window.location.hostname === "web.hisociety.lockated.com") {
-  import("./styles/theme.css"); // Lockated Brand Theme - Edit this file for global color changes
-  // Initialise runtime color patcher — overrides MUI inline styles and any
-  // legacy #C72030 / #C62828 colors injected via sx props or inline styles.
+
+if (
+  window.location.hostname === "ui-hisociety.lockated.com" ||
+  window.location.hostname === "localhost"
+) {
+  void import("./styles/theme.css");
   initColorPatch();
-// }
+}
 // ── Stale chunk handler ─────────────────────────────────────────────────────
 // After a new deployment, the browser may try to load old JS chunk filenames
 // that no longer exist on the server. The server returns a 404 HTML page,
