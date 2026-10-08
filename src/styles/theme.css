@@ -5276,18 +5276,51 @@ html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
   color: #000000 !important;
 }
 
-/* Ways to Earn dialog toggle thumb. */
-html body #root [role="dialog"].max-w-lg .MuiSwitch-root .MuiSwitch-switchBase,
-html body #root [role="dialog"].max-w-lg .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Template details page gear and back-navigation icons. */
+html body #root .MuiBox-root:has(> .MuiTypography-root):has(.bg-white.rounded-lg.shadow-sm.border h3)
+  .bg-white.rounded-lg.shadow-sm.border > div.bg-\[\#F6F4EE\] svg.MuiSvgIcon-root,
+html body #root .MuiBox-root:has(> .MuiTypography-root):has(.bg-white.rounded-lg.shadow-sm.border h3)
+  button:has(> svg.lucide-arrow-left) > svg.lucide-arrow-left {
   color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Ways to Earn dialog toggle thumb. */
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+  background-color: transparent !important;
+}
+
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  box-sizing: border-box !important;
+  background-color: #000000 !important;
 }
 
 /* Brand Partners Config dialog toggle thumb. */
-html body #root [role="dialog"]:has(input[title="Upload logo"])
+html body [role="dialog"]:has(input[title="Upload logo"])
   .MuiSwitch-root .MuiSwitch-switchBase,
-html body #root [role="dialog"]:has(input[title="Upload logo"])
+html body [role="dialog"]:has(input[title="Upload logo"])
   .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
   color: #000000 !important;
+  background-color: transparent !important;
+}
+
+html body [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
 }
 
 /* Incident attachment picker button. */
@@ -5296,6 +5329,22 @@ html body #root label[for="file-upload"] > button {
   border-color: #000000 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Generate Bills action icon on Accounting Charge Calculations. */
+html body #root button:has(> svg.lucide-send) > svg.lucide-send {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Loyalty Inventory Add New Item status toggle thumb. */
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
 }
 
 /* Add User form: replace orange accents with black. */
@@ -5357,11 +5406,11 @@ html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root[class*="border
 }
 
 /* Add/Edit Template submit action. */
-html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root)
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
   > .MuiBox-root:last-child > .MuiButton-root:first-child,
-html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root)
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
   > .MuiBox-root:last-child > .MuiButton-root:first-child:hover,
-html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root)
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
   > .MuiBox-root:last-child > .MuiButton-root:first-child.Mui-disabled {
   background-color: #000000 !important;
   border-color: #000000 !important;
@@ -5418,4 +5467,69 @@ html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root:h
 html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root.Mui-focused,
 html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiFormLabel-asterisk {
   color: #000000 !important;
+}
+
+/* Active step in the Create Contest wizard. */
+html body #root .create-contest-page nav[aria-label="Contest creation steps"]
+  button[aria-current="step"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .create-contest-page nav[aria-label="Contest creation steps"]
+  button[aria-current="step"]:focus-visible {
+  outline-color: #000000 !important;
+}
+
+/* Loyalty Offer details: active step and section gear icons. */
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiStepper-root .MuiStepLabel-label.Mui-active > .MuiBox-root > .MuiBox-root,
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiStepper-root .MuiStepLabel-label.Mui-completed > .MuiBox-root > .MuiBox-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiSvgIcon-root {
+  color: #000000 !important;
+}
+
+/* Accounting Transactions tabs use the Ticket List / Analytics segmented layout. */
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has([role="tab"][value="journal"]):has([role="tab"][value="contra"])
+  [role="tablist"] {
+  width: fit-content !important;
+  max-width: 100% !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background-color: #f1f0ec !important;
+  padding: 4px !important;
+}
+
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has([role="tab"][value="journal"]):has([role="tab"][value="contra"])
+  [role="tablist"] > [role="tab"] {
+  min-height: 40px !important;
+  flex-shrink: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  color: var(--color-text-light) !important;
+  box-shadow: none !important;
+}
+
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has([role="tab"][value="journal"]):has([role="tab"][value="contra"])
+  [role="tablist"] > [role="tab"][data-state="active"] {
+  border-color: #e5e5e5 !important;
+  background-color: #ffffff !important;
+  color: var(--color-text) !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%) !important;
 }
