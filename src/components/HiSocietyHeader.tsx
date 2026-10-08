@@ -423,6 +423,7 @@ export const HiSocietyHeader = () => {
   const userType = localStorage.getItem("userType");
 
   const tempType = localStorage.getItem("tempType");
+  const orgLogoUrl = localStorage.getItem("org_logo_url");
 
   const canSwitchToEmployee = userType === "pms_organization_admin";
 
@@ -441,7 +442,13 @@ export const HiSocietyHeader = () => {
             <Menu className="w-5 h-5" />
           </button>
           <div className="hidden sm:block">
-            {isOmanSite ? (
+            {orgLogoUrl ? (
+              <img
+                src={orgLogoUrl}
+                alt="Organization Logo"
+                className="h-10 w-auto max-w-[200px] object-contain"
+              />
+            ) : isOmanSite ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 xmlnsXlink="http://www.w3.org/1999/xlink"

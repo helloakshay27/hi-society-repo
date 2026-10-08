@@ -80,6 +80,7 @@ export interface Organization {
   logo?: {
     url: string;
   };
+  logo_url?: string | null;
   backend_url?: string;
   backend_domain?: string;
 }
