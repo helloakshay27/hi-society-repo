@@ -395,6 +395,7 @@ const OPS_CONSOLE_ALLOWED_EMAILS = [
   "tejas.chaudhari@lockated.com",
   "dinesh.shinde@lockated.com",
   "runwalcpadmin@gmail.com",
+  "ajay.pihulkar@lockated.com"
 ].map((email) => email.toLowerCase());
 
 export const isOpsConsoleAllowedUser = (
